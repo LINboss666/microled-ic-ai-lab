@@ -139,8 +139,24 @@ Two things follow, and both are recorded rather than smoothed over:
   public history data can stay accessible afterwards. So the routes below are about
   *removing* the objects, not about re-hiding the repository.
 
-## Routes that would clear the exposure
+## Push state while this was written: `PUSH_PENDING_NETWORK`
 
+`github.com:443` refuses git smart-HTTP from this host while `api.github.com` answers
+normally (five attempts over about fifteen minutes, HTTP/1.1 and HTTP/2 both). So:
+
+| | value |
+|---|---|
+| public `poc/c2mos-dff` head | `45c7254` |
+| local `poc/c2mos-dff` head | ahead by the release/reporting commits |
+| circuit code in those commits | none -- `git diff --name-only 45c7254..HEAD` lists only release tooling scripts and reports |
+
+The reviewers therefore already read the identical cell netlist, testbenches, checkers and
+results from the public branch; what is not yet pushed is this document's later edits and
+the bundle generator's derivation. The transcript on record predates the visibility
+change, and the audit's ref-comparison line reports the gap rather than hiding it. Once
+the push lands, re-run `python scripts/public_release_audit.py` to replace the transcript.
+
+## Routes that would clear the exposure
 1. **Wait and re-audit.** GitHub's garbage collection eventually removes objects no ref
    points at; `7ba5eb70` already disappeared. Re-run the audit until
    `SUPERSEDED_COMMITS_SERVED_BY_REMOTE = 0`. Nothing destructive, timing unknown.
