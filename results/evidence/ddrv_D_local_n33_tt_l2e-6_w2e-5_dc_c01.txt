@@ -1,0 +1,8 @@
+== D_local_n33_tt_l2e-6_w2e-5_dc_c01  points=34  VOUT_max=3.3000 V  IOUT@max=0.000004 uA (err -100.000 %)
+   COMPLIANCE +/-1%  : NOT_FOUND
+   COMPLIANCE +/-2%  : NOT_FOUND
+   COMPLIANCE +/-5%  : NOT_FOUND
+   ROUT(upper 40%)   : 4.079e+11 ohm
+   MAX_ADJACENT_JUMP : 0.00000 (fraction of target, VOUT>50% of sweep)
+   IOUT_SPAN whole sweep: 0.000000 .. 0.000004 uA = 0.00 % of target
+DATA_DRIVER_DC: OK

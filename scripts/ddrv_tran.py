@@ -116,6 +116,10 @@ def main():
     ap.add_argument("--target", type=float, default=15e-6)
     ap.add_argument("--band", type=float, default=0.05)
     ap.add_argument("--hold-frac", type=float, default=0.4)
+    ap.add_argument("--net-suffix", default="",
+                    help="'1' to measure channel 1 of the two-channel deck")
+    ap.add_argument("--ensig", default="data_en",
+                    help="which enable net marks the windows (data_en or data_en1)")
     ap.add_argument("--csv", default=None)
     ap.add_argument("--label", default="")
     a = ap.parse_args()
@@ -124,15 +128,16 @@ def main():
         print("DATA_DRIVER_TRAN: FAIL (no data file at %s)" % a.psf)
         return 1
     names, rows = parse(a.psf)
-    for need in ("vsw", "data_out", "data_en"):
+    vsn, onn = "vsw" + a.net_suffix, "data_out" + a.net_suffix
+    for need in (vsn, onn, a.ensig):
         if not rows or need not in rows[0]:
             print("DATA_DRIVER_TRAN: FAIL (trace %s missing; have %s)" % (need, names))
             return 1
     for r in rows:
-        r["iout"] = (r["vsw"] - r["data_out"]) / a.rsen
+        r["iout"] = (r[vsn] - r[onn]) / a.rsen
     rows.sort(key=lambda r: r["time"])
     t0, t1 = rows[0]["time"], rows[-1]["time"]
-    up, down = edges(rows, "data_en")
+    up, down = edges(rows, a.ensig)
     ons, offs = windows(up, down)
     tol = a.band * a.target
     peak = max(abs(r["iout"]) for r in rows)
@@ -193,6 +198,18 @@ def main():
     print("   OFF_LEAKAGE       : %s   (worst median over the last 30%% of an OFF window)"
           % ("n/a" if leak_max is None else "%.6f uA" % (leak_max * 1e6)))
 
+    # The rework claim under test is "the shared VBIAS now stays up". Measure it instead of
+    # asserting it: a structure that quietly kept charging a gate node would still pass the
+    # current-window checks.
+    vb_lo = vb_hi = vb_dev = None
+    if "vbias" in rows[0]:
+        vs = [r["vbias"] for r in rows]
+        vb_lo, vb_hi = min(vs), max(vs)
+        vb_med = median(vs)
+        vb_dev = max(abs(vb_med - vb_lo), abs(vb_hi - vb_med))
+        print("   VBIAS_SHARED      : %.6f .. %.6f V   (worst deviation %.6f V = %.4f %% of 1.8 V)"
+              % (vb_lo, vb_hi, vb_dev, vb_dev / 1.8 * 100.0))
+
     if a.csv:
         exists = os.path.isfile(a.csv)
         dd = os.path.dirname(os.path.abspath(a.csv))
@@ -209,7 +226,10 @@ def main():
                         "NOT_FOUND" if worst_on is None else "%.4g" % worst_on,
                         "NOT_FOUND" if worst_off is None else "%.4g" % worst_off,
                         peak * 1e6, "n/a" if leak_max is None else "%.6f" % (leak_max * 1e6),
-                        a.band * 100, n_on_fail))
+                        a.band * 100, n_on_fail,
+                        "n/a" if vb_lo is None else "%.6f" % vb_lo,
+                        "n/a" if vb_hi is None else "%.6f" % vb_hi,
+                        "n/a" if vb_dev is None else "%.6f" % vb_dev))
 
     if not ons:
         print("DATA_DRIVER_TRAN: FAIL (no complete ON window in the run)")

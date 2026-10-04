@@ -1,0 +1,6 @@
+   == toggling_neighbour_T9.765625e-6  channel 1 samples=276 (after skipping 25% of the run)
+      I_1 mean      : 15.113902 uA
+      I_1 max excursion from its own mean : 2.795105 uA
+      I_1 worst |I - 15uA|               : 2.908760 uA = 19.392 % of target
+      worst sample at t=3.1741e-05 s, nearest neighbour edge at t=3.1739e-05 s (delta 1.799e-09 s)
+   TWO_CHANNEL_INDEPENDENCE: FAIL (crosstalk 19.392 % > 1.0 % POC criterion)

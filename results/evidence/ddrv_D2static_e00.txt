@@ -1,0 +1,12 @@
+     == static_e00_ch0  channel 0 samples=38 (after skipping 25% of the run)
+        I_0 mean      : 0.000000 uA
+        I_0 max excursion from its own mean : 0.000000 uA
+        I_0 worst |I - 15uA|               : 15.000000 uA = 100.000 % of target
+        neighbour enable net `data_en` not found: measuring the held value only
+     TWO_CHANNEL_INDEPENDENCE: FAIL (crosstalk 100.000 % > 1.0 % POC criterion)
+     == static_e00_ch1  channel 1 samples=38 (after skipping 25% of the run)
+        I_1 mean      : 0.000000 uA
+        I_1 max excursion from its own mean : 0.000000 uA
+        I_1 worst |I - 15uA|               : 15.000000 uA = 100.000 % of target
+        neighbour enable net `data_en` not found: measuring the held value only
+     TWO_CHANNEL_INDEPENDENCE: FAIL (crosstalk 100.000 % > 1.0 % POC criterion)

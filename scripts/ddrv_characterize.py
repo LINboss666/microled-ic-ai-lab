@@ -119,13 +119,17 @@ def main():
     ap.add_argument("--label", default="")
     ap.add_argument("--nominal", type=float, default=None,
                     help="also report IOUT at the sample closest to this V(DATA_OUT)")
+    ap.add_argument("--net-suffix", default="",
+                    help="'1' to characterise channel 1 of the two-channel deck; the "
+                         "accepted channel-0 net names stay the default")
     a = ap.parse_args()
 
+    vsn, onn = "vsw" + a.net_suffix, "data_out" + a.net_suffix
     if not os.path.isfile(a.psf):
         print("DATA_DRIVER_DC: FAIL  (no psfascii data file at %s)" % a.psf)
         return 1
     raw, names = parse_records(a.psf)
-    need = ("vsw", "data_out")
+    need = (vsn, onn)
     for k in need:
         if not raw or k not in raw[0]:
             print("DATA_DRIVER_DC: FAIL  (traces %s missing; found %s)" % (k, names))
@@ -133,9 +137,9 @@ def main():
     rows = []
     for r in raw:
         rec = dict(r)
-        rec["vout"] = r["data_out"]                     # compliance is at the device drain
-        rec["vsw"] = r["vsw"]
-        rec["iout"] = (r["vsw"] - r["data_out"]) / a.rsen
+        rec["vout"] = r[onn]                    # compliance is at the device drain
+        rec["vsw"] = r[vsn]
+        rec["iout"] = (r[vsn] - r[onn]) / a.rsen
         rec["err_pct"] = (rec["iout"] - a.target) / a.target * 100.0
         rows.append(rec)
     rows.sort(key=lambda r: r["vsw"])
