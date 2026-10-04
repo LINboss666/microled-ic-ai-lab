@@ -147,4 +147,8 @@ was never pushed. A reviewer without that bundle still gets every other check pl
 loud `PROBLEM` line here rather than a silent pass.
 
 One bookkeeping note: the tracked-file count printed in the transcript is taken at run
-time, so it is ahead by the files this commit itself adds.
+time, so it reads lower than the repository after this document and the transcript
+themselves became tracked. The transcript's `AUDITED_HEAD` is the last *content* commit;
+the commits after it add only this transcript and one AGENTS note, and each of those
+passed the staged gate plus the full `--mode history` scan that the push hook runs, so
+the content verdict carries over without another transcript run.
