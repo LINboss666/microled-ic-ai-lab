@@ -31,7 +31,9 @@ MOS_RX = re.compile(
     r"(?P<b>\S+)\s*\)\s*(?P<model>[A-Za-z0-9_]+)\s+l=(?P<l>\S+)\s+w=(?P<w>\S+)", re.M)
 PARAM_RX = re.compile(r"^\s*parameters\s+(?P<name>\w+)\s*=\s*(?P<val>\S+)", re.M)
 SUBCKT_RX = re.compile(r"^\s*subckt\s+(?P<name>\w+)\s*\((?P<ports>[^)]*)\)", re.M)
-CLAIM_RX = re.compile(r"(\d+)\s*(?:MOS\b|管|transistors?\b)")
+# `(?<![A-Za-z0-9])` so the cell's own name is never read as a count: "C2MOS design status"
+# names the circuit, "18 MOS" claims a number of devices.
+CLAIM_RX = re.compile(r"(?<![A-Za-z0-9])(\d+)\s*(?:MOS\b|管|transistors?\b)")
 
 # suffix -> role group, in the order the cell is drawn
 GROUPS = OrderedDict([
@@ -74,6 +76,10 @@ def group_of(inst):
 
 def main():
     args = sys.argv[1:]
+    # The claim regex reads numbers, not names, so it is self-tested before it judges any
+    # document: "C2MOS" is a circuit name, "18 MOS"/"18管" are claims.
+    assert CLAIM_RX.findall("C2MOS design status, POC") == [], CLAIM_RX.findall("C2MOS")
+    assert CLAIM_RX.findall("18 MOS total, 18管, 9 transistors") == ["18", "18", "9"]
 
     def opt(name, default):
         return args[args.index(name) + 1] if name in args else default
