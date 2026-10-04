@@ -5,6 +5,11 @@ Runs the local checks, then the remote ones through `gh`, and prints the exact c
 block the workflow contract requires. Read-only against the repository: it never
 mutates, never pushes, never changes visibility.
 
+A clean local history is not enough: after a metadata rewrite plus force-push GitHub can
+keep serving the superseded commit objects by SHA, and their author/committer fields are
+exactly the address that was removed locally. Every superseded SHA must come back absent
+before the repository is exposed.
+
     python scripts/public_release_audit.py            # report
     python scripts/public_release_audit.py --quiet    # only the verdict lines
 
@@ -18,11 +23,33 @@ import subprocess
 import sys
 import time
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import repo_safety_rules as R  # noqa: E402
-
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PHONE = re.compile(r"1[3-9][0-9]\d{8}@(163|qq|126|139)\.com")
+# `origin`'s description/README is prose, so a path rule is wrong for it: the sentence
+# "no PDK, no credentials" is a statement of policy, not a leak. Only concrete secret or
+# local-filesystem shapes count here.
+TEXT_LEAK = re.compile(
+    r"(?:[A-Za-z]:[\\/]{1,2}(?:Users|Documents)|/root/|/home/[A-Za-z0-9._-]+/|"
+    r"ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|-----BEGIN|"
+    r"smic18mmrf|\.ic617_agent_bridge_credentials|history_[a-z_]*\.bundle"
+    r"|1[3-9][0-9]\d{8}@(?:163|qq|126|139)\.com)",
+    re.I)
+# Every commit the metadata rewrite replaced. These are tips' ancestors from the
+# ignored local backup bundle (review/history_before_metadata_rewrite.bundle), which is
+# deliberately not in the repo; a reviewer without the bundle can still run every other
+# check and gets a loud PROBLEM here instead of a silent pass.
+OLD_REWRITTEN_SHAS = (
+    "1843f1f9da7ad42ec3c011ff5e736b6952fba9f5",
+    "3f33a4804ddcdeb38523817aec3f9f6d863b8bd3",
+    "461567bd1f527862f6e6a51a131a81ace4dbdf67",
+    "7ba5eb70f918ea2fccb3825bb41a60cce24fbc85",
+    "89841c06e82dd2ccd34f1104563f97bd6ed0dd54",
+    "9f5e54c3fc97f91f71169693714e9a0d85f1db90",
+    "a181bb86d40856bd880df69f67cdcb84c5496e80",
+    "b6f3a0e1de1fbc69e532eb24a65e6c08d2ae2fc1",
+    "bdce712172e62e534359d4be204a798d678a8fc6",
+    "c489b2801fa8fe33b454ac0f584a3daa71591f50",
+)
 FORBIDDEN_NAME = re.compile(
     r"(^|/)(pdk|smic18mmrf_teacher|models?|techfile|calibre)/|\.(lib|svrf|rvc|layermap|zip|7z|rar|vmx|vmdk|raw|psf|vcd|pem|key|ppk)($|\.)|"
     r"credentials|id_rsa|pdk_local\.env$|(^|/)sim/|(^|/)psf/|(^|/)raw/|\*DRC|\bDRC[._]|LVS[._]|review_bundle_.*\.zip|history_.*\.bundle",
@@ -129,8 +156,9 @@ def main():
         % (len(meta.splitlines()), len(phone)))
     if phone:
         problems.append("phone-shaped author/committer email still in history")
-    emails = sorted(set(re.split(r"[|%]", meta) [0::4]))
-    say("   author emails: " + ", ".join(e for e in emails if e))
+    emails = sorted(set(git("log", "--all", "--format=%ae").split())
+                    | set(git("log", "--all", "--format=%ce").split()))
+    say("   author+committer emails: " + ", ".join(emails))
 
     # ---- 5. git objects: nothing unreachable that we care about --------------
     fsck = git("fsck", "--full")
@@ -175,17 +203,57 @@ def main():
             problems.append("remote repo JSON unparsable: " + body[:120])
     else:
         problems.append("cannot read the remote repository state: " + body[:160])
+    visibility = ""
     if info:
+        visibility = str(info.get("visibility") or ("PRIVATE" if info.get("private")
+                                                    else "PUBLIC")).upper()
         say("== remote repo: visibility=%s private=%s default_branch=%s size_kb=%s "
-            "fork=%s" % (info.get("visibility"), info.get("private"),
+            "fork=%s" % (visibility, info.get("private"),
                          (info.get("default_branch") or ""), info.get("size"),
                          info.get("fork")))
-        if info.get("visibility") not in ("PRIVATE", "PUBLIC"):
-            problems.append("unexpected visibility value")
+        if visibility not in ("PRIVATE", "PUBLIC"):
+            problems.append("unexpected visibility value: " + visibility)
     desc = (info.get("description") or "").strip()
     say("== repo description: " + (desc or "(empty)"))
-    if R.path_denied(desc) or FORBIDDEN_NAME.search(desc):
-        problems.append("repo description looks like PDK/credential text")
+    leak = TEXT_LEAK.search(desc)
+    if leak:
+        problems.append("repo description contains a concrete leak pattern: "
+                        + leak.group(0)[:40])
+
+    # The server must hold exactly the rewritten refs. A PR or a fork would pin the
+    # superseded commit objects open forever, so both counts belong in the gate.
+    rc, refs = gh("api", "repos/%s/git/matching-refs/heads" % REPO)
+    remote_refs = {}
+    if rc == 0:
+        try:
+            remote_refs = {d["ref"]: d["object"]["sha"] for d in json.loads(refs)}
+        except (ValueError, KeyError, TypeError):
+            problems.append("remote refs JSON unparsable")
+    else:
+        problems.append("cannot read remote refs: " + refs[:120])
+    local_refs = {}
+    for line in git("for-each-ref", "--format=%(objectname) %(refname)",
+                   "refs/heads").splitlines():
+        sha, ref = line.split(" ", 1)
+        local_refs[ref.strip()] = sha
+    for ref in sorted(set(local_refs) | set(remote_refs)):
+        same = local_refs.get(ref) == remote_refs.get(ref)
+        say("   ref %-28s local=%s remote=%s %s"
+            % (ref, (local_refs.get(ref) or "-")[:8], (remote_refs.get(ref) or "-")[:8],
+               "match" if same else "DIFFERS"))
+        if not same:
+            problems.append("local and remote disagree on " + ref)
+    for label, path in (("open+closed PRs", "pulls?state=all&per_page=100"),
+                        ("forks", "forks?per_page=100")):
+        rc, out = gh("api", "repos/%s/%s" % (REPO, path))
+        try:
+            n = len(json.loads(out)) if rc == 0 else -1
+        except ValueError:
+            n = -1
+        say("== %-18s count=%s" % (label, n))
+        if n != 0:
+            problems.append("%s exist (%d): they pin superseded commit objects on the "
+                            "server" % (label, n))
 
     def total(path, key="total_count"):
         rc, out = gh("api", path)
@@ -209,18 +277,61 @@ def main():
             problems.append("%s has content (%s) and must be reviewed before publishing"
                             % (label, n))
 
-    # commits that the metadata rewrite replaced must not be reachable any more
-    for old_sha in ("89841c06e82dd2ccd34f1104563f97bd6ed0dd54",
-                    "a181bb86d40856bd880df69f67cdcb84c5496e80",
-                    "7ba5eb70f918ea2fccb3825bb41a60cce24fbc85"):
+    # A commit the metadata rewrite replaced must not be served by the server any more.
+    # What such a response exposes is its author/committer fields -- the phone-shaped
+    # address that was removed locally -- and that claim is only sound if the served tree
+    # is one the clean history also has, so the tree OID is checked rather than assumed.
+    # Local history being clean is therefore not sufficient evidence.
+    local_trees = set(git("log", "--all", "--format=%T").split())
+    remote_phone = 0
+    served = 0
+    trees_clean = 0
+    for old_sha in OLD_REWRITTEN_SHAS:
         rc, out = gh("api", "repos/%s/commits/%s" % (REPO, old_sha))
-        gone = rc != 0 and '"status":"404"' in out.replace(" ", "")
-        say("   superseded commit %s -> %s"
-            % (old_sha[:7], "not reachable (404)" if gone
-               else ("REACHABLE (must not be)" if rc == 0 else "call failed: " + out.strip()[:100])))
-        if not gone:
-            problems.append("superseded commit %s is not confirmed unreachable on the "
-                            "remote (%s)" % (old_sha[:7], "reachable" if rc == 0 else "audit call failed"))
+        # GitHub answers "No commit found for SHA" with HTTP 422 (not 404) for an object
+        # that is not in this repository's network, so both shapes mean the same here.
+        gone = rc != 0 and ("No commit found" in out or '"status":"404"' in out.replace(" ", "")
+                            or "HTTP 404" in out)
+        if gone:
+            say("   superseded %s -> not served (object absent)" % old_sha[:8])
+            continue
+        if rc != 0:
+            say("   superseded %s -> audit call failed: %s" % (old_sha[:8], out.strip()[:100]))
+            problems.append("superseded commit %s is not confirmed unreachable (%s)"
+                            % (old_sha[:8], "audit call failed"))
+            continue
+        served += 1
+        fields = 0
+        tree_ok = False
+        try:
+            c = json.loads(out)["commit"]
+            tree_ok = c["tree"]["sha"] in local_trees
+            for k in ("author", "committer"):
+                addr = (c.get(k) or {}).get("email") or ""
+                fields += 1 if PHONE.search(addr) else 0
+        except (ValueError, KeyError, TypeError):
+            problems.append("superseded commit %s served with unparsable metadata"
+                            % old_sha[:8])
+        if tree_ok:
+            trees_clean += 1
+        else:
+            problems.append("superseded commit %s is served with a tree that is not in "
+                            "the clean history -- its FILE CONTENT differs, not just its "
+                            "identity fields" % old_sha[:8])
+        remote_phone += fields
+        say("   superseded %s -> SERVED BY REMOTE, phone-shaped email fields=%d, "
+            "tree matches clean history=%s (not on any ref)"
+            % (old_sha[:8], fields, tree_ok))
+    say("== superseded: %d rewritten commits, %d still served, %d phone-shaped email "
+        "fields on the server, %d/%d served trees match the clean history"
+        % (len(OLD_REWRITTEN_SHAS), served, remote_phone, trees_clean, served))
+    if served:
+        problems.append("%d superseded commit objects are still served by the remote; "
+                        "making the repository PUBLIC would make them anonymously "
+                        "readable by SHA" % served)
+    if remote_phone:
+        problems.append("%d phone-shaped author/committer emails are readable on the "
+                        "remote even though local history is clean" % remote_phone)
 
     # ---- verdict --------------------------------------------------------------
     print("")
@@ -230,6 +341,10 @@ def main():
     print("VENDOR_MODEL_TRACKED_FILES = %d" % counters.get("VENDOR_MODEL_TRACKED_FILES", -1))
     print("PHONE_EMAIL_OCCURRENCES = %d" % len(phone))
     print("forbidden_names_in_tracked = %d" % len(bad_names))
+    print("REPOSITORY_VISIBILITY_NOW = %s" % (visibility or "UNKNOWN"))
+    print("SUPERSEDED_COMMITS_SERVED_BY_REMOTE = %d" % served)
+    print("SUPERSEDED_TREES_MATCHING_CLEAN_HISTORY = %d/%d" % (trees_clean, served))
+    print("REMOTE_PHONE_EMAIL_FIELDS = %d" % remote_phone)
     for p in problems:
         print("PROBLEM " + p)
     zero = all(counters.get(k) == 0 for k in
