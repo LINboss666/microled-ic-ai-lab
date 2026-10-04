@@ -333,21 +333,29 @@ def holders_of(rows, node):
 
 
 TB_RX = [
-    ("rail source", re.compile(r"^\s*(\w+)\s*\(\s*(\S+)\s+(\S+)\s*\)\s*vsource\b[^\n]*?\bdc=(\S+)", re.M)),
-    ("pulse source", re.compile(r"^\s*(\w+)\s*\(\s*(\S+)\s+(\S+)\s*\)\s*vsource\s+type=pulse[^\n]*", re.M)),
-    ("load capacitor", re.compile(r"^\s*(\w+)\s*\(\s*(\S+)\s+(\S+)\s*\)\s*capacitor\s+c=(\S+)", re.M)),
-    ("transient", re.compile(r"^\s*tran\b[^\n]*", re.M)),
+    ("deck parameters", re.compile(r"^\s*parameters\s+(\S+=\S+)", re.M)),
+    ("rail source", re.compile(r"^\s*(\w+)\s*\(\s*(\S+)\s+(\S+)\s*\)\s*vsource\b(?![^\n]*type=pulse)([^\n]*)", re.M)),
+    ("pulse source", re.compile(r"^\s*(\w+)\s*\(\s*(\S+)\s+(\S+)\s*\)\s*vsource\s+(type=pulse[^\n]*)", re.M)),
+    ("load capacitor", re.compile(r"^\s*(\w+)\s*\(\s*(\S+)\s+(\S+)\s*\)\s*capacitor\s+([^\n]*)", re.M)),
+    ("transient", re.compile(r"^\s*(?:\w+\s+)?tran\s+(\S.*|)$", re.M)),
     ("section (corner)", re.compile(r"section=(\w+)")),
-    ("temperature", re.compile(r"^\s*temp\s*=\s*(\S+)", re.M | re.I)),
+    ("temperature", re.compile(r"\btemp\s*=\s*(\S+)", re.I)),
 ]
 
 
 def tb_condition_lines(rel, text):
     out = ["- `%s`" % rel]
     for label, rx in TB_RX:
+        hits = []
         for m in list(rx.finditer(text))[:3]:
-            body = " ".join(x for x in m.groups() if x) or m.group(0)
-            out.append("      %s: %s" % (label, body.strip()))
+            body = " ".join(x for x in m.groups() if x)
+            hits.append(body.strip())
+        if label == "temperature" and not hits:
+            # stating the absence is the point: no `temp=` line means Spectre's default,
+            # and the reports quote 27 C as that default rather than as a swept condition.
+            hits = ["not set in the deck -> Spectre default (27 C), and it was not swept"]
+        for h in hits:
+            out.append("      %s: %s" % (label, h))
     return out
 
 
