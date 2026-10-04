@@ -192,3 +192,30 @@ bash scripts/guest.sh ssh 'cd /root/microled_ai_project && MODE=nograph bash scr
 结论、坑与安全边界见 `reports/phase2_validation.md`；Cadence 侧新增的实测约束已写入 `AGENTS.md` 第 11–16 条。
 
 
+
+---
+
+## 第三阶段：版本管理 + 源码审核工作流（2026-10-05）
+
+本目录现在是一个 git 仓库（`main` = 基线，`poc/c2mos-dff` = C²MOS 移位单元本轮工作）。
+规则与流程写在 **`CONTRIBUTING_AI.md`**，调查结论写在 **`reports/git_workflow.md`**。
+
+```bash
+bash scripts/install_hooks.sh                       # 装 pre-commit / pre-push 安全闸
+python scripts/test_safety_rules.py                 # 闸本身的双向用例（必须 PASS）
+python scripts/repo_safety_scan.py                  # SAFE_TO_TRACK / MUST_IGNORE / NEEDS_REVIEW
+python scripts/precommit_safety_check.py --mode staged
+python scripts/precommit_safety_check.py --mode history
+python scripts/precommit_safety_check.py --mode objects   # 含 .git 里的 dangling blob
+python scripts/make_review_bundle.py main HEAD --notes reports/c2mos_review_notes.md
+python scripts/repo_parity.py /tmp/guest_md5.txt    # Windows 镜像与 guest 结构是否一致
+```
+
+永远不入库：老师/代工厂 PDK 本体与模型卡原文、DRC/LVS/XRC deck、`course_source/`
+（老师交付的课程文档原件）、`pdk_compare/`（PDK 文件清单）、`logs/`（桥运行日志）、
+凭据、SSH 私钥、token、license 服务地址值、raw PSF 波形数据库。
+
+PDK 路径不在任何被跟踪文件里：netlist 写 `include "${QODER_PDK_LIB}"`，
+变量来自未跟踪的 `spectre/pdk_local.env`（模板 `spectre/pdk_local.env.example`）。
+
+远程仓库：`https://github.com/LINboss666/microled-ic-ai-lab`（**PRIVATE**）。
