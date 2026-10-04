@@ -28,8 +28,8 @@ from make_review_bundle import devices_of, supply_nets   # same parser the bundl
 # role table keyed by instance name: the group column is the point of the exercise, a
 # reviewer must be able to see instantly which devices are repeated per channel.
 ROLES = [
-    (re.compile(r"^Mout$"), "PER-CHANNEL", "mirror output device, carries the pixel current"),
-    (re.compile(r"^Mcas$"), "PER-CHANNEL", "cascode device, sets the output compliance knee"),
+    (re.compile(r"^Mout\d?$"), "PER-CHANNEL", "mirror output device, carries the pixel current"),
+    (re.compile(r"^Mcas\d?$"), "PER-CHANNEL", "cascode device, sets the output compliance knee"),
     (re.compile(r"^Msw$"),  "PER-CHANNEL", "series enable switch (candidate A_series only)"),
     (re.compile(r"^Mref$"), "SHARED BIAS", "diode-connected reference, 1:1 with the output device"),
     (re.compile(r"^Msteer$"), "SHARED BIAS", "enable pass device between the reference current and vbias"),
@@ -117,6 +117,10 @@ def device_table(rows, out, mvals):
     per, shared = [], []
     for r in rows:
         group, desc = role_of(r["inst"])
+        # candidate D puts the channel enable on this gate: say so, instead of letting the
+        # reader assume it is the always-on bias node of the accepted C cell
+        if r["inst"].startswith("Mcas") and r["g"].startswith("data_en"):
+            desc = "cascode device whose gate IS the channel enable (candidate D)"
         m = mvals.get(r["inst"], "?")
         out("| `%s` | %s | %s | `%s` | %s | %s | %s | `%s` | `%s` | `%s` | `%s` |"
             % (r["inst"], group, desc, r["model"], r["w"], r["l"], m,
