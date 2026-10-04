@@ -5,7 +5,7 @@ transcript `results/public_release_audit.txt`:
 
 | item | value |
 |---|---|
-| branch / HEAD at audit time | `poc/c2mos-dff` @ `b8588a4` |
+| branch / HEAD at audit time | `poc/c2mos-dff` @ `6058efe` |
 | remote `main` | `11446f5c26730416692ec79615cf86e11aa76dc5` |
 | repository | `LINboss666/microled-ic-ai-lab` |
 | visibility at audit time | `PRIVATE` |

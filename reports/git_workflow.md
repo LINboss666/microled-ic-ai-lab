@@ -127,6 +127,29 @@ phase-1/2 的两份报告里有本机账户名（`C:\Users\<账户>\...`）。�
 按红线我没有改 git config。如果这让你不舒服，换成 GitHub 的 noreply 身份需要在第一次 push
 之前重写作者信息，我可以照办。
 
+## 这段后来实际发生了什么（2026-10-05，不掩饰）
+
+第一次 push 已经带着手机号邮箱上去了，所以"push 之前重写"这条没能做到。Phase 4 按指示补做了
+元数据重写：`git filter-branch --env-filter` 只改 author/committer 的邮箱（tree 逐 commit 比对
+一致），`user.email` 只写在本仓库的 `.git/config`（不动全局配置），重写前的完整历史留在
+`review/history_before_metadata_rewrite.bundle`（ignored，永不上传），然后
+`--force-with-lease` 更新 `main` 与 `poc/c2mos-dff`，用 GitHub 返回的 `author.login` 关联确认
+10 个 commit 都归到 noreply 身份。
+
+代价是发现了一件之前没人知道的事：**force-push 之后 GitHub 仍按 SHA 服务被替换的 commit 对象**，
+其中 `author/committer` 字段还带着那个手机号邮箱。所以"转公开"被这一条挡住了，
+详见 `reports/public_release_audit.md` 与 `results/public_release_audit.txt`。
+
+## 转 PUBLIC 的前置条件（机检，不许口头保证）
+
+```
+python scripts/public_release_audit.py      # 退出码 0 才允许改可见性
+```
+
+它除本地四类产品计数外还查：远端 ref 与本地逐支一致、PR/fork 数为 0（否则会把旧对象钉住）、
+Actions workflow/run/artifact 为 0、以及每个被替换 SHA 在远端是否已经取不到。
+`SUPERSEDED_COMMITS_SERVED_BY_REMOTE` 不为 0 就是 `PUBLIC RELEASE BLOCKED`。
+
 ## 以后每轮的固定流程
 
 见 `CONTRIBUTING_AI.md`（12 条 + 每轮命令）。核心：**先开 branch；Spectre 0 errors ≠ PASS；
