@@ -312,9 +312,13 @@ def main():
 
     man = ["# manifest: relative_path<TAB>bytes<TAB>sha256"]
     man += ["%s\t%d\t%s" % m for m in sorted(manifest)]
-    man.append("# files=%d" % len(manifest))
+    # manifest.txt lists itself with a placeholder hash: it cannot contain its own
+    # digest. The count check below takes that into account, so "manifest rows == files
+    # in the zip" is a real assertion instead of something a reviewer has to eyeball.
+    man.append("manifest.txt\t-\t(self, cannot hash itself)")
+    body = "\n".join(man) + "\n"
     with open(os.path.join(stag, "manifest.txt"), "w", encoding="utf-8", newline="\n") as fh:
-        fh.write("\n".join(man) + "\n")
+        fh.write(body)
 
     zpath = os.path.join(out_dir, "review_bundle_%s.zip" % head[:7])
     with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as z:
@@ -322,9 +326,20 @@ def main():
             for fn in fnames:
                 full = os.path.join(dirpath, fn)
                 z.write(full, os.path.relpath(full, out_dir).replace("\\", "/"))
+
+    with zipfile.ZipFile(zpath) as z:
+        in_zip = set(i.filename for i in z.infolist() if not i.is_dir())
+    listed = set(m[0].replace("\\", "/") for m in manifest) | {"manifest.txt"}
+    listed_zip = set(s.split("review_bundle_%s/" % head[:7], 1)[-1] for s in in_zip)
+    missing = sorted(listed - listed_zip)
+    extra = sorted(listed_zip - listed)
     print("BUNDLE dir : %s" % stag)
     print("BUNDLE zip : %s (%d bytes)" % (zpath, os.path.getsize(zpath)))
-    print("files      : %d  netlists parsed: %d" % (len(manifest), len(netlists)))
+    print("files      : manifest=%d zip=%d" % (len(listed), len(listed_zip)))
+    if missing or extra:
+        print("BUNDLE_SELF_CHECK: MISMATCH missing=%s extra=%s" % (missing, extra))
+        return 1
+    print("BUNDLE_SELF_CHECK: manifest and zip contents agree")
     print("gate(history) rc=%d" % gate.returncode)
     print("MAKE_REVIEW_BUNDLE: DONE")
     return 0
