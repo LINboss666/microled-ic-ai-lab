@@ -1,0 +1,54 @@
+// ==============================================================================
+// nmos_probe.scs -- why is every NMOS inside c2mos_dff non-conducting?
+//
+// The functional run and c2mos_diag.scs both show the same fingerprint: the PMOS pull
+// up of the master works (X1.m = X1.x1 = 1.8000 exactly), but no NMOS discharges
+// anything -- mn_k1 cannot pull mb low while m = 1.8, mn_m1/mn_m2 cannot pull X2.m
+// low while d2 = 1.8, and the internal clock inverter leaves clkb at ~1.9 V with
+// clk = 1.8 V. Nodes then drift ABOVE VDD (x2 -> 2.18, y2 -> 2.35), which is what a
+// circuit with no conducting device at all does: the only currents left are junction
+// leakage and clock overlap charge.
+//
+// The same n18 device, written as (d g s b) at TOP level, passed 3/3 in
+// tg_test_on.scs. So the only structural difference left is "inside a subckt" and/or
+// "sizes taken from a parameters statement". This file tests all three variants in
+// one DC sweep, each with a 1k pull-up so conduction shows as a real voltage divider:
+//   otop  : n18 at top level, literal sizes            (control, must conduct)
+//   osub  : n18 inside a subckt, sizes from local `parameters`
+//   olit  : n18 inside a subckt, literal sizes
+// Verdict rule: at g=1.8 a conducting device pulls its node well below 1.8 V; a dead
+// one leaves it at 1.798... V.
+// ==============================================================================
+simulator lang=spectre insensitive=yes
+
+include "${QODER_PDK_LIB}" section=tt
+
+parameters VDDV=1.8
+
+Vdd (vdd 0) vsource dc=VDDV
+Vss (vss 0) vsource dc=0
+Vg  (g    0) vsource dc=0
+
+// ---- control: exactly the tg_test_on.scs device, at top level
+MNtop (otop g vss vss) n18 l=2e-7 w=2e-6
+Rtop  (vdd otop) resistor r=1e3
+
+// ---- variant 2: same device inside a subckt, sizes from a local parameters stmt
+subckt mprobe (o g vdd vss)
+  parameters ln=2e-7
+  parameters wc=2e-6
+  MNsub (o g vss vss) n18 l=ln w=wc
+ends mprobe
+Xp (osub g vdd vss) mprobe
+Rsub (vdd osub) resistor r=1e3
+
+// ---- variant 3: inside a subckt with literal sizes
+subckt mprobe_lit (o g vdd vss)
+  MNlit (o g vss vss) n18 l=2e-7 w=2e-6
+ends mprobe_lit
+Xl (olit g vdd vss) mprobe_lit
+Rlit (vdd olit) resistor r=1e3
+
+sw1 dc dev=Vg param=dc start=0 stop=1.8 step=0.9
+
+save g otop osub olit vdd

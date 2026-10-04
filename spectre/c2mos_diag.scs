@@ -1,0 +1,40 @@
+// ==============================================================================
+// c2mos_diag.scs -- phase-by-phase probe of ONE C^2MOS cell, both data directions
+//
+// Purpose: the functional run showed q and qbar sitting at ~1.8 V from t=0 and never
+// moving, with the solver dropping gmin to 10 fS -- the signature of a circuit whose
+// nodes are all floating, i.e. of the clocked stacks never conducting. This netlist
+// decides that with DC levels instead of a clock pattern, and it does BOTH directions
+// at once by instantiating the same cell twice with d held at 0 V and at 1.8 V.
+//
+// Timeline (single clk transition, no pattern):
+//   [0,   200ns)  clk = 0   -> clkb = 1.8 : MASTER transparent, SLAVE off
+//             expected  X1.m = 1.8 (d1=0), X2.m = 0   (d2=1.8), X*.mb = !m
+//   [200n, 600ns] clk = 1.8 -> clkb = 0   : MASTER frozen, SLAVE transparent
+//             expected  X1.q = !m = 0,  X2.q = !m = 1.8
+//
+// If q stays at the rail it came up with, the slave stack is dead; if m never equals
+// !d, the master stack is dead. Saves the internal nodes so the answer is not guessed.
+// ==============================================================================
+simulator lang=spectre insensitive=yes
+
+include "${QODER_PDK_LIB}" section=tt
+include "C2MOS_DFF.scs"
+
+parameters VDDV=1.8
+
+Vdd  (vdd  0) vsource dc=VDDV
+Vss  (vss  0) vsource dc=0
+Vd1  (d1   0) vsource dc=0
+Vd2  (d2   0) vsource dc=VDDV
+Vclk (clk  0) vsource type=pulse val0=0 val1=VDDV period=1 delay=2e-7 width=4e-7 rise=1e-9 fall=1e-9
+
+X1 (d1 clk qa qab vdd vss) c2mos_dff
+X2 (d2 clk qb qbb vdd vss) c2mos_dff
+
+Cqa (qa 0) capacitor c=50e-15
+Cqb (qb 0) capacitor c=50e-15
+
+tr1 tran stop=6e-7 maxstep=1e-11
+
+save clk d1 d2 qa qb X1.m X1.mb X1.clkb X1.x1 X1.x2 X1.y1 X1.y2 X2.m X2.mb
