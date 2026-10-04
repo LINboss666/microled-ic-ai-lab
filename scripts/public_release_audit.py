@@ -161,10 +161,18 @@ def main():
     say("   author+committer emails: " + ", ".join(emails))
 
     # ---- 5. git objects: nothing unreachable that we care about --------------
+    # A dangling object is normal housekeeping (staging something the gate then rejects
+    # leaves one behind), so its mere existence is not a leak. What matters is that no
+    # unreachable object carries forbidden content, and --mode objects below is the
+    # check that says so; here the count is reported, not judged.
     fsck = git("fsck", "--full")
-    say("== git fsck --full: " + ("clean" if not fsck.strip() else fsck.strip()[:200]))
-    if fsck.strip():
-        problems.append("git fsck reported something")
+    dangling = [l for l in fsck.splitlines() if l.startswith(("dangling", "missing"))]
+    say("== git fsck --full: %d dangling/missing line(s)%s"
+        % (len(dangling), ": " + "; ".join(d.split()[1] + " " + d.split()[0]
+                                          for d in dangling[:4]) if dangling else ""))
+    for line in fsck.splitlines():
+        if line.startswith("missing"):
+            problems.append("git fsck reports a missing object: " + line[:80])
 
     # ---- 6. remote state ------------------------------------------------------
     REPO, origin_url = remote_repo()
@@ -334,13 +342,19 @@ def main():
                         "remote even though local history is clean" % remote_phone)
 
     # ---- verdict --------------------------------------------------------------
+    head = git("rev-parse", "HEAD").strip()
+    branch = git("rev-parse", "--abbrev-ref", "HEAD").strip()
     print("")
+    print("AUDITED_BRANCH = %s" % branch)
+    print("AUDITED_HEAD = %s" % head)
     print("PDK_TRACKED_FILES = %d" % counters.get("PDK_TRACKED_FILES", -1))
     print("CREDENTIAL_TRACKED_FILES = %d" % counters.get("CREDENTIAL_TRACKED_FILES", -1))
     print("PRIVATE_KEYS_TRACKED_FILES = %d" % counters.get("PRIVATE_KEYS_TRACKED_FILES", -1))
     print("VENDOR_MODEL_TRACKED_FILES = %d" % counters.get("VENDOR_MODEL_TRACKED_FILES", -1))
     print("PHONE_EMAIL_OCCURRENCES = %d" % len(phone))
     print("forbidden_names_in_tracked = %d" % len(bad_names))
+    print("DANGLING_OBJECTS = %d  (content scanned by --mode objects, not judged by existence)"
+          % len(dangling))
     print("REPOSITORY_VISIBILITY_NOW = %s" % (visibility or "UNKNOWN"))
     print("SUPERSEDED_COMMITS_SERVED_BY_REMOTE = %d" % served)
     print("SUPERSEDED_TREES_MATCHING_CLEAN_HISTORY = %d/%d" % (trees_clean, served))

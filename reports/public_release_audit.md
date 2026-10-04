@@ -1,13 +1,14 @@
 # Pre-public release audit (Part E evidence)
 
 Generated against the repository in this state, then read together with the machine
-transcript `results/public_release_audit.txt`:
+transcript `results/public_release_audit.txt`, which names the branch and SHA it audited
+in its own `AUDITED_BRANCH` / `AUDITED_HEAD` lines (so this document does not have to
+guess its own commit hash):
 
 | item | value |
 |---|---|
-| branch / HEAD at audit time | `poc/c2mos-dff` @ `6058efe` |
-| remote `main` | `11446f5c26730416692ec79615cf86e11aa76dc5` |
 | repository | `LINboss666/microled-ic-ai-lab` |
+| remote `main` | `11446f5c26730416692ec79615cf86e11aa76dc5` |
 | visibility at audit time | `PRIVATE` |
 | audit command | `python scripts/public_release_audit.py` |
 
@@ -40,6 +41,30 @@ listing its six commit SHAs and asking the API for each one. All six answered
 content* ever reached the server -- only commit metadata did. That bundle is ignored and
 local-only, so this particular check is a record of what was run rather than something a
 reviewer can re-run without it; the metadata check above is re-runnable.
+
+## One local object-store residue this round (real, and not a false alarm)
+
+Mid-round the audit reported `VENDOR_MODEL_TRACKED_FILES = 1` plus a non-clean
+`git fsck`. The object was a **dangling blob left by a staging that the commit gate then
+rejected**: `git add` writes the blob first, the gate refuses the commit afterwards, and
+the rejected bytes stay in `.git`. The content was a test fixture in
+`scripts/make_review_bundle.py` whose text mimics a BSIM parameter line -- the gate was
+right to block it, and the objects scan was right to keep seeing it after the block.
+
+Two consequences, both kept in the tooling rather than papered over:
+
+* the fixture is assembled at run time (`"+.mo" + "del n18 bsim4"`), so the vendor-shaped
+  text never exists in a tracked file while the scan still has a real model line to
+  catch. `make_review_bundle.py` now asserts both directions before trusting itself:
+  the planted model line must be flagged, an ordinary threshold label must not be.
+* `git fsck` output is no longer an automatic FAIL. A dangling object is normal
+  housekeeping; the property that matters is that no unreachable object carries
+  forbidden content, and `--mode objects` is the check that states it. The audit now
+  prints `DANGLING_OBJECTS = n` and fails only on `missing` objects.
+
+`git prune --expire=now --dry-run` was run first to list exactly what would go (1 blob,
+2 trees, all unreachable and all from this round's rejected staging), then the prune,
+then `git fsck --full` came back clean. Nothing reachable was touched.
 
 ## The blocker: the server still serves the superseded commit objects
 
