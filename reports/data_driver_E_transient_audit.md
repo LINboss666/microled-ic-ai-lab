@@ -271,12 +271,12 @@ CANDIDATE_E_POC_STATUS:                 ACCEPTABLE（条件：帧率尺度；200
 
 ## 11. Git 状态
 
-* 本地：`poc/data-driver-1ch` = `7df2744`（`test: validate data-driver transient against
-  integration method`，79 文件），其前是 DATA-3 的 `6744ff5` + `cda1b88`。
+* 本地：`poc/data-driver-1ch` = `3b533e2`（DATA-3.5 三枚：`7df2744` 审计主体 79 文件、
+  `f864faf` push 状态、`3b533e2` 容差腿 deck），其前是 DATA-3 的 `6744ff5` + `cda1b88`。
 * 远端：仍停在 `cda1b88` —— `github.com:443` 三次连接失败（`api.github.com` 正常），
   记为 `PUSH_PENDING_NETWORK`；已按每次命令 `-c http.version=HTTP/1.1` 尝试，未改任何全局配置。
 * `SOURCE_PROVENANCE_CHECK: PASS`（188 文件，0 违例）、提交/推送前 `SAFETY_GATE: PASS`、
-  bundle = `review/review_bundle_cda1b88.zip`（base `4e74f6a`，221 文件含本审计，
+  bundle = `review/review_bundle_cda1b88.zip`（base `4e74f6a`，223 文件含 DATA-3 + 本审计，
   `MANIFEST_MATCH / SAFETY_SCAN PASS`）—— bundle 是从本地仓库生成的，所以它**已经包含**本轮
   全部工件，即使 push 还没成功。
 
