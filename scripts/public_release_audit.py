@@ -8,7 +8,9 @@ mutates, never pushes, never changes visibility.
 A clean local history is not enough: after a metadata rewrite plus force-push GitHub can
 keep serving the superseded commit objects by SHA, and their author/committer fields are
 exactly the address that was removed locally. Every superseded SHA must come back absent
-before the repository is exposed.
+before the repository is exposed. Once it is exposed anyway -- as the owner chose on
+2026-10-05 -- this gate keeps reporting that same FAIL, so the exposure stays on the
+books instead of becoming invisible the moment visibility changes.
 
     python scripts/public_release_audit.py            # report
     python scripts/public_release_audit.py --quiet    # only the verdict lines
@@ -333,6 +335,13 @@ def main():
     say("== superseded: %d rewritten commits, %d still served, %d phone-shaped email "
         "fields on the server, %d/%d served trees match the clean history"
         % (len(OLD_REWRITTEN_SHAS), served, remote_phone, trees_clean, served))
+    if visibility == "PUBLIC" and served:
+        say("   NOTE the repository is ALREADY PUBLIC while these objects are readable by "
+            "SHA. That is the owner's explicit decision (2026-10-05), not an unexamined "
+            "leak. This gate still prints FAIL -- the exposure is real and this line is "
+            "the tracker for clearing it, not a stamp. Re-running to PASS is the "
+            "remaining work; flipping back to PRIVATE would not undo it (GitHub keeps "
+            "public history data accessible after a visibility downgrade).")
     if served:
         problems.append("%d superseded commit objects are still served by the remote; "
                         "making the repository PUBLIC would make them anonymously "

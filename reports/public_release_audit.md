@@ -1,16 +1,17 @@
-# Pre-public release audit (Part E evidence)
-
-Generated against the repository in this state, then read together with the machine
-transcript `results/public_release_audit.txt`, which names the branch and SHA it audited
-in its own `AUDITED_BRANCH` / `AUDITED_HEAD` lines (so this document does not have to
-guess its own commit hash):
+# Pre-public release audit (Part E evidence, and what actually happened)
 
 | item | value |
 |---|---|
 | repository | `LINboss666/microled-ic-ai-lab` |
-| remote `main` | `11446f5c26730416692ec79615cf86e11aa76dc5` |
-| visibility at audit time | `PRIVATE` |
+| remote `main` (default branch) | `11446f5c26730416692ec79615cf86e11aa76dc5` |
+| `poc/c2mos-dff` (all Phase-4 work) | `45c7254aa2a4b4d05bef1faf1e87792b7843a891` |
+| audit before the flip | `PUBLIC_RELEASE_SAFETY_GATE: FAIL` (transcript below) |
+| visibility now | `PUBLIC` -- by the owner's explicit instruction, with the exposure below acknowledged |
 | audit command | `python scripts/public_release_audit.py` |
+
+Read the two parts of this document in order: the audit findings stand on their own, and
+the last section records the decision that overrode the gate plus what the anonymous
+re-check then saw.
 
 ## What passed
 
@@ -22,7 +23,7 @@ PDK_TRACKED_FILES = 0
 CREDENTIAL_TRACKED_FILES = 0
 PRIVATE_KEYS_TRACKED_FILES = 0
 VENDOR_MODEL_TRACKED_FILES = 0
-PHONE_EMAIL_OCCURRENCES = 0        # local history: 11 commits, author+committer
+PHONE_EMAIL_OCCURRENCES = 0        # reachable history on both branches, author+committer
 forbidden_names_in_tracked = 0     # all carry the GitHub noreply address
 SUPERSEDED_COMMITS_SERVED_BY_REMOTE = 9   # <- the blocker, see below
 SUPERSEDED_TREES_MATCHING_CLEAN_HISTORY = 9/9
@@ -85,60 +86,93 @@ SHA:
 Each of those 9 responses carries the phone-number-shaped address in both the `author`
 and the `committer` field (18 fields total). One object, `7ba5eb70`, is already gone, so
 the server does drop them -- on its own schedule, which is not observable from here.
-While the repository is `PRIVATE` those responses require authentication, so nothing is
-exposed today. The moment visibility becomes `PUBLIC`, the same endpoints and
-`.../commit/<old-sha>` web pages become anonymously readable by anyone who knows or
-guesses a SHA, which is exactly the data the rewrite was meant to remove.
+While the repository is `PRIVATE` those responses require authentication, so the gate's
+verdict at that moment was:
 
-Consequence: **Part F was not executed. The repository stays `PRIVATE`.**
-`PUBLIC RELEASE BLOCKED` is the honest verdict for this round, and
-"PUBLIC_RELEASE_SAFETY_GATE: PASS" was not manufactured by relaxing a check.
+> **Part F was not executed, the repository stayed `PRIVATE`, and
+> `PUBLIC_RELEASE_SAFETY_GATE: FAIL` was reported rather than manufactured away by
+> relaxing a check.**
 
-## Options (each needs an explicit decision)
+## The decision that overrode the gate (2026-10-05)
 
-1. **Wait and re-audit.** GitHub's own garbage collection eventually removes objects
-   that no ref points at; `7ba5eb70` already disappeared. Re-run
-   `python scripts/public_release_audit.py` until `SUPERSEDED_COMMITS_SERVED_BY_REMOTE = 0`,
-   then flip. Nothing destructive, timing unknown.
-2. **Publish from a fresh repository.** Build a new repo from
-   `git bundle`/`git archive` of the current clean history, so its object network has
-   never contained the pre-rewrite commits, and make that one public. Non-destructive,
-   but the public URL changes from `microled-ic-ai-lab`.
-3. **Delete and recreate under the same name.** Gives the same clean object network as
-   option 2 with the original URL, but destroys the existing private repository.
-   Deleted-repository data can linger server-side, so this is not a guaranteed purge.
-4. **GitHub Support.** Ask for removal of the dangling objects for this repository.
-   Out-of-band; no timeline we can verify from here.
+After that verdict the owner was shown the exact exposure -- 9 unreachable commit objects
+whose author/committer fields still hold the phone-number address, readable by SHA -- and
+instructed to publish anyway, deferring the address problem to themselves. So
+`gh repo edit --visibility public --accept-visibility-change-consequences` was run, and
+the state is now:
 
-Option 1 is the only one that requires no irreversible action, so it is the default
-position until told otherwise.
+```
+REPOSITORY_VISIBILITY = PUBLIC        (gh: visibility=PUBLIC; anonymous GET /repos -> 200,
+                                       private=false, forks=0, watchers=0)
+```
 
-## Part G is scripted, and deliberately not run
+Two things follow, and both are recorded rather than smoothed over:
 
-`scripts/anon_release_postcheck.py` is the post-public anonymous review: it fetches the
-repository the way a stranger does -- no `gh`, no token, no `Authorization` header -- and
-checks visibility, branch list, every commit's author/committer fields, the superseded
-SHA list again (this time without credentials), and the whole tree in one tarball request
-against the same deny rules the commit gate uses. Its verdict is
-`PUBLIC_RELEASE_POSTCHECK: PASS / FAIL / BLOCKED_NOT_PUBLIC`.
+* the gate **still reports FAIL** and the script says so out loud (`NOTE the repository is
+  ALREADY PUBLIC ...`). Clearing `SUPERSEDED_COMMITS_SERVED_BY_REMOTE` remains open work,
+  tracked by re-running the audit, not a closed item.
+* changing visibility back would not undo it: GitHub's own visibility-change warning says
+  public history data can stay accessible afterwards. So the routes below are about
+  *removing* the objects, not about re-hiding the repository.
 
-Both of its non-trivial paths were exercised this round:
+## Routes that would clear the exposure
 
-* against this repository while it is still private it prints
-  `BLOCKED_NOT_PUBLIC` (exit 3) rather than pretending it checked, and
-* against an arbitrary public repository (`POSTCHECK_REPO=octocat/Hello-World master`) it
-  read visibility/branches/commits, downloaded and scanned the tarball (1 file, 0 rule
-  hits), probed all ten superseded SHAs (0 readable) and then correctly **failed**
-  because that repo's commit identities are not the noreply shape -- proof the scan can
-  both pass and refuse.
+1. **Wait and re-audit.** GitHub's garbage collection eventually removes objects no ref
+   points at; `7ba5eb70` already disappeared. Re-run the audit until
+   `SUPERSEDED_COMMITS_SERVED_BY_REMOTE = 0`. Nothing destructive, timing unknown.
+2. **Publish from a fresh repository.** Build a new repo from `git bundle`/`git archive`
+   of the clean history, so its object network never contained the pre-rewrite commits,
+   and point people there. Non-destructive, but the URL changes.
+3. **Delete and recreate under the same name.** Same clean object network with the
+   original URL, but destroys the current repository; deleted-repository data can linger
+   server-side, so this is not a purge one can verify from here.
+4. **GitHub Support.** Ask for removal of the unreachable objects. Out-of-band, no
+   verifiable timeline.
 
-It stays unrun against this repo until visibility actually changes.
+## Part G: the anonymous re-check, as run after the flip
+
+`scripts/anon_release_postcheck.py` reviews the repository the way a stranger does -- no
+`gh`, no token, no `Authorization` header -- over visibility, branch list, every commit's
+author/committer fields, the superseded SHA list again, and the whole tree in one tarball
+request (the REST API would need ~150 calls and anonymous limits are 60/hour).
+
+Run anonymously against both branches after publishing:
+
+| anonymous observation | `main` | `poc/c2mos-dff` |
+|---|---|---|
+| visibility / private | `public` / `false` | same repository |
+| branches a stranger can list | `main@11446f5c`, `poc/c2mos-dff@45c7254a` | same |
+| commit identity fields not the noreply shape | 0 | 0 |
+| tree files fetched | 58 | 157 |
+| forbidden paths / content-or-secret rule hits | 0 / 0 | 0 / 0 |
+| superseded commits readable without credentials | **9 of 10** | **9 of 10** |
+
+```
+ANONYMOUS_BAD_IDENTITY_FIELDS = 0
+ANONYMOUS_FORBIDDEN_PATHS = 0
+ANONYMOUS_CONTENT_RULE_HITS = 0
+ANONYMOUS_SUPERSEEDED_READABLE = 9
+PUBLIC_RELEASE_POSTCHECK: FAIL      # solely the 9 objects above; everything else is clean
+```
+
+No PDK file, model card, deck, credential, private key, local privacy path or raw PSF
+database is reachable anonymously -- the tree scan covers all 157 files that way, and it
+is the same rule set the commit gate uses. The single FAIL reason is the accepted
+exposure, and its counter is the number to watch down to 0.
+
+Before the flip, the same script's two other paths had already been exercised: against
+this repository while private it prints `BLOCKED_NOT_PUBLIC` (exit 3) instead of pretending
+it checked, and against an unrelated public repository (`POSTCHECK_REPO=octocat/Hello-World
+master`) it read branches/commits, scanned the tarball, probed all ten SHAs and then
+correctly **refused** because that repository's commit identities are not the noreply shape.
 
 ## Reproduce
 
 ```
 python scripts/public_release_audit.py            # full report, exit 1 = gate FAIL
 python scripts/public_release_audit.py --quiet    # verdict lines only
+python scripts/anon_release_postcheck.py main     # anonymous view of the default branch
+python scripts/anon_release_postcheck.py poc/c2mos-dff   # anonymous view of the work branch
 ```
 
 The superseded SHA list lives in `OLD_REWRITTEN_SHAS` inside the script; it was
