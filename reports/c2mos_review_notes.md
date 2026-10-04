@@ -66,6 +66,13 @@ Monolithic Display Array*, Micromachines 16(2) 207, 2025, DOI 10.3390/mi16020207
 6. **完全没有覆盖真实负载条件**：15 µA 像素电流、列电极实际 RC、VLED 域都不在这个 POC 里，
    50 fF 只是栅负载占位。
 7. 未做 schematic/layout/DRC/LVS；未做 1024 位以上的链；未做功耗与面积估计。
+8. **转公开（Part F）被 Part E 挡住了。** 元数据重写 + `--force-with-lease` 之后，本地历史里
+   手机号形式邮箱计数为 0、远端 ref 也逐支一致，但 GitHub 仍按 SHA 返回 10 个被替换 commit 里的
+   9 个，其 `author/committer` 字段还带着那个地址（`REMOTE_PHONE_EMAIL_FIELDS = 18`）。机检确认这
+   9 个的 tree 与干净历史逐一对应（`SUPERSEDED_COMMITS_SERVED_BY_REMOTE = 9`、
+   `SUPERSEDED_TREES_MATCHING_CLEAN_HISTORY = 9/9`），所以暴露面只有身份字段、不含文件内容；
+   即便如此仓库仍保持 PRIVATE，`PUBLIC RELEASE BLOCKED`。证据与四条处置选项见
+   `reports/public_release_audit.md` 与 `results/public_release_audit.txt`。
 
 ## Questions for reviewer（本轮最不确定的 3 点）
 
