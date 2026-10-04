@@ -12,6 +12,7 @@ Exit 0 = PUBLIC_RELEASE_POSTCHECK: PASS. A still-private repository reports
 BLOCKED_NOT_PUBLIC rather than pretending the check ran.
 """
 
+import base64
 import io
 import json
 import os
@@ -177,11 +178,65 @@ def main():
         problems.append("%d anonymously reachable files trip the deny/secret rules"
                         % len(content_hits))
 
+    # A reviewer must be able to open the code on the public site, not only download a
+    # tarball: check the required file categories exist, then read the headline files
+    # through the contents API and compare their bytes with what the tarball carried.
+    required = {
+        "cell netlist": ["spectre/C2MOS_DFF.scs"],
+        "single-DFF testbench": ["spectre/generated/run_ff1"],
+        "3-stage testbench": ["spectre/generated/run_shift3"],
+        "edge checker": ["scripts/psf_check.awk"],
+        "checker unit tests": ["scripts/test_psf_check.py"],
+        "testbench preflight": ["scripts/tb_preflight.sh"],
+        "regression scripts": ["scripts/c2mos_check.sh", "scripts/c2mos_margin.sh",
+                               "scripts/regression_compare.py"],
+        "PVT probe": ["scripts/pvt_probe.sh"],
+        "provenance checker": ["scripts/provenance_check.py"],
+        "reports": ["reports/c2mos_validation_report.md", "reports/public_release_audit.md",
+                    "reports/c2mos_review_notes.md"],
+    }
+    got = {rel: data for rel, data in files}
+    missing = []
+    for label, paths in sorted(required.items()):
+        hit = [p for p in paths if any(g.startswith(p) or g == p for g in got)]
+        print("== %-22s %s" % (label, ", ".join(hit) if hit else "MISSING"))
+        if not hit:
+            missing.append(label)
+    if missing:
+        problems.append("%d review-critical file group(s) are not reachable anonymously: %s"
+                        % (len(missing), ", ".join(missing)))
+
+    bad_bytes = []
+    for rel in [r for r in ("spectre/C2MOS_DFF.scs", "scripts/psf_check.awk",
+                            "scripts/tb_preflight.sh", "reports/c2mos_validation_report.md")
+                if r in got]:
+        code, obj = json_get(api + "/contents/" + rel + "?ref=" + branch)
+        if code != 200:
+            bad_bytes.append("%s (http=%d)" % (rel, code))
+            continue
+        try:
+            served = base64.b64decode((obj.get("content") or "").encode())
+        except (TypeError, ValueError):
+            bad_bytes.append("%s (content not base64)" % rel)
+            continue
+        if served != got[rel]:
+            bad_bytes.append("%s (bytes differ from the tarball)" % rel)
+    print("== headline files re-read through /contents: %d checked, %d mismatched"
+          % (len([r for r in ("spectre/C2MOS_DFF.scs", "scripts/psf_check.awk",
+                              "scripts/tb_preflight.sh",
+                              "reports/c2mos_validation_report.md") if r in got]),
+             len(bad_bytes)))
+    if bad_bytes:
+        problems.append("public URL content does not match the shipped tree: "
+                        + "; ".join(bad_bytes))
+
     print("")
     print("ANONYMOUS_SUPERSEEDED_READABLE = %d" % still)
     print("ANONYMOUS_BAD_IDENTITY_FIELDS = %d" % bad_ids)
     print("ANONYMOUS_FORBIDDEN_PATHS = %d" % len(path_hits))
     print("ANONYMOUS_CONTENT_RULE_HITS = %d" % len(content_hits))
+    print("ANONYMOUS_REVIEW_FILE_GROUPS_MISSING = %d" % len(missing))
+    print("ANONYMOUS_CONTENT_MISMATCHES = %d" % len(bad_bytes))
     for p in problems:
         print("PROBLEM " + p)
     if problems:

@@ -13,6 +13,30 @@ Read the two parts of this document in order: the audit findings stand on their 
 the last section records the decision that overrode the gate plus what the anonymous
 re-check then saw.
 
+## Status, kept in two separate dimensions
+
+`scripts/public_release_audit.py` reads these tokens back out of this file, so they are
+the machine-visible statement of the repository's state:
+
+```
+SOURCE_RELEASE_SAFETY      = PASS
+IDENTITY_PRIVACY_CLEANUP   = PENDING_OWNER_ACCEPTED
+```
+
+`SOURCE_RELEASE_SAFETY` is the design-material question: PDK files, vendor model cards,
+Calibre decks, credentials, private keys and raw PSF databases -- none of them are
+tracked, in history, in a dangling object, or reachable anonymously.
+`IDENTITY_PRIVACY_CLEANUP` is the person question, and it is open: 9 unreachable commit
+objects still carry the old address in their author/committer fields. The original gate
+line `PUBLIC_RELEASE_SAFETY_GATE: FAIL` and the original
+`PUBLIC_RELEASE_POSTCHECK: FAIL` stay FAIL while that is true, on purpose.
+
+The circuit's own status is unaffected by either line:
+
+```
+C2MOS design status = POC FUNCTIONAL IMPLEMENTATION / WAITING FOR SECOND INDEPENDENT SOURCE REVIEW
+```
+
 ## What passed
 
 Every local and content-side check is green, and the counters the workflow contract

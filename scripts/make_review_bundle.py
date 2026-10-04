@@ -37,6 +37,7 @@ import zipfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import repo_safety_rules as R  # noqa: E402
+from netlist_stats import group_of  # noqa: E402  (same classifier the count check uses)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -125,8 +126,234 @@ def phase_table(rows):
 
 
 # ------------------------------------------------------------------ README -----
-def build_readme(base, head, files, notes_text, results_bundles):
+
+
+def supply_nets(rows):
+    """Which net is the positive rail and which is ground, inferred from the devices
+    themselves (PMOS source/body tie high, NMOS source/body tie low). No net name is
+    assumed, so renaming vdd/vss would not silently change this analysis."""
+    hi = [r["s"] for r in rows if r["model"].startswith("p")] + \
+         [r["b"] for r in rows if r["model"].startswith("p")]
+    lo = [r["s"] for r in rows if not r["model"].startswith("p")] + \
+         [r["b"] for r in rows if not r["model"].startswith("p")]
+    if not hi or not lo:
+        return None, None
+    return max(set(hi), key=hi.count), max(set(lo), key=lo.count)
+
+
+def clock_complements(rows, ports, hi, lo):
+    """Internal nets that a clock port inverts: driven only by devices gated by that port,
+    and neither a subckt port nor a rail."""
+    internal = set(r["d"] for r in rows) - set(ports) - {hi, lo}
+    out = {}
+    for p in ports:
+        if not p.lower().startswith(("clk", "ck")):
+            continue
+        for n in sorted(internal):
+            drivers = [r for r in rows if r["d"] == n]
+            if drivers and all(r["g"] == p for r in drivers):
+                out[p] = n
+                break
+    return out
+
+
+def gate_value(g, phase, clkname, comp):
+    """Logic level a net carries at this phase; None when the net is not a clock net."""
+    if g == clkname:
+        return phase == 1
+    if g == comp.get(clkname):
+        return phase == 0
+    return None
+
+
+def conducts(r, phase, clkname, comp):
+    """Whether this device is ON at this phase. Conduction is polarity-dependent: a PMOS
+    is ON with its gate low, an NMOS with its gate high -- confusing the gate's level with
+    the switch state is exactly how a table like this one goes silently wrong."""
+    val = gate_value(r["g"], phase, clkname, comp)
+    if val is None:
+        return None
+    return (not val) if r["model"].startswith("p") else val
+
+
+def paths_to_rail(rows, start, hi, lo, max_depth=5):
+    """Series paths from `start` to a rail, as [(inst, from_net, to_net), ...]."""
+    adj = {}
+    for r in rows:
+        for a, b in ((r["d"], r["s"]), (r["s"], r["d"]), (r["d"], r["b"]), (r["b"], r["d"])):
+            adj.setdefault(a, []).append((b, r["inst"]))
+    found, stack = [], [(start, [], 0)]
+    while stack:
+        node, seq, depth = stack.pop()
+        if depth >= max_depth:
+            continue
+        for nxt, inst in adj.get(node, []):
+            if any(inst == s[0] for s in seq):
+                continue
+            if nxt in (hi, lo):
+                found.append(seq + [(inst, node, nxt)])
+            else:
+                stack.append((nxt, seq + [(inst, node, nxt)], depth + 1))
+    return found
+
+
+def ascii_stacks(rows, nodes, hi, lo):
+    """Topology text straight out of the parsed devices -- no hand-drawing step where a
+    transcription error could hide."""
+    by = {r["inst"]: r for r in rows}
+    out = []
+    for node in nodes:
+        out.append("")
+        out.append("```")
+        for rail, tag in ((hi, "up  "), (lo, "down")):
+            seen = set()
+            for path in sorted(paths_to_rail(rows, node, hi, lo), key=lambda p: [s[0] for s in p]):
+                if path[-1][2] != rail:
+                    continue
+                line = "%s " % rail + " ".join(
+                    "[%s %s g=%s]" % (i, by[i]["model"], by[i]["g"]) for i, _a, _b in path
+                ) + " %s" % node
+                if line in seen:
+                    continue
+                seen.add(line)
+                out.append("  %s %s" % (tag, line))
+        out.append("```")
+    return "\n".join(out)
+
+
+def clock_behaviour(rows, ports, hi, lo):
+    """Per storage node, whether a data path to each rail is live at clk=0 and at clk=1.
+
+    Nodes come from the keeper devices' own gates, the rails from the device terminals, and
+    transparent/hold falls out of which switches are on. Nothing here is typed in from a
+    description, so a topology change moves this table instead of leaving prose behind.
+    """
+    comp = clock_complements(rows, ports, hi, lo)
+    clks = [p for p in ports if p in comp]
+    keep = [r["g"] for r in rows if re.search(r"k[1-4]$", r["inst"], re.I)]
+    nodes = [n for n in dict.fromkeys(keep) if n not in (hi, lo)]
+    if not clks or not nodes or hi is None:
+        return ["_(clock phases or storage nodes could not be derived from this netlist; "
+                "read the device table instead)_"], []
+    clk = clks[0]
+    by = {r["inst"]: r for r in rows}
+    keep_nodes = nodes
+    # A data stack is a path to a rail that contains at least one clock-gated device; a
+    # keeper path has none. That distinction is read off the netlist, not from names.
+    origins = [p for p in ports if p not in (clk, hi, lo) and p not in keep_nodes
+               and not p.lower().startswith(("clk", "ck", "vdd", "vss"))]
+    clocked = {i for i, r in by.items() if gate_value(r["g"], 0, clk, comp) is not None}
+    node_stacks, node_ck = {}, {}
+    for node in keep_nodes:
+        stacks = [p for p in paths_to_rail(rows, node, hi, lo)
+                  if any(i in clocked for i, _a, _b in p)]
+        node_stacks[node] = stacks
+        node_ck[node] = sorted({i for p in stacks for i, _a, _b in p if i in clocked})
+
+    def live(node, phase):
+        return [any(p[-1][2] == rail and all(conducts(by[i], phase, clk, comp) is not False
+                                             for i, _a, _b in p)
+                  for p in node_stacks[node]) for rail in (hi, lo)]
+
+    def on_list(node, phase):
+        return ", ".join("`%s`" % i for i in node_ck[node]
+                         if conducts(by[i], phase, clk, comp)) or "none"
+
+    def role_of(node, phase):
+        if not node_stacks[node]:
+            return "no data stack"
+        l = live(node, phase)
+        return ("transparent" if all(l) else ("partly live" if any(l) else "hold"))
+
+    lines = ["| storage node | held by | clocked switches ON at `%s=0` | at `%s=1` | derived role |"
+             % (clk, clk), "|---|---|---|---|---|"]
+    roles = {}
+    for node in keep_nodes:
+        holders = ", ".join("`%s`" % h for h in sorted(
+            {group_of(r["inst"]) for r in rows
+             if r["g"] == node and re.search(r"k[1-4]$", r["inst"], re.I)}))
+        if not node_stacks[node]:
+            lines.append("| `%s` | %s | keeper path only | keeper path only | keeper copy of "
+                         "the other node, not a capture point |" % (node, holders))
+            continue
+        r0, r1 = role_of(node, 0), role_of(node, 1)
+        roles[node] = (r0, r1)
+        lines.append("| `%s` | %s | ON: %s | ON: %s | `%s=0` %s / `%s=1` %s |"
+                     % (node, holders, on_list(node, 0), on_list(node, 1),
+                        clk, r0, clk, r1))
+
+    links = {n: sorted({r["g"] for r in rows if r["d"] == n and r["inst"] not in clocked
+                        and r["g"] not in (clk, hi, lo)}) for n in keep_nodes}
+    lines.append("")
+    lines.append("Gate chain, where each hop is the stack whose non-clocked gate is the "
+                 "previous net: " + "; ".join(
+                     "`%s` <- %s" % (n, ", ".join("`%s`" % g for g in links[n]) or "(none)")
+                     for n in keep_nodes) + ".")
+    for port in origins:
+        frontier, hops, reached = {port}, 0, {}
+        while hops < 4:
+            nxt = {n for n in keep_nodes if frontier & set(links[n])}
+            for n in nxt:
+                reached.setdefault(n, hops + 1)
+            frontier, hops = nxt, hops + 1
+        for node in sorted(reached, key=lambda x: (reached[x], x)):
+            lines.append("- `%s` -> `%s`: %d inverting stack stage(s), so `%s` is **%s** with "
+                         "respect to `%s` (counted from the parsed gates)."
+                         % (port, node, reached[node], node,
+                            "non-inverting" if reached[node] % 2 == 0 else "inverting", port))
+
+    masters = [n for n, r in roles.items() if r[0] == "transparent" and r[1] == "hold"]
+    slaves = [n for n, r in roles.items() if r[0] == "hold" and r[1] == "transparent"]
+    if masters and slaves:
+        lines.append("")
+        lines.append("Derived edge behaviour: `%s` (the %s node) is transparent only while "
+                     "`%s=0` and `%s` (the %s node) only while `%s=1`, so a **rising** edge on "
+                     "`%s` hands whatever `%s` was holding to `%s` -- single-phase posedge "
+                     "capture, read off the switch states rather than asserted. While one node "
+                     "is transparent the other has no conducting data path, so there is no "
+                     "same-phase %s-to-output race to hide in."
+                     % (masters[0], holders_of(rows, masters[0]), clk, slaves[0],
+                        holders_of(rows, slaves[0]), clk, clk, masters[0], slaves[0],
+                        origins[0] if origins else "input"))
+        lines.append("")
+        lines.append("TOPOLOGY_DERIVATION: PASS (master node %s, slave node %s)"
+                     % (",".join(masters), ",".join(slaves)))
+    elif roles:
+        lines.append("")
+        lines.append("_The two-latch pattern could not be recognised from the derived roles; "
+                     "treat the table above as the finding and this round's prose as void._")
+        lines.append("")
+        lines.append("TOPOLOGY_DERIVATION: UNRECOGNISED_PATTERN")
+    return lines, keep_nodes
+
+
+def holders_of(rows, node):
+    return "/".join(sorted({group_of(r["inst"]).split()[0] for r in rows
+                            if r["g"] == node and re.search(r"k[1-4]$", r["inst"], re.I)})) or "keeper"
+
+
+TB_RX = [
+    ("rail source", re.compile(r"^\s*(\w+)\s*\(\s*(\S+)\s+(\S+)\s*\)\s*vsource\b[^\n]*?\bdc=(\S+)", re.M)),
+    ("pulse source", re.compile(r"^\s*(\w+)\s*\(\s*(\S+)\s+(\S+)\s*\)\s*vsource\s+type=pulse[^\n]*", re.M)),
+    ("load capacitor", re.compile(r"^\s*(\w+)\s*\(\s*(\S+)\s+(\S+)\s*\)\s*capacitor\s+c=(\S+)", re.M)),
+    ("transient", re.compile(r"^\s*tran\b[^\n]*", re.M)),
+    ("section (corner)", re.compile(r"section=(\w+)")),
+    ("temperature", re.compile(r"^\s*temp\s*=\s*(\S+)", re.M | re.I)),
+]
+
+
+def tb_condition_lines(rel, text):
+    out = ["- `%s`" % rel]
+    for label, rx in TB_RX:
+        for m in list(rx.finditer(text))[:3]:
+            body = " ".join(x for x in m.groups() if x) or m.group(0)
+            out.append("      %s: %s" % (label, body.strip()))
+    return out
+
+
+def build_readme(base, head, files, notes_text, results_bundles, gate_out=""):
     short_base, short_head = base[:7], head[:7]
+
     parts = []
     A = parts.append
     A("# Review bundle %s..%s" % (short_base, short_head))
@@ -145,6 +372,29 @@ def build_readme(base, head, files, notes_text, results_bundles):
         git("log", "--oneline", "%s..%s" % (base, head)).strip().splitlines()))
     A("| files in bundle | %d |" % len(files))
     A("")
+    # The reviewer reads the code from GitHub, not from this zip: the zip is a snapshot,
+    # the repository is the live source. Paths come from remote.origin.url, never typed in.
+    origin = git("config", "--get", "remote.origin.url").strip()
+    m = re.search(r"github\.com[:/]+([^/]+)/([^/]+?)(?:\.git)?/?$", origin, re.I)
+    branch = git("rev-parse", "--abbrev-ref", "HEAD").strip()
+    if m:
+        base_url = "https://github.com/%s/%s/blob/%s" % (m.group(1), m.group(2), branch)
+        key = [rel for rel, _ in files
+               if re.search(r"(C2MOS_DFF\.scs|run_(ff1|shift3)[^/]*\.scs|psf_check\.awk|"
+                            r"test_psf_check\.py|tb_preflight\.sh|c2mos_check\.sh|"
+                            r"c2mos_margin\.sh|pvt_probe\.sh|provenance_check\.py|"
+                            r"netlist_stats\.py|public_release_audit\.md|"
+                            r"c2mos_validation_report\.md)$", rel)]
+        A("Readable straight from the public repository (`%s`), no download needed:" % branch)
+        A("")
+        for rel in key:
+            A("- <%s/%s>" % (base_url, rel))
+        A("")
+        A("`scripts/run_spectre.sh` needs the PDK path from an untracked `spectre/pdk_local.env`, "
+          "so the numbers here are reproducible only where that PDK exists -- the code, the "
+          "checkers and the extracted results are readable anywhere.")
+        A("")
+
     A("Read the diff first: `git_diff.patch`. Do not grade this round from the")
     A("prose alone -- the netlists under `source/` and the numbers under `results/`")
     A("are what the claims rest on.")
@@ -179,8 +429,64 @@ def build_readme(base, head, files, notes_text, results_bundles):
         A("")
         A(phase_table(rows))
         A("")
+        hi, lo = supply_nets(rows)
+        behaviour, storage_nodes = clock_behaviour(rows, ports, hi, lo)
+        A("### Clock behaviour, derived from the switch states")
+        A("")
+        A("\n".join(behaviour))
+        A("")
+        if storage_nodes:
+            A("### ASCII topology (generated from the same parse)")
+            A("")
+            A(ascii_stacks(rows, storage_nodes, hi, lo))
+            A("")
         A("Model parameters of the PDK are deliberately not reproduced here.")
         A("")
+
+    A("## Testbench conditions, quoted from the files in this bundle")
+    A("")
+    A("Every value below is copied out of the netlist text by rule, not retyped. All of it "
+      "is `POC_ASSUMPTION`: the assigned process fixes the 1.8 V core device family, but the "
+      "stimulus, the 50 fF load, the clock period and the slew are this POC's choices and "
+      "represent no specification. The rail-to-node-0 grounding that the preflight asserts "
+      "is visible in the `rail source` lines.")
+    A("")
+    shown = 0
+    for rel, _cat in files:
+        if not rel.endswith(".scs") or "/generated/" not in "/" + rel:
+            continue
+        if not re.search(r"run_(ff1|shift3)", rel):
+            continue
+        body = read_blob(rel, head)
+        if body is None:
+            continue
+        A("\n".join(tb_condition_lines(rel, body.decode("utf-8", "replace"))))
+        shown += 1
+        if shown >= 4:
+            break
+    A("")
+    A("Margin sweeps (`scripts/c2mos_margin.sh`, results under `results/`) use the same "
+      "stimulus shape with the data edge moved relative to the clock edge; the two slew sets "
+      "are `s1e-9` and `s5e-11`.")
+    A("")
+    A("## Two separate release-safety dimensions")
+    A("")
+    A("Circuit status and repository hygiene are different questions, and the bundle keeps "
+      "them apart so an accepted privacy item cannot read as a design failure:")
+    A("")
+    A("```")
+    for line in gate_out.strip().splitlines():
+        if re.match(r"^(PDK_TRACKED_FILES|CREDENTIAL_TRACKED_FILES|PRIVATE_KEYS_TRACKED_FILES|"
+                    r"VENDOR_MODEL_TRACKED_FILES|SAFETY_GATE)", line.strip()):
+            A(line.strip())
+    A("```")
+    A("")
+    A("Those counters are the content audit: PDK files, vendor model cards, Calibre decks, "
+      "credentials, private keys and raw PSF databases. `reports/public_release_audit.md` "
+      "records the other dimension -- the owner's accepted, still-open identity cleanup "
+      "(superseded commit objects that GitHub keeps serving by SHA). It is not a circuit "
+      "verdict and does not change any number in this bundle.")
+    A("")
     A("## Automatic checks and measured numbers")
     A("")
     for rel in results_bundles["summary_files"]:
@@ -304,7 +610,14 @@ def main():
         manifest.append((name, len(body.encode("utf-8")), sha256(body.encode("utf-8"))))
 
     readme = build_readme(base, head, files, notes_text,
-                          {"netlists": netlists, "summary_files": summary_files})
+                          {"netlists": netlists, "summary_files": summary_files}, gate_out)
+    if any("C2MOS_DFF.scs" in rel for rel, _ in files) and \
+            "TOPOLOGY_DERIVATION: PASS" not in readme:
+        print("BUNDLE: BLOCKED -- the generator parsed the cell but no longer derives one "
+              "master node (transparent while clk=0) and one slave node (transparent while "
+              "clk=1). Either the netlist changed or the derivation broke; shipping a clock "
+              "table the tool cannot justify is the one thing this bundle must not do.")
+        return 1
     with open(os.path.join(stag, "REVIEW_README.md"), "w", encoding="utf-8", newline="\n") as fh:
         fh.write(readme)
     manifest.insert(0, ("REVIEW_README.md", len(readme.encode("utf-8")),

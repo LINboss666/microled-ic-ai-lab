@@ -373,6 +373,23 @@ def main():
     zero = all(counters.get(k) == 0 for k in
                ("PDK_TRACKED_FILES", "CREDENTIAL_TRACKED_FILES",
                 "PRIVATE_KEYS_TRACKED_FILES", "VENDOR_MODEL_TRACKED_FILES"))
+    # Two different questions, printed separately on purpose: whether the repository
+    # leaks design material, and whether it leaks a person's address. The second one is
+    # currently an accepted, open item, and it must not be able to drag the first one
+    # into FAIL (or vice versa) in anything a reviewer reads.
+    source_safety = "PASS" if zero and not bad_names else "FAIL"
+    doc = git("show", "HEAD:reports/public_release_audit.md")
+    accepted = ("IDENTITY_PRIVACY_CLEANUP" in doc and "PENDING_OWNER_ACCEPTED" in doc)
+    if served and accepted and visibility == "PUBLIC":
+        identity = "PENDING_OWNER_ACCEPTED"
+    elif served or remote_phone:
+        identity = "OPEN"
+    else:
+        identity = "CLEAN"
+    print("SOURCE_RELEASE_SAFETY = %s  (PDK / vendor model / deck / credentials / key / raw PSF)"
+          % source_safety)
+    print("IDENTITY_PRIVACY_CLEANUP = %s  (%d superseded commits served, %d email fields)"
+          % (identity, served, remote_phone))
     if problems or not zero:
         print("PUBLIC_RELEASE_SAFETY_GATE: FAIL")
         return 1

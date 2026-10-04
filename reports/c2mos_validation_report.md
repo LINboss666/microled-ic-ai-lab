@@ -20,6 +20,14 @@ TIMING CHARACTERIZATION
   HOLD_CHARACTERIZED               : NO
   FUNCTIONAL PASS 只证明"在 tt/1.8 V/27 C/50 fF/两种边沿下，每沿前进一级且不误触发"，
   不构成 DFF 已被表征。
+
+STATUS OF THIS POC（冻结定义，等第二轮独立源码 review）
+  C2MOS_DESIGN_STATUS : POC FUNCTIONAL IMPLEMENTATION / WAITING FOR SECOND INDEPENDENT SOURCE REVIEW
+  仓库侧两个维度（与电路结论无关，不影响本页任何数值）：
+    SOURCE_RELEASE_SAFETY      : PASS                  （PDK/模型卡/deck/凭据/私钥/raw PSF 未暴露）
+    IDENTITY_PRIVACY_CLEANUP   : PENDING_OWNER_ACCEPTED（旧 commit 对象的身份字段，用户 2026-10-05 决定暂缓）
+  冻结：topology、sizing、reset、BLANK、level shifter、scan 输出级、data driver、schematic、layout
+  —— 在 reviewer 给出 REVIEW DECISION: GO 之前都不动；main 分支保持不 merge（PUBLIC != STABLE）。
 ```
 
 ## 1. 器件计数（A1）

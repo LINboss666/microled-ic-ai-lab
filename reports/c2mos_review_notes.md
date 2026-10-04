@@ -66,26 +66,29 @@ Monolithic Display Array*, Micromachines 16(2) 207, 2025, DOI 10.3390/mi16020207
 6. **完全没有覆盖真实负载条件**：15 µA 像素电流、列电极实际 RC、VLED 域都不在这个 POC 里，
    50 fF 只是栅负载占位。
 7. 未做 schematic/layout/DRC/LVS；未做 1024 位以上的链；未做功耗与面积估计。
-8. **转公开（Part F）被 Part E 挡住了。** 元数据重写 + `--force-with-lease` 之后，本地历史里
-   手机号形式邮箱计数为 0、远端 ref 也逐支一致，但 GitHub 仍按 SHA 返回 10 个被替换 commit 里的
-   9 个，其 `author/committer` 字段还带着那个地址（`REMOTE_PHONE_EMAIL_FIELDS = 18`）。机检确认这
-   9 个的 tree 与干净历史逐一对应（`SUPERSEDED_COMMITS_SERVED_BY_REMOTE = 9`、
-   `SUPERSEDED_TREES_MATCHING_CLEAN_HISTORY = 9/9`），所以暴露面只有身份字段、不含文件内容；
-   即便如此仓库仍保持 PRIVATE，`PUBLIC RELEASE BLOCKED`。证据与四条处置选项见
-   `reports/public_release_audit.md` 与 `results/public_release_audit.txt`。
+8. **仓库已 PUBLIC，身份清理仍开放（不是电路结论）。** `SOURCE_RELEASE_SAFETY = PASS`（PDK / 模型卡 /
+   deck / 凭据 / 私钥 / raw PSF 都取不到，匿名整树 157 文件 0 命中），但 10 个被元数据重写替换的 commit 里
+   仍有 9 个被 GitHub 按 SHA 服务，其 author/committer 字段带着旧地址 →
+   `IDENTITY_PRIVACY_CLEANUP = PENDING_OWNER_ACCEPTED`（用户 2026-10-05 明确接受并要求暂缓处理）。
+   原始 `PUBLIC_RELEASE_SAFETY_GATE` 与 `PUBLIC_RELEASE_POSTCHECK` 在这一项清零前继续报 FAIL，我没有把它们改成绿。
+   这条不影响任何数值，也不构成 C²MOS 的 FAIL。详见 `reports/public_release_audit.md`。
 
-## Questions for reviewer（本轮最不确定的 3 点）
+## Questions for reviewer（本轮要 reviewer 明确回答的 3 点）
 
-1. **单相 C²MOS 用在扫描驱动器列选择链上是否合适？** 这里没有时钟非交叠，靠的是"C²MOS 在不
-   有效相位两条堆叠都断开轨"。在 9.765625 µs 列周期里，一根扫描线要保持整列时间；我测的保持窗口
-   只有 100 ns（T=200 ns 时钟）。是否要求我按列周期量级（µs）重做保持/漏电验证，并补 ss/ff 与
-   高 corner 温度，才允许声称可保持？
-2. **priming 无复位是否可接受？** 现在链的初态靠"前几个沿把 DIN=0 移进去"来确定。真实扫描驱动器
-   通常有复位/消隐来保证换列安全。如果课程要求上电确定态，我应该加异步复位（会改 cell），
-   还是保持无复位 + priming 周期并在文档里写清楚？
-3. **判据阈值与"full swing"的定义**：我用了 >1.7 V / <0.1 V（VDD=1.8 V）与 50% 跨点测延迟。
-   审核方是否要求改成 (VDD−Vth) 之类的静态噪声容限口径，或者补充噪声容限/最小噪声裕量测量？
-   以及：断言窗口的时间余量（早窗 +0.20T、晚窗 +0.60T）是否偏松？
+1. **18 MOS 的 C²MOS 拓扑是否存在结构性问题？** 判据请对着 `spectre/C2MOS_DFF.scs` 和 bundle 里由它现场
+   解析出的器件表、ASCII 堆叠与"哪个相位哪几只 clock 管 ON"的推导表（`TOPOLOGY_DERIVATION: PASS`，
+   master=`m`、slave=`q`）。特别是：主/从各自"数据堆叠 + keeper"的两两组合，在你看来是否构成可接受的
+   单相 C²MOS，还是有我没看到的结构缺陷（例如 keeper 与数据堆叠共用节点导致的写/保持冲突）。
+2. **单元内部自生成的 `clkb`（那个反相器）是否需要在下一阶段针对 race/skew 做更严格验证？** 现在每颗 FF
+   自己产生互补相，实测没有同沿穿透（三工艺角各 40/40，`regression_compare` 前后一致）。要不要补
+   clock 到 `clkb` 的延时分量、跨 FF 的相位错位、以及沿速率更陡时的穿透扫描，才算可以进 schematic？
+3. **当前 checker + preflight 的强度是否足以批准进入 Virtuoso 原理图阶段？** 依据：合成波形判据用例
+   （`CROSSING_CHECKER_UNIT_TEST`，9 例）、rail/0 参考预检加必须 FAIL 的负样本（`TESTBENCH_PREFLIGHT`）、
+   器件计数与来源标签机检。如果你觉得还缺某一类自动检查（例如断言窗口收紧、跨 corner 判据、
+   或把 `clk->Q` 提取改成阈值到阈值的静态噪声容限口径），请直接点名要哪一条。
+
+上一轮遗留、仍未答的三点（不阻塞本轮，但会影响下一阶段）：是否按列周期量级（µs）重做保持/漏电并补
+高低温 corner；无复位 + priming 是否可接受；full-swing 判据口径与断言窗口余量是否偏松。
 
 ## 复现要点
 
