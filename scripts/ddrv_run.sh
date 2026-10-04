@@ -25,6 +25,24 @@ RSEN="${RSEN:-1e4}"
 TARGET="${TARGET:-15e-6}"
 mkdir -p "$GENDIR" "$LOGDIR" "$EVDIR" "$RESDIR"
 
+# ---- how IOUT is observed for this run ------------------------------------------
+# PROBE=iprobe is the only accepted method for a new baseline: the 10k sense resistor
+# drops 150 mV at 15 uA and therefore moves the compliance knee it claims to measure.
+# Its runs go to their own CSV files so a burdened number can never be read as the
+# current baseline; the old files stay untouched as LEGACY_BURDENED_MEASUREMENT evidence.
+PROBE="${PROBE:-rsen}"
+case " ${EXTRA:-} " in *iprobe*) PROBE=iprobe;; esac
+RSEN_GEN=""; RSEN_CHK="--rsen $RSEN"
+if [ "$PROBE" = "iprobe" ]; then
+  PROBE_GEN="--probe iprobe"; PROBE_CHK="--require-probe"
+  DC_CSV="${DC_CSV:-$RESDIR/data_driver_dc_iprobe.csv}"
+  TR_CSV="${TR_CSV:-$RESDIR/data_driver_transient_iprobe.csv}"
+else
+  PROBE_GEN=""; PROBE_CHK=""
+  DC_CSV="${DC_CSV:-$RESDIR/data_driver_dc.csv}"
+  TR_CSV="${TR_CSV:-$RESDIR/data_driver_transient.csv}"
+fi
+
 tag_of() { echo "$1_$2_$3_l$4_w$5_$6"; }   # candidate model corner l w vout
 
 run_deck() {   # $1 = deck path, $2 = tag, $3 = expected vdd, $4 = kind (dc|tran)
@@ -74,10 +92,13 @@ dc_one() {     # candidate model l w corner vmax step
   local cand="$1" model="$2" L="$3" W="$4" corner="${5:-tt}" vmax="${6:-1.8}" step="${7:-0.02}"
   local tag deck psf out
   tag=$(tag_of "$cand" "$model" "$corner" "$L" "$W" "dc")
+  # the probe method belongs in the tag: an unburdened re-run of a deck that already has
+  # legacy evidence must not overwrite it
+  [ "$PROBE" = "iprobe" ] && tag="${tag}_iprobe"
   [ -n "${TAGX:-}" ] && tag="${tag}_${TAGX}"
   deck=$("$PY" "$GEN" --candidate "$cand" --model "$model" --l "$L" --w "$W" \
              --corner "$corner" --vmax "$vmax" --step "$step" --mode dc \
-             ${EXTRA:-} ${TAGX:+--suffix "$TAGX"} --out "$GENDIR")
+             $PROBE_GEN ${EXTRA:-} ${TAGX:+--suffix "$TAGX"} --out "$GENDIR")
   deck=$(echo "$deck" | tail -1)
   [ -f "$deck" ] || { echo "GEN_FAILED $deck"; return 9; }
   # keep the diagnostics visible: run_deck's status lines go to the console, and the data
@@ -88,11 +109,11 @@ dc_one() {     # candidate model l w corner vmax step
     echo "DC_FAIL $tag (no usable data file)"; return 8
   fi
   out="$EVDIR/ddrv_${tag}.txt"
-  # DDRV_CSV_RESET=1 on the first point of a grid, so results/data_driver_dc.csv holds
+  # DDRV_CSV_RESET=1 on the first point of a grid, so the CSV holds
   # exactly this grid instead of a mix of every run since the last reset
-  [ "${DDRV_CSV_RESET:-0}" = "1" ] && rm -f "$RESDIR/data_driver_dc.csv"
+  [ "${DDRV_CSV_RESET:-0}" = "1" ] && rm -f "$DC_CSV"
   "$PY" "$CHAR" "$psf" --rsen "$RSEN" --target "$TARGET" --label "$tag" \
-        --csv "$RESDIR/data_driver_dc.csv" | tee "$out"
+        $PROBE_CHK --csv "$DC_CSV" | tee "$out"
 }
 
 selfcheck() {
@@ -119,18 +140,19 @@ tran_one() {   # candidate model l w period vout corner slew
   local cand="$1" model="$2" L="$3" W="$4" period="$5" vout="$6" corner="${7:-tt}" slew="${8:-1e-9}"
   local tag deck psf
   tag=$(tag_of "$cand" "$model" "$corner" "$L" "$W" "T${period}vout${vout}")
+  [ "$PROBE" = "iprobe" ] && tag="${tag}_iprobe"
   [ -n "${TAGX:-}" ] && tag="${tag}_${TAGX}"
   deck=$("$PY" "$GEN" --candidate "$cand" --model "$model" --l "$L" --w "$W" \
              --corner "$corner" --mode tran --period "$period" --vout "$vout" \
-             --slew "$slew" ${EXTRA:-} ${TAGX:+--suffix "$TAGX"} --out "$GENDIR" | tail -1)
+             --slew "$slew" $PROBE_GEN ${EXTRA:-} ${TAGX:+--suffix "$TAGX"} --out "$GENDIR" | tail -1)
   [ -f "$deck" ] || { echo "GEN_FAILED $deck"; return 9; }
   run_deck "$deck" "$tag" 1.8 tran | tee "$LOGDIR/${tag}.pipeline"
   psf=$(grep -aE "^/" "$LOGDIR/${tag}.pipeline" | tail -1)
   if [ -z "$psf" ] || [ ! -f "$psf" ]; then echo "TRAN_FAIL $tag"; return 8; fi
-  [ "${DDRV_CSV_RESET:-0}" = "1" ] && rm -f "$RESDIR/data_driver_transient.csv"
+  [ "${DDRV_CSV_RESET:-0}" = "1" ] && rm -f "$TR_CSV"
   "$PY" "$PROJ/scripts/ddrv_tran.py" "$psf" --rsen "$RSEN" --target "$TARGET" \
-        --label "$tag" --csv "$RESDIR/data_driver_transient.csv" \
-        | tee "$EVDIR/ddrv_${tag}.txt"
+        $PROBE_CHK ${GATE_NET:+--gate-net "$GATE_NET"} ${ENSIG:+--ensig "$ENSIG"} \
+        --label "$tag" --csv "$TR_CSV" | tee "$EVDIR/ddrv_${tag}.txt"
 }
 
 case "${1:-}" in

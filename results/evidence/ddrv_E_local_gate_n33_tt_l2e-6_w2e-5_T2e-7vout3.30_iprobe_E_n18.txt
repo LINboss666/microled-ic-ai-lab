@@ -1,0 +1,14 @@
+   IOUT_SOURCE : iprobe trace `Ip1:i`, 0 V burden (DC drop across the probe is 0 by construction)
+   PROBE_CROSSCHECK  : |Ip1:i - Mout:1| <= 1.914e-05 A over 271 samples
+   PROBE_CROSSCHECK  : 65.2288 % of the largest observed current (2.532e-05 A) -- the two views of the same branch
+   PROBE_CROSSCHECK  : note -- in a transient Ip1:i and Mout:1 are not expected to be equal: the node between Mcas and Mout is charged and discharged through them, so their difference is that displacement current. DC sweeps (where it is < 0.2 %% of full scale) are the agreement test; here the two traces are reported as the circuit's own dynamics
+== E_local_gate_n33_tt_l2e-6_w2e-5_T2e-7vout3.30_iprobe_E_n18  samples=271  window=0..9e-07 s  ON windows=4  OFF windows=4
+   longest ON window : 1.006e-07 s   (band must hold for 40% of it)
+   TURN_ON_SETTLING  : 6.255e-08 s   (worst of 4, 0 never settled)
+   TURN_OFF          : 1.106e-08 s   (worst of 4, 0 never met the band)
+   PEAK              : 25.320592 uA
+   OFF_LEAKAGE       : 0.224932 uA   (worst median over the last 30% of an OFF window)
+   VBIAS_SHARED      : 0.523641 .. 0.924338 V   (worst deviation 0.342064 V = 19.0036 % of 1.8 V)
+   VBIAS_CH : 0.000000 .. 0.884309 V   (the channel's own mirror gate: ON must reach VBIAS_SHARED, OFF must reach 0)
+   GATE_PASS_ERROR   : worst (VBIAS_SHARED - vbias_ch) = 0.884322 V   (a pass device that cannot equal its input leaves the mirror short)
+DATA_DRIVER_TRAN: OK

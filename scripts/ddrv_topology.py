@@ -142,7 +142,9 @@ def path_ascii(rows, hi, lo, out):
     out("## Current path when the channel is enabled")
     out("")
     p = series_path(rows, "data_out", lo)
-    by = {r["inst"]: r for r in rows}
+    by = dict((r["inst"], r) for r in rows)   # genexp, not a dict comprehension: the
+    # guest runs Python 2.6, which has no dict-comprehension syntax and fails at import time
+
     out("```")
     out("  (external: Micro LED cathode / DATA_OUT pad)")
     out("      |")
@@ -176,7 +178,7 @@ def path_ascii(rows, hi, lo, out):
 
 
 def off_explanation(rows, out):
-    gates = {r["inst"]: r["g"] for r in rows}
+    gates = dict((r["inst"], r["g"]) for r in rows)
     has = set(gates.values())
     out("## What happens when DATA_EN goes low")
     out("")

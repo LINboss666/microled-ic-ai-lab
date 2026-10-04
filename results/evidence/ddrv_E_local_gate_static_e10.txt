@@ -1,0 +1,28 @@
+        IOUT_SOURCE : iprobe trace `Ip1:i`, 0 V burden (DC drop across the probe is 0 by construction)
+        PROBE_CROSSCHECK  : |Ip1:i - Mout:1| <= 3.300e-13 A over 904 samples
+        PROBE_CROSSCHECK  : 0.0000 % of the largest observed current (1.493e-05 A) -- the two views of the same branch
+        PROBE_CROSSCHECK  : note -- Ip vs Mout:1 differ by the displacement current of the internal nodes while the neighbour switches; the DC sweeps are the agreement test for the observation method
+     == static_e10_ch0  channel 0 samples=676 (after skipping 25% of the run)  window=6.745e-07 s
+        I_BASELINE        : 14.931906 uA   (median of the observed window)
+        I_0 mean         : 14.931906 uA
+        PEAK_CROSSTALK_ERROR   : 0.000000 uA above baseline = 0.000 % of target
+        PEAK_|I-target|        : 0.068094 uA = 0.454 % of target
+        Q_error                : +1.6041e-22 C (integral of I_victim - I_baseline)
+        CHARGE_ERROR_PERCENT   : 0.0000 %  (|Q_error| / (15uA x 6.745e-07 s))
+        GLITCH_DURATION >+/- 1% : 0.0000e+00 s (0.00 % of the observed window)
+        no edge found on `data_en`: the neighbour is held, so this row is the static level of the victim, not a switching disturbance
+     TWO_CHANNEL_INDEPENDENCE: PASS (peak 0.454 % <= 1.0 %, charge 0.000 % <= 1.0 % POC criteria)
+        IOUT_SOURCE : iprobe trace `Ip2:i`, 0 V burden (DC drop across the probe is 0 by construction)
+        PROBE_CROSSCHECK  : |Ip2:i - Mout1:1| <= 4.870e-13 A over 904 samples
+        PROBE_CROSSCHECK  : 66.3598 % of the largest observed current (7.339e-13 A) -- the two views of the same branch
+        PROBE_CROSSCHECK  : note -- Ip vs Mout:1 differ by the displacement current of the internal nodes while the neighbour switches; the DC sweeps are the agreement test for the observation method
+     == static_e10_ch1  channel 1 samples=676 (after skipping 25% of the run)  window=6.745e-07 s
+        I_BASELINE        : 0.000001 uA   (median of the observed window)
+        I_1 mean         : 0.000001 uA
+        PEAK_CROSSTALK_ERROR   : 0.000000 uA above baseline = 0.000 % of target
+        PEAK_|I-target|        : 14.999999 uA = 100.000 % of target
+        Q_error                : +2.3516e-28 C (integral of I_victim - I_baseline)
+        CHARGE_ERROR_PERCENT   : 0.0000 %  (|Q_error| / (15uA x 6.745e-07 s))
+        GLITCH_DURATION >+/- 1% : 0.0000e+00 s (0.00 % of the observed window)
+        no edge found on `data_en1`: the neighbour is held, so this row is the static level of the victim, not a switching disturbance
+     TWO_CHANNEL_INDEPENDENCE: FAIL (peak 100.000 %, charge 0.000 % vs 1.0 % POC criterion)
