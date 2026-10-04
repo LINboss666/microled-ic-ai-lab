@@ -1,20 +1,36 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""ddrv_xtalk.py -- cross-channel error for the two-channel Candidate D testbench.
+"""ddrv_xtalk.py -- cross-channel error for the two-channel data-driver testbench.
 
 This is a separate analysis on purpose: the accepted checkers (ddrv_characterize.py,
-ddrv_tran.py) keep their criteria untouched, so nothing here can make the rework pass by
-moving a goalpost. It only answers the question the review asked:
-
-    when channel 0 switches, how much does channel 1's current move?
+ddrv_tran.py) keep their criteria untouched, so nothing here can make a rework pass by
+moving a goalpost. It answers the question the review asked, in three parts:
 
     python scripts/ddrv_xtalk.py <psf> [--target 15e-6] [--rsen 1e4]
                                  [--ch 1] [--skip-frac 0.25] [--limit 0.01]
-                                 [--steady <uA>] [--label ...] [--csv out.csv]
+                                 [--band-frac 0.01] [--baseline-ua X] [--ref other.psf]
+                                 [--slew-desc ...] [--label ...] [--csv out.csv]
 
-`--ch 1` reads the `vsw1` / `data_out1` / `data_en1` nets of the two-channel deck.
-The first `--skip-frac` of the run is ignored so the initial power-up transient is not
-counted as crosstalk; crosstalk is what happens around the *neighbour's* edges.
+  PEAK_CROSSTALK_ERROR   worst |I_victim - target| as a %% of the target current. This is
+                         the number the previous round was judged on.
+  Q_error / CHARGE_ERROR_PERCENT
+                         the same event counted as charge instead of as a peak:
+                             Q_error = integral( I_victim(t) - I_baseline(t) ) dt
+                             CHARGE_ERROR_PERCENT = |Q_error| / (target * T_observed) * 100
+                         A short spike that moves the average charge little and a long
+                         droop that removes a frame's worth of charge are not the same
+                         failure, and a peak-only metric cannot tell them apart.
+  GLITCH_DURATION        time for which |I_victim - I_baseline| stays above
+                         +/- band-frac * target (POC criterion, 1% by default).
+
+I_victim is read from the iprobe trace when the deck has one, otherwise from the sense
+resistor and labelled LEGACY_BURDENED_MEASUREMENT (scripts/ddrv_probe.py).
+
+`I_baseline` is the victim's own steady level: the median of the observed window by
+default, or a pinned value (--baseline-ua), or the same channel measured in a static deck
+where the neighbour does not switch at all (--ref; only valid when both runs hold the same
+V(DATA_OUT)). The first `--skip-frac` of the run is ignored so the initial power-up
+transient is not counted as crosstalk.
 """
 
 from __future__ import print_function
@@ -25,65 +41,230 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ddrv_tran import parse, edges            # same PSF reader, no second implementation
+from ddrv_tran import parse, edges, median      # same PSF reader, no second implementation
+import ddrv_probe
+
+
+def mean(xs):
+    return sum(xs) / float(len(xs))
+
+
+def integrate(ts, xs):
+    """Trapezoid over a non-uniform sample sequence."""
+    acc = 0.0
+    for a, b in zip(range(len(xs) - 1), range(1, len(xs))):
+        acc += 0.5 * (xs[a] + xs[b]) * (ts[b] - ts[a])
+    return acc
+
+
+def duration_above(ts, devs, tol):
+    """Total seconds the deviation stays above tol, measured on adjacent sample intervals
+    (a sample-based count would depend on the simulator's step, not on the circuit)."""
+    total = 0.0
+    for i in range(len(devs) - 1):
+        if abs(devs[i]) > tol and abs(devs[i + 1]) > tol:
+            total += ts[i + 1] - ts[i]
+    return total
+
+
+def metrics(obs, base, target, band_frac):
+    """All four crosstalk numbers from one sample list. Split out of main() so the
+    --selftest fixture checks the arithmetic, not just the file reading."""
+    ts = [r["time"] for r in obs]
+    cur = [r["iout"] for r in obs]
+    dev = [q - base for q in cur]
+    q_err = integrate(ts, dev)
+    return {
+        "t_span": ts[-1] - ts[0],
+        "mean": mean(cur),
+        "dev_max": max(abs(d) for d in dev),
+        "err_vs_target": max(abs(c - target) for c in cur),
+        "q_error": q_err,
+        "charge_pct": abs(q_err) / (abs(target) * (ts[-1] - ts[0])) * 100.0,
+        "glitch_s": duration_above(ts, dev, band_frac * abs(target)),
+        "worst_t": obs[max(range(len(cur)), key=lambda i: abs(dev[i]))]["time"],
+    }
+
+
+def selftest():
+    """A known-answer check of the charge metric: a 3 uA glitch held for three samples of a
+    15 uA victim (10 us spacing, so 20 us between the first and last high sample).
+
+    The expected Q_error is the trapezoid of that shape, not 3uA x 20us: the rising and
+    falling edge samples are half-weighted, which is exactly how a real spike of one sample
+    width is counted. Getting this wrong in the checker would silently scale every charge
+    number in the review, so it is asserted against hand arithmetic here instead.
+    """
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "qoder_xtalk_fixture.psf")
+    lines = ["TRACE", '  "Ip2:i" PROP("signal" "v")', "VALUE"]
+    n, dt = 101, 10e-6
+    for i in range(n):
+        t = i * dt
+        iout = 15e-6 + (3e-6 if 50 <= i <= 52 else 0.0)
+        lines.append('"time" %.9g' % t)
+        lines.append('"Ip2:i" %.9g' % iout)
+        lines.append('"vsw1" %.9g' % 1.2)
+        lines.append('"data_out1" %.9g' % 1.2)
+        lines.append('"data_en" %.9g' % (1.8 if i % 50 else 0.0))
+    with open(path, "wb") as fh:
+        fh.write(("\n".join(lines) + "\n").encode("utf-8"))
+    try:
+        names, rows = parse(path)
+        for r in rows:
+            r["iout"] = r["Ip2:i"]
+        obs = [r for r in rows if r["time"] >= rows[0]["time"]]
+        base = median([r["iout"] for r in obs])
+        m = metrics(obs, base, 15e-6, 0.01)
+        want = (("I_baseline", base, 15e-6),
+                ("dev_max", m["dev_max"], 3e-6),
+                ("q_error", m["q_error"], 2 * 3e-6 * 10e-6 + 2 * 0.5 * 3e-6 * 10e-6),
+                ("charge_pct", m["charge_pct"], 9e-11 / (15e-6 * 1000e-6) * 100.0),
+                ("glitch_s", m["glitch_s"], 20e-6),
+                ("err_vs_target", m["err_vs_target"], 3e-6))
+        problems = []
+        for name, got, exp in want:
+            if abs(got - exp) > 1e-12 * max(1.0, abs(exp)):
+                problems.append("%s got %.9g want %.9g" % (name, got, exp))
+        if problems:
+            print("XTALK_SELFTEST: FAIL " + "; ".join(problems))
+            return 1
+        print("XTALK_SELFTEST: PASS  (baseline %.6g A, peak %.6g A, Q %.6g C, %.4f %%, "
+              "glitch %.6g s over %.6g s)" % (base, m["dev_max"], m["q_error"],
+                                              m["charge_pct"], m["glitch_s"], m["t_span"]))
+        return 0
+    finally:
+        os.remove(path)
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("psf")
+    ap.add_argument("psf", nargs="?", default=None)
     ap.add_argument("--target", type=float, default=15e-6)
     ap.add_argument("--rsen", type=float, default=1e4)
     ap.add_argument("--ch", default="1")
     ap.add_argument("--skip-frac", type=float, default=0.25)
     ap.add_argument("--limit", type=float, default=0.01,
                     help="POC cross-channel criterion, fraction of the target current")
-    ap.add_argument("--neigh-sig", default="data_en")
+    ap.add_argument("--band-frac", type=float, default=0.01,
+                    help="glitch band as a fraction of the target (POC criterion)")
+    ap.add_argument("--neigh-sig", default=None,
+                    help="enable net of the toggling neighbour; default: the other channel")
+    ap.add_argument("--baseline-ua", type=float, default=None,
+                    help="pin I_baseline to this value in uA instead of the observed median")
+    ap.add_argument("--ref", default=None,
+                    help="static-deck psfascii of the same channel to take I_baseline from")
+    ap.add_argument("--require-probe", action="store_true")
+    ap.add_argument("--slew-desc", default="", help="what slew produced this row")
     ap.add_argument("--label", default="")
     ap.add_argument("--csv", default=None)
+    ap.add_argument("--selftest", action="store_true",
+                    help="check the charge/glitch arithmetic against a known fixture and "
+                         "exit; a metric nobody can reproduce is not evidence")
     a = ap.parse_args()
 
-    suf = a.ch
+    if a.selftest:
+        return selftest()
+    if not a.psf:
+        ap.error("psf is required unless --selftest")
+
+    suf = a.ch                                  # "" for channel 0, "1" for channel 1
     names, rows = parse(a.psf)
     need = ("vsw" + suf, "data_out" + suf)
     if not rows or any(n not in rows[0] for n in need):
         print("TWO_CHANNEL_INDEPENDENCE: FAIL (channel %s nets missing; have %s)"
-              % (suf, names))
+              % (suf or "0", names))
         return 2
+    method, pk, dk = ddrv_probe.method_for(names, suf, allow_legacy=not a.require_probe)
+    if method is None:
+        print("TWO_CHANNEL_INDEPENDENCE: FAIL (no iprobe trace, --require-probe set)")
+        return 2
+    rows.sort(key=lambda r: r["time"])
+    ddrv_probe.report(method, pk, dk, rows, a.rsen, note=(
+        "Ip vs Mout:1 differ by the displacement current of the internal nodes while the "
+        "neighbour switches; the DC sweeps are the agreement test for the observation method"))
+
+    for r in rows:
+        r["iout"] = ddrv_probe.current(r, method, pk, a.rsen, "vsw" + suf,
+                                       "data_out" + suf)
+
     t0, t1 = rows[0]["time"], rows[-1]["time"]
     t_start = t0 + a.skip_frac * (t1 - t0)
-    obs = [(r["time"], (r["vsw" + suf] - r["data_out" + suf]) / a.rsen, r) for r in rows
-           if r["time"] >= t_start]
+    obs = [r for r in rows if r["time"] >= t_start]
     if len(obs) < 3:
         print("TWO_CHANNEL_INDEPENDENCE: FAIL (too few samples after the skip window)")
         return 2
 
-    steady = sum(o[1] for o in obs) / len(obs)
-    dev = max(abs(o[1] - steady) for o in obs)
-    dev_target = max(abs(o[1] - a.target) for o in obs)
-    frac = dev_target / a.target
-    # where in time the worst excursion happens, and was the neighbour switching then?
-    worst_t = max(obs, key=lambda o: abs(o[1] - a.target))[0]
-    up, down = ([], [])
-    if a.neigh_sig in rows[0]:
-        up, down = edges([r for _t, _i, r in obs], a.neigh_sig)
+    cur = [r["iout"] for r in obs]
+
+    # ---- the baseline the charge error is measured against ----------------------------
+    base, base_src = median(cur), "median of the observed window"
+    if a.ref:
+        rnames, rrows = parse(a.ref)
+        rmethod, rpk, _rdk = ddrv_probe.method_for(rnames, suf,
+                                                   allow_legacy=not a.require_probe)
+        if rmethod is None or not rrows:
+            print("TWO_CHANNEL_INDEPENDENCE: FAIL (baseline deck %s unreadable)" % a.ref)
+            return 2
+        rc = [ddrv_probe.current(r, rmethod, rpk, a.rsen, "vsw" + suf, "data_out" + suf)
+              for r in rrows if r["time"] >= rrows[0]["time"]
+              + a.skip_frac * (rrows[-1]["time"] - rrows[0]["time"])]
+        if rc:
+            base, base_src = median(rc), "median of the static neighbour-held run %s" % \
+                os.path.basename(a.ref)
+        # a baseline is only a baseline at the same operating point: this comparison once
+        # silently compared a channel held at 1.2 V against a reference deck whose output
+        # sat at 0 V, which produced a 100 % "crosstalk" number out of a wiring mistake
+        vdyn = mean([r["vsw" + suf] for r in obs])
+        vref = mean([r["vsw" + suf] for r in rrows if "vsw" + suf in r])
+        if abs(vdyn - vref) > 1e-3:
+            print("TWO_CHANNEL_INDEPENDENCE: FAIL (baseline deck holds V(vsw%s)=%.4f V but "
+                  "the run under test holds %.4f V: the two are not the same operating "
+                  "point)" % (suf, vref, vdyn))
+            return 2
+
+    if a.baseline_ua is not None:
+        base, base_src = a.baseline_ua * 1e-6, "pinned by --baseline-ua"
+
+    m = metrics(obs, base, a.target, a.band_frac)
+    t_span = m["t_span"]
+    steady, dev_max = m["mean"], m["dev_max"]
+    dev_target, frac = m["err_vs_target"], m["err_vs_target"] / a.target
+    q_err, charge_pct, glitch, worst_t = (m["q_error"], m["charge_pct"], m["glitch_s"],
+                                          m["worst_t"])
+
+    neigh = a.neigh_sig
+    if neigh is None:
+        # the neighbour is the channel that pulses: channel 1's victim is disturbed by CH0,
+        # and channel 0's victim by CH1
+        neigh = "data_en1" if suf == "1" else "data_en"
+    up, down = edges(obs, neigh) if (neigh and neigh in rows[0]) else ([], [])
     near = None
     for e in up + down:
         if near is None or abs(e - worst_t) < abs(near - worst_t):
             near = e
 
-    print("== %s  channel %s samples=%d (after skipping %.0f%% of the run)"
+    print("== %s  channel %s samples=%d (after skipping %.0f%% of the run)  window=%.4g s"
           % (a.label or os.path.basename(a.psf), suf or "0", len(obs),
-             a.skip_frac * 100))
-    print("   I_%s mean      : %.6f uA" % (suf or "0", steady * 1e6))
-    print("   I_%s max excursion from its own mean : %.6f uA" % (suf or "0", dev * 1e6))
-    print("   I_%s worst |I - 15uA|               : %.6f uA = %.3f %% of target"
-          % (suf or "0", dev_target * 1e6, frac * 100.0))
+             a.skip_frac * 100, t_span))
+    if a.slew_desc:
+        print("   SLEW              : %s" % a.slew_desc)
+    print("   I_BASELINE        : %.6f uA   (%s)" % (base * 1e6, base_src))
+    print("   I_%s mean         : %.6f uA" % (suf or "0", steady * 1e6))
+    print("   PEAK_CROSSTALK_ERROR   : %.6f uA above baseline = %.3f %% of target"
+          % (dev_max * 1e6, dev_max / abs(a.target) * 100.0))
+    print("   PEAK_|I-target|        : %.6f uA = %.3f %% of target"
+          % (dev_target * 1e6, frac * 100.0))
+    print("   Q_error                : %+.4e C (integral of I_victim - I_baseline)" % q_err)
+    print("   CHARGE_ERROR_PERCENT   : %.4f %%  (|Q_error| / (15uA x %.4g s))"
+          % (charge_pct, t_span))
+    print("   GLITCH_DURATION >+/- %.0f%% : %.4e s (%.2f %% of the observed window)"
+          % (a.band_frac * 100, glitch, glitch / t_span * 100.0))
     if near is not None:
         print("   worst sample at t=%.4e s, nearest neighbour edge at t=%.4e s "
               "(delta %.3e s)" % (worst_t, near, abs(worst_t - near)))
     else:
-        print("   neighbour enable net `%s` not found: measuring the held value only"
-              % a.neigh_sig)
+        print("   no edge found on `%s`: the neighbour is held, so this row is the static "
+              "level of the victim, not a switching disturbance" % neigh)
 
     if a.csv:
         exists = os.path.isfile(a.csv)
@@ -91,19 +272,25 @@ def main():
         if dd and not os.path.isdir(dd):
             os.makedirs(dd)
         blob = (u"" if exists else
-                u"label,channel,samples,mean_uA,max_err_uA,max_err_pct_of_target,limit_pct\n")
-        blob += (u"%s,%s,%d,%.6f,%.6f,%.4f,%.1f\n"
-                 % (a.label, suf or "0", len(obs), steady * 1e6, dev_target * 1e6,
-                    frac * 100.0, a.limit * 100.0))
+                u"label,channel,samples,observed_window_s,i_baseline_uA,mean_uA,"
+                u"peak_crosstalk_uA,peak_crosstalk_pct_of_target,peak_err_vs_target_pct,"
+                u"q_error_C,charge_error_pct,glitch_dur_s_above_1pct,iout_method,slew\n")
+        blob += (u"%s,%s,%d,%.6g,%.6f,%.6f,%.6f,%.4f,%.4f,%.6e,%.4f,%.6e,%s,%s\n"
+                 % (a.label, suf or "0", len(obs), t_span, base * 1e6, steady * 1e6,
+                    dev_max * 1e6, dev_max / abs(a.target) * 100.0, frac * 100.0,
+                    q_err, charge_pct, glitch, method, a.slew_desc))
         with open(a.csv, "ab") as fh:
             fh.write(blob.encode("utf-8") if not isinstance(blob, bytes) else blob)
 
-    if frac <= a.limit:
-        print("TWO_CHANNEL_INDEPENDENCE: PASS (crosstalk %.3f %% <= %.1f %% POC criterion)"
-              % (frac * 100.0, a.limit * 100.0))
+    ok_peak = frac <= a.limit
+    ok_charge = charge_pct <= a.limit * 100.0
+    if ok_peak and ok_charge:
+        print("TWO_CHANNEL_INDEPENDENCE: PASS (peak %.3f %% <= %.1f %%, charge %.3f %% "
+              "<= %.1f %% POC criteria)"
+              % (frac * 100.0, a.limit * 100.0, charge_pct, a.limit * 100.0))
         return 0
-    print("TWO_CHANNEL_INDEPENDENCE: FAIL (crosstalk %.3f %% > %.1f %% POC criterion)"
-          % (frac * 100.0, a.limit * 100.0))
+    print("TWO_CHANNEL_INDEPENDENCE: FAIL (peak %.3f %%, charge %.3f %% vs %.1f %% POC "
+          "criterion)" % (frac * 100.0, charge_pct, a.limit * 100.0))
     return 1
 
 

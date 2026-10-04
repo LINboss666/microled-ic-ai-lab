@@ -1,0 +1,14 @@
+   IOUT_SOURCE : iprobe trace `Ip1:i`, 0 V burden (DC drop across the probe is 0 by construction)
+   PROBE_CROSSCHECK  : |Ip1:i - Mout:1| <= 3.087e-05 A over 1109 samples
+   PROBE_CROSSCHECK  : 86.5387 % of the largest observed current (2.366e-05 A) -- the two views of the same branch
+   PROBE_CROSSCHECK  : note -- in a transient Ip1:i and Mout:1 are not expected to be equal: the node between Mcas and Mout is charged and discharged through them, so their difference is that displacement current. DC sweeps (where it is < 0.2 %% of full scale) are the agreement test; here the two traces are reported as the circuit's own dynamics
+== C_cascode_l2e6w2e5_iprobe_coreT200_T2e7vout1.20_ms1ns  samples=1109  window=0..9e-07 s  ON windows=4  OFF windows=4
+   longest ON window : 1.009e-07 s   (band must hold for 40% of it)
+   TURN_ON_SETTLING  : 3.146e-08 s   (worst of 4, 0 never settled)
+   TURN_OFF          : 7.841e-09 s   (worst of 4, 0 never met the band)
+   PEAK              : 23.662747 uA
+   OFF_LEAKAGE       : 0.044469 uA   (worst mean over the last 30% of the OFF window INTERIOR, edges excluded; sample ripple 0.064223 uA)
+   ON_SETTLED        : 14.931904 .. 14.931906 uA (mean over the last 30% of the ON window INTERIOR, edges excluded), worst |I - target| = 0.068096 uA = 0.454 %   <- compare with the DC curve at the same VOUT
+   ON_RIPPLE         : 0.457642 uA peak-to-peak worst (in-window sample alternation; with method=traponly a step comparable to the gate RC makes this numerical, so the mean is the reported level and this is the doubt)
+   VBIAS_SHARED      : -0.029773 .. 0.884261 V   (worst deviation 0.624828 V = 34.7127 % of 1.8 V)
+DATA_DRIVER_TRAN: OK

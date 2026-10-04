@@ -3,10 +3,11 @@
 """ddrv_tran.py -- switch-on / switch-off metrics for one data-driver channel transient.
 
 The PSF-ASCII transient carries `vsw` (the ideal output test source), `data_out` (the
-device drain) and `data_en`; the absorbed current is reconstructed across the sense
-resistor, exactly as in the DC characterisation:
+device drain) and `data_en`. The absorbed current is read the same way as in the DC
+characterisation (scripts/ddrv_probe.py): a zero-drop `iprobe` trace when the deck has one,
+otherwise the sense-resistor reconstruction
 
-    IOUT(t) = (V(vsw) - V(data_out(t))) / RSEN
+    IOUT(t) = (V(vsw) - V(data_out(t))) / RSEN          LEGACY_BURDENED_MEASUREMENT
 
 Metrics (POC characterisation criteria, NOT course requirements):
   TURN_ON_SETTLING : worst, over all ON windows, time from the DATA_EN rising edge until
@@ -14,7 +15,14 @@ Metrics (POC characterisation criteria, NOT course requirements):
   TURN_OFF         : worst, over all OFF windows, time from the falling edge until |IOUT|
                      stays below the band
   PEAK_UA          : largest |IOUT| in the run
-  OFF_LEAKAGE_UA   : worst median |IOUT| over the last 30% of an OFF window
+  OFF_LEAKAGE_UA   : worst mean |IOUT| over the last 30% of an OFF window
+  ON_SETTLED_UA    : mean IOUT over the last 30% of each ON window, min..max across windows
+  ON_RIPPLE        : peak-to-peak sample alternation inside that tail (numerical honesty:
+                     method=traponly with maxstep ~ the gate RC alternates around the true
+                     value, so a median would report one branch of it)
+  VBIAS_SHARED     : min..max of the shared bias node, i.e. the ripple the gating produces
+  VBIAS_CH         : min..max of this channel's own mirror gate (candidate E), plus the
+                     worst VBIAS_SHARED - VBIAS_CH gate-pass deficit
 
 Measuring per window is the point. An earlier version of this script searched the whole
 run and borrowed samples from the next cycle, which turned a 200 ns period into a
@@ -29,11 +37,20 @@ import io
 import os
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import ddrv_probe
+
 VSPLIT = 0.9            # DATA_EN threshold: half of the 1.8 V pulse (POC_ASSUMPTION)
 
 
 def parse(path):
-    """Return (names, rows); rows are dicts keyed by signal, with 'time' set."""
+    """Return (names, rows); rows are dicts keyed by signal, with 'time' set.
+
+    `names` is every trace that actually carries data, not only the ones declared with
+    PROP(...): this build writes the transient TRACE section as `"Ip1:i" "A"` (name plus
+    unit) with no PROP block at all, and a lookup keyed off the declaration style silently
+    reported "no iprobe trace" on a file that contains one.
+    """
     names, rows, cur, invalue = [], [], {}, False
     with io.open(path, "r", encoding="utf-8", errors="replace") as fh:
         for line in fh:
@@ -55,6 +72,8 @@ def parse(path):
                 val = float(rest.split()[0])
             except (ValueError, IndexError):
                 continue
+            if key not in names:
+                names.append(key)
             if key == "time":
                 if cur:
                     rows.append(cur)
@@ -104,6 +123,10 @@ def median(xs):
     return y[len(y) // 2] if len(y) % 2 else 0.5 * (y[len(y) // 2 - 1] + y[len(y) // 2])
 
 
+def mean(xs):
+    return sum(xs) / float(len(xs)) if xs else None
+
+
 def worst(values):
     good = [v for v in values if v is not None]
     return max(good) if good else None
@@ -122,6 +145,10 @@ def main():
                     help="which enable net marks the windows (data_en or data_en1)")
     ap.add_argument("--csv", default=None)
     ap.add_argument("--label", default="")
+    ap.add_argument("--require-probe", action="store_true",
+                    help="FAIL instead of falling back to the sense resistor")
+    ap.add_argument("--gate-net", default=None,
+                    help="extra node to report min/max for, e.g. vbias_ch (candidate E)")
     a = ap.parse_args()
 
     if not os.path.isfile(a.psf):
@@ -133,9 +160,20 @@ def main():
         if not rows or need not in rows[0]:
             print("DATA_DRIVER_TRAN: FAIL (trace %s missing; have %s)" % (need, names))
             return 1
+    method, pk, dk = ddrv_probe.method_for(names, a.net_suffix,
+                                           allow_legacy=not a.require_probe)
+    if method is None:
+        print("DATA_DRIVER_TRAN: FAIL (no iprobe trace and --require-probe was given; "
+              "have %s)" % names)
+        return 1
     for r in rows:
-        r["iout"] = (r[vsn] - r[onn]) / a.rsen
+        r["iout"] = ddrv_probe.current(r, method, pk, a.rsen, vsn, onn)
     rows.sort(key=lambda r: r["time"])
+    ddrv_probe.report(method, pk, dk, rows, a.rsen, note=(
+        "in a transient Ip1:i and Mout:1 are not expected to be equal: the node between "
+        "Mcas and Mout is charged and discharged through them, so their difference is that "
+        "displacement current. DC sweeps (where it is < 0.2 %% of full scale) are the "
+        "agreement test; here the two traces are reported as the circuit's own dynamics"))
     t0, t1 = rows[0]["time"], rows[-1]["time"]
     up, down = edges(rows, a.ensig)
     ons, offs = windows(up, down)
@@ -159,7 +197,27 @@ def main():
                 return r["time"] - w[0]["time"]
         return None
 
-    on_delays, on_lens = [], []
+    def interior(w, frac, transform=None):
+        """Values over the last `frac` of a window, with BOTH window edges excluded.
+
+        The sample that sits on the falling or rising edge belongs to the edge, not to the
+        settled level: a 1 ns edge sample averaged into a 30-sample tail moved the mean by
+        ~10 % (which is how a 0.03 uA OFF leakage read as 0.63 uA). The mean is not robust
+        the way a median is, so the interval has to be honest instead.
+        """
+        def val(q):
+            return transform(q) if transform else q["iout"]
+        if len(w) < 4:
+            return [val(q) for q in w]
+        span = w[-1]["time"] - w[0]["time"]
+        dt = span / (len(w) - 1)
+        guard = max(2.0 * dt, 0.02 * span)
+        hi = w[-1]["time"] - guard
+        lo = w[0]["time"] + (1.0 - frac) * span
+        sel = [val(q) for q in w if lo <= q["time"] <= hi]
+        return sel or [val(q) for q in w[1:-1]] or [val(w[-1])]
+
+    on_delays, on_lens, on_settled, on_ripple = [], [], [], []
     for (u, d) in ons:
         w = in_win(u, d)
         if len(w) < 3:
@@ -167,15 +225,25 @@ def main():
         L = w[-1]["time"] - w[0]["time"]
         on_lens.append(L)
         on_delays.append(settle_in(w, a.hold_frac * L, "on"))
-    off_delays, leaks = [], []
+        # The level the window actually ends up at, so a transient result can be compared
+        # with the DC curve instead of being assumed equal to it. MEAN, not median: with
+        # method=traponly and a print step comparable to the local gate RC, adjacent samples
+        # alternate around the true value, and a median then reports one branch of the
+        # alternation -- which made the settled current look step-dependent (14.73 vs 15.19
+        # uA at the same operating point). The alternation itself is reported as RIPPLE.
+        tail = interior(w, 0.3)
+        on_settled.append(mean(tail))
+        on_ripple.append(max(tail) - min(tail))
+    off_delays, leaks, off_ripple = [], [], []
     for (d, u) in offs:
         w = in_win(d, u)
         if len(w) < 3:
             continue
         L = w[-1]["time"] - w[0]["time"]
         off_delays.append(settle_in(w, min(a.hold_frac * L, L * 0.9), "off"))
-        quiet = [abs(q["iout"]) for q in w if q["time"] >= w[-1]["time"] - 0.3 * L]
-        leaks.append(median(quiet))
+        quiet = interior(w, 0.3, transform=lambda q: abs(q["iout"]))
+        leaks.append(mean(quiet))
+        off_ripple.append(max(quiet) - min(quiet))
 
     worst_on, worst_off = worst(on_delays), worst(off_delays)
     n_on_fail = sum(1 for x in on_delays if x is None)
@@ -195,8 +263,25 @@ def main():
           % ("NOT_FOUND" if worst_off is None else "%.4g s" % worst_off,
              len(off_delays), n_off_fail))
     print("   PEAK              : %.6f uA" % (peak * 1e6))
-    print("   OFF_LEAKAGE       : %s   (worst median over the last 30%% of an OFF window)"
-          % ("n/a" if leak_max is None else "%.6f uA" % (leak_max * 1e6)))
+    off_rip_txt = "n/a" if not off_ripple else "%.6f uA" % (max(off_ripple) * 1e6)
+    print("   OFF_LEAKAGE       : %s   (worst mean over the last 30%% of the OFF window "
+          "INTERIOR, edges excluded; sample ripple %s)"
+          % ("n/a" if leak_max is None else "%.6f uA" % (leak_max * 1e6), off_rip_txt))
+    on_set_lo = on_set_hi = on_set_err = on_rip_max = None
+    if on_settled:
+        on_set_lo, on_set_hi = min(on_settled), max(on_settled)
+        on_set_err = max(abs(x - a.target) for x in on_settled)
+        on_rip_max = max(on_ripple)
+        print("   ON_SETTLED        : %.6f .. %.6f uA (mean over the last 30%% of the ON "
+              "window INTERIOR, edges excluded), worst |I - target| = %.6f uA = %.3f %%   "
+              "<- compare with the DC curve at the same VOUT"
+              % (on_set_lo * 1e6, on_set_hi * 1e6, on_set_err * 1e6,
+                 on_set_err / abs(a.target) * 100.0))
+        print("   ON_RIPPLE         : %.6f uA peak-to-peak worst (in-window sample "
+              "alternation; with method=traponly a step comparable to the gate RC makes "
+              "this numerical, so the mean is the reported level and this is the doubt)"
+              % (on_rip_max * 1e6,))
+
 
     # The rework claim under test is "the shared VBIAS now stays up". Measure it instead of
     # asserting it: a structure that quietly kept charging a gate node would still pass the
@@ -209,6 +294,18 @@ def main():
         vb_dev = max(abs(vb_med - vb_lo), abs(vb_hi - vb_med))
         print("   VBIAS_SHARED      : %.6f .. %.6f V   (worst deviation %.6f V = %.4f %% of 1.8 V)"
               % (vb_lo, vb_hi, vb_dev, vb_dev / 1.8 * 100.0))
+    gsig = a.gate_net or ("vbias_ch" + a.net_suffix)
+    g_lo = g_hi = None
+    if gsig in rows[0]:
+        gs = [r[gsig] for r in rows]
+        g_lo, g_hi = min(gs), max(gs)
+        print("   %s : %.6f .. %.6f V   (the channel's own mirror gate: ON must reach "
+              "VBIAS_SHARED, OFF must reach 0)" % (gsig.upper(), g_lo, g_hi))
+        if "vbias" in rows[0]:
+            deficit = max(r["vbias"] - r[gsig] for r in rows)
+            print("   GATE_PASS_ERROR   : worst (VBIAS_SHARED - %s) = %.6f V   "
+                  "(a pass device that cannot equal its input leaves the mirror short)"
+                  % (gsig, deficit))
 
     if a.csv:
         exists = os.path.isfile(a.csv)
@@ -219,17 +316,27 @@ def main():
             if not exists:
                 fh.write(u"label,samples,on_windows,off_windows,longest_on_window_s,"
                          u"turn_on_settling_s,turn_off_s,peak_uA,off_leakage_uA,band_pct,"
-                         u"on_windows_not_settled\n")
-            fh.write(u"%s,%d,%d,%d,%s,%s,%s,%.6f,%s,%.1f,%d\n"
+                         u"on_windows_not_settled,iout_method,vbias_shared_min_v,"
+                         u"vbias_shared_max_v,vbias_shared_dev_v,gate_net_min_v,"
+                         u"gate_net_max_v,on_settled_min_uA,on_settled_max_uA,"
+                         u"on_settled_worst_err_pct,on_ripple_p2p_uA\n")
+            fh.write(u"%s,%d,%d,%d,%s,%s,%s,%.6f,%s,%.1f,%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n"
                      % (a.label, len(rows), len(on_delays), len(off_delays),
                         "%.6g" % max(on_lens) if on_lens else "n/a",
                         "NOT_FOUND" if worst_on is None else "%.4g" % worst_on,
                         "NOT_FOUND" if worst_off is None else "%.4g" % worst_off,
                         peak * 1e6, "n/a" if leak_max is None else "%.6f" % (leak_max * 1e6),
-                        a.band * 100, n_on_fail,
+                        a.band * 100, n_on_fail, method,
                         "n/a" if vb_lo is None else "%.6f" % vb_lo,
                         "n/a" if vb_hi is None else "%.6f" % vb_hi,
-                        "n/a" if vb_dev is None else "%.6f" % vb_dev))
+                        "n/a" if vb_dev is None else "%.6f" % vb_dev,
+                        "n/a" if g_lo is None else "%.6f" % g_lo,
+                        "n/a" if g_hi is None else "%.6f" % g_hi,
+                        "n/a" if on_set_lo is None else "%.6f" % (on_set_lo * 1e6),
+                        "n/a" if on_set_hi is None else "%.6f" % (on_set_hi * 1e6),
+                        "n/a" if on_set_err is None else "%.4f" %
+                        (on_set_err / abs(a.target) * 100.0),
+                        "n/a" if on_rip_max is None else "%.6f" % (on_rip_max * 1e6)))
 
     if not ons:
         print("DATA_DRIVER_TRAN: FAIL (no complete ON window in the run)")

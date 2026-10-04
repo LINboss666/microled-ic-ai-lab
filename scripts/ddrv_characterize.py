@@ -9,9 +9,12 @@ Run on the guest (Python 2.6) or on Windows (Python 3); no third-party modules.
     python scripts/ddrv_characterize.py <psfascii file> [--rsen 1e4] [--target 15e-6]
                                         [--csv out.csv] [--label A_series_n18_l5e-7_w2e-6]
 
-The current is reconstructed from the sense resistor: IOUT = (V(vsw) - V(data_out)) / RSEN.
-That is deliberate -- this Spectre build rejects `save *:current` with a warning, and a
-result file built on ignored warnings is not evidence.
+IOUT comes from whichever observation the data file actually carries (scripts/ddrv_probe.py):
+a zero-drop `iprobe` trace when the deck has one, otherwise the sense-resistor reconstruction
+`IOUT = (V(vsw) - V(data_out)) / RSEN`, which is printed as LEGACY_BURDENED_MEASUREMENT
+because a 10 k resistor drops 150 mV at 15 uA and therefore moves the compliance knee it is
+being used to measure. `save *:current` is still not used: this build answers that with
+SPECTRE-8059/8287 warnings, and a result file built on ignored warnings is not evidence.
 
 ±1/2/5% are POC characterisation criteria chosen to compare topologies against each other.
 They are NOT course requirements: the course gives only I_PIXEL_ON = 15 uA (instantaneous,
@@ -24,6 +27,9 @@ import argparse
 import io
 import os
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import ddrv_probe
 
 
 def parse_records(path):
@@ -122,6 +128,12 @@ def main():
     ap.add_argument("--net-suffix", default="",
                     help="'1' to characterise channel 1 of the two-channel deck; the "
                          "accepted channel-0 net names stay the default")
+    ap.add_argument("--require-probe", action="store_true",
+                    help="FAIL instead of falling back to the sense resistor when the "
+                         "data file carries no iprobe trace")
+    ap.add_argument("--gate-net", default=None,
+                    help="channel mirror-gate node to report against VBIAS_SHARED "
+                         "(default: vbias_ch with the channel suffix)")
     a = ap.parse_args()
 
     vsn, onn = "vsw" + a.net_suffix, "data_out" + a.net_suffix
@@ -134,15 +146,37 @@ def main():
         if not raw or k not in raw[0]:
             print("DATA_DRIVER_DC: FAIL  (traces %s missing; found %s)" % (k, names))
             return 1
+    method, pk, dk = ddrv_probe.method_for(names, a.net_suffix,
+                                           allow_legacy=not a.require_probe)
+    if method is None:
+        print("DATA_DRIVER_DC: FAIL  (no iprobe trace and --require-probe forbids the "
+              "burdened sense-resistor fallback; found %s)" % names)
+        return 1
     rows = []
     for r in raw:
         rec = dict(r)
         rec["vout"] = r[onn]                    # compliance is at the device drain
         rec["vsw"] = r[vsn]
-        rec["iout"] = (r[vsn] - r[onn]) / a.rsen
+        rec["iout"] = ddrv_probe.current(r, method, pk, a.rsen, vsn, onn)
         rec["err_pct"] = (rec["iout"] - a.target) / a.target * 100.0
         rows.append(rec)
     rows.sort(key=lambda r: r["vsw"])
+    ddrv_probe.report(method, pk, dk, rows, a.rsen, fullscale=a.target)
+    # the burden is not asserted away: with a probe the two output nodes must be the same
+    if method == ddrv_probe.PROBE:
+        gap = max(abs(r["vsw"] - r["vout"]) for r in rows)
+        print("   PROBE_BURDEN      : max |V(vsw) - V(%s)| = %.3e V (must be 0)"
+              % (onn, gap))
+    # Candidate E's claim is that a local pass device hands over the shared bias. That is a
+    # voltage measurement, not a current one, so measure it: the mirror gate of the channel
+    # must sit on VBIAS_SHARED when enabled and on 0 V when disabled.
+    gsig = a.gate_net or ("vbias_ch" + a.net_suffix)
+    if "vbias" in rows[0] and gsig in rows[0]:
+        gs = [r[gsig] for r in rows]
+        deficit = max(r["vbias"] - r[gsig] for r in rows)
+        excess = max(r[gsig] - r["vbias"] for r in rows)
+        print("   %-15s : %.6f .. %.6f V   worst (VBIAS_SHARED - it) = %.6f V, "
+              "worst overshoot = %.6f V" % (gsig, min(gs), max(gs), deficit, excess))
 
     if a.csv:
         d = os.path.dirname(os.path.abspath(a.csv))
@@ -153,11 +187,11 @@ def main():
         exists = os.path.isfile(a.csv)
         with io.open(a.csv, "a" if exists else "w", encoding="utf-8", newline="") as fh:
             if not exists:
-                fh.write(u"candidate,vsw_V,vout_device_V,iout_uA,err_pct,vbias_V\n")
+                fh.write(u"candidate,vsw_V,vout_device_V,iout_uA,err_pct,vbias_V,method\n")
             for r in rows:
-                fh.write(u"%s,%.6f,%.6f,%.6f,%.4f,%.6f\n"
+                fh.write(u"%s,%.6f,%.6f,%.6f,%.4f,%.6f,%s\n"
                          % (a.label, r["vsw"], r["vout"], r["iout"] * 1e6,
-                            r["err_pct"], r.get("vbias", float("nan"))))
+                            r["err_pct"], r.get("vbias", float("nan")), method))
 
     vmax_pt = max(rows, key=lambda r: r["vout"])
     c5 = compliance(rows, "vout", "iout", a.target, 0.05)
@@ -169,8 +203,9 @@ def main():
     print("== %s  points=%d  VOUT_max=%.4f V  IOUT@max=%.6f uA (err %.3f %%)"
           % (a.label or os.path.basename(a.psf), len(rows), vmax_pt["vout"],
              vmax_pt["iout"] * 1e6, vmax_pt["err_pct"]))
-    for tag, v in (("+/-1%", c1), ("+/-2%", c2), ("+/-5%", c5)):
-        print("   COMPLIANCE %-6s : %s" % (tag, "NOT_FOUND" if v is None else "%.4f V" % v))
+    for tag, v in (("COMPLIANCE_1PCT", c1), ("COMPLIANCE_2PCT", c2),
+                   ("COMPLIANCE_5PCT", c5)):
+        print("   %-15s : %s" % (tag, "NOT_FOUND" if v is None else "%.4f V" % v))
     print("   ROUT(upper 40%%)   : %s" % ("n/a" if ro is None else "%.3e ohm" % ro))
     print("   MAX_ADJACENT_JUMP : %s (fraction of target, VOUT>50%% of sweep)"
           % ("n/a" if jump is None else "%.5f" % jump))
