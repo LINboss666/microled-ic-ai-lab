@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# sync2guest.sh <hostFile>... -- install project files into the guest, LF-normalised.
+#
+#   mirrors the path under D:/ic617_agent_bridge to /root/microled_ai_project, e.g.
+#     spectre/C2MOS_DFF.scs  ->  /root/microled_ai_project/spectre/C2MOS_DFF.scs
+#     scripts/c2mos_check.sh ->  /root/microled_ai_project/scripts/c2mos_check.sh
+#
+# Why the staging step: the files are authored on Windows and arrive CRLF. Spectre
+# tolerates CRLF in a netlist, bash and awk do not -- a CR inside a `while read` loop
+# or an awk pattern silently changes behaviour. So everything goes through
+# /tmp first and is stripped on the way into the project.
+#
+# Nothing outside /root/microled_ai_project is written; existing PDK/library files are
+# never a valid argument here (the destination path is forced under $PROJ).
+set -uo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$HERE/.." && pwd)"
+[ $# -ge 1 ] || { echo "usage: sync2guest.sh <hostFile>..."; exit 9; }
+
+# shellcheck disable=SC1091
+. "$HERE/../.ic617_agent_bridge_credentials"
+export QODER_GUEST_USER QODER_GUEST_PW QODER_GUEST_IP
+KEY="${QODER_SSH_KEY:-$HOME/.ssh/id_rsa_ic617}"
+PROJ="${PROJ:-/root/microled_ai_project}"
+OPTS=(-o BatchMode=yes -o ConnectTimeout=8 -o StrictHostKeyChecking=accept-new
+      -oHostKeyAlgorithms=+ssh-rsa -oPubkeyAcceptedKeyTypes=+ssh-rsa -i "$KEY")
+
+stage=/tmp/qoder_sync_$$
+ssh "${OPTS[@]}" "root@${QODER_GUEST_IP}" "mkdir -p '$stage'" || exit 9
+
+names=(); dests=()
+for f in "$@"; do
+  abs="$(cd "$(dirname "$f")" && pwd)/$(basename "$f")"
+  case "$abs" in
+    "$ROOT"/*) ;;
+    *) echo "REFUSED: $f is not inside $ROOT"; exit 9 ;;
+  esac
+  rel="${abs#"$ROOT"/}"
+  rel="${rel//\\//}"
+  names+=("$(basename "$abs")")
+  dests+=("$PROJ/$(dirname "$rel")")
+  scp "${OPTS[@]}" "$abs" "root@${QODER_GUEST_IP}:$stage/$(basename "$abs")" || exit 9
+done
+
+for i in "${!names[@]}"; do
+  n="${names[$i]}"; d="${dests[$i]}"
+  ssh "${OPTS[@]}" "root@${QODER_GUEST_IP}" \
+    "mkdir -p '$d' && sed 's/\r\$//' '$stage/$n' > '$d/$n' && chmod 644 '$d/$n' && ls -la '$d/$n'"
+done
+ssh "${OPTS[@]}" "root@${QODER_GUEST_IP}" "chmod +x $PROJ/scripts/*.sh 2>/dev/null; rm -rf '$stage'"
+echo "SYNC done -> $PROJ"

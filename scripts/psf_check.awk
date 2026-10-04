@@ -2,8 +2,10 @@
 # Directives (whitespace separated):
 #   ASSERT <sig> <t0> <t1> gt <v>    every sample of sig in [t0,t1] must be >  v
 #   ASSERT <sig> <t0> <t1> lt <v>    every sample of sig in [t0,t1] must be <  v
-#   CROSS  <sig> <v>                 report the FIRST time sig rises above v
-#   FALL    <sig> <v>                 report the FIRST time sig falls below v
+#   CROSS  <sig> <v> [t0]            the FIRST time AFTER t0 that sig rises above v
+#   FALL   <sig> <v> [t0]            the FIRST time AFTER t0 that sig falls below v
+#           (t0 defaults to -inf; it is what makes per-clock-edge clk->Q delays
+#            measurable instead of just "the first transition in the whole run")
 # Prints one line per directive prefixed OK/FAIL/BAD, then a summary line.
 # Exit code 0 only when every ASSERT held and every CROSS/FALL was found.
 # Used for transient checks, where proving a shift register means proving windows
@@ -16,7 +18,7 @@ NR == FNR {
   ndir++
   kind[ndir] = $1
   if ($1 == "ASSERT") { sig[ndir]=$2; t0[ndir]=$3+0; t1[ndir]=$4+0; op[ndir]=$5; lim[ndir]=$6+0 }
-  else                { sig[ndir]=$2; lim[ndir]=$3+0 }
+  else                { sig[ndir]=$2; lim[ndir]=$3+0; tstart[ndir]=(NF>=4 ? $4+0 : -1) }
   nseen[ndir] = 0; nbad[ndir] = 0; firstv[ndir] = ""; lastv[ndir] = ""; minv[ndir] = 1e30; maxv[ndir] = -1e30
   done[ndir] = 0
   next
@@ -35,11 +37,11 @@ inb && NF >= 2 {
   for (i = 1; i <= ndir; i++) {
     if (sig[i] != key) continue
     if (kind[i] == "CROSS") {
-      if (!done[i] && val > lim[i]) { done[i] = 1; tcut[i] = t }
+      if (!done[i] && t >= tstart[i] && val > lim[i]) { done[i] = 1; tcut[i] = t }
       continue
     }
     if (kind[i] == "FALL") {
-      if (!done[i] && val < lim[i]) { done[i] = 1; tcut[i] = t }
+      if (!done[i] && t >= tstart[i] && val < lim[i]) { done[i] = 1; tcut[i] = t }
       continue
     }
     if (t >= t0[i] && t <= t1[i]) {
@@ -58,7 +60,8 @@ END {
   printf "sweep_key=%s\n", (swkey == "" ? "NONE" : swkey)
   for (i = 1; i <= ndir; i++) {
     if (kind[i] == "CROSS" || kind[i] == "FALL") {
-      if (done[i]) printf "OK   %-6s %s thr=%g t=%.9g\n", kind[i], sig[i], lim[i], tcut[i]
+      if (done[i]) printf "OK   %-6s %s thr=%g t=%.9g%s\n", kind[i], sig[i], lim[i], tcut[i], \
+                         (tstart[i] < 0 ? "" : sprintf(" t0=%.9g", tstart[i]))
       else       { printf "FAIL %-6s %s thr=%g never-crossed\n", kind[i], sig[i], lim[i]; nfail++ }
       continue
     }
