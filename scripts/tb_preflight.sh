@@ -100,6 +100,12 @@ P1AWK='
     vplus[nvsrc] = narr[1]; vminus[nvsrc] = narr[2]; vval[nvsrc] = val
     next
   }
+  raw ~ /^[mM][A-Za-z0-9_]*[ \t]*\(/ && raw !~ /vsource|isource|capacitor|resistor|inductor/ {
+    nc = toks(between(raw), narr)          # flat testbench: a top-level MOS device
+    for (i = 1; i <= nc; i++) topnets[narr[i]] = 1
+    nmdev++
+    next
+  }
   $1 ~ /^X/ && raw ~ /\(/ {
     nl = toks(between(raw), narr)
     cn = raw; sub(/^[^)]+\)[ \t]*/, "", cn); sub(/[ \t].*$/, "", cn)
@@ -150,7 +156,31 @@ P1AWK='
         }
       }
     }
-    if (ninst == 0) { print "STATIC_FAIL no subckt instance matched a known subckt definition -- the cell file was not parsed"; bad = 1 }
+    if (ninst == 0) {
+      # A flat deck (devices instantiated directly, no cell subckt) is legitimate -- the
+      # data-driver characterisation testbenches are exactly that. The rail contract is
+      # then enforced by name plus the operating-point probe, not by port mapping.
+      if (nmdev == 0) {
+        print "STATIC_FAIL no subckt instance and no top-level device: nothing to test"
+        bad = 1
+      } else {
+        printf "STATIC_NOTE flat deck: %d top-level device(s), port mapping checks not applicable\n", nmdev
+        tied = 0
+        for (j = 1; j <= nvsrc; j++)
+          if ((vplus[j] == "vss" && vminus[j] == "0") || (vminus[j] == "vss" && vplus[j] == "0")) tied = 1
+        if (topnets["vss"] && !tied) {
+          print "STATIC_FAIL a net named vss is connected to devices but is NOT tied to reference node 0 -- every NMOS in this deck would be silently dead"
+          bad = 1
+        } else if (topnets["vss"]) print "STATIC_OK vss net tied to reference node 0 (flat deck)"
+        driven = 0
+        for (j = 1; j <= nvsrc; j++)
+          if ((vplus[j] == "vdd" && vminus[j] == "0") || (vminus[j] == "vdd" && vplus[j] == "0")) driven = 1
+        if (topnets["vdd"] && !driven) {
+          print "STATIC_FAIL a net named vdd is connected to devices but has no independent source to node 0"
+          bad = 1
+        } else if (topnets["vdd"]) print "STATIC_OK vdd net referenced to node 0 (flat deck)"
+      }
+    }
     s = ""
     for (k in allnets) s = s " " k
     print (bad ? "STATIC_RESULT FAIL" : "STATIC_RESULT PASS")
