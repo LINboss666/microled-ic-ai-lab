@@ -59,7 +59,10 @@ DENY_PATH = [
 DENY_CONTENT = [
     ("spice_model_card",     re.compile(r"^\s*\.\s*model[\s.]", re.I | re.M)),
     ("spice_param_block",    re.compile(r"^\s*\.\s*param[\s.]", re.I | re.M)),
-    ("model_param_line",     re.compile(r"^\s*\+\s*[A-Za-z][A-Za-z0-9_]{1,14}\s*=\s*[-+0-9.eE]", re.M)),
+    # SPICE model continuation line: '+' then an UPPERCASE parameter then '='.
+    # Uppercase is required on purpose: a git diff of one of our own netlists contains
+    # lines like "+  parameters ln=2e-7", which must not be mistaken for a model card.
+    ("model_param_line",     re.compile(r"^\s*\+\s*(?!parameters\b)[A-Z][A-Z0-9_]{1,12}\s*=\s*[-+0-9.eE]", re.M)),
     ("bsim_vth0_parameter",  re.compile(r"\bVTH0\s*=", re.I)),
     ("calibre_deck_section", re.compile(r"^\s*(primary keywords|lvs section|drc section|syntax check)\b", re.I | re.M)),
     ("oa_binary_marker",     re.compile(r"\x00OA(\x00|STREAM)")),

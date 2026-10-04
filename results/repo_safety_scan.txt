@@ -1,0 +1,241 @@
+== MUST_IGNORE: 12
+   .ic617_agent_bridge_credentials                          path_matches:*credentials*
+   course_source/<name withheld: excluded from the repository> path_matches:course_source/*
+   course_source/<name withheld: excluded from the repository> path_matches:course_source/*
+   course_source/<name withheld: excluded from the repository> path_matches:course_source/*
+   course_source/<name withheld: excluded from the repository> path_matches:course_source/*
+   logs/pdk_inventory_raw.txt                               path_matches:logs/pdk_inventory_raw.txt
+   pdk_compare/<name withheld: excluded from the repository> path_matches:pdk_compare/*
+   pdk_compare/<name withheld: excluded from the repository> path_matches:pdk_compare/*
+   pdk_compare/<name withheld: excluded from the repository> path_matches:pdk_compare/*;large_file:372605
+   pdk_compare/<name withheld: excluded from the repository> path_matches:pdk_compare/*;large_file:427772
+   review/review_bundle_016e170.zip                         path_matches:*.zip;unknown_extension:.zip
+   review/review_bundle_7c83256.zip                         path_matches:*.zip;unknown_extension:.zip
+== NEEDS_REVIEW: 48
+   .gitignore                                               vendor_name_in_prose:smic18mmrf_teacher
+   AGENTS.md                                                vendor_name_in_prose:cr018gpii_v1d0
+   microled/spec/system_requirements.md                     vendor_name_in_prose:/root/tech`；不跑,smic18mmrf_teacher
+   reports/architecture_baseline.md                         vendor_name_in_prose:smic18mmrf_teacher
+   reports/c2mos_dff_result.md                              vendor_name_in_prose:ms018_enhanced_v1p2_rev0_spe,smic18mmrf_teacher
+   reports/c2mos_review_notes.md                            vendor_name_in_prose:smic18mmrf_teacher
+   reports/pdk_inventory.md                                 vendor_name_in_prose:/root/tech/PDK_tsmc-65nm/PDK_tsmc-65nm`,/root/tech/`,/root/tech/smic18ee_OA/smic18ee_2P6M_20100810`,/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF`
+   reports/pdk_zip_vs_guest.md                              vendor_name_in_prose:/root/tech/smic_018mmrf-OA/.../SMIC_018_MMRF`,/root/tech`,/root/tech`。,/root/tech）
+   reports/phase2_validation.md                             vendor_name_in_prose:/root/tech/**`,/root/tech`,ms018_enhanced_v1p2_rev0,smic18mmrf_teacher
+   reports/shift_unit_status.md                             vendor_name_in_prose:/root/tech`；未做,smic18mmrf_teacher
+   reports/topology_channel_check.md                        vendor_name_in_prose:/root/tech`、未做器件尺寸设计、未虚构,smic18mmrf_teacher
+   results/architecture_baseline.json                       vendor_name_in_prose:smic18mmrf_teacher
+   review/history_before_pii_redaction.bundle               unknown_extension:.bundle
+   review/history_pre_gc.bundle                             unknown_extension:.bundle
+   review/review_bundle_016e170/REVIEW_README.md            vendor_name_in_prose:smic18mmrf_teacher
+   review/review_bundle_016e170/git_diff.patch              unknown_extension:.patch;vendor_name_in_prose:ms018_enhanced_v1p2_rev0_spe,smic18mmrf_teacher
+   review/review_bundle_016e170/reports/AGENTS.md           vendor_name_in_prose:cr018gpii_v1d0
+   review/review_bundle_016e170/reports/reports/c2mos_dff_result.md vendor_name_in_prose:ms018_enhanced_v1p2_rev0_spe,smic18mmrf_teacher
+   review/review_bundle_016e170/reports/reports/c2mos_review_notes.md vendor_name_in_prose:smic18mmrf_teacher
+   review/review_bundle_016e170/reports/reports/shift_unit_status.md vendor_name_in_prose:/root/tech`；未做,smic18mmrf_teacher
+   review/review_bundle_016e170/source/scripts/precommit_safety_check.py vendor_name_in_prose:smic18mmrf_teacher
+   review/review_bundle_016e170/source/scripts/repo_safety_rules.py vendor_name_in_prose:/root/tech[^\s\,SMIC_018_MMRF,cr018gpii_v1d0,e2r018_v1p8
+   review/review_bundle_016e170/source/spectre/C2MOS_DFF.scs vendor_name_in_prose:smic18mmrf_teacher
+   review/review_bundle_016e170/source/spectre/c2mos_ff1_func.scs vendor_name_in_prose:smic18mmrf_teacher
+   review/review_bundle_016e170/source/spectre/generated/run_ff1_envtest.scs vendor_name_in_prose:smic18mmrf_teacher
+   review/review_bundle_7c83256/REVIEW_README.md            vendor_name_in_prose:smic18mmrf_teacher
+   review/review_bundle_7c83256/git_diff.patch              unknown_extension:.patch;vendor_name_in_prose:ms018_enhanced_v1p2_rev0_spe,smic18mmrf_teacher
+   review/review_bundle_7c83256/reports/AGENTS.md           vendor_name_in_prose:cr018gpii_v1d0
+   review/review_bundle_7c83256/reports/reports/c2mos_dff_result.md vendor_name_in_prose:ms018_enhanced_v1p2_rev0_spe,smic18mmrf_teacher
+   review/review_bundle_7c83256/reports/reports/c2mos_review_notes.md vendor_name_in_prose:smic18mmrf_teacher
+   review/review_bundle_7c83256/reports/reports/shift_unit_status.md vendor_name_in_prose:/root/tech`；未做,smic18mmrf_teacher
+   review/review_bundle_7c83256/source/scripts/precommit_safety_check.py vendor_name_in_prose:smic18mmrf_teacher
+   review/review_bundle_7c83256/source/scripts/repo_safety_rules.py vendor_name_in_prose:/root/tech[^\s\,SMIC_018_MMRF,cr018gpii_v1d0,e2r018_v1p8
+   review/review_bundle_7c83256/source/spectre/C2MOS_DFF.scs vendor_name_in_prose:smic18mmrf_teacher
+   review/review_bundle_7c83256/source/spectre/c2mos_ff1_func.scs vendor_name_in_prose:smic18mmrf_teacher
+   review/review_bundle_7c83256/source/spectre/generated/run_ff1_envtest.scs vendor_name_in_prose:smic18mmrf_teacher
+   scripts/microled_arch_calc.py                            vendor_name_in_prose:smic18mmrf_teacher
+   scripts/precommit_safety_check.py                        vendor_name_in_prose:smic18mmrf_teacher
+   scripts/repo_safety_rules.py                             vendor_name_in_prose:/root/tech[^\s\,SMIC_018_MMRF,cr018gpii_v1d0,e2r018_v1p8
+   scripts/test_safety_rules.py                             vendor_name_in_prose:smic18mmrf_teacher
+   skill/pdk_inventory.sh                                   vendor_name_in_prose:/root/tech}}
+   spec/system_requirements.md                              vendor_name_in_prose:/root/tech`；不跑,smic18mmrf_teacher
+   spectre/C2MOS_DFF.scs                                    vendor_name_in_prose:smic18mmrf_teacher
+   spectre/c2mos_ff1_func.scs                               vendor_name_in_prose:smic18mmrf_teacher
+   spectre/generated/run_ff1_envtest.scs                    vendor_name_in_prose:smic18mmrf_teacher
+   spectre/model_probe_mmrf_teacher_1v8.scs                 vendor_name_in_prose:ms018_enhanced_v1p2_rev0_spe
+   spectre/model_probe_smic18ee_nm.scs                      vendor_name_in_prose:e2r018_v1p8
+   spectre/shift_unit_tb.scs                                vendor_name_in_prose:ms018_enhanced_v1p2_rev0
+== SAFE_TO_TRACK: 177
+   .gitattributes                                           
+   CONTRIBUTING_AI.md                                       
+   README.md                                                
+   logs/bridge_20261004_164213.json                         
+   logs/bridge_20261004_164315.json                         
+   logs/bridge_20261004_164431.json                         
+   logs/bridge_20261004_164735.json                         
+   logs/bridge_20261004_165251.json                         
+   logs/bridge_20261004_174204.json                         
+   logs/pulled_probe.log                                    
+   logs/smoke_20261004_164213_1_skill_smoke_test.il.log     
+   logs/smoke_20261004_164213_2_skill_smoke_test.il.log     
+   logs/smoke_20261004_164243_1_cadence_agent_test.il.log   
+   logs/smoke_20261004_164315_1_cadence_agent_test.il.log   
+   logs/smoke_20261004_164431_1_skill_smoke_test.il.log     
+   logs/smoke_20261004_164431_2_skill_smoke_test.il.log     
+   logs/smoke_20261004_164431_3_skill_smoke_test.il.log     
+   logs/smoke_20261004_164735_1_skill_smoke_test.il.log     
+   logs/smoke_20261004_164735_2_skill_smoke_test.il.log     
+   logs/smoke_20261004_165251_1_skill_smoke_test.il.log     
+   logs/smoke_20261004_165251_2_skill_smoke_test.il.log     
+   logs/smoke_20261004_174204_1_skill_smoke_test.il.log     
+   microled/README.md                                       
+   reports/cadence_probe.md                                 
+   reports/environment_probe.md                             
+   reports/final_validation.md                              
+   results/architecture_baseline.guest_py26.json            
+   results/c2mos_delays.csv                                 
+   results/c2mos_ff1_levels.csv                             
+   results/c2mos_shift3_levels.csv                          
+   results/evidence/c2mos_assert_ff1_envtest_1.txt          
+   results/evidence/c2mos_assert_ff1_envtest_2.txt          
+   results/evidence/c2mos_assert_shift3_envnominal_1.txt    
+   results/evidence/c2mos_assert_shift3_envtest_1.txt       
+   results/evidence/c2mos_assert_shift3_envtest_2.txt       
+   results/evidence/c2mos_delays_ff1_envtest_1.txt          
+   results/evidence/c2mos_delays_ff1_envtest_2.txt          
+   results/evidence/c2mos_delays_shift3_envnominal_1.txt    
+   results/evidence/c2mos_delays_shift3_envtest_1.txt       
+   results/evidence/c2mos_delays_shift3_envtest_2.txt       
+   results/evidence/c2mos_dirs_ff1_envtest.txt              
+   results/evidence/c2mos_dirs_shift3_envtest.txt           
+   results/evidence/c2mos_run_ff1_envtest_1.out             
+   results/evidence/c2mos_run_shift3_envtest_1.out          
+   results/evidence/margin_assert_hold.txt                  
+   results/evidence/margin_assert_setup.txt                 
+   results/evidence/margin_run_hold.out                     
+   results/evidence/margin_run_setup.out                    
+   results/evidence/wave_sample.csv                         
+   results/margin_hold.csv                                  
+   results/margin_setup.csv                                 
+   results/repo_safety_scan.txt                             
+   results/summary.json                                     
+   review/review_bundle_016e170/changed_files.txt           
+   review/review_bundle_016e170/git_log.txt                 
+   review/review_bundle_016e170/git_status.txt              
+   review/review_bundle_016e170/manifest.txt                
+   review/review_bundle_016e170/results/results/c2mos_delays.csv 
+   review/review_bundle_016e170/results/results/c2mos_ff1_levels.csv 
+   review/review_bundle_016e170/results/results/c2mos_shift3_levels.csv 
+   review/review_bundle_016e170/results/results/evidence/c2mos_assert_ff1_envtest_1.txt 
+   review/review_bundle_016e170/results/results/evidence/c2mos_assert_ff1_envtest_2.txt 
+   review/review_bundle_016e170/results/results/evidence/c2mos_assert_shift3_envnominal_1.txt 
+   review/review_bundle_016e170/results/results/evidence/c2mos_assert_shift3_envtest_1.txt 
+   review/review_bundle_016e170/results/results/evidence/c2mos_assert_shift3_envtest_2.txt 
+   review/review_bundle_016e170/results/results/evidence/c2mos_delays_ff1_envtest_1.txt 
+   review/review_bundle_016e170/results/results/evidence/c2mos_delays_ff1_envtest_2.txt 
+   review/review_bundle_016e170/results/results/evidence/c2mos_delays_shift3_envnominal_1.txt 
+   review/review_bundle_016e170/results/results/evidence/c2mos_delays_shift3_envtest_1.txt 
+   review/review_bundle_016e170/results/results/evidence/c2mos_delays_shift3_envtest_2.txt 
+   review/review_bundle_016e170/results/results/evidence/c2mos_dirs_ff1_envtest.txt 
+   review/review_bundle_016e170/results/results/evidence/c2mos_dirs_shift3_envtest.txt 
+   review/review_bundle_016e170/results/results/evidence/margin_assert_hold.txt 
+   review/review_bundle_016e170/results/results/evidence/margin_assert_setup.txt 
+   review/review_bundle_016e170/results/results/evidence/wave_sample.csv 
+   review/review_bundle_016e170/results/results/margin_hold.csv 
+   review/review_bundle_016e170/results/results/margin_setup.csv 
+   review/review_bundle_016e170/results/results/summary.json 
+   review/review_bundle_016e170/source/scripts/c2mos_check.sh 
+   review/review_bundle_016e170/source/scripts/c2mos_margin.sh 
+   review/review_bundle_016e170/source/scripts/export_results.py 
+   review/review_bundle_016e170/source/scripts/make_review_bundle.py 
+   review/review_bundle_016e170/source/scripts/psf_check.awk 
+   review/review_bundle_016e170/source/scripts/psf_dump.awk 
+   review/review_bundle_016e170/source/scripts/sync2guest.sh 
+   review/review_bundle_016e170/source/spectre/c2mos_diag.scs 
+   review/review_bundle_016e170/source/spectre/c2mos_shift3.scs 
+   review/review_bundle_016e170/source/spectre/generated/margin_hold.scs 
+   review/review_bundle_016e170/source/spectre/generated/margin_setup.scs 
+   review/review_bundle_016e170/source/spectre/generated/run_shift3_envnominal.scs 
+   review/review_bundle_016e170/source/spectre/generated/run_shift3_envtest.scs 
+   review/review_bundle_016e170/source/spectre/nmos_probe.scs 
+   review/review_bundle_7c83256/changed_files.txt           
+   review/review_bundle_7c83256/git_log.txt                 
+   review/review_bundle_7c83256/git_status.txt              
+   review/review_bundle_7c83256/manifest.txt                
+   review/review_bundle_7c83256/results/results/c2mos_delays.csv 
+   review/review_bundle_7c83256/results/results/c2mos_ff1_levels.csv 
+   review/review_bundle_7c83256/results/results/c2mos_shift3_levels.csv 
+   review/review_bundle_7c83256/results/results/evidence/c2mos_assert_ff1_envtest_1.txt 
+   review/review_bundle_7c83256/results/results/evidence/c2mos_assert_ff1_envtest_2.txt 
+   review/review_bundle_7c83256/results/results/evidence/c2mos_assert_shift3_envnominal_1.txt 
+   review/review_bundle_7c83256/results/results/evidence/c2mos_assert_shift3_envtest_1.txt 
+   review/review_bundle_7c83256/results/results/evidence/c2mos_assert_shift3_envtest_2.txt 
+   review/review_bundle_7c83256/results/results/evidence/c2mos_delays_ff1_envtest_1.txt 
+   review/review_bundle_7c83256/results/results/evidence/c2mos_delays_ff1_envtest_2.txt 
+   review/review_bundle_7c83256/results/results/evidence/c2mos_delays_shift3_envnominal_1.txt 
+   review/review_bundle_7c83256/results/results/evidence/c2mos_delays_shift3_envtest_1.txt 
+   review/review_bundle_7c83256/results/results/evidence/c2mos_delays_shift3_envtest_2.txt 
+   review/review_bundle_7c83256/results/results/evidence/c2mos_dirs_ff1_envtest.txt 
+   review/review_bundle_7c83256/results/results/evidence/c2mos_dirs_shift3_envtest.txt 
+   review/review_bundle_7c83256/results/results/evidence/margin_assert_hold.txt 
+   review/review_bundle_7c83256/results/results/evidence/margin_assert_setup.txt 
+   review/review_bundle_7c83256/results/results/evidence/wave_sample.csv 
+   review/review_bundle_7c83256/results/results/margin_hold.csv 
+   review/review_bundle_7c83256/results/results/margin_setup.csv 
+   review/review_bundle_7c83256/results/results/summary.json 
+   review/review_bundle_7c83256/source/scripts/c2mos_check.sh 
+   review/review_bundle_7c83256/source/scripts/c2mos_margin.sh 
+   review/review_bundle_7c83256/source/scripts/export_results.py 
+   review/review_bundle_7c83256/source/scripts/make_review_bundle.py 
+   review/review_bundle_7c83256/source/scripts/psf_check.awk 
+   review/review_bundle_7c83256/source/scripts/psf_dump.awk 
+   review/review_bundle_7c83256/source/scripts/sync2guest.sh 
+   review/review_bundle_7c83256/source/spectre/c2mos_diag.scs 
+   review/review_bundle_7c83256/source/spectre/c2mos_shift3.scs 
+   review/review_bundle_7c83256/source/spectre/generated/margin_hold.scs 
+   review/review_bundle_7c83256/source/spectre/generated/margin_setup.scs 
+   review/review_bundle_7c83256/source/spectre/generated/run_shift3_envnominal.scs 
+   review/review_bundle_7c83256/source/spectre/generated/run_shift3_envtest.scs 
+   review/review_bundle_7c83256/source/spectre/nmos_probe.scs 
+   scripts/c2mos_check.sh                                   
+   scripts/c2mos_margin.sh                                  
+   scripts/export_results.py                                
+   scripts/guest.sh                                         
+   scripts/install_hooks.sh                                 
+   scripts/make_review_bundle.py                            
+   scripts/pdk_model_probe.sh                               
+   scripts/probe_vm.ps1                                     
+   scripts/psf_check.awk                                    
+   scripts/psf_dump.awk                                     
+   scripts/repo_parity.py                                   
+   scripts/repo_safety_scan.py                              
+   scripts/run_spectre.sh                                   
+   scripts/run_virtuoso.sh                                  
+   scripts/scan_tcp.mjs                                     
+   scripts/shift_unit_check.sh                              
+   scripts/sync2guest.sh                                    
+   scripts/test_ic617_bridge.ps1                            
+   scripts/test_ssh.ps1                                     
+   scripts/tree_manifest.py                                 
+   scripts/vmfile.mjs                                       
+   scripts/vmguest.mjs                                      
+   skill/cad_env.sh                                         
+   skill/cadence_agent_test.il                              
+   skill/nograph_probe.il                                   
+   skill/probe_skill_builtins.il                            
+   skill/probe_skill_builtins2.il                           
+   skill/probe_skill_time.il                                
+   skill/run_skill.sh                                       
+   skill/skill_smoke_test.il                                
+   spectre/c2mos_diag.scs                                   
+   spectre/c2mos_shift3.scs                                 
+   spectre/generated/margin_hold.scs                        
+   spectre/generated/margin_setup.scs                       
+   spectre/generated/run_shift3_envnominal.scs              
+   spectre/generated/run_shift3_envtest.scs                 
+   spectre/model_probe_mmrf_teacher_3v3.scs                 
+   spectre/model_probe_smic18ee_5v.scs                      
+   spectre/model_probe_tsmc18.scs                           
+   spectre/model_probe_tsmc18_nm.scs                        
+   spectre/model_probe_tsmc18_pm.scs                        
+   spectre/nmos_probe.scs                                   
+   spectre/pdk_local.env.example                            
+   spectre/smoke_rc.scs                                     
+   spectre/tg_test_off.scs                                  
+   spectre/tg_test_on.scs                                   
+SUMMARY total=237 safe=177 ignore=12 review=48

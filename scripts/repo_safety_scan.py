@@ -24,6 +24,17 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import repo_safety_rules as R  # noqa: E402
 
 
+def mask(rel):
+    """Do not print the names of files we exclude precisely because they are
+    third-party deliveries -- a scan report is not a place to inventory them."""
+    for pre in ("course_source/", "pdk_compare/"):
+        if rel.startswith(pre):
+            return pre + "<name withheld: excluded from the repository>"
+    if rel.startswith("logs/") and "TD-MM18" in rel:
+        return "logs/<vendor document id withheld>"
+    return rel
+
+
 def main():
     args = sys.argv[1:]
     as_json = "--json" in args
@@ -36,7 +47,7 @@ def main():
     buckets = {"SAFE_TO_TRACK": [], "MUST_IGNORE": [], "NEEDS_REVIEW": []}
     for full, rel in R.walk_root(root):
         info = R.classify_file(full, rel)
-        buckets[info["bucket"]].append((rel, info["reasons"]))
+        buckets[info["bucket"]].append((mask(rel), info["reasons"]))
 
     if as_json:
         print(json.dumps({k: [{"path": p, "reasons": r} for p, r in v]
