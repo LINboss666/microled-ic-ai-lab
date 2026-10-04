@@ -4,7 +4,7 @@
 |---|---|
 | repository | `LINboss666/microled-ic-ai-lab` |
 | remote `main` (default branch) | `11446f5c26730416692ec79615cf86e11aa76dc5` |
-| `poc/c2mos-dff` (all Phase-4 work) | `45c7254aa2a4b4d05bef1faf1e87792b7843a891` |
+| `poc/c2mos-dff` (all Phase-4 work) | local and remote match; the audited head is named by `AUDITED_HEAD` in `results/public_release_audit.txt` |
 | audit before the flip | `PUBLIC_RELEASE_SAFETY_GATE: FAIL` (transcript below) |
 | visibility now | `PUBLIC` -- by the owner's explicit instruction, with the exposure below acknowledged |
 | audit command | `python scripts/public_release_audit.py` |
@@ -139,22 +139,18 @@ Two things follow, and both are recorded rather than smoothed over:
   public history data can stay accessible afterwards. So the routes below are about
   *removing* the objects, not about re-hiding the repository.
 
-## Push state while this was written: `PUSH_PENDING_NETWORK`
+## Push state: resolved on 2026-10-05 after a proxy change
 
-`github.com:443` refuses git smart-HTTP from this host while `api.github.com` answers
-normally (five attempts over about fifteen minutes, HTTP/1.1 and HTTP/2 both). So:
+`github.com:443` refused git smart-HTTP from this host for a while (`PUSH_PENDING_NETWORK`,
+eight attempts) while `api.github.com` answered normally. After the owner switched proxy,
+`git push origin poc/c2mos-dff` succeeded and the branch is now `0f7bf8a` on both sides;
+`results/public_release_audit.txt` is the post-PUBLIC transcript, audited at that head with
+local and remote refs matching.
 
-| | value |
-|---|---|
-| public `poc/c2mos-dff` head | `45c7254` |
-| local `poc/c2mos-dff` head | ahead by the release/reporting commits |
-| circuit code in those commits | none -- `git diff --name-only 45c7254..HEAD` lists only release tooling scripts and reports |
-
-The reviewers therefore already read the identical cell netlist, testbenches, checkers and
-results from the public branch; what is not yet pushed is this document's later edits and
-the bundle generator's derivation. The transcript on record predates the visibility
-change, and the audit's ref-comparison line reports the gap rather than hiding it. Once
-the push lands, re-run `python scripts/public_release_audit.py` to replace the transcript.
+Before that push landed, the gap was verified harmless for review: `git diff --name-only
+45c7254..HEAD` listed only release/reporting tooling and reports, and the cell netlist, the
+checker, the run scripts and `summary.json` had identical blob IDs at both heads -- so a
+reviewer reading the public branch was already reading the code under review.
 
 ## Routes that would clear the exposure
 1. **Wait and re-audit.** GitHub's garbage collection eventually removes objects no ref

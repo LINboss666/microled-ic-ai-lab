@@ -10,15 +10,15 @@
 == gate staged: SAFETY_GATE: PASS
 == gate: SAFETY_GATE: PASS
 == gate: SAFETY_GATE: PASS
-== commit metadata: 20 author/committer records, phone-email hits=0
+== commit metadata: 28 author/committer records, phone-email hits=0
    author+committer emails: 237816241+LINboss666@users.noreply.github.com
 == git fsck --full: 0 dangling/missing line(s)
 == origin: https://github.com/LINboss666/microled-ic-ai-lab.git -> audit target LINboss666/microled-ic-ai-lab
 == gh api identity: LINboss666
-== remote repo: visibility=PRIVATE private=True default_branch=main size_kb=183 fork=False
+== remote repo: visibility=PUBLIC private=False default_branch=main size_kb=313 fork=False
 == repo description: Micro LED scan-driver IC: AI-Cadence POC (IC617 + SMIC 018 MM RF). Own netlists, checkers and numbers only; no PDK, no model cards, no credentials.
    ref refs/heads/main              local=11446f5c remote=11446f5c match
-   ref refs/heads/poc/c2mos-dff     local=0f9967cb remote=0f9967cb match
+   ref refs/heads/poc/c2mos-dff     local=0f7bf8a5 remote=0f7bf8a5 match
 == open+closed PRs    count=0
 == forks              count=0
 == actions/workflows  count=0
@@ -35,9 +35,10 @@
    superseded bdce7121 -> SERVED BY REMOTE, phone-shaped email fields=2, tree matches clean history=True (not on any ref)
    superseded c489b280 -> SERVED BY REMOTE, phone-shaped email fields=2, tree matches clean history=True (not on any ref)
 == superseded: 10 rewritten commits, 9 still served, 18 phone-shaped email fields on the server, 9/9 served trees match the clean history
+   NOTE the repository is ALREADY PUBLIC while these objects are readable by SHA. That is the owner's explicit decision (2026-10-05), not an unexamined leak. This gate still prints FAIL -- the exposure is real and this line is the tracker for clearing it, not a stamp. Re-running to PASS is the remaining work; flipping back to PRIVATE would not undo it (GitHub keeps public history data accessible after a visibility downgrade).
 
 AUDITED_BRANCH = poc/c2mos-dff
-AUDITED_HEAD = 0f9967cb850b4c756711dddef4afb9a4037523a7
+AUDITED_HEAD = 0f7bf8a58a098ecc3c08c548b0437681b3582420
 PDK_TRACKED_FILES = 0
 CREDENTIAL_TRACKED_FILES = 0
 PRIVATE_KEYS_TRACKED_FILES = 0
@@ -45,10 +46,12 @@ VENDOR_MODEL_TRACKED_FILES = 0
 PHONE_EMAIL_OCCURRENCES = 0
 forbidden_names_in_tracked = 0
 DANGLING_OBJECTS = 0  (content scanned by --mode objects, not judged by existence)
-REPOSITORY_VISIBILITY_NOW = PRIVATE
+REPOSITORY_VISIBILITY_NOW = PUBLIC
 SUPERSEDED_COMMITS_SERVED_BY_REMOTE = 9
 SUPERSEDED_TREES_MATCHING_CLEAN_HISTORY = 9/9
 REMOTE_PHONE_EMAIL_FIELDS = 18
 PROBLEM 9 superseded commit objects are still served by the remote; making the repository PUBLIC would make them anonymously readable by SHA
 PROBLEM 18 phone-shaped author/committer emails are readable on the remote even though local history is clean
+SOURCE_RELEASE_SAFETY = PASS  (PDK / vendor model / deck / credentials / key / raw PSF)
+IDENTITY_PRIVACY_CLEANUP = PENDING_OWNER_ACCEPTED  (9 superseded commits served, 18 email fields)
 PUBLIC_RELEASE_SAFETY_GATE: FAIL
