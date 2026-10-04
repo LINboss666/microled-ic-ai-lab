@@ -1,0 +1,122 @@
+// ==============================================================================
+// 1-bit scan-driver shift cell -- functional verification testbench
+//
+// Process  : teacher's SMIC 018 MM RF copy, ms018_enhanced_v1p2_rev0, section=tt
+// Devices  : 1.8 V core only (n18 / p18). No 3.3 V, no DNW, no stacked devices.
+// Scope    : ONE channel. Three cascaded cells only because a bit cannot be shown to
+//            "shift" with fewer than two; this is NOT an array.
+//
+// DELIBERATELY ABSENT (frozen by user decision 2026-10-04): the scan OUTPUT stage.
+// VLED and the Micro LED Vf are NOT DEFINED, so there is no electrode driver, no
+// output-voltage-domain choice and no output-swing claim. `preout` is an internal
+// non-inverting pre-driver buffer used only to show the cell can drive a following
+// stage; its load is a TESTBENCH ASSUMPTION.
+//
+// Latch structure (corrected after the first two runs):
+//   Each latch = cross-coupled pair of inverters (true bistable) + a clocked capture
+//   transfer gate that overrides the keeper during its phase.
+//   The first attempt used a clocked feedback TG instead of the second inverter,
+//   which makes m1->m2->m1 a ring of negative feedback (not a latch); that plus
+//   both clocks being low at t=0 left the chain undefined.
+//   Transfer-gate devices are sized ~2x the keeper inverters so writes win.
+//
+// Clocks are strict complements (no dead band):
+//   clk  = 1 on [0, 0.45T]           -> master captures, slave holds
+//   clkb = 0 on [0, 0.45T], 1 after  -> slave transparent while master holds
+//   A production scan driver adds real non-overlap; that is a later design item,
+//   not something this functional unit claims to have verified.
+//
+// Per-cell transfer is NON-INVERTING (q follows d): m1=D, m2=!D, s1=m2, q=!s1=D.
+//
+// TESTBENCH ASSUMPTIONS (none of these come from the course requirement):
+//   T        = 9.765625e-6 s  (100 Hz column period, derived 1/(1024*100))
+//   Cload    = 0.5 pF on preout (placeholder; the real column load needs layout RC
+//              and the undefined VLED/Vf -> NOT DEFINED)
+//   edge rate= 1..2 ns source rise/fall
+//   R=1e8    = DC symmetry nudges only; the first transparent phase is what actually
+//              establishes the chain state (a resistor cannot beat a driven keeper)
+// ==============================================================================
+// ROOT-CAUSE NOTE (the reason the first two runs failed): a Spectre MOSFET line is
+//   Mname (drain gate bulk source) model ...
+// The transfer gates were first written as (a b GATE bulk), which put the clock on the
+// BULK and the data on the GATE, so they never behaved as switches. Correct order is
+// used below: nodeA gate nodeB bulk.
+//
+// ==============================================================================
+simulator lang=spectre insensitive=yes
+
+include "${QODER_PDK_LIB}" section=tt
+
+parameters T=9.765625e-6
+parameters VDDV=1.8
+
+// ---------------------------------------------------------------- one shift cell
+subckt scell (d clk clkb q nq preout vdd vss)
+  // one `parameters` statement per group: the kit's own files continue with '+', but
+  // separate statements are unambiguous and avoid relying on continuation syntax
+  parameters ln=2e-7
+  // Sizing rule for a node-latch chain (this was the second failure): the keeper must
+  // be STRONGER than the capture transfer gate, otherwise the next cell's write path
+  // pulls the stored value away while this cell is supposed to be holding -- which is
+  // exactly what the first measurement showed (q1 collapsing during clk=1, q2 never
+  // reaching its own slot). So TG < keeper here.
+  parameters wtgn=1e-6 wtgp=2e-6
+  parameters wkn=2e-6   wkp=4e-6
+  parameters wnb=3e-6   wpb=6e-6
+
+  // ---- master latch: cross-coupled inverters + clk-capture TG on node m1
+  // Authoritative order, from `spectre -h bsim4` on this host:  Name ( d g s b ) ModelName
+  // -- the bulk is the LAST terminal (proved by spectre/tg_test_{on,off}.scs: 3/3 PASS).
+  // Two ways this was gotten wrong earlier: (A B gate bulk) put the data on the gate,
+  // and (A gate bulk B) put the clock node on the source. Both destroy the switch.
+  // Correct: (nodeA gate nodeB bulk).
+  mn1 (m1 clk  d vss)    n18 l=ln w=wtgn     // NM conducts while clk=1
+  mp1 (m1 clkb d vdd)    p18 l=ln w=wtgp     // PM conducts while clkb=0
+  mn2 (m2 m1 vss vss)  n18 l=ln w=wkn
+  mp2 (m2 m1 vdd vdd)  p18 l=ln w=wkp
+  mn3 (m1 m2 vss vss)  n18 l=ln w=wkn       // second inverter: m2 -> m1 (hold loop)
+  mp3 (m1 m2 vdd vdd)  p18 l=ln w=wkp
+
+  // ---- slave latch: cross-coupled inverters + clkb-capture TG on node s1
+  mn4 (s1 clkb m2 vss)  n18 l=ln w=wtgn     // conducts while clkb=1
+  mp4 (s1 clk  m2 vdd)  p18 l=ln w=wtgp    // conducts while clk=0
+  mn5 (q  s1 vss vss)  n18 l=ln w=wkn
+  mp5 (q  s1 vdd vdd)  p18 l=ln w=wkp
+  mn6 (s1 q  vss vss)  n18 l=ln w=wkn       // second inverter: q -> s1 (hold loop)
+  mp6 (s1 q  vdd vdd)  p18 l=ln w=wkp
+
+  // complementary state
+  mn7 (nq q vss vss) n18 l=ln w=wkn
+  mp7 (nq q vdd vdd) p18 l=ln w=wkp
+
+  // internal pre-driver: two inversions so preout follows q (NOT the frozen
+  // electrode output stage)
+  mn8 (i1 q    vss vss)  n18 l=ln w=wnb
+  mp8 (i1 q    vdd vdd)  p18 l=ln w=wpb
+  mn9 (preout i1 vss vss) n18 l=ln w=wnb
+  mp9 (preout i1 vdd vdd) p18 l=ln w=wpb
+
+  r1 (m1 vss) resistor r=1e8
+  r2 (s1 vdd) resistor r=1e8
+ends scell
+
+// ------------------------------------------------------------------- testbench
+Vdd (vdd 0) vsource dc=VDDV
+
+// strict complements: clk high for the first 45% of every T; clkb low there
+Ck  (clk 0)  vsource type=pulse val0=0    val1=VDDV period=T delay=0 width=0.45*T rise=1e-9 fall=1e-9
+Ckb (clkb 0) vsource type=pulse val0=VDDV val1=0    period=T delay=0 width=0.45*T rise=1e-9 fall=1e-9
+
+// a single '1' -- the equivalent of the scan start pulse -- valid across one full
+// clk window starting at 1.0T, then the chain is empty again
+Din (d0 0)   vsource type=pulse val0=0    val1=VDDV period=1  delay=1.0*T width=1.0*T rise=2e-9 fall=2e-9
+
+X1 (d0 clk clkb q1  nq1 o1     vdd vss) scell
+X2 (q1 clk clkb q2  nq2 o2     vdd vss) scell
+X3 (q2 clk clkb q3  nq3 preout vdd vss) scell
+
+Cload (preout 0) capacitor c=0.5e-12
+
+tr1 tran stop=8*T maxstep=2e-9 pstep=1e-8
+
+save clk clkb d0 q1 q2 q3 preout vdd X1.m1 X1.m2 X1.s1 X1.nq

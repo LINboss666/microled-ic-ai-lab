@@ -1,0 +1,21 @@
+// PDK model probe -- SMIC 0.18um EEPROM, 5 V device (n50e2r) at its 5 V nominal rail.
+// Included because a Micro LED pixel drive may need more headroom than a 1.8 V core
+// device; this only proves the thick-oxide model parses and conducts, nothing more.
+//
+// Geometry must respect the card's own validity range, otherwise Spectre aborts in
+// initial setup (CMI-2441 range warning, then CMI-2434 `Vsat' must be positive):
+//   n50e2r:  lmin=1.4e-6 lmax=1e-5  wmin=6e-7 wmax=1e-4
+// so l=2um w=10um is used here (l=0.5um is invalid for this thick-oxide device).
+simulator lang=spectre insensitive=yes
+
+include "${QODER_SMIC18EE_LIB}" section=tt
+
+Vdd (vdd 0) vsource  dc=5.0
+Rup (vdd d) resistor r=100e3
+Vgs (g 0)   vsource  dc=0
+
+M1 (d g 0 0) n50e2r l=2e-6 w=10e-6
+
+sw1 dc dev=Vgs param=dc start=0 stop=5.0 step=0.5
+
+save d g

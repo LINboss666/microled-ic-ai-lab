@@ -1,0 +1,128 @@
+# ==============================================================================
+# This repository holds OUR OWN engineering content: netlists, testbenches,
+# checkers, SKILL, scripts, reports and small numeric results.
+#
+# It must NEVER hold a foundry/instructor PDK, vendor model card, DRC/LVS deck,
+# credential, SSH key or token. Not in a commit, and not in history.
+#
+# The gate is not this file -- .gitignore only hides things from `git status`.
+# scripts/precommit_safety_check.py is what refuses a commit, and it also re-checks
+# full history before any push. Install it with scripts/install_hooks.sh.
+# ==============================================================================
+
+# ---- Foundry / instructor PDK -------------------------------------------------
+pdk/
+**/pdk/
+smic18mmrf_teacher/
+**/smic18mmrf_teacher/
+models/
+**/models/
+model/
+techfile/
+**/techfile/
+*.lib
+*.vloga
+cds.lib
+lib.defs
+cdsinfo.*
+*.oax
+*.oa
+data.sml
+journal*
+*.rvc
+*.svrf
+*.layermap
+*.tech
+DRC*
+LVS*
+
+# machine-generated listings of a PDK delivery (hundreds of vendor paths)
+pdk_compare/
+logs/pdk_inventory_raw.txt
+logs/TD-MM18-SP-2004.txt
+
+# ---- credentials, keys, tokens ------------------------------------------------
+.ic617_agent_bridge_credentials
+*credentials*
+*.pem
+*.key
+*.ppk
+id_rsa*
+id_dsa*
+id_ecdsa*
+id_ed25519*
+known_hosts*
+authorized_keys
+.env
+.env.*
+*_token*
+*secret*
+*.netrc
+.netrc
+
+# ---- local machine config (PDK paths live here, never in the repo) -----------
+**/pdk_local.env
+
+# ---- Cadence / simulator runtime and bulk output ------------------------------
+CDS.log
+CDS.log.*
+*.cdslck
+**/*.cdslck
+.vnc-cds/
+.cadence/
+home/
+skill_run/
+**/sim/
+*.raw/
+**/*.raw/
+psf/
+**/psf/
+raw/
+**/raw/
+*.psf
+*.awave
+*.vcd
+*.scs.bak
+spectre/sim/
+
+# ---- VM images, archives, binaries -------------------------------------------
+*.vmx
+*.vmdk
+*.ova
+*.ovf
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
+*.bz2
+*.exe
+*.dll
+*.so
+*.pdf
+
+# ---- instructor's delivered course documents (see reports classification note) -
+course_source/
+
+# ---- review bundles (regenerate with scripts/make_review_bundle.py) -----------
+review/
+
+# ---- python / OS --------------------------------------------------------------
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- generated netlists -------------------------------------------------------
+# spectre/generated/*.scs ARE tracked on purpose: they are the exact files that
+# produced the committed numbers, and a reviewer must be able to read them.
+
+# pre-parity Windows document mirror; spec/ and reports/ are authoritative
+microled/
+
+# ---- bridge run logs: local absolute paths, hostnames, guest IP, command
+# echoes. Evidence that matters is copied into results/evidence/ instead.
+logs/

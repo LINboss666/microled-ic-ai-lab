@@ -1,0 +1,20 @@
+// Minimal transfer-gate unit test -- TG supposed OFF.
+// NM gate=0 and PM gate=1.8 -> both off -> `out` must stay at 0 (held by Rd) even
+// though `d` is swept to 1.8 V. Together with tg_test_on.scs this proves or refutes
+// the (drain gate bulk source) reading of a SMIC n18/p18 pass device.
+simulator lang=spectre insensitive=yes
+
+include "${QODER_PDK_LIB}" section=tt
+
+Vdd (vdd 0) vsource dc=1.8
+Vd  (d    0) vsource dc=0
+Vgn (gn   0) vsource dc=0
+Vgp (gp   0) vsource dc=1.8
+
+MN (out gn d vss) n18 l=2e-7 w=2e-6
+MP (out gp d vdd) p18 l=2e-7 w=4e-6
+Rd (out 0)  resistor r=1e6
+
+sw1 dc dev=Vd param=dc start=0 stop=1.8 step=0.9
+
+save d out gn gp vdd

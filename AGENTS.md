@@ -1,0 +1,60 @@
+# AGENTS.md — ic617_agent_bridge
+
+本目录是给 Agent 用的 IC617 自动化桥接工程。开工前先读 `README.md`，本文件只写约束和坑。
+
+## 通道
+
+- 首选 SSH（密钥免密，`~/.ssh/id_rsa_ic617`）：`bash scripts/guest.sh ssh '<cmd>'`；`QODER_GUEST_IP` 由凭据文件提供默认值。
+- Guest IP 优先用 `vmrun getGuestIPAddress` 现取；拿不到时才回退到凭据文件里记录的地址，并且必须再用 TCP/22 探一次确认它没过期。`192.168.3.128` 只是本次的值。
+- VMware Tools（`vmguest.mjs` / `vmfile.mjs`）用于 VM 状态查询与 SSH 不可达时的应急执行。凭据自动从 `.ic617_agent_bridge_credentials` 读取（`guest.sh` 会 source 并导出），**不要向用户重复索要密码**。
+- 改完 `skill/*.il`、`skill/cad_env.sh`、`skill/run_skill.sh` 后，跑一次 `test_ic617_bridge.ps1` 就够了——它会 scp 同步，Windows 侧是唯一真源。
+
+## 硬约束
+
+- 不对 VM 做开机/关机/reset/挂起/重启；不创建/删除/回滚快照；不改 `.vmx`。
+- 所有 guest 侧写入限定在 `/root/qoder_ic617_sandbox/` 内。要在工程目录里跑，先得到用户明确批准。
+- 不修改 PDK、不修改已有 Cadence library、不动他人 schematic/layout、不删任何 Cadence 工程。
+- 不改 license 配置，不启停 license 服务。
+- **凭据规则（2026-10-04 用户更新，优先于早期"不落盘"要求）**：guest root 凭据已按用户明确要求持久化在 `D:\ic617_agent_bridge\.ic617_agent_bridge_credentials`（被 `.gitignore` 排除）。直接读取使用，不要再问；但密码值绝不写进报告、聊天、日志、JSON、README、其他记忆文件，也绝不提交该文件。license 值同样只在运行时取用，不复制进仓库。
+- 网络相关的唯一允许动作：guest 内 `dhclient -1 eth0`（临时租约）。不要改 `ifcfg-eth0` 的 `ONBOOT`，除非用户点头。
+- 不要为了 SSH 兼容修改 Windows 全局 SSH 配置；兼容参数只加在单次命令行上。
+- 每个问题最多 3 次修复尝试，然后带证据停下来汇报。
+
+## 会踩的坑（都是实测结论）
+
+1. **`/etc/env/virtuoso` 是包装脚本不是软链**，末尾 `virtuoso&` 会弹 GUI 并立刻返回。永远不要直接执行它；用 `skill/cad_env.sh` 取它的 `export` 行。它还有 `$D_LIBRARY_PATH` 拼写错误。
+2. **该镜像不重启就没有网络**：`ifcfg-eth0` 是 `ONBOOT=no`。SSH 连不上先查 IP，而不是查密钥。
+3. **OpenSSH_5.3 只提供 `ssh-rsa`/`ssh-dss`**，现代客户端默认拒绝。所以必须 `-oHostKeyAlgorithms=+ssh-rsa -oPubkeyAcceptedKeyTypes=+ssh-rsa`，且**不能**用 ed25519 密钥。
+4. **Git Bash 会改写 POSIX 风格路径**（argv 和环境变量值都会被换成 Windows 路径），所以 `vmguest.mjs`/`vmfile.mjs` 的路径必须经 base64 传入；不要把 `/tmp/...`、`/root/...` 直接当命令行参数丢给任何 Windows exe。
+5. **`vmrun copyFileFromHostToGuest` 在这里报"文件名无效"**，上传走 `runProgramInGuest` + base64 + md5 回读；`copyFileFromGuestToHost` 正常。
+6. **vmrun 会把外层命令里的 `$rc`/`$?` 吃掉**，所以 `vmguest.mjs` 用 base64 载荷内的 `trap ... EXIT` 自报退出码。
+7. **dbAccess 的 SKILL 没有时钟**：`gettime/time/ctime/time2str/posixtime/today/now/date` 全部 nil；用 `getShellEnvVar("QODER_RUN_TS")`。
+8. **`funcall(符号)` 在 dbAccess SKILL 里恒为 nil**，探测函数存在性必须逐个字面写出来，不能动态派发。
+9. **`printf("%s", nil)` 会中断整个 `load`**（不是只打印 nil）。任何 `getShellEnvVar` 结果先过一层 nil 保护，参考 `skill/cadence_agent_test.il` 的 `qSv()`。
+10. **guest 重启后 SSH 恢复顺序**：`vmrun list` → Tools 通道 `dhclient` → 再 SSH。中间不要用 `vmrun` 做电源操作。
+
+## 验证纪律
+
+- 声称可用之前必须真跑：`test_ic617_bridge.ps1 -Repeat 3` 全 PASS 才算通道可用。
+- SKILL 脚本只认显式成功标识（token）+ `rc=0`，不看"没报错"就当成功。
+- 日志留在 `logs/`（Windows）与 `$SANDBOX/logs/`（guest），两边都别删，那是证据。
+- `reports/` 里的结论必须能对应到一条命令输出；不能对应就删掉那句话。
+
+## Micro LED 工程（第二阶段起）
+
+- 工程目录在 guest 的 **`/root/microled_ai_project`**（桥沙箱 `/root/qoder_ic617_sandbox` 只放桥基础设施，别混用）。Windows 侧文档镜像在 `microled/`。
+- 需求只有 `spec/system_requirements.md` 那 7 条；其余参数（灰阶、消隐、pitch、Vf、工艺、VDD、PWM、复用系数…）全部是 `NOT DEFINED`。**不得把 NOT DEFINED 当已知量往下推。**
+- 三个执行器带硬护栏，优先用它们而不是手写命令：`scripts/run_spectre.sh`（拒绝项目外 netlist）、`scripts/pdk_model_probe.sh`（8 项判据聚合）、`scripts/run_virtuoso.sh`（拒绝项目外 .il，HOME 全程重定向）。
+- 大于约 3 KB 的文件不要用 `guest.sh push`：base64 载荷经 vmrun argv 有大小上限，会超时。用 scp。
+
+## Cadence 侧实测坑（都已踩过并有对策）
+
+11. **Spectre 组件名与语句顺序**：电压源是 `vsource`（不是 `source`）；分析语句是 `实例名 关键字 参数`，即 `sw1 dc dev=... param=dc start=... stop=... step=...`。`analyze=yes` 对 `dc` 非法（SFE-30 警告并忽略）。语法以本机 `spectre -h <组件>` 为准。
+12. **默认输出即 `<netlist>.log` + `<netlist>.raw/`**，此 build 不接受 `-log/-raw`；要拿到可比对的数据必须跑真正的分析（纯 op 时 psfascii 只写空的 `logFile`）。`-format psfascii` 后从 `.raw/` 里选带 `TRACE`+`VALUE` 的文件，`logFile` 要跳过。
+13. **TSMC 主 include 不可用**：`tsmc18/models/spectre/spectre.scs` 硬编码 `/opt/cadence/process/.tsmc18/...`（不存在）。直接 include 模型卡 `cr018gpii_v1d0.scs`，且 **`tt` 必须同时 include `stat_noise`**，否则 SFE-1996 `unknown parameter par1fn_mc`。
+14. **厚栅器件有几何硬限**：SMIC `n50e2r` 要求 `lmin=1.4µm lmax=10µm wmin=0.6µm wmax=100µm`；违反时报 `CMI-2441` 后接莫名其妙的 `CMI-2434 'Vsat' must be positive`。选 L/W 前先读卡里的 lmin/lmax/wmin/wmax。
+15. **full Virtuoso 不需要 X**。`virtuoso -nograph` 会自己拉起 Xvnc(:80)（`$HOME/.vnc-cds/`），4–6 s 完成。`-h` 只列 10 个选项，**没有** `-ilLoadFile`；SKILL 注入靠 `$HOME/.cdsinit` 里 `load("x.il") + exit()`，或 `-restore x.il` 且文件自己以 `exit()` 结尾（否则进程不退出，实测撞满超时）。
+16. **SKILL 里 `~` 属性访问符会在解析期报错并中断整个 load**（试过 `l~name` 三种写法，均 `syntax error ... at line N column M` + `*Error* load`）。取 dd 对象属性改用函数式访问（如 `ddGetObjName(l)`），别在探针里赌。
+17. **Spectre MOS 端序是 `Name ( d g s b ) ModelName`，衬极在最后**（权威来源：本机 `spectre -h bsim4`；`-h nmos` 会报 no such component，因为组件名是模型类型）。写成 `(A B 栅 衬)` 会把数据变成栅极；写成 `(A 栅 衬 B)` 会把时钟节点变成源极——两种都让"传输门"退化成拉电源/地的管子，特征是输出停在 VDD−Vth（≈1.52 V）或全节点分压到 ≈1.1 V。已用 `spectre/tg_test_on.scs` / `tg_test_off.scs` 三条判据钉死这个结论（ON 传 1.8/传 0，OFF 阻断）。
+18. **单元尺寸上的保持/写入冲突**：同尺寸的节点锁存链里，若 TG 强于本管 keeper，则后一级会在前一级"应保持"的相位把它的值拽走（实测 `q1` 在 `clk=1` 期间塌掉、`q2` 窗口内 max 仅 6 mV）；若 keeper 强于 TG，则写不进去。纯互补两相时钟 + 同尺寸反相器锁存链无法同时满足，**真实扫描/行驱动单元用 pulse-D（C²MOS）单相结构或真非交叠时钟**，不要继续靠调宽解决。
+

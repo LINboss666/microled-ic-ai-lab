@@ -1,0 +1,23 @@
+// Spectre standalone smoke test -- deliberately uses NO foundry model, NO PDK,
+// NO OA library. Only Spectre built-in primitives, so a pass proves: the binary
+// runs, licensing works, the netlist parser accepts it, the solver converges, and
+// the results are numerically correct.
+//
+// Syntax notes (taken from this build's own `spectre -h`, not guessed):
+//   - an independent voltage source is the `vsource` component, not `source`
+//   - an analysis line is  <name> <analysisType> <params>   (name first), e.g.
+//     sw1 dc analyze=yes dev=Vdd param=dc start=...
+//
+// Circuit: 1.8 V swept 0 -> 1.8 V over a 10k/5k divider.
+// Expected: vm = Vdd * 5k/(10k+5k) = Vdd/3  ->  0.6 V at Vdd = 1.8 V
+simulator lang=spectre
+
+Vdd  (vd 0)  vsource   dc=1.8
+Rtop (vd vm) resistor  r=10e3
+Rbot (vm 0)  resistor  r=5e3
+
+// `analyze' is not a valid parameter of the dc analysis instance in this build
+// (SFE-30 warns and ignores it), so it is left off.
+sw1 dc dev=Vdd param=dc start=0 stop=1.8 step=0.6
+
+save vd vm

@@ -1,0 +1,29 @@
+# Line endings: the repo stores LF and checks out LF.
+#
+# The guest project tree is LF (bash and awk break on CRLF) while files authored on
+# Windows arrive CRLF. Normalising here means a checkout and the guest tree are
+# byte-identical, so `git status` stays clean on either side and scripts can be run
+# straight from a checkout without a conversion step.
+* text=auto eol=lf
+
+*.scs    text eol=lf
+*.il     text eol=lf
+*.awk    text eol=lf
+*.py     text eol=lf
+*.sh     text eol=lf
+*.ps1    text eol=lf
+*.mjs    text eol=lf
+*.md     text eol=lf
+*.json   text eol=lf
+*.csv    text eol=lf
+*.txt    text eol=lf
+*.sp     text eol=lf
+*.cir    text eol=lf
+*.yaml   text eol=lf
+
+# never touch binary-ish evidence
+*.png    binary
+*.jpg    binary
+*.gz     binary
+*.zip    binary
+*.pdf    binary

@@ -1,0 +1,19 @@
+// PDK model probe (PMOS) -- same TSMC 0.18 card, corner tt.
+// Source and bulk at the 1.8 V rail, 100k pull-down on the drain.
+//
+//   Vgs = 0   -> Vgs-Vth drives it hard on -> V(p) rises well above 0 V
+//   Vgs = 1.8 -> Vgs = 0 -> off            -> V(p) pulled to 0 V (within 1 mV)
+simulator lang=spectre insensitive=yes
+
+include "${QODER_TSMC18_MODEL}" section=stat_noise
+include "${QODER_TSMC18_MODEL}" section=tt
+
+Vdd (vdd 0) vsource  dc=1.8
+Vgs (g 0)   vsource  dc=0
+Rdn (p 0)   resistor r=100e3
+
+M2 (p g vdd vdd) pch l=180e-9 w=2e-6
+
+sw1 dc dev=Vgs param=dc start=0 stop=1.8 step=0.2
+
+save p g

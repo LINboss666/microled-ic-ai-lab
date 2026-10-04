@@ -1,0 +1,26 @@
+// PDK model probe (NMOS) -- TSMC 0.18um MS/RF General Purpose II, cr018gpii v1.0, BSIM4 v4.5
+// Proves only: the vendor card parses, a core NMOS conducts, and the corner wiring is right.
+//
+// Include notes (learned from this card, not assumed):
+//   - the vendor master spectre.scs hardcodes /opt/cadence/process/.tsmc18/... which does
+//     not exist in this image, so it is unusable as-is; the card is included directly
+//   - `tt` needs `stat_noise` as well, otherwise SFE-1996 on par1fn_mc
+//   - the card declares `library tsmclib`, but models resolve by plain name here
+//
+// Checkable behaviour with a 100k pull-up to the 1.8 V nominal core rail:
+//   Vgs = 0   -> device off -> no current -> V(d) = 1.8 V exactly
+//   Vgs = 1.8 -> device on  -> V(d) drops below 1.75 V
+simulator lang=spectre insensitive=yes
+
+include "${QODER_TSMC18_MODEL}" section=stat_noise
+include "${QODER_TSMC18_MODEL}" section=tt
+
+Vdd (vdd 0) vsource  dc=1.8
+Rup (vdd d) resistor r=100e3
+Vgs (g 0)   vsource  dc=0
+
+M1 (d g 0 0) nch l=180e-9 w=2e-6
+
+sw1 dc dev=Vgs param=dc start=0 stop=1.8 step=0.2
+
+save d g

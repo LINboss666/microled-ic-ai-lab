@@ -1,0 +1,15 @@
+;; Capability probe #3: how to get a timestamp from inside dbAccess SKILL.
+;; every call is guarded with errset, and shell-side output also lands in the log.
+printf("PROBE3_BEGIN\n")
+printf("gettime()            -> %L\n" errset(gettime()))
+printf("time()               -> %L\n" errset(time()))
+printf("ctime(gettime())     -> %L\n" errset(ctime(gettime())))
+printf("time2str(gettime())  -> %L\n" errset(time2str(gettime())))
+printf("posixtime()          -> %L\n" errset(posixtime()))
+printf("system(date) begin:\n")
+errset(system("date +%Y-%m-%dT%H:%M:%S%z"))
+printf("system(date) end\n")
+printf("shell(date)          -> %L\n" errset(shell("date +%FT%T")))
+printf("pipe(date)           -> %L\n" errset(pipe("date +%FT%T")))
+printf("getShellEnvVar(QODER_PROBE_TS) -> %L\n" errset(getShellEnvVar("QODER_PROBE_TS")))
+printf("PROBE3_END\n")

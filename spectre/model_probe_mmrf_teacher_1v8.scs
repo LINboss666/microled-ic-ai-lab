@@ -1,0 +1,26 @@
+// PDK model probe -- SMIC 018 MM RF, TEACHER COPY, 1.8 V core pair (n18 / p18, BSIM4)
+// Model entry taken from the kit's own readme:
+//   include ".../ms018_enhanced_v1p2_rev0_spe.lib" section=TT
+// corner names available: TT FF SS FNSP SNFP MOS_MC (plus RES_/BJT_/DIO_/VAR_/MIM_ variants)
+//
+// One swept gate drives both devices, so a single run yields four checkable facts:
+//   at Vgs = 0   : n18 off -> its drain sits exactly on the 1.8 V rail
+//                  p18 on  -> its drain rises well above 0 V
+//   at Vgs = 1.8 : n18 on  -> its drain is pulled far below the rail
+//                  p18 off -> its drain sits exactly on 0 V
+// Geometry obeys the card limits (n18/p18: lmin=1.5e-7, wmin=1.9e-7, max 1e-4).
+simulator lang=spectre insensitive=yes
+
+include "${QODER_PDK_LIB}" section=tt
+
+Vdd  (vdd 0)  vsource  dc=1.8
+Vgs  (g 0)    vsource  dc=0
+Run  (vdd dn)  resistor r=100e3
+Rpd  (dp 0)    resistor r=100e3
+
+Mn (dn g 0 0)     n18 l=180e-9 w=2e-6
+Mp (dp g vdd vdd) p18 l=180e-9 w=2e-6
+
+sw1 dc dev=Vgs param=dc start=0 stop=1.8 step=0.2
+
+save dn dp g vdd

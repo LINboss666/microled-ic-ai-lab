@@ -1,0 +1,157 @@
+{
+  "assumptions": [
+    {
+      "effect": "Set to 0, so every time figure here is an UPPER bound on available time and a LOWER bound on required rates.", 
+      "id": "A1", 
+      "item": "Blanking / retrace / vertical sync overhead", 
+      "status": "NOT DEFINED"
+    }, 
+    {
+      "effect": "All data-rate figures are per single bit-plane. Multiply by the bit depth once defined.", 
+      "id": "A2", 
+      "item": "Gray scale bit depth", 
+      "status": "NOT DEFINED"
+    }, 
+    {
+      "effect": "No PWM period or minimum on-time is derived.", 
+      "id": "A3", 
+      "item": "PWM bit depth / dimming scheme", 
+      "status": "NOT DEFINED"
+    }, 
+    {
+      "effect": "Progressive one-row-at-a-time scan. Selecting M rows multiplies row current by M and divides per-row time by M; the duty-cycled averages stay the same.", 
+      "id": "A4", 
+      "item": "Rows selected simultaneously", 
+      "status": "1"
+    }, 
+    {
+      "effect": "5 um may be the emission area rather than the centre-to-centre pitch, so the physical array size below is conditional.", 
+      "id": "A5", 
+      "item": "Pixel pitch equals the stated 5 um x 5 um", 
+      "status": "NOT DEFINED"
+    }, 
+    {
+      "effect": "No power figure is derived from current alone.", 
+      "id": "A6", 
+      "item": "LED forward voltage / drive-node swing", 
+      "status": "NOT DEFINED"
+    }, 
+    {
+      "effect": "Deliberately not chosen here.", 
+      "id": "A7", 
+      "item": "CMOS node, device choice, VDD", 
+      "status": "NOT DEFINED"
+    }, 
+    {
+      "effect": "Only the minimum aggregate channel rate is computed.", 
+      "id": "A8", 
+      "item": "Data-driver interface (link width, latch structure)", 
+      "status": "NOT DEFINED"
+    }
+  ], 
+  "derived_not_assumed": {
+    "array_height_mm_if_pitch_equals_pixel_size": 3.8399999999999999, 
+    "array_size_basis": "conditional on A5 (pitch == 5 um)", 
+    "array_width_mm_if_pitch_equals_pixel_size": 5.1200000000000001, 
+    "data_channels_per_driver": 512, 
+    "data_channels_total": 1024, 
+    "pixel_count": 786432, 
+    "scan_channels_per_driver": 384, 
+    "scan_channels_total": 768, 
+    "select_duty": 0.0013020833333333333, 
+    "theoretical_all_pixels_emitting_simultaneously_A": 11.796479999999999, 
+    "theoretical_all_pixels_note": "What a DC, non-multiplexed panel would draw if every pixel emitted at its 15 uA on-state current at the same time. Listed because the requirement asks for it; it is the arithmetic reason row multiplexing is implied."
+  }, 
+  "excluded_interpretation": {
+    "statement": "Treating 15 uA as a frame AVERAGE and solving for the instantaneous current.", 
+    "status": "EXCLUDED by D1 (student-confirmed 2026-10-04). Kept only so the earlier ambiguity remains traceable.", 
+    "would_give": {
+      "instantaneous_pixel_current_mA": 11.52, 
+      "row_current_A": 11.796479999999999
+    }
+  }, 
+  "explicitly_not_computed": [
+    "power (needs A6)", 
+    "PWM minimum on-time (needs A3)", 
+    "gray-scale bandwidth (needs A2)", 
+    "D/A resolution per channel", 
+    "device sizing / VDD / process node (needs A7)"
+  ], 
+  "given": {
+    "H_ACTIVE": 1024, 
+    "I_pixel_definition": "D1: instantaneous on-state current (confirmed 2026-10-04)", 
+    "I_pixel_uA": 15.0, 
+    "V_ACTIVE": 768, 
+    "blocks": [
+      "TCON", 
+      "data driver x2", 
+      "scan driver x2"
+    ], 
+    "data_drivers": 2, 
+    "pixel_size_um": [
+      5.0, 
+      5.0
+    ], 
+    "refresh_hz": [
+      60.0, 
+      100.0
+    ], 
+    "scan_drivers": 2
+  }, 
+  "per_refresh_rate": [
+    {
+      "basis": {
+        "data_clock": "channels_per_driver / line_time, 1 bit per clock (A2, A8)", 
+        "frame_average": "pixels x I_PIXEL x duty, duty = ROWS_SELECTED/V_ACTIVE (DERIVED from the scan structure, per D1)", 
+        "row_current": "H_ACTIVE x ROWS_SELECTED x I_PIXEL (A4)"
+      }, 
+      "data_channels_per_driver": 512, 
+      "derived_frame_average_pixel_current_A": 1.9531249999999998e-08, 
+      "derived_frame_average_pixel_current_uA": 0.01953125, 
+      "derived_panel_average_current_A": 0.015359999999999999, 
+      "derived_panel_average_current_mA": 15.359999999999999, 
+      "frame_time_s": 0.016666666666666666, 
+      "line_time_s": 2.170138888888889e-05, 
+      "line_time_us": 21.701388888888889, 
+      "min_data_clock_hz_per_bitplane": 23592960.0, 
+      "min_per_channel_update_rate_hz": 23592960.0, 
+      "per_row_available_time_s": 2.170138888888889e-05, 
+      "pixel_writes_per_s": 47185920.0, 
+      "refresh_hz": 60.0, 
+      "row_current_A": 0.015359999999999999, 
+      "row_current_mA": 15.359999999999999, 
+      "row_select_rate_hz": 46080.0, 
+      "select_duty": 0.0013020833333333333
+    }, 
+    {
+      "basis": {
+        "data_clock": "channels_per_driver / line_time, 1 bit per clock (A2, A8)", 
+        "frame_average": "pixels x I_PIXEL x duty, duty = ROWS_SELECTED/V_ACTIVE (DERIVED from the scan structure, per D1)", 
+        "row_current": "H_ACTIVE x ROWS_SELECTED x I_PIXEL (A4)"
+      }, 
+      "data_channels_per_driver": 512, 
+      "derived_frame_average_pixel_current_A": 1.9531249999999998e-08, 
+      "derived_frame_average_pixel_current_uA": 0.01953125, 
+      "derived_panel_average_current_A": 0.015359999999999999, 
+      "derived_panel_average_current_mA": 15.359999999999999, 
+      "frame_time_s": 0.01, 
+      "line_time_s": 1.3020833333333334e-05, 
+      "line_time_us": 13.020833333333334, 
+      "min_data_clock_hz_per_bitplane": 39321600.0, 
+      "min_per_channel_update_rate_hz": 39321600.0, 
+      "per_row_available_time_s": 1.3020833333333334e-05, 
+      "pixel_writes_per_s": 78643200.0, 
+      "refresh_hz": 100.0, 
+      "row_current_A": 0.015359999999999999, 
+      "row_current_mA": 15.359999999999999, 
+      "row_select_rate_hz": 76800.0, 
+      "select_duty": 0.0013020833333333333
+    }
+  ], 
+  "source": "COURSE REQUIREMENT (+ student clarification D1 on 2026-10-04)", 
+  "stated_parameters": {
+    "blanking_fraction": 0.0, 
+    "note": "both are assumptions, not requirements; see A4 / A1", 
+    "rows_selected_at_a_time": 1
+  }
+}

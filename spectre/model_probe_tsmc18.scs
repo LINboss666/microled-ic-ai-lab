@@ -1,0 +1,30 @@
+// PDK model probe -- TSMC 0.18um MS/RF General Purpose II (cr018gpii v1.0)
+// Purpose: prove only that (a) the vendor model card parses in this Spectre build,
+// (b) one core NMOS can be simulated, (c) the corner/library wiring is right.
+// No design work, no sizing study, nothing written back into the PDK.
+//
+// Why the card is included directly: the vendor master
+//   ${QODER_TSMC18_MASTER}
+// hardcodes "/opt/cadence/process/.tsmc18/..." which does not exist in this image,
+// so it cannot be used as-is. The card's own `section tt` pulls in the corner
+// sub-sections by relative path, which does resolve.
+simulator lang=spectre insensitive=yes
+
+// stat_noise is required: the `tt` corner expressions reference the Monte-Carlo
+// noise knobs (par1fn_mc etc.) that are defined there. Including only `tt` fails
+// with SFE-1996 "unknown parameter par1fn_mc". This is a netlist-side include, not
+// a change to the PDK file.
+include "${QODER_TSMC18_MODEL}" section=stat_noise
+include "${QODER_TSMC18_MODEL}" section=tt
+
+// Minimal NMOS: source and bulk at ground, Vds fixed, Vgs swept.
+// l/w are plain SI numbers because this is Spectre language, not SPICE.
+Vds (d 0) vsource dc=0.9
+Vgs (g 0) vsource dc=0
+
+M1 (d g 0 0) nch l=180e-9 w=2e-6
+
+sw1 dc analyze=yes dev=Vgs param=dc start=0 stop=1.8 step=0.2
+
+save d g
+save M1!d
