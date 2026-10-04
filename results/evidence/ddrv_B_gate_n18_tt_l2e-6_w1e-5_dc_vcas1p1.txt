@@ -1,0 +1,8 @@
+== B_gate_n18_tt_l2e-6_w1e-5_dc_vcas1p1  points=91  VOUT_max=1.6453 V  IOUT@max=15.471444 uA (err 3.143 %)
+   COMPLIANCE +/-1%  : NOT_FOUND
+   COMPLIANCE +/-2%  : NOT_FOUND
+   COMPLIANCE +/-5%  : 0.1347 V
+   ROUT(upper 40%)   : 2.439e+06 ohm
+   MAX_ADJACENT_JUMP : 0.00061 (fraction of target, VOUT>50% of sweep)
+   IOUT_SPAN over sweep: -0.000000 .. 15.471444 uA = 103.14 % of target
+DATA_DRIVER_DC: OK

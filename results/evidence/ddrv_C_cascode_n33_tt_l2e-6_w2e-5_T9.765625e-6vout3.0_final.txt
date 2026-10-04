@@ -1,0 +1,7 @@
+== C_cascode_n33_tt_l2e-6_w2e-5_T9.765625e-6vout3.0_final  samples=413  window=0..4.39453e-05 s  ON windows=4  OFF windows=4
+   longest ON window : 4.883e-06 s   (band must hold for 40% of it)
+   TURN_ON_SETTLING  : 4.417e-07 s   (worst of 4, 0 never settled)
+   TURN_OFF          : 2.986e-07 s   (worst of 4, 0 never met the band)
+   PEAK              : 20.789768 uA
+   OFF_LEAKAGE       : 0.006114 uA   (worst median over the last 30% of an OFF window)
+DATA_DRIVER_TRAN: OK

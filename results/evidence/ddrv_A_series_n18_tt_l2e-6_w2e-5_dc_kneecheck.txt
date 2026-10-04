@@ -1,0 +1,9 @@
+== A_series_n18_tt_l2e-6_w2e-5_dc_kneecheck  points=91  VOUT_max=1.6561 V  IOUT@max=14.389649 uA (err -4.069 %)
+   COMPLIANCE +/-1%  : NOT_FOUND
+   COMPLIANCE +/-2%  : NOT_FOUND
+   COMPLIANCE +/-5%  : 1.3574 V
+   ROUT(upper 40%)   : 2.233e+06 ohm
+   MAX_ADJACENT_JUMP : 0.00064 (fraction of target, VOUT>50% of sweep)
+   IOUT_SPAN above the +/-5% knee (1.3574 V, 16 pts): 14.256407 .. 14.389649 uA = 0.89 % of target
+   IOUT_SPAN whole sweep: -0.000000 .. 14.389649 uA = 95.93 % of target
+DATA_DRIVER_DC: OK

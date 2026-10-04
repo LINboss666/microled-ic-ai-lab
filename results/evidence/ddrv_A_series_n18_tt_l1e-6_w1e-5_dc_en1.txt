@@ -1,0 +1,9 @@
+== A_series_n18_tt_l1e-6_w1e-5_dc_en1  points=91  VOUT_max=1.6552 V  IOUT@max=14.483856 uA (err -3.441 %)
+   COMPLIANCE +/-1%  : NOT_FOUND
+   COMPLIANCE +/-2%  : NOT_FOUND
+   COMPLIANCE +/-5%  : 1.2175 V
+   ROUT(upper 40%)   : 1.882e+06 ohm
+   MAX_ADJACENT_JUMP : 0.00080 (fraction of target, VOUT>50% of sweep)
+   IOUT_SPAN above the +/-5% knee (1.2175 V, 23 pts): 14.254180 .. 14.483856 uA = 1.53 % of target
+   IOUT_SPAN whole sweep: -0.000000 .. 14.483856 uA = 96.56 % of target
+DATA_DRIVER_DC: OK

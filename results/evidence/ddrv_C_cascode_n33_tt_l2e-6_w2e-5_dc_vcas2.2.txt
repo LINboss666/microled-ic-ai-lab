@@ -1,0 +1,9 @@
+== C_cascode_n33_tt_l2e-6_w2e-5_dc_vcas2.2  points=166  VOUT_max=3.1498 V  IOUT@max=15.019074 uA (err 0.127 %)
+   COMPLIANCE +/-1%  : 0.4515 V
+   COMPLIANCE +/-2%  : 0.2130 V
+   COMPLIANCE +/-5%  : 0.1158 V
+   ROUT(upper 40%)   : 7.264e+08 ohm
+   MAX_ADJACENT_JUMP : 0.00002 (fraction of target, VOUT>50% of sweep)
+   IOUT_SPAN above the +/-5% knee (0.1158 V, 153 pts): 14.424232 .. 15.019074 uA = 3.97 % of target
+   IOUT_SPAN whole sweep: -0.000000 .. 15.019074 uA = 100.13 % of target
+DATA_DRIVER_DC: OK
