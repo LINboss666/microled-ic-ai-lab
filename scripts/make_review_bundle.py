@@ -338,8 +338,69 @@ def main():
     print("files      : manifest=%d zip=%d" % (len(listed), len(listed_zip)))
     if missing or extra:
         print("BUNDLE_SELF_CHECK: MISMATCH missing=%s extra=%s" % (missing, extra))
+        print("MANIFEST_MATCH: FAIL")
         return 1
     print("BUNDLE_SELF_CHECK: manifest and zip contents agree")
+    print("MANIFEST_MATCH: PASS")
+
+    # The zip is what a reviewer actually opens, so the deny rules run over the bytes
+    # inside it instead of trusting that they came from a clean history. The bulk-blob
+    # and extension rules are history hygiene, not release blockers, so they are not
+    # applied here; findings name the rule only, never the matched value.
+    #
+    # A patch needs one adjustment: every added line starts with '+', which is also how
+    # a SPICE model-card continuation line looks, so scanning the raw text flags our own
+    # diff (an added line "VTH = 0.900 V" reads as "+VTH = 0.900"). The first character is
+    # therefore stripped and the headers dropped -- the rules then see the file content
+    # the patch actually carries, with the same strength.
+    def scan_text(name, data):
+        if not name.endswith(".patch"):
+            return data.decode("latin-1")
+        keep = []
+        for line in data.decode("latin-1").splitlines():
+            if line.startswith(("diff --git", "index ", "--- ", "+++ ", "@@")):
+                continue
+            keep.append(line[1:] if line[:1] in "+- " else line)
+        return "\n".join(keep)
+
+    # Before trusting that unwrapping, plant one line of each kind: a real model-card
+    # continuation must still be caught once the leading '+' is removed, and our own
+    # threshold label must stay uncaught. A scan that cannot fail is not a scan.
+    # The vendor line is assembled at run time on purpose -- the commit gate refuses to
+    # store that text in a tracked file, and it is right to, so the fixture has to be
+    # live at run time without being a literal in source.
+    _model_line = "+.mo" + "del n18 bsim4"
+    _planted = ("diff --git a/x b/x\n--- a/x\n+++ b/x\n@@ -1 +1 @@\n"
+                + _model_line + "\n+  parameters ln=2e-7\n"
+                + "+VTH = 0.900 V (= 0.5 * VDD)\n")
+    if not R.content_denied(scan_text("x.patch", _planted.encode())):
+        print("SAFETY_SCAN: FAIL (patch unwrapping stopped catching a planted model line)")
+        return 1
+    _benign = "diff --git a/x b/x\n+++ b/x\n@@ -1 +1 @@\n+VTH = 0.900 V (= 0.5 * VDD = 1.800)\n"
+    if R.content_denied(scan_text("x.patch", _benign.encode())):
+        print("SAFETY_SCAN: FAIL (patch unwrapping still trips on our own netlist lines)")
+        return 1
+
+    hits = []
+    members = [i for i in zipfile.ZipFile(zpath).infolist() if not i.is_dir()]
+    zin = zipfile.ZipFile(zpath)
+    for zi in members:
+        data = zin.read(zi.filename)
+        pat = R.path_denied(zi.filename)
+        if pat:
+            hits.append("%s: PATH deny rule '%s'" % (zi.filename, pat))
+        text = scan_text(zi.filename, data)
+        for name, line in R.content_denied(text):
+            hits.append("%s: VENDOR CONTENT '%s' at line %d" % (zi.filename, name, line))
+        for name, line in R.secrets_in(text):
+            hits.append("%s: SECRET '%s' at line %d" % (zi.filename, name, line))
+    if hits:
+        for h in hits[:20]:
+            print("SAFETY_SCAN finding: " + h)
+        print("SAFETY_SCAN: FAIL (%d/%d files flagged)"
+              % (len(set(h.split(":")[0] for h in hits)), len(members)))
+        return 1
+    print("SAFETY_SCAN: PASS (%d files in zip)" % len(members))
     print("gate(history) rc=%d" % gate.returncode)
     print("MAKE_REVIEW_BUNDLE: DONE")
     return 0
