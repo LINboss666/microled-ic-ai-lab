@@ -1,0 +1,18 @@
+   IOUT_SOURCE : iprobe trace `Ip2:i`, 0 V burden (DC drop across the probe is 0 by construction)
+   PROBE_CROSSCHECK  : |Ip2:i - Mout1:1| <= 1.891e-06 A over 8959 samples
+   PROBE_CROSSCHECK  : 12.4745 % of the largest observed current (1.512e-05 A) -- the two views of the same branch
+   PROBE_CROSSCHECK  : note -- Ip vs Mout:1 differ by the displacement current of the internal nodes while the neighbour switches; the DC sweeps are the agreement test for the observation method
+== B_traponly_ms5e-9  channel 1 samples=7162 (after skipping 20% of the run)  window=3.515e-05 s
+   SLEW              : T=9.765625us slew=10ns method=traponly maxstep=5e-9
+   I_BASELINE        : 14.931906 uA   (median of the static neighbour-held run tran1.tran.tran)
+   I_1 mean         : 14.876528 uA
+   PEAK_CROSSTALK_ERROR   : 7.869516 uA above baseline = 52.463 % of target
+   PEAK_|I-target|        : 7.937611 uA = 52.917 % of target
+   Q_error                : -3.9098e-13 C (integral of I_victim - I_baseline)
+   CHARGE_ERROR_PERCENT   : 0.0741 %  (|Q_error| / (15uA x 3.515e-05 s))
+   GLITCH_DURATION >+/- 1% : 1.5244e-07 s (0.43 % of the observed window)
+   VBIAS_SHARED      : 0.806361 .. 0.886718 V   (spread 0.080357 V)
+   vbias_ch1         : 0.819138 .. 0.885470 V   (spread 0.066332 V)
+   RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000618 uA p2p, sign-flip ratio 0.976 over 7162 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+   worst sample at t=1.2220e-05 s, nearest neighbour edge at t=1.2212e-05 s (delta 8.184e-09 s)
+TWO_CHANNEL_INDEPENDENCE: FAIL (peak 52.917 %, charge 0.074 % vs 1.0 % POC criterion)

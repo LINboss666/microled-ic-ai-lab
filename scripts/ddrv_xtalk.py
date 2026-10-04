@@ -38,10 +38,11 @@ from __future__ import print_function
 import argparse
 import io
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ddrv_tran import parse, edges, median      # same PSF reader, no second implementation
+from ddrv_tran import parse, edges, median, ringing_metrics   # one PSF reader, no second impl
 import ddrv_probe
 
 
@@ -155,6 +156,9 @@ def main():
                     help="static-deck psfascii of the same channel to take I_baseline from")
     ap.add_argument("--require-probe", action="store_true")
     ap.add_argument("--slew-desc", default="", help="what slew produced this row")
+    ap.add_argument("--ring-floor", type=float, default=0.001,
+                    help="alternation amplitude, as a fraction of the target current, above "
+                         "which adjacent-point alternation is reported as YES")
     ap.add_argument("--label", default="")
     ap.add_argument("--csv", default=None)
     ap.add_argument("--selftest", action="store_true",
@@ -232,11 +236,31 @@ def main():
     q_err, charge_pct, glitch, worst_t = (m["q_error"], m["charge_pct"], m["glitch_s"],
                                           m["worst_t"])
 
+    # ---- is the victim's own sequence step-locked? --------------------------------------
+    # A real inter-channel disturbance has a physical time constant and does not care how
+    # the solver prints; trapezoidal ringing alternates at every sample. Reporting peak and
+    # charge without this number is what let a numerical artifact look like crosstalk.
+    ring_flip, ring_p2p, ring_n = ringing_metrics(cur)
+    ring_yes = "NO"
+    if ring_flip is not None:
+        ring_yes = ("YES" if (ring_p2p >= a.ring_floor * abs(a.target)
+                              and ring_flip >= 0.70) else "NO")
+    shared_lo = shared_hi = gate_lo = gate_hi = None
+    if "vbias" in obs[0]:
+        vs = [r["vbias"] for r in obs]
+        shared_lo, shared_hi = min(vs), max(vs)
+    gsig = "vbias_ch" + suf
+    if gsig in obs[0]:
+        gs = [r[gsig] for r in obs]
+        gate_lo, gate_hi = min(gs), max(gs)
+
     neigh = a.neigh_sig
     if neigh is None:
-        # the neighbour is the channel that pulses: channel 1's victim is disturbed by CH0,
-        # and channel 0's victim by CH1
-        neigh = "data_en1" if suf == "1" else "data_en"
+        # the neighbour is the OTHER channel: the victim on channel 1 is disturbed by
+        # channel 0's enable (`data_en`), and the victim on channel 0 by `data_en1`.
+        # An earlier version had this inverted, which silently turned every "no edge found"
+        # report into a lost correlation between the disturbance and its cause.
+        neigh = "data_en" if suf == "1" else "data_en1"
     up, down = edges(obs, neigh) if (neigh and neigh in rows[0]) else ([], [])
     near = None
     for e in up + down:
@@ -259,6 +283,21 @@ def main():
           % (charge_pct, t_span))
     print("   GLITCH_DURATION >+/- %.0f%% : %.4e s (%.2f %% of the observed window)"
           % (a.band_frac * 100, glitch, glitch / t_span * 100.0))
+    if shared_lo is not None:
+        print("   VBIAS_SHARED      : %.6f .. %.6f V   (spread %.6f V)"
+              % (shared_lo, shared_hi, shared_hi - shared_lo))
+    if gate_lo is not None:
+        print("   %-17s : %.6f .. %.6f V   (spread %.6f V)"
+              % (gsig, gate_lo, gate_hi, gate_hi - gate_lo))
+    if ring_flip is None:
+        print("   RINGING           : not measurable (%d distinct-sample differences)"
+              % ring_n)
+    else:
+        print("   RINGING           : ADJACENT_POINT_ALTERNATION: %s   (alternation %.6f uA "
+              "p2p, sign-flip ratio %.3f over %d samples; YES needs p2p >= %.4f uA and "
+              "flips >= 0.70)"
+              % (ring_yes, ring_p2p * 1e6, ring_flip, ring_n,
+                 a.ring_floor * a.target * 1e6))
     if near is not None:
         print("   worst sample at t=%.4e s, nearest neighbour edge at t=%.4e s "
               "(delta %.3e s)" % (worst_t, near, abs(worst_t - near)))
@@ -271,14 +310,31 @@ def main():
         dd = os.path.dirname(os.path.abspath(a.csv))
         if dd and not os.path.isdir(dd):
             os.makedirs(dd)
-        blob = (u"" if exists else
-                u"label,channel,samples,observed_window_s,i_baseline_uA,mean_uA,"
-                u"peak_crosstalk_uA,peak_crosstalk_pct_of_target,peak_err_vs_target_pct,"
-                u"q_error_C,charge_error_pct,glitch_dur_s_above_1pct,iout_method,slew\n")
-        blob += (u"%s,%s,%d,%.6g,%.6f,%.6f,%.6f,%.4f,%.4f,%.6e,%.4f,%.6e,%s,%s\n"
-                 % (a.label, suf or "0", len(obs), t_span, base * 1e6, steady * 1e6,
-                    dev_max * 1e6, dev_max / abs(a.target) * 100.0, frac * 100.0,
-                    q_err, charge_pct, glitch, method, a.slew_desc))
+        csv_hdr = (u"label,channel,samples,observed_window_s,i_baseline_uA,mean_uA,"
+                   u"peak_crosstalk_uA,peak_crosstalk_pct_of_target,"
+                   u"peak_err_vs_target_pct,q_error_C,charge_error_pct,"
+                   u"glitch_dur_s_above_1pct,iout_method,slew,vbias_shared_min_v,"
+                   u"vbias_shared_max_v,gate_min_v,gate_max_v,ring_alternation_p2p_uA,"
+                   u"ring_flip_ratio,adjacent_point_alternation\n")
+        csv_fmt = (u"%s,%s,%d,%.6g,%.6f,%.6f,%.6f,%.4f,%.4f,%.6e,%.4f,%.6e,%s,%s,%s,%s,"
+                   u"%s,%s,%s,%s,%s\n")
+        csv_vals = (
+            a.label, suf or "0", len(obs), t_span, base * 1e6, steady * 1e6,
+            dev_max * 1e6, dev_max / abs(a.target) * 100.0, frac * 100.0,
+            q_err, charge_pct, glitch, method, a.slew_desc,
+            "n/a" if shared_lo is None else "%.6f" % shared_lo,
+            "n/a" if shared_hi is None else "%.6f" % shared_hi,
+            "n/a" if gate_lo is None else "%.6f" % gate_lo,
+            "n/a" if gate_hi is None else "%.6f" % gate_hi,
+            "n/a" if ring_p2p is None else "%.6f" % (ring_p2p * 1e6),
+            "n/a" if ring_flip is None else "%.3f" % ring_flip, ring_yes)
+        n_col = csv_hdr.rstrip(u"\n").count(u",") + 1
+        n_slot = len(re.findall(u"%[-+ #0]*[0-9.]*[a-zA-Z]", csv_fmt))
+        if not (n_col == n_slot == len(csv_vals)):
+            print("TWO_CHANNEL_INDEPENDENCE: FAIL (csv field mismatch: header=%d format=%d "
+                  "args=%d)" % (n_col, n_slot, len(csv_vals)))
+            return 2
+        blob = (u"" if exists else csv_hdr) + (csv_fmt % csv_vals)
         with open(a.csv, "ab") as fh:
             fh.write(blob.encode("utf-8") if not isinstance(blob, bytes) else blob)
 

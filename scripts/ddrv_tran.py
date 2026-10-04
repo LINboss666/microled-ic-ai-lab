@@ -35,6 +35,7 @@ from __future__ import print_function
 import argparse
 import io
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -127,6 +128,28 @@ def mean(xs):
     return sum(xs) / float(len(xs)) if xs else None
 
 
+def ringing_metrics(series):
+    """Estimate 2-sample alternation (trapezoidal ringing) inside one settled sequence.
+
+    The point of making this step-locked rather than amplitude-only: a real circuit ripple
+    survives a change of print step or integration method, while trapezoidal ringing
+    alternates sign at (almost) every sample because the trapezoidal rule is not L-stable.
+      flip_ratio : fraction of consecutive first-differences whose sign alternates
+      alt_p2p    : median |x[i+1] - x[i]|. For a pure 2-cycle oscillation this IS its
+                   peak-to-peak swing; a monotone settling ramp has the same median step,
+                   which is exactly why a YES needs BOTH numbers and not just an amplitude.
+    """
+    if len(series) < 5:
+        return None, None, 0
+    diffs = [series[i + 1] - series[i] for i in range(len(series) - 1)]
+    nz = [d for d in diffs if d != 0.0]
+    if len(nz) < 3:
+        return None, None, len(series)
+    flips = sum(1 for a, b in zip(nz, nz[1:]) if (a > 0) != (b > 0))
+    flip_ratio = flips / float(len(nz) - 1)
+    return flip_ratio, median([abs(d) for d in nz]), len(series)
+
+
 def worst(values):
     good = [v for v in values if v is not None]
     return max(good) if good else None
@@ -149,6 +172,9 @@ def main():
                     help="FAIL instead of falling back to the sense resistor")
     ap.add_argument("--gate-net", default=None,
                     help="extra node to report min/max for, e.g. vbias_ch (candidate E)")
+    ap.add_argument("--ring-floor", type=float, default=0.001,
+                    help="sawtooth amplitude, as a fraction of the target current, above "
+                         "which adjacent-point alternation is reported as YES")
     a = ap.parse_args()
 
     if not os.path.isfile(a.psf):
@@ -217,7 +243,7 @@ def main():
         sel = [val(q) for q in w if lo <= q["time"] <= hi]
         return sel or [val(q) for q in w[1:-1]] or [val(w[-1])]
 
-    on_delays, on_lens, on_settled, on_ripple = [], [], [], []
+    on_delays, on_lens, on_settled, on_ripple, on_series = [], [], [], [], []
     for (u, d) in ons:
         w = in_win(u, d)
         if len(w) < 3:
@@ -234,6 +260,7 @@ def main():
         tail = interior(w, 0.3)
         on_settled.append(mean(tail))
         on_ripple.append(max(tail) - min(tail))
+        on_series.append(interior(w, 0.7))
     off_delays, leaks, off_ripple = [], [], []
     for (d, u) in offs:
         w = in_win(d, u)
@@ -277,10 +304,30 @@ def main():
               "<- compare with the DC curve at the same VOUT"
               % (on_set_lo * 1e6, on_set_hi * 1e6, on_set_err * 1e6,
                  on_set_err / abs(a.target) * 100.0))
-        print("   ON_RIPPLE         : %.6f uA peak-to-peak worst (in-window sample "
-              "alternation; with method=traponly a step comparable to the gate RC makes "
-              "this numerical, so the mean is the reported level and this is the doubt)"
+        print("   ON_RIPPLE         : %.6f uA peak-to-peak worst (spread of the settled tail; "
+              "could be circuit ripple or solver alternation -- RINGING below separates them)"
               % (on_rip_max * 1e6,))
+
+    ring_flip = ring_p2p = None
+    ring_n = 0
+    ring_yes = "NO"
+    if on_series:
+        per = [ringing_metrics(s) for s in on_series]
+        per = [p for p in per if p[0] is not None and p[1] is not None]
+        if per:
+            ring_flip, ring_p2p, _n = max(per, key=lambda p: p[1])
+            ring_n = sum(p[2] for p in per)
+            floor = a.ring_floor * abs(a.target)
+            ring_yes = "YES" if (ring_p2p >= floor and ring_flip >= 0.70) else "NO"
+            print("   RINGING           : ADJACENT_POINT_ALTERNATION: %s   (worst alternation "
+                  "%.6f uA p2p, sign-flip ratio %.3f, %d samples over %d ON windows; YES needs "
+                  "p2p >= %.4f uA and flips >= 0.70. Step-locked by construction, so a real "
+                  "ripple survives changing maxstep while ringing does not.)"
+                  % (ring_yes, ring_p2p * 1e6, ring_flip, ring_n, len(per), floor * 1e6))
+        else:
+            print("   RINGING           : not measurable (fewer than 5 distinct samples per "
+                  "ON window interior)")
+
 
 
     # The rework claim under test is "the shared VBIAS now stays up". Measure it instead of
@@ -312,31 +359,48 @@ def main():
         dd = os.path.dirname(os.path.abspath(a.csv))
         if dd and not os.path.isdir(dd):
             os.makedirs(dd)
+        # The header, the format and the value tuple are named so their field counts can be
+        # checked against each other. Two rounds of this project already produced a CSV whose
+        # last column was silently dropped by a placeholder the format string did not have,
+        # and a deliverable that quietly loses a measurement is worse than one that fails.
+        csv_hdr = (u"label,samples,on_windows,off_windows,longest_on_window_s,"
+                   u"turn_on_settling_s,turn_off_s,peak_uA,off_leakage_uA,band_pct,"
+                   u"on_windows_not_settled,iout_method,vbias_shared_min_v,"
+                   u"vbias_shared_max_v,vbias_shared_dev_v,gate_net_min_v,"
+                   u"gate_net_max_v,on_settled_min_uA,on_settled_max_uA,"
+                   u"on_settled_worst_err_pct,on_ripple_p2p_uA,ring_alternation_p2p_uA,"
+                   u"ring_flip_ratio,adjacent_point_alternation\n")
+        csv_fmt = (u"%s,%d,%d,%d,%s,%s,%s,%.6f,%s,%.1f,%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,"
+                   u"%s,%s,%s\n")
+        csv_vals = (
+            a.label, len(rows), len(on_delays), len(off_delays),
+            "%.6g" % max(on_lens) if on_lens else "n/a",
+            "NOT_FOUND" if worst_on is None else "%.4g" % worst_on,
+            "NOT_FOUND" if worst_off is None else "%.4g" % worst_off,
+            peak * 1e6, "n/a" if leak_max is None else "%.6f" % (leak_max * 1e6),
+            a.band * 100, n_on_fail, method,
+            "n/a" if vb_lo is None else "%.6f" % vb_lo,
+            "n/a" if vb_hi is None else "%.6f" % vb_hi,
+            "n/a" if vb_dev is None else "%.6f" % vb_dev,
+            "n/a" if g_lo is None else "%.6f" % g_lo,
+            "n/a" if g_hi is None else "%.6f" % g_hi,
+            "n/a" if on_set_lo is None else "%.6f" % (on_set_lo * 1e6),
+            "n/a" if on_set_hi is None else "%.6f" % (on_set_hi * 1e6),
+            "n/a" if on_set_err is None else "%.4f" % (on_set_err / abs(a.target) * 100.0),
+            "n/a" if on_rip_max is None else "%.6f" % (on_rip_max * 1e6),
+            "n/a" if ring_p2p is None else "%.6f" % (ring_p2p * 1e6),
+            "n/a" if ring_flip is None else "%.3f" % ring_flip, ring_yes)
+        n_col = csv_hdr.rstrip(u"\n").count(u",") + 1
+        n_slot = len(re.findall(u"%[-+ #0]*[0-9.]*[a-zA-Z]", csv_fmt))
+        if not (n_col == n_slot == len(csv_vals)):
+            print("DATA_DRIVER_TRAN: FAIL (csv field mismatch: header=%d format=%d args=%d "
+                  "-- refusing to write a CSV that silently drops a column)"
+                  % (n_col, n_slot, len(csv_vals)))
+            return 1
         with io.open(a.csv, "a" if exists else "w", encoding="utf-8", newline="") as fh:
             if not exists:
-                fh.write(u"label,samples,on_windows,off_windows,longest_on_window_s,"
-                         u"turn_on_settling_s,turn_off_s,peak_uA,off_leakage_uA,band_pct,"
-                         u"on_windows_not_settled,iout_method,vbias_shared_min_v,"
-                         u"vbias_shared_max_v,vbias_shared_dev_v,gate_net_min_v,"
-                         u"gate_net_max_v,on_settled_min_uA,on_settled_max_uA,"
-                         u"on_settled_worst_err_pct,on_ripple_p2p_uA\n")
-            fh.write(u"%s,%d,%d,%d,%s,%s,%s,%.6f,%s,%.1f,%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n"
-                     % (a.label, len(rows), len(on_delays), len(off_delays),
-                        "%.6g" % max(on_lens) if on_lens else "n/a",
-                        "NOT_FOUND" if worst_on is None else "%.4g" % worst_on,
-                        "NOT_FOUND" if worst_off is None else "%.4g" % worst_off,
-                        peak * 1e6, "n/a" if leak_max is None else "%.6f" % (leak_max * 1e6),
-                        a.band * 100, n_on_fail, method,
-                        "n/a" if vb_lo is None else "%.6f" % vb_lo,
-                        "n/a" if vb_hi is None else "%.6f" % vb_hi,
-                        "n/a" if vb_dev is None else "%.6f" % vb_dev,
-                        "n/a" if g_lo is None else "%.6f" % g_lo,
-                        "n/a" if g_hi is None else "%.6f" % g_hi,
-                        "n/a" if on_set_lo is None else "%.6f" % (on_set_lo * 1e6),
-                        "n/a" if on_set_hi is None else "%.6f" % (on_set_hi * 1e6),
-                        "n/a" if on_set_err is None else "%.4f" %
-                        (on_set_err / abs(a.target) * 100.0),
-                        "n/a" if on_rip_max is None else "%.6f" % (on_rip_max * 1e6)))
+                fh.write(csv_hdr)
+            fh.write(csv_fmt % csv_vals)
 
     if not ons:
         print("DATA_DRIVER_TRAN: FAIL (no complete ON window in the run)")

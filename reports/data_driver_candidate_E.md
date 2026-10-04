@@ -1,6 +1,11 @@
 # Phase DATA-3：测量方法修正（零负担取样）+ Candidate E 本地镜像栅门控
 
-状态：`DATA_DRIVER_CANDIDATE_E: FAIL` / `DATA_DRIVER_ENABLE_ARCHITECTURE: NEEDS_REVIEW`
+状态：`CANDIDATE_E_DC: PASS` / `CANDIDATE_E_STATIC_INDEPENDENCE: PASS` /
+`CANDIDATE_E_TRANSIENT: NUMERICAL_VALIDATION_REQUIRED`
+（DATA-3.5 更新。本文最初写的 `DATA_DRIVER_CANDIDATE_E: FAIL` 依赖一个**自己定义的**
+`PEAK ≤ 1 %` 门限，而该门限既不是课程要求也没有先于数值真实性审计被验证 ——
+瞬态部分的判定已由 `reports/data_driver_E_transient_audit.md` 接管，本文其余数值保持原样不重写。）
+
 分支：`poc/data-driver-1ch`（未合并 `main`，未建 schematic/layout，未跑 PVT —— 见 §11）
 评审输入：`15uA CASCODE CORE: KEEP / CANDIDATE D: REJECT / NEXT: LOCAL-GATE ENABLE`
 
@@ -15,12 +20,15 @@
 | COMPLIANCE | **PASS** | 零负担新基准：`COMPLIANCE_1PCT 0.4600 V / 2PCT 0.2200 V / 5PCT 0.1200 V`，可用到 `V(DATA_OUT)=3.3000 V` |
 | SINGLE-CHANNEL TRANSIENT | **PASS** | 导通整定 17.9–22.9 ns（帧周期）/ 18.7–20.4 ns（200 ns 周期）；三个测试电平的 `ON_SETTLED` 与 DC 曲线一致（14.8694 / 14.9319 / 14.9608 uA） |
 | STATIC CHANNEL INDEPENDENCE | **PASS** | 2×2 使能矩阵：dI0 = dI1 = `0.000000 uA = 0.000 %`（判据 1 %，`POC_ASSUMPTION`） |
-| PEAK DYNAMIC CROSSTALK | **FAIL** | 受害通道峰值偏差 2.36–8.91 uA = **15.8 %–59.4 %** of 15 uA，三种压摆率 × 两种周期全部超 1 % 判据 |
-| INTEGRATED CHARGE ERROR | 帧周期 **PASS** / 200 ns 时槽 **FAIL** | `CHARGE_ERROR_PERCENT` = 0.079–0.090 %（帧）；3.24–3.85 %（200 ns 周期内邻居每 200 ns 开关一次） |
+| PEAK DYNAMIC CROSSTALK | `POC_CHARACTERIZATION_ONLY`（数值真实性审计后重判） | 受害通道峰值偏差 2.36–8.91 uA = **15.8 %–59.4 %** of 15 uA，三种压摆率 × 两种周期全部超我自定的 1 % 界；该界**不是课程要求**，且峰值本身先要过 `reports/data_driver_E_transient_audit.md` 的方法/步长审计 |
+| INTEGRATED **ELECTRICAL** CHARGE ERROR | 帧周期 <0.1 % / 200 ns 时槽 3.2–3.9 % | `CHARGE_ERROR_PERCENT` = 0.079–0.090 %（帧）；3.24–3.85 %（200 ns 周期内邻居每 200 ns 开关一次）。只声称电荷，不换算亮度：`OPTICAL_MAPPING: NOT DEFINED` |
 | DEVICE STRESS | `NOMINAL_BOUNDARY / FOUNDRY_REVIEW_REQUIRED` | 全域最大 `\|VGS\| 1.8000 V`、`\|VGD\| 1.8000 V`、`\|VDS\| 2.6549 V`；工程材料中没有 foundry 可靠性限值，因此既不判 3.3 V 管击穿，也不判安全 |
 | BASIC PROCESS CORNERS | **NOT RUN** | 按 item 11 规则：TT 功能集未全过（动态独立失败）→ 不跑 tt/ss/ff |
 
 `DATA_DRIVER_CANDIDATE_E: FAIL` —— 不是电流核心失败，而是**门控的动态耦合**失败；机制已定位（§7）。
+（DATA-3.5 修正：这一行当时把"我自己定的 `PEAK ≤ 1 %` 界"和"未经数值方法审计的峰值"当成了判定依据。
+审计结论是峰值确实是物理的、不是 ringing，但 `PEAK` 属 `POC_CHARACTERIZATION_ONLY`，
+所以正式状态改回 §0 那三行，不再由 agent 单方宣布 E 的 PASS/FAIL。）
 
 ---
 
@@ -261,12 +269,18 @@ deck：2 通道共享 `Mref + VBIAS_SHARED`，各自 `vbias_ch / Mpass / Mbleed 
 毛刺时长 = `\|I−I_baseline\|` 超 ±1 % 的相邻采样区间总长（`ddrv_xtalk.py --selftest` 用已知答案的
 夹具校过这四式的算术）。
 
-**读法**：扰动脉冲本身几乎是恒定电荷 —— 三种压摆下 `Q_error` 都是 −3.9e-13 C 量级；
+**读法（DATA-3.5 修正）**：扰动脉冲本身几乎是恒定电荷 —— 三种压摆下 `Q_error` 都是 −3.9e-13 C 量级；
 压摆从 0.1 ns 放到 100 ns 把毛刺从 17.1 µs 收到 350 ns、把峰值从 58.7 % 压到 15.8 %。
-所以每帧的**总电荷误差**很小（<0.1 %，即灰阶亮度误差 <0.1 %），
-但**瞬时电流**在邻居翻转的那段时间里可以掉到标称值的一半以下。
-判据用"峰值 ≤ 1 %"就 FAIL，用"每帧电荷 ≤ 1 %"就 PASS —— 这正是评审要求同时报两个量的原因，
-本节不给单一结论，把它交给评审定判据。
+所以每帧的 **`ELECTRICAL_CHARGE_ERROR`** 很小（<0.1 %）。
+
+**这句原来写的"即灰阶亮度误差 <0.1 %"已删除**：本项目没有 Micro LED 电光模型、没有 `EQE(I)`、
+没有光功率模型，也没有课程给出的灰阶定义 —— `OPTICAL_MAPPING: NOT DEFINED`。
+电流积分只能声称是电流量；把它当成亮度需要一条未被给出的转移特性。
+
+**峰值 vs 电荷两个量给出相反结论**（峰值超我自定的 1 % 界，电荷不超），这一点由 DATA-3.5 处理：
+`PEAK` 属于 `POC_CHARACTERIZATION_ONLY`，不是 `COURSE_REQUIREMENT`，且它当时还没先通过
+"是不是数值假象"的审计（见 `reports/data_driver_E_transient_audit.md`）。
+
 
 ### 7.3 耦合路径定位（item 8 之外的额外实验，带明确标签）
 
@@ -329,8 +343,13 @@ deck：2 通道共享 `Mref + VBIAS_SHARED`，各自 `vbias_ch / Mpass / Mbleed 
 
 **已知失败**
 
-1. `PEAK DYNAMIC CROSSTALK` 超判据（§7.2 全部 6 个组合）。
-2. 200 ns 时槽下 `CHARGE_ERROR_PERCENT` 3.2–3.9 %（>1 %）。
+1. ~~`PEAK DYNAMIC CROSSTALK` 超判据（§7.2 全部 6 个组合）~~ → **DATA-3.5 重判**：峰值 14.9–59.9 % 是
+   **物理的**（换 gear2only、maxstep 5→0.5 ns、reltol 收紧 10× 都保留），但它属
+   `POC_CHARACTERIZATION_ONLY`，不是课程要求，且当时未做该方法审计 —— 见
+   `reports/data_driver_E_transient_audit.md`。同一条里"毛刺持续 17.1 µs"是 traponly 振铃造成的，
+   gear2only 下是 0.127 µs（差 134 倍）。
+2. 200 ns 时槽下 `CHARGE_ERROR_PERCENT` 3.6 %（两法一致，物理）；帧率下 0.072–0.085 %。
+   只说电荷，不换算亮度（`OPTICAL_MAPPING: NOT DEFINED`）。
 3. `E n18` 家族在 3.30 V 帧下 4 个 ON 窗口有 1 个不满足 ±5 % 保持（`rc=1`）—— 家族被否的实测依据之一。
 4. 3 个历史 deck 在 `maxstep` 未约束时测出的整定/纹波结论不可复现（§6.1）；`core_T2e7vout3.30`
    （18 ns 步长）报 FAIL 而 1 ns 步长同一电路报 PASS，说明旧 FAIL 是方法产物。
@@ -404,6 +423,9 @@ deck：2 通道共享 `Mref + VBIAS_SHARED`，各自 `vbias_ch / Mpass / Mbleed 
 1. **判据**：两通道动态串扰同时有"峰值"和"每帧电荷"两个量，且它们给出相反的结论
    （峰值 15.8–59.4 % vs 每帧电荷 0.079–0.090 %）。Micro LED 的灰阶定义如果是"选中期间的时间平均电流"，
    1 % 判据应该绑在哪个量上？（现在的 POC 判据把两个都绑成 1 %，于是永远自相矛盾。）
+   DATA-3.5 的处理：按评审 item 10，`PEAK` 归 `POC_CHARACTERIZATION_ONLY`，不再单独据此判 E FAIL；
+   但"正式判据应该绑哪个量"仍然是评审的决定，不由 agent 补一个数就当规定。
+
 2. **偏置网络归属**：`Cbias` 实验显示峰值串扰主要由共享偏置的动态阻抗决定（±0.123 → ±0.005 V，
    峰值 58.7 → 7.1 %）。是否允许把"共享偏置缓冲/保持电容"纳入下一阶段的设计范围（它会改变每通道面积预算），
    还是必须让通道本身对任意偏置阻抗免疫？

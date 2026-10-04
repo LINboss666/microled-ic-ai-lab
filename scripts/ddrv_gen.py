@@ -146,7 +146,8 @@ PROBE_SAVE = "save Ip1:i Mout:1"
 
 def build_E(model, l, w, corner, vmax, step, mode, period, slew, en, en1, channels,
             vout, vout1, toggle, probe, mpass_model, mbleed_model, lpass, wpass,
-            lbleed, wbleed, vcas="1.8", maxstep=None, cbias=None):
+            lbleed, wbleed, vcas="1.8", maxstep=None, cbias=None, method=None,
+            errpreset=None):
     """Candidate E: the accepted core, plus a mirror gate that belongs to the channel.
 
     VBIAS_SHARED is produced by an always-on reference branch and is touched by no bleed:
@@ -248,9 +249,20 @@ Vdeb%s (data_en_b%s 0) vsource type=pulse val0=VDDV val1=0    period=TD \\
     if mode == "dc":
         out.append("\ndc1 dc dev=Vout param=dc start=0 stop=%s step=%s\n" % (vmax, step))
     else:
-        out.append("\ntran1 tran stop=%.6g step=%.6g maxstep=%s\n"
-                   % (float(period) * 4.5, float(period) / 2000.0,
-                      maxstep_of(period, maxstep)))
+        tran = "tran1 tran stop=%.6g step=%.6g maxstep=%s" % (
+            float(period) * 4.5, float(period) / 2000.0, maxstep_of(period, maxstep))
+        # `method=` is written only when asked for. Left out, this build derives it from
+        # errpreset (default "moderate" -> traponly), which is exactly the production case
+        # the A/B test has to be compared against.
+        if method:
+            tran += " method=%s" % method
+        # errpreset is a PACKAGE, not a single tolerance knob: on this build "conservative"
+        # sets reltol=1e-4 AND lteratio=10 AND relref=alllocal AND method=gear2only. The
+        # method is therefore always pinned explicitly alongside it, and the run header is
+        # read back to prove which numbers actually applied.
+        if errpreset:
+            tran += " errpreset=%s" % errpreset
+        out.append("\n%s\n" % tran)
     return "".join(out)
 
 
@@ -352,12 +364,13 @@ def build(cand, model, l, w, corner, vmax, step, mode, lref=None, wref=None,
           rsen="1e4", en="1", en1="1", channels=1, vout=None, vout1=None,
           toggle="0", probe="rsen", mpass_model="n18", mbleed_model="n18",
           lpass="1e-6", wpass="2e-5", lbleed="1e-6", wbleed="2e-6", maxstep=None,
-          cbias=None):
+          cbias=None, method=None, errpreset=None):
     if cand == "E_local_gate":
         return build_E(model, l, w, corner, vmax, step, mode, period, slew, en, en1,
                        int(channels), vout or "0", vout1 or "0", toggle, probe,
                        mpass_model, mbleed_model, lpass, wpass, lbleed, wbleed,
-                       vcas or "1.8", maxstep=maxstep, cbias=cbias)
+                       vcas or "1.8", maxstep=maxstep, cbias=cbias, method=method,
+                       errpreset=errpreset)
     if cand == "D_local":
         return build_D(model, l, w, corner, vmax, step, mode, period, slew, rsen,
                        en, en1, int(channels), vout or "0", vout1 or "0", toggle,
@@ -441,6 +454,17 @@ def main():
     ap.add_argument("--cbias", default=None,
                     help="candidate E only: capacitance on VBIAS_SHARED (TESTBENCH "
                          "bracketing element, models a real bias buffer's hold capacitance)")
+    ap.add_argument("--method", default=None,
+                    choices=("traponly", "gear2only", "gear2", "trap", "trapgear2",
+                             "euler", "trapeuler"),
+                    help="candidate E only: force the transient integration method. "
+                         "Unset means the production case: this build derives it from "
+                         "errpreset (moderate -> traponly)")
+    ap.add_argument("--errpreset", default=None, choices=("liberal", "moderate",
+                           "conservative"),
+                    help="candidate E only: Spectre accuracy package on the tran "
+                         "statement. NOTE it also selects the integration method, so "
+                         "always pair it with --method; the run header is read back")
     ap.add_argument("--suffix", default="",
                     help="extra tag when a knob outside l/w changes (keeps decks from "
                          "overwriting each other)")
@@ -459,7 +483,8 @@ def main():
                  en1=a.en1, channels=a.channels, vout=a.vout, vout1=a.vout1,
                  toggle=a.toggle, probe=a.probe, mpass_model=a.mpass_model,
                  mbleed_model=a.mbleed_model, lpass=a.lpass, wpass=a.wpass,
-                 lbleed=a.lbleed, wbleed=a.wbleed, maxstep=a.maxstep, cbias=a.cbias)
+                 lbleed=a.lbleed, wbleed=a.wbleed, maxstep=a.maxstep, cbias=a.cbias,
+                 method=a.method, errpreset=a.errpreset)
     if a.probe == "iprobe" and a.candidate not in ("D_local", "E_local_gate"):
         # the accepted candidates were measured through a 10k resistor; swapping in a
         # zero-drop iprobe re-measures the same circuit without touching its topology
@@ -478,6 +503,10 @@ def main():
         tag += "_iprobe"
     if a.cbias:
         tag += "_cbias" + str(a.cbias)
+    if a.method:
+        tag += "_m" + a.method
+    if a.errpreset:
+        tag += "_ep" + a.errpreset
     if a.suffix:
         tag += "_" + a.suffix
     if a.mode == "tran":
