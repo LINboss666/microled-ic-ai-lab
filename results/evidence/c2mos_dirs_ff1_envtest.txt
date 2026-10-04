@@ -1,0 +1,35 @@
+# ---- single C^2MOS DFF: q must repeat d's value one clock later: 1,0,1,0
+ASSERT q   1.4e-07 1.9e-07 gt 1.7
+ASSERT q   2.2e-07 2.9e-07 gt 1.7
+ASSERT qbar 1.4e-07 1.9e-07 lt 0.1
+ASSERT qbar 2.2e-07 2.9e-07 lt 0.1
+ASSERT q   3.4e-07 3.9e-07 lt 0.1
+ASSERT q   4.2e-07 4.9e-07 lt 0.1
+ASSERT qbar 3.4e-07 3.9e-07 gt 1.7
+ASSERT qbar 4.2e-07 4.9e-07 gt 1.7
+ASSERT q   5.4e-07 5.9e-07 gt 1.7
+ASSERT q   6.2e-07 6.9e-07 gt 1.7
+ASSERT qbar 5.4e-07 5.9e-07 lt 0.1
+ASSERT qbar 6.2e-07 6.9e-07 lt 0.1
+ASSERT q   7.4e-07 7.9e-07 lt 0.1
+ASSERT q   8.2e-07 8.9e-07 lt 0.1
+ASSERT qbar 7.4e-07 7.9e-07 gt 1.7
+ASSERT qbar 8.2e-07 8.9e-07 gt 1.7
+# ---- evidence that the INPUT really alternated 1,0,1,0 (not a lone '1')
+CROSS d 0.9 6e-08
+FALL  d 0.9 2.6e-07
+CROSS d 0.9 4.6e-07
+FALL  d 0.9 6.6e-07
+# ---- clk->Q, always referenced to the CLOCK RISING edge that captures
+#      (the cell has no reset, so q's level before the first rising edge is
+#       whatever the DC operating point left in the slave keeper -- the first
+#       edge is therefore not a valid 0->1 observation and is not measured.)
+CROSS clk 0.9 0
+CROSS clk 0.9 2.8e-07
+FALL  q   0.9 2.8e-07
+CROSS clk 0.9 4.8e-07
+CROSS q   0.9 4.8e-07
+CROSS clk 0.9 6.8e-07
+FALL  q   0.9 6.8e-07
+CROSS clk 0.9 8.8e-07
+CROSS q   0.9 8.8e-07

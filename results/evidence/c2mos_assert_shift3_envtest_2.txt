@@ -1,0 +1,42 @@
+sweep_key=time
+OK   ASSERT q0 [7.4e-07,7.9e-07] gt 1.7  n=2500 min=1.8 max=1.8
+OK   ASSERT q0 [8.2e-07,8.9e-07] gt 1.7  n=3507 min=1.79952 max=1.83951
+OK   ASSERT q1 [7.4e-07,7.9e-07] lt 0.1  n=2500 min=6.1785e-08 max=8.77604e-08
+OK   ASSERT q1 [8.2e-07,8.9e-07] lt 0.1  n=3507 min=-1.32117e-05 max=1.79249e-05
+OK   ASSERT q2 [7.4e-07,7.9e-07] lt 0.1  n=2500 min=1.03333e-08 max=1.10655e-08
+OK   ASSERT q2 [8.2e-07,8.9e-07] lt 0.1  n=3507 min=2.51222e-06 max=6.25972e-06
+OK   ASSERT q0 [9.4e-07,9.9e-07] lt 0.1  n=2500 min=-5.68588e-07 max=-2.27727e-07
+OK   ASSERT q0 [1.02e-06,1.09e-06] lt 0.1  n=3508 min=-0.0130548 max=0.0260599
+OK   ASSERT q1 [9.4e-07,9.9e-07] gt 1.7  n=2500 min=1.8 max=1.8
+OK   ASSERT q1 [1.02e-06,1.09e-06] gt 1.7  n=3508 min=1.79996 max=1.80007
+OK   ASSERT q2 [9.4e-07,9.9e-07] lt 0.1  n=2500 min=1.06814e-08 max=1.0985e-08
+OK   ASSERT q2 [1.02e-06,1.09e-06] lt 0.1  n=3508 min=3.22196e-06 max=1.79278e-05
+OK   ASSERT q0 [1.14e-06,1.19e-06] gt 1.7  n=2500 min=1.8 max=1.8
+OK   ASSERT q0 [1.22e-06,1.29e-06] gt 1.7  n=3507 min=1.79952 max=1.83948
+OK   ASSERT q1 [1.14e-06,1.19e-06] lt 0.1  n=2500 min=-5.68875e-07 max=-2.27984e-07
+OK   ASSERT q1 [1.22e-06,1.29e-06] lt 0.1  n=3507 min=-1.31493e-05 max=1.79283e-05
+OK   ASSERT q2 [1.14e-06,1.19e-06] gt 1.7  n=2500 min=1.8 max=1.8
+OK   ASSERT q2 [1.22e-06,1.29e-06] gt 1.7  n=3507 min=1.79999 max=1.8
+OK   ASSERT q0 [1.34e-06,1.39e-06] lt 0.1  n=2500 min=-5.68891e-07 max=-2.27538e-07
+OK   ASSERT q0 [1.42e-06,1.49e-06] lt 0.1  n=3508 min=-0.0130469 max=0.0260609
+OK   ASSERT q1 [1.34e-06,1.39e-06] gt 1.7  n=2500 min=1.8 max=1.8
+OK   ASSERT q1 [1.42e-06,1.49e-06] gt 1.7  n=3508 min=1.79996 max=1.80007
+OK   ASSERT q2 [1.34e-06,1.39e-06] lt 0.1  n=2500 min=1.07143e-08 max=1.12531e-08
+OK   ASSERT q2 [1.42e-06,1.49e-06] lt 0.1  n=3508 min=3.22242e-06 max=1.79277e-05
+OK   ASSERT q0 [1.54e-06,1.59e-06] gt 1.7  n=2500 min=1.8 max=1.8
+OK   ASSERT q0 [1.62e-06,1.69e-06] gt 1.7  n=3507 min=1.79952 max=1.83952
+OK   ASSERT q1 [1.54e-06,1.59e-06] lt 0.1  n=2500 min=-5.68872e-07 max=-2.27983e-07
+OK   ASSERT q1 [1.62e-06,1.69e-06] lt 0.1  n=3507 min=-1.32108e-05 max=1.79322e-05
+OK   ASSERT q2 [1.54e-06,1.59e-06] gt 1.7  n=2500 min=1.8 max=1.8
+OK   ASSERT q2 [1.62e-06,1.69e-06] gt 1.7  n=3507 min=1.79999 max=1.8
+OK   ASSERT q2 [7.1e-07,8.9e-07] lt 0.1  n=9022 min=-0.00200313 max=9.87976e-06
+OK   ASSERT q0b [7.4e-07,8.8e-07] lt 0.1  n=7022 min=-0.0012395 max=0.000424347
+OK   ASSERT q1b [9.4e-07,1.08e-06] lt 0.1  n=7027 min=-0.00102109 max=0.000629074
+OK   ASSERT q2b [1.14e-06,1.28e-06] lt 0.1  n=7028 min=-0.00079881 max=0.000858627
+OK   CROSS  clk thr=0.9 t=7.00515864e-07 t0=6.8e-07
+OK   CROSS  q0 thr=0.9 t=7.00928116e-07 t0=6.8e-07
+OK   CROSS  clk thr=0.9 t=9.00517836e-07 t0=8.8e-07
+OK   CROSS  q1 thr=0.9 t=9.00939382e-07 t0=8.8e-07
+OK   CROSS  clk thr=0.9 t=1.10050547e-06 t0=1.08e-06
+OK   CROSS  q2 thr=0.9 t=1.1009002e-06 t0=1.08e-06
+SUMMARY directives=40 failed=0

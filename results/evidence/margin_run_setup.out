@@ -1,0 +1,28 @@
+SPECTRE name=margin_setup.scs rc=0 elapsed=16s timeout=500s
+LOGFILE /root/microled_ai_project/spectre/sim/margin_setup.log
+RAWDIR  /root/microled_ai_project/spectre/sim/margin_setup.raw
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='/root/microled_ai_project/spectre/sim/margin_setup.raw/tr1.tran.tran'
+total 268
+drwxr-xr-x. 15 root root 4096 Oct  4 23:31 .
+drwxr-xr-x.  3 root root 4096 Oct  4 23:31 ..
+-rw-r--r--.  1 root root 6610 Oct  4 23:01 c2mos_diag.log
+drwxr-xr-x.  2 root root 4096 Oct  4 23:01 c2mos_diag.raw
+-rw-r--r--.  1 root root 6358 Oct  4 23:01 c2mos_diag.stdout
+-rw-r--r--.  1 root root 6617 Oct  4 23:09 margin_hold.log
+drwxr-xr-x.  2 root root 4096 Oct  4 23:09 margin_hold.raw
+-rw-r--r--.  1 root root 6365 Oct  4 23:09 margin_hold.stdout
+-rw-r--r--.  1 root root 6680 Oct  4 23:31 margin_setup.log
+drwxr-xr-x.  2 root root 4096 Oct  4 23:31 margin_setup.raw
+-rw-r--r--.  1 root root 6428 Oct  4 23:31 margin_setup.stdout
+----- log tail -----
+
+
+Aggregate audit (11:31:19 PM, Sun Oct 4, 2026):
+Time used: CPU = 15.2 s, elapsed = 15.4 s, util. = 99.1%.
+Time spent in licensing: elapsed = 48 ms.
+Peak memory used = 64.5 Mbytes.
+Simulation started at: 11:31:03 PM, Sun Oct 4, 2026, ended at: 11:31:19 PM, Sun Oct 4, 2026, with elapsed time (wall clock): 15.4 s.
+spectre completes with 0 errors, 0 warnings, and 7 notices.
+MARGIN_setup: PASS

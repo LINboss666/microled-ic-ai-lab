@@ -1,0 +1,28 @@
+SPECTRE name=run_shift3_envtest.scs rc=0 elapsed=11s timeout=500s
+LOGFILE /root/microled_ai_project/spectre/sim/run_shift3_envtest.log
+RAWDIR  /root/microled_ai_project/spectre/sim/run_shift3_envtest.raw
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='/root/microled_ai_project/spectre/sim/run_shift3_envtest.raw/tr1.tran.tran'
+total 248
+drwxr-xr-x. 14 root root 4096 Oct  4 23:30 .
+drwxr-xr-x.  3 root root 4096 Oct  4 23:30 ..
+-rw-r--r--.  1 root root 6610 Oct  4 23:01 c2mos_diag.log
+drwxr-xr-x.  2 root root 4096 Oct  4 23:01 c2mos_diag.raw
+-rw-r--r--.  1 root root 6358 Oct  4 23:01 c2mos_diag.stdout
+-rw-r--r--.  1 root root 6617 Oct  4 23:09 margin_hold.log
+drwxr-xr-x.  2 root root 4096 Oct  4 23:09 margin_hold.raw
+-rw-r--r--.  1 root root 6365 Oct  4 23:09 margin_hold.stdout
+-rw-r--r--.  1 root root 6679 Oct  4 23:09 margin_setup.log
+drwxr-xr-x.  2 root root 4096 Oct  4 23:09 margin_setup.raw
+-rw-r--r--.  1 root root 6427 Oct  4 23:09 margin_setup.stdout
+----- log tail -----
+
+
+Aggregate audit (11:30:21 PM, Sun Oct 4, 2026):
+Time used: CPU = 10.5 s, elapsed = 10.6 s, util. = 98.9%.
+Time spent in licensing: elapsed = 52 ms.
+Peak memory used = 62.5 Mbytes.
+Simulation started at: 11:30:10 PM, Sun Oct 4, 2026, ended at: 11:30:21 PM, Sun Oct 4, 2026, with elapsed time (wall clock): 10.6 s.
+spectre completes with 0 errors, 0 warnings, and 7 notices.
+STRUCT_shift3_envtest_1: PASS

@@ -100,7 +100,7 @@ HISTORY_SCAN_BYTES = 512 * 1024
 EXTENSIONS_ALLOWED = {
     ".scs", ".il", ".sp", ".cir", ".awk", ".py", ".sh", ".ps1", ".mjs", ".md",
     ".json", ".csv", ".txt", ".yaml", ".yml", ".gitignore", ".gitattributes",
-    ".example", ".env.example", ".sql", ".svg", ".log",
+    ".example", ".env.example", ".sql", ".svg", ".log", ".out",
 }
 
 

@@ -1,0 +1,45 @@
+# ---- 3-stage chain, expected table (cycle start: q0 q1 q2) ----
+#   3.5T: 1 0 0   4.5T: 0 1 0   5.5T: 1 0 1   6.5T: 0 1 0   7.5T: 1 0 1
+ASSERT q0 7.4e-07 7.9e-07 gt 1.7
+ASSERT q0 8.2e-07 8.9e-07 gt 1.7
+ASSERT q1 7.4e-07 7.9e-07 lt 0.1
+ASSERT q1 8.2e-07 8.9e-07 lt 0.1
+ASSERT q2 7.4e-07 7.9e-07 lt 0.1
+ASSERT q2 8.2e-07 8.9e-07 lt 0.1
+ASSERT q0 9.4e-07 9.9e-07 lt 0.1
+ASSERT q0 1.02e-06 1.09e-06 lt 0.1
+ASSERT q1 9.4e-07 9.9e-07 gt 1.7
+ASSERT q1 1.02e-06 1.09e-06 gt 1.7
+ASSERT q2 9.4e-07 9.9e-07 lt 0.1
+ASSERT q2 1.02e-06 1.09e-06 lt 0.1
+ASSERT q0 1.14e-06 1.19e-06 gt 1.7
+ASSERT q0 1.22e-06 1.29e-06 gt 1.7
+ASSERT q1 1.14e-06 1.19e-06 lt 0.1
+ASSERT q1 1.22e-06 1.29e-06 lt 0.1
+ASSERT q2 1.14e-06 1.19e-06 gt 1.7
+ASSERT q2 1.22e-06 1.29e-06 gt 1.7
+ASSERT q0 1.34e-06 1.39e-06 lt 0.1
+ASSERT q0 1.42e-06 1.49e-06 lt 0.1
+ASSERT q1 1.34e-06 1.39e-06 gt 1.7
+ASSERT q1 1.42e-06 1.49e-06 gt 1.7
+ASSERT q2 1.34e-06 1.39e-06 lt 0.1
+ASSERT q2 1.42e-06 1.49e-06 lt 0.1
+ASSERT q0 1.54e-06 1.59e-06 gt 1.7
+ASSERT q0 1.62e-06 1.69e-06 gt 1.7
+ASSERT q1 1.54e-06 1.59e-06 lt 0.1
+ASSERT q1 1.62e-06 1.69e-06 lt 0.1
+ASSERT q2 1.54e-06 1.59e-06 gt 1.7
+ASSERT q2 1.62e-06 1.69e-06 gt 1.7
+# ---- no race-through: while the '1' is only in FF0, FF2 must be low
+ASSERT q2 7.1e-07 8.9e-07 lt 0.1
+# ---- complementary output of each stage, one cycle each
+ASSERT q0b 7.4e-07 8.8e-07 lt 0.1
+ASSERT q1b 9.4e-07 1.08e-06 lt 0.1
+ASSERT q2b 1.14e-06 1.28e-06 lt 0.1
+# ---- clk->Q per stage, at the edge where that stage first takes a '1'
+CROSS clk 0.9 6.8e-07
+CROSS q0  0.9 6.8e-07
+CROSS clk 0.9 8.8e-07
+CROSS q1  0.9 8.8e-07
+CROSS clk 0.9 1.08e-06
+CROSS q2  0.9 1.08e-06

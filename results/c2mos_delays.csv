@@ -1,0 +1,18 @@
+evidence_file,measurement,seconds,percent_of_T
+c2mos_delays_ff1_envtest_1.txt,clk->Q fall (edge after t0=1.40T),1.867e-10,0.0934
+c2mos_delays_ff1_envtest_1.txt,clk->Q rise (edge after t0=2.40T),3.974e-10,0.199
+c2mos_delays_ff1_envtest_1.txt,clk->Q fall (edge after t0=3.40T),1.783e-10,0.0892
+c2mos_delays_ff1_envtest_1.txt,clk->Q rise (edge after t0=4.40T),3.974e-10,0.199
+c2mos_delays_ff1_envtest_2.txt,clk->Q fall (edge after t0=1.40T),1.867e-10,0.0934
+c2mos_delays_ff1_envtest_2.txt,clk->Q rise (edge after t0=2.40T),3.974e-10,0.199
+c2mos_delays_ff1_envtest_2.txt,clk->Q fall (edge after t0=3.40T),1.783e-10,0.0892
+c2mos_delays_ff1_envtest_2.txt,clk->Q rise (edge after t0=4.40T),3.974e-10,0.199
+c2mos_delays_shift3_envnominal_1.txt,FF0 clk->Q (rise),4.317e-10,0.00442
+c2mos_delays_shift3_envnominal_1.txt,FF1 clk->Q (rise),4.506e-10,0.00461
+c2mos_delays_shift3_envnominal_1.txt,FF2 clk->Q (rise),4.067e-10,0.00416
+c2mos_delays_shift3_envtest_1.txt,FF0 clk->Q (rise),4.123e-10,0.206
+c2mos_delays_shift3_envtest_1.txt,FF1 clk->Q (rise),4.215e-10,0.211
+c2mos_delays_shift3_envtest_1.txt,FF2 clk->Q (rise),3.947e-10,0.197
+c2mos_delays_shift3_envtest_2.txt,FF0 clk->Q (rise),4.123e-10,0.206
+c2mos_delays_shift3_envtest_2.txt,FF1 clk->Q (rise),4.215e-10,0.211
+c2mos_delays_shift3_envtest_2.txt,FF2 clk->Q (rise),3.947e-10,0.197

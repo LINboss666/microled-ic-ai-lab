@@ -1,0 +1,4 @@
+  DELAY  clk->Q fall (edge after t0=1.40T) = 1.867e-10 s = 0.0934% of T   [clk=3.005e-07 q=3.007e-07]
+  DELAY  clk->Q rise (edge after t0=2.40T) = 3.974e-10 s = 0.199% of T   [clk=5.005e-07 q=5.009e-07]
+  DELAY  clk->Q fall (edge after t0=3.40T) = 1.783e-10 s = 0.0892% of T   [clk=7.005e-07 q=7.007e-07]
+  DELAY  clk->Q rise (edge after t0=4.40T) = 3.974e-10 s = 0.199% of T   [clk=9.005e-07 q=9.009e-07]
