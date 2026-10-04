@@ -132,13 +132,29 @@ def tally(items):
     return counters
 
 
+def all_object_blobs():
+    """Every blob physically present in .git, reachable or not.
+
+    Stricter than --mode history: `git add -A` followed by `git reset` leaves dangling
+    blobs. Those are not pushed, but they are readable by whoever has the directory, so
+    it is worth proving nothing sensitive ever became an object at all.
+    """
+    raw = git("cat-file", "--batch-all-objects", "--batch-check")
+    out = []
+    for line in raw.decode("utf-8", "replace").splitlines():
+        parts = line.split()
+        if len(parts) >= 2 and parts[1] == "blob":
+            out.append((parts[0], git("cat-file", "blob", parts[0])))
+    return out
+
+
 def main():
     args = sys.argv[1:]
     mode = "staged"
     if "--mode" in args:
         mode = args[args.index("--mode") + 1]
-    if mode not in ("staged", "history", "worktree"):
-        print("usage: precommit_safety_check.py [--mode staged|history|worktree]")
+    if mode not in ("staged", "history", "worktree", "objects"):
+        print("usage: precommit_safety_check.py [--mode staged|history|worktree|objects]")
         return 9
 
     items = []          # (path, bytes)
@@ -149,7 +165,7 @@ def main():
         for full, rel in R.walk_root(ROOT):
             with open(full, "rb") as fh:
                 items.append((rel, fh.read()))
-    else:
+    elif mode == "history":
         blobs, ncommits = history_blobs()
         for path, shas in sorted(blobs.items()):
             blob = None
@@ -163,6 +179,10 @@ def main():
             if blob is None:
                 items.append((path, b""))      # counted for tallies, clean
         print("history: %d commits scanned" % ncommits)
+    else:
+        for sha, data in all_object_blobs():
+            items.append(("<blob:" + sha[:12] + ">", data))
+        print("objects: every blob in .git scanned (reachable and dangling)")
 
     bad = []
     for path, data in items:
