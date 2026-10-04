@@ -385,7 +385,8 @@ deck：2 通道共享 `Mref + VBIAS_SHARED`，各自 `vbias_ch / Mpass / Mbleed 
 * **PVT 未跑**：item 11 的规则是 TT 功能集全过才跑 corner，动态独立未过 → 不跑，也不引用旧 corner 数字为 E 背书。
 * **Candidate F 未实现/未测**（偏离评审的"E 与 F 都失败才判 NEEDS_REVIEW"，此处显式声明）：
   F 的关键元件是像素通路里的大尺寸串联开关，而该结构的直流误差在 DATA-1 已经量过
-  （A_series 同拓扑：串联开关的 `I×R_on` 压降直接进源端，负结果保留在 `reports/data_driver_1ch_result.md`）；
+  （`A_series` 同拓扑、开关管与核心同尺寸：ON 电流 **−4.07 %**、±1 % 拐点抬到 **1.3574 V**、
+  4/4 个 ON 窗口整定 `NOT_FOUND`、冲击 **80.7 µA** —— 见 `reports/data_driver_1ch_result.md` 的候选对比表）；
   同时 §7.3 显示 E 的动态失败主要由**共享偏置阻抗**决定，F 若用同一理想偏置支路，
   其"串扰≈0"只会来自理想电压源零阻抗这一 testbench 假设，而不是设计。
   要不要在这种前提下花一轮做 F，请评审定；需要的话我可以在下一次授权后按
