@@ -1,0 +1,42 @@
+sweep_key=time
+OK   ASSERT q0 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   CROSS  d0 thr=0.9 t=4.805e-07 t0=0 edges=1
+OK   CROSS  q0 thr=0.9 t=5.00910334125e-07 t0=4.8e-07 edges=2
+OK   ASSERT q1 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   CROSS  d1 thr=0.9 t=4.905e-07 t0=0 edges=1
+OK   CROSS  q1 thr=0.9 t=5.00909912878e-07 t0=4.8e-07 edges=2
+OK   ASSERT q2 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   CROSS  d2 thr=0.9 t=4.955e-07 t0=0 edges=1
+OK   CROSS  q2 thr=0.9 t=5.00909455335e-07 t0=4.8e-07 edges=2
+OK   ASSERT q3 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   CROSS  d3 thr=0.9 t=4.975e-07 t0=0 edges=1
+OK   CROSS  q3 thr=0.9 t=5.00909081059e-07 t0=4.8e-07 edges=2
+OK   ASSERT q4 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   CROSS  d4 thr=0.9 t=4.985e-07 t0=0 edges=1
+OK   CROSS  q4 thr=0.9 t=5.00908747241e-07 t0=4.8e-07 edges=2
+OK   ASSERT q5 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   CROSS  d5 thr=0.9 t=4.99e-07 t0=0 edges=1
+OK   CROSS  q5 thr=0.9 t=5.00908478128e-07 t0=4.8e-07 edges=2
+OK   ASSERT q6 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   CROSS  d6 thr=0.9 t=4.995e-07 t0=0 edges=1
+OK   CROSS  q6 thr=0.9 t=5.00908024855e-07 t0=4.8e-07 edges=2
+OK   ASSERT q7 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   CROSS  d7 thr=0.9 t=4.998e-07 t0=0 edges=1
+OK   CROSS  q7 thr=0.9 t=5.00907473487e-07 t0=4.8e-07 edges=2
+OK   ASSERT q8 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   CROSS  d8 thr=0.9 t=5.001e-07 t0=0 edges=1
+OK   CROSS  q8 thr=0.9 t=5.00906000622e-07 t0=4.8e-07 edges=2
+OK   ASSERT q9 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   CROSS  d9 thr=0.9 t=5.003e-07 t0=0 edges=1
+OK   CROSS  q9 thr=0.9 t=5.00900710192e-07 t0=4.8e-07 edges=2
+FAIL ASSERT q10 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.07386e-08 max=1.09966e-08 viol=2500
+OK   CROSS  d10 thr=0.9 t=5.005e-07 t0=0 edges=1
+FAIL CROSS  q10 thr=0.9 not-found after_t0=4.8e-07 edges=1
+FAIL ASSERT q11 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.07664e-08 max=1.1067e-08 viol=2500
+OK   CROSS  d11 thr=0.9 t=5.009e-07 t0=0 edges=1
+FAIL CROSS  q11 thr=0.9 not-found after_t0=4.8e-07 edges=1
+FAIL ASSERT q12 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.07564e-08 max=1.11199e-08 viol=2500
+OK   CROSS  d12 thr=0.9 t=5.015e-07 t0=0 edges=1
+FAIL CROSS  q12 thr=0.9 not-found after_t0=4.8e-07 edges=1
+OK   CROSS  clk thr=0.9 t=5.005e-07 t0=4.8e-07 edges=3
+SUMMARY directives=40 failed=6

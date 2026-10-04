@@ -1,0 +1,21 @@
+corner=tt
+    TESTBENCH_PREFLIGHT: PASS
+[1] assertions: total=40 failed=0
+  DELAY  FF0 clk->Q (rise) = 4.215e-10 s = 0.211% of T
+  DELAY  FF1 clk->Q (rise) = 4.329e-10 s = 0.216% of T
+  DELAY  FF2 clk->Q (rise) = 3.957e-10 s = 0.198% of T
+C2MOS_SHIFT_3STAGE: PASS
+corner=ss
+    TESTBENCH_PREFLIGHT: PASS
+[1] assertions: total=40 failed=0
+  DELAY  FF0 clk->Q (rise) = 5.128e-10 s = 0.256% of T
+  DELAY  FF1 clk->Q (rise) = 5.248e-10 s = 0.262% of T
+  DELAY  FF2 clk->Q (rise) = 4.793e-10 s = 0.24% of T
+C2MOS_SHIFT_3STAGE: PASS
+corner=ff
+    TESTBENCH_PREFLIGHT: PASS
+[1] assertions: total=40 failed=0
+  DELAY  FF0 clk->Q (rise) = 3.533e-10 s = 0.177% of T
+  DELAY  FF1 clk->Q (rise) = 3.692e-10 s = 0.185% of T
+  DELAY  FF2 clk->Q (rise) = 3.381e-10 s = 0.169% of T
+C2MOS_SHIFT_3STAGE: PASS

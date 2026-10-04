@@ -1,14 +1,2 @@
-margin_ns,q_min_V,q_max_V,assert_verdict,signal,data_edge_s
-20.000,1.8,1.8,OK,q0,5.2e-07
-10.000,1.8,1.8,OK,q1,5.1e-07
-5.000,1.8,1.8,OK,q2,5.05e-07
-3.000,1.8,1.8,OK,q3,5.03e-07
-2.000,1.8,1.8,OK,q4,5.02e-07
-1.500,1.8,1.8,OK,q5,5.015e-07
-1.000,1.8,1.8,OK,q6,5.01e-07
-0.700,1.8,1.8,OK,q7,5.007e-07
-0.400,1.8,1.8,OK,q8,5.004e-07
-0.200,1.8,1.8,OK,q9,5.002e-07
-0.000,1.8,1.8,OK,q10,5e-07
--0.400,1.8,1.8,OK,q11,4.996e-07
--1.000,1.8,1.8,OK,q12,4.99e-07
+note
+superseded: source-delay based table produced by the OLD checker; the measured per-slew tables live in results/margin_<mode>_s<slew>.csv

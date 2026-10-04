@@ -20,7 +20,13 @@
 6. **失败方案不得伪装成 PASS。** 失败的 netlist、checker、结论原文必须留在仓库里，
    作废的结论用显式"作废"标注保留原文，不允许为了让仓库好看而删历史。
 7. **假设必须标来源。** 每条参数归入且只归入一类：
-   `COURSE REQUIREMENT` / `TEACHER PAPER` / `ENGINEERING DERIVATION` / `POC ASSUMPTION`。
+   `COURSE_REQUIREMENT` / `COURSE_FIGURE` / `TEACHER_PAPER` / `ENGINEERING_DERIVATION` /
+   `GPT6_LEGACY_PROPOSAL` / `POC_ASSUMPTION` / `NOT DEFINED`。
+   `course_source/spec_v12_text.txt` 属于旧 GPT-6 生成方案 = `GPT6_LEGACY_PROPOSAL`，
+   永远不得升格为 `TEACHER_PAPER` 或 `COURSE_REQUIREMENT`，除非同一事实能在老师正式题目
+   文字、正式布局结构图，或老师论文（Xiao et al., Micromachines 16(2) 207, 2025,
+   DOI 10.3390/mi16020207）里独立找到。通道方向这类结构结论 = `COURSE_FIGURE` +
+   `ENGINEERING_DERIVATION`。违规由 `python scripts/provenance_check.py` 机检。
    题目没给的（灰阶位数、消隐、PWM 深度、pitch、Vf、VLED、VDD、复用系数、输出域）
    保持 `NOT DEFINED`，**不得当已知量继续往下算**。
 8. **结构/方向类结论必须有出处。** 谁驱动谁、行列数量、电压域这类判断，要引用课程材料
@@ -45,8 +51,18 @@ git switch -c poc/<topic>
 bash scripts/sync2guest.sh spectre/<file>.scs scripts/<file>.sh
 bash scripts/guest.sh ssh "bash /root/microled_ai_project/scripts/<check>.sh ..."
 
-# 2) 把关键数值落到 results/（大波形数据库不入库）
+# 1b) 任何正式 transient 之前：testbench 自检（rail/0 参考/VDD 值；FAIL 即禁止仿真）
+bash   scripts/tb_preflight.sh /root/microled_ai_project/spectre/<tb>.scs 1.8 <tag>
+bash   scripts/tb_preflight.sh /root/microled_ai_project/spectre/preflight_negative_vss_float.scs 1.8 bad   # 必须 FAIL
+
+# 1c) checker 自身的合成波形用例（不得拿被测电路验证判据）
+python scripts/test_psf_check.py --write-transcript results/checker_unit_test.txt
+python scripts/netlist_stats.py            # 器件计数由 netlist 生成并核对报告文本
+python scripts/provenance_check.py         # 来源标签与绝对化描述
+
+# 2) 把关键数值落到 results/（大波形数据库不入库），并核对判据修复前后的一致
 python scripts/export_results.py
+python scripts/regression_compare.py --old results/history/<before>.csv --new results/evidence/<after>.txt
 
 # 3) 提交：pre-commit 闸会自动跑；单独手动跑也一样
 python scripts/precommit_safety_check.py --mode staged

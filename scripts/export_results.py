@@ -121,15 +121,6 @@ def margin_csv(mode):
                        "signal", "data_edge_s"], rows)
 
 
-def bracket(mode, rows):
-    ok = [float(r[0]) for r in rows if r[3] == "OK"]
-    bad = [float(r[0]) for r in rows if r[3] == "FAIL"]
-    if not ok:
-        return {"working_min_ns": None, "failing_max_ns": None}
-    return {"working_min_ns": min(ok),
-            "failing_max_ns": max(bad) if bad else None}
-
-
 def summary(tokens):
     out = {}
     for fn in sorted(os.listdir(EV)):
@@ -145,6 +136,36 @@ def summary(tokens):
     return p
 
 
+def margin_tables():
+    """Aggregate the measured, per-slew margin CSVs written by c2mos_margin.sh.
+
+    Those CSVs already carry the threshold-to-threshold margin column, so the bracket
+    here is a statement about measured crossings, not about the delay knob of a source.
+    """
+    out = {}
+    for fn in sorted(os.listdir(OUT)):
+        m = re.match(r"margin_(setup|hold)_(s[0-9.eE-]+)\.csv$", fn)
+        if not m:
+            continue
+        mode, tag = m.group(1), m.group(2)
+        with open(os.path.join(OUT, fn), encoding="utf-8") as fh:
+            rows = list(csv.DictReader(fh))
+        col = "setup_margin_ns" if mode == "setup" else "hold_margin_ns"
+        ok = [float(r[col]) for r in rows if r["level_verdict"] == "PASS"
+              and re.match(r"^-?[0-9.]+$", r[col] or "")]
+        bad = [float(r[col]) for r in rows if r["level_verdict"] == "FAIL"
+               and re.match(r"^-?[0-9.]+$", r[col] or "")]
+        out["%s@%s" % (mode, tag)] = {
+            "points": len(rows),
+            "working_margin_min_ns": min(ok) if ok else None,
+            "working_margin_max_ns": max(ok) if ok else None,
+            "failing_margin_min_ns": min(bad) if bad else None,
+            "failing_margin_max_ns": max(bad) if bad else None,
+            "boundary_found": bool(ok and bad),
+        }
+    return out
+
+
 def main():
     if not os.path.isdir(EV):
         print("FATAL: %s missing (pull the checker output from the guest first)" % EV)
@@ -152,16 +173,22 @@ def main():
     ff1, ff1_rows = levels_csv(r"c2mos_assert_ff1_.*\.txt", "c2mos_ff1_levels.csv")
     sh3, sh3_rows = levels_csv(r"c2mos_assert_shift3_.*\.txt", "c2mos_shift3_levels.csv")
     delays_csv()
-    _, ms_rows = margin_csv("setup")
-    _, mh_rows = margin_csv("hold")
+    for p in (margin_csv("setup"), margin_csv("hold")):      # legacy pre-fix transcripts
+        if p and p[1]:
+            with open(p[0], "w", newline="", encoding="utf-8") as fh:
+                w = csv.writer(fh)
+                w.writerow(["note"])
+                w.writerow(["superseded: source-delay based table produced by the OLD"
+                            " checker; the measured per-slew tables live in"
+                            " results/margin_<mode>_s<slew>.csv"])
     extra = {}
-    if ms_rows:
-        extra["setup_bracket_ns"] = bracket("setup", ms_rows)
-    if mh_rows:
-        extra["hold_bracket_ns"] = bracket("hold", mh_rows)
     for rows, name in ((ff1_rows, "ff1_windows"), (sh3_rows, "shift3_windows")):
         extra[name] = {"total": len(rows),
                        "failed": sum(1 for r in rows if r[9] == "FAIL")}
+    extra["margin_measured"] = margin_tables()
+    extra["margin_legacy_note"] = ("results/margin_setup.csv and results/margin_hold.csv"
+                                   " are marked superseded: they were derived from the"
+                                   " source-delay knob by the pre-fix checker")
     summary(extra)
     print("EXPORT_RESULTS: DONE")
     return 0

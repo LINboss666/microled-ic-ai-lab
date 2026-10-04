@@ -24,8 +24,11 @@
 // which alone is enough to explain the old symptoms; see the note above the subckt.
 //
 // Keeper sizing: cross-coupled weak inverter pairs (m<->mb, q<->qbar), W = 0.25 x the
-//   clocked-path width, so a write always wins while the node is still actively
-//   restored (fully static) during the inactive half-cycle.
+//   clocked-path width. What has actually been measured is that at tt, 1.8 V, 27 C and
+//   a 50 fF load a write wins and the node is actively restored (fully static) during
+//   the inactive half-cycle. That is NOT a guarantee over voltage, temperature, process
+//   spread or mismatch -- none of those have been run here, so no always/guaranteed/
+//   all-corners statement belongs in this file.
 //
 // This cell has NO reset, NO pulse generator and NO scan power output stage; the scan
 // output domain (VLED / Micro LED Vf) stays NOT DEFINED and is frozen this round.

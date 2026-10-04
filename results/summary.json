@@ -1,18 +1,45 @@
 {
  "ff1_windows": {
   "failed": 0,
-  "total": 32
+  "total": 64
  },
- "hold_bracket_ns": {
-  "failing_max_ns": null,
-  "working_min_ns": -1.0
- },
- "setup_bracket_ns": {
-  "failing_max_ns": 0.0,
-  "working_min_ns": 0.2
+ "margin_legacy_note": "results/margin_setup.csv and results/margin_hold.csv are marked superseded: they were derived from the source-delay knob by the pre-fix checker",
+ "margin_measured": {
+  "hold@s1e-9": {
+   "boundary_found": true,
+   "failing_margin_max_ns": -1.0,
+   "failing_margin_min_ns": -1.0,
+   "points": 13,
+   "working_margin_max_ns": 20.0,
+   "working_margin_min_ns": -0.4
+  },
+  "hold@s5e-11": {
+   "boundary_found": true,
+   "failing_margin_max_ns": -0.4,
+   "failing_margin_min_ns": -1.0,
+   "points": 13,
+   "working_margin_max_ns": 20.0,
+   "working_margin_min_ns": 0.0
+  },
+  "setup@s1e-9": {
+   "boundary_found": true,
+   "failing_margin_max_ns": 0.0,
+   "failing_margin_min_ns": -1.0,
+   "points": 13,
+   "working_margin_max_ns": 20.0,
+   "working_margin_min_ns": 0.2
+  },
+  "setup@s5e-11": {
+   "boundary_found": true,
+   "failing_margin_max_ns": 0.0,
+   "failing_margin_min_ns": -1.0,
+   "points": 13,
+   "working_margin_max_ns": 20.0,
+   "working_margin_min_ns": 0.2
+  }
  },
  "shift3_windows": {
   "failed": 0,
-  "total": 102
+  "total": 306
  }
 }

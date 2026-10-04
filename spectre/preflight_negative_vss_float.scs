@@ -1,0 +1,37 @@
+// ==============================================================================
+// preflight_negative_vss_float.scs -- DELIBERATELY BROKEN testbench fixture.
+//
+// This is the negative test for scripts/tb_preflight.sh. It is the real failure mode
+// this project hit: `vss` is used as the source/bulk of every NMOS but is never tied to
+// the Spectre reference node 0, so it is a floating net, no NMOS has a current path, and
+// the circuit still simulates with "0 errors, 0 warnings".
+//
+// Expected:  TESTBENCH_PREFLIGHT: FAIL
+// If this fixture ever passes the preflight, the preflight is broken and no transient
+// result from this repository can be trusted.
+//
+// NEVER use this file for functional verification and never "fix" it: the correct
+// version is spectre/c2mos_ff1_func.scs, which differs only by the Vss source.
+// ==============================================================================
+simulator lang=spectre insensitive=yes
+
+include "${QODER_PDK_LIB}" section=tt
+include "C2MOS_DFF.scs"
+
+parameters T=2e-7
+parameters VDDV=1.8
+
+Vdd (vdd 0) vsource dc=VDDV
+// the bug, on purpose: no `Vss (vss 0) vsource dc=0` line here
+
+Ck (clk 0) vsource type=pulse val0=0    val1=VDDV period=T     delay=0.5*T  width=0.5*T rise=1e-9 fall=1e-9
+Dd (d    0) vsource type=pulse val0=0    val1=VDDV period=2*T   delay=0.35*T width=T     rise=1e-9 fall=1e-9
+
+X1 (d clk q qbar vdd vss) c2mos_dff
+
+Cq    (q    0) capacitor c=50e-15
+Cqb   (qbar 0) capacitor c=50e-15
+
+tr1 tran stop=4.8*T maxstep=1e-4*T
+
+save clk d q qbar

@@ -19,7 +19,9 @@
 
 没有采用第三种触发器风格，也没有加复位、脉冲发生器或输出级 —— 按你的指示执行。
 
-## 单元结构（`spectre/C2MOS_DFF.scs`，20 管 + 时钟反相器 2 管）
+## 单元结构（`spectre/C2MOS_DFF.scs`，18 MOS = 内部时钟反相器 2 + 主级堆叠 4 + 主级 keeper 4 + 从级堆叠 4 + 从级 keeper 4）
+
+计数不手抄：`python scripts/netlist_stats.py` 从 netlist 解析出 NMOS=9 / PMOS=9 / 合计 18，并核对全仓库所有"N 管 / N MOS / N transistors"断言。
 
 外部只有 `d clk` 两个信号，`clkb` 由单元内部反相器产生。**内部时钟极性明确记录**：
 `clkb = !clk`；clk=0 时主锁存透明、从锁存保持；clk=1 时主锁存保持、从锁存透明 → 上升沿触发，`D→Q` 同相（两级反相）。
@@ -50,7 +52,7 @@
 | clk=1（clkb=0） | `mp_m1`(gate=1) 断、`mn_m1`(gate=0) 断 → 与两条轨都断开 | 两条堆叠都导通 → `q=!m=d` | 无。`d` 在此相位翻转也碰不到 `m`，只碰到已断开的堆叠里的栅极 |
 
 尺寸：时钟路径 `wc=2 µm / wcp=4 µm`，keeper `wk=0.5 µm / wkp=1 µm`（0.25×），`l=0.2 µm` 全部。
-写入由时钟路径赢、保持由 keeper 主动补荷（fully static），实测保持窗口内 min 1.8000 V、无跌落。
+已实测：在 tt / 1.8 V / 27 °C / 50 fF 这些条件下，写入由时钟路径赢、保持由 keeper 主动补荷（fully static），保持窗口内 min 1.8000 V、无跌落。电压、温度、工艺偏差、mismatch、Monte Carlo 均未运行，所以这不是"总能写入 / 全角保证"。
 
 ## 验证内容与判据
 
@@ -97,21 +99,28 @@ clk→Q 延迟（50% 跨点差，始终相对**捕获它的那个上升沿**测�
 被测沿取第 3 个上升沿（2.5T），前两个沿只用来把从锁存置成确定状态（单元无复位，上电时 keeper 双稳态
 的直流解未定义，这是仿真初值问题，不是靠加复位解决的）。
 
+> **本节结论已被 `reports/c2mos_validation_report.md` 取代**（第一轮独立 review 之后）。
+> 原因有两条：当时 margin 是按**电压源的 delay 旋钮**读成 setup/hold 的，而旋钮值不等于
+> 阈值到阈值的裕量；并且当时的 `CROSS/FALL` 判据是"第一个越过阈值的采样点"，不是过沿检测。
+> 下面保留原文，是为了让审核方看到结论是怎么被修正的，不代表当前状态。
+
 建立时间（`d` 在 2.5T−margin 上升）：
 
 | margin | 20 / 10 / 5 / 3 / 2 / 1.5 / 1 / 0.7 / 0.4 / 0.2 ns | 0 / −0.4 / −1.0 ns |
 |---|---|---|
 | q 在 [2.7T, 2.95T] | 1.8000 V → CAPTURED | ≈1.07e−8 V → REJECTED |
 
-→ 边界被夹在 **(0.0, 0.2] ns**。
+修正后的实测说法（阈值到阈值，VTH=0.5·VDD）：`setup_margin = t_CLK50 − t_D50`，
+1 ns 与 50 ps 两组边沿都给出同一夹逼 **捕获 ≥ +0.200 ns、拒绝 ≤ 0.000 ns**，
+即当前夹逼宽度就是扫描步进 0.2 ns。
 
-保持时间（`d` 在 2.5T+margin 下降）：margin 从 20 ns 一直到 **−1 ns 全部 HELD**，q 始终 1.8000 V、
-零跌落。原始采样点核对过 `d12`：它在 499.98→501.7 ns 之间才降完（数据边沿 1 ns），也就是说边沿跨过
-时钟沿才落到 0，所以负 margin 那几行**不是保持测试**，而是"数据在有效沿时刻仍为 1"的正常捕获。
-→ 在时钟高电平相位（master 两条堆叠都与轨断开）内看不到任何保持要求，实测 **t_hold ≈ 0 ns**。
-
-两个数字都受 1 ns 源边沿速率限制，不代表单元本征极限；要拿本征值需要把时钟/数据边沿缩到 ~50 ps 再扫。
-这一条属于表征说明，不是课程规格。
+保持时间：原报告写的"实测 t_hold ≈ 0 ns"**证据不足，已撤回**。正确表述是
+**HOLD BOUNDARY NOT FOUND IN CURRENT SWEEP**，以及 no functional hold failure observed
+down to the tested source-delay margin = −1 ns；进一步用 50 ps 边沿重测才把边界夹到
+**≥ 0.000 ns 保持、≤ −0.400 ns 失败**之间。两组结果不一致本身就说明源边沿速率在主导观测值
+（本仿真器的 pulse 时序是 `delay → rise → width`，1 ns 那组的数据下降沿实际比旋钮值晚约一个
+rise time，从未进入保持临界区）。因此 **`HOLD_CHARACTERIZED: NO`**，本轮不产出任何
+setup/hold 规格；数据在 `results/margin_*_s{1e-9,5e-11}.csv` 与 `results/summary.json`。
 
 ## 本轮挖出的真根因（推翻了上一轮的失败归因）
 
@@ -145,7 +154,7 @@ Windows 镜像 `D:\ic617_agent_bridge\`，guest 侧 `/root/microled_ai_project\`
 
 | 文件 | 作用 |
 |---|---|
-| `spectre/C2MOS_DFF.scs` | 单元（22 管，无复位/无脉冲/无输出级） |
+| `spectre/C2MOS_DFF.scs` | 单元（18 MOS，无复位/无脉冲/无输出级） |
 | `spectre/c2mos_ff1_func.scs` | 单级功能 testbench |
 | `spectre/c2mos_shift3.scs` | 3 级链 testbench |
 | `spectre/c2mos_diag.scs` | 相位级探针（两个实例：d=0 与 d=1.8） |

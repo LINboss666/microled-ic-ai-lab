@@ -1,0 +1,3 @@
+  DELAY  FF0 clk->Q (rise) = 4.204e-10 s = 0.00431% of T
+  DELAY  FF1 clk->Q (rise) = 4.34e-10 s = 0.00444% of T
+  DELAY  FF2 clk->Q (rise) = 3.974e-10 s = 0.00407% of T

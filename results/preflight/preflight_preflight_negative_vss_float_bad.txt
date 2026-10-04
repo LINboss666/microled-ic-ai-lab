@@ -1,0 +1,28 @@
+== testbench preflight: /root/microled_ai_project/spectre/preflight_negative_vss_float.scs (expected VDD=1.8)
+--- local cell files parsed for port lists: /root/microled_ai_project/spectre/C2MOS_DFF.scs
+STATIC_OK vdd net vdd referenced to node 0 at 1.8 V
+STATIC_FAIL vss net vss is NOT tied to reference node 0: it is a floating substrate/source net, every NMOS carrying current through it is silently dead
+STATIC_RESULT FAIL
+NETS_TO_SAVE clk vdd qbar q d vss
+VDD_NETS
+--- preflight netlist: /root/microled_ai_project/spectre/preflight_preflight_negative_vss_float_bad.scs
+spectre_rc=0 datafile=/root/microled_ai_project/spectre/sim/preflight_preflight_negative_vss_float_bad.raw/tr1.tran.tran
+--- operating point at the first sample
+    clk 0
+    vdd 1.8
+    qbar 1.79864736
+    q 1.79862669
+    d 0
+    vss 1.7980144
+    X1.x1 1.8
+    X1.y1 1.79931342
+    X1.x2 1.79752631
+    X1.y2 1.79813821
+    X1.m 1.8
+    X1.clkb 1.8
+    X1.mb 1.79864745
+OP_OK vdd net vdd = 1.8 (expected 1.8)
+OP_FAIL vss net vss = 1.7980144 is not at the reference potential
+--- rail check
+RAIL_WARNINGS=0
+TESTBENCH_PREFLIGHT: FAIL

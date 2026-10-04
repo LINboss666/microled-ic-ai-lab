@@ -42,6 +42,13 @@ mkdir -p "$LOGD"
 NET="$PROJ/spectre/run_${TB}_${TAG}.scs"
 DIRS="$LOGD/c2mos_dirs_${TB}_${TAG}.txt"
 awk -v t="$T" '{ if ($0 ~ /^parameters T=/) print "parameters T=" t; else print }' "$TPL" > "$NET"
+# Optional model-section override (scripts/pvt_probe.sh uses it to re-run the identical
+# assertions at another corner). Unset => whatever the template says, which is tt.
+if [ -n "${SECTION:-}" ]; then
+  awk -v s="$SECTION" '{ sub(/section=[A-Za-z0-9_]+/, "section=" s); print }' "$NET" > "$NET.tmp"
+  mv "$NET.tmp" "$NET"
+  echo "model section override = $SECTION"
+fi
 
 # t(<multiple of T>) -> absolute seconds
 t() { awk -v t="$T" -v f="$1" 'BEGIN{printf "%.9g", t*f}'; }
@@ -84,12 +91,16 @@ build_dirs() {
     echo "#       edge is therefore not a valid 0->1 observation and is not measured.)" >> "$f"
     echo "CROSS clk 0.9 0"          >> "$f"
     echo "CROSS clk 0.9 $(t 1.40)"  >> "$f"
+    echo "FALL  d   0.9 $(t 1.30)"  >> "$f"
     echo "FALL  q   0.9 $(t 1.40)"  >> "$f"
     echo "CROSS clk 0.9 $(t 2.40)"  >> "$f"
+    echo "CROSS d   0.9 $(t 2.30)"  >> "$f"
     echo "CROSS q   0.9 $(t 2.40)"  >> "$f"
     echo "CROSS clk 0.9 $(t 3.40)"  >> "$f"
+    echo "FALL  d   0.9 $(t 3.30)"  >> "$f"
     echo "FALL  q   0.9 $(t 3.40)"  >> "$f"
     echo "CROSS clk 0.9 $(t 4.40)"  >> "$f"
+    echo "CROSS d   0.9 $(t 4.30)"  >> "$f"
     echo "CROSS q   0.9 $(t 4.40)"  >> "$f"
     return
   fi
@@ -167,15 +178,21 @@ run_once() {
   local dl="$LOGD/c2mos_delays_${TB}_${TAG}_${idx}.txt"
   : > "$dl"
   if [ "$TB" = "ff1" ]; then
-    local o kind cc qq
+    local o kind cc qq dd
     for o in "1.40 FALL" "2.40 CROSS" "3.40 FALL" "4.40 CROSS"; do
       set -- $o; o=$1; kind=$2
       cc=$(xtime "$ass" CROSS clk "$(t $o)")
       qq=$(xtime "$ass" "$kind" q "$(t $o)")
-      awk -v a="$cc" -v b="$qq" -v o="$o" -v k="$kind" -v tt="$T" 'BEGIN{
+      # the data 50% crossing that belongs to this edge: 0.10T before the edge search
+      # start is where the pattern puts it (d toggles at edge - 0.15T)
+      dd=$(xtime "$ass" "$kind" d "$(t $(add "$o" -0.10))")
+      awk -v a="$cc" -v b="$qq" -v c="$dd" -v o="$o" -v k="$kind" -v tt="$T" 'BEGIN{
+        lbl = (k=="CROSS" ? "rise" : "fall")
         if (a==""||b=="") { printf "  DELAY  %s t0=%sT: not measured\n", k, o; exit }
-        printf "  DELAY  clk->Q %s (edge after t0=%sT) = %.4g s = %.3g%% of T   [clk=%.4g q=%.4g]\n", \
-               (k=="CROSS"?"rise":"fall"), o, b-a, 100*(b-a)/tt, a, b }' | tee -a "$dl"
+        printf "  TIMING edge=%sT kind=%-4s t_CLK50=%.6g t_Q50=%.6g t_D50=%s", o, lbl, a, b, \
+               (c=="" ? "not-found" : sprintf("%.6g", c+0))
+        printf "  D50_to_CLK50=%s  CLK50_to_Q50=%.6g s (%.3g%% of T)\n", \
+               (c=="" ? "n/a" : sprintf("%.6g", a-c)), b-a, 100*(b-a)/tt }' | tee -a "$dl"
     done
   else
     local i t0 cc qq
@@ -194,6 +211,18 @@ build_dirs "$DIRS"
 echo "TB=$TB T=$T tag=$TAG"
 echo "netlist=$NET"
 echo "directives=$DIRS rules=$(grep -acE '^(ASSERT|CROSS|FALL)' "$DIRS")"
+
+# ---- A8 gate: no formal transient unless the testbench rails are proven real ------
+if [ "${SKIP_PREFLIGHT:-0}" != "1" ]; then
+  echo "--- testbench preflight"
+  pf_out=$(bash "$PROJ/scripts/tb_preflight.sh" "$NET" "${VDD_EXP:-1.8}" "$TB" 2>&1)
+  pf_rc=$?
+  echo "$pf_out" | grep -aE "STATIC_OK|STATIC_FAIL|OP_OK|OP_FAIL|RAIL_|TESTBENCH_PREFLIGHT" | sed 's/^/    /'
+  if [ "$pf_rc" != "0" ]; then
+    echo "$TOKEN: FAIL  (testbench preflight refused; see $LOGD/preflight_$(basename "$NET" .scs)_$TB.txt)"
+    exit 1
+  fi
+fi
 
 allok=1
 for r in $(seq 1 "$REPEAT"); do

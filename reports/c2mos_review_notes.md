@@ -11,17 +11,25 @@ AI 能否做出一个**能被数值断言证明可用**的扫描驱动器最小�
 
 范围之外（按指示冻结）：扫描功率输出级、VLED、Micro LED Vf、电平搬移、版图、DRC/LVS、阵列。
 
-## Requirement 分类（每条只有一个标签）
+## Requirement 分类（每条只有一个标签，机检：`scripts/provenance_check.py`）
+
+标签含义：`COURSE_REQUIREMENT` 老师正式题目文字或用户明确确认的课程条件；`COURSE_FIGURE`
+正式题目里的布局结构图；`TEACHER_PAPER` 老师论文（Xiao et al., *A 64 x 64 GaN Micro LED
+Monolithic Display Array*, Micromachines 16(2) 207, 2025, DOI 10.3390/mi16020207）的实际内容；
+`ENGINEERING_DERIVATION` 由前三者算出；`GPT6_LEGACY_PROPOSAL` 只出自旧 V1.2 交付包；
+`POC_ASSUMPTION` 本仿真自设条件；`NOT DEFINED` 题目未给。
 
 | 条目 | 标签 | 依据 |
 |---|---|---|
-| 1024 列 × 768 行、5 µm 像素、15 µA 为**选通态瞬时**像素电流、60–100 Hz | `COURSE REQUIREMENT` | 题目给定；15 µA 的定义由用户于 2026-10-04 明确 |
-| 扫描驱动 = 列驱动（1024 根，2×512，上下，奇偶列，高边开关）；数据驱动 = 行驱动（768 根，2×384，左右，奇偶行，恒流吸收） | `TEACHER PAPER` | 规格书抽取文本 `spec_v12_text.txt` L8 / L17 / L32 / L76 / L79 / L112 |
-| 列周期 9.765625 µs @100 Hz = 1/(1024×100)；单根扫描线最大电流 I_SCAN_MAX = 768×15 µA = 11.52 mA | `ENGINEERING DERIVATION` | 由上面两条直接推导，脚本 `scripts/microled_arch_calc.py` 内含反向自检 |
-| 正式工艺 = 老师交付副本 smic18mmrf_teacher，只用 1.8 V 核心管 n18/p18 | `COURSE REQUIREMENT` | 用户指定；副本 CRC 与 zip 全对 |
-| 本轮只做 1 路、只做移位 + 最小单元、不接输出级 | `COURSE REQUIREMENT`（用户指示） | 用户 2026-10-04 明确 |
-| 测试时钟 T=200 ns、每管 50 fF 负载、源边沿 1 ns、电平判据 1.7 V / 0.1 V、13 个 margin | `POC ASSUMPTION` | 题目未给；不代表任何真实负载或规格 |
+| 1024 列 × 768 行、5 µm 像素、15 µA 为**选通态瞬时**像素电流、60–100 Hz | `COURSE_REQUIREMENT` | 正式题目文字；15 µA 的含义由用户于 2026-10-04 明确确认 |
+| 扫描驱动 = 列驱动（1024 根，2×512，上下，奇偶列，高边开关）；数据驱动 = 行驱动（768 根，2×384，左右，奇偶行，恒流吸收） | `COURSE_FIGURE` + `ENGINEERING_DERIVATION` | 正式布局结构图（Figure 3 的行列与上下/左右分区）加上 1024×768 的计数推导。**旧版把这条标成 `TEACHER PAPER` 是错的**：它当时唯一的引用是 `spec_v12_text.txt`，那是 `GPT6_LEGACY_PROPOSAL`，不能提升证据等级 |  <!-- check:skip 本行是在引用被废除的旧标签，不是在使用它 -->
+| 列周期 9.765625 µs @100 Hz = 1/(1024×100)；单根扫描线最大电流 I_SCAN_MAX = 768×15 µA = 11.52 mA | `ENGINEERING_DERIVATION` | 由上面两行算出；`scripts/microled_arch_calc.py` 内含反向自检 |
+| 正式工艺 = 老师交付副本 smic18mmrf_teacher，只用 1.8 V 核心管 n18/p18 | `COURSE_REQUIREMENT` | 用户指定；副本与 zip 逐文件 CRC 全对 |
+| 本轮只做 1 路、只做移位 + 最小单元、不接输出级 | `COURSE_REQUIREMENT` | 用户 2026-10-04 明确指示 |
+| 测试时钟 T=200 ns、每管 50 fF 负载、源边沿 1 ns / 50 ps 两组、电平判据 1.7 V / 0.1 V、13 个 margin | `POC_ASSUMPTION` | 题目未给；不代表任何真实负载或规格 |
 | 灰阶位数、PWM/PAM 深度、消隐占比、pitch、Vf、VLED、输出电压域、复用系数 | `NOT DEFINED` | 题目未给，**不得当已知量继续推算** |
+| 旧 `MicroLED_驱动芯片规格书_V1.2_最终交付包`（抽取件 `spec_v12_text.txt`）里的任何数值 | `GPT6_LEGACY_PROPOSAL` | 那是旧 GPT-6 生成的设计方案，不是老师论文也不是题面；只作对照，不作依据 |
+
 
 ## Circuit / clock 极性
 
@@ -36,13 +44,23 @@ AI 能否做出一个**能被数值断言证明可用**的扫描驱动器最小�
    从未接地（NMOS 全部无电流路径，节点被泵到 VDD 以上，Spectre 报 0 error）。因此
    "互补两相 TG 锁存链存在 keeper/写入强度冲突、拓扑不可行"这个结论**已作废**；
    `spectre/shift_unit_tb.scs` 至今没有在正确接地下验证过，它现在是 unknown，不是 FAIL 也不是 PASS。
-2. **只跑了 `tt` corner、默认温度**。没有 ss/ff、没有电压/温度扫描、没有 mismatch、没有噪声。
-   keeper 0.25× 的写入/保持裕量因此只在一种条件下成立。
-3. **建立/保持的测量值受源边沿速率限制**：时钟与数据边沿都是 1 ns，所以
-   setup ∈ (0.0, 0.2] ns、hold ≈ 0 ns 是"边沿限制下"的数，不是器件本征极限；
-   要本征值需要把边沿压到 ~50 ps 重扫。
-4. **hold 扫描里 margin ≤ 0 的三行不是保持测试**。原始采样显示 `d12` 在 499.98→501.7 ns
-   之间才降完（数据边沿跨过时钟沿），那几行本质上是 setup 侧的行为，标签 HELD 容易被误读。
+2. **PVT 只做了三个工艺角探针，不是表征。** 工艺角名从模型库的 `section` 列表实测读出
+   （`tt` / `ss` / `ff`，另有 `fnsp` / `snfp`），不猜。3 级链在 tt/ss/ff 下 40/40 断言都过、
+   同一沿不穿透多級 ✓ 但仍是**单一 VDD(1.8 V)、单一温度、单一负载(50 fF)、无 mismatch、
+   无 Monte Carlo、无噪声**。keeper 0.25× 的写入/保持裕量已被验证**在这些条件下成立**，
+   不得写成"总能写入 / 全角保证"。
+3. **建立时间：两组边沿速率给出同一夹逼。** 用实测 50% 跨点（VTH = 0.5·VDD）计：
+   `setup_margin = t_CLK50 − t_D50`，1 ns 与 50 ps 两组都是 **≥ +0.200 ns 捕获、≤ 0.000 ns 失败**
+   → 当前夹逼宽度就等于扫描步进 0.2 ns，边界并未被边沿速率扭曲。
+4. **保持时间：`HOLD_CHARACTERIZED: NO`，且不得给数值 spec。** 实测
+   `hold_margin = t_D50 − t_CLK50`（数据变化点相对时钟 50% 点）：
+   - 1 ns 边沿组：**HOLD BOUNDARY NOT FOUND IN CURRENT SWEEP** ——
+     no functional hold failure observed down to the tested source-delay margin = −1 ns；
+     而且因为本仿真器的 pulse 时序是 `delay → rise → width`，1 ns 那组的**数据下降沿实际比旋钮值晚
+     约一个 rise time**，所以它只测到了正 hold 侧，从未进入保持临界区；
+   - 50 ps 边沿组：边界夹在 **≥ 0.000 ns 保持成功 / ≤ −0.400 ns 失败** 之间。
+   两组结论不同本身就说明：源边沿速率正在主导观测值，而"源 delay 旋钮"不等于阈值到阈值的保持时间。
+   因此本轮只标 PRELIMINARY CHARACTERIZATION，不产出 hold 规格。
 5. **无复位**：从锁存是一对对称交叉耦合反相器，上电直流解未定义。testbench 用前两个（链：三个）
    时钟沿做 priming 才让状态确定，之后才断言。真实扫描驱动器一般自带 RST/blanking，这里按指示没加。
 6. **完全没有覆盖真实负载条件**：15 µA 像素电流、列电极实际 RC、VLED 域都不在这个 POC 里，

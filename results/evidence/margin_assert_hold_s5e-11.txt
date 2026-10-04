@@ -1,0 +1,42 @@
+sweep_key=time
+OK   ASSERT q0 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   FALL   d0 thr=0.9 t=5.20025e-07 t0=4.8e-07 edges=1
+FAIL FALL   q0 thr=0.9 not-found after_t0=4.8e-07 edges=0
+OK   ASSERT q1 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   FALL   d1 thr=0.9 t=5.10025e-07 t0=4.8e-07 edges=1
+FAIL FALL   q1 thr=0.9 not-found after_t0=4.8e-07 edges=0
+OK   ASSERT q2 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   FALL   d2 thr=0.9 t=5.05025e-07 t0=4.8e-07 edges=1
+FAIL FALL   q2 thr=0.9 not-found after_t0=4.8e-07 edges=0
+OK   ASSERT q3 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   FALL   d3 thr=0.9 t=5.03025e-07 t0=4.8e-07 edges=1
+FAIL FALL   q3 thr=0.9 not-found after_t0=4.8e-07 edges=0
+OK   ASSERT q4 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   FALL   d4 thr=0.9 t=5.02025e-07 t0=4.8e-07 edges=1
+FAIL FALL   q4 thr=0.9 not-found after_t0=4.8e-07 edges=0
+OK   ASSERT q5 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   FALL   d5 thr=0.9 t=5.01525e-07 t0=4.8e-07 edges=1
+FAIL FALL   q5 thr=0.9 not-found after_t0=4.8e-07 edges=0
+OK   ASSERT q6 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   FALL   d6 thr=0.9 t=5.01025e-07 t0=4.8e-07 edges=1
+FAIL FALL   q6 thr=0.9 not-found after_t0=4.8e-07 edges=0
+OK   ASSERT q7 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   FALL   d7 thr=0.9 t=5.00725e-07 t0=4.8e-07 edges=1
+FAIL FALL   q7 thr=0.9 not-found after_t0=4.8e-07 edges=0
+OK   ASSERT q8 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   FALL   d8 thr=0.9 t=5.00425e-07 t0=4.8e-07 edges=1
+FAIL FALL   q8 thr=0.9 not-found after_t0=4.8e-07 edges=0
+OK   ASSERT q9 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   FALL   d9 thr=0.9 t=5.00225e-07 t0=4.8e-07 edges=1
+FAIL FALL   q9 thr=0.9 not-found after_t0=4.8e-07 edges=0
+OK   ASSERT q10 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.8 max=1.8
+OK   FALL   d10 thr=0.9 t=5.00025e-07 t0=4.8e-07 edges=1
+FAIL FALL   q10 thr=0.9 not-found after_t0=4.8e-07 edges=0
+FAIL ASSERT q11 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.07569e-08 max=1.09284e-08 viol=2500
+OK   FALL   d11 thr=0.9 t=4.99625e-07 t0=4.8e-07 edges=1
+OK   FALL   q11 thr=0.9 t=5.00132910975e-07 t0=4.8e-07 edges=1
+FAIL ASSERT q12 [5.4e-07,5.9e-07] gt 1.5  n=2500 min=1.07569e-08 max=1.09283e-08 viol=2500
+OK   FALL   d12 thr=0.9 t=4.99025e-07 t0=4.8e-07 edges=1
+OK   FALL   q12 thr=0.9 t=5.00132496877e-07 t0=4.8e-07 edges=1
+OK   CROSS  clk thr=0.9 t=5.00025e-07 t0=4.8e-07 edges=3
+SUMMARY directives=40 failed=13

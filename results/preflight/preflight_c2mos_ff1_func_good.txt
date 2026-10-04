@@ -1,0 +1,28 @@
+== testbench preflight: /root/microled_ai_project/spectre/c2mos_ff1_func.scs (expected VDD=1.8)
+--- local cell files parsed for port lists: /root/microled_ai_project/spectre/C2MOS_DFF.scs
+STATIC_OK vdd net vdd referenced to node 0 at 1.8 V
+STATIC_OK vss net vss tied to node 0 through an independent source
+STATIC_RESULT PASS
+NETS_TO_SAVE clk vdd qbar q d vss
+VDD_NETS
+--- preflight netlist: /root/microled_ai_project/spectre/preflight_c2mos_ff1_func_good.scs
+spectre_rc=0 datafile=/root/microled_ai_project/spectre/sim/preflight_c2mos_ff1_func_good.raw/tr1.tran.tran
+--- operating point at the first sample
+    clk 0
+    vdd 1.8
+    qbar 0.810829713
+    q 0.810829754
+    d 0
+    vss 0
+    X1.x1 1.79999998
+    X1.y1 1.77510264
+    X1.x2 9.13578182e-09
+    X1.y2 0.810829737
+    X1.m 1.79999996
+    X1.clkb 1.79999998
+    X1.mb 6.33163255e-09
+OP_OK vdd net vdd = 1.8 (expected 1.8)
+OP_OK vss net vss = 0 (must equal the reference)
+--- rail check
+RAIL_WARNINGS=0
+TESTBENCH_PREFLIGHT: PASS
