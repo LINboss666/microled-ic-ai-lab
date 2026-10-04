@@ -1,4 +1,4 @@
-== tracked files: 156
+== tracked files: 157
    untracked-only probes (all must be False):
      .ic617_agent_bridge_credentials                tracked=False
      spectre/pdk_local.env                          tracked=False
@@ -10,7 +10,7 @@
 == gate staged: SAFETY_GATE: PASS
 == gate: SAFETY_GATE: PASS
 == gate: SAFETY_GATE: PASS
-== commit metadata: 16 author/committer records, phone-email hits=0
+== commit metadata: 18 author/committer records, phone-email hits=0
    author+committer emails: 237816241+LINboss666@users.noreply.github.com
 == git fsck --full: 0 dangling/missing line(s)
 == origin: https://github.com/LINboss666/microled-ic-ai-lab.git -> audit target LINboss666/microled-ic-ai-lab
@@ -18,7 +18,7 @@
 == remote repo: visibility=PRIVATE private=True default_branch=main size_kb=183 fork=False
 == repo description: Micro LED scan-driver IC: AI-Cadence POC (IC617 + SMIC 018 MM RF). Own netlists, checkers and numbers only; no PDK, no model cards, no credentials.
    ref refs/heads/main              local=11446f5c remote=11446f5c match
-   ref refs/heads/poc/c2mos-dff     local=9a263254 remote=9a263254 match
+   ref refs/heads/poc/c2mos-dff     local=1edecd74 remote=1edecd74 match
 == open+closed PRs    count=0
 == forks              count=0
 == actions/workflows  count=0
@@ -37,7 +37,7 @@
 == superseded: 10 rewritten commits, 9 still served, 18 phone-shaped email fields on the server, 9/9 served trees match the clean history
 
 AUDITED_BRANCH = poc/c2mos-dff
-AUDITED_HEAD = 9a26325433ac0d81bd8c72abb09be168f35b6c7c
+AUDITED_HEAD = 1edecd74e7468cb31c76f18440c26dd83ebe0df8
 PDK_TRACKED_FILES = 0
 CREDENTIAL_TRACKED_FILES = 0
 PRIVATE_KEYS_TRACKED_FILES = 0
