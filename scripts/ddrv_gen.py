@@ -96,7 +96,7 @@ Vss  (vss 0)      vsource dc=0
 Vout (vsw 0)      vsource dc=0
 Rsen (data_out vsw) resistor r=RSEN
 {stim}{vcassrc}
-save vdd vss vsw data_out vbias {extra}
+save vdd vss vsw data_out vbias data_en data_en_b {extra}
 
 {analysis}
 """

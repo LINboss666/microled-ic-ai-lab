@@ -15,6 +15,12 @@ FUNCTIONAL             : ON = 14.9465 uA @ tt, err -0.357 %；OFF = 5 pA @ 3.3 V
 COMPLIANCE             : +/-1% 从 0.4515 V 起，可用到 3.1505 V（本 testbench 上限）
 TIMING/PVT             : 三工艺角已过（固定尺寸跨 corner）；无 mismatch / Monte Carlo / 温度扫描
 DATA_DIRECTION_CONFLICT : 未出现（见下节）
+DATA_DRIVER_AGENT_POC  : PASS          (本轮冻结状态，等独立源码 review)
+INDEPENDENT_SOURCE_REVIEW : READY
+SCALABILITY_CONCERN_FOUND : YES         (共享 vbias 与单通道 Mbleed 冲突，见 review notes；电路未改)
+DEVICE_STRESS            : EXTRACTED    (六只管子的 max|VGS|/|VGD|/|VDS| 来自实测扫描)
+电流定义 / compliance 办法 / 理想源清单 / 器件表与应力表：见
+`reports/data_driver_review_notes.md` 与生成的 `reports/ddrv_topology_summary.md`
 ```
 
 ## 需求与来源标签（每条只有一个标签，机检 `scripts/provenance_check.py`）
@@ -22,7 +28,7 @@ DATA_DIRECTION_CONFLICT : 未出现（见下节）
 | 条目 | 标签 | 依据 |
 |---|---|---|
 | `I_PIXEL_ON = 15 µA`，像素被选通发光期间的**瞬时**电流（不是帧平均） | `COURSE_REQUIREMENT` | 用户 2026-10-04 定义 D1，本轮重申 |
-| 数据通道 = 吸收电流的一侧，`DATA_OUT → 15 µA sink → VSS` | `COURSE_REQUIREMENT` | 用户本轮明示的基本方向 |
+| 数据通道 = 吸收电流的一侧，`DATA_OUT → 15 µA sink → VSS` | `ENGINEERING_TOPOLOGY_CHOICE` | 用户本轮给的方向。**修正记录**：本报告第一版把它标成 `COURSE_REQUIREMENT`，那是过度声明——书面出处只有旧 GPT-6 交付包（`GPT6_LEGACY_PROPOSAL`），正式题目文字/图没有唯一确定电流在哪一侧。详见 `reports/data_driver_review_notes.md` 的 `REVIEW_PREP_BUG_FOUND`；此修正**不影响任何测量值**。 |
 | 已核对：这与既有拓扑结论一致，故未触发 `DATA_DIRECTION_CONFLICT` | `ENGINEERING_DERIVATION` | `reports/topology_channel_check.md`、`reports/architecture_baseline.md` 的既有推导 |
 | 列周期 9.765625 µs = 1/(1024×100 Hz)，只作时间尺度参考 | `ENGINEERING_DERIVATION` | 由题面 1024 列 + 60–100 Hz 直接推出 |
 | ±1 / ±2 / ±5 % 判据、`VDD=1.8 V`、`RSEN=10 kΩ`、`Vcas=1.8 V`、扫描步长、边沿 1 ns | `POC_ASSUMPTION` | 题目未给，为本轮比较拓扑而定义，不构成指标 |
@@ -110,7 +116,7 @@ rout 从 1.4×10⁸ 升到 1.7×10⁹ Ω。也就是说 **`vcas = 1.8 V`（芯�
 - 200 ns 那一组余量很小（44 ns 建立 / 101 ns ON 窗口，判据要求保持 40 %），
   它是**故意用作压力测试的时间尺度参考**，不代表任何已确定的数据通道协议。
 
-## 三个工艺角（固定一套尺寸，不逐角重新调参）
+## 三个工艺角（固定一套尺寸，不逐角重新调参）—— BASIC PROCESS CORNER PROBE ONLY
 
 | corner | err @ 最高 | ±1% 合规点 | ±2% | ±5% | 跨度 |
 |---|---|---|---|---|---|
@@ -119,7 +125,25 @@ rout 从 1.4×10⁸ 升到 1.7×10⁹ Ω。也就是说 **`vcas = 1.8 V`（芯�
 | `ff` | −0.156 % | 0.4115 V | 0.2128 V | 0.1155 V | 3.49 % |
 
 角名是从模型库的 `section` 列表实测读出的，没有猜。三角都满足 ±1%（在 ≥0.52 V 的输出电压以上），
-说明这套尺寸对角度不敏感；**没有**做电压/温度扫描、mismatch、Monte Carlo。
+说明这套尺寸对角度不敏感；**没有**做电压/温度扫描、mismatch、Monte Carlo，
+所以这一节的地位是 `BASIC PROCESS CORNER PROBE ONLY`，**不能**读成 `PVT SIGNOFF PASS`。
+
+## 电流定义与 compliance 提取办法（避免方向含糊）
+
+```
+IOUT = ( V(vsw) - V(data_out) ) / RSEN        # RSEN=10k，在通道之外的 testbench 元件
+正方向 = 电流从测试源经 RSEN 流入 DATA_OUT 再向下到 VSS（"吸收"为正）
+```
+
+不用 `save i(...)` / `save X:current`：这个 Spectre build 分别报 SFE-874 与 SPECTRE-8059/8287
+并忽略该 save，留 warning 的跑法不算证据。绝对值只用于 OFF 泄漏与峰值电流两处的报告，
+误差、compliance 与瞬态带判据都用带符号的 IOUT。
+
+compliance 的求法：`tol ∈ {1,2,5} %`，找**最低的** `V(data_out)` 使其**之上所有**采样点都满足
+`|IOUT − 15 µA| ≤ tol·15 µA`；直接用采样点、不做插值，所以分辨率等于扫描步长
+（步长 0.02 V 与 0.05 V 两组膝点都写进 CSV，见"限制"第 4 条）。上部可用电压还被 `RSEN` 压掉 0.15 V，
+所以 3.3 V 扫描实际测到 ≈3.15 V。
+
 
 ## 复现
 
