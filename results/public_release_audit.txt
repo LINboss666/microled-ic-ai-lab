@@ -1,4 +1,4 @@
-== tracked files: 155
+== tracked files: 156
    untracked-only probes (all must be False):
      .ic617_agent_bridge_credentials                tracked=False
      spectre/pdk_local.env                          tracked=False
@@ -10,15 +10,15 @@
 == gate staged: SAFETY_GATE: PASS
 == gate: SAFETY_GATE: PASS
 == gate: SAFETY_GATE: PASS
-== commit metadata: 12 author/committer records, phone-email hits=0
+== commit metadata: 16 author/committer records, phone-email hits=0
    author+committer emails: 237816241+LINboss666@users.noreply.github.com
-== git fsck --full: clean
+== git fsck --full: 0 dangling/missing line(s)
 == origin: https://github.com/LINboss666/microled-ic-ai-lab.git -> audit target LINboss666/microled-ic-ai-lab
 == gh api identity: LINboss666
 == remote repo: visibility=PRIVATE private=True default_branch=main size_kb=183 fork=False
 == repo description: Micro LED scan-driver IC: AI-Cadence POC (IC617 + SMIC 018 MM RF). Own netlists, checkers and numbers only; no PDK, no model cards, no credentials.
    ref refs/heads/main              local=11446f5c remote=11446f5c match
-   ref refs/heads/poc/c2mos-dff     local=6058efe4 remote=6058efe4 match
+   ref refs/heads/poc/c2mos-dff     local=9a263254 remote=9a263254 match
 == open+closed PRs    count=0
 == forks              count=0
 == actions/workflows  count=0
@@ -36,12 +36,15 @@
    superseded c489b280 -> SERVED BY REMOTE, phone-shaped email fields=2, tree matches clean history=True (not on any ref)
 == superseded: 10 rewritten commits, 9 still served, 18 phone-shaped email fields on the server, 9/9 served trees match the clean history
 
+AUDITED_BRANCH = poc/c2mos-dff
+AUDITED_HEAD = 9a26325433ac0d81bd8c72abb09be168f35b6c7c
 PDK_TRACKED_FILES = 0
 CREDENTIAL_TRACKED_FILES = 0
 PRIVATE_KEYS_TRACKED_FILES = 0
 VENDOR_MODEL_TRACKED_FILES = 0
 PHONE_EMAIL_OCCURRENCES = 0
 forbidden_names_in_tracked = 0
+DANGLING_OBJECTS = 0  (content scanned by --mode objects, not judged by existence)
 REPOSITORY_VISIBILITY_NOW = PRIVATE
 SUPERSEDED_COMMITS_SERVED_BY_REMOTE = 9
 SUPERSEDED_TREES_MATCHING_CLEAN_HISTORY = 9/9
