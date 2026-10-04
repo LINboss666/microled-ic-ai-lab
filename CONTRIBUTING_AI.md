@@ -67,8 +67,12 @@ python scripts/regression_compare.py --old results/history/<before>.csv --new re
 # 3) 提交：pre-commit 闸会自动跑；单独手动跑也一样
 python scripts/precommit_safety_check.py --mode staged
 
-# 4) 生成评审包（自动跑 --mode history 闸）
+# 4) 生成评审包（自动跑 --mode history 闸；自带 MANIFEST_MATCH / SAFETY_SCAN 两个自检）
 python scripts/make_review_bundle.py <BASE_SHA> HEAD
+
+# 5) 只有要改可见性时才跑：PUBLIC 之前必须 exit 0
+python scripts/public_release_audit.py         # PUBLIC_RELEASE_SAFETY_GATE
+python scripts/anon_release_postcheck.py main  # 改完之后，匿名视角复检
 ```
 
 ## Review bundle 是给谁看的
