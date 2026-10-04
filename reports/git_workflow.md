@@ -150,6 +150,12 @@ python scripts/public_release_audit.py      # 退出码 0 才允许改可见性
 Actions workflow/run/artifact 为 0、以及每个被替换 SHA 在远端是否已经取不到。
 `SUPERSEDED_COMMITS_SERVED_BY_REMOTE` 不为 0 就是 `PUBLIC RELEASE BLOCKED`。
 
+真的改成 PUBLIC 之后，再用匿名视角复检一次（不带任何凭据，走 API + tarball）：
+
+```
+python scripts/anon_release_postcheck.py main   # PUBLIC_RELEASE_POSTCHECK
+```
+
 ## 以后每轮的固定流程
 
 见 `CONTRIBUTING_AI.md`（12 条 + 每轮命令）。核心：**先开 branch；Spectre 0 errors ≠ PASS；

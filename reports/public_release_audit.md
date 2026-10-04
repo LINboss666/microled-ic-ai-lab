@@ -113,6 +113,27 @@ Consequence: **Part F was not executed. The repository stays `PRIVATE`.**
 Option 1 is the only one that requires no irreversible action, so it is the default
 position until told otherwise.
 
+## Part G is scripted, and deliberately not run
+
+`scripts/anon_release_postcheck.py` is the post-public anonymous review: it fetches the
+repository the way a stranger does -- no `gh`, no token, no `Authorization` header -- and
+checks visibility, branch list, every commit's author/committer fields, the superseded
+SHA list again (this time without credentials), and the whole tree in one tarball request
+against the same deny rules the commit gate uses. Its verdict is
+`PUBLIC_RELEASE_POSTCHECK: PASS / FAIL / BLOCKED_NOT_PUBLIC`.
+
+Both of its non-trivial paths were exercised this round:
+
+* against this repository while it is still private it prints
+  `BLOCKED_NOT_PUBLIC` (exit 3) rather than pretending it checked, and
+* against an arbitrary public repository (`POSTCHECK_REPO=octocat/Hello-World master`) it
+  read visibility/branches/commits, downloaded and scanned the tarball (1 file, 0 rule
+  hits), probed all ten superseded SHAs (0 readable) and then correctly **failed**
+  because that repo's commit identities are not the noreply shape -- proof the scan can
+  both pass and refuse.
+
+It stays unrun against this repo until visibility actually changes.
+
 ## Reproduce
 
 ```
