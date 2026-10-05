@@ -46,6 +46,17 @@ from ddrv_tran import parse, edges, median, ringing_metrics   # one PSF reader, 
 import ddrv_probe
 
 
+def csv_field(v):
+    """Quote a free-text field: `--slew-desc` and `--label` legitimately contain commas, and
+    an unquoted comma silently shifts every following column -- the header then lies about
+    what the numbers are (this is how the corner table's `vbias_shared_min_v` came back
+    holding the text " method=gear2only-")."""
+    t = u"%s" % (v,)
+    if u"," in t or u'"' in t:
+        return u'"%s"' % t.replace(u'"', u'""')
+    return t
+
+
 def mean(xs):
     return sum(xs) / float(len(xs))
 
@@ -319,9 +330,9 @@ def main():
         csv_fmt = (u"%s,%s,%d,%.6g,%.6f,%.6f,%.6f,%.4f,%.4f,%.6e,%.4f,%.6e,%s,%s,%s,%s,"
                    u"%s,%s,%s,%s,%s\n")
         csv_vals = (
-            a.label, suf or "0", len(obs), t_span, base * 1e6, steady * 1e6,
+            csv_field(a.label), suf or "0", len(obs), t_span, base * 1e6, steady * 1e6,
             dev_max * 1e6, dev_max / abs(a.target) * 100.0, frac * 100.0,
-            q_err, charge_pct, glitch, method, a.slew_desc,
+            q_err, charge_pct, glitch, method, csv_field(a.slew_desc),
             "n/a" if shared_lo is None else "%.6f" % shared_lo,
             "n/a" if shared_hi is None else "%.6f" % shared_hi,
             "n/a" if gate_lo is None else "%.6f" % gate_lo,

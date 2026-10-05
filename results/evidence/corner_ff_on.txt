@@ -1,0 +1,15 @@
+   IOUT_SOURCE : iprobe trace `Ip1:i`, 0 V burden (DC drop across the probe is 0 by construction)
+   PROBE_CROSSCHECK  : |Ip1:i - Mout:1| <= 2.304e-08 A over 166 samples = 0.153592 % of full scale
+   PROBE_CROSSCHECK  : 0.1537 % of the largest observed current (1.499e-05 A) -- the two views of the same branch
+   PROBE_BURDEN      : max |V(vsw) - V(data_out)| = 0.000e+00 V (must be 0)
+   vbias_ch        : 0.818122 .. 0.818122 V   worst (VBIAS_SHARED - it) = 0.000000 V, worst overshoot = -0.000000 V
+== E_ff_on  points=166  VOUT_max=3.3000 V  IOUT@max=14.988599 uA (err -0.076 %)
+   COMPLIANCE_1PCT : 0.4200 V
+   COMPLIANCE_2PCT : 0.2000 V
+   COMPLIANCE_5PCT : 0.1200 V
+   ROUT(upper 40%)   : 8.562e+07 ohm
+   MAX_ADJACENT_JUMP : 0.00014 (fraction of target, VOUT>50% of sweep)
+   NOMINAL VOUT=1.2000 V: IOUT=14.964881 uA  err=-0.234 %
+   IOUT_SPAN above the +/-5% knee (0.1200 V, 160 pts): 14.499767 .. 14.988599 uA = 3.26 % of target
+   IOUT_SPAN whole sweep: 0.000000 .. 14.988599 uA = 99.92 % of target
+DATA_DRIVER_DC: OK
