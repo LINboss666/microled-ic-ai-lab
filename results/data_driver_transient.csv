@@ -1,0 +1,14 @@
+label,samples,on_windows,off_windows,longest_on_window_s,turn_on_settling_s,turn_off_s,peak_uA,off_leakage_uA,band_pct,on_windows_not_settled
+C_cascode_n33_tt_l2e-6_w2e-5_T2e-7vout0.5_final,343,4,4,1.00852e-07,3.732e-08,1.144e-08,15.878314,0.008834,5.0,0
+C_cascode_n33_tt_l2e-6_w2e-5_T2e-7vout1.2_final,388,4,4,1.00883e-07,4.374e-08,1.433e-08,19.889549,0.024402,5.0,0
+C_cascode_n33_tt_l2e-6_w2e-5_T2e-7vout3.0_final,352,4,4,1.00911e-07,3.978e-08,7.485e-09,20.787453,0.021018,5.0,0
+C_cascode_n33_tt_l2e-6_w2e-5_T9.765625e-6vout0.5_final,401,4,4,4.88368e-06,2.005e-07,1.144e-08,15.878502,0.000074,5.0,0
+C_cascode_n33_tt_l2e-6_w2e-5_T9.765625e-6vout1.2_final,474,4,4,4.88371e-06,3.979e-07,7.708e-09,19.888594,0.000352,5.0,0
+C_cascode_n33_tt_l2e-6_w2e-5_T9.765625e-6vout3.0_final,413,4,4,4.88325e-06,4.417e-07,2.986e-07,20.789768,0.006114,5.0,0
+A_series_n33_tt_l2e-6_w2e-5_T2e-7vout1.2_final,341,4,4,1.00937e-07,NOT_FOUND,1.259e-08,63.605899,0.386618,5.0,4
+A_series_n33_tt_l2e-6_w2e-5_T9.765625e-6vout1.2_final,421,4,4,4.88375e-06,NOT_FOUND,5.847e-07,63.575042,0.024444,5.0,4
+B_gate_n33_tt_l2e-6_w2e-5_T2e-7vout1.2_final,344,4,4,1.00856e-07,5.258e-08,3.672e-08,24.494833,0.000003,5.0,0
+B_gate_n33_tt_l2e-6_w2e-5_T9.765625e-6vout1.2_final,399,4,4,4.88368e-06,2.161e-07,7.166e-08,24.478853,0.000001,5.0,0
+A_series_n18_tt_l2e-6_w2e-5_T2e-7vout1.2_n18switch,327,4,4,1.00984e-07,NOT_FOUND,1.344e-08,80.719662,0.024221,5.0,4
+A_series_n18_tt_l2e-6_w2e-5_T9.765625e-6vout1.2_n18switch,413,4,4,4.8838e-06,NOT_FOUND,7.655e-09,80.718997,0.001822,5.0,4
+C_cascode_n33_tt_l2e-6_w2e-5_T9.765625e-6vout1.2_vfyTran,474,4,4,4.88371e-06,3.979e-07,7.708e-09,19.888594,0.000352,5.0,0

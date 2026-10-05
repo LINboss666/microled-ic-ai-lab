@@ -1,0 +1,6 @@
+== D_local_n33_tt_l2e-6_w2e-5_T2e-7vout1.2_s01  samples=58  window=0..9e-07 s  ON windows=0  OFF windows=0
+   TURN_ON_SETTLING  : NOT_FOUND   (worst of 0, 0 never settled)
+   TURN_OFF          : NOT_FOUND   (worst of 0, 0 never met the band)
+   PEAK              : 0.000000 uA
+   OFF_LEAKAGE       : n/a   (worst median over the last 30% of an OFF window)
+   VBIAS_SHARED      : 0.884261 .. 0.884261 V   (worst deviation 0.000000 V = 0.0000 % of 1.8 V)

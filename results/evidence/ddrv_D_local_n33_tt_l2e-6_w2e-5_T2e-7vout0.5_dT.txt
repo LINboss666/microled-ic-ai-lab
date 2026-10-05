@@ -1,0 +1,7 @@
+== D_local_n33_tt_l2e-6_w2e-5_T2e-7vout0.5_dT  samples=291  window=0..9e-07 s  ON windows=4  OFF windows=4
+   longest ON window : 1.009e-07 s   (band must hold for 40% of it)
+   TURN_ON_SETTLING  : NOT_FOUND   (worst of 4, 4 never settled)
+   TURN_OFF          : 1.421e-09 s   (worst of 4, 0 never met the band)
+   PEAK              : 80.144669 uA
+   OFF_LEAKAGE       : 0.000037 uA   (worst median over the last 30% of an OFF window)
+   VBIAS_SHARED      : 0.780463 .. 0.915725 V   (worst deviation 0.103799 V = 5.7666 % of 1.8 V)

@@ -1,0 +1,33 @@
+// DATA-5 smoke A: does the selected DNW master behave like the plain n33 whose electrical
+// role it is taking over? Same stimulus for both branches (one source, one iprobe each, so
+// the two currents are measured independently), drain shorted to gate, and every bulk driven
+// from its own 0 V source so VBS = 0 -- the condition the frozen cell asked for and the only
+// condition under which the frozen numbers are meaningful.
+//
+// Netlist order is (drain gate source bulk), the order the accepted decks and
+// model_probe/model_probe_mmrf_teacher_3v3.scs already use. Model names only; no PDK content.
+//
+// n33_dnw_ckt is deliberately NOT in this deck: it needs at least six terminals (measured,
+// see dnw_smoke_c_terminal_count.scs), so its extra hookup is not comparable at four nodes.
+simulator lang=spectre insensitive=yes
+
+include "${QODER_PDK_LIB}" section=tt
+
+Vss (vss 0) vsource dc=0
+
+* shared stimulus: one ideal source feeding two diode-connected branches
+Vx (vdm 0) vsource dc=0
+
+Ipa (vdm na) iprobe
+Ma  (na na sa ba) n33_dnw_4t_ckt l=2e-6 w=5e-6
+Vsa (sa 0) vsource dc=0
+Vba (ba 0) vsource dc=0
+
+Ipb (vdm nb) iprobe
+Mb  (nb nb sb vss) n33 l=2e-6 w=5e-6
+Vsb (sb 0) vsource dc=0
+
+save vdm na nb
+save Ipa:i Ipb:i
+
+dc1 dc dev=Vx param=dc start=0 stop=1.8 step=0.01

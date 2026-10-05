@@ -48,12 +48,17 @@ import sys
 ALLOWED = {
     "COURSE_REQUIREMENT", "COURSE_FIGURE", "TEACHER_PAPER", "ENGINEERING_DERIVATION",
     "GPT6_LEGACY_PROPOSAL", "POC_ASSUMPTION", "NOT DEFINED", "NOT_DEFINED",
+    # Not a course-level label: used when the formal material does not uniquely determine
+    # an architectural direction (e.g. which side of the pixel absorbs the current). It
+    # records "we chose this", and can never be used to claim the course asked for it.
+    "ENGINEERING_TOPOLOGY_CHOICE",
 }
 
 # label tokens we recognise, including the legacy spaced forms we want gone
 LABEL_RX = re.compile(r"\b(?:COURSE[_ ]REQUIREMENT|COURSE[_ ]FIGURE|TEACHER[_ ]PAPER|"
                       r"ENGINEERING[_ ]DERIVATION|GPT6[_ ]LEGACY[_ ]PROPOSAL|"
-                      r"POC[_ ]ASSUMPTION|NOT[_ ]DEFINED)\b")
+                      r"POC[_ ]ASSUMPTION|NOT[_ ]DEFINED|"
+                      r"ENGINEERING[_ ]TOPOLOGY[_ ]CHOICE)\b")
 BRACKET_MAP = [
     (re.compile(r"【\s*题面"), "COURSE_REQUIREMENT"),
     (re.compile(r"【\s*规格书\s*V1\.2"), "GPT6_LEGACY_PROPOSAL"),

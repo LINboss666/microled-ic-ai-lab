@@ -1,0 +1,26 @@
+// DATA-5 smoke B: is the fourth net in the netlist really the device body, and does the
+// DNW model answer to it? Common-source with VGS = 1.5 V and VDS = 0.3 V held fixed, the
+// bulk pulled below the source (VSB > 0, junction reverse-biased, so a legal bias) and the
+// drain current watched. If pin 4 were anything other than the bulk, Ids would not move.
+// The bulk leg carries an iprobe so the body current itself is visible instead of assumed.
+simulator lang=spectre insensitive=yes
+
+include "${QODER_PDK_LIB}" section=tt
+
+Vss (vss 0) vsource dc=0
+Vg  (g1 0) vsource dc=1.5
+
+Vd (vdn 0) vsource dc=0.3
+Ipd (vdn d1) iprobe
+
+Vs (s1 0) vsource dc=0
+
+Vb (vbn 0) vsource dc=0
+Ipb (vbn b1) iprobe
+
+M1 (d1 g1 s1 b1) n33_dnw_4t_ckt l=2e-6 w=5e-6
+
+save g1 d1 s1 b1
+save Ipd:i Ipb:i
+
+dc1 dc dev=Vb param=dc start=0 stop=-1.2 step=0.05

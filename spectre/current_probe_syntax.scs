@@ -1,0 +1,35 @@
+// current_probe_syntax.scs -- which zero-burden current-probe syntax does this Spectre
+// build actually accept? Decided by experiment, not by documentation folklore: an earlier
+// round of this project shipped `save Vout:current` and got SPECTRE-8059/8287 warnings
+// that were silently ignored, and `save i(Vout)` is a fatal SFE-874 read-in error.
+//
+// The circuit is the accepted 15 uA cascode core fed from a 1.0 V ideal source. With no
+// series resistor anywhere, the branch current is 15 uA by construction, so whichever
+// saved signal reads ~1.5e-5 (sign aside) is the usable probe output.
+simulator lang=spectre insensitive=yes
+
+include "${QODER_PDK_LIB}" section=tt
+
+parameters IREF=15u VDDV=1.8
+
+Mref (vbias vbias vss vss) n33 l=2e-6 w=2e-5
+Iref (vdd vbias) isource dc=IREF
+
+Mout (node_m vbias vss vss) n33 l=2e-6 w=2e-5
+Mcas (data_out vcas node_m vss) n33 l=2e-6 w=2e-5
+
+// zero-drop probe in series: an iprobe is a 0 V element by definition
+Ip1 (vsw data_out) iprobe
+Vout (vsw 0) vsource dc=1.0
+Vcas (vcas 0) vsource dc=1.8
+Vdd  (vdd 0) vsource dc=VDDV
+Vss  (vss 0) vsource dc=0
+
+save vdd vss data_out vbias node_m vsw
+save Ip1
+save Ip1:current
+save Mout:drain
+save Mout:1
+save Mcas:drain
+
+dc1 dc dev=Vout param=dc start=0.5 stop=1.0 step=0.5

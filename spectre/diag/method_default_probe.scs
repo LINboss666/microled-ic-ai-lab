@@ -1,0 +1,10 @@
+// method_default_probe.scs -- DIAGNOSTIC: no model library, no options, no errpreset.
+// Asks one question: what does THIS build record as the transient integration method
+// when nothing in the project sets it?  Answer comes out of the run header, not from
+// documentation or from an earlier report.
+simulator lang=spectre insensitive=yes
+Vin (in 0) vsource type=pulse val0=0 val1=1.0 period=200n width=100n rise=1n fall=1n
+R1 (in out) resistor r=1000
+C1 (out 0) capacitor c=1p
+save in out
+tran1 tran stop=900n step=100p maxstep=500p

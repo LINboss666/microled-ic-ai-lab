@@ -1,0 +1,2 @@
+label_a,label_b,points,knee_V,max_dev_uA,max_dev_pct_of_target,max_dev_at_vout_V,rms_dev_uA
+accepted_C_iprobe,Ebodyfix_tt_on,166,0.4600,-0.000023,-0.0002,3.3000,0.000023

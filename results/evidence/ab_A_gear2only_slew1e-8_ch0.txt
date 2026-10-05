@@ -1,0 +1,17 @@
+   IOUT_SOURCE : iprobe trace `Ip1:i`, 0 V burden (DC drop across the probe is 0 by construction)
+   PROBE_CROSSCHECK  : |Ip1:i - Mout:1| <= 8.616e-06 A over 8998 samples
+   PROBE_CROSSCHECK  : 57.5733 % of the largest observed current (1.496e-05 A) -- the two views of the same branch
+   PROBE_CROSSCHECK  : note -- in a transient Ip1:i and Mout:1 are not expected to be equal: the node between Mcas and Mout is charged and discharged through them, so their difference is that displacement current. DC sweeps (where it is < 0.2 %% of full scale) are the agreement test; here the two traces are reported as the circuit's own dynamics
+== A_gear2only_slew1e-8_ch0  samples=8998  window=0..4.39453e-05 s  ON windows=4  OFF windows=4
+   longest ON window : 4.892e-06 s   (band must hold for 40% of it)
+   TURN_ON_SETTLING  : 2.753e-08 s   (worst of 4, 0 never settled)
+   TURN_OFF          : 1.046e-08 s   (worst of 4, 0 never met the band)
+   PEAK              : 14.964773 uA
+   OFF_LEAKAGE       : 0.000299 uA   (worst mean over the last 30% of the OFF window INTERIOR, edges excluded; sample ripple 0.000107 uA)
+   ON_SETTLED        : 14.931906 .. 14.931906 uA (mean over the last 30% of the ON window INTERIOR, edges excluded), worst |I - target| = 0.068094 uA = 0.454 %   <- compare with the DC curve at the same VOUT
+   ON_RIPPLE         : 0.000000 uA peak-to-peak worst (spread of the settled tail; could be circuit ripple or solver alternation -- RINGING below separates them)
+   RINGING           : ADJACENT_POINT_ALTERNATION: NO   (worst alternation 0.000000 uA p2p, sign-flip ratio 0.605, 1995 samples over 3 ON windows; YES needs p2p >= 0.0150 uA and flips >= 0.70. Step-locked by construction, so a real ripple survives changing maxstep while ringing does not.)
+   VBIAS_SHARED      : 0.805431 .. 0.887509 V   (worst deviation 0.078830 V = 4.3794 % of 1.8 V)
+   VBIAS_CH : -0.000457 .. 0.884428 V   (the channel's own mirror gate: ON must reach VBIAS_SHARED, OFF must reach 0)
+   GATE_PASS_ERROR   : worst (VBIAS_SHARED - vbias_ch) = 0.884261 V   (a pass device that cannot equal its input leaves the mirror short)
+DATA_DRIVER_TRAN: OK

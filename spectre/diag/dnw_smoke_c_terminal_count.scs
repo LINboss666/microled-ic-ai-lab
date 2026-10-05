@@ -1,0 +1,19 @@
+// DATA-5 smoke C: does n33_dnw_ckt accept the extra tub / substrate terminals that its
+// foundry device definition carries? A read-in refusal here is the informative outcome --
+// it would say the simulation model takes four nodes and the tub hookup lives in the
+// device master, not in the netlist. Both outcomes are recorded as evidence, neither is
+// assumed: the terminal count is measured from the tool, not read off the cell's name.
+simulator lang=spectre insensitive=yes
+
+include "${QODER_PDK_LIB}" section=tt
+
+Vss (vss 0) vsource dc=0
+Vx  (vdm 0) vsource dc=1.2
+Vt  (dnwtub 0) vsource dc=0
+Vp  (psub 0)   vsource dc=0
+
+M6 (vdm vdm vss vss dnwtub psub) n33_dnw_ckt l=2e-6 w=5e-6
+
+save vdm dnwtub psub
+
+dc1 dc dev=Vx param=dc start=0 stop=1.8 step=0.9

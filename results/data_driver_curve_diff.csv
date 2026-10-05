@@ -1,0 +1,4 @@
+label_a,label_b,points,knee_V,max_dev_uA,max_dev_pct_of_target,max_dev_at_vout_V,rms_dev_uA
+accepted_C_iprobe,E_n18_on,166,0.4600,-0.000003,-0.0000,3.3000,0.000003
+accepted_C_iprobe,E_n33_on,166,0.4600,0.000000,0.0000,3.3000,0.000000
+accepted_C_iprobe,E_selected_on,166,0.4600,0.000000,0.0000,3.3000,0.000000

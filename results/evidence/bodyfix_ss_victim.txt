@@ -1,0 +1,18 @@
+   IOUT_SOURCE : iprobe trace `Ip2:i`, 0 V burden (DC drop across the probe is 0 by construction)
+   PROBE_CROSSCHECK  : |Ip2:i - Mout1:1| <= 3.252e-08 A over 8983 samples
+   PROBE_CROSSCHECK  : 0.2172 % of the largest observed current (1.497e-05 A) -- the two views of the same branch
+   PROBE_CROSSCHECK  : note -- Ip vs Mout:1 differ by the displacement current of the internal nodes while the neighbour switches; the DC sweeps are the agreement test for the observation method
+== Ebodyfix_ss_victim  channel 1 samples=7181 (after skipping 20% of the run)  window=3.515e-05 s
+   SLEW              : 10 ns edge, method=gear2only, maxstep=5 ns, FRAME_SCALE
+   I_BASELINE        : 14.896671 uA   (median of the static neighbour-held run tran1.tran.tran)
+   I_1 mean         : 14.863251 uA
+   PEAK_CROSSTALK_ERROR   : 0.055828 uA above baseline = 0.372 % of target
+   PEAK_|I-target|        : 0.159157 uA = 1.061 % of target
+   Q_error                : -1.1849e-12 C (integral of I_victim - I_baseline)
+   CHARGE_ERROR_PERCENT   : 0.2247 %  (|Q_error| / (15uA x 3.515e-05 s))
+   GLITCH_DURATION >+/- 1% : 0.0000e+00 s (0.00 % of the observed window)
+   VBIAS_SHARED      : 0.859486 .. 0.955596 V   (spread 0.096110 V)
+   vbias_ch1         : 0.950886 .. 0.951637 V   (spread 0.000752 V)
+   RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000007 uA p2p, sign-flip ratio 0.008 over 7181 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+   worst sample at t=4.1535e-05 s, nearest neighbour edge at t=4.1509e-05 s (delta 2.560e-08 s)
+TWO_CHANNEL_INDEPENDENCE: FAIL (peak 1.061 %, charge 0.225 % vs 1.0 % POC criterion)
