@@ -147,7 +147,7 @@ PROBE_SAVE = "save Ip1:i Mout:1"
 def build_E(model, l, w, corner, vmax, step, mode, period, slew, en, en1, channels,
             vout, vout1, toggle, probe, mpass_model, mbleed_model, lpass, wpass,
             lbleed, wbleed, vcas="1.8", maxstep=None, cbias=None, method=None,
-            errpreset=None):
+            errpreset=None, mpass_bulk="vbias_ch"):
     """Candidate E: the accepted core, plus a mirror gate that belongs to the channel.
 
     VBIAS_SHARED is produced by an always-on reference branch and is touched by no bleed:
@@ -198,11 +198,21 @@ Vss (vss 0) vsource dc=0
         # adds a "1" suffix and is addressed with --net-suffix 1 / --ch 1.
         s = "" if i == 0 else str(i)
         node = "vbias_ch%s" % s
+        # which net the pass device's bulk pin gets. The frozen deck tied it to the local
+        # node; the device-realizability audit found that a plain n33 has no body of its own
+        # (reports/data_driver_n33_body_audit.md), so the bodyfix variant ties it to vss.
+        if mpass_bulk == node:
+            bulk_note = ("* body tied to the local node because that is the one that can "
+                         "fall to 0 V")
+        else:
+            bulk_note = ("* BODYFIX: bulk on %s. A plain n33 body is the die substrate, not "
+                         "a device-local\n* node, so it cannot be driven from %s; see "
+                         "reports/data_driver_n33_body_audit.md" % (mpass_bulk, node))
         out.append("""
 * ---- channel %d: 2 core MOS + 2 local gate-control MOS ----------------------
 Mcas%s   (data_out%s vcas%s   node_m%s vss) %s      l=%s  w=%s
 Mout%s   (node_m%s  %s   vss      vss) %s      l=%s  w=%s
-* body tied to the local node because that is the one that can fall to 0 V
+%s
 Mpass_local%s   (vbias   data_en%s   %s %s) %s l=%s w=%s
 Mbleed_local%s (%s data_en_b%s vss   vss)  %s  l=%s w=%s
 Vcas%s  (vcas%s  0) vsource dc=VCASV
@@ -211,7 +221,8 @@ Vout%s  (vsw%s   0) vsource dc=%s
 """ % (i,
        s, s, s, s, model, l, w,
        s, s, node, model, l, w,
-       s, s, node, node, mpass_model, lpass, wpass,
+       bulk_note,
+       s, s, node, mpass_bulk, mpass_model, lpass, wpass,
        s, node, s, mbleed_model, lbleed, wbleed,
        s, s,
        s, s, (vout if i == 0 else vout1),
@@ -364,13 +375,13 @@ def build(cand, model, l, w, corner, vmax, step, mode, lref=None, wref=None,
           rsen="1e4", en="1", en1="1", channels=1, vout=None, vout1=None,
           toggle="0", probe="rsen", mpass_model="n18", mbleed_model="n18",
           lpass="1e-6", wpass="2e-5", lbleed="1e-6", wbleed="2e-6", maxstep=None,
-          cbias=None, method=None, errpreset=None):
+          cbias=None, method=None, errpreset=None, mpass_bulk="vbias_ch"):
     if cand == "E_local_gate":
         return build_E(model, l, w, corner, vmax, step, mode, period, slew, en, en1,
                        int(channels), vout or "0", vout1 or "0", toggle, probe,
                        mpass_model, mbleed_model, lpass, wpass, lbleed, wbleed,
                        vcas or "1.8", maxstep=maxstep, cbias=cbias, method=method,
-                       errpreset=errpreset)
+                       errpreset=errpreset, mpass_bulk=mpass_bulk)
     if cand == "D_local":
         return build_D(model, l, w, corner, vmax, step, mode, period, slew, rsen,
                        en, en1, int(channels), vout or "0", vout1 or "0", toggle,
@@ -468,6 +479,13 @@ def main():
     ap.add_argument("--suffix", default="",
                     help="extra tag when a knob outside l/w changes (keeps decks from "
                          "overwriting each other)")
+    ap.add_argument("--mpass-bulk", default="vbias_ch", choices=("vbias_ch", "vss"),
+                    help="candidate E only: net on the local pass device's bulk pin. "
+                         "vbias_ch is the frozen deck's connection and stays the default "
+                         "so reviewed decks regenerate byte-identically; vss is the "
+                         "BODYFIX variant, required because a plain n33 body is the die "
+                         "substrate (reports/data_driver_n33_body_audit.md). Pass "
+                         "--suffix bodyfix with it so the decks do not overwrite each other")
     ap.add_argument("--out", default="spectre/generated")
     a = ap.parse_args()
 
@@ -484,7 +502,7 @@ def main():
                  toggle=a.toggle, probe=a.probe, mpass_model=a.mpass_model,
                  mbleed_model=a.mbleed_model, lpass=a.lpass, wpass=a.wpass,
                  lbleed=a.lbleed, wbleed=a.wbleed, maxstep=a.maxstep, cbias=a.cbias,
-                 method=a.method, errpreset=a.errpreset)
+                 method=a.method, errpreset=a.errpreset, mpass_bulk=a.mpass_bulk)
     if a.probe == "iprobe" and a.candidate not in ("D_local", "E_local_gate"):
         # the accepted candidates were measured through a 10k resistor; swapping in a
         # zero-drop iprobe re-measures the same circuit without touching its topology
@@ -507,6 +525,10 @@ def main():
         tag += "_m" + a.method
     if a.errpreset:
         tag += "_ep" + a.errpreset
+    if a.mpass_bulk != "vbias_ch":
+        # the bulk net is a circuit change even though l/w are untouched, so it always
+        # shows up in the deck name instead of relying on --suffix being remembered
+        tag += "_bulk" + a.mpass_bulk
     if a.suffix:
         tag += "_" + a.suffix
     if a.mode == "tran":

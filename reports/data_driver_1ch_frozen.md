@@ -4,8 +4,13 @@
 适用范围 `FRAME-SCALE POC: T_COLUMN = 9.765625 us`。
 本轮不改电路、不重新 sizing、不跑 PVT signoff，只在冻结单元上做三个工艺 section 的基本探针。
 
+> **DATA-4.5 撤回说明（措辞与状态更正，数据未动）**：本文件的 `FROZEN_FOR_SCHEMATIC` 依赖
+> `Mpass_local (vbias data_en vbias_ch vbias_ch) n33` 这条连接。器件可实现性审计判定普通
+> `n33` 的体端不是独立节点（见 `reports/data_driver_n33_body_audit.md`），因此冻结状态撤回为
+> `BLOCKED_PENDING_BODY_DECISION`。下面所有实测数值保持原样，只是不再等于"可以直接画图"。
+
 ```
-DATA_DRIVER_1CH:                 FROZEN_FOR_SCHEMATIC
+DATA_DRIVER_1CH:                 BLOCKED_PENDING_BODY_DECISION   (本文原判 FROZEN_FOR_SCHEMATIC，见上方撤回说明)
 TOPOLOGY:                        Candidate E (local mirror-gate enable)
 REVIEW_HEAD_SHA:                 2e1d502   (LOCAL_REMOTE_PARITY: PASS，见 §6)
 BASIC_PROCESS_CORNER_PROBE:      PASS
@@ -72,7 +77,7 @@ PMOS，用它们描述不了任何东西 → 不用。`mos_mc` 是 Monte-Carlo �
 | `COMPLIANCE_1PCT` | 0.4600 V | **0.5000 V** | 0.4200 V |
 | `COMPLIANCE_2PCT` | 0.2200 V | 0.2400 V | 0.2000 V |
 | `COMPLIANCE_5PCT` | 0.1200 V | 0.1200 V | 0.1200 V |
-| OFF 泄漏（DC 全扫 0→3.3 V 最大） | 0.000005 µA | 0.000000 µA | 0.000027 µA |
+| `DC_STATIC_OFF_LEAKAGE`（DC 全扫 0→3.3 V 最大） | 0.000005 µA | 0.000000 µA | 0.000027 µA |
 | OFF 时 `vbias_ch` / 共享节点 | 0.000000 V / 0.884277 V 保持 | 0 / 0.951454 V 保持 | 0 / 0.818129 V 保持 |
 | 导通整定（帧尺度，邻居翻转的通道） | 27.53 ns | **36.53 ns** | 24.24 ns |
 | 关断时间 | 10.46 ns | 10.77 ns | 10.42 ns |
@@ -84,7 +89,14 @@ PMOS，用它们描述不了任何东西 → 不用。`mos_mc` 是 Monte-Carlo �
 | `VBIAS_SHARED` 摆幅（动态） | 0.0821 V | 0.0926 V | 0.0784 V |
 | 受害 `vbias_ch1` 摆幅 | 0.0665 V | 0.0558 V | 0.0677 V |
 | `ADJACENT_POINT_ALTERNATION`（受害 / 开关通道） | NO 0.000000 / NO 0.000000 µA | NO / NO | NO / NO |
-| OFF 泄漏（瞬态 OFF 段均值） | 0.000299 µA | 0.000306 µA | 0.000293 µA |
+| `TRANSIENT_OFF_WINDOW_RESIDUAL_CURRENT`（瞬态 OFF 段均值） | 0.000299 µA | 0.000306 µA | 0.000293 µA |
+
+> **这两个 OFF 量不是同一件事，不得混写**（DATA-4.5 item 7 的更正）：
+> `DC_STATIC_OFF_LEAKAGE` 来自 `--en 0` 的 DC 稳态扫描（数据使能管一直关着，`vbias_ch = 0.000000 V`），
+> 三 corner 最大 27 pA；`TRANSIENT_OFF_WINDOW_RESIDUAL_CURRENT` 来自**邻居通道正在翻转**的帧尺度瞬态里
+> OFF 段最后 30 % 窗口 interior 的均值（同一时刻共享节点正在被隔壁通道每帧抽取，动态摆幅 0.078–0.093 V），
+> 三 corner 最大 306 nA。两个数各自成立，原始数据未改；把 306 nA 说成"DC 关断泄漏"是错的，
+> 把 27 pA 说成"瞬态也这么小"同样是错的。
 
 （同一批数字的机器版：`results/data_driver_E_corner_dc.csv`、`..._transient.csv`、`..._xtalk.csv`；
 逐行文字证据：`results/evidence/corner_*.txt`，12 份。）
@@ -123,7 +135,7 @@ PMOS，用它们描述不了任何东西 → 不用。`mos_mc` 是 Monte-Carlo �
 | 无法建立 15 µA | 三 corner 全部 14.899–14.965 µA（−0.23 %…−0.67 %） | 未触发 |
 | 无法在 9.765625 µs 内 settling | 24.2–36.5 ns，占 ON 时间 ≤0.75 % | 未触发 |
 | 错误逻辑状态 | ON 传到 `VBIAS_SHARED` 零压降、OFF 到 0 V 且共享节点不动 | 未触发 |
-| 明显器件异常 | 无收敛问题（12/12 `errors=0 warnings=0`）、无振铃（gear2only 恒 0）、OFF 泄漏 ≤306 nA、无负向栅节点越界（最差 `vbias_ch = −0.000457 V`，约 0.5 mV 结偏置） | 未触发 |
+| 明显器件异常 | 无收敛问题（12/12 `errors=0 warnings=0`）、无振铃（gear2only 恒 0）、`DC_STATIC_OFF_LEAKAGE` ≤27 pA 且 `TRANSIENT_OFF_WINDOW_RESIDUAL_CURRENT` ≤306 nA（两个量分开看，见 §3 注）、无负向栅节点越界（最差 `vbias_ch = −0.000457 V`，约 0.5 mV 结偏置） | 未触发 |
 
 → `DATA_DRIVER_1CH: FROZEN_FOR_SCHEMATIC`，停在这里等最终 source review。
 200 ns 时槽仍是 `POC_STRESS_TEST`（DATA-3.5 实测每槽电误差 3.6 %，两法一致，物理），
