@@ -15,8 +15,11 @@
 
 ```
 DATA_DRIVER_1CH:                 FROZEN_FOR_SCHEMATIC   (现行实现 = Candidate E-DNW，见 reports/data_driver_E_dnw_mpass.md；DATA-4.5 曾撤回为 BLOCKED_PENDING_BODY_DECISION)
+ACCEPTED_BY_REVIEW:              GO / ACCEPTED_FOR_COURSE_POC  (电路版本 = 4b3e571，见下方 REVIEW_HEAD_SHA)
 TOPOLOGY:                        Candidate E (local mirror-gate enable)
-REVIEW_HEAD_SHA:                 2e1d502   (LOCAL_REMOTE_PARITY: PASS，见 §6)
+REVIEW_HEAD_SHA:                 4b3e5710cd439fe04bac95d816653c8d3f308dfd = 被独立 review 接受的电路版本
+                                 (Candidate E-DNW，Mpass = n33_dnw_4t_ckt；本文件与其后的 commit 只改文字，
+                                 不改电路、W/L、testbench 或任何结果)
 BASIC_PROCESS_CORNER_PROBE:      PASS
 FULL_PVT_SIGNOFF:                NO
 PHYSICAL_DYNAMIC_CROSSTALK:      PRESENT
@@ -142,6 +145,8 @@ PMOS，用它们描述不了任何东西 → 不用。`mos_mc` 是 Monte-Carlo �
 | 明显器件异常 | 无收敛问题（12/12 `errors=0 warnings=0`）、无振铃（gear2only 恒 0）、`DC_STATIC_OFF_LEAKAGE` ≤27 pA 且 `TRANSIENT_OFF_WINDOW_RESIDUAL_CURRENT` ≤306 nA（两个量分开看，见 §3 注）、无负向栅节点越界（最差 `vbias_ch = −0.000457 V`，约 0.5 mV 结偏置） | 未触发 |
 
 → `DATA_DRIVER_1CH: FROZEN_FOR_SCHEMATIC`，停在这里等最终 source review。
+独立 review 已给出 `REVIEW DECISION: GO` / `DATA_DRIVER_1CH: ACCEPTED_FOR_COURSE_POC`
+（接受的电路版本 = `4b3e571`，见文件头的 `REVIEW_HEAD_SHA`），下一步 `VIRTUOSO_SCHEMATIC`。
 200 ns 时槽仍是 `POC_STRESS_TEST`（DATA-3.5 实测每槽电误差 3.6 %，两法一致，物理），
 若未来系统真用这个时间尺度则 `REWORK_REQUIRED`。当前帧尺度结论不因此改变。
 
@@ -149,8 +154,12 @@ PMOS，用它们描述不了任何东西 → 不用。`mos_mc` 是 Monte-Carlo �
 
 ## 6. Git 与产物
 
-* `poc/data-driver-1ch`，DATA-3.5 的 `2e1d502` 已成功推送（attempt 1 成功，
-  `gh api` 验证远端 = `2e1d502…`）→ `LOCAL_REMOTE_PARITY: PASS`；`main` 未合并。
+* 分支 `poc/data-driver-1ch`：`4b3e571`（DATA-5，`Mpass_local` 换成 `n33_dnw_4t_ckt`）是独立
+  review 接受的**电路**版本；本文件的 `REVIEW_HEAD_SHA` 就指它。之后的 commit 只改文字，
+  不改电路、W/L、testbench 或任何结果。
+* 接受后按评审指示把 `poc/data-driver-1ch` 合并进 `main` 并推送（合并前后都跑 safety gate，
+  合并时工作树干净）。`MAIN_HEAD` 不写进本文件——写进去就必然过期，它由那一轮 handoff 给出，
+  `git log main` 与 `git ls-remote origin main` 是权威来源。
 * 本轮新增：`scripts/ddrv_corner_probe.sh`、`reports/data_driver_1ch_frozen.md`（本文）、
   3 份 corner CSV、12 份 corner 证据、12 份 corner deck（含 `section=tt/ff/ss` 自证）、
   `ddrv_xtalk.py` 的 CSV 引号修复。
