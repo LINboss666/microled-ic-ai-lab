@@ -256,6 +256,10 @@ DATA_DRIVER_1CH:                 BLOCKED_PENDING_BODY_DECISION
 ISOLATED_3V3_NMOS_AVAILABLE:     YES
 E_TRANSIENT_RESULT（DATA-3.5 事实保持）: MIXED_NUMERICAL_AND_PHYSICAL
 FULL_PVT_SIGNOFF:                NO
+REVIEW_HEAD_SHA:                 见随本文件提交的 review bundle 名与 manifest（本文件不写自己的 SHA，
+                                 写了就必然过期）；远端此刻仍停在 DATA-4 的 `093cbcc` =
+                                 PUSH_PENDING_NETWORK（github.com:443 三次不可达，含 curl 000；
+                                 未改任何传输/全局配置）
 NEXT:                            人工评审 —— 在 (a) 接受 ss 失败并把 POC 范围限定为
                                  tt/ff，或 (b) 用 PDK 的 DNW 3.3 V NMOS 恢复原语义
                                  之间选择
