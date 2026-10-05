@@ -8,9 +8,13 @@
 > `Mpass_local (vbias data_en vbias_ch vbias_ch) n33` 这条连接。器件可实现性审计判定普通
 > `n33` 的体端不是独立节点（见 `reports/data_driver_n33_body_audit.md`），因此冻结状态撤回为
 > `BLOCKED_PENDING_BODY_DECISION`。下面所有实测数值保持原样，只是不再等于"可以直接画图"。
+>
+> **DATA-5 更新**：该 blocker 已按独立评审的决定解除——`Mpass_local` 换成真实存在的隔离主名
+> `smic18mmrf/n33_dnw_4t_ckt`，冻结恢复，现行定义见 `reports/data_driver_E_dnw_mpass.md`。
+> 本文件 §1–§4 描述的那份"体端接 vbias_ch 的 n33"网表**不是**可制造的定义，只作为历史测量保留。
 
 ```
-DATA_DRIVER_1CH:                 BLOCKED_PENDING_BODY_DECISION   (本文原判 FROZEN_FOR_SCHEMATIC，见上方撤回说明)
+DATA_DRIVER_1CH:                 FROZEN_FOR_SCHEMATIC   (现行实现 = Candidate E-DNW，见 reports/data_driver_E_dnw_mpass.md；DATA-4.5 曾撤回为 BLOCKED_PENDING_BODY_DECISION)
 TOPOLOGY:                        Candidate E (local mirror-gate enable)
 REVIEW_HEAD_SHA:                 2e1d502   (LOCAL_REMOTE_PARITY: PASS，见 §6)
 BASIC_PROCESS_CORNER_PROBE:      PASS

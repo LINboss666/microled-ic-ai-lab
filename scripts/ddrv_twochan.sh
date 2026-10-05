@@ -39,8 +39,11 @@ GATEX="${GATEX:-}"             # candidate E's pass/bleed sizing, verbatim gener
 PROBE="${PROBE:-iprobe}"       # the burdened method is not accepted for a new verdict
 LIMIT_PCT=1.0
 cd "$PROJ" || exit 9
-RES="$PROJ/results/data_driver_xtalk_${CAND}.csv"
-EVD="$PROJ/results/evidence"
+# RES/EVD default to the names DATA-3 was reviewed under; a variant under test (the DNW
+# pass device) points them elsewhere so re-running cannot rewrite evidence that is already
+# under review.
+RES="${RES:-$PROJ/results/data_driver_xtalk_${CAND}.csv}"
+EVD="${EVD:-$PROJ/results/evidence}"
 LOGS="$PROJ/logs"
 mkdir -p "$EVD"
 # the probe method is handed to ddrv_run.sh through PROBE so the generator, the checkers

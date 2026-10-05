@@ -1,0 +1,20 @@
+      IOUT_SOURCE : iprobe trace `Ip2:i`, 0 V burden (DC drop across the probe is 0 by construction)
+      PROBE_CROSSCHECK  : |Ip2:i - Mout1:1| <= 6.481e-06 A over 9004 samples
+      PROBE_CROSSCHECK  : 37.7302 % of the largest observed current (1.698e-05 A) -- the two views of the same branch
+      PROBE_CROSSCHECK  : note -- Ip vs Mout:1 differ by the displacement current of the internal nodes while the neighbour switches; the DC sweeps are the agreement test for the observation method
+   == toggling_neighbour_T9.765625e-6_slew1e-10  channel 1 samples=6757 (after skipping 25% of the run)  window=3.295e-05 s
+      SLEW              : 1e-10 s, neighbour CH0 pulses; baseline from the static (1,1) run
+      I_BASELINE        : 14.931906 uA   (median of the static neighbour-held run tran1.tran.tran)
+      I_1 mean         : 14.881972 uA
+      PEAK_CROSSTALK_ERROR   : 8.808161 uA above baseline = 58.721 % of target
+      PEAK_|I-target|        : 8.876256 uA = 59.175 % of target
+      Q_error                : -3.9141e-13 C (integral of I_victim - I_baseline)
+      CHARGE_ERROR_PERCENT   : 0.0792 %  (|Q_error| / (15uA x 3.295e-05 s))
+      GLITCH_DURATION >+/- 1% : 1.7086e-05 s (51.85 % of the observed window)
+      VICTIM_HOLD_WITHIN_5PCT : 99.71 % of the observed window sits inside +/-5 % of baseline
+                                (the documented POC regulation criterion wants a channel to hold, not just avoid a peak)
+      VBIAS_SHARED      : 0.761251 .. 0.962319 V   (spread 0.201068 V)
+      vbias_ch1         : 0.806786 .. 0.888707 V   (spread 0.081921 V)
+      RINGING           : ADJACENT_POINT_ALTERNATION: YES   (alternation 0.419053 uA p2p, sign-flip ratio 0.978 over 6757 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+      worst sample at t=4.1510e-05 s, nearest neighbour edge at t=4.1504e-05 s (delta 5.764e-09 s)
+   TWO_CHANNEL_INDEPENDENCE: FAIL (peak 59.175 %, charge 0.079 % vs 1.0 % POC criterion)

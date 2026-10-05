@@ -1,0 +1,4 @@
+# DATA-5 self-caught generator defect
+# explicit --mpass-bulk vbias_ch (as DATA-4.5 left the default) vs the reviewed DATA-4 deck:
+< Mpass_local1   (vbias   data_en1   vbias_ch1 vbias_ch1) n33 l=2e-6 w=5e-6
+> Mpass_local1   (vbias   data_en1   vbias_ch1 vbias_ch) n33 l=2e-6 w=5e-6

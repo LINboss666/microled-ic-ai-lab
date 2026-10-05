@@ -263,6 +263,10 @@ REVIEW_HEAD_SHA:                 见随本文件提交的 review bundle 名与 m
 NEXT:                            人工评审 —— 在 (a) 接受 ss 失败并把 POC 范围限定为
                                  tt/ff，或 (b) 用 PDK 的 DNW 3.3 V NMOS 恢复原语义
                                  之间选择
+
+SUPERSEDED BY DATA-5（评审选了 (b)）：Mpass 换成 `smic18mmrf/n33_dnw_4t_ckt` 后 ss 的
+功能性失败消失，`DATA_DRIVER_1CH: FROZEN_FOR_SCHEMATIC` 恢复；见
+`reports/data_driver_E_dnw_mpass.md`。本文件的测量数据与结论未改。
 ```
 
 工件：`results/data_driver_Ebodyfix_corner_{dc,transient,xtalk}.csv`、

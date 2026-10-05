@@ -147,7 +147,7 @@ PROBE_SAVE = "save Ip1:i Mout:1"
 def build_E(model, l, w, corner, vmax, step, mode, period, slew, en, en1, channels,
             vout, vout1, toggle, probe, mpass_model, mbleed_model, lpass, wpass,
             lbleed, wbleed, vcas="1.8", maxstep=None, cbias=None, method=None,
-            errpreset=None, mpass_bulk="vbias_ch"):
+            errpreset=None, mpass_bulk=None):
     """Candidate E: the accepted core, plus a mirror gate that belongs to the channel.
 
     VBIAS_SHARED is produced by an always-on reference branch and is touched by no bleed:
@@ -201,13 +201,21 @@ Vss (vss 0) vsource dc=0
         # which net the pass device's bulk pin gets. The frozen deck tied it to the local
         # node; the device-realizability audit found that a plain n33 has no body of its own
         # (reports/data_driver_n33_body_audit.md), so the bodyfix variant ties it to vss.
-        if mpass_bulk == node:
+        # Unset means "this channel's own node", which is per-channel by construction: a
+        # literal default would have made channel 1 share channel 0's body, and a two-channel
+        # deck would then no longer be the two-channel circuit under review.
+        bulk_net = node if mpass_bulk is None else mpass_bulk
+        if bulk_net == node and "dnw" in mpass_model:
+            bulk_note = ("* E-DNW: the pass device is a deep-N-well master, so %s really is "
+                         "this channel's own\n* isolated body and tying it to the source "
+                         "(VBS = 0) is manufacturable" % node)
+        elif bulk_net == node:
             bulk_note = ("* body tied to the local node because that is the one that can "
                          "fall to 0 V")
         else:
             bulk_note = ("* BODYFIX: bulk on %s. A plain n33 body is the die substrate, not "
                          "a device-local\n* node, so it cannot be driven from %s; see "
-                         "reports/data_driver_n33_body_audit.md" % (mpass_bulk, node))
+                         "reports/data_driver_n33_body_audit.md" % (bulk_net, node))
         out.append("""
 * ---- channel %d: 2 core MOS + 2 local gate-control MOS ----------------------
 Mcas%s   (data_out%s vcas%s   node_m%s vss) %s      l=%s  w=%s
@@ -222,7 +230,7 @@ Vout%s  (vsw%s   0) vsource dc=%s
        s, s, s, s, model, l, w,
        s, s, node, model, l, w,
        bulk_note,
-       s, s, node, mpass_bulk, mpass_model, lpass, wpass,
+       s, s, node, bulk_net, mpass_model, lpass, wpass,
        s, node, s, mbleed_model, lbleed, wbleed,
        s, s,
        s, s, (vout if i == 0 else vout1),
@@ -375,7 +383,7 @@ def build(cand, model, l, w, corner, vmax, step, mode, lref=None, wref=None,
           rsen="1e4", en="1", en1="1", channels=1, vout=None, vout1=None,
           toggle="0", probe="rsen", mpass_model="n18", mbleed_model="n18",
           lpass="1e-6", wpass="2e-5", lbleed="1e-6", wbleed="2e-6", maxstep=None,
-          cbias=None, method=None, errpreset=None, mpass_bulk="vbias_ch"):
+          cbias=None, method=None, errpreset=None, mpass_bulk=None):
     if cand == "E_local_gate":
         return build_E(model, l, w, corner, vmax, step, mode, period, slew, en, en1,
                        int(channels), vout or "0", vout1 or "0", toggle, probe,
@@ -479,13 +487,14 @@ def main():
     ap.add_argument("--suffix", default="",
                     help="extra tag when a knob outside l/w changes (keeps decks from "
                          "overwriting each other)")
-    ap.add_argument("--mpass-bulk", default="vbias_ch", choices=("vbias_ch", "vss"),
+    ap.add_argument("--mpass-bulk", default=None, choices=("vbias_ch", "vss"),
                     help="candidate E only: net on the local pass device's bulk pin. "
-                         "vbias_ch is the frozen deck's connection and stays the default "
-                         "so reviewed decks regenerate byte-identically; vss is the "
-                         "BODYFIX variant, required because a plain n33 body is the die "
-                         "substrate (reports/data_driver_n33_body_audit.md). Pass "
-                         "--suffix bodyfix with it so the decks do not overwrite each other")
+                         "Unset means each channel's own vbias_ch node (the frozen "
+                         "connection, so reviewed decks regenerate byte-identically); "
+                         "vss is the BODYFIX variant, required because a plain n33 body "
+                         "is the die substrate (reports/data_driver_n33_body_audit.md). "
+                         "Any explicit value is appended to the deck name, so a variant "
+                         "can never overwrite a reviewed deck")
     ap.add_argument("--out", default="spectre/generated")
     a = ap.parse_args()
 
@@ -525,10 +534,14 @@ def main():
         tag += "_m" + a.method
     if a.errpreset:
         tag += "_ep" + a.errpreset
-    if a.mpass_bulk != "vbias_ch":
+    if a.mpass_bulk:
         # the bulk net is a circuit change even though l/w are untouched, so it always
         # shows up in the deck name instead of relying on --suffix being remembered
         tag += "_bulk" + a.mpass_bulk
+    if "dnw" in a.mpass_model:
+        # a deep-N-well master is a different physical device even at identical W/L, so a
+        # DNW deck must never be able to look like (or overwrite) a reviewed plain-n33 deck
+        tag += "_dnwpass"
     if a.suffix:
         tag += "_" + a.suffix
     if a.mode == "tran":

@@ -1,0 +1,74 @@
+### tt frozen
+   I_BASELINE        : 14.931906 uA   (median of the static neighbour-held run tran1.tran.tran)
+   PEAK_CROSSTALK_ERROR   : 7.876419 uA above baseline = 52.509 % of target
+   CHARGE_ERROR_PERCENT   : 0.0725 %  (|Q_error| / (15uA x 3.515e-05 s))
+   GLITCH_DURATION >+/- 1% : 1.5166e-07 s (0.43 % of the observed window)
+   VICTIM_HOLD_WITHIN_5PCT : 99.71 % of the observed window sits inside +/-5 % of baseline
+   vbias_ch1         : 0.819635 .. 0.886121 V   (spread 0.066486 V)
+   RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000000 uA p2p, sign-flip ratio 0.313 over 7192 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+### tt bodyfix
+   I_BASELINE        : 14.931882 uA   (median of the static neighbour-held run tran1.tran.tran)
+   PEAK_CROSSTALK_ERROR   : 0.720267 uA above baseline = 4.802 % of target
+   CHARGE_ERROR_PERCENT   : 0.2131 %  (|Q_error| / (15uA x 3.515e-05 s))
+   GLITCH_DURATION >+/- 1% : 2.3417e-06 s (6.66 % of the observed window)
+   VICTIM_HOLD_WITHIN_5PCT : 100.00 % of the observed window sits inside +/-5 % of baseline
+   vbias_ch1         : 0.879629 .. 0.884697 V   (spread 0.005068 V)
+   RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000001 uA p2p, sign-flip ratio 0.006 over 7185 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+### tt dnw
+   I_BASELINE        : 14.931906 uA   (median of the static neighbour-held run tran1.tran.tran)
+   PEAK_CROSSTALK_ERROR   : 7.877215 uA above baseline = 52.515 % of target
+   CHARGE_ERROR_PERCENT   : 0.0726 %  (|Q_error| / (15uA x 3.515e-05 s))
+   GLITCH_DURATION >+/- 1% : 1.4397e-07 s (0.41 % of the observed window)
+   VICTIM_HOLD_WITHIN_5PCT : 99.72 % of the observed window sits inside +/-5 % of baseline
+   vbias_ch1         : 0.819621 .. 0.886118 V   (spread 0.066497 V)
+   RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000000 uA p2p, sign-flip ratio 0.234 over 7193 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+### ss frozen
+   I_BASELINE        : 14.899428 uA   (median of the static neighbour-held run tran1.tran.tran)
+   PEAK_CROSSTALK_ERROR   : 6.786845 uA above baseline = 45.246 % of target
+   CHARGE_ERROR_PERCENT   : 0.0877 %  (|Q_error| / (15uA x 3.515e-05 s))
+   GLITCH_DURATION >+/- 1% : 2.1888e-07 s (0.62 % of the observed window)
+   VICTIM_HOLD_WITHIN_5PCT : 99.69 % of the observed window sits inside +/-5 % of baseline
+   vbias_ch1         : 0.896670 .. 0.952449 V   (spread 0.055778 V)
+   RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000000 uA p2p, sign-flip ratio 0.438 over 7196 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+### ss bodyfix
+   I_BASELINE        : 14.896671 uA   (median of the static neighbour-held run tran1.tran.tran)
+   PEAK_CROSSTALK_ERROR   : 0.055828 uA above baseline = 0.372 % of target
+   CHARGE_ERROR_PERCENT   : 0.2247 %  (|Q_error| / (15uA x 3.515e-05 s))
+   GLITCH_DURATION >+/- 1% : 0.0000e+00 s (0.00 % of the observed window)
+   VICTIM_HOLD_WITHIN_5PCT : 100.00 % of the observed window sits inside +/-5 % of baseline
+   vbias_ch1         : 0.950886 .. 0.951637 V   (spread 0.000752 V)
+   RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000007 uA p2p, sign-flip ratio 0.008 over 7181 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+### ss dnw
+   I_BASELINE        : 14.899428 uA   (median of the static neighbour-held run tran1.tran.tran)
+   PEAK_CROSSTALK_ERROR   : 6.786790 uA above baseline = 45.245 % of target
+   CHARGE_ERROR_PERCENT   : 0.0877 %  (|Q_error| / (15uA x 3.515e-05 s))
+   GLITCH_DURATION >+/- 1% : 2.1890e-07 s (0.62 % of the observed window)
+   VICTIM_HOLD_WITHIN_5PCT : 99.69 % of the observed window sits inside +/-5 % of baseline
+   vbias_ch1         : 0.896670 .. 0.952449 V   (spread 0.055778 V)
+   RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000000 uA p2p, sign-flip ratio 0.436 over 7196 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+### ff frozen
+   I_BASELINE        : 14.964881 uA   (median of the static neighbour-held run tran1.tran.tran)
+   PEAK_CROSSTALK_ERROR   : 7.940419 uA above baseline = 52.936 % of target
+   CHARGE_ERROR_PERCENT   : 0.0663 %  (|Q_error| / (15uA x 3.515e-05 s))
+   GLITCH_DURATION >+/- 1% : 1.2875e-07 s (0.37 % of the observed window)
+   VICTIM_HOLD_WITHIN_5PCT : 99.74 % of the observed window sits inside +/-5 % of baseline
+   vbias_ch1         : 0.752547 .. 0.820211 V   (spread 0.067664 V)
+   RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000000 uA p2p, sign-flip ratio 0.310 over 7189 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+### ff bodyfix
+   I_BASELINE        : 14.964877 uA   (median of the static neighbour-held run tran1.tran.tran)
+   PEAK_CROSSTALK_ERROR   : 5.527816 uA above baseline = 36.852 % of target
+   CHARGE_ERROR_PERCENT   : 0.0976 %  (|Q_error| / (15uA x 3.515e-05 s))
+   GLITCH_DURATION >+/- 1% : 2.9133e-07 s (0.83 % of the observed window)
+   VICTIM_HOLD_WITHIN_5PCT : 99.58 % of the observed window sits inside +/-5 % of baseline
+   vbias_ch1         : 0.778469 .. 0.818494 V   (spread 0.040026 V)
+   RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000000 uA p2p, sign-flip ratio 0.499 over 7191 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+### ff dnw
+   I_BASELINE        : 14.964881 uA   (median of the static neighbour-held run tran1.tran.tran)
+   PEAK_CROSSTALK_ERROR   : 7.940568 uA above baseline = 52.937 % of target
+   CHARGE_ERROR_PERCENT   : 0.0663 %  (|Q_error| / (15uA x 3.515e-05 s))
+   GLITCH_DURATION >+/- 1% : 1.2956e-07 s (0.37 % of the observed window)
+   VICTIM_HOLD_WITHIN_5PCT : 99.74 % of the observed window sits inside +/-5 % of baseline
+   vbias_ch1         : 0.752551 .. 0.820210 V   (spread 0.067658 V)
+   RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000000 uA p2p, sign-flip ratio 0.343 over 7189 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+results: /root/microled_ai_project/results/data_driver_E_mpass_body_hold_compare.csv
+HOLD_COMPARE_DONE corners=tt ss ff

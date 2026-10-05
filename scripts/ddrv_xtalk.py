@@ -94,6 +94,9 @@ def metrics(obs, base, target, band_frac):
         "q_error": q_err,
         "charge_pct": abs(q_err) / (abs(target) * (ts[-1] - ts[0])) * 100.0,
         "glitch_s": duration_above(ts, dev, band_frac * abs(target)),
+        # the documented POC criterion is a +/-5 % band held for a fraction of the window,
+        # so report the victim's own hold as well as the 1 % glitch
+        "outside5_s": duration_above(ts, dev, 0.05 * abs(target)),
         "worst_t": obs[max(range(len(cur)), key=lambda i: abs(dev[i]))]["time"],
     }
 
@@ -294,6 +297,10 @@ def main():
           % (charge_pct, t_span))
     print("   GLITCH_DURATION >+/- %.0f%% : %.4e s (%.2f %% of the observed window)"
           % (a.band_frac * 100, glitch, glitch / t_span * 100.0))
+    print("   VICTIM_HOLD_WITHIN_5PCT : %.2f %% of the observed window sits inside +/-5 %% of "
+          "baseline\n                             (the documented POC regulation criterion "
+          "wants a channel to hold, not just avoid a peak)"
+          % (100.0 * (1.0 - m["outside5_s"] / t_span)))
     if shared_lo is not None:
         print("   VBIAS_SHARED      : %.6f .. %.6f V   (spread %.6f V)"
               % (shared_lo, shared_hi, shared_hi - shared_lo))

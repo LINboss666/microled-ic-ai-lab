@@ -35,6 +35,11 @@ ROLES = [
     (re.compile(r"^Msteer$"), "SHARED BIAS", "enable pass device between the reference current and vbias"),
     (re.compile(r"^Mdummy$"), "SHARED BIAS", "absorbs the reference current while the channel is disabled"),
     (re.compile(r"^Mbleed$"), "SHARED BIAS", "discharges vbias so the output stack really turns off"),
+    (re.compile(r"^Mpass_local\d?$"), "PER-CHANNEL",
+     "local pass device charging THIS channel's mirror gate; on a DNW master its bulk is "
+     "the channel's own isolated body"),
+    (re.compile(r"^Mbleed_local\d?$"), "PER-CHANNEL",
+     "local bleed discharging THIS channel's mirror gate to VSS"),
 ]
 
 IDEAL_RX = re.compile(
