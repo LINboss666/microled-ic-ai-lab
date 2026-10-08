@@ -137,7 +137,8 @@ SHA：`57eed38`（fix）+ `c68dcfe`（test），分支 `feature/c2mos-virtuoso-s
 只对当次命令加 `-c http.version=HTTP/1.1`，未改任何全局配置。网络恢复后
 `git push -u origin feature/c2mos-virtuoso-schematic` 成功（`* [new branch]`，无 `--force`，未 merge main）。
 pre-push 走 `--mode history`：`54 commits / 756 objects`，四项计数全 0，`SAFETY_GATE: PASS`。
-推送后分别回读：`origin/feature/c2mos-virtuoso-schematic = d4e9a76…` = 本地 HEAD；
+推送后分别回读：`origin/feature/c2mos-virtuoso-schematic` = 本地 HEAD（本轮实质 commit `57eed38` 修复、
+`c68dcfe` 防错闸，其后的 `docs:` 一枚只改文字）；
 `origin/main = 23e471c…` = 本地 main（未动）。
 
 闸：`python scripts/precommit_safety_check.py --mode staged` → `PDK_TRACKED_FILES = 0`、
