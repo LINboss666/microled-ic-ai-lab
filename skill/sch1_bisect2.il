@@ -1,0 +1,11 @@
+printf("B2-BEGIN\n")
+cv = dbOpenCellViewByType("microled_cells" "c2mos_dff_1bit" "schematic" "schematic" "r")
+printf("B2-CV %L\n" cv)
+x = cv~viewType
+printf("B2-A-ASSIGN-OK %L\n" x)
+y = length(cv~insts)
+printf("B2-B-IN-FUNCTION %L\n" y)
+printf("B2-C-AS-ARG %L\n" cv~cellName)
+printf("B2-D-INSIDE-LIST %L\n" list(cv~viewType))
+printf("B2_DONE\n")
+exit()

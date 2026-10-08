@@ -1,0 +1,118 @@
+\# Program start time UTC 2026.10.08 14:19:56.911
+\# Local time Thursday 8 October 2026, 10:19 pm
+\o Program:		@(#)$CDS: virtuoso version 6.1.7-64b 11/09/2015 12:45 (sjfnl165) $
+\o Hierarchy:		/opt/IC617/tools.lnx86/dfII/
+\o Sub version:		sub-version  IC6.1.7-64b.78  (64-bit addresses)
+\# Command line:	/opt/IC617/tools/dfII/bin/64bit/virtuoso -nograph -log /root/microled_ai_project/cadence_work/logs/sch_nograph_20261008_221953.log
+\# Host name (type):	work-eda (x86_64)
+\# Operating system:	Linux 2.6.32-431.el6.x86_64 #1 SMP Sun Nov 10 22:19:54 EST 2013
+\# Linux /etc/issue:	Red Hat Enterprise Linux Server release 6.5 (Santiago)
+\# Linux /etc/issue:	Kernel \r on an \m
+\# X display name (WxH):	work-eda:80 (1024x868)
+\# Available geometry:			TL(0:0) BR(1023:867)
+\# X server:			RealVNC Ltd (VNC nograph server, PID 43736)
+\# Depth of Visual (Root):	16 (16)
+\# Number of Planes Used:	16
+\# X version:		11.0 (vendor release 3370)
+\# X resource pool:	base 0x800000, mask 0x3fffff (4194303), shift 0
+\# 			current id 0x0, current max 0x3ffffa (4194298)
+\# Max data seg size:	     unlimited
+\# Max process size:	     unlimited
+\# Initial sbrk value:	        369 MB
+\# Available memory:	      8,240 MB
+\# System memory:	     11,866 MB
+\# Maximum memory size:	     11,577 MB
+\# Max mem available:	      8,320 MB
+\# Initial memory used:	         80 MB
+\#        process size:	        873 MB
+\# Qt version:		4.8.5
+\# Window Manager:	other
+\# User Name:		root
+\o Working Directory:	work-eda:/root/microled_ai_project/cadence_work
+\# Process Id:		43615
+\o 
+\o COPYRIGHT © 1992-2015  CADENCE DESIGN SYSTEMS INC.  ALL RIGHTS RESERVED.
+\o           © 1992-2015  UNIX SYSTEMS Laboratories INC.,
+\o                          Reproduced with permission.
+\o 
+\o This Cadence Design Systems program and online documentation are
+\o proprietary/confidential information and may be disclosed/used only
+\o as authorized in a license agreement controlling such use and disclosure.
+\o 
+\o           RESTRICTED RIGHTS NOTICE (SHORT FORM)
+\o Use/reproduction/disclosure is subject to restriction
+\o set forth at FAR 1252.227-19 or its equivalent.
+\o Loading geView.cxt 
+\o Loading menuBuilder.cxt 
+\o Loading schView.cxt 
+\o Loading selectSv.cxt 
+\o Loading wireEdit.cxt 
+\o Loading pte2.cxt 
+\o Loading xlUI.cxt 
+\o Loading auCore.cxt 
+\o Loading vhdl.cxt 
+\o Loading seismic.cxt 
+\o Loading ci.cxt 
+\o Loading ams.cxt 
+\o Virtuoso Framework License (111) was checked out successfully. Total checkout time was 0.04s.
+\o END OF SITE CUSTOMIZATION
+\o Loading $HOME/.cdsinit init file from the site init file.
+\o NL-BEGIN
+\o Loading smic18mmrf/libInit.il ...
+\o 	Loading smic18mmrf/loadCxt.ile ... done!
+\o 	Loading context 'smic18mmrf' from library 'smic18mmrf' ... done!
+\o 	Loading context 'pdkUtils' from library 'smic18mmrf' ... done!
+\o 	Loading smic18mmrf/display.drf ... done!
+\o 	Loading smic18mmrf/libInitCktPro.il ... done!
+\o 	Loading smic18mmrf/libInitCustomExit.il ... Loading libInitCustomExit.il for smic18mmrf
+\o Loading oasis.cxt 
+\o Loading analog.cxt 
+\o Loading asimenv.cxt 
+\o Loading spectrei.cxt 
+\o Loading devCheck.cxt 
+\o Loading relXpert.cxt 
+\o Loading hspiceD.cxt 
+\o Loading spectreinl.cxt 
+\o Loading UltraSim.cxt 
+\o Loading msgHandler.cxt 
+\o Loading AMSOSS.cxt 
+\o Loading AMS.cxt 
+\o done!
+\o Loaded smic18mmrf/libInit.il successfully!
+\o Loading smic skill utility
+\o /root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../SMIC18MMRF_skillUtility/batchSetCDF.ile
+\o /root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../SMIC18MMRF_skillUtility/libNumcheck.ile
+\o Loading emxskill
+\o file="/license.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/license.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/license.ils
+\o file="/continuum.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuum.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuum.ils
+\o file="/continuumgui.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuumgui.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuumgui.ils
+\o file="/callbacks.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/callbacks.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/callbacks.ils
+\o file="/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils
+\o file="/../models/diff_ind_rf_psub_18MTE_scalable.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_rf_psub_18MTE_scalable.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_rf_psub_18MTE_scalable.ils
+\o file="/../models/ind_rf_psub_scalable.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/ind_rf_psub_scalable.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/ind_rf_psub_scalable.ils
+\o NL-CELL lib=microled_cells cell=c2mos_dff_1bit view=schematic
+\o NL-SUMMARY instances=24 nets=13 shapes=219
+\o NL-MOS inst=mp_k4 master=smic18mmrf/p18:symbol model=p18 l_expr=ln w_expr=wkp D=q G=qbar S=vdd B=vdd
+\o NL-MOS inst=mp_k3 master=smic18mmrf/p18:symbol model=p18 l_expr=ln w_expr=wkp D=qbar G=q S=vdd B=vdd
+\o NL-MOS inst=mp_s2 master=smic18mmrf/p18:symbol model=p18 l_expr=ln w_expr=wcp D=q G=m S=y1 B=vdd
+\o NL-MOS inst=mp_s1 master=smic18mmrf/p18:symbol model=p18 l_expr=ln w_expr=wcp D=y1 G=clkb S=vdd B=vdd
+\o NL-MOS inst=mp_k2 master=smic18mmrf/p18:symbol model=p18 l_expr=ln w_expr=wkp D=m G=mb S=vdd B=vdd
+\o NL-MOS inst=mp_k1 master=smic18mmrf/p18:symbol model=p18 l_expr=ln w_expr=wkp D=mb G=m S=vdd B=vdd
+\o NL-MOS inst=mp_m2 master=smic18mmrf/p18:symbol model=p18 l_expr=ln w_expr=wcp D=m G=d S=x1 B=vdd
+\o NL-MOS inst=mp_m1 master=smic18mmrf/p18:symbol model=p18 l_expr=ln w_expr=wcp D=x1 G=clk S=vdd B=vdd
+\o NL-MOS inst=mp_c master=smic18mmrf/p18:symbol model=p18 l_expr=ln w_expr=wcp D=clkb G=clk S=vdd B=vdd
+\o NL-MOS inst=mn_k4 master=smic18mmrf/n18:symbol model=n18 l_expr=ln w_expr=wk D=q G=qbar S=vss B=vss
+\o NL-MOS inst=mn_k3 master=smic18mmrf/n18:symbol model=n18 l_expr=ln w_expr=wk D=qbar G=q S=vss B=vss
+\o NL-MOS inst=mn_s2 master=smic18mmrf/n18:symbol model=n18 l_expr=ln w_expr=wc D=q G=m S=y2 B=vss
+\o NL-MOS inst=mn_s1 master=smic18mmrf/n18:symbol model=n18 l_expr=ln w_expr=wc D=y2 G=clk S=vss B=vss
+\o NL-MOS inst=mn_k2 master=smic18mmrf/n18:symbol model=n18 l_expr=ln w_expr=wk D=m G=mb S=vss B=vss
+\o NL-MOS inst=mn_k1 master=smic18mmrf/n18:symbol model=n18 l_expr=ln w_expr=wk D=mb G=m S=vss B=vss
+\o NL-MOS inst=mn_m2 master=smic18mmrf/n18:symbol model=n18 l_expr=ln w_expr=wc D=m G=d S=x2 B=vss
+\o NL-MOS inst=mn_m1 master=smic18mmrf/n18:symbol model=n18 l_expr=ln w_expr=wc D=x2 G=clkb S=vss B=vss
+\o NL-MOS inst=mn_c master=smic18mmrf/n18:symbol model=n18 l_expr=ln w_expr=wc D=clkb G=clk S=vss B=vss
+\o NL-PINSTUB inst="PIN5" master="basic"/"iopin":"symbol" NL-PINSTUB inst="PIN4" master="basic"/"iopin":"symbol" NL-PINSTUB inst="PIN3" master="basic"/"iopin":"symbol" NL-PINSTUB inst="PIN2" master="basic"/"iopin":"symbol" NL-PINSTUB inst="PIN1" master="basic"/"iopin":"symbol" NL-PINSTUB inst="PIN0" master="basic"/"iopin":"symbol" NL-PORT net="vss" pinCount=1 firstPin=db:0x1755ce1a pinDir=nil termName="vss" NL-PORT net="vdd" pinCount=1 firstPin=db:0x1755ce1b pinDir=nil termName="vdd" NL-PORT net="qbar" pinCount=1 firstPin=db:0x1755ce1c pinDir=nil termName="qbar" NL-PORT net="q" pinCount=1 firstPin=db:0x1755ce1d pinDir=nil termName="q" NL-PORT net="clk" pinCount=1 firstPin=db:0x1755ce1e pinDir=nil termName="clk" NL-PORT net="d" pinCount=1 firstPin=db:0x1755ce1f pinDir=nil termName="d" NL-OPEN-FAILED
+\o DUMP_DONE
+\o 
+\o Loading lce.cxt 
+\# Memory report: on exit            330 MB, process size 1,152 MB at UTC 2026.10.08 14:19:57.981
+\# Memory report: peak usage         330 MB, process size 1,152 MB

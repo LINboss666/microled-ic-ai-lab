@@ -1,0 +1,64 @@
+// ==============================================================================
+// c2mos_ff1_func.scs -- ONE C^2MOS master-slave DFF, functional characterisation
+//
+// Cell   : C2MOS_DFF.scs (1.8 V n18/p18 only, teacher smic18mmrf_teacher, tt)
+// Clock  : ONE external clock. clkb is generated inside the cell.
+//
+// Timing plan, expressed as multiples of the clock period T (T is rendered by the
+// driver script, so the same assertions hold at any clock rate):
+//   clk   : low [0,0.5T), HIGH [0.5T,1T), low [1T,1.5T), HIGH [1.5T,2T), ...
+//           rising edges at (k+0.5)T, falling edges at (k+1)T
+//   d     : HIGH [0.35T,1.35T), low [1.35T,2.35T), HIGH [2.35T,3.35T),
+//           low [3.35T,4.35T), HIGH from 4.35T
+//           -> the input sequence seen by consecutive rising edges is
+//              1, 0, 1, 0, 1  (not a single '1', as required)
+//           -> every data transition lands 0.15T BEFORE its capturing edge and
+//              0.35T AFTER the previous one, i.e. in the middle of the phase in
+//              which the master is transparent, so a functional pass cannot be an
+//              accident of timing.
+//   q     : must equal the value of d at the previous rising edge, i.e. 1,0,1,0
+//           shifted by exactly one clock cycle.
+//
+// The q assertion windows deliberately straddle the *input* transitions: e.g.
+// [1.1T,1.45T] is inside the clock LOW phase and contains d's fall at 1.35T, so a
+// pass there proves both "held during the inactive phase" and "no combinational
+// feed-through of a changing input".
+//
+// TESTBENCH ASSUMPTIONS (not course requirements):
+//   T      = 200 ns test clock. The application column period derived from the
+//            topology is 9.765625 us, i.e. ~49x slower, so this is a stress rate.
+//   Cload  = 50 fF on q and on qbar (placeholder for the next stage's gate
+//            loading; the real scan load depends on the NOT DEFINED output domain)
+//   edges  = 1 ns source rise/fall
+// There is NO output stage, NO reset and NO pulse generator inside the cell.
+// ==============================================================================
+simulator lang=spectre insensitive=yes
+; SCH-1 Part D regression: identical to c2mos_ff1_func/c2mos_ff1, but the cell under test
+; is the netlist rebuilt from microled_cells/c2mos_dff_1bit:schematic. Only the include
+; path and the subckt name changed -- sources, loads, clock plan and every assertion
+; window are untouched.
+
+include "${QODER_PDK_LIB}" section=tt
+include "generated/c2mos_dff_1bit_from_schematic.scs"
+
+parameters T=2e-7
+parameters VDDV=1.8
+
+Vdd (vdd 0) vsource dc=VDDV
+// vss MUST be connected to ground. Inside the cell `vss` only ever touches sources
+// and bulks, so without this line it is a floating net, no NMOS can pass current and
+// every node sticks near VDD (see spectre/nmos_probe.scs).
+Vss (vss 0) vsource dc=0
+
+// one clock only; the cell inverts it internally
+Ck (clk 0) vsource type=pulse val0=0    val1=VDDV period=T     delay=0.5*T  width=0.5*T rise=1e-9 fall=1e-9
+Dd (d    0) vsource type=pulse val0=0    val1=VDDV period=2*T   delay=0.35*T width=T     rise=1e-9 fall=1e-9
+
+X1 (d clk q qbar vdd vss) c2mos_dff_1bit
+
+Cq    (q    0) capacitor c=50e-15
+Cqb   (qbar 0) capacitor c=50e-15
+
+tr1 tran stop=4.8*T maxstep=1e-4*T
+
+save clk d q qbar

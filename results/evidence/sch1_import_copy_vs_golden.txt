@@ -1,0 +1,30 @@
+--- /root/microled_ai_project/spectre/C2MOS_DFF.scs	2026-10-05 00:11:50.000000000 +0800
++++ /root/microled_ai_project/cadence_work/asg_in/c2mos_dff_1bit.scs	2026-10-08 22:18:18.926005733 +0800
+@@ -1,3 +1,5 @@
++simulator lang=spectre insensitive=yes
++global 0
+ // ==============================================================================
+ // C2MOS_DFF.scs -- one fully-static C^2MOS master-slave D flip-flop
+ // Process : teacher copy smic18mmrf_teacher, section=tt, 1.8 V core devices n18/p18
+@@ -30,9 +32,11 @@
+ // This cell has NO reset, NO pulse generator and NO scan power output stage; the scan
+ // output domain (VLED / Micro LED Vf) stays NOT DEFINED and is frozen this round.
+ // ==============================================================================
+-simulator lang=spectre insensitive=yes
+ 
+-subckt c2mos_dff (d clk q qbar vdd vss)
++subckt c2mos_dff_1bit (d clk q qbar vdd vss)
++  parameters d clk input
++  parameters q qbar output
++  parameters vdd vss inputOutput
+   // Sizes live inside the subckt so an instance can override them
+   // (X1 (...) c2mos_dff wc=4e-6). NOTE: this was NOT the reason the first run of
+   // this cell was dead -- top-level parameters resolve fine here too. The real cause
+@@ -79,4 +83,6 @@
+   mn_k4 (q    qbar vss vss) n18 l=ln w=wk
+   mp_k4 (q    qbar vdd vdd) p18 l=ln w=wkp
+ 
+-ends c2mos_dff
++ends c2mos_dff_1bit
++parameters d clk q qbar vdd vss inputOutput
++I1 (d clk q qbar vdd vss) c2mos_dff_1bit

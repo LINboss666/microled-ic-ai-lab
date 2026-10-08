@@ -1,0 +1,4 @@
+  TIMING edge=1.40T kind=fall t_CLK50=3.005e-07 t_Q50=3.00684e-07 t_D50=2.715e-07  D50_to_CLK50=2.9e-08  CLK50_to_Q50=1.843e-10 s (0.0922% of T)
+  TIMING edge=2.40T kind=rise t_CLK50=5.005e-07 t_Q50=5.0091e-07 t_D50=4.705e-07  D50_to_CLK50=3e-08  CLK50_to_Q50=4.10301e-10 s (0.205% of T)
+  TIMING edge=3.40T kind=fall t_CLK50=7.005e-07 t_Q50=7.00684e-07 t_D50=6.715e-07  D50_to_CLK50=2.9e-08  CLK50_to_Q50=1.84252e-10 s (0.0921% of T)
+  TIMING edge=4.40T kind=rise t_CLK50=9.005e-07 t_Q50=9.0091e-07 t_D50=8.705e-07  D50_to_CLK50=3e-08  CLK50_to_Q50=4.10301e-10 s (0.205% of T)

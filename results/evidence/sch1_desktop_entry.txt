@@ -1,0 +1,19 @@
+SCH-1 Part A desktop entry, verbatim copy.
+Live file on the guest: /root/Desktop/Cadence-Virtuoso-MicroLED.desktop
+(the repo's safety gate only accepts text extensions, so the entry is committed as .txt;
+ the launcher it calls is tracked at cadence_work/launch_virtuoso.sh)
+--8<--
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Cadence Virtuoso - MicroLED
+GenericName=Cadence Virtuoso
+Comment=Micro LED IC617 session (teacher smic18mmrf PDK; work dir /root/microled_ai_project/cadence_work)
+Exec=/root/microled_ai_project/cadence_work/launch_virtuoso.sh
+Icon=/opt/IC617/share/cdssetup/icons/32x32/app-virtuoso.png
+TryExec=/root/microled_ai_project/cadence_work/launch_virtuoso.sh
+Terminal=false
+# Categories/keys follow this desktop's own convention (RHEL6 system launchers use
+# "Categories=Development;..." with no legacy Encoding key), so desktop-file-validate
+# reports no warnings.
+Categories=Development;

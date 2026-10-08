@@ -1,0 +1,13 @@
+; SCH-1 Part C probe 3: does an explicit load() of schematic.cxt define the editor API?
+printf("PROBE_BEGIN\n")
+r = errset(load("/opt/IC617/tools/dfII/etc/context/64bit/schematic.cxt" t))
+printf("PROBE-LOAD-CXT %L\n" r)
+printf("PROBE-GETD-SCHCREATE %L\n" getd("schCreate"))
+printf("PROBE-GETD-SCHCREATEWIRE %L\n" getd("schCreateWire"))
+printf("PROBE-GETD-SCHCREATEPIN %L\n" getd("schCreatePin"))
+printf("PROBE-GETD-SCHCHECK %L\n" getd("schCheck"))
+printf("PROBE-GETD-HICHECKANDSAVE %L\n" getd("hiCheckAndSave"))
+printf("PROBE-GETD-HISETINITFUNC %L\n" getd("hiSetInitFunc"))
+printf("PROBE-GETD-DBOPENCELLVIEW %L\n" getd("dbOpenCellViewByType"))
+printf("PROBE_END\n")
+exit()

@@ -31,8 +31,11 @@ AWK="$PROJ/scripts/psf_check.awk"
 LOGD="$PROJ/logs"
 
 case "$TB" in
-  ff1)    TPL="$PROJ/spectre/c2mos_ff1_func.scs";  TOKEN=C2MOS_DFF_1CH;      ;;
-  shift3) TPL="$PROJ/spectre/c2mos_shift3.scs";    TOKEN=C2MOS_SHIFT_3STAGE; ;;
+  ff1)          TPL="$PROJ/spectre/c2mos_ff1_func.scs";                TOKEN=C2MOS_DFF_1CH;            ;;
+  shift3)       TPL="$PROJ/spectre/c2mos_shift3.scs";                  TOKEN=C2MOS_SHIFT_3STAGE;       ;;
+  # SCH-1 Part D: the same two assertion tables against the cell rebuilt out of the OA schematic.
+  ff1_sch)      TPL="$PROJ/spectre/c2mos_ff1_from_schematic.scs";      TOKEN=SCHEMATIC_DFF_FUNCTION;   ;;
+  shift3_sch)   TPL="$PROJ/spectre/c2mos_shift3_from_schematic.scs";   TOKEN=SCHEMATIC_SHIFT3_FUNCTION ;;
   *) echo "FATAL: unknown testbench '$TB'"; exit 8 ;;
 esac
 [ -r "$TPL" ] || { echo "FATAL: template missing $TPL"; exit 8; }
@@ -61,7 +64,7 @@ thr() { if [ "$1" = "1" ]; then echo "gt 1.7"; else echo "lt 0.1"; fi; }
 build_dirs() {
   local f="$1" i s a b c d line
   : > "$f"
-  if [ "$TB" = "ff1" ]; then
+  if [ "$TB" = "ff1" ] || [ "$TB" = "ff1_sch" ]; then
     echo "# ---- single C^2MOS DFF: q must repeat d's value one clock later: 1,0,1,0" >> "$f"
     local STARTS="0.5 1.5 2.5 3.5"
     local Q="1 0 1 0"
@@ -177,7 +180,7 @@ run_once() {
   # agent's console output is not evidence a human can re-check.
   local dl="$LOGD/c2mos_delays_${TB}_${TAG}_${idx}.txt"
   : > "$dl"
-  if [ "$TB" = "ff1" ]; then
+  if [ "$TB" = "ff1" ] || [ "$TB" = "ff1_sch" ]; then
     local o kind cc qq dd
     for o in "1.40 FALL" "2.40 CROSS" "3.40 FALL" "4.40 CROSS"; do
       set -- $o; o=$1; kind=$2

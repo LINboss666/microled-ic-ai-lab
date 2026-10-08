@@ -1,0 +1,186 @@
+#!/bin/bash
+# SCH-1 Part C: build the OA schematic with Cadence's own netlist->schematic importer.
+#
+# Why this tool: on this build the Schematic Editor's SKILL package (schematic.cxt) is not
+# registered for a batch session -- `schCreate`/`schCreateWire`/`schCheck` are undefined, an
+# explicit load() of the .cxt returns nil, and hiSetInitFunc (the deferral hook) is absent too.
+# spiceIn (Analog Schematic Generation) is Cadence's supported batch route from a Spectre
+# netlist to a real, placed Composer schematic: it reads connectivity out of the netlist file
+# instead of out of anyone's head, which is exactly what this phase requires.
+#
+# Guards:
+#   * the golden netlist is only READ; the import copy is generated and diffed against it
+#   * refuses to touch an existing cell directory -- nothing is ever overwritten
+#   * refuses to run spiceIn if any MOS instance line differs from the golden after the rewrite
+#   * runs with cwd = cadence_work so the same cds.lib the desktop launcher uses is in force
+#
+# BODYFORM:
+#   subckt_top  the accepted cell is imported as a sub-circuit and one wrapper instance is added at
+#               file scope. Required because SPICEIN-77 refuses a topCell that is also a
+#               sub-circuit in the file, and the top cell is the file scope.
+#   subckt      the cell alone in subckt form (measured: SPICEIN-77 rejects that as the topCell).
+#   flat        body lifted to file scope, the shape of Cadence's own sample netlist.
+#
+# Measured failure modes, kept here so they are not re-attempted:
+#   * with the DEFAULT topCell ("top") and a subckt-only file, spiceIn read the subckt header as an
+#     instance line and took its last port `vss` as the master cell -- SPICEIN-24.
+#   * a dropped `subckt` keyword in the rewrite produces exactly the same SPICEIN-24, which is why
+#     rename_cell refuses to continue when the header is gone.
+#   * passing the sample's conn2schArgs list left instances, nets and 208 figures but NO
+#     net-to-pin binding; only the tool's own defaults let dbCheck bind the nets.
+set -u
+
+PROJ="${PROJ:-/root/microled_ai_project}"
+WORK="$PROJ/cadence_work"
+SRC="$PROJ/spectre/C2MOS_DFF.scs"
+CELL="${CELL:-c2mos_dff_1bit}"
+LIB="${LIB:-microled_cells}"
+SRC_CELL="${SRC_CELL:-c2mos_dff}"
+PORTS="${PORTS:-d clk q qbar vdd vss}"
+BODYFORM="${BODYFORM:-subckt_top}"
+TOP="${TOP:-sch1_top}"
+
+if [ "${CONN2SCH_ARGS:-default}" = "default" ]; then
+  CONN2SCH_ARGS_LINE=""
+else
+  CONN2SCH_ARGS_LINE="    'conn2schArgs    \" -asg -NOSQUARE -MIN_CROSSOVERS -FAST_LABELS +NOXTRSCH -VERBOSE \""
+fi
+
+IN="$WORK/asg_in"
+LOGD="$WORK/logs"
+STAMP=$(date +%Y%m%d_%H%M%S)
+ASLOG="$LOGD/asg_spiceIn_$STAMP.log"
+
+[ -r "$SRC" ] || { echo "REFUSE: golden netlist unreadable: $SRC"; exit 9; }
+mkdir -p "$IN" "$LOGD" "$PROJ/cadence_out"
+NL="$IN/${CELL}.scs"
+BODY="$IN/${CELL}_body.inc"
+TOP_CELL_NAME="$CELL"
+
+# rename only the subckt/ends pair, then assert both survived
+rename_cell() {
+  sed -E "s/^subckt[[:space:]]+${SRC_CELL}([[:space:]])/subckt ${CELL}\1/" "$SRC" > "$NL"
+  sed -E "s/^ends[[:space:]]+${SRC_CELL}([[:space:]]*)$/ends ${CELL}\1/" "$NL" > "$NL.tmp" \
+    && mv "$NL.tmp" "$NL"
+  grep -qE "^subckt[[:space:]]+${CELL}([[:space:]]|\()" "$NL" || {
+    echo "REFUSE: import copy lost its 'subckt ${CELL}' header -- not running spiceIn on a mangled netlist"
+    exit 6
+  }
+  grep -qE "^ends[[:space:]]+${CELL}" "$NL" || {
+    echo "REFUSE: import copy lost its 'ends ${CELL}' footer"
+    exit 6
+  }
+}
+
+# the importer wants port directions, which a bare Spectre subckt header does not carry; this adds
+# only the declaration line inside the subckt and changes no connectivity
+declare_ports() {
+  # Directions follow the SCH-1 spec: d and clk are inputs, q and qbar outputs, vdd and vss are
+  # global supply ports. The accepted netlist states no directions, so this is the one piece of
+  # information the import adds, and it is structural annotation only -- no net, pin or size.
+  awk -v cell="$CELL" \
+      '{ print }
+       !done && $0 ~ ("^subckt " cell) {
+         print "  parameters d clk input"
+         print "  parameters q qbar output"
+         print "  parameters vdd vss inputOutput"
+         done = 1
+       }' \
+      "$NL" > "$NL.tmp" && mv "$NL.tmp" "$NL"
+}
+
+case "$BODYFORM" in
+  subckt_top)
+    rename_cell
+    declare_ports
+    {
+      echo "simulator lang=spectre insensitive=yes"
+      echo "global 0"
+      sed '/^simulator lang=spectre/d' "$NL"
+      echo "parameters ${PORTS} inputOutput"
+      echo "I1 (d clk q qbar vdd vss) ${CELL}"
+    } > "$NL.tmp" && mv "$NL.tmp" "$NL"
+    TOP_CELL_NAME="$TOP"
+    echo "WRAPPER_TOP_CELL=$TOP WRAPPER_INSTANCE=I1"
+    ;;
+  subckt)
+    rename_cell
+    declare_ports
+    ;;
+  flat)
+    sed -n "/^subckt ${SRC_CELL} /,/^ends ${SRC_CELL}/p" "$SRC" | sed '1d;$d' | sed 's/^  //' > "$BODY"
+    [ -s "$BODY" ] || { echo "REFUSE: could not extract the body of ${SRC_CELL}"; exit 6; }
+    {
+      echo "// SCH-1 import copy generated by scripts/sch1_asg_import.sh from $SRC"
+      echo "// Structural change only: body lifted to file scope, ports declared inputOutput."
+      echo "simulator lang=spectre insensitive=yes"
+      echo "global 0"
+      echo "parameters ${PORTS} inputOutput"
+      cat "$BODY"
+    } > "$NL"
+    ;;
+  *) echo "usage: BODYFORM=subckt_top|subckt|flat"; exit 9 ;;
+esac
+
+diff -u "$SRC" "$NL" > "$IN/${CELL}_vs_golden.diff"
+NORM_SRC=$(grep -E '^[[:space:]]*(mp|mn)[a-z_0-9]+[[:space:]]*\(' "$SRC" | sed 's/^[[:space:]]*//')
+NORM_NL=$(grep -E '^[[:space:]]*(mp|mn)[a-z_0-9]+[[:space:]]*\(' "$NL" | sed 's/^[[:space:]]*//')
+LINES_DIFF=$(diff <(printf '%s\n' "$NORM_SRC") <(printf '%s\n' "$NORM_NL") | wc -l)
+echo "BODYFORM=$BODYFORM TOP_CELL_NAME=$TOP_CELL_NAME"
+echo "GOLDEN_INSTANCE_LINES=$(printf '%s\n' "$NORM_SRC" | grep -c .)  IMPORT_COPY_INSTANCE_LINES=$(printf '%s\n' "$NORM_NL" | grep -c .)"
+echo "INSTANCE_LINE_DIFF_LINES=$LINES_DIFF"
+echo "PORT_DECL_LINES=$(grep -cE '^[[:space:]]*parameters (d clk input|q qbar output|vdd vss inputOutput)$' "$NL")"
+echo "DESIGN_VAR_LINES=$(grep -cE '^[[:space:]]*parameters (ln|wc|wcp|wk|wkp)=' "$NL")"
+[ -n "$NORM_SRC" ] || { echo "REFUSE: golden has no parsable MOS instance lines"; exit 6; }
+[ "$LINES_DIFF" -eq 0 ] || { echo "REFUSE: import copy instance lines differ from the golden"; exit 6; }
+
+for C in "$CELL" "$TOP_CELL_NAME"; do
+  if [ -e "$WORK/$LIB/$C" ]; then
+    echo "REFUSE: $LIB/$C already exists -- nothing is overwritten. Inspect it, do not re-run."
+    exit 7
+  fi
+done
+
+# spiceIn's default top cell name is the literal string "top". The parameter file format is
+# Cadence's own (/opt/IC617/tools/dfII/samples/spiceIn/param.il -- one flat SKILL list named
+# spiceInParams; SPICEIN-11 says so when the name is wrong). Every setting below is plumbing:
+# names, paths, libraries, mode flags. No W/L, no model and no connectivity value is set here;
+# those come only from the netlist copy.
+PARAM="$IN/${CELL}_param.il"
+cat > "$PARAM" <<EOF
+;; generated by scripts/sch1_asg_import.sh
+spiceInParams = list(nil
+    'topCell         "$TOP_CELL_NAME"
+    'language        "SPECTRE"
+    'netlistFile     "$NL"
+    'outputLib       "$LIB"
+    'refLibList      "smic18mmrf analogLib"
+    'outputViewType  "schematic"
+    'outputViewName  "schematic"
+    'simName         "spectre"
+    'outputSimName   "spectre"
+    'overwriteCells  "NONE"
+    'logFile         "$ASLOG"
+${CONN2SCH_ARGS_LINE})
+EOF
+echo "PARAM_FILE=$PARAM"
+
+# shellcheck disable=SC1091
+. "$PROJ/skill/cad_env.sh" || { echo "FATAL: cadence env load failed"; exit 8; }
+cd "$WORK" || exit 9
+
+echo "ASG_TOOL=$(command -v spiceIn || echo MISSING)"
+[ -n "$(command -v spiceIn)" ] || { echo "FATAL: spiceIn not on the Cadence PATH"; exit 8; }
+
+timeout "${TMO:-300}" spiceIn -param "$PARAM"
+rc=$?
+echo "ASG rc=$rc"
+# spiceIn also drops a spiceIn.log in the cwd; keep it as evidence next to the stamped log
+[ -f "$WORK/spiceIn.log" ] && cp -f "$WORK/spiceIn.log" "$LOGD/asg_cwdlog_$STAMP.log"
+echo "ASG_LOG=$ASLOG"
+echo "--- log tail ---"
+tail -20 "$ASLOG" 2>&1
+echo "--- library contents ---"
+ls -1 "$WORK/$LIB" 2>&1 | head -10
+[ -d "$WORK/$LIB/$CELL/schematic" ] && echo "ASG_SCHEMATIC_DIR=yes" \
+  && ls -l "$WORK/$LIB/$CELL/schematic" | head -6

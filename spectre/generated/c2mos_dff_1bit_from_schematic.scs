@@ -1,0 +1,34 @@
+; SCH-1 Part D: netlist rebuilt FROM microled_cells/c2mos_dff_1bit:schematic.
+; Rows come from skill/sch1_dump_for_netlist.il (cadence_out/db_dump_*.log); no line
+; was copied from spectre/C2MOS_DFF.scs. The five design-variable DEFAULTS below are the
+; golden's, because the cellview stores size *expressions* (l=ln, w=wcp) and not values;
+; the expressions themselves are compared against the golden by scripts/sch1_netlist_from_db.py.
+; NL-SUMMARY instances=24 nets=13 shapes=219
+simulator lang=spectre insensitive=yes
+
+subckt c2mos_dff_1bit (d clk q qbar vdd vss)
+  parameters ln=2e-7
+  parameters wc=2e-6
+  parameters wcp=4e-6
+  parameters wk=5e-7
+  parameters wkp=1e-6
+  mn_c (clkb clk vss vss) n18 l=ln w=wc
+  mn_k1 (mb m vss vss) n18 l=ln w=wk
+  mn_k2 (m mb vss vss) n18 l=ln w=wk
+  mn_k3 (qbar q vss vss) n18 l=ln w=wk
+  mn_k4 (q qbar vss vss) n18 l=ln w=wk
+  mn_m1 (x2 clkb vss vss) n18 l=ln w=wc
+  mn_m2 (m d x2 vss) n18 l=ln w=wc
+  mn_s1 (y2 clk vss vss) n18 l=ln w=wc
+  mn_s2 (q m y2 vss) n18 l=ln w=wc
+  mp_c (clkb clk vdd vdd) p18 l=ln w=wcp
+  mp_k1 (mb m vdd vdd) p18 l=ln w=wkp
+  mp_k2 (m mb vdd vdd) p18 l=ln w=wkp
+  mp_k3 (qbar q vdd vdd) p18 l=ln w=wkp
+  mp_k4 (q qbar vdd vdd) p18 l=ln w=wkp
+  mp_m1 (x1 clk vdd vdd) p18 l=ln w=wcp
+  mp_m2 (m d x1 vdd) p18 l=ln w=wcp
+  mp_s1 (y1 clkb vdd vdd) p18 l=ln w=wcp
+  mp_s2 (q m y1 vdd) p18 l=ln w=wcp
+ends c2mos_dff_1bit
+

@@ -1,0 +1,88 @@
+ RB-CHECK-RESULT t
+ RB-SAVE-RESULT t
+ POST-SUMMARY instances=(24) nets=(13) terms=(0) shapes=(219)
+ POST-CON "mp_k4" "D" "q"
+ POST-CON "mp_k4" "B" "vdd"
+ POST-CON "mp_k4" "G" "qbar"
+ POST-CON "mp_k4" "S" "vdd"
+ POST-CON "mp_k3" "D" "qbar"
+ POST-CON "mp_k3" "B" "vdd"
+ POST-CON "mp_k3" "G" "q"
+ POST-CON "mp_k3" "S" "vdd"
+ POST-CON "mp_s2" "D" "q"
+ POST-CON "mp_s2" "B" "vdd"
+ POST-CON "mp_s2" "G" "m"
+ POST-CON "mp_s2" "S" "y1"
+ POST-CON "mp_s1" "D" "y1"
+ POST-CON "mp_s1" "B" "vdd"
+ POST-CON "mp_s1" "G" "clkb"
+ POST-CON "mp_s1" "S" "vdd"
+ POST-CON "mp_k2" "D" "m"
+ POST-CON "mp_k2" "B" "vdd"
+ POST-CON "mp_k2" "G" "mb"
+ POST-CON "mp_k2" "S" "vdd"
+ POST-CON "mp_k1" "D" "mb"
+ POST-CON "mp_k1" "B" "vdd"
+ POST-CON "mp_k1" "G" "m"
+ POST-CON "mp_k1" "S" "vdd"
+ POST-CON "mp_m2" "D" "m"
+ POST-CON "mp_m2" "B" "vdd"
+ POST-CON "mp_m2" "G" "d"
+ POST-CON "mp_m2" "S" "x1"
+ POST-CON "mp_m1" "D" "x1"
+ POST-CON "mp_m1" "B" "vdd"
+ POST-CON "mp_m1" "G" "clk"
+ POST-CON "mp_m1" "S" "vdd"
+ POST-CON "mp_c" "D" "clkb"
+ POST-CON "mp_c" "B" "vdd"
+ POST-CON "mp_c" "G" "clk"
+ POST-CON "mp_c" "S" "vdd"
+ POST-CON "mn_k4" "D" "q"
+ POST-CON "mn_k4" "B" "vss"
+ POST-CON "mn_k4" "G" "qbar"
+ POST-CON "mn_k4" "S" "vss"
+ POST-CON "mn_k3" "D" "qbar"
+ POST-CON "mn_k3" "B" "vss"
+ POST-CON "mn_k3" "G" "q"
+ POST-CON "mn_k3" "S" "vss"
+ POST-CON "mn_s2" "D" "q"
+ POST-CON "mn_s2" "B" "vss"
+ POST-CON "mn_s2" "G" "m"
+ POST-CON "mn_s2" "S" "y2"
+ POST-CON "mn_s1" "D" "y2"
+ POST-CON "mn_s1" "B" "vss"
+ POST-CON "mn_s1" "G" "clk"
+ POST-CON "mn_s1" "S" "vss"
+ POST-CON "mn_k2" "D" "m"
+ POST-CON "mn_k2" "B" "vss"
+ POST-CON "mn_k2" "G" "mb"
+ POST-CON "mn_k2" "S" "vss"
+ POST-CON "mn_k1" "D" "mb"
+ POST-CON "mn_k1" "B" "vss"
+ POST-CON "mn_k1" "G" "m"
+ POST-CON "mn_k1" "S" "vss"
+ POST-CON "mn_m2" "D" "m"
+ POST-CON "mn_m2" "B" "vss"
+ POST-CON "mn_m2" "G" "d"
+ POST-CON "mn_m2" "S" "x2"
+ POST-CON "mn_m1" "D" "x2"
+ POST-CON "mn_m1" "B" "vss"
+ POST-CON "mn_m1" "G" "clkb"
+ POST-CON "mn_m1" "S" "vss"
+ POST-CON "mn_c" "D" "clkb"
+ POST-CON "mn_c" "B" "vss"
+ POST-CON "mn_c" "G" "clk"
+ POST-CON "mn_c" "S" "vss"
+ POST-NET "clkb" instTermCount=4
+ POST-NET "y1" instTermCount=2
+ POST-NET "vss" instTermCount=16
+ POST-NET "y2" instTermCount=2
+ POST-NET "x1" instTermCount=2
+ POST-NET "m" instTermCount=8
+ POST-NET "x2" instTermCount=2
+ POST-NET "mb" instTermCount=4
+ POST-NET "vdd" instTermCount=16
+ POST-NET "qbar" instTermCount=4
+ POST-NET "q" instTermCount=6
+ POST-NET "clk" instTermCount=4
+ POST-NET "d" instTermCount=2

@@ -1,0 +1,97 @@
+=== OLD tree: /root/tech/smic_018mmrf-OA ===
+/root/tech/smic_018mmrf-OA
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/Technology_File
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/LVS
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/models
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/DRC
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/Design_Rule
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/smic18mmrf
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/Spice_Model
+-- any cds.lib in the old tree --
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/cds.lib
+   [$f]
+     -- File Created by  at Mon Aug 28 15:22:39 2000
+     -- assisted by CdsLibEditor
+     DEFINE cdsDefTechLib $CDSHOME/tools/dfII/etc/cdsDefTechLib 
+     DEFINE basic $CDSHOME/tools/dfII/etc/cdslib/basic 
+     DEFINE analogLib $CDSHOME/tools/dfII/etc/cdslib/artist/analogLib 
+     DEFINE umc18mmrf ./umc18mmrf
+-- model files the old tree actually carries --
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/cds.lib
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/models/hspice/ms018_rf_v1p5.lib
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/models/hspice/ms018_v1p7.lib
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/models/hspice/rf018_m6_res.lib
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/models/spectre/ms018_v1p7_spe.lib
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/models/spectre/rf018_m6_res_spe.lib
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/models/spectre/ms018_rf_v1p5_spe.lib
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/Spice_Model/ms018_v1p7_eldo.lib
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/Spice_Model/ms018_v1p7.lib
+/root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/Spice_Model/ms018_v1p7_spe.lib
+-- version-ish strings in file names (no content read) --
+2001v8R.pdf
+ms018_rf_v1p5_diff_ind.ckt
+ms018_rf_v1p5_diff_ind_spe.ckt
+ms018_rf_v1p5.lib
+ms018_rf_v1p5_mim.ckt
+ms018_rf_v1p5_mim_spe.ckt
+ms018_rf_v1p5_mos.ckt
+ms018_rf_v1p5_mos_spe.ckt
+ms018_rf_v1p5_readme_spe.txt
+ms018_rf_v1p5_readme.txt
+ms018_rf_v1p5_res.ckt
+ms018_rf_v1p5_res_spe.ckt
+-- newest mtime in the old tree (delivery date proxy) --
+2022-04-20 /root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/smic18mmrf/umc18mmrf.layermap
+2022-04-20 /root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/smic18mmrf/tech.db
+2022-04-20 /root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/smic18mmrf/rppo/symbol/symbol.oa
+-- old library cell names of interest --
+   n18 : /root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/smic18mmrf/n18
+   p18 : /root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/smic18mmrf/p18
+   n33 : /root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/smic18mmrf/n33
+   p33 : /root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF/smic18mmrf/p33
+
+=== TEACHER tree: /root/microled_ai_project/pdk/smic18mmrf_teacher ===
+Calibre
+cds.lib
+display.drf
+docs
+emxkit
+models
+smic18mmrf
+SMIC18MMRF_skillUtility
+stream
+techfile.tf
+-- kit cds.lib --
+DEFINE cdsDefTechLib $CDSHOME/tools/dfII/etc/cdsDefTechLib 
+DEFINE basic         $CDSHOME/tools/dfII/etc/cdslib/basic 
+DEFINE analogLib     $CDSHOME/tools/dfII/etc/cdslib/artist/analogLib 
+DEFINE smic18mmrf  ./smic18mmrf
+-- OA library dir(s) and their format --
+   /root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf : 213 entries; cdsinfo: #
+-- model files (names only) --
+/root/microled_ai_project/pdk/smic18mmrf_teacher/models/hspice/ms018_enhanced_v1p2_rev0.lib
+/root/microled_ai_project/pdk/smic18mmrf_teacher/models/hspice/mse018_v1p11_rf.lib
+/root/microled_ai_project/pdk/smic18mmrf_teacher/models/spectre/ms018_enhanced_v1p2_rev0_spe.lib
+/root/microled_ai_project/pdk/smic18mmrf_teacher/models/spectre/mse018_v1p11_rf_spe.lib
+-- doc file names carry the kit version --
+SMIC_OA_CDS_Quick_Start_18MSERF_1833_V1.20_REV0_0.pdf
+SMIC_OA_CDS_Reference_Manual_18MSERF_1833_V1.20_REV0_0.pdf
+SMIC_OA_CDS_Release_Note_Revision_History_18MSERF_1833_V1.20_REV0_0.pdf
+-- newest mtime in the teacher tree --
+2025-04-19 /root/microled_ai_project/pdk/smic18mmrf_teacher/Calibre/DRC/SMIC_CalDRC_018LGMS_1833_V1.20_REV1_0/SMIC_CalDRC_018LGMS_1833_V1.20_REV1_0.drc
+2025-04-19 /root/microled_ai_project/pdk/smic18mmrf_teacher/Calibre/DRC/SMIC_CalDRC_018LGMS_1833_V1.20_REV1_0/SMIC_CalDRC_018LGMS_1833_V1.20_REV1_0.ant
+2025-04-10 /root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/rhrpo/schematic/thumbnail_128x128.png
+-- teacher cells of interest + their views --
+   n18 : present, views = ams auCdl auLvs data.dm hspiceD ivpcell layout pdk.dat spectre symbol UltraSim 
+   p18 : present, views = ams auCdl auLvs data.dm hspiceD ivpcell layout pdk.dat spectre symbol UltraSim 
+   n33 : present, views = ams auCdl auLvs data.dm hspiceD ivpcell layout pdk.dat spectre symbol UltraSim 
+   n33_dnw_4t_ckt : present, views = ams auCdl auLvs data.dm hspiceD ivpcell layout pdk.dat spectre symbol UltraSim 
+
+=== are they the same kit? (mechanical comparison, not opinion) ===
+   teacher cell-list hash: 2ad0083972b7
+   old lib dir: /root/tech/smic_018mmrf-OA/smic_018mmrf-OA/SMIC_018_MMRF
+   old cell count: 12
+   old model card present? 0 
+PDK_IDENTITY_PROBE_DONE

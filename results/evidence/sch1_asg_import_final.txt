@@ -1,0 +1,60 @@
+Import Parameters:
+	Netlist file name: /root/microled_ai_project/cadence_work/asg_in/c2mos_dff_1bit.scs
+	Output library name: microled_cells
+	Reference Library List: smic18mmrf analogLib microled_cells 
+	Top cell: sch1_import_top
+	Created net d.
+	Created net clk.
+	Created net q.
+	Created net qbar.
+	Created net vdd.
+	Created net vss.
+		Created net 'clkb'.
+		Master Cellview: 'smic18mmrf.n18:symbol' found.
+		Created connection between net 'clkb' and term 'D'.
+		Created connection between net 'clk' and term 'G'.
+		Created connection between net 'vss' and term 'S'.
+		Created connection between net 'vss' and term 'B'.
+		Master Cellview: 'smic18mmrf.p18:symbol' found.
+		Created connection between net 'clkb' and term 'D'.
+		Created connection between net 'clk' and term 'G'.
+		Created connection between net 'vdd' and term 'S'.
+		Created connection between net 'vdd' and term 'B'.
+		Created net 'x1'.
+		Master Cellview: 'smic18mmrf.p18:symbol' found.
+		Created connection between net 'x1' and term 'D'.
+		Created connection between net 'clk' and term 'G'.
+		Created connection between net 'vdd' and term 'S'.
+		Created connection between net 'vdd' and term 'B'.
+		Created net 'm'.
+		Master Cellview: 'smic18mmrf.p18:symbol' found.
+		Created connection between net 'm' and term 'D'.
+		Created connection between net 'd' and term 'G'.
+		Created connection between net 'x1' and term 'S'.
+		Created connection between net 'vdd' and term 'B'.
+		Created net 'x2'.
+		Master Cellview: 'smic18mmrf.n18:symbol' found.
+		Created connection between net 'x2' and term 'D'.
+		Created connection between net 'clkb' and term 'G'.
+		Created connection between net 'vss' and term 'S'.
+		Created connection between net 'vss' and term 'B'.
+		Master Cellview: 'smic18mmrf.n18:symbol' found.
+		Created connection between net 'm' and term 'D'.
+		Created connection between net 'd' and term 'G'.
+		Created connection between net 'x2' and term 'S'.
+		Created connection between net 'vss' and term 'B'.
+		Created net 'mb'.
+		Master Cellview: 'smic18mmrf.n18:symbol' found.
+		Created connection between net 'mb' and term 'D'.
+		Created connection between net 'm' and term 'G'.
+		Created connection between net 'vss' and term 'S'.
+		Created connection between net 'vss' and term 'B'.
+		Master Cellview: 'smic18mmrf.p18:symbol' found.
+		Created connection between net 'mb' and term 'D'.
+		Created connection between net 'm' and term 'G'.
+		Created connection between net 'vdd' and term 'S'.
+		Created connection between net 'vdd' and term 'B'.
+		Master Cellview: 'smic18mmrf.n18:symbol' found.
+		Created connection between net 'm' and term 'D'.
+		Created connection between net 'mb' and term 'G'.
+		Created connection between net 'vss' and term 'S'.

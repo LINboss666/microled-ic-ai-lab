@@ -1,0 +1,30 @@
+LAUNCHER_EXISTS      PASS /root/microled_ai_project/cadence_work/launch_virtuoso.sh
+LAUNCHER_EXECUTABLE  PASS
+ENV_WRAPPER_READABLE PASS (harvested by /root/microled_ai_project/skill/cad_env.sh, never executed)
+----- launch_virtuoso.sh under LAUNCHER_CHECK=1 (rc=0) -----
+CHECK CADENCE_ENV_LOADED PASS
+      virtuoso  : /opt/IC617//tools/dfII/bin/virtuoso
+      OA_HOME   : /opt/IC617/oa_v22.50.036/
+      MMSIM     : /opt/MMSIM151
+CHECK PROJECT_WORKDIR_CORRECT PASS
+      DISPLAY derived from the only listening X socket: :0
+      DISPLAY   : :0   XAUTHORITY: unset
+CHECK CDS_LIB_FOUND PASS
+      cds.lib   : /root/microled_ai_project/cadence_work/cds.lib
+          DEFINE cdsDefTechLib /opt/IC617/tools/dfII/etc/cdsDefTechLib
+          DEFINE basic         /opt/IC617/tools/dfII/etc/cdslib/basic
+          DEFINE analogLib     /opt/IC617/tools/dfII/etc/cdslib/artist/analogLib
+          DEFINE smic18mmrf    /root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf
+          DEFINE microled_cells ./microled_cells
+LAUNCHER_CHECK: PASS
+CADENCE_ENV_LOADED   PASS
+PROJECT_WORKDIR_CORRECT PASS (/root/microled_ai_project/cadence_work)
+CDS_LIB_FOUND        PASS /root/microled_ai_project/cadence_work/cds.lib
+DESKTOP_ENTRY_EXISTS  PASS /root/Desktop/Cadence-Virtuoso-MicroLED.desktop
+DESKTOP_ENTRY_EXECUTABLE PASS
+DESKTOP_FILE_VALIDATE PASS (no complaints)
+DESKTOP_EXEC_MATCHES_LAUNCHER PASS (/root/microled_ai_project/cadence_work/launch_virtuoso.sh)
+DESKTOP_ICON_PASS (/opt/IC617/share/cdssetup/icons/32x32/app-virtuoso.png)
+X_SOCKETS             X0 
+PRE_EXISTING_VIRTUOSO none (never signalled by this script)
+SCH1_LAUNCHER_VERIFY_DONE
