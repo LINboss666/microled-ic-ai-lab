@@ -132,9 +132,13 @@ COUNTS_UNCHANGED` 全 PASS（未移器件、未改导线、未重排、5 个 sol
 - `test:` 参数完整性闸 + 7 例单元测试 + `AGENTS.md` 第 27 条 + `reports/lessons_learned/`
 
 SHA：`57eed38`（fix）+ `c68dcfe`（test），分支 `feature/c2mos-virtuoso-schematic`。
-推送状态：**PUSH_PENDING_NETWORK** —— 3 次 `git ls-remote` 尝试分别 `Could not connect to server` 与
-`Recv failure: Connection was reset`，同一时刻 `gh api` 正常（`visibility=public`），即已知的 git HTTP/2
-传输问题；只对当次命令加 `-c http.version=HTTP/1.1`，未改任何全局配置，未使用 --force，未 merge main。
+推送状态：**LOCAL_REMOTE_PARITY: PASS**。第一次 3 次尝试连不上（`Could not connect to server` /
+`Recv failure: Connection was reset`）而同一时刻 `gh api` 正常，即已知的 git HTTP/2 传输问题；
+只对当次命令加 `-c http.version=HTTP/1.1`，未改任何全局配置。网络恢复后
+`git push -u origin feature/c2mos-virtuoso-schematic` 成功（`* [new branch]`，无 `--force`，未 merge main）。
+pre-push 走 `--mode history`：`54 commits / 756 objects`，四项计数全 0，`SAFETY_GATE: PASS`。
+推送后分别回读：`origin/feature/c2mos-virtuoso-schematic = d4e9a76…` = 本地 HEAD；
+`origin/main = 23e471c…` = 本地 main（未动）。
 
 闸：`python scripts/precommit_safety_check.py --mode staged` → `PDK_TRACKED_FILES = 0`、
 `CREDENTIAL_TRACKED_FILES = 0`、`PRIVATE_KEYS_TRACKED_FILES = 0`、`VENDOR_MODEL_TRACKED_FILES = 0`、
