@@ -1,0 +1,5 @@
+subckt data_bias_ref (VBIAS_SHARED VSS)
+  parameters VBIAS_SHARED output
+  parameters VSS inputOutput
+  Mref (VBIAS_SHARED VBIAS_SHARED VSS VSS) n33 l=2e-6 w=2e-5
+ends data_bias_ref

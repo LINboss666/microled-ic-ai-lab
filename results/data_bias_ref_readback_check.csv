@@ -1,0 +1,2 @@
+instance_name,master,model,raw_L,raw_W,raw_finger_width,raw_fingers,raw_multiplier,cdf_L,cdf_W,resolved_L_m,resolved_effective_W_m,golden_L_m,golden_W_m,L_match,W_match,verdict
+Mref,smic18mmrf/n33:symbol,n33,2u,20u,20u,1,1,2u,20u,2e-06,2e-05,2e-06,2e-05,yes,yes,PASS

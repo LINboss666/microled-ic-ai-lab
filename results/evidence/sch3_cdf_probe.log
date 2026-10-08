@@ -1,0 +1,270 @@
+\# Program start time UTC 2026.10.08 16:49:48.967
+\# Local time Friday 9 October 2026, 12:49 am
+\o Program:		@(#)$CDS: virtuoso version 6.1.7-64b 11/09/2015 12:45 (sjfnl165) $
+\o Hierarchy:		/opt/IC617/tools.lnx86/dfII/
+\o Sub version:		sub-version  IC6.1.7-64b.78  (64-bit addresses)
+\# Command line:	/opt/IC617/tools/dfII/bin/64bit/virtuoso -nograph -log /root/microled_ai_project/cadence_work/logs/sch_nograph_20261009_004945.log
+\# Host name (type):	work-eda (x86_64)
+\# Operating system:	Linux 2.6.32-431.el6.x86_64 #1 SMP Sun Nov 10 22:19:54 EST 2013
+\# Linux /etc/issue:	Red Hat Enterprise Linux Server release 6.5 (Santiago)
+\# Linux /etc/issue:	Kernel \r on an \m
+\# X display name (WxH):	work-eda:80 (1024x868)
+\# Available geometry:			TL(0:0) BR(1023:867)
+\# X server:			RealVNC Ltd (VNC nograph server, PID 66689)
+\# Depth of Visual (Root):	16 (16)
+\# Number of Planes Used:	16
+\# X version:		11.0 (vendor release 3370)
+\# X resource pool:	base 0x800000, mask 0x3fffff (4194303), shift 0
+\# 			current id 0x0, current max 0x3ffffa (4194298)
+\# Max data seg size:	     unlimited
+\# Max process size:	     unlimited
+\# Initial sbrk value:	        367 MB
+\# Available memory:	      8,067 MB
+\# System memory:	     11,866 MB
+\# Maximum memory size:	     11,579 MB
+\# Max mem available:	      8,147 MB
+\# Initial memory used:	         80 MB
+\#        process size:	        873 MB
+\# Qt version:		4.8.5
+\# Window Manager:	other
+\# User Name:		root
+\o Working Directory:	work-eda:/root/microled_ai_project/cadence_work
+\# Process Id:		66568
+\o 
+\o COPYRIGHT © 1992-2015  CADENCE DESIGN SYSTEMS INC.  ALL RIGHTS RESERVED.
+\o           © 1992-2015  UNIX SYSTEMS Laboratories INC.,
+\o                          Reproduced with permission.
+\o 
+\o This Cadence Design Systems program and online documentation are
+\o proprietary/confidential information and may be disclosed/used only
+\o as authorized in a license agreement controlling such use and disclosure.
+\o 
+\o           RESTRICTED RIGHTS NOTICE (SHORT FORM)
+\o Use/reproduction/disclosure is subject to restriction
+\o set forth at FAR 1252.227-19 or its equivalent.
+\o Loading geView.cxt 
+\o Loading menuBuilder.cxt 
+\o Loading schView.cxt 
+\o Loading selectSv.cxt 
+\o Loading wireEdit.cxt 
+\o Loading pte2.cxt 
+\o Loading xlUI.cxt 
+\o Loading auCore.cxt 
+\o Loading vhdl.cxt 
+\o Loading seismic.cxt 
+\o Loading ci.cxt 
+\o Loading ams.cxt 
+\o Virtuoso Framework License (111) was checked out successfully. Total checkout time was 0.03s.
+\o END OF SITE CUSTOMIZATION
+\o Loading $HOME/.cdsinit init file from the site init file.
+\o S3-BEGIN
+\o Loading smic18mmrf/libInit.il ...
+\o 	Loading smic18mmrf/loadCxt.ile ... done!
+\o 	Loading context 'smic18mmrf' from library 'smic18mmrf' ... done!
+\o 	Loading context 'pdkUtils' from library 'smic18mmrf' ... done!
+\o 	Loading smic18mmrf/display.drf ... done!
+\o 	Loading smic18mmrf/libInitCktPro.il ... done!
+\o 	Loading smic18mmrf/libInitCustomExit.il ... Loading libInitCustomExit.il for smic18mmrf
+\o Loading oasis.cxt 
+\o Loading analog.cxt 
+\o Loading asimenv.cxt 
+\o Loading spectrei.cxt 
+\o Loading devCheck.cxt 
+\o Loading relXpert.cxt 
+\o Loading hspiceD.cxt 
+\o Loading spectreinl.cxt 
+\o Loading UltraSim.cxt 
+\o Loading msgHandler.cxt 
+\o Loading AMSOSS.cxt 
+\o Loading AMS.cxt 
+\o done!
+\o Loaded smic18mmrf/libInit.il successfully!
+\o Loading smic skill utility
+\o /root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../SMIC18MMRF_skillUtility/batchSetCDF.ile
+\o /root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../SMIC18MMRF_skillUtility/libNumcheck.ile
+\o Loading emxskill
+\o file="/license.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/license.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/license.ils
+\o file="/continuum.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuum.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuum.ils
+\o file="/continuumgui.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuumgui.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuumgui.ils
+\o file="/callbacks.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/callbacks.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/callbacks.ils
+\o file="/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils
+\o file="/../models/diff_ind_rf_psub_18MTE_scalable.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_rf_psub_18MTE_scalable.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_rf_psub_18MTE_scalable.ils
+\o file="/../models/ind_rf_psub_scalable.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/ind_rf_psub_scalable.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/ind_rf_psub_scalable.ils
+\o S3-OBJ "n33" dd=dd:0x1a1381e8 sym=db:0x172ce29a base=cdf:0x0x20ec7098 eff=cdf:0x0x20ec7070
+\o S3-VIEWS "n33" nil
+\o S3-TERMCOUNT "n33" 4
+\o S3-TERM "n33" "D" dir="inputOutput"
+\o S3-TERM "n33" "G" dir="inputOutput"
+\o S3-TERM "n33" "B" dir="inputOutput"
+\o S3-TERM "n33" "S" dir="inputOutput"
+\o S3P "n33" "BASE" "l" found="yes" type="baseCellData" units="lengthMetric" default=nil value="350n" form=nil prompt="Length"
+\o S3P "n33" "BASE" "w" found="yes" type="baseCellData" units="lengthMetric" default=nil value="350n" form=nil prompt="Total Width"
+\o S3P "n33" "BASE" "fw" found="yes" type="baseCellData" units="lengthMetric" default=nil value="350n" form=nil prompt="Finger Width"
+\o S3P "n33" "BASE" "wf" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33" "BASE" "m" found="yes" type="baseCellData" units=nil default=nil value="1" form=nil prompt="Multiplier"
+\o S3P "n33" "BASE" "mult" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33" "BASE" "n" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33" "BASE" "nf" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33" "BASE" "fingers" found="yes" type="baseCellData" units=nil default=nil value="1" form=nil prompt="Fingers"
+\o S3P "n33" "BASE" "area" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33" "BASE" "as" found="yes" type="baseCellData" units=nil default=nil value="211.4f" form=nil prompt="Source diffusion area"
+\o S3P "n33" "BASE" "ad" found="yes" type="baseCellData" units=nil default=nil value="211.4f" form=nil prompt="Drain diffusion area"
+\o S3P "n33" "BASE" "ps" found="yes" type="baseCellData" units=nil default=nil value="1.88u" form=nil prompt="Source diffusion periphery"
+\o S3P "n33" "BASE" "pd" found="yes" type="baseCellData" units=nil default=nil value="1.88u" form=nil prompt="Drain diffusion periphery"
+\o S3P "n33" "BASE" "nws" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33" "BASE" "model" found="yes" type="baseCellData" units=nil default=nil value="n33" form=nil prompt="Model Name"
+\o S3P "n33" "BASE" "bulk" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33" "BASE" "b" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33" "BASE" "sub" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33" "BASE" "dnw" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33" "BASE" "wnw" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33" "BASE" "rmod" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33" "BASE" "length" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33" "BASE" "width" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33" "BASE" "multiplier" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33" "BASE" "temperature" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33" "BASE" "mtc" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33" "BASE" "dtc" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33" "EFFECTIVE" "l" found="yes" type="cellData" units="lengthMetric" default=nil value="350n" form=nil prompt="Length"
+\o S3P "n33" "EFFECTIVE" "w" found="yes" type="cellData" units="lengthMetric" default=nil value="350n" form=nil prompt="Total Width"
+\o S3P "n33" "EFFECTIVE" "fw" found="yes" type="cellData" units="lengthMetric" default=nil value="350n" form=nil prompt="Finger Width"
+\o S3P "n33" "EFFECTIVE" "m" found="yes" type="cellData" units=nil default=nil value="1" form=nil prompt="Multiplier"
+\o S3P "n33" "EFFECTIVE" "fingers" found="yes" type="cellData" units=nil default=nil value="1" form=nil prompt="Fingers"
+\o S3P "n33" "EFFECTIVE" "model" found="yes" type="cellData" units=nil default=nil value="n33" form=nil prompt="Model Name"
+\o S3-OBJ "n33_dnw_4t_ckt" dd=dd:0x1a138340 sym=db:0x172ce21a base=cdf:0x0x20ec70e8 eff=cdf:0x0x20ec70c0
+\o S3-VIEWS "n33_dnw_4t_ckt" nil
+\o S3-TERMCOUNT "n33_dnw_4t_ckt" 4
+\o S3-TERM "n33_dnw_4t_ckt" "D" dir="inputOutput"
+\o S3-TERM "n33_dnw_4t_ckt" "G" dir="inputOutput"
+\o S3-TERM "n33_dnw_4t_ckt" "B" dir="inputOutput"
+\o S3-TERM "n33_dnw_4t_ckt" "S" dir="inputOutput"
+\o S3P "n33_dnw_4t_ckt" "BASE" "l" found="yes" type="baseCellData" units="lengthMetric" default=nil value="350n" form=nil prompt="Length"
+\o S3P "n33_dnw_4t_ckt" "BASE" "w" found="yes" type="baseCellData" units="lengthMetric" default=nil value="350n" form=nil prompt="Total Width"
+\o S3P "n33_dnw_4t_ckt" "BASE" "fw" found="yes" type="baseCellData" units="lengthMetric" default=nil value="350n" form=nil prompt="Finger Width"
+\o S3P "n33_dnw_4t_ckt" "BASE" "wf" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_dnw_4t_ckt" "BASE" "m" found="yes" type="baseCellData" units=nil default=nil value="1" form=nil prompt="Multiplier"
+\o S3P "n33_dnw_4t_ckt" "BASE" "mult" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_dnw_4t_ckt" "BASE" "n" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_dnw_4t_ckt" "BASE" "nf" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_dnw_4t_ckt" "BASE" "fingers" found="yes" type="baseCellData" units=nil default=nil value="1" form=nil prompt="Fingers"
+\o S3P "n33_dnw_4t_ckt" "BASE" "area" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_dnw_4t_ckt" "BASE" "as" found="yes" type="baseCellData" units=nil default=nil value="211.4f" form=nil prompt="Source diffusion area"
+\o S3P "n33_dnw_4t_ckt" "BASE" "ad" found="yes" type="baseCellData" units=nil default=nil value="211.4f" form=nil prompt="Drain diffusion area"
+\o S3P "n33_dnw_4t_ckt" "BASE" "ps" found="yes" type="baseCellData" units=nil default=nil value="1.88u" form=nil prompt="Source diffusion periphery"
+\o S3P "n33_dnw_4t_ckt" "BASE" "pd" found="yes" type="baseCellData" units=nil default=nil value="1.88u" form=nil prompt="Drain diffusion periphery"
+\o S3P "n33_dnw_4t_ckt" "BASE" "nws" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_dnw_4t_ckt" "BASE" "model" found="yes" type="baseCellData" units=nil default=nil value="n33_dnw_4t_ckt" form=nil prompt="Model Name"
+\o S3P "n33_dnw_4t_ckt" "BASE" "bulk" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_dnw_4t_ckt" "BASE" "b" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_dnw_4t_ckt" "BASE" "sub" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_dnw_4t_ckt" "BASE" "dnw" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_dnw_4t_ckt" "BASE" "wnw" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_dnw_4t_ckt" "BASE" "rmod" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_dnw_4t_ckt" "BASE" "length" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_dnw_4t_ckt" "BASE" "width" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_dnw_4t_ckt" "BASE" "multiplier" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_dnw_4t_ckt" "BASE" "temperature" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_dnw_4t_ckt" "BASE" "mtc" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_dnw_4t_ckt" "BASE" "dtc" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_dnw_4t_ckt" "EFFECTIVE" "l" found="yes" type="cellData" units="lengthMetric" default=nil value="350n" form=nil prompt="Length"
+\o S3P "n33_dnw_4t_ckt" "EFFECTIVE" "w" found="yes" type="cellData" units="lengthMetric" default=nil value="350n" form=nil prompt="Total Width"
+\o S3P "n33_dnw_4t_ckt" "EFFECTIVE" "fw" found="yes" type="cellData" units="lengthMetric" default=nil value="350n" form=nil prompt="Finger Width"
+\o S3P "n33_dnw_4t_ckt" "EFFECTIVE" "m" found="yes" type="cellData" units=nil default=nil value="1" form=nil prompt="Multiplier"
+\o S3P "n33_dnw_4t_ckt" "EFFECTIVE" "fingers" found="yes" type="cellData" units=nil default=nil value="1" form=nil prompt="Fingers"
+\o S3P "n33_dnw_4t_ckt" "EFFECTIVE" "model" found="yes" type="cellData" units=nil default=nil value="n33_dnw_4t_ckt" form=nil prompt="Model Name"
+\o S3-OBJ "n33_ckt" dd=dd:0x1a138478 sym=db:0x172cef9a base=cdf:0x0x20ec7138 eff=cdf:0x0x20ec7110
+\o S3-VIEWS "n33_ckt" nil
+\o S3-TERMCOUNT "n33_ckt" 4
+\o S3-TERM "n33_ckt" "D" dir="inputOutput"
+\o S3-TERM "n33_ckt" "G" dir="inputOutput"
+\o S3-TERM "n33_ckt" "B" dir="inputOutput"
+\o S3-TERM "n33_ckt" "S" dir="inputOutput"
+\o S3P "n33_ckt" "BASE" "l" found="yes" type="baseCellData" units="lengthMetric" default=nil value="350n" form=nil prompt="Length"
+\o S3P "n33_ckt" "BASE" "w" found="yes" type="baseCellData" units="lengthMetric" default=nil value="350n" form=nil prompt="Total Width"
+\o S3P "n33_ckt" "BASE" "fw" found="yes" type="baseCellData" units="lengthMetric" default=nil value="350n" form=nil prompt="Finger Width"
+\o S3P "n33_ckt" "BASE" "wf" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_ckt" "BASE" "m" found="yes" type="baseCellData" units=nil default=nil value="1" form=nil prompt="Multiplier"
+\o S3P "n33_ckt" "BASE" "mult" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_ckt" "BASE" "n" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_ckt" "BASE" "nf" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_ckt" "BASE" "fingers" found="yes" type="baseCellData" units=nil default=nil value="1" form=nil prompt="Fingers"
+\o S3P "n33_ckt" "BASE" "area" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_ckt" "BASE" "as" found="yes" type="baseCellData" units=nil default=nil value="211.4f" form=nil prompt="Source diffusion area"
+\o S3P "n33_ckt" "BASE" "ad" found="yes" type="baseCellData" units=nil default=nil value="211.4f" form=nil prompt="Drain diffusion area"
+\o S3P "n33_ckt" "BASE" "ps" found="yes" type="baseCellData" units=nil default=nil value="1.88u" form=nil prompt="Source diffusion periphery"
+\o S3P "n33_ckt" "BASE" "pd" found="yes" type="baseCellData" units=nil default=nil value="1.88u" form=nil prompt="Drain diffusion periphery"
+\o S3P "n33_ckt" "BASE" "nws" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_ckt" "BASE" "model" found="yes" type="baseCellData" units=nil default=nil value="n33_ckt" form=nil prompt="Model Name"
+\o S3P "n33_ckt" "BASE" "bulk" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_ckt" "BASE" "b" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_ckt" "BASE" "sub" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_ckt" "BASE" "dnw" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_ckt" "BASE" "wnw" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_ckt" "BASE" "rmod" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_ckt" "BASE" "length" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_ckt" "BASE" "width" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_ckt" "BASE" "multiplier" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_ckt" "BASE" "temperature" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_ckt" "BASE" "mtc" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_ckt" "BASE" "dtc" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n33_ckt" "EFFECTIVE" "l" found="yes" type="cellData" units="lengthMetric" default=nil value="350n" form=nil prompt="Length"
+\o S3P "n33_ckt" "EFFECTIVE" "w" found="yes" type="cellData" units="lengthMetric" default=nil value="350n" form=nil prompt="Total Width"
+\o S3P "n33_ckt" "EFFECTIVE" "fw" found="yes" type="cellData" units="lengthMetric" default=nil value="350n" form=nil prompt="Finger Width"
+\o S3P "n33_ckt" "EFFECTIVE" "m" found="yes" type="cellData" units=nil default=nil value="1" form=nil prompt="Multiplier"
+\o S3P "n33_ckt" "EFFECTIVE" "fingers" found="yes" type="cellData" units=nil default=nil value="1" form=nil prompt="Fingers"
+\o S3P "n33_ckt" "EFFECTIVE" "model" found="yes" type="cellData" units=nil default=nil value="n33_ckt" form=nil prompt="Model Name"
+\o S3-OBJ "n18" dd=dd:0x1a1385a0 sym=db:0x172ce29a base=cdf:0x0x20ec7188 eff=cdf:0x0x20ec7160
+\o S3-VIEWS "n18" nil
+\o S3-TERMCOUNT "n18" 4
+\o S3-TERM "n18" "S" dir="inputOutput"
+\o S3-TERM "n18" "G" dir="inputOutput"
+\o S3-TERM "n18" "B" dir="inputOutput"
+\o S3-TERM "n18" "D" dir="inputOutput"
+\o S3P "n18" "BASE" "l" found="yes" type="baseCellData" units="lengthMetric" default=nil value="180n" form=nil prompt="Length"
+\o S3P "n18" "BASE" "w" found="yes" type="baseCellData" units="lengthMetric" default=nil value="220n" form=nil prompt="Total Width"
+\o S3P "n18" "BASE" "fw" found="yes" type="baseCellData" units="lengthMetric" default=nil value="220n" form=nil prompt="Finger Width"
+\o S3P "n18" "BASE" "wf" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n18" "BASE" "m" found="yes" type="baseCellData" units=nil default=nil value="1" form=nil prompt="Multiplier"
+\o S3P "n18" "BASE" "mult" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n18" "BASE" "n" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n18" "BASE" "nf" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n18" "BASE" "fingers" found="yes" type="baseCellData" units=nil default=nil value="1" form=nil prompt="Fingers"
+\o S3P "n18" "BASE" "area" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n18" "BASE" "as" found="yes" type="baseCellData" units=nil default=nil value="198.4f" form=nil prompt="Source diffusion area"
+\o S3P "n18" "BASE" "ad" found="yes" type="baseCellData" units=nil default=nil value="198.4f" form=nil prompt="Drain diffusion area"
+\o S3P "n18" "BASE" "ps" found="yes" type="baseCellData" units=nil default=nil value="1.88u" form=nil prompt="Source diffusion periphery"
+\o S3P "n18" "BASE" "pd" found="yes" type="baseCellData" units=nil default=nil value="1.88u" form=nil prompt="Drain diffusion periphery"
+\o S3P "n18" "BASE" "nws" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n18" "BASE" "model" found="yes" type="baseCellData" units=nil default=nil value="n18" form=nil prompt="Model Name"
+\o S3P "n18" "BASE" "bulk" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n18" "BASE" "b" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n18" "BASE" "sub" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n18" "BASE" "dnw" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n18" "BASE" "wnw" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n18" "BASE" "rmod" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n18" "BASE" "length" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n18" "BASE" "width" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n18" "BASE" "multiplier" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n18" "BASE" "temperature" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n18" "BASE" "mtc" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n18" "BASE" "dtc" found="no" type=nil units=nil default=nil value=nil form=nil prompt=nil
+\o S3P "n18" "EFFECTIVE" "l" found="yes" type="cellData" units="lengthMetric" default=nil value="180n" form=nil prompt="Length"
+\o S3P "n18" "EFFECTIVE" "w" found="yes" type="cellData" units="lengthMetric" default=nil value="220n" form=nil prompt="Total Width"
+\o S3P "n18" "EFFECTIVE" "fw" found="yes" type="cellData" units="lengthMetric" default=nil value="220n" form=nil prompt="Finger Width"
+\o S3P "n18" "EFFECTIVE" "m" found="yes" type="cellData" units=nil default=nil value="1" form=nil prompt="Multiplier"
+\o S3P "n18" "EFFECTIVE" "fingers" found="yes" type="cellData" units=nil default=nil value="1" form=nil prompt="Fingers"
+\o S3P "n18" "EFFECTIVE" "model" found="yes" type="cellData" units=nil default=nil value="n18" form=nil prompt="Model Name"
+\o S3-PARSE "2u" 2e-06
+\o S3-PARSE "2e-06" 2e-06
+\o S3-PARSE "20u" 2e-05
+\o S3-PARSE "5u" 5e-06
+\o S3-PARSE "350n" 3.5e-07
+\o S3-PARSE "180n" 1.8e-07
+\o S3-PARSE "220n" 2.2e-07
+\o S3-PARSE "0.35u" 3.5e-07
+\o S3-PARSE "ln" "ln"
+\o S3CDF_DONE
+\o 
+\o Loading lce.cxt 
+\# Memory report: on exit            329 MB, process size 1,151 MB at UTC 2026.10.08 16:49:49.989
+\# Memory report: peak usage         329 MB, process size 1,151 MB

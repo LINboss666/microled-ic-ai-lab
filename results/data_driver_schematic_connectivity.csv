@@ -1,0 +1,6 @@
+instance,cell,oa_master,golden_master,D,G,S,B,expected_D,expected_G,expected_S,expected_B,terminal_match
+Mbleed_local,data_sink_1ch,smic18mmrf/n33:symbol,n33,vbias_ch,DATA_EN_B,VSS,VSS,vbias_ch,DATA_EN_B,VSS,VSS,yes
+Mcas,data_sink_1ch,smic18mmrf/n33:symbol,n33,DATA_OUT,VCAS,node_m,VSS,DATA_OUT,VCAS,node_m,VSS,yes
+Mout,data_sink_1ch,smic18mmrf/n33:symbol,n33,node_m,vbias_ch,VSS,VSS,node_m,vbias_ch,VSS,VSS,yes
+Mpass_local,data_sink_1ch,smic18mmrf/n33_dnw_4t_ckt:symbol,n33_dnw_4t_ckt,VBIAS_SHARED,DATA_EN,vbias_ch,vbias_ch,VBIAS_SHARED,DATA_EN,vbias_ch,vbias_ch,yes
+Mref,data_bias_ref,smic18mmrf/n33:symbol,n33,VBIAS_SHARED,VBIAS_SHARED,VSS,VSS,VBIAS_SHARED,VBIAS_SHARED,VSS,VSS,yes

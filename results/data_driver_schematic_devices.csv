@@ -1,0 +1,6 @@
+cell,instance_name,master,model,raw_L,raw_W,raw_finger_width,raw_fingers,raw_multiplier,cdf_L,cdf_W,resolved_L_m,resolved_effective_W_m,golden_L_m,golden_W_m,L_match,W_match,verdict
+data_sink_1ch,Mbleed_local,smic18mmrf/n33:symbol,n33,2u,2u,2u,1,1,2u,2u,2e-06,2e-06,2e-06,2e-06,yes,yes,PASS
+data_sink_1ch,Mcas,smic18mmrf/n33:symbol,n33,2u,20u,20u,1,1,2u,20u,2e-06,2e-05,2e-06,2e-05,yes,yes,PASS
+data_sink_1ch,Mout,smic18mmrf/n33:symbol,n33,2u,20u,20u,1,1,2u,20u,2e-06,2e-05,2e-06,2e-05,yes,yes,PASS
+data_sink_1ch,Mpass_local,smic18mmrf/n33_dnw_4t_ckt:symbol,n33_dnw_4t_ckt,2u,5u,5u,1,1,2u,5u,2e-06,5e-06,2e-06,5e-06,yes,yes,PASS
+data_bias_ref,Mref,smic18mmrf/n33:symbol,n33,2u,20u,20u,1,1,2u,20u,2e-06,2e-05,2e-06,2e-05,yes,yes,PASS

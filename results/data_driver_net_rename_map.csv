@@ -1,0 +1,9 @@
+golden_net,oa_name,kind,cells
+data_en,DATA_EN,EXTERNAL_PORT,data_sink_1ch
+data_en_b,DATA_EN_B,EXTERNAL_PORT,data_sink_1ch
+data_out,DATA_OUT,EXTERNAL_PORT,data_sink_1ch
+vbias,VBIAS_SHARED,EXTERNAL_PORT,data_bias_ref+data_sink_1ch
+vcas,VCAS,EXTERNAL_PORT,data_sink_1ch
+vss,VSS,EXTERNAL_PORT,data_bias_ref+data_sink_1ch
+node_m,node_m,INTERNAL_NET,data_sink_1ch
+vbias_ch,vbias_ch,INTERNAL_NET,data_sink_1ch

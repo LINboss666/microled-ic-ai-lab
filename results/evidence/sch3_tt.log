@@ -1,0 +1,126 @@
+
+================ CORNER tt
+OA_NETLIST_EXPORT: PASS
+TESTBENCH_PREFLIGHT: PASS (flat_tt_on)
+SIM flat_tt_on: rc=0 errors=0 warnings=0
+       PROBE_BURDEN      : max |V(vsw) - V(data_out)| = 0.000e+00 V (must be 0)
+       vbias_ch        : 0.884261 .. 0.884261 V   worst (VBIAS_SHARED - it) = 0.000000 V, worst overshoot = -0.000000 V
+    == SCH3_flat_tt_on  points=166  VOUT_max=3.3000 V  IOUT@max=14.960843 uA (err -0.261 %)
+       COMPLIANCE_1PCT : 0.4600 V
+       NOMINAL VOUT=1.2000 V: IOUT=14.931906 uA  err=-0.454 %
+    DATA_DRIVER_DC: OK
+OA_NETLIST_EXPORT: PASS
+TESTBENCH_PREFLIGHT: PASS (flat_tt_off)
+SIM flat_tt_off: rc=0 errors=0 warnings=0
+       PROBE_BURDEN      : max |V(vsw) - V(data_out)| = 0.000e+00 V (must be 0)
+       vbias_ch        : 0.000000 .. 0.000000 V   worst (VBIAS_SHARED - it) = 0.884277 V, worst overshoot = -0.884261 V
+    == SCH3_flat_tt_off  points=166  VOUT_max=3.3000 V  IOUT@max=0.000005 uA (err -100.000 %)
+       COMPLIANCE_1PCT : NOT_FOUND
+       NOMINAL VOUT=1.2000 V: IOUT=0.000001 uA  err=-100.000 %
+    DATA_DRIVER_DC: OK
+SAVE_LIST_ADJUSTED: save vdd vss vbias vsw data_out node_m vbias_ch data_en data_en_b vcas -> save vdd vss vbias vsw data_out data_en data_en_b vcas
+OA_NETLIST_EXPORT: PASS
+PREFLIGHT_FAIL hier_tt_on
+STATIC_FAIL instance Xc (subckt data_sink_1ch) exposes no vdd port
+STATIC_FAIL instance Xc (subckt data_sink_1ch) exposes no vss port
+STATIC_FAIL instance Xb (subckt data_bias_ref) exposes no vdd port
+STATIC_FAIL instance Xb (subckt data_bias_ref) exposes no vss port
+TESTBENCH_PREFLIGHT: FAIL
+TESTBENCH_PREFLIGHT: PASS (flat_tt_ch0)
+SIM flat_tt_ch0: rc=0 errors=0 warnings=0
+       TURN_ON_SETTLING  : 2.727e-08 s   (worst of 4, 0 never settled)
+       TURN_OFF          : 1.008e-08 s   (worst of 4, 0 never met the band)
+       ON_RIPPLE         : 0.000000 uA peak-to-peak worst (spread of the settled tail; could be circuit ripple or solver alternation -- RINGING below separates them)
+       RINGING           : ADJACENT_POINT_ALTERNATION: NO   (worst alternation 0.000000 uA p2p, sign-flip ratio 0.728, 2660 samples over 4 ON windows; YES needs p2p >= 0.0150 uA and flips >= 0.70. Step-locked by construction, so a real ripple survives changing maxstep while ringing does not.)
+       VBIAS_SHARED      : 0.805416 .. 0.887491 V   (worst deviation 0.078846 V = 4.3803 % of 1.8 V)
+       VBIAS_CH : -0.000457 .. 0.884428 V   (the channel's own mirror gate: ON must reach VBIAS_SHARED, OFF must reach 0)
+       GATE_PASS_ERROR   : worst (VBIAS_SHARED - vbias_ch) = 0.884261 V   (a pass device that cannot equal its input leaves the mirror short)
+    DATA_DRIVER_TRAN: OK
+TESTBENCH_PREFLIGHT: PASS (flat_tt_victim)
+SIM flat_tt_victim: rc=0 errors=0 warnings=0
+PREFLIGHT_FAIL hier_tt_ch0
+STATIC_FAIL instance Xc (subckt data_sink_1ch) exposes no vdd port
+STATIC_FAIL instance Xc (subckt data_sink_1ch) exposes no vss port
+STATIC_FAIL instance Xc1 (subckt data_sink_1ch) exposes no vdd port
+STATIC_FAIL instance Xc1 (subckt data_sink_1ch) exposes no vss port
+STATIC_FAIL instance Xb (subckt data_bias_ref) exposes no vdd port
+
+===== two-channel static combinations (accepted tt decks, OA devices) =====
+TESTBENCH_PREFLIGHT: PASS (flat_tt_e00_ch0)
+SIM flat_tt_e00_ch0: rc=0 errors=0 warnings=0
+       I_BASELINE        : 0.000001 uA   (median of the observed window)
+       PEAK_CROSSTALK_ERROR   : 0.000000 uA above baseline = 0.000 % of target
+       CHARGE_ERROR_PERCENT   : 0.0000 %  (|Q_error| / (15uA x 6.745e-07 s))
+       GLITCH_DURATION >+/- 1% : 0.0000e+00 s (0.00 % of the observed window)
+       VBIAS_SHARED      : 0.884261 .. 0.884261 V   (spread 0.000000 V)
+       vbias_ch          : 0.000000 .. 0.000000 V   (spread 0.000000 V)
+       RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000000 uA p2p, sign-flip ratio 0.737 over 676 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+TESTBENCH_PREFLIGHT: PASS (flat_tt_e00_ch1)
+SIM flat_tt_e00_ch1: rc=0 errors=0 warnings=0
+       I_BASELINE        : 0.000001 uA   (median of the observed window)
+       PEAK_CROSSTALK_ERROR   : 0.000000 uA above baseline = 0.000 % of target
+       CHARGE_ERROR_PERCENT   : 0.0000 %  (|Q_error| / (15uA x 6.745e-07 s))
+       GLITCH_DURATION >+/- 1% : 0.0000e+00 s (0.00 % of the observed window)
+       VBIAS_SHARED      : 0.884261 .. 0.884261 V   (spread 0.000000 V)
+       vbias_ch1         : 0.000000 .. 0.000000 V   (spread 0.000000 V)
+       RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000000 uA p2p, sign-flip ratio 0.730 over 676 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+TESTBENCH_PREFLIGHT: PASS (flat_tt_e01_ch0)
+SIM flat_tt_e01_ch0: rc=0 errors=0 warnings=0
+       I_BASELINE        : 0.000001 uA   (median of the observed window)
+       PEAK_CROSSTALK_ERROR   : 0.000000 uA above baseline = 0.000 % of target
+       CHARGE_ERROR_PERCENT   : 0.0000 %  (|Q_error| / (15uA x 6.745e-07 s))
+       GLITCH_DURATION >+/- 1% : 0.0000e+00 s (0.00 % of the observed window)
+       VBIAS_SHARED      : 0.884261 .. 0.884261 V   (spread 0.000000 V)
+       vbias_ch          : 0.000000 .. 0.000000 V   (spread 0.000000 V)
+       RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000000 uA p2p, sign-flip ratio 0.724 over 676 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+TESTBENCH_PREFLIGHT: PASS (flat_tt_e01_ch1)
+SIM flat_tt_e01_ch1: rc=0 errors=0 warnings=0
+       I_BASELINE        : 14.931906 uA   (median of the observed window)
+       PEAK_CROSSTALK_ERROR   : 0.000000 uA above baseline = 0.000 % of target
+       CHARGE_ERROR_PERCENT   : 0.0000 %  (|Q_error| / (15uA x 6.745e-07 s))
+       GLITCH_DURATION >+/- 1% : 0.0000e+00 s (0.00 % of the observed window)
+       VBIAS_SHARED      : 0.884261 .. 0.884261 V   (spread 0.000000 V)
+       vbias_ch1         : 0.884261 .. 0.884261 V   (spread 0.000000 V)
+       RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000000 uA p2p, sign-flip ratio 0.991 over 676 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+TESTBENCH_PREFLIGHT: PASS (flat_tt_e10_ch0)
+SIM flat_tt_e10_ch0: rc=0 errors=0 warnings=0
+       I_BASELINE        : 14.931906 uA   (median of the observed window)
+       PEAK_CROSSTALK_ERROR   : 0.000000 uA above baseline = 0.000 % of target
+       CHARGE_ERROR_PERCENT   : 0.0000 %  (|Q_error| / (15uA x 6.745e-07 s))
+       GLITCH_DURATION >+/- 1% : 0.0000e+00 s (0.00 % of the observed window)
+       VBIAS_SHARED      : 0.884261 .. 0.884261 V   (spread 0.000000 V)
+       vbias_ch          : 0.884261 .. 0.884261 V   (spread 0.000000 V)
+       RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000000 uA p2p, sign-flip ratio 0.816 over 676 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+TESTBENCH_PREFLIGHT: PASS (flat_tt_e10_ch1)
+SIM flat_tt_e10_ch1: rc=0 errors=0 warnings=0
+       I_BASELINE        : 0.000001 uA   (median of the observed window)
+       PEAK_CROSSTALK_ERROR   : 0.000000 uA above baseline = 0.000 % of target
+       CHARGE_ERROR_PERCENT   : 0.0000 %  (|Q_error| / (15uA x 6.745e-07 s))
+       GLITCH_DURATION >+/- 1% : 0.0000e+00 s (0.00 % of the observed window)
+       VBIAS_SHARED      : 0.884261 .. 0.884261 V   (spread 0.000000 V)
+       vbias_ch1         : 0.000000 .. 0.000000 V   (spread 0.000000 V)
+       RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000000 uA p2p, sign-flip ratio 0.715 over 676 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+TESTBENCH_PREFLIGHT: PASS (flat_tt_e11_ch0)
+SIM flat_tt_e11_ch0: rc=0 errors=0 warnings=0
+       I_BASELINE        : 14.931906 uA   (median of the observed window)
+       PEAK_CROSSTALK_ERROR   : 0.000000 uA above baseline = 0.000 % of target
+       CHARGE_ERROR_PERCENT   : 0.0000 %  (|Q_error| / (15uA x 6.745e-07 s))
+       GLITCH_DURATION >+/- 1% : 0.0000e+00 s (0.00 % of the observed window)
+       VBIAS_SHARED      : 0.884261 .. 0.884261 V   (spread 0.000000 V)
+       vbias_ch          : 0.884261 .. 0.884261 V   (spread 0.000000 V)
+       RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000000 uA p2p, sign-flip ratio 0.877 over 676 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+TESTBENCH_PREFLIGHT: PASS (flat_tt_e11_ch1)
+SIM flat_tt_e11_ch1: rc=0 errors=0 warnings=0
+       I_BASELINE        : 14.931906 uA   (median of the observed window)
+       PEAK_CROSSTALK_ERROR   : 0.000000 uA above baseline = 0.000 % of target
+       CHARGE_ERROR_PERCENT   : 0.0000 %  (|Q_error| / (15uA x 6.745e-07 s))
+       GLITCH_DURATION >+/- 1% : 0.0000e+00 s (0.00 % of the observed window)
+       VBIAS_SHARED      : 0.884261 .. 0.884261 V   (spread 0.000000 V)
+       vbias_ch1         : 0.884261 .. 0.884261 V   (spread 0.000000 V)
+       RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000000 uA p2p, sign-flip ratio 0.877 over 676 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+
+results: /root/microled_ai_project/results/data_driver_schematic_dc.csv
+         /root/microled_ai_project/results/data_driver_schematic_transient.csv
+         /root/microled_ai_project/results/data_driver_schematic_xtalk.csv
+         /root/microled_ai_project/results/data_driver_schematic_static.csv
+SCH3_REGRESSION_RUNS_DONE corners=tt rc_total=1

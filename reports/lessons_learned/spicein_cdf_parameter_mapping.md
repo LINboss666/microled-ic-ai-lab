@@ -123,3 +123,56 @@ dbSave(cellView)   ; 不调用任何 CDF callback
 同一检查器对今后 Data Driver 的原理图导入同样适用：它的 golden CSV、回读日志、PDK 默认值、
 期望库名全是命令行参数，没有对 C²MOS 的特判；单元测试见
 `python scripts/test_sch_parameter_integrity_check.py`（7 例，含"合法等于默认值不得误杀"一例）。
+
+
+---
+
+## 6. SCH-3 复现（2026-10-09）：同一缺陷换到 3.3 V 器件族，且门的参数若照抄就会漏检
+
+Data Driver（`smic18mmrf/n33` 与深 N 阱 `n33_dnw_4t_ckt`）用同一条 spiceIn 路线导入后，
+修参前的只读回读（`results/evidence/sch3_readback_prefix.log`）出现与本文 §1 完全同形的状态：
+
+```
+raw_l="2e-06"  raw_w=ABSENT  raw_fw=ABSENT  raw_fingers=ABSENT  raw_mult=ABSENT  simW="2e-05"
+cdf_l="2u"     cdf_w="350n"  cdf_fw="350n"  cdf_fingers="1"     cdf_mult="1"
+```
+
+三点新增认识，都是本轮实测，不是推断：
+
+1. **默认值随器件族变**：`n33` 与 `n33_dnw_4t_ckt` 的 CDF 默认是 `l=w=fw=350n`（`n18/p18` 是 180n/220n）。
+   如果把 SCH-2 的门参数 `--pdk-default-l 180n --pdk-default-w 220n` 直接复用到 3.3 V cell，
+   `DEFAULT_VALUE_FALLBACK_COUNT` 会一直是 0——本事故就换个器件名继续隐身。永久闸因此新增
+   `PDK_DEFAULT_DECLARATION_MISMATCH_COUNT`：回读日志带出 master 自己的 CDF 默认值
+   （`RD3-MPARAM` 行），与命令行声明不一致即失败；判定"是否落在默认"也优先用 OA 报出的族默认值。
+   新增单元测试 CASE9/CASE10 专门盯这两条。
+2. **CDF 会规范化参数字符串**：写入 `1e-06` 后 CDF 报回 `1u`。同一数值、不同字符串，
+   所以 raw 与 CDF 的一致性必须比**数值**而不是比文本；旧版按字符串比较会在合法状态下误报
+   `CDF_ERROR_COUNT`（CASE8 覆盖）。
+3. **宽度丢失与 spiceIn 是否写了表达式无关**：黄金网表里 `l/w` 本来就是数字（`l=2e-6 w=2e-5`），
+   导入后 `w/fw/m/fingers` 仍然 ABSENT。因此 §2 的根因不能表述成"设计变量没解析"，
+   准确表述是：**导入器把宽度写进 CDF 不认的 `simW`，CDF 认的字段从未被写**。
+
+修法与 SCH-2 相同（`dbDeletePropByName` + `dbCreateProp` 写数值到 `l/w/fw/m/fingers`，然后 `dbSave`，
+不调任何 callback），SCH-3 另加两条纪律：
+
+- 不再补写 `simW`（它不属于这些 master 的 CDF 参数字典）；
+- 写入 SKILL 自带结构守卫：cellview 里 master 属于 `smic18mmrf` 的实例数必须等于参数表行数，
+  不相等就拒绝写入（防止表少一只，那一只悄悄留在默认尺寸）。
+
+结果：`data_sink_1ch` 4 只 + `data_bias_ref` 1 只，MASTER/L/W 5/5，`CDF_EVALUATION_ERRORS: 0`，
+`TERMINAL_CONNECTIVITY_MATCH: 5/5`（DNW 的 D/G/S/B 按端子名绑定，Body 与本通道 Source 同网）。
+
+## 7. 附：`getd` 不能用来判断编辑器 API 是否可用
+
+本轮想给 §12 写"schCheck 在批处理里不存在"的旧结论时实测发现：
+
+```
+getd('schCheck)      => nil            # SCH-1/SCH-2 据此判定"不可用"，错
+errset(schCheck(cv)) => ((0 2))        # 实际可调用，返回 (errors warnings) 并打印具体警告
+errset(schCreate)    => nil            # schCreate / schCreateWire 确实不可用
+```
+
+同一份日志里，`data_sink_1ch` 报 0 error / 2 solder-dot warning，`c2mos_dff_1bit(_paramfix)` 各
+0 error / 5 warning——警告坐标与用户在 GUI 里看到的 5 条一致，说明这个 `schCheck` 就是编辑器那套检查。
+教训与本文 §3 的"计数器全 0 不等于验证通过"是同一类：**探测方法本身也要被验证**；
+探测 API 只能靠 `errset(<字面调用>)`，不能靠 `getd`/`funcall`（AGENTS 第 8、28 条）。

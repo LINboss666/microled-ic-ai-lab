@@ -1,0 +1,7 @@
+label,samples,on_windows,off_windows,longest_on_window_s,turn_on_settling_s,turn_off_s,peak_uA,off_leakage_uA,band_pct,on_windows_not_settled,iout_method,vbias_shared_min_v,vbias_shared_max_v,vbias_shared_dev_v,gate_net_min_v,gate_net_max_v,on_settled_min_uA,on_settled_max_uA,on_settled_worst_err_pct,on_ripple_p2p_uA,ring_alternation_p2p_uA,ring_flip_ratio,adjacent_point_alternation
+SCH3_flat_tt_ch0,8999,4,4,4.89187e-06,2.727e-08,1.008e-08,14.964847,0.000299,5.0,0,iprobe,0.805416,0.887491,0.078846,-0.000457,0.884428,14.931906,14.931906,0.4540,0.000000,0.000000,0.728,NO
+SCH3_flat_tt_base,8791,0,0,n/a,NOT_FOUND,NOT_FOUND,14.931906,n/a,5.0,0,iprobe,0.884261,0.884261,0.000000,0.884261,0.884261,n/a,n/a,n/a,n/a,n/a,n/a,NO
+SCH3_flat_ss_ch0,9002,4,4,4.89248e-06,3.654e-08,1.077e-08,14.905015,0.000306,5.0,0,iprobe,0.862478,0.955110,0.088791,-0.000438,0.951269,14.899428,14.899428,0.6705,0.000000,0.000000,0.898,NO
+SCH3_flat_ss_base,8791,0,0,n/a,NOT_FOUND,NOT_FOUND,14.899428,n/a,5.0,0,iprobe,0.951269,0.951269,0.000000,0.951269,0.951269,n/a,n/a,n/a,n/a,n/a,n/a,NO
+SCH3_flat_ff_ch0,8993,4,4,4.89235e-06,2.425e-08,1.041e-08,15.022315,0.000293,5.0,0,iprobe,0.742765,0.821221,0.075356,0.000000,0.818397,14.964881,14.964881,0.2341,0.000000,0.000000,0.769,NO
+SCH3_flat_ff_base,8791,0,0,n/a,NOT_FOUND,NOT_FOUND,14.964881,n/a,5.0,0,iprobe,0.818122,0.818122,0.000000,0.818122,0.818122,n/a,n/a,n/a,n/a,n/a,n/a,NO

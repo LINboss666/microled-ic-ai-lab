@@ -1,0 +1,23 @@
+// sch3_smoke_top.scs -- SCH-3 section 8 gate cell, authored by hand on purpose.
+//
+// This is a TOOLING probe, not a circuit: its only job is to prove, before any real cell is built,
+// that on this build (a) spiceIn instantiates the 3.3 V master and the deep-N-well master from the
+// teacher PDK by those exact names, (b) the four terminals of the DNW device bind by NAME to the
+// four nets, and (c) a numeric length/width written as an OA property is what the CDF then reports.
+// SCH-3 section 3's "do not hand-write the connectivity" rule is about the golden data driver; the
+// golden circuit's netlists come from scripts/sch3_golden_extract.py instead.
+//
+// Sizes are deliberately neither the design sizes (2e-6/2e-5, 2e-6/5e-6, 2e-6/2e-6) nor this PDK's
+// measured CDF defaults for these masters (l=350n w=350n), so a silent fall-back to defaults, or a
+// silent copy from the golden table, is visible rather than plausible.
+simulator lang=spectre insensitive=yes
+global 0
+
+subckt data_pdk_param_smoke (smoke_d smoke_g smoke_s smoke_b)
+  parameters smoke_d smoke_g smoke_s smoke_b inputOutput
+  Msm_plain (smoke_d smoke_g smoke_s smoke_b) n33 l=1e-6 w=8e-6
+  Msm_dnw   (smoke_d smoke_g smoke_s smoke_b) n33_dnw_4t_ckt l=3e-6 w=7e-6
+ends data_pdk_param_smoke
+
+parameters smoke_d smoke_g smoke_s smoke_b inputOutput
+X1 (smoke_d smoke_g smoke_s smoke_b) data_pdk_param_smoke

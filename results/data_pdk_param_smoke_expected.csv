@@ -1,0 +1,3 @@
+instance_name,model,D,G,S,B,golden_L_raw,golden_L_m,golden_W_raw,golden_W_m,golden_fingers,golden_fingers_source,golden_multiplier,golden_multiplier_source,cell
+Msm_dnw,n33_dnw_4t_ckt,smoke_d,smoke_g,smoke_s,smoke_b,3e-6,3e-06,7e-6,7e-06,1,DEFAULT_FROM_NETLIST_ABSENCE,1,DEFAULT_FROM_NETLIST_ABSENCE,data_pdk_param_smoke
+Msm_plain,n33,smoke_d,smoke_g,smoke_s,smoke_b,1e-6,1e-06,8e-6,8e-06,1,DEFAULT_FROM_NETLIST_ABSENCE,1,DEFAULT_FROM_NETLIST_ABSENCE,data_pdk_param_smoke

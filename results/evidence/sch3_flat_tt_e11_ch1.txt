@@ -1,0 +1,19 @@
+   IOUT_SOURCE : iprobe trace `Ip2:i`, 0 V burden (DC drop across the probe is 0 by construction)
+   PROBE_CROSSCHECK  : |Ip2:i - Mout1:1| <= 3.271e-13 A over 904 samples
+   PROBE_CROSSCHECK  : 0.0000 % of the largest observed current (1.493e-05 A) -- the two views of the same branch
+   PROBE_CROSSCHECK  : note -- Ip vs Mout:1 differ by the displacement current of the internal nodes while the neighbour switches; the DC sweeps are the agreement test for the observation method
+== SCH3_flat_tt_static_e11_ch1  channel 1 samples=676 (after skipping 25% of the run)  window=6.745e-07 s
+   I_BASELINE        : 14.931906 uA   (median of the observed window)
+   I_1 mean         : 14.931906 uA
+   PEAK_CROSSTALK_ERROR   : 0.000000 uA above baseline = 0.000 % of target
+   PEAK_|I-target|        : 0.068094 uA = 0.454 % of target
+   Q_error                : -9.1359e-24 C (integral of I_victim - I_baseline)
+   CHARGE_ERROR_PERCENT   : 0.0000 %  (|Q_error| / (15uA x 6.745e-07 s))
+   GLITCH_DURATION >+/- 1% : 0.0000e+00 s (0.00 % of the observed window)
+   VICTIM_HOLD_WITHIN_5PCT : 100.00 % of the observed window sits inside +/-5 % of baseline
+                             (the documented POC regulation criterion wants a channel to hold, not just avoid a peak)
+   VBIAS_SHARED      : 0.884261 .. 0.884261 V   (spread 0.000000 V)
+   vbias_ch1         : 0.884261 .. 0.884261 V   (spread 0.000000 V)
+   RINGING           : ADJACENT_POINT_ALTERNATION: NO   (alternation 0.000000 uA p2p, sign-flip ratio 0.877 over 676 samples; YES needs p2p >= 0.0150 uA and flips >= 0.70)
+   no edge found on `data_en`: the neighbour is held, so this row is the static level of the victim, not a switching disturbance
+TWO_CHANNEL_INDEPENDENCE: PASS (peak 0.454 % <= 1.0 %, charge 0.000 % <= 1.0 % POC criteria)

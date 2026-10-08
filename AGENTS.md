@@ -67,4 +67,18 @@
 25. **`git push` 报 `Recv failure: Connection was reset` / 443 连不上，而同一时刻 `gh api` 正常**时，是 git 的 HTTP/2 传输被打断，不是凭据、不是闸门。只对当次命令加 `-c http.version=HTTP/1.1` 即可通过（实测：连败 3 次的同一分支一次成功）。不要为此改全局 git 配置，也不要动 SSH 全局安全设置。
 26. **`guest.sh pull` 会覆盖本地已审文件，pull 之后必须立刻 `git status` 核对**。实测：一次性拉 `results/*.csv` 时，guest 上那份**旧的** C²MOS 结果（缺第四阶段复验产生的 `rev1/revnom` 行，共少 267 行）把仓库里已审核的 5 个 CSV 覆盖掉了，而 diff 里只看得到"减行"，很像我在删数据。规矩：只 pull 本轮新产生的文件名（或先 `tar` 到 /tmp 再解到临时目录对比），pull 完立即 `git status --short`，凡是**已审文件出现在 M 列表里就当作事故处理**——把外来副本移到 `review/` 下留档（该目录 ignored），再用 `git checkout --` 还原，绝不在没搞清来源前提交覆盖结果。
 
-27. **Automated Schematic Parameter Integrity Gate（自动生成的原理图必须逐实例回读有效参数）**：禁止仅根据实例数量、连接关系或黄金 Spectre 仿真结果，宣布自动导入的 Virtuoso 原理图正确。必须从 OA 数据库重新读取每个 PDK 器件的有效参数（本 build 实测：CDF 参数字典与实例上**同名**的 OA 属性是同一份存储，`smic18mmrf/n18|p18` 的参数名是 `l/w/fw/m/fingers/model`，不是 `wf/mult/area`；用 `cdfGetInstCDF` + `cdfFindParamByName` 或 `dbFindProp` 读，`cdfParseFloatString` 判断是否真成了数值），与黄金网表逐实例比较，并检查 CDF 参数求值；未完成时必须报告 BLOCKED，不得把黄金 W/L 回填到导出网表来掩盖导入错误（SCH-1 就是这么把 18 只全部停在 PDK 默认 180n/220n 的原理图判成 PASS 的）。机检入口：`python scripts/sch_parameter_integrity_check.py`（任一有效 W/L 不匹配、任一参数不可求值、任一器件意外落在默认尺寸都非零退出；合法等于默认值不误杀），用例 `python scripts/test_sch_parameter_integrity_check.py`（7 例）。完整过程与陷阱（含 `cdfUpdateInstParam` 会把实例属性删掉这条）见 `reports/lessons_learned/spicein_cdf_parameter_mapping.md`。
+27. **Automated Schematic Parameter Integrity Gate（自动生成的原理图必须逐实例回读有效参数）**：禁止仅根据实例数量、连接关系或黄金 Spectre 仿真结果，宣布自动导入的 Virtuoso 原理图正确。必须从 OA 数据库重新读取每个 PDK 器件的有效参数（本 build 实测：CDF 参数字典与实例上**同名**的 OA 属性是同一份存储，`smic18mmrf/n18|p18` 的参数名是 `l/w/fw/m/fingers/model`，不是 `wf/mult/area`；用 `cdfGetInstCDF` + `cdfFindParamByName` 或 `dbFindProp` 读，`cdfParseFloatString` 判断是否真成了数值），与黄金网表逐实例比较，并检查 CDF 参数求值；未完成时必须报告 BLOCKED，不得把黄金 W/L 回填到导出网表来掩盖导入错误（SCH-1 就是这么把 18 只全部停在 PDK 默认 180n/220n 的原理图判成 PASS 的）。机检入口：`python scripts/sch_parameter_integrity_check.py`（任一有效 W/L 不匹配、任一参数不可求值、任一器件意外落在默认尺寸都非零退出；合法等于默认值不误杀；`--pdk-default-*` 必须按**被测器件族**给，见第 29 条），用例 `python scripts/test_sch_parameter_integrity_check.py`（11 例：SCH-2 的 7 例 + 族默认值声明不一致、3.3 V 器件落在 350n 默认、宽度属性缺失三例）。完整过程与陷阱（含 `cdfUpdateInstParam` 会把实例属性删掉这条，以及 SCH-3 在 3.3 V 族上的复现）见 `reports/lessons_learned/spicein_cdf_parameter_mapping.md`。
+
+28. **判断编辑器 API 是否可用不能用 `getd`**（2026-10-09 SCH-3 实测纠正）：`getd('schCheck)` 返回 nil，
+    但 `errset(schCheck(cv))` 真能跑并返回 `((errors warnings))`（`data_sink_1ch` → `(0 2)`，两条 solder-dot
+    警告；`c2mos_dff_1bit_paramfix` → `(0 5)`，与用户在 GUI 看到的 5 条同坐标）。`schCreate`/`schCreateWire`
+    经字面调用确认仍不可用。所以：SCH-1/SCH-2 里"批处理没有 schCheck"这句话是**探测方法错了**，
+    凡是"这个函数存在吗"的问题都要用 `errset(<字面调用>)` 回答，`getd`/`funcall` 在这条路径上不可信
+    （与第 8 条同源）。§12 这类"检查并保存"的状态据此如实写成 schCheck 的返回值，不要把 dbCheck 包装成它。
+
+29. **PDK 的 CDF 默认值随器件族改变，门的参数必须跟着改**（SCH-3 实测）：`smic18mmrf/n18|p18` 默认
+    `l=180n w=220n fw=220n`，而 `n33`、`n33_dnw_4t_ckt` 默认 `l=w=fw=350n`。把 `--pdk-default-l 180n
+    --pdk-default-w 220n` 复用到 3.3 V cell 上，`DEFAULT_VALUE_FALLBACK_COUNT` 会恒为 0，SCH-2 那种
+    "整批管子停在默认尺寸还报 PASS"的事故就换个器件名继续隐身。永久闸现在自己核对：回读日志带出
+    `RD3-MPARAM`（master 自己的 CDF 默认值），与命令行声明不一致就 `PDK_DEFAULT_DECLARATION_MISMATCH_COUNT`
+    非零退出。另一条同源坑：CDF 会把 `1e-06` 规范化成 `1u`，raw 属性与 CDF 必须**比数值不比字符串**。

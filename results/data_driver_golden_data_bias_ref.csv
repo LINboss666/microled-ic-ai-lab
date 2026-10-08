@@ -1,0 +1,2 @@
+instance_name,model,D,G,S,B,golden_L_raw,golden_L_m,golden_W_raw,golden_W_m,golden_fingers,golden_fingers_source,golden_multiplier,golden_multiplier_source,cell
+Mref,n33,vbias,vbias,vss,vss,2e-6,2e-06,2e-5,2e-05,1,DEFAULT_FROM_NETLIST_ABSENCE,1,DEFAULT_FROM_NETLIST_ABSENCE,data_bias_ref
