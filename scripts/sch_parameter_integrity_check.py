@@ -14,8 +14,14 @@ Design rules:
   * a value is accepted only if it appears in the raw OA property, in the CDF dictionary, and
     parses to the same number -- an unresolved text such as the design-variable name "ln" is a
     failure, not a pass-by-default
+  * the raw property and the CDF must mean the same NUMBER, not be the same string: measured, a
+    property written as "1e-06" comes back out of the CDF as "1u"
   * "equals the PDK default" is only suspicious when the golden value differs from that default;
     a design size that legitimately coincides with a default must not fail
+  * when the readback carries the vendor's own per-master CDF defaults (RD3-MPARAM lines), those
+    decide what "sitting on the default" means, and a --pdk-default-* pair that disagrees with them
+    is itself a failure -- n18 defaults to 180n/220n while n33 and n33_dnw_4t_ckt default to
+    350n/350n, so reusing one pair across families silently switches the detector off
   * comparison is in SI units, so "2u", "2000n" and "2e-6" are the same size and "220n" is not "2u"
   * generic by construction: golden CSV + readback log + PDK defaults are all arguments, so the
     Data Driver schematic import can call the same script
@@ -90,7 +96,7 @@ def load_golden(path):
 
 
 def load_readback(path):
-    rows, pins = {}, []
+    rows, pins, master_defaults = {}, [], {}
     for line in io.open(path, encoding="utf-8", errors="replace"):
         if "RD-ROW" in line:
             r = parse_row(line)
@@ -100,7 +106,13 @@ def load_readback(path):
             r = parse_row(line)
             if "net" in r:
                 pins.append(r["net"])
-    return rows, pins
+        elif "RD3-MPARAM" in line:
+            # one master's own CDF default, printed by the readback SKILL straight off the vendor
+            # cell: skill/sch3_readback.il -> RD3-MPARAM cell="n33" name="l" value="350n"
+            r = parse_row(line)
+            if r.get("cell") and r.get("name") and r.get("value") != "UNREADABLE":
+                master_defaults.setdefault(r["cell"], {})[r["name"]] = r["value"]
+    return rows, pins, master_defaults
 
 
 def main():
@@ -117,12 +129,13 @@ def main():
     args = ap.parse_args()
 
     golden = load_golden(args.golden)
-    read, pins = load_readback(args.readback)
+    read, pins, master_defaults = load_readback(args.readback)
     dflt_l, dflt_w = to_metres(args.pdk_default_l), to_metres(args.pdk_default_w)
 
     fails = []
     counters = dict(UNRESOLVED_PARAMETER_COUNT=0, CDF_ERROR_COUNT=0,
-                    INVALID_LENGTH_COUNT=0, DEFAULT_VALUE_FALLBACK_COUNT=0)
+                    INVALID_LENGTH_COUNT=0, DEFAULT_VALUE_FALLBACK_COUNT=0,
+                    PDK_DEFAULT_DECLARATION_MISMATCH_COUNT=0)
     master_match = 0
     l_match = 0
     w_match = 0
@@ -164,9 +177,14 @@ def main():
             if val is None:
                 counters["UNRESOLVED_PARAMETER_COUNT"] += 1
                 reasons.append("%s is not a real value (%s)" % (label, r.get(label)))
-        if r.get("cdf_l") != r.get("raw_l") or r.get("cdf_w") != r.get("raw_w"):
-            counters["CDF_ERROR_COUNT"] += 1
-            reasons.append("CDF dictionary disagrees with the raw property")
+        # The CDF and the raw property must mean the SAME NUMBER. They are not required to be the
+        # same STRING: measured on this build, a property written as "1e-06" is reported by the CDF
+        # as "1u", and an earlier string comparison turned that into a false CDF_ERROR.
+        for label, raw_v, cdf_v in (("l", raw_l, cdf_l), ("w", raw_w, cdf_w)):
+            if raw_v is not None and cdf_v is not None and not same_size(raw_v, cdf_v):
+                counters["CDF_ERROR_COUNT"] += 1
+                reasons.append("CDF %s=%s (%.9g) disagrees with the raw property %s (%.9g)"
+                               % (label, r.get("cdf_" + label), cdf_v, r.get("raw_" + label), raw_v))
 
         # --- fingers x multiplier must reproduce the total width, or the size is fictional
         if None not in (raw_w, raw_fw, fingers, mult) and not same_size(
@@ -175,16 +193,38 @@ def main():
                            % (r.get("raw_w"), r.get("raw_fw"), r.get("raw_fingers"),
                               r.get("raw_mult")))
 
-        # --- legal length, and no silent fall-back to the PDK default
-        if raw_l is None or (dflt_l is not None and raw_l <= 0):
+        # --- which default applies: the vendor CDF's own value for THIS master if the readback
+        # carried it, otherwise the value declared on the command line. n18 defaults to 180n/220n
+        # and n33 to 350n/350n (both measured), so a single hard-coded pair cannot cover a PDK.
+        md = master_defaults.get(r.get("master_cell", "")) or {}
+        md_l, md_w = to_metres(md.get("l")), to_metres(md.get("w"))
+        eff_dflt_l = md_l if md_l is not None else dflt_l
+        eff_dflt_w = md_w if md_w is not None else dflt_w
+        for key, declared, measured in (("l", dflt_l, md_l), ("w", dflt_w, md_w)):
+            if declared is not None and measured is not None and not same_size(declared, measured):
+                counters["PDK_DEFAULT_DECLARATION_MISMATCH_COUNT"] += 1
+                fails.append("%s: master %s defaults %s=%s in its own CDF but the gate was told "
+                             "%s -- a stale default declaration switches the fall-back detector off"
+                             % (name, r.get("master_cell"), key, md.get(key),
+                             args.pdk_default_l if key == "l" else args.pdk_default_w))
+
+        # --- legal length, and no silent fall-back to the PDK default. The judgement is on the size
+        # the device ACTUALLY has (the CDF answer is used when the raw property is missing), but both
+        # length and width must coincide with the default before it counts: a design legitimately at
+        # the minimum length with a different width must not be flagged, which is why SCH-2's rule
+        # "golden differs from the default, and both dims match it" is kept.
+        eff_l = raw_l if raw_l is not None else cdf_l
+        eff_w = raw_w if raw_w is not None else cdf_w
+        if raw_l is None or (eff_dflt_l is not None and raw_l <= 0):
             counters["INVALID_LENGTH_COUNT"] += 1
             reasons.append("length unusable (%s)" % r.get("cdf_l"))
-        if (dflt_l is not None and dflt_w is not None and raw_l is not None and raw_w is not None
-                and same_size(raw_l, dflt_l) and same_size(raw_w, dflt_w)
-                and not (same_size(gL, dflt_l) and same_size(gW, dflt_w))):
+        if (eff_dflt_l is not None and eff_dflt_w is not None
+                and eff_l is not None and eff_w is not None
+                and same_size(eff_l, eff_dflt_l) and same_size(eff_w, eff_dflt_w)
+                and not (same_size(gL, eff_dflt_l) and same_size(gW, eff_dflt_w))):
             counters["DEFAULT_VALUE_FALLBACK_COUNT"] += 1
             reasons.append("device sits on the PDK default %s/%s while golden is %s/%s"
-                           % (args.pdk_default_l, args.pdk_default_w,
+                           % (md.get("l", args.pdk_default_l), md.get("w", args.pdk_default_w),
                               g["golden_L_raw"], g["golden_W_raw"]))
 
         ok_l = raw_l is not None and cdf_l is not None and same_size(raw_l, gL) and same_size(cdf_l, gL)
@@ -234,6 +274,14 @@ def main():
     print("W_MATCH: %d/%d" % (w_match, n))
     for key in sorted(counters):
         print("%s: %d" % (key, counters[key]))
+    if master_defaults:
+        for cell in sorted(master_defaults):
+            md = master_defaults[cell]
+            print("PDK_MASTER_DEFAULT: %s l=%s w=%s fw=%s m=%s fingers=%s"
+                  % (cell, md.get("l", "?"), md.get("w", "?"), md.get("fw", "?"),
+                     md.get("m", "?"), md.get("fingers", "?")))
+    else:
+        print("PDK_MASTER_DEFAULT: none in this readback -- judged against --pdk-default-* only")
     print("PORT_PINS: %s" % " ".join(got))
     print("READBACK_TABLE: %s" % args.out)
     for f in fails[:40]:

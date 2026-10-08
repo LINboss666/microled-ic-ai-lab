@@ -50,15 +50,23 @@ def golden_text(rows):
     return NL.join(lines) + NL
 
 
-def row(inst, model, d, g, s, b, l_txt, w_txt, fingers="1", mult="1", raw_w_absent=False):
-    """One RD-ROW line in the shape skill/sch2_readback.il prints it."""
+def row(inst, model, d, g, s, b, l_txt, w_txt, fingers="1", mult="1", raw_w_absent=False,
+        cdf_l=None, cdf_w=None):
+    """One RD-ROW line in the shape skill/sch2_readback.il prints it.
+
+    cdf_l/cdf_w let a case state the CDF value separately from the raw property, which is what the
+    PDK really does: it normalises the text ("1e-06" in, "1u" out) and, when no property was ever
+    written, shows its own default instead.
+    """
     w_field = "ABSENT" if raw_w_absent else '"%s"' % w_txt
+    cdf_l = l_txt if cdf_l is None else cdf_l
+    cdf_w = w_txt if cdf_w is None else cdf_w
     return ('RD-ROW inst="%s" master_lib="smic18mmrf" master_cell="%s" master_view="symbol" '
             'model="%s" raw_l="%s" raw_w=%s raw_fw=%s raw_fingers="%s" raw_mult="%s" simW="%s" '
             'cdf_l="%s" cdf_w="%s" cdf_fw="%s" cdf_fingers="%s" cdf_mult="%s" '
             'num_l=(2e-07) num_w=(2e-06) bbox=(((0 0) (1 1))) D="%s" G="%s" S="%s" B="%s"'
             % (inst, model, model, l_txt, w_field, w_field, fingers, mult, w_txt,
-               l_txt, w_txt, w_txt, fingers, mult, d, g, s, b))
+               cdf_l, cdf_w, cdf_w, fingers, mult, d, g, s, b))
 
 
 def matching_rows(golden_rows):
@@ -75,18 +83,22 @@ def unresolved(golden_rows):
             for r in golden_rows]
 
 
-def write_readback(path, rows):
+def write_readback(path, rows, master_defaults=None):
     body = ["RD-CELL microled_cells/test_cell instances=%d nets=13 shapes=219" % len(rows)]
     body += rows
+    # skill/sch3_readback.il prints the vendor CDF's own default per master; SCH-2 era logs have no
+    # such lines and are judged against --pdk-default-* alone
+    for (cell, name, value) in (master_defaults or []):
+        body.append('RD3-MPARAM cell="%s" name="%s" value="%s"' % (cell, name, value))
     for net in ("d", "clk", "q", "qbar", "vdd", "vss"):
         body.append('RD-NETPIN net="%s" pins=1' % net)
     io.open(path, "w", encoding="utf-8", newline=NL).write(NL.join(body) + NL)
 
 
-def run(golden, readback, out, expect_mos):
+def run(golden, readback, out, expect_mos, defaults=(DEFAULT_L, DEFAULT_W), master_defaults=None):
     cmd = [sys.executable, CHECKER, "--golden", golden, "--readback", readback, "--out", out,
-           "--expect-mos", str(expect_mos), "--pdk-default-l", DEFAULT_L,
-           "--pdk-default-w", DEFAULT_W]
+           "--expect-mos", str(expect_mos), "--pdk-default-l", defaults[0],
+           "--pdk-default-w", defaults[1]]
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     text = proc.communicate()[0].decode("utf-8", "replace")  # reaps the child
     return proc.returncode, text  # reading returncode before communicate() yields None
@@ -100,33 +112,58 @@ def main():
     n = len(BASE)
     good = matching_rows(BASE)
 
+    n33_defaults = ("350n", "350n")           # measured on smic18mmrf/n33 and n33_dnw_4t_ckt
+    n33_master = [("n33", "l", "350n"), ("n33", "w", "350n")]
+    N33 = [("Mout", "n33", "node_m", "vbias_ch", "vss", "vss", "2e-6", "2e-06", "2e-5", "2e-05")]
+
     cases = [
-        ("CASE1 correct MOS parameters -> PASS", BASE, good, 0, None),
+        ("CASE1 correct MOS parameters -> PASS", BASE, good, 0, None, None, None),
         ("CASE2 every device on the PDK default -> FAIL", BASE, all_default(BASE), 1,
-         "DEFAULT_VALUE_FALLBACK_COUNT: %d" % n),
+         "DEFAULT_VALUE_FALLBACK_COUNT: %d" % n, None, None),
         ("CASE3 one device with the wrong width -> FAIL", BASE,
          [good[0], row("mp_c", "p18", "clkb", "clk", "vdd", "vdd", "200n", "2u"), good[2]],
-         1, "W_MATCH: 2/%d" % n),
+         1, "W_MATCH: 2/%d" % n, None, None),
         ("CASE4 one device with an invalid length -> FAIL", BASE,
          [good[0], row("mp_c", "p18", "clkb", "clk", "vdd", "vdd", "0", "4u"), good[2]],
-         1, "INVALID_LENGTH_COUNT: 1"),
+         1, "INVALID_LENGTH_COUNT: 1", None, None),
         # four fields per device are unreadable in that state: raw l, CDF l, raw w, raw fw
         ("CASE5 CDF expression unresolved -> FAIL", BASE, unresolved(BASE), 1,
-         "UNRESOLVED_PARAMETER_COUNT: %d" % (4 * n)),
+         "UNRESOLVED_PARAMETER_COUNT: %d" % (4 * n), None, None),
         ("CASE6 different textual units, same physical size -> PASS", BASE,
          [row("mn_c", "n18", "clkb", "clk", "vss", "vss", "200n", "2000n"),
           row("mp_c", "p18", "clkb", "clk", "vdd", "vdd", "2e-7", "4000n"),
-          row("mn_k1", "n18", "mb", "m", "vss", "vss", "0.2u", "500n")], 0, None),
+          row("mn_k1", "n18", "mb", "m", "vss", "vss", "0.2u", "500n")], 0, None, None, None),
         ("CASE7 size that legitimately equals the PDK default -> PASS", DEFAULT_SIZED,
-         matching_rows(DEFAULT_SIZED), 0, "DEFAULT_VALUE_FALLBACK_COUNT: 0"),
+         matching_rows(DEFAULT_SIZED), 0, "DEFAULT_VALUE_FALLBACK_COUNT: 0", None, None),
+        # the PDK normalises the text it stores: "2e-07" in, "200n" out. Same number, so this is
+        # not a CDF error -- an earlier revision compared the strings and reported a false failure.
+        ("CASE8 raw property and CDF differ only in notation -> PASS", BASE,
+         [row("mn_c", "n18", "clkb", "clk", "vss", "vss", "2e-07", "2e-06", cdf_l="200n",
+              cdf_w="2u"),
+          row("mp_c", "p18", "clkb", "clk", "vdd", "vdd", "2e-07", "4e-06",
+              cdf_l="200n", cdf_w="4u"),
+          row("mn_k1", "n18", "mb", "m", "vss", "vss", "2e-07", "5e-07", cdf_l="200n",
+              cdf_w="500n")], 0, "CDF_ERROR_COUNT: 0", None, None),
+        ("CASE9 gate told the wrong family's defaults -> FAIL", N33,
+         matching_rows(N33), 1, "PDK_DEFAULT_DECLARATION_MISMATCH_COUNT: 2", None, n33_master),
+        ("CASE10 3.3 V device on its own 350n default -> FAIL", N33,
+         [row("Mout", "n33", "node_m", "vbias_ch", "vss", "vss", "350n", "350n")], 1,
+         "DEFAULT_VALUE_FALLBACK_COUNT: 1", n33_defaults, n33_master),
+        # exactly what spiceIn leaves behind on this build: l written, w never written, so the CDF
+        # answers with the master's default while the raw property does not exist
+        ("CASE11 width property absent, CDF shows default -> FAIL", N33,
+         [row("Mout", "n33", "node_m", "vbias_ch", "vss", "vss", "2e-6", "2e-5",
+              raw_w_absent=True, cdf_w="350n")], 1, "UNRESOLVED_PARAMETER_COUNT: 2",
+         n33_defaults, n33_master),
     ]
 
     failures = 0
     for case in cases:
-        label, gold_rows, rb_rows, want_rc, want_text = case
+        label, gold_rows, rb_rows, want_rc, want_text, defaults, master_defaults = case
         io.open(golden, "w", encoding="utf-8", newline=NL).write(golden_text(gold_rows))
-        write_readback(readback, rb_rows)
-        rc, text = run(golden, readback, out, len(gold_rows))
+        write_readback(readback, rb_rows, master_defaults)
+        rc, text = run(golden, readback, out, len(gold_rows),
+                       defaults or (DEFAULT_L, DEFAULT_W), master_defaults)
         ok = rc == want_rc and (not want_text or want_text in text)
         note = "" if ok or not want_text else ", missing '%s'" % want_text
         print("%-58s %s (exit=%s want=%s%s)" % (label, "PASS" if ok else "FAIL", rc, want_rc, note))

@@ -17,8 +17,13 @@ makes the number a derived quantity:
 
   python scripts/netlist_stats.py [--cell spectre/C2MOS_DFF.scs]
                                   [--reports reports/] [--expect-groups 2,4,4,4,4]
+                                  [--also spectre/generated/<deck>.scs ...]
+
+  Claims about a cellview built from spectre/import/*.scs are validated against those files by
+  default; --also adds further netlists whose parsed device counts are legitimate totals too.
 """
 
+import glob
 import os
 import re
 import sys
@@ -82,7 +87,19 @@ def main():
     assert CLAIM_RX.findall("18 MOS total, 18管, 9 transistors") == ["18", "18", "9"]
 
     def opt(name, default):
-        return args[args.index(name) + 1] if name in args else default
+        if name not in args or args.index(name) + 1 >= len(args):
+            return default
+        return args[args.index(name) + 1]
+
+    def opt_all(name):
+        """--also may be repeated: extra netlists whose parsed device counts are also legitimate
+        totals for the prose check."""
+        out, i = [], 0
+        while i + 1 < len(args):
+            if args[i] == name:
+                out.append(args[i + 1])
+            i += 1
+        return out
 
     cell = os.path.join(ROOT, opt("--cell", "spectre/C2MOS_DFF.scs"))
     repdir = os.path.join(ROOT, opt("--reports", "reports"))
@@ -123,6 +140,24 @@ def main():
         problems.append("nmos+pmos %d != total %d" % (nmos + pmos, len(devs)))
 
     # police the prose: every device-count claim in every report must equal the parser
+    # every accepted total must come out of a parsed netlist, never out of the prose.
+    # spectre/import/*.scs are the cell-level netlists our own schematics were built from, so a
+    # report describing one of those cellviews (4 devices in data_sink_1ch, 1 in data_bias_ref) is
+    # checked against a real file by default instead of being forced through check:skip.
+    import_dir = os.path.join(ROOT, "spectre", "import")
+    extras = opt_all("--also")
+    if os.path.isdir(import_dir):
+        extras += [os.path.relpath(f, ROOT).replace("\\", "/")
+                   for f in sorted(glob.glob(os.path.join(import_dir, "*.scs")))]
+    known = set([len(devs)])
+    for extra in extras:
+        path = os.path.join(ROOT, extra)
+        more, _p, _q = parse_cell(path)
+        if not more:
+            print("DEVICE_COUNT_CHECK: FAIL  (--also %s parsed 0 devices)" % extra)
+            return 1
+        known.add(len(more))
+        print("also parsed %s -> %d devices" % (extra, len(more)))
     print("")
     print("report claims checked against the parser:")
     if os.path.isdir(repdir):
@@ -139,11 +174,11 @@ def main():
                     continue    # a line may quote a superseded claim on purpose
                 line = idx + 1
                 n = int(m.group(1))
-                tag = "ok" if n == len(devs) else "MISMATCH"
-                if n != len(devs):
+                tag = "ok" if n in known else "MISMATCH"
+                if n not in known:
                     problems.append("%s:%d claims %d devices" % (fn, line, n))
-                print("  %-8s %s:%-4d '%s' (source says %d)"
-                      % (tag, fn, line, m.group(0).strip(), len(devs)))
+                print("  %-8s %s:%-4d '%s' (source says %s)"
+                      % (tag, fn, line, m.group(0).strip(), "/".join(str(k) for k in sorted(known))))
     else:
         print("  (no reports directory)")
 
