@@ -137,6 +137,9 @@ SHA：`57eed38`（fix）+ `c68dcfe`（test），分支 `feature/c2mos-virtuoso-s
 只对当次命令加 `-c http.version=HTTP/1.1`，未改任何全局配置。网络恢复后
 `git push -u origin feature/c2mos-virtuoso-schematic` 成功（`* [new branch]`，无 `--force`，未 merge main）。
 pre-push 走 `--mode history`：`54 commits / 756 objects`，四项计数全 0，`SAFETY_GATE: PASS`。
+**推送判据分两级写清**：`d4e9a76` 那次是推完再用 `ls-remote` 实读回来自确认一致；之后的两枚 `docs:` commit
+由 `git push` 自身输出的远端确认行 `d4e9a76..b924c45` 证明已被接受，但推完立刻再读时 443 又断了两次
+（`Could not connect to server`），所以 `b924c45` 的独立回读**尚未完成**，下次通道可用时补读即可。
 推送后分别回读：`origin/feature/c2mos-virtuoso-schematic` = 本地 HEAD（本轮实质 commit `57eed38` 修复、
 `c68dcfe` 防错闸，其后的 `docs:` 一枚只改文字）；
 `origin/main = 23e471c…` = 本地 main（未动）。
