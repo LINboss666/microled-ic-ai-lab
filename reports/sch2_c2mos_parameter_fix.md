@@ -131,11 +131,18 @@ COUNTS_UNCHANGED` 全 PASS（未移器件、未改导线、未重排、5 个 sol
   证据日志、两份报告）
 - `test:` 参数完整性闸 + 7 例单元测试 + `AGENTS.md` 第 27 条 + `reports/lessons_learned/`
 
+SHA：`57eed38`（fix）+ `c68dcfe`（test），分支 `feature/c2mos-virtuoso-schematic`。
+推送状态：**PUSH_PENDING_NETWORK** —— 3 次 `git ls-remote` 尝试分别 `Could not connect to server` 与
+`Recv failure: Connection was reset`，同一时刻 `gh api` 正常（`visibility=public`），即已知的 git HTTP/2
+传输问题；只对当次命令加 `-c http.version=HTTP/1.1`，未改任何全局配置，未使用 --force，未 merge main。
+
 闸：`python scripts/precommit_safety_check.py --mode staged` → `PDK_TRACKED_FILES = 0`、
 `CREDENTIAL_TRACKED_FILES = 0`、`PRIVATE_KEYS_TRACKED_FILES = 0`、`VENDOR_MODEL_TRACKED_FILES = 0`、
-`SAFETY_GATE: PASS`；`python scripts/provenance_check.py`、`python scripts/netlist_stats.py`
-（`DEVICE_COUNT_CHECK: PASS`）。未 merge `main`。
-HEAD SHA 由 `git log --oneline -1` 现取，写在这里必然过期，故本文不抄。
+`SAFETY_GATE: PASS`（两枚 commit 前各跑一次，共 32 + 5 个对象）；
+`python scripts/provenance_check.py` → `SOURCE_PROVENANCE_CHECK: PASS`；
+`python scripts/netlist_stats.py` → `DEVICE_COUNT_CHECK: PASS`。未 merge `main`。
+证据日志里的 Cadence 版本横幅（`@(#)$CDS: virtuoso version 6.1.7-64b …`）是二进制自带字符串，
+不含任何模型参数内容。
 
 ## 8. 请你确认（停在 USER_GUI_PARAMETER_REVIEW）
 
