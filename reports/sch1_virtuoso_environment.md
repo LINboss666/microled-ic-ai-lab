@@ -1,5 +1,13 @@
 # SCH-1：Micro LED Virtuoso 工作环境 + C²MOS DFF 原理图
 
+> **⚠️ 本轮的"参数等价"结论已被 SCH-2 更正（2026-10-08）。**
+> `GOLDEN_NETLIST_EQUIVALENCE: PASS` 当年比的是属性里的**表达式名字**与**从黄金网表补来的默认值**，
+> 没有比原理图自己的有效尺寸；GUI 里 18 只管子实际全部停在 PDK 默认 `180n/220n`，`l` 还是不可求值的
+> 字符串 `ln`。环境、连通性、端口、功能回归各结论仍然成立（功能回归用的是黄金网表口径，故它证明的是
+> 电路本身，不是原理图的参数）。现状与修复见 `reports/sch2_c2mos_parameter_fix.md`，
+> 教训与永久闸门见 `reports/lessons_learned/spicein_cdf_parameter_mapping.md` + `AGENTS.md` 第 27 条。
+
+
 日期：2026-10-08（guest 本地时间）。分支：`feature/c2mos-virtuoso-schematic`（未合并 `main`）。
 本轮只做 A/B/C/D；E 列的禁止项一律未触碰。
 
@@ -22,7 +30,7 @@
 | `SCHEMATIC` | `microled_cells/c2mos_dff_1bit/schematic`（真实可编辑 OA 视图，`sch.oa` 35 KB 量级） | `results/evidence/sch1_asg_import_final.txt`（含 SPICEIN-33/54 与 import 参数表） |
 | `MOS_COUNT` | **18**（9 n18 + 9 p18，从 DB 读回） | `results/sch1_connectivity_c2mos_dff_1bit.csv`、`results/evidence/sch1_db_dump_c2mos_dff_1bit.log` |
 | `SCHEMATIC_CHECK_AND_SAVE` | PASS（`dbCheck()`→t、`dbSave()`→t，重新以只读打开后 72/72 引脚仍绑定到网络） | `results/evidence/sch1_readback_after_check_save.txt` |
-| `GOLDEN_NETLIST_EQUIVALENCE` | **PASS**（18/18 行的 model、l 表达式、w 表达式、D/G/S/B 四只网络全部一致；网络名集合 13 个一致；端口集合 6 个一致） | `scripts/sch1_netlist_from_db.py` 输出 + `results/sch1_connectivity_c2mos_dff_1bit.csv` |
+| `GOLDEN_NETLIST_EQUIVALENCE` | **PASS，但只对当时所比的维度成立**（18/18 行的 model、l **表达式名**、w **表达式名**、D/G/S/B 网络一致；网络/端口集合一致）。有效尺寸未比 → 已被 SCH-2 判 `SCHEMATIC_DEVICE_PARAMETERS: FAIL` 并修好 | `scripts/sch1_netlist_from_db.py` 输出 + `results/sch1_connectivity_c2mos_dff_1bit.csv` |
 | `SCHEMATIC_DFF_FUNCTION` | **PASS**（33/33 断言，testbench preflight PASS） | `results/sch1_ff1_from_schematic_asserts.txt`、`results/sch1_ff1_from_schematic_delays.txt` |
 | `SCHEMATIC_SHIFT3_FUNCTION` | **PASS**（40/40 断言） | `results/sch1_shift3_from_schematic_asserts.txt`、`results/sch1_shift3_from_schematic_delays.txt` |
 | `SCHEMATIC_NETLIST_VERIFICATION` | 通过，但**导出器是我写的 DB 读取器，不是 ADE netlister**（见 §5.2） | `spectre/generated/c2mos_dff_1bit_from_schematic.scs` |

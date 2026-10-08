@@ -1,0 +1,68 @@
+// ==============================================================================
+// c2mos_shift3.scs -- three IDENTICAL C^2MOS DFF stages, DIN -> FF0 -> FF1 -> FF2
+//
+// This is the minimal unit of one scan channel: a bit entering at DIN must appear
+// on q0, then q1, then q2, one clock period per step. No output stage is connected
+// (VLED / Micro LED Vf stay NOT DEFINED, output stage frozen by decision).
+//
+// Timing (multiples of T, T is rendered by the driver):
+//   clk rising edges at (k+0.5)T, falling at (k+1)T
+//   d  HIGH [3.35T,4.35T) low [4.35T,5.35T) HIGH [5.35T,6.35T) low [6.35T,7.35T)
+//      HIGH from 7.35T
+//   -> the value seen at successive rising edges is 1,0,1,0,1  (a single '1' would
+//      not prove the chain moves in both directions)
+//   -> the first three edges (0.5T, 1.5T, 2.5T) are PRIME-TO-ZERO edges: they give
+//      every stage's keeper a defined state before anything is asserted. That is a
+//      simulation initialisation concern (the cell has no reset pin); a real scan
+//      chain always runs priming cycles too.
+//
+// Expected table, written out BEFORE the run (this is what the assertions encode):
+//   cycle start   q0  q1  q2
+//   3.5T           1   0   0     '1' entered FF0 only
+//   4.5T           0   1   0     one stage per edge; FF2 must NOT have taken it yet
+//   5.5T           1   0   1
+//   6.5T           0   1   0     the '0' has moved one step
+//   7.5T           1   0   1
+// Each cycle is sampled twice: once inside the clock HIGH half (transparent phase)
+// and once inside the clock LOW half (hold phase). The LOW-half windows also
+// contain the d transitions (4.35T, 5.35T, 6.35T, 7.35T), so a pass simultaneously
+// proves hold during the inactive phase and absence of combinational feed-through.
+//
+// TESTBENCH ASSUMPTIONS: T=200 ns stress clock (application column period is
+// 9.765625 us, ~49x slower); 50 fF load per Q (stand-in for the next stage's gate
+// load, NOT the undefined column electrode load); 1 ns source edges.
+// ==============================================================================
+simulator lang=spectre insensitive=yes
+; SCH-2: the cell under test is now netlisted from the schematic readback only
+; (scripts/sch2_netlist_from_readback.py), so l= and w= are the values the OA database
+; resolved, not the golden expressions plus golden defaults.
+; SCH-1 Part D regression: identical to c2mos_shift3_func/c2mos_shift3, but the cell under test
+; is the netlist rebuilt from the OA parameters of microled_cells/c2mos_dff_1bit:schematic. Only the include
+; path and the subckt name changed -- sources, loads, clock plan and every assertion
+; window are untouched.
+
+include "${QODER_PDK_LIB}" section=tt
+include "generated/c2mos_dff_1bit_from_oa_readback.scs"
+
+parameters T=2e-7
+parameters VDDV=1.8
+
+Vdd (vdd 0) vsource dc=VDDV
+// vss must be tied to ground or no NMOS in the chain can pass current
+Vss (vss 0) vsource dc=0
+
+Ck (clk 0) vsource type=pulse val0=0 val1=VDDV period=T   delay=0.5*T  width=0.5*T rise=1e-9 fall=1e-9
+Dd (d  0)  vsource type=pulse val0=0 val1=VDDV period=2*T delay=3.35*T width=T     rise=1e-9 fall=1e-9
+
+// three identical cells, chained, one shared clock
+X1 (d  clk q0 q0b vdd vss) c2mos_dff_1bit
+X2 (q0 clk q1 q1b vdd vss) c2mos_dff_1bit
+X3 (q1 clk q2 q2b vdd vss) c2mos_dff_1bit
+
+Cq0 (q0 0) capacitor c=50e-15
+Cq1 (q1 0) capacitor c=50e-15
+Cq2 (q2 0) capacitor c=50e-15
+
+tr1 tran stop=9.2*T maxstep=1e-4*T
+
+save clk d q0 q1 q2 q0b q1b q2b

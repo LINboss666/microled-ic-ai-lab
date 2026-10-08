@@ -34,8 +34,8 @@ case "$TB" in
   ff1)          TPL="$PROJ/spectre/c2mos_ff1_func.scs";                TOKEN=C2MOS_DFF_1CH;            ;;
   shift3)       TPL="$PROJ/spectre/c2mos_shift3.scs";                  TOKEN=C2MOS_SHIFT_3STAGE;       ;;
   # SCH-1 Part D: the same two assertion tables against the cell rebuilt out of the OA schematic.
-  ff1_sch)      TPL="$PROJ/spectre/c2mos_ff1_from_schematic.scs";      TOKEN=SCHEMATIC_DFF_FUNCTION;   ;;
-  shift3_sch)   TPL="$PROJ/spectre/c2mos_shift3_from_schematic.scs";   TOKEN=SCHEMATIC_SHIFT3_FUNCTION ;;
+  ff1_sch)      TPL="$PROJ/spectre/c2mos_ff1_from_oa_readback.scs";    TOKEN=SCHEMATIC_DFF_FUNCTION;   ;;
+  shift3_sch)   TPL="$PROJ/spectre/c2mos_shift3_from_oa_readback.scs"; TOKEN=SCHEMATIC_SHIFT3_FUNCTION ;;
   *) echo "FATAL: unknown testbench '$TB'"; exit 8 ;;
 esac
 [ -r "$TPL" ] || { echo "FATAL: template missing $TPL"; exit 8; }

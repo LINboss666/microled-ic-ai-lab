@@ -1,0 +1,129 @@
+\# Program start time UTC 2026.10.08 15:52:19.734
+\# Local time Thursday 8 October 2026, 11:52 pm
+\o Program:		@(#)$CDS: virtuoso version 6.1.7-64b 11/09/2015 12:45 (sjfnl165) $
+\o Hierarchy:		/opt/IC617/tools.lnx86/dfII/
+\o Sub version:		sub-version  IC6.1.7-64b.78  (64-bit addresses)
+\# Command line:	/opt/IC617/tools/dfII/bin/64bit/virtuoso -nograph -log /root/microled_ai_project/cadence_work/logs/sch_nograph_20261008_235216.log -restore /root/microled_ai_project/skill/sch2_native_netlist.il
+\# Host name (type):	work-eda (x86_64)
+\# Operating system:	Linux 2.6.32-431.el6.x86_64 #1 SMP Sun Nov 10 22:19:54 EST 2013
+\# Linux /etc/issue:	Red Hat Enterprise Linux Server release 6.5 (Santiago)
+\# Linux /etc/issue:	Kernel \r on an \m
+\# X display name (WxH):	work-eda:80 (1024x868)
+\# Available geometry:			TL(0:0) BR(1023:867)
+\# X server:			RealVNC Ltd (VNC nograph server, PID 63608)
+\# Depth of Visual (Root):	16 (16)
+\# Number of Planes Used:	16
+\# X version:		11.0 (vendor release 3370)
+\# X resource pool:	base 0x800000, mask 0x3fffff (4194303), shift 0
+\# 			current id 0x0, current max 0x3ffffa (4194298)
+\# Max data seg size:	     unlimited
+\# Max process size:	     unlimited
+\# Initial sbrk value:	        373 MB
+\# Available memory:	      8,072 MB
+\# System memory:	     11,866 MB
+\# Maximum memory size:	     11,573 MB
+\# Max mem available:	      8,152 MB
+\# Initial memory used:	         80 MB
+\#        process size:	        873 MB
+\# Qt version:		4.8.5
+\# Window Manager:	other
+\# User Name:		root
+\o Working Directory:	work-eda:/root/microled_ai_project/cadence_work
+\# Process Id:		63487
+\o 
+\o COPYRIGHT © 1992-2015  CADENCE DESIGN SYSTEMS INC.  ALL RIGHTS RESERVED.
+\o           © 1992-2015  UNIX SYSTEMS Laboratories INC.,
+\o                          Reproduced with permission.
+\o 
+\o This Cadence Design Systems program and online documentation are
+\o proprietary/confidential information and may be disclosed/used only
+\o as authorized in a license agreement controlling such use and disclosure.
+\o 
+\o           RESTRICTED RIGHTS NOTICE (SHORT FORM)
+\o Use/reproduction/disclosure is subject to restriction
+\o set forth at FAR 1252.227-19 or its equivalent.
+\o Loading geView.cxt 
+\o Loading menuBuilder.cxt 
+\o Loading schView.cxt 
+\o Loading selectSv.cxt 
+\o Loading wireEdit.cxt 
+\o Loading pte2.cxt 
+\o Loading xlUI.cxt 
+\o Loading auCore.cxt 
+\o Loading vhdl.cxt 
+\o Loading seismic.cxt 
+\o Loading ci.cxt 
+\o Loading ams.cxt 
+\o Virtuoso Framework License (111) was checked out successfully. Total checkout time was 0.03s.
+\o END OF SITE CUSTOMIZATION
+\o Loading $HOME/.cdsinit init file from the site init file.
+\o //
+\o //  Calibre Skill Interface * (v2015.2_36.27) *
+\o //
+\o //                 Copyright Mentor Graphics Corporation 2005
+\o //                             All Rights Reserved.
+\o //         THIS WORK CONTAINS TRADE SECRET AND PROPRIETARY INFORMATION
+\o //            WHICH IS THE PROPERTY OF MENTOR GRAPHICS CORPORATION
+\o //              OR ITS LICENSORS AND IS SUBJECT TO LICENSE TERMS.
+\o //
+\o //
+\o Loading HSPICE.cxt
+\o Loading oasis.cxt 
+\o Loading analog.cxt 
+\o Loading cdf.cxt 
+\o   ==== HSPICE-ADE Interface, K-2015.06-3 BUILD (08/06/2015 18:09:41) ==== 
+\o   ==== COPYRIGHT 2008-2026 SYNOPSYS INC.                             ==== 
+\o   ==== HSPICE-ADE Interface installed successfully                   ==== 
+\o   HSPICE-ADE: use interface at '/opt/synopsys/Hspice-2015.06-3/interface'
+\o   HSPICE-ADE: use HSPICE at '/opt/synopsys/Hspice-2015.06-3//hspice/bin/hspice'
+\o   HSPICE-ADE: HSPICE Version K-2015.06-3 linux64 (build id: 3630644)
+\o NN-BEGIN
+\o Loading smic18mmrf/libInit.il ...
+\o 	Loading smic18mmrf/loadCxt.ile ... done!
+\o 	Loading context 'smic18mmrf' from library 'smic18mmrf' ... done!
+\o 	Loading context 'pdkUtils' from library 'smic18mmrf' ... done!
+\o 	Loading smic18mmrf/display.drf ... done!
+\o 	Loading smic18mmrf/libInitCktPro.il ... done!
+\o 	Loading smic18mmrf/libInitCustomExit.il ... Loading libInitCustomExit.il for smic18mmrf
+\o Loading spectrei.cxt 
+\o Loading devCheck.cxt 
+\# Memory report: using         389 MB, process size 1,211 MB at UTC 2026.10.08 15:52:21.008
+\o Loading relXpert.cxt 
+\o Loading hspiceD.cxt 
+\o Loading spectreinl.cxt 
+\o Loading UltraSim.cxt 
+\o Loading msgHandler.cxt 
+\o Loading AMSOSS.cxt 
+\o Loading AMS.cxt 
+\o done!
+\o Loaded smic18mmrf/libInit.il successfully!
+\o Loading smic skill utility
+\o /root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../SMIC18MMRF_skillUtility/batchSetCDF.ile
+\o /root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../SMIC18MMRF_skillUtility/libNumcheck.ile
+\o Loading emxskill
+\o file="/license.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/license.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/license.ils
+\o file="/continuum.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuum.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuum.ils
+\o file="/continuumgui.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuumgui.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuumgui.ils
+\o file="/callbacks.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/callbacks.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/callbacks.ils
+\o file="/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils
+\o file="/../models/diff_ind_rf_psub_18MTE_scalable.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_rf_psub_18MTE_scalable.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_rf_psub_18MTE_scalable.ils
+\o file="/../models/ind_rf_psub_scalable.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/ind_rf_psub_scalable.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/ind_rf_psub_scalable.ils
+\o NN-CV db:0x1795e89a cell="c2mos_dff_1bit_paramfix"
+\o NN-COUNT instances=24 nets=13
+\o ERROR (ADE-5059): 'nil' is not a valid simulator name. Ensure that the simulator name
+\o         is spelled correctly. Available simulators are ("ams" "HSPICE" "hspiceD" "spectre" "UltraSim").
+\o NN-S0 (nil)
+\o NN-S1 nil
+\o NN-S2 nil
+\o NN-SESSION nil
+\o NN-D1 nil
+\o NN-D2 nil
+\o NN-D3 nil
+\o NN-F1 nil
+\o NN-F2 nil
+\o NN-FILES (0)
+\o NN_DONE
+\o 
+\o Loading lce.cxt 
+\# Memory report: on exit            415 MB, process size 1,237 MB at UTC 2026.10.08 15:52:21.390
+\# Memory report: peak usage         415 MB, process size 1,237 MB

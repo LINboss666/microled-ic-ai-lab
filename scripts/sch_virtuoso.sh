@@ -39,16 +39,28 @@ STAMP=$(date +%Y%m%d_%H%M%S)
 LOG="$WORK/logs/sch_nograph_$STAMP.log"
 OUT="$WORK/logs/sch_nograph_$STAMP.stdout"
 
+if [ "${MODE:-nograph}" = "restore" ]; then
+  # no .cdsinit injection: the -restore argument IS the injection, and a leftover .cdsinit with
+  # exit() would make a restore run look like it finished (measured in an earlier phase)
+  rm -f "$HOME_DIR/.cdsinit"
+  printf ';; restore mode runs the IL itself; nothing extra here
+' > "$HOME_DIR/.cdsinit"
+else
 cat > "$HOME_DIR/.cdsinit" <<EOF
 ;; written by scripts/sch_virtuoso.sh -- isolated init for one batch run, not the operator's
 load("$IL")
 EOF
+fi
 
 if [ "${DEFER:-0}" = "1" ]; then
   # Editor packages are only present once the environment has finished initialising, so the
   # IL must define sch1Main() and be invoked from the init hook instead of from .cdsinit.
   # The IL is then responsible for exit().
   printf 'hiSetInitFunc("sch1Main()")\n' >> "$HOME_DIR/.cdsinit"
+elif [ "${MODE:-nograph}" = "restore" ]; then
+  # the -restore file ends with exit() itself; an exit() left in .cdsinit makes
+  # virtuoso quit before the restore argument runs (measured: 1 s, no tokens)
+  :
 else
   printf 'exit()\n' >> "$HOME_DIR/.cdsinit"
 fi
@@ -60,7 +72,11 @@ fi
 # present in -nograph. Anything that must produce a real, checkable schematic therefore runs
 # as a normal session against the desktop display, driven by the .cdsinit above and closing
 # itself with exit().
+# MODE=restore is a different startup path, not a cosmetic one: it is the only one measured on
+# this build where the ADE-L netlister functions (asiNetlist, nlNetlist, nlCreateDesign) exist at
+# all -- .cdsinit-time batches never see them. It needs the -restore file to end with exit().
 case "${MODE:-nograph}" in
+  restore) CMD=(virtuoso -nograph -log "$LOG" -restore "$IL") ;;
   nograph) CMD=(virtuoso -nograph -log "$LOG") ;;
   gui)     [ -n "${DISPLAY:-}" ] || { echo "REFUSED: MODE=gui needs DISPLAY"; exit 9; }
            CMD=(virtuoso -log "$LOG") ;;

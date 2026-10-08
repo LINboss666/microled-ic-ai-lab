@@ -1,0 +1,123 @@
+\# Program start time UTC 2026.10.08 15:39:26.306
+\# Local time Thursday 8 October 2026, 11:39 pm
+\o Program:		@(#)$CDS: virtuoso version 6.1.7-64b 11/09/2015 12:45 (sjfnl165) $
+\o Hierarchy:		/opt/IC617/tools.lnx86/dfII/
+\o Sub version:		sub-version  IC6.1.7-64b.78  (64-bit addresses)
+\# Command line:	/opt/IC617/tools/dfII/bin/64bit/virtuoso -nograph -log /root/microled_ai_project/cadence_work/logs/sch_nograph_20261008_233922.log
+\# Host name (type):	work-eda (x86_64)
+\# Operating system:	Linux 2.6.32-431.el6.x86_64 #1 SMP Sun Nov 10 22:19:54 EST 2013
+\# Linux /etc/issue:	Red Hat Enterprise Linux Server release 6.5 (Santiago)
+\# Linux /etc/issue:	Kernel \r on an \m
+\# X display name (WxH):	work-eda:80 (1024x868)
+\# Available geometry:			TL(0:0) BR(1023:867)
+\# X server:			RealVNC Ltd (VNC nograph server, PID 59406)
+\# Depth of Visual (Root):	16 (16)
+\# Number of Planes Used:	16
+\# X version:		11.0 (vendor release 3370)
+\# X resource pool:	base 0x800000, mask 0x3fffff (4194303), shift 0
+\# 			current id 0x0, current max 0x3ffffa (4194298)
+\# Max data seg size:	     unlimited
+\# Max process size:	     unlimited
+\# Initial sbrk value:	        356 MB
+\# Available memory:	      8,099 MB
+\# System memory:	     11,866 MB
+\# Maximum memory size:	     11,589 MB
+\# Max mem available:	      8,178 MB
+\# Initial memory used:	         80 MB
+\#        process size:	        873 MB
+\# Qt version:		4.8.5
+\# Window Manager:	other
+\# User Name:		root
+\o Working Directory:	work-eda:/root/microled_ai_project/cadence_work
+\# Process Id:		59285
+\o 
+\o COPYRIGHT © 1992-2015  CADENCE DESIGN SYSTEMS INC.  ALL RIGHTS RESERVED.
+\o           © 1992-2015  UNIX SYSTEMS Laboratories INC.,
+\o                          Reproduced with permission.
+\o 
+\o This Cadence Design Systems program and online documentation are
+\o proprietary/confidential information and may be disclosed/used only
+\o as authorized in a license agreement controlling such use and disclosure.
+\o 
+\o           RESTRICTED RIGHTS NOTICE (SHORT FORM)
+\o Use/reproduction/disclosure is subject to restriction
+\o set forth at FAR 1252.227-19 or its equivalent.
+\o Loading geView.cxt 
+\o Loading menuBuilder.cxt 
+\o Loading schView.cxt 
+\o Loading selectSv.cxt 
+\o Loading wireEdit.cxt 
+\o Loading pte2.cxt 
+\o Loading xlUI.cxt 
+\o Loading auCore.cxt 
+\o Loading vhdl.cxt 
+\o Loading seismic.cxt 
+\o Loading ci.cxt 
+\o Loading ams.cxt 
+\o Virtuoso Framework License (111) was checked out successfully. Total checkout time was 0.02s.
+\o END OF SITE CUSTOMIZATION
+\o Loading $HOME/.cdsinit init file from the site init file.
+\o RD-BEGIN
+\o Loading smic18mmrf/libInit.il ...
+\o 	Loading smic18mmrf/loadCxt.ile ... done!
+\o 	Loading context 'smic18mmrf' from library 'smic18mmrf' ... done!
+\o 	Loading context 'pdkUtils' from library 'smic18mmrf' ... done!
+\o 	Loading smic18mmrf/display.drf ... done!
+\o 	Loading smic18mmrf/libInitCktPro.il ... done!
+\o 	Loading smic18mmrf/libInitCustomExit.il ... Loading libInitCustomExit.il for smic18mmrf
+\o Loading oasis.cxt 
+\o Loading analog.cxt 
+\o Loading asimenv.cxt 
+\o Loading spectrei.cxt 
+\o Loading devCheck.cxt 
+\o Loading relXpert.cxt 
+\o Loading hspiceD.cxt 
+\o Loading spectreinl.cxt 
+\o Loading UltraSim.cxt 
+\# Memory report: using         306 MB, process size 1,128 MB at UTC 2026.10.08 15:39:27.054
+\o Loading msgHandler.cxt 
+\o Loading AMSOSS.cxt 
+\o Loading AMS.cxt 
+\o done!
+\o Loaded smic18mmrf/libInit.il successfully!
+\o Loading smic skill utility
+\o /root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../SMIC18MMRF_skillUtility/batchSetCDF.ile
+\o /root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../SMIC18MMRF_skillUtility/libNumcheck.ile
+\o Loading emxskill
+\o file="/license.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/license.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/license.ils
+\o file="/continuum.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuum.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuum.ils
+\o file="/continuumgui.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuumgui.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuumgui.ils
+\o file="/callbacks.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/callbacks.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/callbacks.ils
+\o file="/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils
+\o file="/../models/diff_ind_rf_psub_18MTE_scalable.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_rf_psub_18MTE_scalable.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_rf_psub_18MTE_scalable.ils
+\o file="/../models/ind_rf_psub_scalable.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/ind_rf_psub_scalable.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/ind_rf_psub_scalable.ils
+\o RD-CELL "microled_cells"/"c2mos_dff_1bit_paramfix" instances=24 nets=13 shapes=219
+\o RD-ROW inst="mp_k4" master_lib="smic18mmrf" master_cell="p18" master_view="symbol" model="p18" raw_l="200n" raw_w="1u" raw_fw="1u" raw_fingers="1" raw_mult="1" simW="1u" cdf_l="200n" cdf_w="1u" cdf_fw="1u" cdf_fingers="1" cdf_mult="1" num_l=(2e-07) num_w=(1e-06) bbox=(((0.075 9.3875) (1.3 10.03125))) D="q" G="qbar" S="vdd" B="vdd"
+\o RD-ROW inst="mp_k3" master_lib="smic18mmrf" master_cell="p18" master_view="symbol" model="p18" raw_l="200n" raw_w="1u" raw_fw="1u" raw_fingers="1" raw_mult="1" simW="1u" cdf_l="200n" cdf_w="1u" cdf_fw="1u" cdf_fingers="1" cdf_mult="1" num_l=(2e-07) num_w=(1e-06) bbox=(((1.45 9.3875) (2.675 10.03125))) D="qbar" G="q" S="vdd" B="vdd"
+\o RD-ROW inst="mp_s2" master_lib="smic18mmrf" master_cell="p18" master_view="symbol" model="p18" raw_l="200n" raw_w="4u" raw_fw="4u" raw_fingers="1" raw_mult="1" simW="4u" cdf_l="200n" cdf_w="4u" cdf_fw="4u" cdf_fingers="1" cdf_mult="1" num_l=(2e-07) num_w=(4e-06) bbox=(((5.825 2.7625) (7.05 3.40625))) D="q" G="m" S="y1" B="vdd"
+\o RD-ROW inst="mp_s1" master_lib="smic18mmrf" master_cell="p18" master_view="symbol" model="p18" raw_l="200n" raw_w="4u" raw_fw="4u" raw_fingers="1" raw_mult="1" simW="4u" cdf_l="200n" cdf_w="4u" cdf_fw="4u" cdf_fingers="1" cdf_mult="1" num_l=(2e-07) num_w=(4e-06) bbox=(((5.825 4.0125) (7.05 4.65625))) D="y1" G="clkb" S="vdd" B="vdd"
+\o RD-ROW inst="mp_k2" master_lib="smic18mmrf" master_cell="p18" master_view="symbol" model="p18" raw_l="200n" raw_w="1u" raw_fw="1u" raw_fingers="1" raw_mult="1" simW="1u" cdf_l="200n" cdf_w="1u" cdf_fw="1u" cdf_fingers="1" cdf_mult="1" num_l=(2e-07) num_w=(1e-06) bbox=(((4.2 9.3875) (5.425 10.03125))) D="m" G="mb" S="vdd" B="vdd"
+\o RD-ROW inst="mp_k1" master_lib="smic18mmrf" master_cell="p18" master_view="symbol" model="p18" raw_l="200n" raw_w="1u" raw_fw="1u" raw_fingers="1" raw_mult="1" simW="1u" cdf_l="200n" cdf_w="1u" cdf_fw="1u" cdf_fingers="1" cdf_mult="1" num_l=(2e-07) num_w=(1e-06) bbox=(((2.825 9.3875) (4.05 10.03125))) D="mb" G="m" S="vdd" B="vdd"
+\o RD-ROW inst="mp_m2" master_lib="smic18mmrf" master_cell="p18" master_view="symbol" model="p18" raw_l="200n" raw_w="4u" raw_fw="4u" raw_fingers="1" raw_mult="1" simW="4u" cdf_l="200n" cdf_w="4u" cdf_fw="4u" cdf_fingers="1" cdf_mult="1" num_l=(2e-07) num_w=(4e-06) bbox=(((7.575 2.7625) (8.8 3.40625))) D="m" G="d" S="x1" B="vdd"
+\o RD-ROW inst="mp_m1" master_lib="smic18mmrf" master_cell="p18" master_view="symbol" model="p18" raw_l="200n" raw_w="4u" raw_fw="4u" raw_fingers="1" raw_mult="1" simW="4u" cdf_l="200n" cdf_w="4u" cdf_fw="4u" cdf_fingers="1" cdf_mult="1" num_l=(2e-07) num_w=(4e-06) bbox=(((7.7 4.0125) (8.925 4.65625))) D="x1" G="clk" S="vdd" B="vdd"
+\o RD-ROW inst="mp_c" master_lib="smic18mmrf" master_cell="p18" master_view="symbol" model="p18" raw_l="200n" raw_w="4u" raw_fw="4u" raw_fingers="1" raw_mult="1" simW="4u" cdf_l="200n" cdf_w="4u" cdf_fw="4u" cdf_fingers="1" cdf_mult="1" num_l=(2e-07) num_w=(4e-06) bbox=(((7.575 9.3875) (8.8 10.03125))) D="clkb" G="clk" S="vdd" B="vdd"
+\o RD-ROW inst="mn_k4" master_lib="smic18mmrf" master_cell="n18" master_view="symbol" model="n18" raw_l="200n" raw_w="500n" raw_fw="500n" raw_fingers="1" raw_mult="1" simW="500n" cdf_l="200n" cdf_w="500n" cdf_fw="500n" cdf_fingers="1" cdf_mult="1" num_l=(2e-07) num_w=(5e-07) bbox=(((0.075 6.5125) (1.3 7.15625))) D="q" G="qbar" S="vss" B="vss"
+\o RD-ROW inst="mn_k3" master_lib="smic18mmrf" master_cell="n18" master_view="symbol" model="n18" raw_l="200n" raw_w="500n" raw_fw="500n" raw_fingers="1" raw_mult="1" simW="500n" cdf_l="200n" cdf_w="500n" cdf_fw="500n" cdf_fingers="1" cdf_mult="1" num_l=(2e-07) num_w=(5e-07) bbox=(((1.45 8.0125) (2.675 8.65625))) D="qbar" G="q" S="vss" B="vss"
+\o RD-ROW inst="mn_s2" master_lib="smic18mmrf" master_cell="n18" master_view="symbol" model="n18" raw_l="200n" raw_w="2u" raw_fw="2u" raw_fingers="1" raw_mult="1" simW="2u" cdf_l="200n" cdf_w="2u" cdf_fw="2u" cdf_fingers="1" cdf_mult="1" num_l=(2e-07) num_w=(2e-06) bbox=(((7.325 6.5125) (8.55 7.15625))) D="q" G="m" S="y2" B="vss"
+\o RD-ROW inst="mn_s1" master_lib="smic18mmrf" master_cell="n18" master_view="symbol" model="n18" raw_l="200n" raw_w="2u" raw_fw="2u" raw_fingers="1" raw_mult="1" simW="2u" cdf_l="200n" cdf_w="2u" cdf_fw="2u" cdf_fingers="1" cdf_mult="1" num_l=(2e-07) num_w=(2e-06) bbox=(((7.45 5.2625) (8.675 5.90625))) D="y2" G="clk" S="vss" B="vss"
+\o RD-ROW inst="mn_k2" master_lib="smic18mmrf" master_cell="n18" master_view="symbol" model="n18" raw_l="200n" raw_w="500n" raw_fw="500n" raw_fingers="1" raw_mult="1" simW="500n" cdf_l="200n" cdf_w="500n" cdf_fw="500n" cdf_fingers="1" cdf_mult="1" num_l=(2e-07) num_w=(5e-07) bbox=(((4.2 1.5125) (5.425 2.15625))) D="m" G="mb" S="vss" B="vss"
+\o RD-ROW inst="mn_k1" master_lib="smic18mmrf" master_cell="n18" master_view="symbol" model="n18" raw_l="200n" raw_w="500n" raw_fw="500n" raw_fingers="1" raw_mult="1" simW="500n" cdf_l="200n" cdf_w="500n" cdf_fw="500n" cdf_fingers="1" cdf_mult="1" num_l=(2e-07) num_w=(5e-07) bbox=(((2.825 8.0125) (4.05 8.65625))) D="mb" G="m" S="vss" B="vss"
+\o RD-ROW inst="mn_m2" master_lib="smic18mmrf" master_cell="n18" master_view="symbol" model="n18" raw_l="200n" raw_w="2u" raw_fw="2u" raw_fingers="1" raw_mult="1" simW="2u" cdf_l="200n" cdf_w="2u" cdf_fw="2u" cdf_fingers="1" cdf_mult="1" num_l=(2e-07) num_w=(2e-06) bbox=(((7.575 1.5125) (8.8 2.15625))) D="m" G="d" S="x2" B="vss"
+\o RD-ROW inst="mn_m1" master_lib="smic18mmrf" master_cell="n18" master_view="symbol" model="n18" raw_l="200n" raw_w="2u" raw_fw="2u" raw_fingers="1" raw_mult="1" simW="2u" cdf_l="200n" cdf_w="2u" cdf_fw="2u" cdf_fingers="1" cdf_mult="1" num_l=(2e-07) num_w=(2e-06) bbox=(((7.575 0.1375) (8.8 0.78125))) D="x2" G="clkb" S="vss" B="vss"
+\o RD-ROW inst="mn_c" master_lib="smic18mmrf" master_cell="n18" master_view="symbol" model="n18" raw_l="200n" raw_w="2u" raw_fw="2u" raw_fingers="1" raw_mult="1" simW="2u" cdf_l="200n" cdf_w="2u" cdf_fw="2u" cdf_fingers="1" cdf_mult="1" num_l=(2e-07) num_w=(2e-06) bbox=(((7.575 8.0125) (8.8 8.65625))) D="clkb" G="clk" S="vss" B="vss"
+\o RD-NETPIN net="qbar" pins=1
+\o RD-NETPIN net="vdd" pins=1
+\o RD-NETPIN net="q" pins=1
+\o RD-NETPIN net="clk" pins=1
+\o RD-NETPIN net="d" pins=1
+\o RD-NETPIN net="vss" pins=1
+\o RD_DONE
+\o 
+\o Loading lce.cxt 
+\# Memory report: on exit            330 MB, process size 1,152 MB at UTC 2026.10.08 15:39:27.382
+\# Memory report: peak usage         330 MB, process size 1,152 MB
