@@ -133,6 +133,10 @@ http://127.0.0.1:7892`（`--unset` 即撤销）。
   `feature/data-driver-virtuoso-schematic = 9dde29fd0e2dc54eeeeed58eb1ab42a3b8682661`，与本地 HEAD
   相等，由 `git ls-remote` 与 `gh api` 两条独立路径同时确认。`main` 未合并、未改动（远端 main 仍为
   `23e471c`）。
+* 本文件与诊断报告自身的提交（`9098dad`）也用同一个脚本推送，选定通道同样是代理；推送后
+  `git ls-remote`（走直连，几分钟前它还是 0/5）与 `gh api` 都回读到
+  `9098dad3952ccf4b1a4dfcc78753f269eb05d09c` == 本地 HEAD。这条直连在约 20 分钟内从 5/5 → 0/5 → 又能
+  用，正是"必须在运行时测量、不能记住上次哪条路好走"的直接证据。
 
 ## 8. 失败时的恢复流程
 
