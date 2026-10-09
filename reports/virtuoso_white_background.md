@@ -18,7 +18,8 @@ CURRENT_LAUNCHER:           /root/Desktop/Cadence-Virtuoso-MicroLED.desktop
 WHITE_BACKGROUND_CONFIG:    PASS
 CONFIG_METHOD:              xrdb -merge cadence_work/appearance/white/xresources.txt
                             （Opus.editorBackground #ffffff + Opus.dragColor #000000）
-DESKTOP_LAUNCHER:           PASS（LAUNCHER_CHECK: PASS，三条旧检查仍在原位且通过）
+DESKTOP_LAUNCHER:           *** 已被 GUI-2 推翻，见下方更正块 ***
+                            （GUI-1 当时只跑了 LAUNCHER_CHECK=1，即 PASS；GUI-2 查明双击实际失败）
 AUTO_LOAD_ON_NEXT_START:    YES
 RESTORE_ORIGINAL_THEME:     READY（bash scripts/gui1_white_theme.sh restore）
 GUI_VISUAL_VERIFICATION:    PENDING_USER_REVIEW
@@ -108,10 +109,29 @@ DATABASE_VALIDATION:      PASS     真读回 X 会话数据库：
                                    连续 3 次合并仍是 1 条（不无限追加）；
                                    restore 后行数 10 -> 8、Opus 键 0 条、GNOME 原项还在；
                                    重新 enable 又回到 2 条（往返成立）
-LAUNCHER_VALIDATION:      PASS     LAUNCHER_CHECK: PASS；theme 行打印出将要合并的文件路径；
-AUTO_LOAD_ON_NEXT_START:  YES      且 LAUNCHER_CHECK=1 模式不写数据库（CHECK_MODE_IS_SIDE_EFFECT_FREE: PASS）
+LAUNCHER_VALIDATION:      INVALID  *** 仅 LAUNCHER_CHECK=1，未验证桌面启动路径，已被 GUI-2 推翻 ***
+AUTO_LOAD_ON_NEXT_START:  NO       *** GUI-2 实测：双击报 "There was an error launching the
+                                   application."，白色背景当时根本没机会生效 ***
 DISPLAY_RESOURCE_VALIDATION: 同上（资源名/绑定/文档三项就是这一项）
 ```
+
+> **GUI-2 更正（2026-10-09）**：本报告的 `DESKTOP_LAUNCHER: PASS` / `LAUNCHER_VALIDATION: PASS` /
+> `AUTO_LOAD_ON_NEXT_START: YES` 三条**当时就不成立**，根因如下，全部可复现：
+>
+> * GUI-1 用 `scripts/sync2guest.sh` 部署改过的 launcher，而该脚本对每个同步文件**硬编码
+>   `chmod 644`**（收尾只给 `$PROJ/scripts/*.sh` 补 `+x`，不管 `cadence_work/`）——于是
+>   `launch_virtuoso.sh` 从 `-rwxr-xr-x` 变成 `-rw-r--r--`，执行位被这次改动自己抹掉了。
+> * `.desktop` 的 `Exec=` 与 `TryExec=` 都指向该文件本身，GNOME 需要 `access(X_OK)` / `execv`
+>   都通过；实测 `execv -> errno 13 EACCES`（rc=126），所以图标报"启动应用时出错"。
+> * 我当初跑的是 `LAUNCHER_CHECK=1 bash <脚本>`：**用 bash 起脚本不需要执行位**，所以它必然 PASS，
+>   对桌面路径零证明力。`AUTO_LOAD_ON_NEXT_START: YES` 属于把"配置文件已接好线"当成"下次能启动"，
+>   正是任务当时警告过的那类过度声明。
+> * 白色背景与本次失败**无关**（受控 A/B：只差 `QODER_THEME` 时两种都启动成功；只差执行位时结果翻转），
+>   主题功能在修复后按原设计继续工作。
+>
+> 修复与复测见 `reports/lessons_learned/virtuoso_desktop_launch_failure.md`、`AGENTS.md` 第 32 条。
+> 仍未由我验证的一项：**真实双击（nautilus 驱动）无法在本机模拟，取不到可信像素，
+> `DESKTOP_DOUBLE_CLICK: USER_VERIFICATION_REQUIRED`**。
 
 验不了的部分，两条都是实测，不是"没试"：
 

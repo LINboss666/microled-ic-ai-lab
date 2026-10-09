@@ -29,7 +29,7 @@ OPTS=(-o BatchMode=yes -o ConnectTimeout=8 -o StrictHostKeyChecking=accept-new
 stage=/tmp/qoder_sync_$$
 ssh "${OPTS[@]}" "root@${QODER_GUEST_IP}" "mkdir -p '$stage'" || exit 9
 
-names=(); finals=(); dests=()
+names=(); finals=(); dests=(); modes=()
 for f in "$@"; do
   abs="$(cd "$(dirname "$f")" && pwd)/$(basename "$f")"
   case "$abs" in
@@ -45,13 +45,23 @@ for f in "$@"; do
   names+=("$stage/$idx--$(basename "$abs")")
   finals+=("$(basename "$abs")")
   dests+=("$PROJ/$(dirname "$rel")")
+  # The destination mode comes from the repository, never from a hardcoded 644. This is what broke the
+  # desktop icon: GUI-1 synced an edited cadence_work/launch_virtuoso.sh, this script forced mode 644
+  # on it, and the .desktop Exec/TryExec both need that file executable -- GNOME's execv got EACCES
+  # and reported "There was an error launching the application." while `bash -n` and LAUNCHER_CHECK
+  # both kept passing. git mode 100755 -> 755.
+  gmode=$(git -C "$ROOT" ls-files -s -- "$rel" 2>/dev/null | awk '{print $1; exit}')
+  case "$gmode" in
+    100755) modes+=("755") ;;
+    *)      modes+=("644") ;;
+  esac
   scp "${OPTS[@]}" "$abs" "root@${QODER_GUEST_IP}:${names[$idx]}" || exit 9
 done
 
 for i in "${!names[@]}"; do
-  n="${names[$i]}"; f="${finals[$i]}"; d="${dests[$i]}"
+  n="${names[$i]}"; f="${finals[$i]}"; d="${dests[$i]}"; m="${modes[$i]}"
   ssh "${OPTS[@]}" "root@${QODER_GUEST_IP}" \
-    "mkdir -p '$d' && sed 's/\r\$//' '$n' > '$d/$f' && chmod 644 '$d/$f' && ls -l '$d/$f'"
+    "mkdir -p '$d' && sed 's/\r\$//' '$n' > '$d/$f' && chmod $m '$d/$f' && ls -l '$d/$f'"
 done
 ssh "${OPTS[@]}" "root@${QODER_GUEST_IP}" "chmod +x $PROJ/scripts/*.sh 2>/dev/null; rm -rf '$stage'"
 echo "SYNC done -> $PROJ"

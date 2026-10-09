@@ -126,3 +126,39 @@
     另两条同类坑：PS 5.1 不能 `function F(@a)` 再在体内 splat `@a`（解析错误）；`Out-String` 会把
     原生命令 stderr 的 `ErrorRecord` 打印成 `+ FullyQualifiedErrorId : NativeCommandError` 而吞掉
     git 真正的报错，必须 `if ($_ -is [ErrorRecord]) { $_.Exception.Message }` 展平，否则阶段分类失效。
+32. **改 Virtuoso 桌面启动脚本之后，禁止只跑静态检查就宣布可用**（GUI-2 实测，2026-10-09，详见
+    `reports/lessons_learned/virtuoso_desktop_launch_failure.md`）。双击报
+    `There was an error launching the application.` 的真实原因是 `launch_virtuoso.sh` **丢了执行位**
+    （mode 644），而 `.desktop` 的 `Exec` 和 `TryExec` 都指向该文件本身：GNOME 先
+    `access(TryExec, X_OK)` 再 `execv(Exec)`，两处都要 X_OK，实测 `execv -> errno 13 EACCES / rc=126`。
+    ① **为什么静态检查完全骗得过人**：`bash -n` 和 `LAUNCHER_CHECK=1 bash <脚本>` 都是用 `bash` 起的，
+    **`bash` 不需要执行位**，所以两条都一路 PASS 而图标照样打不开。凡是"验证桌面/图标/外部启动器"的
+    结论，必须按被验证者的真实调用方式去调（`execv` 目标本身），不能用解释器代跑。
+    ② 执行位是 `scripts/sync2guest.sh` 弄丢的：它原本对每个同步文件**硬编码 `chmod 644`**，收尾只给
+    `$PROJ/scripts/*.sh` 补 `+x`，不管 `cadence_work/`。已改成按 `git ls-files -s` 的 index mode 决定
+    落地权限（`100755 -> 755`）。**同时**该文件在仓库里原本是 `100644`，即执行位只靠 guest 上一次手工
+    `chmod`，所以修复必须三处一起做：guest `chmod 755` + `git update-index --chmod=+x <file>` +
+    部署通道按 git mode 走；只做其中一处必然复发。
+    ③ **白色背景不是原因，且已有证据**（不要再来回猜）：主题块只有 `say`，xrdb 失败也只打印
+    `theme NOT applied`，**没有任何 `bail`/`exit`**；受控 A/B（只差 `QODER_THEME`）两种都启动成功、
+    CIW 都 `IsViewable`；而只差执行位时结果立刻翻转。另记：`QODER_THEME=none/original` **只跳过本次
+    merge**，不会删掉已在 X 会话数据库里的 `Opus.*` 资源，彻底恢复要
+    `bash scripts/gui1_white_theme.sh restore`（`xrdb -load` 快照，不是 `-remove`）。
+    ④ 复测入口：`scripts/gui2_verify_desktop.sh`（14 项静态全链路，**故意不做 execv**——否则每跑一次
+    就真起一个 Virtuoso，改用 `os.access(X_OK)` 给同一判据，结尾固定输出
+    `VIRTUOSO_GUI: UNVERIFIED_BY_THIS_SCRIPT`）；`scripts/gui2_real_launch.sh` + `gui2_envexec.sh`
+    （把 `/proc/<gnome-session>/environ` 逐项交给 `env`，用**桌面会话自己的环境**execv 真正的 Exec
+    目标，再证明有 virtuoso 进程**且**窗口 `Map State: IsViewable` + `WM_STATE: Normal`）。
+    判 GUI 起来**必须轮询 IsViewable**：`libManager`/`libSelect` 以 `-unmapped` 启动是正常的分段启动，
+    一开始 `WM_STATE: not found` 不代表失败。
+    ⑤ 本机环境事实（省得再探）：`/root/.Xauthority` **不存在**，桌面真实
+    `XAUTHORITY=/var/run/gdm/auth-for-root-*/database`；桌面 `PATH` 首项是 `/etc/env`（那个末尾会自己
+    拉 GUI 的包装脚本目录），但 `cad_env.sh` 只 eval 其中的 `export` 行、IC617 bin 仍在 PATH 前，实测
+    桌面环境下仍解析到 `/opt/IC617//tools/dfII/bin/virtuoso`，且 launcher 的
+    `case "$BIN" in /opt/IC617/*)` 护栏会拒绝别的路径；metacity 在跑；成功会话里也会有一条
+    `Display :0 Error "BadAtom"`，与本故障无关，别当根因。
+    ⑥ **没能验证的部分不许伪造**：真正由 nautilus 驱动的双击无法模拟（这台 VM 取不到可信像素），
+    一律写 `DESKTOP_DOUBLE_CLICK: USER_VERIFICATION_REQUIRED`。另：`cadence_work/desktop/`（`.desktop`
+    源文件）因扩展名白名单不含 `.desktop` 而**未被 git 跟踪**，快捷方式本身没有版本记录，改坏找不回来。
+    ⑦ 若无法完成完整 GUI 启动路径验证，必须显式写 `DESKTOP_GUI_LAUNCH: UNVERIFIED`，不得以
+    `LAUNCHER_CHECK: PASS` 代替。

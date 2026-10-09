@@ -14,7 +14,7 @@ is deliberately not written down, so this report stays safe to publish.
 
 | item | value | source |
 |---|---|---|
-| git execution host | Windows, `LAPTOP-0AICPJF1` | `git_transport_probe.ps1` HOST line |
+| git execution host | Windows, personal laptop hostname (masked here on purpose) | `git_transport_probe.ps1` HOST line |
 | git build | `git version 2.49.0.windows.1` (Git for Windows, libcurl) | same |
 | git TLS backend | `http.sslBackend = schannel`, `http.sslVerify` unset (= default, verifying) | `git config --get` |
 | RHEL guest involvement in push | none — the guest is never contacted for git operations | push commands run only on Windows |
