@@ -95,3 +95,34 @@
     X 会话数据库（`xrdb -query` 读回 + `xrdb -load <快照>` 恢复）。另记：`xrdb` 走 cpp，资源文件里
     含撇号的 `!` 注释会报 `Unterminated character constant`；`Opus` 的绑定要用紧格式 `Opus.res:`，
     Cadence 自带样例文件 `tools/dfII/cdsuser/.Xdefaults` 明确警告过松散绑定会与 SKILL 设置冲突。
+31. **推 GitHub 一律走 `scripts/git_push_reliable.ps1`，失败时报告阶段而不是重跑命令**（NET-1 实测，
+    2026-10-09，详见 `reports/git_network_diagnosis.md` 与
+    `reports/lessons_learned/git_transport_instability.md`）。① git 跑在 **Windows**
+    （Git for Windows 2.49.0.windows.1，`http.sslBackend=schannel`），guest 完全不在这条路径上——
+    不要把 Windows 代理设置和 RHEL 网络配置混为一谈。② 实测根因：**到 `github.com:443`
+    （`20.205.243.166`）的直连会间歇失败**，同一会话内从 5/5 成功翻到 0/5，坏在两个层
+    （`Failed to connect ... port 443`，以及 `expected flush after ref listing` / `curl 28` 卡死）；
+    而 `gh` 用的是 `api.github.com`（`...168`，另一个 IP），所以"gh 正常、git 失败"从来不是代理差异。
+    git 在全局/仓库/URL/remote 四级都没有代理配置，代理环境变量三级全 unset，`gh`（Go）同样走直连——
+    **"gh 用代理、git 绕代理"这个候选根因已被证伪**，不要再据此"修代理"。③ 已验证的传输：
+    **配置代理优先，强制直连（`-c http.proxy=`）兜底**，两条候选都要先用 `git ls-remote` 实测再选；
+    用户配置的本地代理在 `127.0.0.1:7892`，本轮所有经它的 git 操作零失败。为什么不把代理持久化成
+    仓库配置：那会让裸 `git push` 依赖"代理软件正好开着"，新引入一种故障；脚本已能探测+回退。
+    需要用户授权才做：`git config --local http.https://github.com.proxy <verified-proxy>`。④ 用 git 自带的
+    `http.lowSpeedLimit=1024 / http.lowSpeedTime=10` 给传输设界，别让半开连接把脚本挂死；不要靠
+    PowerShell 盯进程超时（5.1 没有原生 timeout）。⑤ 绝不用 `--force` / `--force-with-lease` /
+    `--no-verify`，绝不 REST 改写 ref，绝不为连上而 `http.sslVerify=false`，绝不关身份验证；远端 SHA
+    不是本地 HEAD 的祖先时**停下报告**；`main`/`master` 不由该脚本推。⑥ `LOCAL_REMOTE_PARITY: PASS`
+    只在独立回读（换一条非 push 通道的 `ls-remote`，或 `gh api` 打 `api.github.com`）拿到
+    `REMOTE_SHA == LOCAL_SHA` 时才允许；回读不到就写 `PUSH_REPORTED_SUCCESS / REMOTE_PARITY_UNVERIFIED`，
+    不许按 push 的 stdout 猜。⑦ SSH over 443 现状：`ssh.github.com:443` 可达，host key 三张指纹与
+    GitHub `/meta` 公布密钥逐一对上（所以不是被代理中间人），但本机没有 GitHub 身份
+    （`Permission denied (publickey)`，`~/.ssh` 只有虚拟机密钥），且列账户公钥需要扩 token scope——
+    因此 `SSH_443: AUTH_NOT_CONFIGURED`，**不生成/上传密钥、不写 `~/.ssh`、不换 origin**。
+    要 SSH 路线必须由用户先注册公钥。⑧ PowerShell 的一条通用坑（就出在这个脚本上）：命令解析顺序是
+    别名→函数→cmdlet→可执行文件，所以**函数名不能与外部程序同名**——`function Git(...)` 里的
+    `& git` 会递归调用函数自己，直到 `CallDepthOverflow`，症状是"git 什么都没输出"而不是报错。
+     helper 一律取名 `InvokeGit`/`Get-PreArgs` 这类带动词或带连字符的形式，并写 `& git.exe`。
+    另两条同类坑：PS 5.1 不能 `function F(@a)` 再在体内 splat `@a`（解析错误）；`Out-String` 会把
+    原生命令 stderr 的 `ErrorRecord` 打印成 `+ FullyQualifiedErrorId : NativeCommandError` 而吞掉
+    git 真正的报错，必须 `if ($_ -is [ErrorRecord]) { $_.Exception.Message }` 展平，否则阶段分类失效。

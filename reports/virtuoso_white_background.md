@@ -155,22 +155,34 @@ DISPLAY_RESOURCE_VALIDATION: 同上（资源名/绑定/文档三项就是这一�
 
 ```
 GUI-1 commits: d3881ef  feat: give the Micro LED Virtuoso session a white schematic background...
-               82957a6  docs: record that the GUI-1 commit is not on the remote yet ...  <- HEAD
+               82957a6  docs: record that the GUI-1 commit is not on the remote yet ...
+               9dde29f  docs: keep the push-pending note self-consistent ...           <- HEAD
 上一条:        a53f646  SCH-3 data driver 原理图（已在远端，独立回读确认过）
 Safety Gate:   两次提交各自过 staged 扫描（22 / 1 个对象），PDK/CREDENTIAL/PRIVATE_KEY/VENDOR_MODEL 计数全 0
 ```
 
-推送状态：`git push` 四次尝试全部失败（三次 `Failed to connect to github.com port 443`、一次
-`Recv failure: Connection was reset`），而**同一时刻 `gh api` 正常**并返回
+推送状态（当时，2026-10-08）：`git push` 四次尝试全部失败（三次 `Failed to connect to github.com
+port 443`、一次 `Recv failure: Connection was reset`），而**同一时刻 `gh api` 正常**并返回
 `refs/heads/feature/data-driver-virtuoso-schematic = a53f646` —— 与 SCH-2 遇到的形状一致，
-是 git 的 443 传输被阻断，不是闸门或凭据问题（只对当次命令加 `-c http.version=HTTP/1.1`，
-未改任何全局配置；到第 3 次后按规矩停下，只多试了一次作确认）。因此：
+是 git 的 443 传输不稳定，不是闸门或凭据问题（只对当次命令加 `-c http.version=HTTP/1.1`，
+未改任何全局配置；到第 3 次后按规矩停下，只多试了一次作确认）。因此当时记录：
 
 ```
 LOCAL_REMOTE_PARITY: NOT_YET（本地 82957a6 / 远端 a53f646；本轮两个提交都还没上远端）
 REVIEW_HEAD_SHA:     82957a6（本地；等网络恢复后独立回读才算推上去）
 ```
 
-等网络恢复后重跑 `git -c http.version=HTTP/1.1 push origin feature/data-driver-virtuoso-schematic`
-并用 `git ls-remote` 或 `gh api .../git/refs/heads/...` 独立回读才算推上去；未 merge main。
+**已由 NET-1 解决（2026-10-09）**：根因、验证与恢复流程见 `reports/git_network_diagnosis.md` 与
+`reports/lessons_learned/git_transport_instability.md`。上面那次"直连 443 失败、`gh` 同时可用"的
+形状后来被证明是**到 `github.com:443` 的直连抖动**（同一会话内从 5/5 成功翻到 0/5），而 `gh` 走的是
+`api.github.com` 这个另一个 IP 的另一条边缘；`-c http.version=HTTP/1.1` **不是**解法，当时的成功
+不足以支撑该结论，这里明确更正。GUI-1 的三个提交（含下面第 9 节的 `9dde29f`）已用
+`scripts/git_push_reliable.ps1` 推送成功，并由 `git ls-remote`（非 push 所用通道）与 `gh api`
+两条独立路径回读确认：
+
+```
+远端 refs/heads/feature/data-driver-virtuoso-schematic = 9dde29f...（== 本地 HEAD）
+LOCAL_REMOTE_PARITY: PASS
+未 merge main（远端 main 仍为 23e471c）
+```
 
