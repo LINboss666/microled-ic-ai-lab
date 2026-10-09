@@ -148,3 +148,27 @@ DISPLAY_RESOURCE_VALIDATION: 同上（资源名/绑定/文档三项就是这一�
 2. `xrdb` 走 C 预处理器：资源文件里 `!` 注释如果含撇号/引号会被当成未结束的字符常量，
    逐行报 `Unterminated character constant`（键仍然合并成功，但日志脏）。资源文件因此保持
    短注释、不写撇号，说明文字放报告里。
+
+## 7. Git 与远端状态（§9）
+
+本轮提交在 `feature/data-driver-virtuoso-schematic` 上：
+
+```
+GUI-1 commit:  d3881ef  feat: give the Micro LED Virtuoso session a white schematic background...
+上一条:        a53f646  SCH-3 data driver 原理图（已在远端，独立回读确认过）
+Safety Gate:   staged 22 个对象，PDK/CREDENTIAL/PRIVATE_KEY/VENDOR_MODEL 计数全 0，PASS
+```
+
+推送状态：`git push` 三次尝试全部失败（两次 `Failed to connect to github.com port 443`、一次
+`Recv failure: Connection was reset`），而**同一时刻 `gh api` 正常**并返回
+`refs/heads/feature/data-driver-virtuoso-schematic = a53f646` —— 与 SCH-2 遇到的形状一致，
+是 git 的 443 传输被阻断，不是闸门或凭据问题（只对当次命令加 `-c http.version=HTTP/1.1`，
+未改任何全局配置）。因此：
+
+```
+LOCAL_REMOTE_PARITY: NOT_YET（本地 d3881ef / 远端 a53f646；远端尚未收到本轮提交）
+```
+
+等网络恢复后重跑 `git -c http.version=HTTP/1.1 push origin feature/data-driver-virtuoso-schematic`
+并用 `git ls-remote` 或 `gh api .../git/refs/heads/...` 独立回读才算推上去；未 merge main。
+
