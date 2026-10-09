@@ -78,34 +78,6 @@ else
   say "      cds.lib   : $CDS_LIB missing -> Library Manager would show no project libraries"
 fi
 
-# GUI-1: the appearance theme. One mechanism only -- the project's X resource file is merged into
-# this X session's database (the way Cadence's own sample .Xdefaults prescribes), and the previous
-# database is snapshotted first so scripts/gui1_white_theme.sh restore can put it back.
-#
-# Session-wide by nature: any *other* Virtuoso started in this X session afterwards also reads these
-# two Opus resources. Nothing in ~/.Xresources, ~/.Xdefaults, ~/.cdsinit, the site init, the Cadence
-# install tree or the teacher PDK is written, and no non-Opus key is touched.
-# QODER_THEME=original (or ...=none) starts the session without applying the theme.
-RESFILE=""
-WANT_THEME="${QODER_THEME:-}"
-if [ -z "$WANT_THEME" ]; then
-  RESFILE=$(cat "$WORK/appearance/active_resources" 2>/dev/null || true)
-elif [ "$WANT_THEME" = original ] || [ "$WANT_THEME" = none ]; then
-  RESFILE=""
-else
-  RESFILE="$WORK/appearance/$WANT_THEME/xresources.txt"
-fi
-say "      theme     : ${WANT_THEME:-$(cat "$WORK/appearance/theme" 2>/dev/null || echo unset)}  resource_file=${RESFILE:-none}"
-if [ "${LAUNCHER_CHECK:-0}" != "1" ] && [ -n "$RESFILE" ] && [ -f "$RESFILE" ] && command -v xrdb >/dev/null 2>&1; then
-  SNAP="$WORK/appearance/backup/xrdb_query_original.txt"
-  [ -s "$SNAP" ] || xrdb -query > "$SNAP" 2>&1
-  if xrdb -merge "$RESFILE"; then
-    say "      theme applied via xrdb (undo: bash scripts/gui1_white_theme.sh restore)"
-  else
-    say "      theme NOT applied (xrdb failed) -- the session starts with built-in colours"
-  fi
-fi
-
 # An existing session is never touched: report it and carry on.
 OTHER=$(ps -eo pid,args | grep '/opt/IC617.*/virtuoso' | grep -v grep | awk '{print $1}' | head -3 | tr '\n' ' ')
 [ -n "${OTHER:-}" ] && say "      note: Virtuoso already running (pid $OTHER) -- left untouched"

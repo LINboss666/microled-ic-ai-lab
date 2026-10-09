@@ -29,7 +29,7 @@ OPTS=(-o BatchMode=yes -o ConnectTimeout=8 -o StrictHostKeyChecking=accept-new
 stage=/tmp/qoder_sync_$$
 ssh "${OPTS[@]}" "root@${QODER_GUEST_IP}" "mkdir -p '$stage'" || exit 9
 
-names=(); dests=()
+names=(); finals=(); dests=()
 for f in "$@"; do
   abs="$(cd "$(dirname "$f")" && pwd)/$(basename "$f")"
   case "$abs" in
@@ -38,15 +38,20 @@ for f in "$@"; do
   esac
   rel="${abs#"$ROOT"/}"
   rel="${rel//\\//}"
-  names+=("$(basename "$abs")")
+  # The staging area is flat, so the file name alone would collide the moment two arguments share a
+  # basename (cadence_work/appearance/white/xresources.txt and .../original/xresources.txt did exactly
+  # this: both destinations got whichever file was uploaded last, silently). Stage under the index.
+  idx="${#names[@]}"
+  names+=("$stage/$idx--$(basename "$abs")")
+  finals+=("$(basename "$abs")")
   dests+=("$PROJ/$(dirname "$rel")")
-  scp "${OPTS[@]}" "$abs" "root@${QODER_GUEST_IP}:$stage/$(basename "$abs")" || exit 9
+  scp "${OPTS[@]}" "$abs" "root@${QODER_GUEST_IP}:${names[$idx]}" || exit 9
 done
 
 for i in "${!names[@]}"; do
-  n="${names[$i]}"; d="${dests[$i]}"
+  n="${names[$i]}"; f="${finals[$i]}"; d="${dests[$i]}"
   ssh "${OPTS[@]}" "root@${QODER_GUEST_IP}" \
-    "mkdir -p '$d' && sed 's/\r\$//' '$stage/$n' > '$d/$n' && chmod 644 '$d/$n' && ls -la '$d/$n'"
+    "mkdir -p '$d' && sed 's/\r\$//' '$n' > '$d/$f' && chmod 644 '$d/$f' && ls -l '$d/$f'"
 done
 ssh "${OPTS[@]}" "root@${QODER_GUEST_IP}" "chmod +x $PROJ/scripts/*.sh 2>/dev/null; rm -rf '$stage'"
 echo "SYNC done -> $PROJ"

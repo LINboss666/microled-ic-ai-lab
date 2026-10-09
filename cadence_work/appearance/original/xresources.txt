@@ -1,0 +1,6 @@
+! Micro LED Virtuoso -- ORIGINAL theme (GUI-1 restore target)
+! Contains no Opus overrides on purpose. The desktop session database held no Opus resources
+! before this round (backup/xrdb_query_original.txt), and the image has no ~/.Xresources,
+! ~/.Xdefaults or ~/.cdsinit, so merging this file adds nothing and leaves the colours the
+! installed binary uses by itself -- the black design window background the user had before.
+! It exists so the switch has an explicit, symmetrical counterpart instead of a missing file.

@@ -1,0 +1,4 @@
+ls: cannot access /root/.Xresources: No such file or directory
+ls: cannot access /root/.Xdefaults: No such file or directory
+ls: cannot access /root/.cdsinit: No such file or directory
+ls: cannot access /root/.cdsenv: No such file or directory

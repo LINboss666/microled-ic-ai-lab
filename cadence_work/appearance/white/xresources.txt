@@ -1,0 +1,10 @@
+! Micro LED Virtuoso -- WHITE theme (GUI-1, 2026-10-09)
+! Applied by cadence_work/launch_virtuoso.sh through xrdb; undo with
+!   bash scripts/gui1_white_theme.sh restore
+! Rationale, measurements and the vendor documentation quotes are in
+! reports/virtuoso_white_background.md. xrdb runs the C preprocessor, so this file keeps its
+! comment lines free of apostrophes and quotes: they are read as character constants otherwise.
+! Bindings are tight (Opus.resource) because the sample resource file shipped with Cadence warns
+! that loose Opus* bindings can conflict with values set from SKILL.
+Opus.editorBackground:  #ffffff
+Opus.dragColor:         #000000

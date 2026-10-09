@@ -1,0 +1,111 @@
+\# Program start time UTC 2026.10.09 01:11:04.588
+\# Local time Friday 9 October 2026, 9:11 am
+\o Program:		@(#)$CDS: virtuoso version 6.1.7-64b 11/09/2015 12:45 (sjfnl165) $
+\o Hierarchy:		/opt/IC617/tools.lnx86/dfII/
+\o Sub version:		sub-version  IC6.1.7-64b.78  (64-bit addresses)
+\# Command line:	/opt/IC617/tools/dfII/bin/64bit/virtuoso -log /root/microled_ai_project/cadence_work/logs/gui1_probe_20261009_091104.log
+\# Host name (type):	work-eda (x86_64)
+\# Operating system:	Linux 2.6.32-431.el6.x86_64 #1 SMP Sun Nov 10 22:19:54 EST 2013
+\# Linux /etc/issue:	Red Hat Enterprise Linux Server release 6.5 (Santiago)
+\# Linux /etc/issue:	Kernel \r on an \m
+\# X display name (WxH):	:0 (1076x1277)
+\# Available geometry:			TL(0:0) BR(1075:1239)
+\# X server:			CentOS
+\# Depth of Visual (Root):	24 (24)
+\# Number of Planes Used:	24
+\# X version:		11.0 (vendor release 11704000)
+\# X resource pool:	base 0x3600000, mask 0x1fffff (2097151), shift 0
+\# 			current id 0x0, current max 0x1ffffa (2097146)
+\# Max data seg size:	     unlimited
+\# Max process size:	     unlimited
+\# Initial sbrk value:	        363 MB
+\# Available memory:	      5,516 MB
+\# System memory:	     11,866 MB
+\# Maximum memory size:	     11,583 MB
+\# Max mem available:	      5,596 MB
+\# Initial memory used:	         80 MB
+\#        process size:	        873 MB
+\# Qt version:		4.8.5
+\# Window Manager:	gnome (metacity)
+\# User Name:		root
+\o Working Directory:	work-eda:/root/microled_ai_project/cadence_work
+\# Process Id:		126344
+\o 
+\o COPYRIGHT © 1992-2015  CADENCE DESIGN SYSTEMS INC.  ALL RIGHTS RESERVED.
+\o           © 1992-2015  UNIX SYSTEMS Laboratories INC.,
+\o                          Reproduced with permission.
+\o 
+\o This Cadence Design Systems program and online documentation are
+\o proprietary/confidential information and may be disclosed/used only
+\o as authorized in a license agreement controlling such use and disclosure.
+\o 
+\o           RESTRICTED RIGHTS NOTICE (SHORT FORM)
+\o Use/reproduction/disclosure is subject to restriction
+\o set forth at FAR 1252.227-19 or its equivalent.
+\o Loading geView.cxt 
+\o Loading menuBuilder.cxt 
+\o Loading schView.cxt 
+\o Loading selectSv.cxt 
+\o Loading wireEdit.cxt 
+\o Loading pte2.cxt 
+\o Loading xlUI.cxt 
+\o Loading auCore.cxt 
+\o Loading vhdl.cxt 
+\o Loading seismic.cxt 
+\o Loading ci.cxt 
+\o Loading ams.cxt 
+\o Virtuoso Framework License (111) was checked out successfully. Total checkout time was 0.02s.
+\# Memory report: using         228 MB, process size 1,050 MB at UTC 2026.10.09 01:11:05.048
+\o END OF SITE CUSTOMIZATION
+\o Loading $HOME/.cdsinit init file from the site init file.
+\o BG2-BEGIN
+\o BG2-ENV DISPLAY=":0" XENVIRONMENT="/root/microled_ai_project/cadence_work/appearance/white/xresources.txt" THEME=nil
+\o BG2-WINS0 ((window:1))
+\o BG2-WIN name=nil num=nil appType=nil state=nil displayName=nil
+\o BG2-OPEN1 nil
+\o BG2-OPEN2 nil
+\o BG2-OPEN3 nil
+\o BG2-OPEN4 (window:2)
+\o BG2-WINS1 ((window:1 window:2))
+\o Loading smic18mmrf/libInit.il ...
+\o 	Loading smic18mmrf/loadCxt.ile ... done!
+\o 	Loading context 'smic18mmrf' from library 'smic18mmrf' ... done!
+\o 	Loading context 'pdkUtils' from library 'smic18mmrf' ... done!
+\o 	Loading smic18mmrf/display.drf ... done!
+\o 	Loading smic18mmrf/libInitCktPro.il ... done!
+\o 	Loading smic18mmrf/libInitCustomExit.il ... Loading libInitCustomExit.il for smic18mmrf
+\o Loading oasis.cxt 
+\o Loading analog.cxt 
+\o Loading asimenv.cxt 
+\o Loading spectrei.cxt 
+\o Loading devCheck.cxt 
+\o Loading relXpert.cxt 
+\o Loading hspiceD.cxt 
+\o Loading spectreinl.cxt 
+\o Loading UltraSim.cxt 
+\o Loading msgHandler.cxt 
+\o Loading AMSOSS.cxt 
+\o Loading AMS.cxt 
+\o done!
+\o Loaded smic18mmrf/libInit.il successfully!
+\o Loading smic skill utility
+\o /root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../SMIC18MMRF_skillUtility/batchSetCDF.ile
+\o /root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../SMIC18MMRF_skillUtility/libNumcheck.ile
+\o Loading emxskill
+\o file="/license.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/license.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/license.ils
+\o file="/continuum.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuum.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuum.ils
+\o file="/continuumgui.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuumgui.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuumgui.ils
+\o file="/callbacks.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/callbacks.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/callbacks.ils
+\o file="/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils
+\o file="/../models/diff_ind_rf_psub_18MTE_scalable.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_rf_psub_18MTE_scalable.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_rf_psub_18MTE_scalable.ils
+\o file="/../models/ind_rf_psub_scalable.ils"loadfile="/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/ind_rf_psub_scalable.ils"/root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/ind_rf_psub_scalable.ils
+\o BG2-CV "data_sink_1ch" opened=db:0x16ece89a
+\o BG2-COUNT instances=10 nets=8 shapes=46
+\# Memory report: using         340 MB, process size 1,162 MB at UTC 2026.10.09 01:11:10.331
+\o BG2-CAP (0)
+\o BG2-CAPREPORT (0)
+\o BG2_DONE
+\o 
+\o Loading lce.cxt 
+\# Memory report: on exit            340 MB, process size 1,162 MB at UTC 2026.10.09 01:11:10.336
+\# Memory report: peak usage         340 MB, process size 1,162 MB

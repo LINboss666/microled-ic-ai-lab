@@ -1,0 +1,27 @@
+DISPLAY=:0
+  [WIN] 0x360000c "opus": ("opus" "Opus")  795x193+0+0  +0+0
+  [WIN] 0x36000a2 "Graphics": ("Qt-subapplication" "Virtuoso")  900x700+2+26  +120+397
+GRAPHICS_WINDOW_ID=0x36000a2
+CIW_WINDOW_ID=0x360000c
+  [GEOM-GRAPHICS] Absolute upper-left X:  120
+  [GEOM-GRAPHICS] Absolute upper-left Y:  397
+  [GEOM-GRAPHICS] Width: 900
+  [GEOM-GRAPHICS] Height: 700
+  [GEOM-GRAPHICS] Depth: 24
+  [GEOM-GRAPHICS] Map State: IsViewable
+GRAPHICS_PNG=/tmp/gui1_GRAPHICS_baseline.png bytes=178 geometry=900x700
+GRAPHICS_INTERIOR_MEAN_RGB=black
+GRAPHICS_INTERIOR_LUMA=0
+GRAPHICS_INTERIOR_WHITE_FRACTION=0
+GRAPHICS_TOP_COLORS:
+  [HIST-GRAPHICS]     157500: (  0,  0,  0) #000000 black
+  [HIST-GRAPHICS] 
+  [GEOM-CIW] Absolute upper-left X:  0
+  [GEOM-CIW] Absolute upper-left Y:  0
+  [GEOM-CIW] Width: 795
+  [GEOM-CIW] Height: 193
+  [GEOM-CIW] Depth: 24
+  [GEOM-CIW] Map State: IsUnMapped
+import: unable to read X window image `0x360000c': Resource temporarily unavailable @ error/xwindow.c/XImportImage/5037.
+CIW_CAPTURE: FAIL (import and xwd both failed)
+CAPTURE: DONE label=baseline

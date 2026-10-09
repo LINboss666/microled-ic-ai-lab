@@ -82,3 +82,16 @@
     "整批管子停在默认尺寸还报 PASS"的事故就换个器件名继续隐身。永久闸现在自己核对：回读日志带出
     `RD3-MPARAM`（master 自己的 CDF 默认值），与命令行声明不一致就 `PDK_DEFAULT_DECLARATION_MISMATCH_COUNT`
     非零退出。另一条同源坑：CDF 会把 `1e-06` 规范化成 `1u`，raw 属性与 CDF 必须**比数值不比字符串**。
+
+30. **GUI-1 的两条实测坑（2026-10-09）**。① `scripts/sync2guest.sh` 的暂存目录原本只按 basename
+    命名，一次传两个同名文件（`appearance/white/xresources.txt` 与 `appearance/original/xresources.txt`）
+    就会让后一份覆盖前一份，**两个目的目录都拿到同一份内容且毫无报错**——已改成按参数序号暂存；
+    凡是"看起来同步成功了"的结论都要回读目标文件本身的内容，不要只看文件名。② 这台 VM 上
+    **不能用截图验证 GUI**：`import -window root` 在 `:0`（1076x1277）上只回一张几百字节的平面图，
+    按窗口 id 抓取要么全黑要么 `Resource temporarily unavailable`，连 `xmessage` 要求蓝/白也读成全黑；
+    批处理 Virtuoso 会话也没有可绘制窗口（CIW `Map State: IsUnMapped`，无参 `hiOpenWindow()` 建出的
+    Graphics 窗口在没有 cellview 画进去之前不重绘，`hiOpenWindow(?appType "Schematic")` => nil）。
+    所以显示层结论一律写成 `GUI_VISUAL_VERIFICATION: PENDING_USER_REVIEW`，可测的部分改测
+    X 会话数据库（`xrdb -query` 读回 + `xrdb -load <快照>` 恢复）。另记：`xrdb` 走 cpp，资源文件里
+    含撇号的 `!` 注释会报 `Unterminated character constant`；`Opus` 的绑定要用紧格式 `Opus.res:`，
+    Cadence 自带样例文件 `tools/dfII/cdsuser/.Xdefaults` 明确警告过松散绑定会与 SKILL 设置冲突。

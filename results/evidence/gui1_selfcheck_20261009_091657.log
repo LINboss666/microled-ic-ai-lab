@@ -1,0 +1,6 @@
+IDEMPOTENT_OPUS_EDITORBACKGROUND_ENTRIES_AFTER_3_MERGES: 1 (want 1)
+DATABASE_LINES: before_restore=10 after_restore=8 opus_keys_left=0
+ROUND_TRIP_OPUS_KEYS_AFTER_REENABLE: 2
+  Opus.dragColor:	#000000
+  Opus.editorBackground:	#ffffff
+SELFCHECK: PASS

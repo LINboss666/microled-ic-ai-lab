@@ -1,0 +1,15 @@
+CHECK CADENCE_ENV_LOADED PASS
+      virtuoso  : /opt/IC617//tools/dfII/bin/virtuoso
+      OA_HOME   : /opt/IC617/oa_v22.50.036/
+      MMSIM     : /opt/MMSIM151
+CHECK PROJECT_WORKDIR_CORRECT PASS
+      DISPLAY   : :0   XAUTHORITY: unset
+CHECK CDS_LIB_FOUND PASS
+      cds.lib   : /root/microled_ai_project/cadence_work/cds.lib
+          DEFINE cdsDefTechLib /opt/IC617/tools/dfII/etc/cdsDefTechLib
+          DEFINE basic         /opt/IC617/tools/dfII/etc/cdslib/basic
+          DEFINE analogLib     /opt/IC617/tools/dfII/etc/cdslib/artist/analogLib
+          DEFINE smic18mmrf    /root/microled_ai_project/pdk/smic18mmrf_teacher/smic18mmrf
+          DEFINE microled_cells ./microled_cells
+      theme     : white  resource_file=/root/microled_ai_project/cadence_work/appearance/white/xresources.txt
+LAUNCHER_CHECK: PASS

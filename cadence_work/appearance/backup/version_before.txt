@@ -1,0 +1,23 @@
+
+
+**********************  CADENCE SOFTWARE INFORMATION  ************************
+@(#)$CDS: spectre  version 15.1.0 64bit 11/12/2015 19:02 (sjfnl729) $
+@(#)$CDS: virtuoso version 6.1.7-64b 11/09/2015 12:45 (sjfnl165) $
+
+           **************************************************
+           *    Inital is OK, NOW starting IC617 .....      *
+           **************************************************
+
+
+*WARNING* X Window Display Initialization failure
+*WARNING* (DISPLAY "<not defined>")
+CDS: spectre  version 15.1.0 64bit 11/12/2015 19:02 (sjfnl729) $
+@(#)$CDS: virtuoso version 6.1.7-64b 11/09/2015 12:45 (sjfnl165) $
+
+           **************************************************
+           *    Inital is OK, NOW starting IC617 .....      *
+           **************************************************
+
+
+*WARNING* X Window Display Initialization failure
+*WARNING* (DISPLAY "<not defined>")
