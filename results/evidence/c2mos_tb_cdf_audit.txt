@@ -1,0 +1,753 @@
+===============================================================================
+c2mos_tb_cdf_audit.txt -- READ-ONLY audit evidence for microled_cells/c2mos_dff_tb
+===============================================================================
+Channel: ssh root@192.168.222.129 (key auth), guest `date` = Sun Oct 11 23:16:40 CST 2026
+Cadence: /opt/IC617 (IC617 6.1.7-64b), analogLib = /opt/IC617/tools/dfII/etc/cdslib/artist/analogLib
+Every line below is verbatim command output. Nothing here was typed by hand or edited to look right.
+
+-------------------------------------------------------------------------------
+SECTION A  analogLib CDF dictionary + per-simulator netlist implementation
+command:  tr -cd printable < analogLib/<cell>/data.dm | awk RS="storeDefault" (name/type/def/units/prompt)
+          grep -o 'propMapping (...)'/instParameters/componentName/netlistProcedure
+READ-ONLY PROOF: the three data.dm files are mode -r-xr-xr-x and dated Nov 10 2015 (SECTION D).
+This is the authority for "what the parameter is really called"; the golden deck's val0/period/...
+are Spectre names, and analogLib's propMapping lists the (spectre, OA) pairs.
+-------------------------------------------------------------------------------
+##### vdc  (-r-xr-xr-x. Nov 10 2015)
+  CDF noisefile  type=string  def=[        ] units=                    prompt=Noise file name
+  CDF FNpairs    type=int     def=[        ] units=                    prompt=Number of noise/freq pairs
+  CDF F1         type=string  def=[        ] units=                    prompt=Freq 1
+  CDF N1         type=string  def=[        ] units=                    prompt=Noise 1
+  CDF F2         type=string  def=[        ] units=                    prompt=Freq 2
+  CDF N2         type=string  def=[        ] units=                    prompt=Noise 2
+  CDF F3         type=string  def=[        ] units=                    prompt=Freq 3
+  CDF N3         type=string  def=[        ] units=                    prompt=Noise 3
+  CDF F4         type=string  def=[        ] units=                    prompt=Freq 4
+  CDF N4         type=string  def=[        ] units=                    prompt=Noise 4
+  CDF F5         type=string  def=[        ] units=                    prompt=Freq 5
+  CDF N5         type=string  def=[        ] units=                    prompt=Noise 5
+  CDF F6         type=string  def=[        ] units=                    prompt=Freq 6
+  CDF N6         type=string  def=[        ] units=                    prompt=Noise 6
+  CDF F7         type=string  def=[        ] units=                    prompt=Freq 7
+  CDF N7         type=string  def=[        ] units=                    prompt=Noise 7
+  CDF F8         type=string  def=[        ] units=                    prompt=Freq 8
+  CDF N8         type=string  def=[        ] units=                    prompt=Noise 8
+  CDF F9         type=string  def=[        ] units=                    prompt=Freq 9
+  CDF N9         type=string  def=[        ] units=                    prompt=Noise 9
+  CDF F10        type=string  def=[        ] units=                    prompt=Freq 10
+  CDF N10        type=string  def=[        ] units=                    prompt=Noise 10
+  CDF vdc        type=string  def=[        ] units=voltage             prompt=DC voltage
+  CDF acm        type=string  def=[        ] units=voltage             prompt=AC magnitude
+  CDF acp        type=string  def=[        ] units=                    prompt=AC phase
+  CDF xfm        type=string  def=[        ] units=voltage             prompt=XF magnitude
+  CDF pacm       type=string  def=[        ] units=voltage  editable   prompt=PAC magnitude
+  CDF pacp       type=string  def=[        ] units=                    prompt=PAC phase
+  CDF tc1        type=string  def=[        ] units=                    prompt=Temperature coefficient 1
+  CDF tc2        type=string  def=[        ] units=                    prompt=Temperature coefficient 2
+  CDF tnom       type=string  def=[        ] units=                    prompt=Nominal temperature
+  CDF srcType    type=string  def=[dc      ] units=                    prompt=Source type
+  netlistProcedure hspiceDCompPrim_vdc
+  netlistProcedure spectreSrcPrim
+  componentName
+  componentName vsource
+  componentName vsrc
+  instParameters (vdc acm acp)
+  instParameters (dc mag phase xfmag pacmag pacphase type tc1 tc2 tnom)
+  instParameters (dc mag phase xfmag pacmag pacphase tc1 tc2 tnom)
+  propMapping (nil)
+  propMapping (nil dc vdc mag acm phase acp xfmag xfm pacmag pacm pacphase pacp type srcType)
+  propMapping (nil dc vdc mag acm phase acp xfmag xfm pacmag pacm pacphase pacp type srcType)
+-- simulator implementation names present --
+##### vpulse  (-r-xr-xr-x. Nov 10 2015)
+  CDF fundname   type=string  def=[        ] units=                    prompt=Frequency name for 1/period
+  CDF noisefile  type=string  def=[        ] units=                    prompt=Noise file name
+  CDF FNpairs    type=int     def=[        ] units=                    prompt=Number of noise/freq pairs
+  CDF F1         type=string  def=[        ] units=                    prompt=Freq 1
+  CDF N1         type=string  def=[        ] units=                    prompt=Noise 1
+  CDF F2         type=string  def=[        ] units=                    prompt=Freq 2
+  CDF N2         type=string  def=[        ] units=                    prompt=Noise 2
+  CDF F3         type=string  def=[        ] units=                    prompt=Freq 3
+  CDF N3         type=string  def=[        ] units=                    prompt=Noise 3
+  CDF F4         type=string  def=[        ] units=                    prompt=Freq 4
+  CDF N4         type=string  def=[        ] units=                    prompt=Noise 4
+  CDF F5         type=string  def=[        ] units=                    prompt=Freq 5
+  CDF N5         type=string  def=[        ] units=                    prompt=Noise 5
+  CDF F6         type=string  def=[        ] units=                    prompt=Freq 6
+  CDF N6         type=string  def=[        ] units=                    prompt=Noise 6
+  CDF F7         type=string  def=[        ] units=                    prompt=Freq 7
+  CDF N7         type=string  def=[        ] units=                    prompt=Noise 7
+  CDF F8         type=string  def=[        ] units=                    prompt=Freq 8
+  CDF N8         type=string  def=[        ] units=                    prompt=Noise 8
+  CDF F9         type=string  def=[        ] units=                    prompt=Freq 9
+  CDF N9         type=string  def=[        ] units=                    prompt=Noise 9
+  CDF F10        type=string  def=[        ] units=                    prompt=Freq 10
+  CDF N10        type=string  def=[        ] units=                    prompt=Noise 10
+  CDF vdc        type=string  def=[        ] units=voltage             prompt=DC voltage
+  CDF acm        type=string  def=[        ] units=voltage             prompt=AC magnitude
+  CDF acp        type=string  def=[        ] units=                    prompt=AC phase
+  CDF xfm        type=string  def=[        ] units=voltage             prompt=XF magnitude
+  CDF pacm       type=string  def=[        ] units=voltage  editable   prompt=PAC magnitude
+  CDF pacp       type=string  def=[        ] units=                    prompt=PAC phase
+  CDF v1         type=string  def=[0       ] units=voltage             prompt=Voltage 1
+  CDF v2         type=string  def=[0       ] units=voltage             prompt=Voltage 2
+  CDF per        type=string  def=[        ] units=time                prompt=Period
+  CDF td         type=string  def=[        ] units=time                prompt=Delay time
+  CDF tr         type=string  def=[        ] units=time                prompt=Rise time
+  CDF tf         type=string  def=[        ] units=time                prompt=Fall time
+  CDF pw         type=string  def=[        ] units=time                prompt=Pulse width
+  CDF tc1        type=string  def=[        ] units=                    prompt=Temperature coefficient 1
+  CDF tc2        type=string  def=[        ] units=                    prompt=Temperature coefficient 2
+  CDF tnom       type=string  def=[        ] units=                    prompt=Nominal temperature
+  CDF srcType    type=string  def=[pulse   ] units=                    prompt=Source type
+  CDF edgetype   type=cyclic  def=[        ] units=                    prompt=Type of rising & falling edge
+  CDF dc         type=string  def=[        ] units=voltage             prompt=DC source
+  netlistProcedure hspiceDCompPrim_vpulse
+  netlistProcedure spectreSrcPrim
+  componentName
+  componentName vsource
+  componentName vsrc
+  instParameters (dc acm acp v1 v2 td tr tf pw per)
+  instParameters (dc mag phase type edgetype xfmag pacmag pacphase val0 val1 period delay rise fall width tc1 tc2 tnom)
+  instParameters (dc mag phase xfmag pacmag pacphase val0 val1 period delay rise fall width tc1 tc2 tnom)
+  propMapping (nil)
+  propMapping (nil dc vdc mag acm phase acp val0 v1 val1 v2 period per delay td rise tr fall tf width pw xfmag xfm pacmag pacm pacphase pacp type srcType)
+  propMapping (nil dc vdc mag acm phase acp val0 v1 val1 v2 period per delay td rise tr fall tf width pw xfmag xfm pacmag pacm pacphase pacp type srcType)
+-- simulator implementation names present --
+##### cap  (-r-xr-xr-x. Nov 10 2015)
+  CDF model      type=string  def=[        ] units=                    prompt=Model name
+  CDF c          type=string  def=[1p      ] units=capacitance            prompt=Capacitance
+  CDF w          type=string  def=[        ] units=lengthMetric            prompt=Width
+  CDF l          type=string  def=[        ] units=lengthMetric            prompt=Length
+  CDF m          type=string  def=[        ] units=                    prompt=Multiplier
+  CDF scale      type=string  def=[        ] units=                    prompt=Scale factor
+  CDF trise      type=string  def=[        ] units=                    prompt=Temp rise from ambient
+  CDF ic         type=string  def=[        ] units=voltage             prompt=Initial condition
+  CDF tc1        type=string  def=[        ] units=                    prompt=Temperature coefficient 1
+  CDF tc2        type=string  def=[        ] units=                    prompt=Temperature coefficient 2
+  CDF area       type=string  def=[        ] units=                    prompt=Capacitor Area
+  CDF perim      type=string  def=[        ] units=                    prompt=Capacitor Perimeter
+  CDF dtemp      type=string  def=[        ] units=                    prompt=Temperature difference
+  CDF polyCoef   type=int     def=[        ] units=                    prompt=Number of Polynomial Coeffs
+  CDF c1         type=string  def=[        ] units=                    prompt=Poly Coeff 1
+  CDF c2         type=string  def=[        ] units=                    prompt=Poly Coeff 2
+  CDF c3         type=string  def=[        ] units=                    prompt=Poly Coeff 3
+  CDF c4         type=string  def=[        ] units=                    prompt=Poly Coeff 4
+  CDF c5         type=string  def=[        ] units=                    prompt=Poly Coeff 5
+  CDF c6         type=string  def=[        ] units=                    prompt=Poly Coeff 6
+  CDF c7         type=string  def=[        ] units=                    prompt=Poly Coeff 7
+  CDF c8         type=string  def=[        ] units=                    prompt=Poly Coeff 8
+  CDF c9         type=string  def=[        ] units=                    prompt=Poly Coeff 9
+  CDF c10        type=string  def=[        ] units=                    prompt=Poly Coeff 10
+  CDF c11        type=string  def=[        ] units=                    prompt=Poly Coeff 11
+  CDF c12        type=string  def=[        ] units=                    prompt=Poly Coeff 12
+  CDF c13        type=string  def=[        ] units=                    prompt=Poly Coeff 13
+  CDF c14        type=string  def=[        ] units=                    prompt=Poly Coeff 14
+  CDF c15        type=string  def=[        ] units=                    prompt=Poly Coeff 15
+  CDF c16        type=string  def=[        ] units=                    prompt=Poly Coeff 16
+  CDF c17        type=string  def=[        ] units=                    prompt=Poly Coeff 17
+  CDF c18        type=string  def=[        ] units=                    prompt=Poly Coeff 18
+  CDF c19        type=string  def=[        ] units=                    prompt=Poly Coeff 19
+  CDF c20        type=string  def=[        ] units=                    prompt=Poly Coeff 20
+  netlistProcedure ansCdlCompPrim
+  netlistProcedure ansLvsCompPrim
+  netlistProcedure hspiceDCompPrim
+  componentName
+  componentName cap
+  componentName capacitor
+  instParameters (c)
+  instParameters (C)
+  instParameters (c tc1 tc2 scale dtemp m w l ic polyCoef c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12 c13 c14 c15 c16 c17 c18 c19 c20)
+  instParameters (c w l m scale trise ic tc1 tc2 area perim)
+  instParameters (c w l m scale trise ic tc1 tc2 model)
+  propMapping (nil C c)
+-- simulator implementation names present --
+##### gnd NO_DATA_DM
+##### library write-check (mtime of the vendor files, mode, locks)
+-------------------------------------------------------------------------------
+SECTION B  in-session readback of the testbench cell (read-only)
+command:  SCH3_LIB=microled_cells SCH3_CELLS=c2mos_dff_tb AUD_DUT=c2mos_dff_1bit
+          bash scripts/sch_virtuoso.sh skill/c2mos_tb_cdf_audit.il 420 TB_CDF_AUDIT_DONE
+verdict:  TOKEN_FOUND yes / SCH_VIRTUOSO: PASS / no *Error* line in the session log
+          (log cadence_work/logs/sch_nograph_20261011_233017.log, 245 TBCA- lines)
+TBCA-RAWPROP = dbFindProp on the instance   TBCA-CDF = cdfFindParamByName->value
+TBCA-CONNECT = instTerm -> net              TBCA-NET  = net -> #instTerms
+-------------------------------------------------------------------------------
+TBCA-BEGIN
+TBCA-OPEN lib="microled_cells" cell="c2mos_dff_tb" cv=db:0x17e6ee1a
+TBCA-STRUCT instances=(8) nets=(7) terms=(0) shapes=(53) labels=(0)
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-INST name="Cqb" master="analogLib"/"cap"/"symbol" objType="inst" instTerms=(2) bbox=((4.7375 0.975) (6.0875 1.4))
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-RAWPROP name="c" value="5e-14"
+TBCA-RAWPROP name="model" value="cap"
+TBCA-CDFINST name="Cqb" cdf="yes"
+TBCA-ENUM paramList="nil"
+TBCA-CDF name="tc1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tc2" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="c" type="instData" def=nil value="50f" units="capacitance" editable=nil
+TBCA-CDF name="model" type="instData" def=nil value="cap" units=nil editable=nil
+TBCA-CDF name="w" type="instData" def=nil value="" units="lengthMetric" editable=nil
+TBCA-CDF name="l" type="instData" def=nil value="" units="lengthMetric" editable=nil
+TBCA-CDF name="m" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="scale" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="ic" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="area" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="perim" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="trise" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="polyCoef" type="instData" def=nil value=0 units=nil editable=nil
+TBCA-CONNECT inst="Cqb" term="MINUS" net="gnd!" direction="inputOutput"
+TBCA-CONNECT inst="Cqb" term="PLUS" net="qbar" direction="inputOutput"
+TBCA-INST name="Cq" master="analogLib"/"cap"/"symbol" objType="inst" instTerms=(2) bbox=((7.8625 0.975) (9.2125 1.4))
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-RAWPROP name="c" value="5e-14"
+TBCA-RAWPROP name="model" value="cap"
+TBCA-CDFINST name="Cq" cdf="yes"
+TBCA-ENUM paramList="nil"
+TBCA-CDF name="tc1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tc2" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="c" type="instData" def=nil value="50f" units="capacitance" editable=nil
+TBCA-CDF name="model" type="instData" def=nil value="cap" units=nil editable=nil
+TBCA-CDF name="w" type="instData" def=nil value="" units="lengthMetric" editable=nil
+TBCA-CDF name="l" type="instData" def=nil value="" units="lengthMetric" editable=nil
+TBCA-CDF name="m" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="scale" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="ic" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="area" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="perim" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="trise" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="polyCoef" type="instData" def=nil value=0 units=nil editable=nil
+TBCA-CONNECT inst="Cq" term="MINUS" net="gnd!" direction="inputOutput"
+TBCA-CONNECT inst="Cq" term="PLUS" net="q" direction="inputOutput"
+TBCA-INST name="X1" master="microled_cells"/"c2mos_dff_1bit"/"symbol" objType="inst" instTerms=(6) bbox=((0.0 0.75) (1.775 1.75))
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-RAWPROP name="model" value="c2mos_dff_1bit"
+TBCA-CDFINST name="X1" cdf="yes"
+TBCA-ENUM paramList="nil"
+TBCA-CONNECT inst="X1" term="d" net="d" direction="inputOutput"
+TBCA-CONNECT inst="X1" term="clk" net="clk" direction="inputOutput"
+TBCA-CONNECT inst="X1" term="q" net="q" direction="inputOutput"
+TBCA-CONNECT inst="X1" term="qbar" net="qbar" direction="inputOutput"
+TBCA-CONNECT inst="X1" term="vdd" net="vdd" direction="inputOutput"
+TBCA-CONNECT inst="X1" term="vss" net="vss" direction="inputOutput"
+TBCA-INST name="Dd" master="analogLib"/"vpulse"/"symbol" objType="inst" instTerms=(2) bbox=((2.64375 0.975) (3.9625 1.4))
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-RAWPROP name="v1" value="0"
+TBCA-RAWPROP name="v2" value="1.8"
+TBCA-RAWPROP name="per" value="4e-07"
+TBCA-RAWPROP name="td" value="7e-08"
+TBCA-RAWPROP name="tr" value="1e-09"
+TBCA-RAWPROP name="tf" value="1e-09"
+TBCA-RAWPROP name="pw" value="2e-07"
+TBCA-RAWPROP name="model" value="vpulse"
+TBCA-CDFINST name="Dd" cdf="yes"
+TBCA-ENUM paramList="nil"
+TBCA-CDF name="dc" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="vdc" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="acm" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="acp" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="xfm" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="pacm" type="instData" def=nil value="" units="voltage" editable="t"
+TBCA-CDF name="pacp" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="srcType" type="instData" def=nil value="pulse" units=nil editable=nil
+TBCA-CDF name="edgetype" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tc1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tc2" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tnom" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="noisefile" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="fundname" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="FNpairs" type="instData" def=nil value=0 units=nil editable=nil
+TBCA-CDF name="F1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="N1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="v1" type="instData" def=nil value="0" units="voltage" editable=nil
+TBCA-CDF name="v2" type="instData" def=nil value="1.8" units="voltage" editable=nil
+TBCA-CDF name="per" type="instData" def=nil value="400n" units="time" editable=nil
+TBCA-CDF name="td" type="instData" def=nil value="70n" units="time" editable=nil
+TBCA-CDF name="tr" type="instData" def=nil value="1n" units="time" editable=nil
+TBCA-CDF name="tf" type="instData" def=nil value="1n" units="time" editable=nil
+TBCA-CDF name="pw" type="instData" def=nil value="200n" units="time" editable=nil
+TBCA-CONNECT inst="Dd" term="PLUS" net="d" direction="inputOutput"
+TBCA-CONNECT inst="Dd" term="MINUS" net="gnd!" direction="inputOutput"
+TBCA-INST name="Ck" master="analogLib"/"vpulse"/"symbol" objType="inst" instTerms=(2) bbox=((3.76875 0.975) (5.0875 1.4))
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-RAWPROP name="v1" value="0"
+TBCA-RAWPROP name="v2" value="1.8"
+TBCA-RAWPROP name="per" value="2e-07"
+TBCA-RAWPROP name="td" value="1e-07"
+TBCA-RAWPROP name="tr" value="1e-09"
+TBCA-RAWPROP name="tf" value="1e-09"
+TBCA-RAWPROP name="pw" value="1e-07"
+TBCA-RAWPROP name="model" value="vpulse"
+TBCA-CDFINST name="Ck" cdf="yes"
+TBCA-ENUM paramList="nil"
+TBCA-CDF name="dc" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="vdc" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="acm" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="acp" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="xfm" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="pacm" type="instData" def=nil value="" units="voltage" editable="t"
+TBCA-CDF name="pacp" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="srcType" type="instData" def=nil value="pulse" units=nil editable=nil
+TBCA-CDF name="edgetype" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tc1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tc2" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tnom" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="noisefile" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="fundname" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="FNpairs" type="instData" def=nil value=0 units=nil editable=nil
+TBCA-CDF name="F1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="N1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="v1" type="instData" def=nil value="0" units="voltage" editable=nil
+TBCA-CDF name="v2" type="instData" def=nil value="1.8" units="voltage" editable=nil
+TBCA-CDF name="per" type="instData" def=nil value="200n" units="time" editable=nil
+TBCA-CDF name="td" type="instData" def=nil value="100n" units="time" editable=nil
+TBCA-CDF name="tr" type="instData" def=nil value="1n" units="time" editable=nil
+TBCA-CDF name="tf" type="instData" def=nil value="1n" units="time" editable=nil
+TBCA-CDF name="pw" type="instData" def=nil value="100n" units="time" editable=nil
+TBCA-CONNECT inst="Ck" term="PLUS" net="clk" direction="inputOutput"
+TBCA-CONNECT inst="Ck" term="MINUS" net="gnd!" direction="inputOutput"
+TBCA-INST name="Vss" master="analogLib"/"vdc"/"symbol" objType="inst" instTerms=(2) bbox=((6.7375 0.975) (8.0875 1.4))
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-RAWPROP name="vdc" value="0"
+TBCA-RAWPROP name="model" value="vdc"
+TBCA-CDFINST name="Vss" cdf="yes"
+TBCA-ENUM paramList="nil"
+TBCA-CDF name="vdc" type="instData" def=nil value="0" units="voltage" editable=nil
+TBCA-CDF name="acm" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="acp" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="xfm" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="pacm" type="instData" def=nil value="" units="voltage" editable="t"
+TBCA-CDF name="pacp" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="srcType" type="instData" def=nil value="dc" units=nil editable=nil
+TBCA-CDF name="tc1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tc2" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tnom" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="noisefile" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="FNpairs" type="instData" def=nil value=0 units=nil editable=nil
+TBCA-CDF name="F1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="N1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CONNECT inst="Vss" term="PLUS" net="vss" direction="inputOutput"
+TBCA-CONNECT inst="Vss" term="MINUS" net="gnd!" direction="inputOutput"
+TBCA-INST name="Vdd" master="analogLib"/"vdc"/"symbol" objType="inst" instTerms=(2) bbox=((5.7375 0.975) (7.0875 1.4))
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-RAWPROP name="vdc" value="1.8"
+TBCA-RAWPROP name="model" value="vdc"
+TBCA-CDFINST name="Vdd" cdf="yes"
+TBCA-ENUM paramList="nil"
+TBCA-CDF name="vdc" type="instData" def=nil value="1.8" units="voltage" editable=nil
+TBCA-CDF name="acm" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="acp" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="xfm" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="pacm" type="instData" def=nil value="" units="voltage" editable="t"
+TBCA-CDF name="pacp" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="srcType" type="instData" def=nil value="dc" units=nil editable=nil
+TBCA-CDF name="tc1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tc2" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tnom" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="noisefile" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="FNpairs" type="instData" def=nil value=0 units=nil editable=nil
+TBCA-CDF name="F1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="N1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CONNECT inst="Vdd" term="PLUS" net="vdd" direction="inputOutput"
+TBCA-CONNECT inst="Vdd" term="MINUS" net="gnd!" direction="inputOutput"
+TBCA-INST name="PIN0" master="basic"/"iopin"/"symbol" objType="inst" instTerms="nil" bbox=((9.3875 0.1875) (9.6125 0.50625))
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-CDFINST name="PIN0" cdf="yes"
+TBCA-ENUM paramList="nil"
+TBCA-NET name="gnd!" instTerms=(6) labels=(0) shapes=(0) isGlobal=nil
+TBCA-NET name="vdd" instTerms=(2) labels=(0) shapes=(0) isGlobal=nil
+TBCA-NET name="vss" instTerms=(2) labels=(0) shapes=(0) isGlobal=nil
+TBCA-NET name="clk" instTerms=(2) labels=(0) shapes=(0) isGlobal=nil
+TBCA-NET name="d" instTerms=(2) labels=(0) shapes=(0) isGlobal=nil
+TBCA-NET name="q" instTerms=(2) labels=(0) shapes=(0) isGlobal=nil
+TBCA-NET name="qbar" instTerms=(2) labels=(0) shapes=(0) isGlobal=nil
+TBCA-DUT-SCH cell="c2mos_dff_1bit" open="yes"
+TBCA-DUT-TERMS count=(0)
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-DUT-SYM cell="c2mos_dff_1bit" open=db:0x17e6e21a view="symbol"
+TBCA-DUT-SYMTERM count=(6)
+TBCA-DUT-SYMTERM name="vss" dir="inputOutput"
+TBCA-DUT-SYMTERM name="vdd" dir="inputOutput"
+TBCA-DUT-SYMTERM name="qbar" dir="inputOutput"
+TBCA-DUT-SYMTERM name="q" dir="inputOutput"
+TBCA-DUT-SYMTERM name="clk" dir="inputOutput"
+TBCA-DUT-SYMTERM name="d" dir="inputOutput"
+TBCA-SIMOBJ lib="microled_cells" cell="c2mos_dff_tb" view="schematic" dd=dd:0x1ad3a0e8
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_tb"/"schematic" prop="simViewList" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_tb"/"schematic" prop="simCompileList" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_tb"/"schematic" prop="modelFile" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_tb"/"schematic" prop="implementationPath" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_tb"/"schematic" prop="source" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_tb"/"schematic" prop="analogCell" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_tb"/"schematic" prop="simulatorLanguage" value=nil
+TBCA-SIMVIEWS "microled_cells"/"c2mos_dff_tb"/"schematic" views=nil
+TBCA-SIMOBJ lib="microled_cells" cell="c2mos_dff_1bit" view="schematic" dd=dd:0x1ad3a350
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_1bit"/"schematic" prop="simViewList" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_1bit"/"schematic" prop="simCompileList" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_1bit"/"schematic" prop="modelFile" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_1bit"/"schematic" prop="implementationPath" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_1bit"/"schematic" prop="source" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_1bit"/"schematic" prop="analogCell" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_1bit"/"schematic" prop="simulatorLanguage" value=nil
+TBCA-SIMVIEWS "microled_cells"/"c2mos_dff_1bit"/"schematic" views=nil
+TBCA-SIMOBJ lib="analogLib" cell="vdc" view="symbol" dd=dd:0x1a8d7a30
+TBCA-SIMPROP "analogLib"/"vdc"/"symbol" prop="simViewList" value=nil
+TBCA-SIMPROP "analogLib"/"vdc"/"symbol" prop="simCompileList" value=nil
+TBCA-SIMPROP "analogLib"/"vdc"/"symbol" prop="modelFile" value=nil
+TBCA-SIMPROP "analogLib"/"vdc"/"symbol" prop="implementationPath" value=nil
+TBCA-SIMPROP "analogLib"/"vdc"/"symbol" prop="source" value=nil
+TBCA-SIMPROP "analogLib"/"vdc"/"symbol" prop="analogCell" value=nil
+TBCA-SIMPROP "analogLib"/"vdc"/"symbol" prop="simulatorLanguage" value=nil
+TBCA-SIMVIEWS "analogLib"/"vdc"/"symbol" views=nil
+TBCA-SIMOBJ lib="analogLib" cell="vpulse" view="symbol" dd=dd:0x1a8d7968
+TBCA-SIMPROP "analogLib"/"vpulse"/"symbol" prop="simViewList" value=nil
+TBCA-SIMPROP "analogLib"/"vpulse"/"symbol" prop="simCompileList" value=nil
+TBCA-SIMPROP "analogLib"/"vpulse"/"symbol" prop="modelFile" value=nil
+TBCA-SIMPROP "analogLib"/"vpulse"/"symbol" prop="implementationPath" value=nil
+TBCA-SIMPROP "analogLib"/"vpulse"/"symbol" prop="source" value=nil
+TBCA-SIMPROP "analogLib"/"vpulse"/"symbol" prop="analogCell" value=nil
+TBCA-SIMPROP "analogLib"/"vpulse"/"symbol" prop="simulatorLanguage" value=nil
+TBCA-SIMVIEWS "analogLib"/"vpulse"/"symbol" views=nil
+TBCA-SIMOBJ lib="analogLib" cell="cap" view="symbol" dd=dd:0x1a8d7898
+TBCA-SIMPROP "analogLib"/"cap"/"symbol" prop="simViewList" value=nil
+TBCA-SIMPROP "analogLib"/"cap"/"symbol" prop="simCompileList" value=nil
+TBCA-SIMPROP "analogLib"/"cap"/"symbol" prop="modelFile" value=nil
+TBCA-SIMPROP "analogLib"/"cap"/"symbol" prop="implementationPath" value=nil
+TBCA-SIMPROP "analogLib"/"cap"/"symbol" prop="source" value=nil
+TBCA-SIMPROP "analogLib"/"cap"/"symbol" prop="analogCell" value=nil
+TBCA-SIMPROP "analogLib"/"cap"/"symbol" prop="simulatorLanguage" value=nil
+TBCA-SIMVIEWS "analogLib"/"cap"/"symbol" views=nil
+TBCA-NETLIST run="0"
+-------------------------------------------------------------------------------
+SECTION C  native Cadence netlist attempt, MODE=restore (the only startup path on this build
+where the asi*/nl* functions exist at all), AUD_NETLIST=1
+command:  SCH3_LIB=microled_cells SCH3_CELLS=c2mos_dff_tb AUD_DUT=c2mos_dff_1bit AUD_NETLIST=1
+          MODE=restore bash scripts/sch_virtuoso.sh skill/c2mos_tb_cdf_audit.il 500 TB_CDF_AUDIT_DONE
+verdict:  rc=0 / TOKEN_FOUND yes / TBCA-NL-A0=A1=A2=nil / TBCA-NL-SESSION nil
+          -> asiCreateSession returns nil for (?simulator "spectre" ?cellView cv), for the same
+             call with ?tmpDir "/tmp/tb_audit/nl", and for (?simulator "spectre" ?libName ?cellName
+             ?viewName). asiInitialize/asiNetlist/asiFinalNetlist were therefore never reached.
+          This closes the argument-shape gap left open by skill/sch2_native_netlist.il (which tried
+          asiCreateSession() with NO ?simulator and died on ADE-5059).
+          NATIVE_NETLIST_BLOCKED
+-------------------------------------------------------------------------------
+TBCA-BEGIN
+TBCA-OPEN lib="microled_cells" cell="c2mos_dff_tb" cv=db:0x162fee1a
+TBCA-STRUCT instances=(8) nets=(7) terms=(0) shapes=(53) labels=(0)
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-INST name="Cqb" master="analogLib"/"cap"/"symbol" objType="inst" instTerms=(2) bbox=((4.7375 0.975) (6.0875 1.4))
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-RAWPROP name="c" value="5e-14"
+TBCA-RAWPROP name="model" value="cap"
+TBCA-CDFINST name="Cqb" cdf="yes"
+TBCA-ENUM paramList="nil"
+TBCA-CDF name="tc1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tc2" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="c" type="instData" def=nil value="50f" units="capacitance" editable=nil
+TBCA-CDF name="model" type="instData" def=nil value="cap" units=nil editable=nil
+TBCA-CDF name="w" type="instData" def=nil value="" units="lengthMetric" editable=nil
+TBCA-CDF name="l" type="instData" def=nil value="" units="lengthMetric" editable=nil
+TBCA-CDF name="m" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="scale" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="ic" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="area" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="perim" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="trise" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="polyCoef" type="instData" def=nil value=0 units=nil editable=nil
+TBCA-CONNECT inst="Cqb" term="MINUS" net="gnd!" direction="inputOutput"
+TBCA-CONNECT inst="Cqb" term="PLUS" net="qbar" direction="inputOutput"
+TBCA-INST name="Cq" master="analogLib"/"cap"/"symbol" objType="inst" instTerms=(2) bbox=((7.8625 0.975) (9.2125 1.4))
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-RAWPROP name="c" value="5e-14"
+TBCA-RAWPROP name="model" value="cap"
+TBCA-CDFINST name="Cq" cdf="yes"
+TBCA-ENUM paramList="nil"
+TBCA-CDF name="tc1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tc2" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="c" type="instData" def=nil value="50f" units="capacitance" editable=nil
+TBCA-CDF name="model" type="instData" def=nil value="cap" units=nil editable=nil
+TBCA-CDF name="w" type="instData" def=nil value="" units="lengthMetric" editable=nil
+TBCA-CDF name="l" type="instData" def=nil value="" units="lengthMetric" editable=nil
+TBCA-CDF name="m" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="scale" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="ic" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="area" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="perim" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="trise" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="polyCoef" type="instData" def=nil value=0 units=nil editable=nil
+TBCA-CONNECT inst="Cq" term="MINUS" net="gnd!" direction="inputOutput"
+TBCA-CONNECT inst="Cq" term="PLUS" net="q" direction="inputOutput"
+TBCA-INST name="X1" master="microled_cells"/"c2mos_dff_1bit"/"symbol" objType="inst" instTerms=(6) bbox=((0.0 0.75) (1.775 1.75))
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-RAWPROP name="model" value="c2mos_dff_1bit"
+TBCA-CDFINST name="X1" cdf="yes"
+TBCA-ENUM paramList="nil"
+TBCA-CONNECT inst="X1" term="d" net="d" direction="inputOutput"
+TBCA-CONNECT inst="X1" term="clk" net="clk" direction="inputOutput"
+TBCA-CONNECT inst="X1" term="q" net="q" direction="inputOutput"
+TBCA-CONNECT inst="X1" term="qbar" net="qbar" direction="inputOutput"
+TBCA-CONNECT inst="X1" term="vdd" net="vdd" direction="inputOutput"
+TBCA-CONNECT inst="X1" term="vss" net="vss" direction="inputOutput"
+TBCA-INST name="Dd" master="analogLib"/"vpulse"/"symbol" objType="inst" instTerms=(2) bbox=((2.64375 0.975) (3.9625 1.4))
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-RAWPROP name="v1" value="0"
+TBCA-RAWPROP name="v2" value="1.8"
+TBCA-RAWPROP name="per" value="4e-07"
+TBCA-RAWPROP name="td" value="7e-08"
+TBCA-RAWPROP name="tr" value="1e-09"
+TBCA-RAWPROP name="tf" value="1e-09"
+TBCA-RAWPROP name="pw" value="2e-07"
+TBCA-RAWPROP name="model" value="vpulse"
+TBCA-CDFINST name="Dd" cdf="yes"
+TBCA-ENUM paramList="nil"
+TBCA-CDF name="dc" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="vdc" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="acm" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="acp" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="xfm" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="pacm" type="instData" def=nil value="" units="voltage" editable="t"
+TBCA-CDF name="pacp" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="srcType" type="instData" def=nil value="pulse" units=nil editable=nil
+TBCA-CDF name="edgetype" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tc1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tc2" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tnom" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="noisefile" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="fundname" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="FNpairs" type="instData" def=nil value=0 units=nil editable=nil
+TBCA-CDF name="F1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="N1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="v1" type="instData" def=nil value="0" units="voltage" editable=nil
+TBCA-CDF name="v2" type="instData" def=nil value="1.8" units="voltage" editable=nil
+TBCA-CDF name="per" type="instData" def=nil value="400n" units="time" editable=nil
+TBCA-CDF name="td" type="instData" def=nil value="70n" units="time" editable=nil
+TBCA-CDF name="tr" type="instData" def=nil value="1n" units="time" editable=nil
+TBCA-CDF name="tf" type="instData" def=nil value="1n" units="time" editable=nil
+TBCA-CDF name="pw" type="instData" def=nil value="200n" units="time" editable=nil
+TBCA-CONNECT inst="Dd" term="PLUS" net="d" direction="inputOutput"
+TBCA-CONNECT inst="Dd" term="MINUS" net="gnd!" direction="inputOutput"
+TBCA-INST name="Ck" master="analogLib"/"vpulse"/"symbol" objType="inst" instTerms=(2) bbox=((3.76875 0.975) (5.0875 1.4))
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-RAWPROP name="v1" value="0"
+TBCA-RAWPROP name="v2" value="1.8"
+TBCA-RAWPROP name="per" value="2e-07"
+TBCA-RAWPROP name="td" value="1e-07"
+TBCA-RAWPROP name="tr" value="1e-09"
+TBCA-RAWPROP name="tf" value="1e-09"
+TBCA-RAWPROP name="pw" value="1e-07"
+TBCA-RAWPROP name="model" value="vpulse"
+TBCA-CDFINST name="Ck" cdf="yes"
+TBCA-ENUM paramList="nil"
+TBCA-CDF name="dc" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="vdc" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="acm" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="acp" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="xfm" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="pacm" type="instData" def=nil value="" units="voltage" editable="t"
+TBCA-CDF name="pacp" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="srcType" type="instData" def=nil value="pulse" units=nil editable=nil
+TBCA-CDF name="edgetype" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tc1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tc2" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tnom" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="noisefile" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="fundname" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="FNpairs" type="instData" def=nil value=0 units=nil editable=nil
+TBCA-CDF name="F1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="N1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="v1" type="instData" def=nil value="0" units="voltage" editable=nil
+TBCA-CDF name="v2" type="instData" def=nil value="1.8" units="voltage" editable=nil
+TBCA-CDF name="per" type="instData" def=nil value="200n" units="time" editable=nil
+TBCA-CDF name="td" type="instData" def=nil value="100n" units="time" editable=nil
+TBCA-CDF name="tr" type="instData" def=nil value="1n" units="time" editable=nil
+TBCA-CDF name="tf" type="instData" def=nil value="1n" units="time" editable=nil
+TBCA-CDF name="pw" type="instData" def=nil value="100n" units="time" editable=nil
+TBCA-CONNECT inst="Ck" term="PLUS" net="clk" direction="inputOutput"
+TBCA-CONNECT inst="Ck" term="MINUS" net="gnd!" direction="inputOutput"
+TBCA-INST name="Vss" master="analogLib"/"vdc"/"symbol" objType="inst" instTerms=(2) bbox=((6.7375 0.975) (8.0875 1.4))
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-RAWPROP name="vdc" value="0"
+TBCA-RAWPROP name="model" value="vdc"
+TBCA-CDFINST name="Vss" cdf="yes"
+TBCA-ENUM paramList="nil"
+TBCA-CDF name="vdc" type="instData" def=nil value="0" units="voltage" editable=nil
+TBCA-CDF name="acm" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="acp" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="xfm" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="pacm" type="instData" def=nil value="" units="voltage" editable="t"
+TBCA-CDF name="pacp" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="srcType" type="instData" def=nil value="dc" units=nil editable=nil
+TBCA-CDF name="tc1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tc2" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tnom" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="noisefile" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="FNpairs" type="instData" def=nil value=0 units=nil editable=nil
+TBCA-CDF name="F1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="N1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CONNECT inst="Vss" term="PLUS" net="vss" direction="inputOutput"
+TBCA-CONNECT inst="Vss" term="MINUS" net="gnd!" direction="inputOutput"
+TBCA-INST name="Vdd" master="analogLib"/"vdc"/"symbol" objType="inst" instTerms=(2) bbox=((5.7375 0.975) (7.0875 1.4))
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-RAWPROP name="vdc" value="1.8"
+TBCA-RAWPROP name="model" value="vdc"
+TBCA-CDFINST name="Vdd" cdf="yes"
+TBCA-ENUM paramList="nil"
+TBCA-CDF name="vdc" type="instData" def=nil value="1.8" units="voltage" editable=nil
+TBCA-CDF name="acm" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="acp" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="xfm" type="instData" def=nil value="" units="voltage" editable=nil
+TBCA-CDF name="pacm" type="instData" def=nil value="" units="voltage" editable="t"
+TBCA-CDF name="pacp" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="srcType" type="instData" def=nil value="dc" units=nil editable=nil
+TBCA-CDF name="tc1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tc2" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="tnom" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="noisefile" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="FNpairs" type="instData" def=nil value=0 units=nil editable=nil
+TBCA-CDF name="F1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CDF name="N1" type="instData" def=nil value="" units=nil editable=nil
+TBCA-CONNECT inst="Vdd" term="PLUS" net="vdd" direction="inputOutput"
+TBCA-CONNECT inst="Vdd" term="MINUS" net="gnd!" direction="inputOutput"
+TBCA-INST name="PIN0" master="basic"/"iopin"/"symbol" objType="inst" instTerms="nil" bbox=((9.3875 0.1875) (9.6125 0.50625))
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-CDFINST name="PIN0" cdf="yes"
+TBCA-ENUM paramList="nil"
+TBCA-NET name="gnd!" instTerms=(6) labels=(0) shapes=(0) isGlobal=nil
+TBCA-NET name="vdd" instTerms=(2) labels=(0) shapes=(0) isGlobal=nil
+TBCA-NET name="vss" instTerms=(2) labels=(0) shapes=(0) isGlobal=nil
+TBCA-NET name="clk" instTerms=(2) labels=(0) shapes=(0) isGlobal=nil
+TBCA-NET name="d" instTerms=(2) labels=(0) shapes=(0) isGlobal=nil
+TBCA-NET name="q" instTerms=(2) labels=(0) shapes=(0) isGlobal=nil
+TBCA-NET name="qbar" instTerms=(2) labels=(0) shapes=(0) isGlobal=nil
+TBCA-DUT-SCH cell="c2mos_dff_1bit" open="yes"
+TBCA-DUT-TERMS count=(0)
+TBCA-PROPSHAPE dbGet_properties=nil attr_properties=nil attr_propList=nil
+TBCA-DUT-SYM cell="c2mos_dff_1bit" open=db:0x162fe21a view="symbol"
+TBCA-DUT-SYMTERM count=(6)
+TBCA-DUT-SYMTERM name="vss" dir="inputOutput"
+TBCA-DUT-SYMTERM name="vdd" dir="inputOutput"
+TBCA-DUT-SYMTERM name="qbar" dir="inputOutput"
+TBCA-DUT-SYMTERM name="q" dir="inputOutput"
+TBCA-DUT-SYMTERM name="clk" dir="inputOutput"
+TBCA-DUT-SYMTERM name="d" dir="inputOutput"
+TBCA-SIMOBJ lib="microled_cells" cell="c2mos_dff_tb" view="schematic" dd=dd:0x191c40e8
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_tb"/"schematic" prop="simViewList" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_tb"/"schematic" prop="simCompileList" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_tb"/"schematic" prop="modelFile" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_tb"/"schematic" prop="implementationPath" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_tb"/"schematic" prop="source" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_tb"/"schematic" prop="analogCell" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_tb"/"schematic" prop="simulatorLanguage" value=nil
+TBCA-SIMVIEWS "microled_cells"/"c2mos_dff_tb"/"schematic" views=nil
+TBCA-SIMOBJ lib="microled_cells" cell="c2mos_dff_1bit" view="schematic" dd=dd:0x191c4350
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_1bit"/"schematic" prop="simViewList" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_1bit"/"schematic" prop="simCompileList" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_1bit"/"schematic" prop="modelFile" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_1bit"/"schematic" prop="implementationPath" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_1bit"/"schematic" prop="source" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_1bit"/"schematic" prop="analogCell" value=nil
+TBCA-SIMPROP "microled_cells"/"c2mos_dff_1bit"/"schematic" prop="simulatorLanguage" value=nil
+TBCA-SIMVIEWS "microled_cells"/"c2mos_dff_1bit"/"schematic" views=nil
+TBCA-SIMOBJ lib="analogLib" cell="vdc" view="symbol" dd=dd:0x18d61bc0
+TBCA-SIMPROP "analogLib"/"vdc"/"symbol" prop="simViewList" value=nil
+TBCA-SIMPROP "analogLib"/"vdc"/"symbol" prop="simCompileList" value=nil
+TBCA-SIMPROP "analogLib"/"vdc"/"symbol" prop="modelFile" value=nil
+TBCA-SIMPROP "analogLib"/"vdc"/"symbol" prop="implementationPath" value=nil
+TBCA-SIMPROP "analogLib"/"vdc"/"symbol" prop="source" value=nil
+TBCA-SIMPROP "analogLib"/"vdc"/"symbol" prop="analogCell" value=nil
+TBCA-SIMPROP "analogLib"/"vdc"/"symbol" prop="simulatorLanguage" value=nil
+TBCA-SIMVIEWS "analogLib"/"vdc"/"symbol" views=nil
+TBCA-SIMOBJ lib="analogLib" cell="vpulse" view="symbol" dd=dd:0x18d61af8
+TBCA-SIMPROP "analogLib"/"vpulse"/"symbol" prop="simViewList" value=nil
+TBCA-SIMPROP "analogLib"/"vpulse"/"symbol" prop="simCompileList" value=nil
+TBCA-SIMPROP "analogLib"/"vpulse"/"symbol" prop="modelFile" value=nil
+TBCA-SIMPROP "analogLib"/"vpulse"/"symbol" prop="implementationPath" value=nil
+TBCA-SIMPROP "analogLib"/"vpulse"/"symbol" prop="source" value=nil
+TBCA-SIMPROP "analogLib"/"vpulse"/"symbol" prop="analogCell" value=nil
+TBCA-SIMPROP "analogLib"/"vpulse"/"symbol" prop="simulatorLanguage" value=nil
+TBCA-SIMVIEWS "analogLib"/"vpulse"/"symbol" views=nil
+TBCA-SIMOBJ lib="analogLib" cell="cap" view="symbol" dd=dd:0x18d61a28
+TBCA-SIMPROP "analogLib"/"cap"/"symbol" prop="simViewList" value=nil
+TBCA-SIMPROP "analogLib"/"cap"/"symbol" prop="simCompileList" value=nil
+TBCA-SIMPROP "analogLib"/"cap"/"symbol" prop="modelFile" value=nil
+TBCA-SIMPROP "analogLib"/"cap"/"symbol" prop="implementationPath" value=nil
+TBCA-SIMPROP "analogLib"/"cap"/"symbol" prop="source" value=nil
+TBCA-SIMPROP "analogLib"/"cap"/"symbol" prop="analogCell" value=nil
+TBCA-SIMPROP "analogLib"/"cap"/"symbol" prop="simulatorLanguage" value=nil
+TBCA-SIMVIEWS "analogLib"/"cap"/"symbol" views=nil
+TBCA-NETLIST run="1"
+TBCA-NL-CV db:0x162fee1a
+TBCA-NL-A0 nil
+TBCA-NL-A1 nil
+TBCA-NL-A2 nil
+TBCA-NL-SESSION nil
+-------------------------------------------------------------------------------
+SECTION D  nothing-was-modified proofs, re-checked AFTER the two Virtuoso runs above
+  $ md5sum -c /tmp/tb_audit/mc_before.md5 | grep -v ': OK$'      -> (no output)   [36 files]
+      (mc_before.md5 was taken BEFORE the audit: every file under cadence_work/microled_cells,
+       .cdslck excluded -> microled_cells byte-identical, DUT included)
+  $ find /opt/IC617/.../artist/analogLib -type f -newermt 2026-10-11 -printf 'CHANGED %p\n'  -> (none)
+  $ find /opt/IC617/.../artist/analogLib -name '*.cdslck'                                    -> (none)
+  $ md5sum analogLib/{vdc,vpulse,cap}/data.dm
+       73717d1c79f164cfed608eb57f651c8c  vdc/data.dm     (-r-xr-xr-x. 11124 Nov 10  2015)
+       5eb36d873fe3ebb8960fdf269737437a  vpulse/data.dm  (-r-xr-xr-x. 13284 Nov 10  2015)
+       98fcf35add34c919be070a8b4d940429  cap/data.dm     (-r-xr-xr-x. 12940 Nov 10  2015)
+  only the analogLib DIRECTORY itself carries a 2026-10-11 mtime (21:18); no file inside it was
+  written, so that is a directory-entry update (lock create/delete), not a library modification.
+  $ ls /opt/IC617/tools/bin/64bit /opt/IC617/tools/dfII/bin/64bit | grep -iE 'netlist|^nl$|asi'
+       oasisin  oasisout        (no standalone netlister; those two are OA import/export)
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+SECTION E  machine gate over sections A + B (output appended below this line by
+           scripts/c2mos_tb_cdf_check.py --evidence results/evidence/c2mos_tb_cdf_audit.txt,
+           which parses the frozen deck with scripts/c2mos_tb_build.py's own parser and compares
+           raw/CDF values NUMERICALLY, because Cadence normalises 5e-14 into 50f)
+-------------------------------------------------------------------------------
+command:  python scripts/c2mos_tb_cdf_check.py --evidence results/evidence/c2mos_tb_cdf_audit.txt
+verdict:  rc=0, ROWS=20 BAD=0, TB_CDF_CHECK: PASS
+
+# GOLDEN_VALUE     : value stated by the frozen deck, parsed (never retyped)
+# CDF_PROPERTY_NAME: analogLib's own name for it, from data.dm propMapping
+# OA_RAW_VALUE     : dbFindProp on the instance | OA_CDF_VALUE : cdfFindParamByName value
+GOLDEN_VALUE     CDF_PROPERTY_NAME  OA_RAW_VALUE   OA_CDF_VALUE   MATCH_STATUS                INSTANCE/DECK_ATTR
+1.8              vdc                1.8            1.8            MATCH                       Vdd/dc
+0                vdc                0              0              MATCH                       Vss/dc
+pulse            srcType            ABSENT         pulse          MATCH_VIA_MASTER_DEFAULT    Ck/type
+0                v1                 0              0              MATCH                       Ck/val0
+1.8              v2                 1.8            1.8            MATCH                       Ck/val1
+2E-7             per                2e-07          200n           MATCH                       Ck/period
+1.0E-7           td                 1e-07          100n           MATCH                       Ck/delay
+1.0E-7           pw                 1e-07          100n           MATCH                       Ck/width
+1E-9             tr                 1e-09          1n             MATCH                       Ck/rise
+1E-9             tf                 1e-09          1n             MATCH                       Ck/fall
+pulse            srcType            ABSENT         pulse          MATCH_VIA_MASTER_DEFAULT    Dd/type
+0                v1                 0              0              MATCH                       Dd/val0
+1.8              v2                 1.8            1.8            MATCH                       Dd/val1
+4E-7             per                4e-07          400n           MATCH                       Dd/period
+7.0E-8           td                 7e-08          70n            MATCH                       Dd/delay
+2E-7             pw                 2e-07          200n           MATCH                       Dd/width
+1E-9             tr                 1e-09          1n             MATCH                       Dd/rise
+1E-9             tf                 1e-09          1n             MATCH                       Dd/fall
+5.0E-14          c                  5e-14          50f            MATCH                       Cq/c
+5.0E-14          c                  5e-14          50f            MATCH                       Cqb/c
+ROWS=20 BAD=0
+OA_MASTER instance=Ck master="analogLib"/"vpulse"/"symbol" raw_prop_count=8
+OA_MASTER instance=Cq master="analogLib"/"cap"/"symbol" raw_prop_count=2
+OA_MASTER instance=Cqb master="analogLib"/"cap"/"symbol" raw_prop_count=2
+OA_MASTER instance=Dd master="analogLib"/"vpulse"/"symbol" raw_prop_count=8
+OA_MASTER instance=PIN0 master="basic"/"iopin"/"symbol" raw_prop_count=0
+OA_MASTER instance=Vdd master="analogLib"/"vdc"/"symbol" raw_prop_count=2
+OA_MASTER instance=Vss master="analogLib"/"vdc"/"symbol" raw_prop_count=2
+OA_MASTER instance=X1 master="microled_cells"/"c2mos_dff_1bit"/"symbol" raw_prop_count=1
+TB_CDF_CHECK: PASS
+
+-------------------------------------------------------------------------------
+SECTION F  what a Spectre netlister WOULD emit for these instances, from SECTION A propMapping
+  (derived by name lookup only; NOT produced by Cadence on this build -- see SECTION C)
+  Vdd  -> vsource dc=1.8                     (OA vdc=1.8, srcType default dc)
+  Vss  -> vsource dc=0                       (OA vdc=0)
+  Ck   -> vsource type=pulse val0=0 val1=1.8 period=200n delay=100n width=100n rise=1n fall=1n
+  Dd   -> vsource type=pulse val0=0 val1=1.8 period=400n delay=70n  width=200n rise=1n fall=1n
+  Cq   -> capacitor c=50f                    Cqb -> capacitor c=50f
+  golden deck, same lines: see spectre/c2mos_ff1_func.scs (Vdd/Vss use vsource dc=VDDV / dc=0)
+-------------------------------------------------------------------------------

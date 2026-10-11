@@ -7,11 +7,18 @@
 
 ## 0. 结论先说
 
+> **更正（2026-10-11 深夜，见 `reports/c2mos_tb_cdf_audit.md`）**：下表第三行"ASG 没有把激励参数带进 OA 库
+> ……不能充当验证载体"**是错的**，已作废。错因是我用黄金 deck 里的 **Spectre** 参数名
+> （`val0/val1/period/delay/width/rise/fall`）去查 analogLib 的 CDF，而这些量在 `analogLib` 字典里叫
+> `v1/v2/per/td/tr/tf/pw`（对应关系写在厂商 `data.dm` 的 `propMapping` 里）。按正确名字回读后实测：
+> **黄金激励的 20 个数值全部已在 cell 里，raw 属性层与 CDF 层一致**（`TB_CDF_CHECK: PASS`，`ROWS=20 BAD=0`）。
+> 该 testbench 真正缺的是**仿真分析设置**（`tran`/`save`），不是参数值。原始判决句留在下表以便追溯。
+
 | | |
 |---|---|
 | Task 1 testbench cell | **已建成**：`microled_cells/c2mos_dff_tb/schematic`，8 实例，DUT 按名绑定正确 |
 | Task 2 DFF 验证 | **通过**：`SCHEMATIC_DFF_FUNCTION: PASS`，33 断言 0 失败，两遍逐字节一致，preflight 先过 |
-| ⚠ 但有一个新发现的硬限制 | **ASG 没有把激励参数带进 OA 库**：`vdc`/`vpulse` 的 `dc/val0/val1/period/delay/width/rise/fall` 在**属性和 CDF 里都不存在** ⇒ `c2mos_dff_tb` **不能**充当验证载体，验证仍须走文本 deck |
+| ~~⚠ 但有一个新发现的硬限制~~ **（本行结论已被上面更正作废）** | ~~**ASG 没有把激励参数带进 OA 库**：`vdc`/`vpulse` 的 `dc/val0/val1/period/delay/width/rise/fall` 在**属性和 CDF 里都不存在** ⇒ `c2mos_dff_tb` **不能**充当验证载体，验证仍须走文本 deck~~ |
 
 第二行用的是仓库既有的 `ff1_sch` 路径（DUT = 从本机 OA cellview 回读重建的网表 + golden deck 激励），
 它绕开了上面那条限制；第三行说明**为什么不能用新 cell 直接仿真**。
@@ -124,12 +131,17 @@ SCHEMATIC_DFF_FUNCTION: PASS
 |---|---|
 | golden 网表 deck（`ff1`）vs 本机原理图重建（`ff1_sch`），tag `local1` | **断言报告逐字节相同**（commit `7307b26`，两份 repeat 都相同）⇒ 原理图与冻结网表波形级等价 |
 | 本轮 `review1` 再跑 `ff1_sch` | 33 断言 0 失败、两遍一致，与 `local1` 同结论（同一套时间窗，仅 tag 不同） |
-| **新建的 `c2mos_dff_tb` cell vs golden deck** | **结构等价但数值不等价**：拓扑/绑定/负载一致，激励参数未被 ASG 保存（`TB-CDF "Ck" ((("dc" "")))`）⇒ **不等价，不能替换 golden deck 作为验证载体** |
+| **新建的 `c2mos_dff_tb` cell vs golden deck** | ~~**结构等价但数值不等价**~~ **（本行作废）**：拓扑/绑定/负载一致这一点成立；"激励参数未被 ASG 保存"不成立——按 analogLib 的正确参数名回读，20 项黄金数值 raw 与 CDF 两层全部等值（`reports/c2mos_tb_cdf_audit.md` §3） |
 
 ## 8. 需要你定（我没有自行修复）
 
+> **本节整块已被后续只读审计推翻，保留原文以便追溯。** 更正见 `reports/c2mos_tb_cdf_audit.md`：
+> 所谓"没有任何激励数值"来自按 Spectre 名字查询（`val0/period/...`），而 analogLib 的真名是
+> `v1/per/...`；按真名实测，数值完整。仍然成立的观察只有一条：`cell 目录只有 schematic`（无 symbol view），
+> 以及本节 §7 指出的缺 `tran/save` 分析设置。真正的待定项缩减为两条，见新报告 §10 的 T1/T2。
+
 ```
-Problem: microled_cells/c2mos_dff_tb 里的 vdc/vpulse 实例没有任何激励数值，
+Problem: microled_cells/c2mos_dff_tb 里的 vdc/vpulse 实例没有任何激励数值，   <-- 已证伪
          因此这个 cell 无法作为可仿真的 testbench。
 Evidence: TB-PROP 只有 model；TB-CDF 只有空 dc；对照 cap 的 c=5e-14 确实保住了。
           同一份 deck 里的 X1 六端子按名绑定全部成功，说明不是导入整体失败。
