@@ -1,0 +1,70 @@
+=== /root/Desktop/MicroLED-IC-Project.desktop (verbatim, mode 755) ===
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=MicroLED IC Project
+GenericName=Cadence Virtuoso
+Comment=Micro LED IC617 session (teacher smic18mmrf PDK; work dir /root/microled_ai_project/cadence_work)
+Exec=/root/microled_ai_project/cadence_work/launch_virtuoso.sh
+Icon=/opt/IC617/share/cdssetup/icons/32x32/app-virtuoso.png
+TryExec=/root/microled_ai_project/cadence_work/launch_virtuoso.sh
+Terminal=false
+Categories=Development;
+
+=== launcher: md5 must equal the tracked repo blob ===
+57be646893b671721bbea0326e3e7e06  /root/microled_ai_project/cadence_work/launch_virtuoso.sh
+-rwxr-xr-x. 1 root root 5522 Oct  9 19:51 /root/microled_ai_project/cadence_work/launch_virtuoso.sh
+
+=== STATIC: gui2_verify_desktop.sh (fresh run) ===
+CHECK DESKTOP_FILE_EXECUTABLE    PASS  mode=755
+CHECK DESKTOP_FILE_LINEENDS      PASS  LF only
+NOTE  Exec=/root/microled_ai_project/cadence_work/launch_virtuoso.sh
+NOTE  TryExec=/root/microled_ai_project/cadence_work/launch_virtuoso.sh  Type=Application  Terminal=false  Path=<absent, GNOME uses the session cwd>
+CHECK EXEC_TARGET_EXECUTABLE     PASS  /root/microled_ai_project/cadence_work/launch_virtuoso.sh
+CHECK TRYEXEC_ACCESSIBLE         PASS  /root/microled_ai_project/cadence_work/launch_virtuoso.sh
+CHECK EXEC_WOULD_BE_EACCES       PASS  os.access(X_OK)=true -> execv would succeed
+CHECK LAUNCHER_SYNTAX            PASS  /root/microled_ai_project/cadence_work/launch_virtuoso.sh parses
+CHECK LAUNCHER_LINEENDS          PASS  LF only
+CHECK CADENCE_ENV_LOADED         PASS  reported PASS by the launcher itself
+CHECK PROJECT_WORKDIR_CORRECT    PASS  reported PASS by the launcher itself
+CHECK CDS_LIB_FOUND              PASS  reported PASS by the launcher itself
+CHECK LAUNCHER_CHECK             PASS  static
+        virtuoso  : /opt/IC617//tools/dfII/bin/virtuoso
+        DISPLAY derived from the only listening X socket: :0
+        DISPLAY   : :0   XAUTHORITY: unset
+        cds.lib   : /root/microled_ai_project/cadence_work/cds.lib
+        theme     : white  resource_file=/root/microled_ai_project/cadence_work/appearance/white/xresources.txt
+CHECK WHITE_THEME_WIRED          PASS  resource_file=/root/microled_ai_project/cadence_work/appearance/white/xresources.txt
+CHECK WHITE_THEME_CONTENTS       PASS  sets Opus.editorBackground
+
+DESKTOP_ENTRY: PASS
+VIRTUOSO_GUI: UNVERIFIED_BY_THIS_SCRIPT (static checks only; run scripts/gui2_real_launch.sh,
+              which proves a virtuoso process AND a viewable window on the session display)
+NOTE  LAUNCHER_CHECK: PASS on its own does NOT mean the desktop icon works -- that is the exact
+NOTE  confusion that hid this bug. A passing run here still needs the dynamic check.
+
+=== DYNAMIC: /tmp/gui2_launch.out, left by gui2_real_launch.sh ===
+ENVEXEC_SESSION_PID=3032
+CHECK CADENCE_ENV_LOADED PASS
+      virtuoso  : /opt/IC617//tools/dfII/bin/virtuoso
+      OA_HOME   : /opt/IC617/oa_v22.50.036/
+      MMSIM     : /opt/MMSIM151
+CHECK PROJECT_WORKDIR_CORRECT PASS
+      DISPLAY   : :0   XAUTHORITY: /var/run/gdm/auth-for-root-8x8Kba/database
+CHECK CDS_LIB_FOUND PASS
+      cds.lib   : /root/microled_ai_project/cadence_work/cds.lib
+          DEFINE cdsDefTechLib /opt/IC617/tools/dfII/etc/cdsDefTechLib
+          DEFINE basic /opt/IC617/tools/dfII/etc/cdslib/basic
+          DEFINE analogLib /opt/IC617/tools/dfII/etc/cdslib/artist/analogLib
+          DEFINE smic18mmrf /root/tech/teacher_pdk/smic18mmrf
+          DEFINE microled_dirver0 /root/Desktop/microled_dirver0
+          DEFINE microled_cells /root/microled_ai_project/cadence_work/microled_cells
+      theme     : white  resource_file=/root/microled_ai_project/cadence_work/appearance/white/xresources.txt
+      theme applied via xrdb (undo: bash scripts/gui1_white_theme.sh restore)
+      session log: /root/microled_ai_project/cadence_work/logs/virtuoso_gui_20261011_203954.log
+STARTING_VIRTUOSO
+xargs: sh: terminated by signal 15
+
+=== post-cleanup state ===
+remaining_virtuoso=0  msgserver=0
+xrdb restored diff lines vs pre-launch snapshot = 0
