@@ -1,0 +1,24 @@
+TB=ff1_sch T=2e-7 tag=local1
+netlist=/root/microled_ai_project/spectre/run_ff1_sch_local1.scs
+directives=/root/microled_ai_project/logs/c2mos_dirs_ff1_sch_local1.txt rules=33
+--- testbench preflight
+    STATIC_OK vdd net vdd referenced to node 0 at 1.8 V
+    STATIC_OK vss net vss tied to node 0 through an independent source
+    OP_OK vdd net vdd = 1.8 (expected 1.8)
+    OP_OK vss net vss = 0 (must equal the reference)
+    RAIL_WARNINGS=0
+    TESTBENCH_PREFLIGHT: PASS
+[1] spectre finished, datafile=tr1.tran.tran
+[1] assertions: total=33 failed=0
+  TIMING edge=1.40T kind=fall t_CLK50=3.005e-07 t_Q50=3.00684e-07 t_D50=2.715e-07  D50_to_CLK50=2.9e-08  CLK50_to_Q50=1.843e-10 s (0.0922% of T)
+  TIMING edge=2.40T kind=rise t_CLK50=5.005e-07 t_Q50=5.0091e-07 t_D50=4.705e-07  D50_to_CLK50=3e-08  CLK50_to_Q50=4.10301e-10 s (0.205% of T)
+  TIMING edge=3.40T kind=fall t_CLK50=7.005e-07 t_Q50=7.00684e-07 t_D50=6.715e-07  D50_to_CLK50=2.9e-08  CLK50_to_Q50=1.84252e-10 s (0.0921% of T)
+  TIMING edge=4.40T kind=rise t_CLK50=9.005e-07 t_Q50=9.0091e-07 t_D50=8.705e-07  D50_to_CLK50=3e-08  CLK50_to_Q50=4.10301e-10 s (0.205% of T)
+[2] spectre finished, datafile=tr1.tran.tran
+[2] assertions: total=33 failed=0
+  TIMING edge=1.40T kind=fall t_CLK50=3.005e-07 t_Q50=3.00684e-07 t_D50=2.715e-07  D50_to_CLK50=2.9e-08  CLK50_to_Q50=1.843e-10 s (0.0922% of T)
+  TIMING edge=2.40T kind=rise t_CLK50=5.005e-07 t_Q50=5.0091e-07 t_D50=4.705e-07  D50_to_CLK50=3e-08  CLK50_to_Q50=4.10301e-10 s (0.205% of T)
+  TIMING edge=3.40T kind=fall t_CLK50=7.005e-07 t_Q50=7.00684e-07 t_D50=6.715e-07  D50_to_CLK50=2.9e-08  CLK50_to_Q50=1.84252e-10 s (0.0921% of T)
+  TIMING edge=4.40T kind=rise t_CLK50=9.005e-07 t_Q50=9.0091e-07 t_D50=8.705e-07  D50_to_CLK50=3e-08  CLK50_to_Q50=4.10301e-10 s (0.205% of T)
+REPEAT: 2 runs produced byte-identical assertion reports
+SCHEMATIC_DFF_FUNCTION: PASS

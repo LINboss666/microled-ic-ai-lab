@@ -1,0 +1,56 @@
+[20:22:23] GUARD virtuoso_main=0
+[20:22:23] PDK before = 5333 entries
+[20:22:23] cell untouched? md5 of schematic dir listing:
+  total 52
+  -rw-r--r--. 1 root root  3316 Oct 11 20:02 data.dm
+  -rw-r--r--. 1 root root    35 Oct 11 20:02 master.tag
+  -rw-r--r--. 1 root root 37796 Oct 11 20:02 sch.oa
+  -rw-r--r--. 1 root root  1326 Oct 11 20:02 thumbnail_128x128.png
+[20:22:23] --- STEP 1: install the netlist rebuilt from THIS machine's readback ---
+[20:22:23] install diff lines vs committed = 4 (expect: provenance comment only)
+[20:22:23] --- STEP 2: golden cell DFF (frozen deck, 2 repeats) ---
+[20:22:39] ff1 rc=0
+    TESTBENCH_PREFLIGHT: PASS
+[1] assertions: total=33 failed=0
+[2] assertions: total=33 failed=0
+REPEAT: 2 runs produced byte-identical assertion reports
+C2MOS_DFF_1CH: PASS
+[20:22:39] --- STEP 3: this-machine OA schematic DFF (ff1_sch, 2 repeats) ---
+[20:22:55] ff1_sch rc=0
+    TESTBENCH_PREFLIGHT: PASS
+REPEAT: 2 runs produced byte-identical assertion reports
+SCHEMATIC_DFF_FUNCTION: PASS
+[20:22:55] DFF verdict: golden_pass_lines=1  oa_pass_lines=1
+[20:22:55] --- STEP 4: 3-stage shift register (DFF passed, so allowed) ---
+[20:23:25] shift3_sch rc=0
+    TESTBENCH_PREFLIGHT: PASS
+SCHEMATIC_SHIFT3_FUNCTION: PASS
+[20:23:55] shift3 rc=0
+    TESTBENCH_PREFLIGHT: PASS
+C2MOS_SHIFT_3STAGE: PASS
+[20:23:55] --- STEP 5: evidence bundle ---
+  c2mos_assert_ff1_local1_1.txt 35 lines
+  c2mos_assert_ff1_local1_2.txt 35 lines
+  c2mos_assert_ff1_sch_local1_1.txt 35 lines
+  c2mos_assert_ff1_sch_local1_2.txt 35 lines
+  c2mos_assert_shift3_local1_1.txt 42 lines
+  c2mos_assert_shift3_sch_local1_1.txt 42 lines
+  c2mos_dirs_ff1_local1.txt 39 lines
+  c2mos_dirs_ff1_sch_local1.txt 39 lines
+  c2mos_dirs_shift3_local1.txt 45 lines
+  c2mos_dirs_shift3_sch_local1.txt 45 lines
+  preflight_run_ff1_local1_ff1.txt 28 lines
+  preflight_run_ff1_sch_local1_ff1_sch.txt 28 lines
+  preflight_run_shift3_local1_shift3.txt 50 lines
+  preflight_run_shift3_sch_local1_shift3_sch.txt 50 lines
+[20:23:55] delay tables:
+/root/microled_ai_project/logs/c2mos_run_ff1_local1_1.out
+/root/microled_ai_project/logs/c2mos_run_ff1_local1_2.out
+/root/microled_ai_project/logs/c2mos_run_ff1_sch_local1_1.out
+/root/microled_ai_project/logs/c2mos_run_ff1_sch_local1_2.out
+/root/microled_ai_project/logs/c2mos_run_shift3_local1_1.out
+/root/microled_ai_project/logs/c2mos_run_shift3_sch_local1_1.out
+[20:23:55] PDK after = 5333 entries  diff_lines = 0
+[20:23:55] cell schematic dir after (must be identical): 3de3224df0af
+[20:23:55] disk after: 5.1G free
+[20:23:55] TB_VERIFY_DONE golden=1 oa=1
