@@ -1,0 +1,65 @@
+[20:02:21] GUARD virtuoso_main=0
+[20:02:21] GUARD cell exists before? NO
+[20:02:21] PDK before = 5333 entries
+[20:02:21] --- STEP 1: ASG import (sch1_asg_import.sh, all defaults) ---
+[20:02:23] step1 exit=0  SPICEIN_ok=3
+WRAPPER_TOP_CELL=sch1_top WRAPPER_INSTANCE=I1
+GOLDEN_INSTANCE_LINES=18  IMPORT_COPY_INSTANCE_LINES=18
+INFO (SPICEIN-54): Spice In successfully imported the netlist file '/root/microled_ai_project/cadence_work/asg_in/c2mos_dff_1bit.scs'. You may like to read the
+ASG rc=0
+INFO (SPICEIN-33): Spice In successfully created the schematic view microled_cells.sch1_top::schematic. Read the log file
+INFO (SPICEIN-54): Spice In successfully imported the netlist file '/root/microled_ai_project/cadence_work/asg_in/c2mos_dff_1bit.scs'. You may like to read the
+[20:02:23] cells now: c2mos_dff_1bit cdsinfo.tag data_bias_ref data.dm data_sink_1ch sch1_top sch3_top tech.db 
+[20:02:23] --- STEP 2: pre-fix readback (read-only) ---
+[20:02:28] PRE_LOG=/root/microled_ai_project/cadence_work/logs/sch_nograph_20261011_200223.log
+[20:02:28] gate PRE rc=1
+MOS_COUNT_GOLDEN: 18
+MOS_COUNT_READBACK: 18
+MOS_MASTER_MATCH: 18/18
+L_MATCH: 0/18
+W_MATCH: 0/18
+CDF_ERROR_COUNT: 0
+DEFAULT_VALUE_FALLBACK_COUNT: 0
+INVALID_LENGTH_COUNT: 18
+PDK_DEFAULT_DECLARATION_MISMATCH_COUNT: 0
+UNRESOLVED_PARAMETER_COUNT: 72
+OA_DEVICE_PARAMETER_READBACK: FAIL
+[20:02:28] PRE simW tally:       5 simW="wc"       5 simW="wcp"       4 simW="wk"       4 simW="wkp" 
+[20:02:28] --- STEP 3: apply golden sizes (sch3_fix_params.il + committed table) ---
+[20:02:34] step3 exit=0 token=1
+[20:02:34] --- STEP 4: strip residual simW ---
+[20:02:40] step4 exit=0 token=1
+[20:02:40] del count=18  deletes: DS-DEL "mp_k4" DS-DEL "mp_k3" DS-DEL "mp_s2" DS-DEL "mp_s1" DS-DEL "mp_k2" DS-DEL "mp_k1" DS-DEL "mp_m2" DS-DEL "mp_m1" DS-DEL "mp_c" DS-DEL "mn_k4" DS-DEL "mn_k3" DS-DEL "mn_s2" DS-DEL "mn_s1" DS-DEL "mn_k2" DS-DEL "mn_k1" DS-DEL "mn_m2" DS-DEL "mn_m1" DS-DEL "mn_c" 
+ DS-BEFORE-SUMMARY instances=(24) nets=(13) shapes=(219) terms=(0)
+ DS-AFTER-SUMMARY instances=(24) nets=(13) shapes=(219) terms=(0)
+[20:02:40] --- STEP 5: post readback + gate ---
+[20:02:45] POST_LOG=/root/microled_ai_project/cadence_work/logs/sch_nograph_20261011_200240.log
+[20:02:45] gate POST rc=0
+MOS_COUNT_GOLDEN: 18
+MOS_COUNT_READBACK: 18
+MOS_MASTER_MATCH: 18/18
+L_MATCH: 18/18
+W_MATCH: 18/18
+CDF_ERROR_COUNT: 0
+DEFAULT_VALUE_FALLBACK_COUNT: 0
+INVALID_LENGTH_COUNT: 0
+PDK_DEFAULT_DECLARATION_MISMATCH_COUNT: 0
+UNRESOLVED_PARAMETER_COUNT: 0
+PORT_PINS: clk d q qbar vdd vss
+OA_DEVICE_PARAMETER_READBACK: PASS
+[20:02:45] POST simW tally:      18 simW="ABSENT" 
+[20:02:45] POST raw_w tally:       4 "1u"       5 "2u"       5 "4u"       4 "500n" 
+[20:02:45] POST cdf_w tally:       4 "1u"       5 "2u"       5 "4u"       4 "500n" 
+[20:02:45] --- STEP 6: prove the fix moved no structure ---
+[20:02:45] conn rc=0
+MOS_ROWS_BEFORE: 18
+MOS_ROWS_AFTER: 18
+INSTANCE_COUNT_UNCHANGED: PASS
+CONNECTIVITY_UNCHANGED: PASS
+MASTERS_UNCHANGED: PASS
+EXTERNAL_PORTS_UNCHANGED: PASS
+COUNTS_UNCHANGED: PASS
+SCHEMATIC_STRUCTURE_UNCHANGED: PASS
+[20:02:45] PDK after = 5333 entries  diff_lines = 0
+[20:02:45] PDK locks/logs = 0
+[20:02:45] C2MOS_PIPELINE_DONE gate_post_rc=0 conn_rc=0
