@@ -1,0 +1,12 @@
+case,description,mode,expected,actual,rc,verdict
+"-",legacy single-rail bench, old CLI form,legacy,PASS,PASS,0,PASS
+"-",legacy negative: project floating-vss bench,legacy,FAIL,FAIL,1,PASS
+"vdd18=1.8 vdd33=3.3 vss=0",dual-rail 1.8/3.3 declared correctly,contract,PASS,PASS,0,PASS
+"vdd18=1.8 vdd33=3.3 vss=0",vdd33 left unconnected to any source,contract,FAIL,FAIL,1,PASS
+"vdd18=1.8 vdd33=3.3 vss=0",vdd33 driven to 2.5 V against a 3.3 V contract,contract,FAIL,FAIL,1,PASS
+"vdd18=1.8 vdd33=3.3 vss=0",vdd18/vdd33 pins swapped on the instance,contract,FAIL,FAIL,1,PASS
+"vdd18=1.8 vdd33=3.3 vss=0",vss lifted off the reference by 0.1 V,contract,FAIL,FAIL,1,PASS
+"vdd18=0 vdd33=3.3 vss=0",declared vdd18=0 with vdd33=3.3 (power-down scenario),contract,PASS,PASS,0,PASS
+"vdd18=1.8 vdd33=0 vss=0",declared vdd33=0 with vdd18=1.8 (power-down scenario),contract,PASS,PASS,0,PASS
+"vdd18=1.8 vdd33=3.3 vss=0",core rail shorted to the 3.3 V net by an extra source,contract,FAIL,FAIL,1,PASS
+"vdd18=1.8 vss=0",contract omits vdd33 while the cell exposes it,contract,FAIL,FAIL,1,PASS

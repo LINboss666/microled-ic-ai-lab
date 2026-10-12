@@ -27,9 +27,17 @@
 set -u
 
 PROJ="${PROJ:-/root/microled_ai_project}"
-NET="${1:?usage: tb_preflight.sh <abs.netlist> [expected_vdd] [tag]}"
+PROJ_DIR="$PROJ"
+NET="${1:?usage: tb_preflight.sh <abs.netlist> [expected_vdd] [tag] [supply_map]}"
 VEXP="${2:-1.8}"
 TAG="${3:-pre}"
+# Dual-rail supply contract (SCAN-1 R1). A bench with vdd18=1.8 and vdd33=3.3 cannot be judged by
+# one scalar expectation: whichever value is chosen, the other rail is then mis-checked, which is
+# exactly why the S2 decks were refused. Contract format is "port=volts ..." naming the SUBCKT PORTS
+# that carry supply; a declared 0 V is a legitimate, checked power-down condition. Implemented in
+# sc1_supply_check.awk so no awk program has to be nested inside this shell script's quoting.
+SMAP="${4:-${SUPPLY_MAP:-}}"
+SUPP_AWK="$PROJ_DIR/scripts/sc1_supply_check.awk"
 RS="$PROJ/scripts/run_spectre.sh"
 LOGD="$PROJ/logs"
 
@@ -214,6 +222,17 @@ for lvl in 1 2 3; do
 done
 echo "--- local cell files parsed for port lists:${CELLFILES:- none}"
 
+if [ -n "$SMAP" ]; then
+  [ -r "$SUPP_AWK" ] || { echo "FATAL: supply contract checker missing ($SUPP_AWK)"; exit 8; }
+  SC=$(awk -v smap="$SMAP" -f "$SUPP_AWK" $CELLFILES "$NET")
+  echo "$SC" | grep -v '^SUPPLY_NET ' | sed 's/^/  /'
+  SUPPLY_PAIRS=$(echo "$SC" | awk '/^SUPPLY_NET / {print $2}' | sort -u | tr '
+' ' ')
+  case "$SC" in *SUPPLY_RESULT_FAIL*|*"SUPPLY_RESULT FAIL"*)
+    echo "TESTBENCH_PREFLIGHT: FAIL (supply contract not satisfied)"; exit 1 ;;
+  esac
+  CONTRACT=1
+fi
 STATIC=$(awk -v vexp="$VEXP" -v dir="$DIR" "$P1AWK" $CELLFILES "$NET")
 echo "$STATIC"
 static_verdict=$(echo "$STATIC" | awk '/^STATIC_RESULT/ {print $2}')
@@ -278,6 +297,20 @@ echo "--- operating point at the first sample"
 echo "$OP" | sed 's/^/    /'
 
 fail=""
+if [ "${CONTRACT:-}" = "1" ]; then
+  for pair in $SUPPLY_PAIRS; do
+    v=${pair%%=*}; want=${pair##*=}
+    got=$(echo "$OP" | awk -v k="$v" '$1==k {print $2}')
+    [ -n "$got" ] || { echo "OP_FAIL no operating-point value for declared supply net $v"; fail=1; continue; }
+    ok=$(awk -v a="$got" -v b="$want" 'BEGIN{ d=a-b; if(d<0)d=-d; print (d<=1e-6)?"yes":"no" }')
+    if [ "$ok" = "yes" ]; then echo "OP_OK supply net $v = $got (contract $want V)"
+    else echo "OP_FAIL supply net $v = $got, contract requires $want V"; fail=1; fi
+  done
+  if [ -n "$fail" ]; then echo "TESTBENCH_PREFLIGHT: FAIL (supply contract violated at the operating point)"; exit 1; fi
+  echo "PREFLIGHT_CONTRACT_SATISFIED: PASS"
+  echo "TESTBENCH_PREFLIGHT: PASS"
+  exit 0
+fi
 for v in $VDD_NETS; do
   [ -n "$v" ] || continue
   got=$(echo "$OP" | awk -v k="$v" '$1==k {print $2}')
