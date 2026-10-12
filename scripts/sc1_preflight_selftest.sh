@@ -89,6 +89,9 @@ pf_run() {
       bash "$PF" "$deck" "$vexp" "$tag" > "$log" 2>&1; rc=$?
   fi
   out=$(cat "$log" 2>/dev/null)
+  # judge only a complete log: an unfinished write is a harness fault, never a circuit verdict
+  log_complete=yes
+  printf '%s\n' "$out" | grep -q '^TESTBENCH_PREFLIGHT:' || log_complete=no
   local act_stage act_reject sim_called verdict why_note=""
   act_stage=$(printf '%s\n' "$out" | awk '/^PREFLIGHT_STAGE=/{sub(/^PREFLIGHT_STAGE=/,"");print;exit}')  act_reject=$(printf '%s\n' "$out" | grep -m1 '^PREFLIGHT_REJECT:' | sed 's/^PREFLIGHT_REJECT: //')
   [ -n "$act_reject" ] || act_reject=$(printf '%s\n' "$out" | grep -m1 '^PREFLIGHT_HARNESS_ERROR:' | sed 's/.*: //')
@@ -122,6 +125,9 @@ pf_run() {
   fi
   if [ "$verdict" = PASS ] && [ "$class" = tool_fault ] && [ "$act_stage" != supply_contract ]; then
     verdict=FAIL; why_note="tool fault refused at the wrong stage: ${act_stage:-none}"
+  fi
+  if [ "$verdict" = PASS ] && [ "$log_complete" = no ]; then
+    verdict=FAIL; why_note="HARNESS_ERROR log_incomplete_no_final_verdict_line"
   fi
   # an acceptance case whose simulator phase produced nothing is BLOCKED, not FAIL and not PASS
   if [ "$verdict" != PASS ] && [ "$class" = circuit_positive ] && [ "$MODE" = full ]; then

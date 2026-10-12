@@ -48,7 +48,23 @@ mkdir -p "$LOGD"
 DIR="$(cd "$(dirname "$NET")" && pwd)"
 BASE="$(basename "$NET" .scs)"
 OUT="$LOGD/preflight_${BASE}_${TAG}.txt"
-exec > >(tee "$OUT") 2>&1
+# No background log writer at all. `exec > >(tee "$OUT") 2>&1` hands the file to an asynchronous
+# process that can still be draining when this script exits, and a harness reading the log right
+# afterwards sees a truncated file (measured: the cloud reviewer's first static run reported an
+# empty rejection stage for a row whose log was complete minutes later; and bash 4.1 on the guest
+# does not set $! for a process substitution at all, so "wait for tee" is not portable either).
+# The report is therefore written by this process, and echoed to the original stdout on the way out
+# -- both the file and the caller's capture are complete before the exit status becomes visible.
+exec 3>&1
+: > "$OUT"
+exec >>"$OUT" 2>&1
+cleanup_log() {
+  rc=$?
+  trap - EXIT
+  cat "$OUT" >&3 2>/dev/null
+  exit "$rc"
+}
+trap cleanup_log EXIT
 
 # A harness error is never a circuit verdict, and it is the one case where the stage name has to be
 # printed on the way out -- otherwise a missing file looks exactly like a refused negative.
