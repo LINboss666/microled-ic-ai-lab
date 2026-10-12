@@ -2,6 +2,88 @@
 
 ## CURRENT_STATUS (single authoritative table; everything below this block is history)
 
+Updated 2026-10-12 during **SCAN-1R2C / tool rework only**. Identity re-read before editing:
+remote `poc/scan-driver-1ch` = `9159a3970f67d8e30e9a4d4a2cc88cd59bbee43c` = local HEAD (via
+`git ls-remote`), main = `23e471cb936b421ee97e1250c3be06edf96f9937`. No divergence, nothing of anyone
+else was touched.
+
+**No simulator was called in this round**: no Spectre, no preflight full, no operating-point probe,
+no Virtuoso, and the newly supplied PDK was not used. Allowed validation was offline synthetic
+waveforms, the static supply preflight, CSV read-back and repository safety gates. The overall tooling
+audit is **PENDING_REVIEW / REWORK** until the reviewer re-reads this round on the remote.
+
+### Problem A: the attribution bound was still not the input's own 50 % crossings
+
+| what 9159a39 did | what the code now does |
+|---|---|
+| `bounds` came from complete 10-90 % events, so an input that dipped to 0.4 V (above the 10 % level = 0.18 V) and came back produced **no bound at all**: a1 authenticated `t_in=2.5e-09 t_out=1.45e-08 delay_ns=12.000 MEASUREMENT_VALID=YES` rc=0 | the bound is the next crossing of the input's **own 50 % level in either direction**, scanned straight off the waveform: `t_next=5.642857 ns`, and a1 now answers `OUTSIDE_ATTRIBUTION ... candidate t_out=1.450000e-08 (candidate_delay_ns=12.000) is not inside [t_in=2.500000e-09, t_next=5.642857e-09)` with rc=4, `MEASUREMENT_VALID=NO` |
+| the candidate filter tested the output event's **start**, never the 50 % point it then reported: a2 printed its own window ending at 5.1 ns while reporting `t_out=8.125 ns` as valid | the candidate is selected and validated by the reported 50 % point: a2 refuses with rc=4, and the boundary race (output 50 % **exactly** on `t_next`) also refuses -- `t_in <= t_out < t_next` strictly |
+| mirrored polarities had the same hole | a1_mirror / a2_mirror refuse with the same numbers (t_in=2.5 ns / 1.5 ns, t_next=5.642857 ns / 5.5 ns) |
+| -- | positives still measure: a dip that never reaches the input's 50 % level (plateau 1.2 V) leaves event 1 measurable at `delay_ns=12.000` rc=0 YES; a complete response measured at 10.125 ns against a 12.5 ns bound gives `delay_ns=8.625` rc=0 YES; `--in-event second` on the R2B deck still gives 12.5 / 14.5 / 2.000 ns; `--pairing diagnose` still shows the 12 ns candidate but with rc=6 and `MEASUREMENT_VALID=NO` |
+| every refusal path | now prints `MEASUREMENT_VALID=NO`, and only a certified line prints `delay_ns=` (a refusal prints `candidate_delay_ns=`), so a reader cannot mistake a borrowed candidate for a measurement |
+
+Semantics fixed for this round: attribution failure = `OUTSIDE_ATTRIBUTION` **rc 4**; no output event
+at all = `NO_RESPONSE` rc 4; unorderable sampling = `AMBIGUOUS_RESOLUTION` rc 6; polarity beaten by an
+earlier opposite event = `AMBIGUOUS_POLARITY` rc 6; `--pairing diagnose` = rc 6. No fixed ns cap, no
+column period, no window-widening switch was added.
+
+### Problem B (the reviewer's second hole): the preflight log was written asynchronously
+
+* **Cause confirmed by fault injection, not asserted.** `scripts/sc1_r2c_lograce.sh` builds two
+  variants from a copy of the committed wrapper with the SAME deliberately slow log writer, and reads
+  the report file and the caller's capture immediately after each return: guest bash 4.1.2 → async
+  writer lost **12/12** reads, committed wrapper lost **0/12**; Windows bash 5.x → **10/12** vs
+  **0/12**; exit status stayed 7 (static probe) in both. Nothing here called a simulator, and the
+  committed wrapper was never modified to produce the failure.
+* **My first fix attempt was wrong and is recorded**: `TEE_PID=$!` + `wait` after
+  `exec > >(tee ...)` passed 8/8 on Windows bash 5.2 but failed 8/8 on the guest, because bash 4.1
+  does not set `$!` for a process substitution at all -- the "synchronisation" was a no-op there. The
+  mechanism was therefore replaced, not patched: the wrapper now writes its report from its own
+  process and echoes it to the saved stdout on exit, which is version independent.
+* The matrix harness also refuses to classify an incomplete log: a row whose log has no final
+  `TESTBENCH_PREFLIGHT:` line is `HARNESS_ERROR log_incomplete_no_final_verdict_line`, never a circuit
+  verdict and never a silent stage-less read.
+* Supply verdicts, exit codes and the static-stage rules are unchanged.
+
+### Gate status
+
+| item | status | evidence |
+|---|---|---|
+| EVENT_ATTRIBUTION_VALIDATION | **PASS 11/11** | `results/evidence/sc1_r2c_checker.csv` (guest Python 2.6, label `fixed_r2c_guest_py26`), same 11/11 on Windows Python 3.12; decks are reproducible with `scripts/sc1_r2c_casegen.py` |
+| baseline behaviour before the fix | **6 of 11 rows failed at 9159a39** (5 authenticated with rc=0/YES, 1 refused without a validity flag) | `results/evidence/sc1_r2c_before.csv` |
+| CHECKER_REGRESSION | **PASS** | 16/16 R2B (`sc1_r2c_checker_r2b_subset.csv`), 48/48 R2A (`sc1_r2c_checker_r2a_subset.csv`), 27/27 legacy -- all re-run on the guest; one R2B row's reason token moved from `NO_RESPONSE` to `OUTSIDE_ATTRIBUTION` because R2C refined the diagnosis, with `PROPDELAY` / `MEASUREMENT_VALID=YES` still forbidden |
+| SUPPLY_STATIC_REGRESSION | **PASS 33/33** | `results/evidence/sc1_r2c_preflight_static.csv` + transcript; composition 8 acceptance + 13 circuit negatives + 10 tool faults + 2 harness = 33, and `simulator_called=no` on **all** 33 rows (the 8 acceptance rows stop at the static probe, rc=7, `CIRCUIT_VERDICT: NOT_RUN`). Earlier wording that implied the acceptance rows called the simulator is corrected in `sc1_r2b_full_status.txt` |
+| CSV_AUDIT | **PASS** | `scripts/sc1_csv_audit.py` over the 33-row matrix, recomputing every verdict from the recorded logs |
+| LOG_COMPLETION_VALIDATION | **PASS** | `results/evidence/sc1_r2c_lograce_guest.transcript.txt` (bash 4.1.2) and the Windows run quoted above |
+| full preflight / C2MOS / S1 regression | **NOT_RUN_AFTER_R2C / PAUSED_BY_USER** | `results/evidence/sc1_r2c_full_status.txt`; b603820's full 31/31 and 9159a39-era static numbers are history only and are not claimed for this code |
+| protected inputs | zero diff vs 9159a39 | `spectre/` whole tree, `sc1_s1r.sh`, `sc1_s2.sh`, `run_spectre.sh`, `sc1_supply_check.awk` (deliberately untouched this round), frozen DATA assets, and every earlier evidence CSV; hashes in `results/evidence/sc1_r2c_manifest.csv` |
+| R2 / R3 / S3 / S4, SOA, autonomous power-fail | NOT_STARTED / NO / NOT_IMPLEMENTED | unchanged |
+
+### Reproduce offline
+
+```
+python scripts/sc1_r2c_casegen.py --outdir DECKS
+python scripts/sc1_r2c_selftest.py --decks DECKS --out results/evidence/sc1_r2c_checker.csv --version-label L
+python scripts/sc1_r2b_selftest.py; python scripts/sc1_r2a_selftest.py; python scripts/sc1_checker_selftest.py
+PROJ=/path/to/checkout bash scripts/sc1_r2c_lograce.sh 10 0.05
+PROJ=/path/to/checkout bash scripts/sc1_preflight_selftest.sh static
+```
+
+### Still open for the reviewer
+
+* The attribution rule uses the input's own next 50 % crossing as the bound. A deliberately
+  multi-cycle response (real power-gating chains may answer later than one input change) is therefore
+  refused rather than measured; if such a case is wanted, it needs a caller-supplied event pairing,
+  not a widened window. Nothing was relaxed for that purpose in this round.
+* Whether an exact-threshold plateau should count as one crossing (current, conservative rule) or as
+  two is a judgement; the current choice creates a bound, which can only ever refuse.
+* The old async `tee` behaviour is reproduced only with an injected slow writer; on a quiet machine the
+  race may not appear, which the lograce script reports as INCONCLUSIVE rather than as a pass.
+* Full-mode regression, C2MOS and S1 real-circuit re-reads remain paused by the user.
+
+
+## HISTORICAL_STATUS (SCAN-1R2B round, kept for audit; superseded by the R2C block above)
+
 Updated 2026-10-12 during **SCAN-1R2B / only-tool-repair**. Inputs re-read this session: branch
 `poc/scan-driver-1ch` head `b60382099d369801c93d8e5f06adf2071a079eab` (the round's start, reviewed by
 the cloud reviewer), earlier starts `5c8b8a7…` (first R2B counterexamples) and `41ffbf2…` (R2A),
