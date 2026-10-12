@@ -2,6 +2,54 @@
 
 ## CURRENT_STATUS (single authoritative table; everything below this block is history)
 
+Updated 2026-10-12 during **SCAN-1R2D / S2 static implementation + S1 offline re-analysis**.
+Baseline re-read before editing: remote `poc/scan-driver-1ch` = `f7364f5df658cab60e037a1fe1cc65dae2e760cf`
+= local HEAD; main = `23e471cb936b421ee97e1250c3be06edf96f9937`. No divergence, no other agent's work
+touched.
+
+**No simulator was used in this round** -- no Spectre, no ngspice, no preflight full, no operating-point
+probe, no Virtuoso, and the newly supplied PDK was not used for anything. The user's pause on real-circuit
+simulation stays in force, so nothing below is a circuit verdict.
+
+| item | status | evidence |
+|---|---|---|
+| S2 static implementation | **COMPLETE** | `spectre/sc1_level_shifter_r2d.scs`: core `sc1_ls_core_r2d (en x y vdd18 vdd33 vss)` with the six devices of the review table, `sc1_ls_c0_r2d` (two 3.3 V stages, `gate33` keeps `x`'s polarity), `sc1_ls_c1_r2d` (static NAND `gate33=NOT(y AND core_ok33)`, parallel PMOS, series NMOS with the intermediate node `ns_m` named), plus `sc1_ls_c0_top_r2d` / `sc1_ls_c1_top_r2d`. Per-device D/G/S/B + W/L tables in `reports/scan_driver_r2d_static_review.md` |
+| Device interfaces | **READ LOCALLY, not assumed** | vendor `inline subckt n33_ckt ( d g s b )` / `p33_ckt ( d g s b )`; bare `n18/p18/n33/p33` are BSIM4 `model` records, so instances here are primitives; the S1 measured truth table is only consistent with that same order, which is derivation from existing data, not a fresh `spectre -h` confirmation. Hashes of the three files read: `results/evidence/sc1_r2d_manifest.csv`, role `pdk_reference_readonly_hash_only` |
+| Geometry legality | **NOT_VERIFIED** | `GEOMETRY_RANGE_READ = NO`: no L/W range or absolute-rating table in the readable local model README, so sizes only reuse shapes this PDK already accepted in completed runs (S1 1.8 V gate, 3.3 V device probe, DATA decks). `SOA_SIGNOFF = NO / FOUNDRY_REVIEW_REQUIRED` |
+| S2 deck static validation | **PASS 29/29 (static only)** | `bash scripts/sc1_s2_r2d.sh` in the guest: 27 decks accepted at probe rc=7 with `CIRCUIT_VERDICT: NOT_RUN`, and the two intended negatives refused at `PREFLIGHT_STAGE=supply_contract` with reasons (`net vssx (Xt port vss) has no independent source from reference node 0`; missing 3.3 V rail). `simulator_called=no` on every row. `results/evidence/sc1_r2d_static_matrix.csv` |
+| Supply gate over the new cell | **PASS with hierarchy resolved** | `sc1_supply_check.awk` (unchanged) reports `top=1 descendants=2 checked=8 internal=0` for both variants: every supply port of the core and of the output network resolves through the parent's port bindings to a declared rail. `neg_output_polarity_fault` is accepted by the static gate on purpose -- its polarity error is a circuit verdict and this round claims no detector caught it |
+| S1 historical re-analysis | **PASS 10/10 rows, from the raw waveforms** | `results/evidence/sc1_r2d_s1_historical_reanalysis.csv`: 4 truth rows, 5 transient windows, BLANK-clamped negative (`DETECTED`), each with raw file SHA256, deck SHA256, reader rc, sample count and an independent group-aware awk cross-check; differences vs the historical summary are <= 5e-7 V and are the historical 6-decimal print, not a data change. This is `S1_HISTORICAL_REANALYSIS`, not a fresh regression, and it does not re-prove the golden C2MOS cell |
+| Two mistakes in my own first pass | **found and corrected before the numbers above** | T2 was transcribed as `max` although a `>0.9 V` assertion takes the window **minimum** (the historical number 1.799913 is the min; awk confirms min 1.79991344 / max 1.80009894); and the sample-count probe had a bisection upper-bound bug reporting 128 where the window holds 157. The raw data never disagreed with history -- the intermediate script did |
+| Future regression entries | **prepared, dry-run by default** | `scripts/sc1_s1_r2d_regression.sh` (reader rc before any `float()`, SI/negative values, no phantom `_t1` net, missing raw/negative/short window exit non-zero instead of being skipped) and `scripts/sc1_s2_r2d.sh`: both need `RUN=1` **and** `QODER_SIM_AUTHORISED=1`; `RUN=1` alone exits 5 and runs nothing, verified in the guest |
+| Protected inputs | **zero diff vs f7364f5** | whole `spectre/`, `scripts/sc1_s1r.sh`, `scripts/sc1_s2.sh`, `scripts/run_spectre.sh`, and all audited tools (`sc1_read_psf.py`, `sc1_delay.py`, `tb_preflight.sh`, `sc1_supply_check.awk`); earlier evidence CSVs untouched, and `sc1_r2d_*` is the new naming |
+| Gates | **PASS** | staged-object safety gate per commit, `provenance_check.py`, `netlist_stats.py` `DEVICE_COUNT_CHECK: PASS`, no PDK/model-card/raw-PSF/credential/vendor path committed |
+| S1 fresh regression, C2MOS re-run, preflight full | **NOT_RUN / PAUSED_BY_USER** | `results/evidence/sc1_r2c_full_status.txt` still stands for the tool side; nothing here changes it |
+| S2 functional TT, dynamic, power sequence, stress | **NOT_RUN** | decks exist with planned windows; no measurement, no assertion outcome |
+| R2 full acceptance / R3 chaining / S3 / S4 | **NOT_COMPLETED / NOT_STARTED** | — |
+| `core_ok33`, autonomous power-fail | assumed control only; **NOT_IMPLEMENTED** | best future outcome stays `SAFE_OFF_WITH_ASSUMED_CORE_OK` |
+
+### Next step is a decision, not a continuation
+
+The authorised next action is the real-PDK TT verification of exactly the decks listed in
+`reports/scan_driver_r2d_static_review.md` §6 (static levels, rail currents with a calibrated sign
+convention, per-device terminal voltages including `ns_m`, delay/slew per load, both power-order ramps
+and backfeed). It is **not** S3, and it does not follow automatically from this round's green offline
+results.
+
+### Open questions worth the reviewer's judgement
+
+* Core device sizing: equal W on the p33 pull-ups and n33 pull-downs is a starting point taken from
+  precedent, not from analysis. The competition question (can 1.8 V on a 3.3 V-threshold n33 gate flip
+  the cross couple at all, and which way does it fail if not) is the first thing to measure.
+* Whether `C1` should ever carry an output buffer, and if so whether the extra two stages change the
+  select polarity budget, is deliberately left unimplemented until a measured load case demands it.
+* The primitive terminal-order question is inert for these connections only because bulk is tied to
+  each device's own source rail everywhere except the C1 stack's intentional well tie. If any future
+  deck separates S from B elsewhere, confirm the order with `spectre -h mos` first.
+
+
+## HISTORICAL_STATUS (SCAN-1R2C round, kept for audit; superseded by the R2D block above)
+
 Updated 2026-10-12 during **SCAN-1R2C / tool rework only**. Identity re-read before editing:
 remote `poc/scan-driver-1ch` = `9159a3970f67d8e30e9a4d4a2cc88cd59bbee43c` = local HEAD (via
 `git ls-remote`), main = `23e471cb936b421ee97e1250c3be06edf96f9937`. No divergence, nothing of anyone
