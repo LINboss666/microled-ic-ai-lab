@@ -246,6 +246,37 @@ Xm (in out vdd18 vss) midc
 sw1 tran stop=1.5n maxstep=0.5n")
 pf_run n11 circuit_negative no "$COLLIDE" contract 1.8 "$BASE_CONTRACT" \
   1 supply_contract "refusing to guess" "a midc-local net named vdd33 while a global vdd33 rail also exists"
+# R2B: the reviewer's uncertified child substrate, driven through the wrapper rather than the awk
+FLOATKIDS='subckt leafc (in out vdd33 vss)
+  mpleaf (out in vdd33 vdd33) p33 l=3.5e-7 w=5e-6
+  mnleaf (out in vss vss) n33 l=3.5e-7 w=5e-6
+ends leafc
+subckt topc (in out vdd18 vdd33 vss)
+  Xchild (in out vdd33 floating_ground) leafc
+ends topc'
+F13=$(mkdeck float_child "$HDR
+$CELL
+$FLOATKIDS
+V18 (vdd18 0) vsource dc=1.8
+V33 (vdd33 0) vsource dc=3.3
+Vss (vss 0) vsource dc=0
+Vi (in 0) vsource dc=0
+X1 (in out vdd18 vdd33 vss) topc
+sw1 tran stop=1.5n maxstep=0.5n
+save in out vdd18 vdd33 vss")
+pf_run n13 circuit_negative no "$F13" contract 1.8 "$BASE_CONTRACT" 1 supply_contract "is not certified" "child vss tied to a mid-level internal node (floating_ground) instead of the parent vss port"
+MAPPEDKIDS=$(printf '%s' "$FLOATKIDS" | sed 's/floating_ground/vss/')
+F14=$(mkdeck mapped_child "$HDR
+$CELL
+$MAPPEDKIDS
+V18 (vdd18 0) vsource dc=1.8
+V33 (vdd33 0) vsource dc=3.3
+Vss (vss 0) vsource dc=0
+Vi (in 0) vsource dc=0
+X1 (in out vdd18 vdd33 vss) topc
+sw1 tran stop=1.5n maxstep=0.5n
+save in out vdd18 vdd33 vss")
+pf_run p08 circuit_positive yes "$F14" contract 1.8 "$BASE_CONTRACT" 0 "" "SUPPLY_GATE: PASS" "the same deck with the child wired through the parent vss port"
 # the project's own legacy negative bench must still be refused, at the static parse stage
 LEGNEG="$PROJ/spectre/preflight_negative_vss_float.scs"
 pf_run n12 circuit_negative no "$LEGNEG" legacy 1.8 "-" 1 static_parse "NOT tied to reference node 0" "committed negative bench: vss left floating"

@@ -149,19 +149,21 @@ check('r0b_inverting_2ns', 'en rise -> out fall is 2.0 ns',
               '--vdd-in', '1.8', '--vdd-out', '3.3', '--edge-in', 'rise', '--edge-out', 'fall'],
       0, asserts=[('delay_ns', 2.0, 0.05), ('t_in', 2.5e-9, 1e-12),
                          ('t_out', 4.5e-9, 1e-12)], regression=True)
-# same-direction query on an inverting chain: it does land on the later output rise, so the tool
-# must hand back the 50 % number AND mark that an opposite-direction event answered sooner
-check('r0b_same_dir_on_inverting_marked',
-      'a same-direction pairing must flag the earlier opposite-direction response',
+# same-direction query on inverting data: R2A printed 6.0 ns with a marker and rc 0. R2B corrected
+# that -- an acceptance run must not hand back a number that the opposite-direction event already
+# contradicts, so the pairing is refused with a non-zero code and MEASUREMENT_VALID=NO.
+check('r0b_same_dir_on_inverting_refused',
+      'a same-direction pairing that an opposite event beats is refused, not accepted',
       DELAY, ['--data', p_inv, '--mode', 'propdelay', '--sig-in', 'en', '--sig-out', 'out',
               '--vdd-in', '1.8', '--vdd-out', '3.3', '--edge-in', 'rise', '--edge-out', 'rise'],
-      0, asserts=[('delay_ns', 6.0, 0.05)], expect_in='earlier_opposite_event=YES')
+      6, asserts=[('delay_ns', 6.0, 0.05)],
+      expect_in='AMBIGUOUS_POLARITY', regression=True)
 p_noresp = write('noresp.psf', psf([('time', [i * 1e-9 for i in range(8)]),
                                     ('en', [0.0, 0.0, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8]),
                                     ('gate', [0.0] * 8)]))
-check('r0b_missing_response', 'an input with no output response is NO_EDGE, not 0 ns',
+check('r0b_missing_response', 'an input with no output response is NO_RESPONSE, not 0 ns',
       DELAY, ['--data', p_noresp, '--mode', 'propdelay', '--sig-in', 'en', '--sig-out', 'gate',
-              '--edge-in', 'rise', '--edge-out', 'fall'], 4, expect_in='NO_EDGE')
+              '--edge-in', 'rise', '--edge-out', 'fall'], 4, expect_in='NO_RESPONSE')
 p_same = write('same.psf', psf([('time', [i * 1e-9 for i in range(10)]),
                                ('a', [0.0, 0.0, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8]),
                                ('b', [0.0, 0.0, 0.0, 3.3, 3.3, 3.3, 3.3, 3.3, 3.3, 3.3])]))
@@ -175,10 +177,13 @@ check('r0b_legacy_single_edge_same_phase', 'one --edge still applies to input an
       DELAY, ['--data', p_same, '--mode', 'propdelay', '--sig-in', 'a', '--sig-out', 'b',
               '--edge', 'rise'], 0, asserts=[('delay_ns', 1.0, 0.05)],
       expect_in='legacy_edge_interface=same_direction')
-check('r0b_window_selects_event', 'window picks the second of two input events',
+check('r0b_window_excludes_the_only_event',
+      'a window that contains no input event is NO_EDGE (this deck has only one input event)',
       DELAY, ['--data', p_same, '--mode', 'propdelay', '--sig-in', 'a', '--sig-out', 'b',
               '--edge-in', 'rise', '--edge-out', 'rise', '--t0', '6n', '--t1', '9n'],
       4, expect_in='NO_EDGE')
+# renamed on R2B: it was described as "window picks the second of two input events", but the deck
+# holds a single event, so it never tested event selection -- r2ba_second_event_2ns does
 # the other inverting direction: a falling input must pair with a rising output, not with a fall
 p_inv2 = write('inv2.psf', psf([('time', [i * 1e-9 for i in range(10)]),
                                ('en', [1.8, 1.8, 1.8, 1.8, 1.8, 0.0, 0.0, 0.0, 0.0, 1.8]),
@@ -362,8 +367,10 @@ V33 (vdd33 0) vsource dc=2.5
 Vss (vss 0) vsource dc=0
 Xm (in out vdd18 vdd33 vss) mid
 """)], 1, expect_in='driven 2.5 V', regression=True, isawk=True, stage='structure')
-# an internal supply node is not a rail preflight can certify: reported, counted, never skipped
-check('r1b_internal_supply_reported', 'a descendant rail fed by an internal node is named, not hidden',
+# an internal supply node cannot be certified. R2A counted it (internal=1) and still passed; R2B
+# corrected that acceptance semantic -- counting is not checking, and a floating child substrate is
+# the very accident this gate exists to catch. Scenario kept, expectation changed.
+check('r1b_internal_supply_refused', 'a descendant rail fed by an internal node refuses the contract',
       AWK, ['-v', 'smap=vdd18=1.8 vdd33=3.3 vss=0 inv18.vdd=1.8',
             write('nest_int.scs', DUT + """subckt mid (in out vdd18 vss)
   reg (vcc33 in) res r=1k
@@ -374,8 +381,7 @@ ends mid
 V18 (vdd18 0) vsource dc=1.8
 Vss (vss 0) vsource dc=0
 Xm (in out vdd18 vss) mid
-""")], 0, expect_in='SUPPLY_INTERNAL',
-      asserts=[('internal', 1, 0)], isawk=True, stage='structure')
+""")], 1, expect_in='SUPPLY_NOT_CERTIFIED', regression=True, isawk=True, stage='structure')
 # the reviewer's ambiguity: a subckt-local net that shares a top-level rail's name
 check('r1b_local_net_name_collision', 'a local net named like a global rail is refused, not guessed',
       AWK, ['-v', 'smap=vdd18=1.8 vdd33=3.3 vss=0',
