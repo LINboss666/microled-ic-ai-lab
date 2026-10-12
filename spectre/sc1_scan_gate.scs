@@ -1,0 +1,40 @@
+// ==============================================================================
+// sc1_scan_gate.scs -- SCAN-1 S1: the BLANK/ENABLE gate that produces SCAN_EN.
+//
+// Target logic, positive-logic as specified by the task brief section 2:
+//     SCAN_EN = Q AND (NOT BLANK)          BLANK=1 must suppress the high side
+//                                           BLANK=0 allows Q=1 to select
+//
+// Why this is 4 transistors and not NAND+inverter (8) :  ENGINEERING_TOPOLOGY_CHOICE
+//     The golden C^2MOS cell already exports the COMPLEMENT of the stored bit as `qbar`
+//     (its port list is (d clk q qbar vdd vss)). De Morgan:
+//         Q AND NOT BLANK  ==  NOT ( NOT Q OR BLANK )  ==  NOR( qbar , BLANK )
+//     A static-CMOS NOR is non-inverting with respect to Q when its inputs are qbar and
+//     BLANK, so no buffer or inverted-BLK strap is needed. This is the brief's permitted
+//     "more compact equivalent logic", not a reinterpretation of the requirement.
+//
+// Static CMOS NOR, terminal order (D G S B) as used everywhere in this project:
+//     pull-up   = two PMOS in SERIES  (conducts only when qbar=0 AND BLANK=0 -> out=1)
+//     pull-down = two NMOS in PARALLEL (conducts when qbar=1 OR BLANK=1      -> out=0)
+//
+// BLANK acts on the OUTPUT device, not on the storage node: pulling BLANK high takes an
+// NMOS directly from the output to VSS, so SCAN_EN falls without any path into q or qbar.
+// The DFF therefore keeps its state while the scan power stage is suppressed. This is
+// verified in the transient deck, not asserted here.
+//
+// Sizing: l=200n is the value the golden C^2MOS cell already runs on this PDK (lmin for
+// n18/p18 is smaller, but matching the proven golden geometry keeps one variable out of
+// the corner runs). W matches the golden clocked-path widths so the gate can drive a
+// real level-shifter input without being weaker than the cell that feeds it.
+// ==============================================================================
+subckt sc1_scan_gate (qbar blank en vdd vss)
+  parameters lg=2e-7 wn=2e-6 wp=4e-6
+
+  // ---- pull-up path: en = 1 only when qbar=0 AND blank=0
+  mp_a (n1   qbar  vdd vdd) p18 l=lg w=wp
+  mp_b (en   blank n1  vdd) p18 l=lg w=wp
+
+  // ---- pull-down path: en = 0 when either input is high
+  mn_a (en   qbar  vss vss) n18 l=lg w=wn
+  mn_b (en   blank vss vss) n18 l=lg w=wn
+ends sc1_scan_gate

@@ -1,0 +1,5 @@
+Q,BLANK,en_V,row_expected,verdict
+1,0,want>0.9,ON,PASS
+0,0,want<0.9,OFF,PASS
+1,1,want<0.9,OFF,PASS
+0,1,want<0.9,OFF,PASS
