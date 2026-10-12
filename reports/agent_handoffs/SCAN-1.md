@@ -2,6 +2,67 @@
 
 ## CURRENT_STATUS (single authoritative table; everything below this block is history)
 
+Updated 2026-10-12 during **SCAN-1R2B / only-tool-repair**. Inputs re-read this session: branch
+`poc/scan-driver-1ch` head `b60382099d369801c93d8e5f06adf2071a079eab` (the round's start, reviewed by
+the cloud reviewer), earlier starts `5c8b8a7…` (first R2B counterexamples) and `41ffbf2…` (R2A),
+main @ `23e471cb936b421ee97e1250c3be06edf96f9937`.
+
+The overall tooling audit stays **REWORK** until the reviewer re-reads this round's remote evidence.
+R2, R3, S3, S4 are not started. No simulator was called in this round.
+
+### The two functional holes, with the numbers that close them
+
+| hole | b603820 behaviour (reproduced locally before touching code) | R2B behaviour |
+|---|---|---|
+| **A. propdelay borrowed the next cycle's response** | the reviewer's deck gave `t_in=2.5e-09 t_out=1.45e-08 delay_ns=12.000 in_ev=2 out_ev=1 earlier_opposite_event=no` with **rc 0**: the first, unanswered pulse was credited with the second cycle's fall | default (event 1) is now `NO_RESPONSE … no complete fall output event before the next input change at 5.1e-09` **rc 4**; with `--in-event second` the real measurement is `t_in=1.250e-08 t_out=1.450e-08 delay_ns=2.000 MEASUREMENT_VALID=YES` **rc 0**; `--pairing diagnose` still prints the 12.000 ns pairing but with `MEASUREMENT_VALID=NO` **rc 6** |
+| **B. an uncertified internal supply passed the gate** | the reviewer's deck printed `SUPPLY_INTERNAL … internal=1` and then `SUPPLY_RESULT PASS` with **rc 0**; the wrapper only emitted a scope note and the static probe exited 7 as if accepted | same deck now prints `SUPPLY_NOT_CERTIFIED X1.Xchild port vss is internal node @top.floating_ground` plus `SUPPLY_FAIL … is not certified: it maps to internal node … instead of a rail the contract covers`, `SUPPLY_RESULT FAIL`, **rc 1**; through the wrapper it is refused at `PREFLIGHT_STAGE=supply_contract` (matrix row n13) with `simulator_called=no` |
+
+Attribution rule that replaced the "any later event" pairing: an output event may only be credited to
+the selected input event while **no further input crossing of either direction** has begun -- the bound
+comes from the input waveform itself, never from a fixed ns cap or from the 9.765625 us column period.
+A missing 50 % crossing is `NO_HALF_CROSSING` (rc 4) instead of quoting the 10 % point, and a deck whose
+sampling is too coarse to order the two edges is `AMBIGUOUS_RESOLUTION` (rc 6, `MEASUREMENT_VALID=NO`)
+rather than `NO_RESPONSE`, which would have misdiagnosed an unresolvable measurement as an unanswered
+input. Node 0 is now never treated as a subckt-local name, so a child reference tied straight to the
+reference node is certified as the legal 0 V it is.
+
+### Status of every gate this round touched
+
+| item | status | evidence |
+|---|---|---|
+| R2B targeted regressions | **PASS 16/16 (8 regression)** | `results/evidence/sc1_r2b_checker.csv`; both reviewer decks, event selection, diagnose mode, 50 % vs 10 % reference, coarse-sampling ambiguity, two answered cycles, two-level hierarchy, internal vdd, node-0 child reference |
+| R2A suite after the corrected semantics | **PASS 48/48 (21 regression)** | `results/evidence/sc1_r2b_checker_r2a_subset.csv`; three expectations changed by acceptance-semantic decision, not by loosening the tool: `r0b_same_dir_on_inverting_marked` → `…_refused` (rc 6), `r0b_missing_response` → `NO_RESPONSE` token, `r1b_internal_supply_reported` → `r1b_internal_supply_refused` (rc 1); `r0b_window_selects_event` renamed to `r0b_window_excludes_the_only_event` because its deck holds a single input event and never tested selection |
+| Legacy measurement suite | **PASS 27/27** | `results/evidence/sc1_r2b_legacy27.csv` (guest Python 2.6) |
+| Preflight matrix, static mode | **PASS 33/33** | `results/evidence/sc1_r2b_preflight_static.csv` + transcript: 8 acceptance + 13 circuit negatives + 10 tool faults + 2 harness = 33; no row reached the simulator except the acceptance rows probed with `PREFLIGHT_STATIC_PROBE=1` (rc 7, `CIRCUIT_VERDICT: NOT_RUN`) |
+| CSV read-back audit | **PASS** | `scripts/sc1_csv_audit.py` recomputes every verdict from the recorded logs; 33 rows × 16 columns, unique ids |
+| Preflight matrix, full mode (real PDK) | **NOT_RUN_AFTER_R2B / PAUSED_BY_USER** | `results/evidence/sc1_r2b_full_status.txt`. The b603820 full 31/31 result is kept as `sc1_r2a_preflight.csv` and describes the OLD tools; it is not claimed for this code |
+| Count correction to the previous block | 31 = 7 + 12 + 10 + 2, so **24** rows were refusals/harness, not 22 | the sentence in the R2A block below was wrong and is marked |
+| Protected inputs | untouched | `spectre/C2MOS_DFF.scs`, `sc1_scan_gate.scs`, `sc1_level_shifter.scs`, `scripts/sc1_s1r.sh`, `scripts/sc1_s2.sh`, `scripts/run_spectre.sh` unchanged; hashes and the fact that the old evidence CSVs were not overwritten are in `results/evidence/sc1_r2b_manifest.csv` |
+| Safety / provenance | PASS | staged-object gate on every commit, `provenance_check.py`, `repo_safety_scan.py`; no PDK, model card, raw PSF, credential or vendor path committed |
+
+### Offline reproduction, exactly as the reviewer would run it
+
+```
+python scripts/sc1_r2b_selftest.py --out results/evidence/sc1_r2b_checker.csv      # 16 cases
+python scripts/sc1_r2a_selftest.py --out results/evidence/sc1_r2b_checker_r2a_subset.csv
+python scripts/sc1_checker_selftest.py --out results/evidence/sc1_r2b_legacy27.csv
+PROJ=/path/to/checkout bash scripts/sc1_preflight_selftest.sh static               # 33 cases
+```
+No simulator, no PDK, no licence. Interfaces added this round (documented in each tool's usage):
+`--in-event first|second|N`, `--pairing accept|diagnose`, exit code 6 = diagnostic/ambiguous,
+`MEASUREMENT_VALID=YES|NO` on every propdelay line, `SUPPLY_NOT_CERTIFIED` from the awk checker.
+
+### Open for the reviewer / still unverified
+
+* The full-mode matrix on this implementation (needs the teacher PDK; explicitly paused by the user).
+* S1 real-circuit regression with the corrected tools: NOT_RUN. Nothing in this round judges any circuit.
+* Whether the attribution bound should also be able to take an explicit response-window argument from
+  the caller; the current rule uses the input's own next crossing, which is the strictest reading.
+* R2 / R3 / S3 / S4 NOT_STARTED, `SOA_SIGNOFF: NO`, autonomous power-fail protection NOT_IMPLEMENTED.
+
+
+## HISTORICAL_STATUS (SCAN-1R2A round, kept for audit; superseded by the R2B block above)
+
 Updated 2026-10-12 during **SCAN-1R2A / R0-R1 tool rework**. Inputs re-read this session:
 `poc/scan-driver-1ch` @ `41ffbf29673de15acf0fdc491f7daa7d113ddc88` (review start), circuit baseline
 `fc6757bda8b410ebf34e4bbcf248eaa2a98a19b6`, main @ `23e471cb936b421ee97e1250c3be06edf96f9937`.
@@ -19,7 +80,7 @@ the reviewer re-reads the new remote evidence, the overall audit status of the t
 | R1-B supply semantics | **FIXED** | unresolved master, non-numeric contract value, zero instances, unmatched entry all refused; node 0 accepted as the 0 V reference; hierarchy resolved through port bindings (`descendants=2` counted); per-master entries let core-domain and high-domain instances coexist; rail-tie contradictions refused; subckt-local net with a global rail's name is refused, not guessed |
 | R1-C negative-case protocol | **FIXED** | `scripts/sc1_preflight_selftest.sh` declares per case an expected rc **set**, rejection stage, required reason tokens (all must appear), the connection actually changed, and whether the simulator may be reached; missing deck/checker are `HARNESS_ERROR` rc 8; a positive whose simulator phase produced no data is BLOCKED, never PASS |
 | Preflight matrix (offline static mode) | **PASS 31/31** | `results/evidence/sc1_r2a_preflight_static.transcript.txt`; no simulator involved |
-| Preflight matrix (real PDK, full mode) | **PASS 31/31** | `results/evidence/sc1_r2a_preflight.csv` + `..._full.transcript.txt`; 7 acceptance cases ran the operating-point probe on the teacher PDK `section=tt` with `sim=yes`, 22 refusals/harness cases never called Spectre |
+| Preflight matrix (real PDK, full mode) | **PASS 31/31** | `results/evidence/sc1_r2a_preflight.csv` + `..._full.transcript.txt`; 7 acceptance cases ran the operating-point probe on the teacher PDK `section=tt` with `sim=yes`, 24 refusals/harness rows never called Spectre (the count in this round's review was mis-stated as 22: 31 = 7 acceptance + 12 circuit negative + 10 tool fault + 2 harness) |
 | CSV read-back audit | **PASS** | `scripts/sc1_csv_audit.py` on the matrix: 16 columns per record, unique case ids, rc/stage/reason correspondence, verdict recomputed from the recorded logs |
 | Legacy 27-case suite | **PASS 27/27** (guest Python 2.6) | `results/evidence/sc1_r2a_legacy27.csv`; two misleading names corrected -- `delay_propdelay_10ns` asserted 5 ns (renamed to the same-phase case) and `delay_partial_then_full` contains no second transition at all (renamed `delay_partial_only_holds_low`; the real double-event counterexample is `r0a_splice_first_complete`) |
 | `psf_check` 9 cases / `safety_rules` 21 cases | **PASS on Python 3** (Windows + cloud reviewer) | these two suites use `open(..., encoding=)` and cannot run under the guest's Python 2.6 -- recorded as NOT_RUN on the guest, not as a pass there |
@@ -390,7 +451,7 @@ relied on are recorded.
 
 ### SCAN-1R2 round status block, moved out of CURRENT_STATUS on 2026-10-12 (R2A)
 
-## CURRENT_STATUS (single authoritative table; older sections below are history)
+## HISTORICAL_STATUS (SCAN-1R2 round, kept for audit; superseded)
 
 Updated 2026-10-12 during SCAN-1R2 / S2-only. Baseline reviewed by the cloud reviewer:
 `poc/scan-driver-1ch` @ `fc6757bda8b410ebf34e4bbcf248eaa2a98a19b6`, main @
