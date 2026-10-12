@@ -1,0 +1,7 @@
+"case_id","reanalysis_rc","reasons","verdict","note","data_class"
+"all_matching","0","as expected","PASS","complete lineage and consistent stimulus certifies the re-read","SYNTHETIC_MOCK_not_historical_data"
+"wrong_blank","1","as expected","PASS","a row whose own stimulus does not read back at its label cannot be evidence","SYNTHETIC_MOCK_not_historical_data"
+"missing_deck","3","as expected","PASS","raw values without their decks are a re-read, not a certification","SYNTHETIC_MOCK_not_historical_data"
+"missing_history","3","as expected","PASS","with no historical values there is nothing to agree with, so agreement is not claimed","SYNTHETIC_MOCK_not_historical_data"
+"unreadable_evidence","1","as expected","PASS","a transient raw without the states its window names cannot verify the stimulus","SYNTHETIC_MOCK_not_historical_data"
+"no_fault_run","3","as expected","PASS","a missing negative leaves the checker uncertified; it is never skipped into a pass","SYNTHETIC_MOCK_not_historical_data"
