@@ -84,6 +84,8 @@ raw/
 *.vcd
 *.scs.bak
 spectre/sim/
+# the guest's simulation scratch tree (decks, logs, mock harness trees) -- never an artifact
+cadence_work/
 
 # ---- VM images, archives, binaries -------------------------------------------
 *.vmx
