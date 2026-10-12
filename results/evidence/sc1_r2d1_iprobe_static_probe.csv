@@ -1,0 +1,2 @@
+"actual_rc","actual_stage","verdict","simulator_called","supply_fail_lines","first_reason","note"
+"1","supply_contract","REFUSED_BY_STATIC_GATE","no","5","contract_refused:net vdd18 (Xt port vdd18) has no independent source from reference node 0","deck keeps a series iprobe in each rail branch; syntax from spectre/current_probe_syntax.scs, contract vdd18=1.8 vdd33=3.3 vss=0"
