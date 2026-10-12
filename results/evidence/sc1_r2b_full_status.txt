@@ -20,8 +20,9 @@ this round's evidence (offline + static only)
   results/evidence/sc1_r2b_checker.csv                 16/16 cases, 8 reproducing the R2B review
   results/evidence/sc1_r2b_checker_r2a_subset.csv      48/48 cases (R2A set, corrected semantics)
   results/evidence/sc1_r2b_legacy27.csv                27/27 cases
-  In every static-mode row simulator_called=no except the acceptance rows probed with
-  PREFLIGHT_STATIC_PROBE=1, which exit 7 and print CIRCUIT_VERDICT: NOT_RUN.
+  CORRECTED on R2C (the sentence above it was inaccurate): every one of the 33 static-mode rows has
+  simulator_called=no, the acceptance rows included -- they are stopped by PREFLIGHT_STATIC_PROBE=1,
+  which exits 7 and prints CIRCUIT_VERDICT: NOT_RUN. No static-mode row invoked a simulator.
 
 not verified anywhere yet
   S1 real-circuit regression under the fixed tools: NOT_RUN

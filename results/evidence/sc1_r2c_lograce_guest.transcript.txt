@@ -1,0 +1,6 @@
+LOG_RACE iterations=10 writer_sleep=0.05s  (2 reads checked per run: report file + caller capture)
+  async log writer (the mechanism this round replaces): incomplete reads = 20/20
+  committed wrapper (synchronous report + echo on exit): incomplete reads = 0/20
+  exit status stayed 7 (static probe, no simulator) in both variants
+LOG_COMPLETION_VALIDATION: PASS (cause reproduced on a copy of the committed script, and the
+  committed mechanism reads complete 20/20)

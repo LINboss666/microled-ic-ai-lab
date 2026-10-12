@@ -1,0 +1,39 @@
+SCAN-1 R2C -- simulator-side regression status (recorded, not measured)
+
+STATUS OF EVERY SIMULATOR PATH ON THIS CODE
+  full-mode preflight regression : NOT_RUN_AFTER_R2C / PAUSED_BY_USER
+  C2MOS real-circuit regression  : NOT_RUN / PAUSED_BY_USER
+  S1 real-circuit regression     : NOT_RUN / PAUSED_BY_USER (never re-read with the corrected tools)
+  new S2 circuit (R2), chaining (R3), S3, S4 : NOT_STARTED
+  newly supplied PDK             : not used, no model compatibility run
+  Reason: the R2C task book pauses C2MOS, PDK and every real-circuit simulation. Allowed validation
+  is offline synthetic waveforms, the static supply preflight, CSV audit and repository safety gates.
+  NOTHING in this round called Spectre, ngspice, preflight full, the operating-point probe or
+  Virtuoso.
+
+STATIC MATRIX, as measured
+  results/evidence/sc1_r2c_preflight_static.csv   33 rows x 16 columns, verdict PASS 33/33
+  results/evidence/sc1_r2c_preflight_static.transcript.txt
+  Composition: 8 acceptance + 13 circuit negatives + 10 tool faults + 2 harness errors = 33.
+  simulator_called=no on ALL 33 rows. The 8 acceptance rows stop at PREFLIGHT_STATIC_PROBE=1, which
+  exits with code 7 and prints CIRCUIT_VERDICT: NOT_RUN -- they are accepted by the static layer
+  only and are not circuit verdicts. CSV read-back: CSV_AUDIT PASS (scripts/sc1_csv_audit.py).
+
+OFFLINE SUITES, as measured on two interpreters
+  sc1_r2c_selftest.py  11/11  Windows Python 3.12 and guest Python 2.6  (results/evidence/sc1_r2c_checker.csv)
+  sc1_r2b_selftest.py  16/16  guest Python 2.6  (results/evidence/sc1_r2c_checker_r2b_subset.csv)
+  sc1_r2a_selftest.py  48/48  guest Python 2.6  (results/evidence/sc1_r2c_checker_r2a_subset.csv)
+  sc1_checker_selftest.py 27/27 guest Python 2.6 (results/evidence/sc1_r2c_legacy27.csv)
+  sc1_r2c_lograce.sh   PASS   Windows bash 5.x and guest bash 4.1.2
+                           (results/evidence/sc1_r2c_lograce_guest.transcript.txt)
+  Baseline evidence for the attribution fix, taken before the tool was edited:
+  results/evidence/sc1_r2c_before.csv  6 of 11 rows failed at 9159a39 -- a1, a1_mirror, a2, a2_mirror
+  and boundary returned rc=0 with MEASUREMENT_VALID=YES (the two holes the reviewer named, plus the
+  boundary race), and r2b_two refused with rc=4 but printed no validity flag at all.
+
+NOT VERIFIED, and not claimed
+  Rail currents, device terminal stresses, load response, timing margins, any S2 behaviour, and any
+  statement about the real circuit: NOT MEASURED this round. POC_ASSUMPTION voltages (1.8 V / 3.3 V)
+  and the ns values in these decks are tool-test conditions, not silicon specifications; the
+  9.765625 us column period is deliberately not used as an attribution bound.
+  SOA_SIGNOFF: NO / FOUNDRY_REVIEW_REQUIRED. Autonomous power-fail protection: NOT_IMPLEMENTED.
