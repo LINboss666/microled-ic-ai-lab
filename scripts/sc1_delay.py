@@ -241,6 +241,7 @@ def main():
         co, ao = attempts(to_, vo_, vdo, eout)
         if not ci:
             print("NO_EDGE propdelay input %s %s produced no complete event" % (si, ein))
+            print("MEASUREMENT_VALID=NO")
             return E['noedge']
 
         # Propagation delay is defined at 50 % of each rail, not at the 10/90 % slew endpoints.
@@ -277,6 +278,7 @@ def main():
         if k < 0 or k >= len(ci):
             print("NO_EDGE propdelay requested input event %r but %s has only %d complete %s event(s)"
                   % (sel_pol, si, len(ci), ein))
+            print("MEASUREMENT_VALID=NO")
             return E['noedge']
         ev = ci[k]
         tin = half(ti_, vi_, vdi, 'up' if ein == 'rise' else 'down', (ev[0], ev[1]))
@@ -284,24 +286,40 @@ def main():
             print("NO_HALF_CROSSING input %s event %d spans %.6e..%.6e s with no 50%% crossing of "
                   "%.6g V; refusing to quote the 10%% point as a timing reference"
                   % (si, k + 1, ev[0], ev[1], 0.5 * vdi))
+            print("MEASUREMENT_VALID=NO")
             return E['noedge']
 
-        # Event attribution. Any later input crossing -- in either direction -- ends the window in
-        # which an output response may still be credited to THIS input event. Without that bound the
-        # first, unanswered pulse happily borrows the second cycle's response, which is how a 12.000
-        # ns answer was produced for a chain whose real delay is 2.000 ns.
-        cf, _af = attempts(ti_, vi_, vdi, 'fall' if ein == 'rise' else 'rise')
-        bounds = sorted([x[0] for x in ci] + [x[0] for x in cf])
-        after = [t for t in bounds if t > tin + 1e-15]
-        t_limit = after[0] if after else None
-        if pairing == 'diagnose':
-            cand = [e for e in co if e[0] >= tin]
-        else:
-            cand = [e for e in co if e[0] >= tin and (t_limit is None or e[0] <= t_limit)]
-        if not cand:
-            # An output event that STARTED before the input's 50 % crossing is not "no response":
-            # the sampling is too coarse to order the two edges at all. Saying NO_RESPONSE there
-            # would misreport an unresolvable measurement as an unanswered input.
+        # Event attribution. The bound is the next crossing of the input's OWN 50 % level, in either
+        # direction -- not the next complete 10-90 % event. A partial excursion that stops above the
+        # 10 % threshold is invisible to attempts(), and that is how the reviewer's a1 deck let an
+        # unanswered first pulse borrow the second cycle's response and still report 12.000 ns.
+        def crossings(tt, vv, vdd):
+            lvl = 0.5 * vdd
+            xs = []
+            for i in range(1, len(vv)):
+                a, b = vv[i - 1], vv[i]
+                if a == lvl and b != lvl:
+                    continue            # a plateau at the level was counted when it was reached
+                if b == lvl:
+                    xs.append(tt[i])
+                elif (a < lvl < b) or (b < lvl < a):
+                    xs.append(interp(tt[i - 1], a, tt[i], b, lvl))
+            return sorted(xs)
+
+        in_cross = crossings(ti_, vi_, vdi)
+        after = [c for c in in_cross if c > tin + 1e-15]
+        t_next = after[0] if after else None
+
+        # The candidate is chosen by the time that will actually be reported: the output's 50 % point.
+        # Filtering on the event START let a2 keep t_out=8.125 ns while its own printed window closed
+        # at 5.1 ns.
+        pts = []
+        for e in co:
+            tv = half(to_, vo_, vdo, 'up' if eout == 'rise' else 'down', (e[0], e[1]))
+            if tv is not None and tv >= tin - 1e-15:
+                pts.append((e, tv))
+        pts.sort(key=lambda x: x[1])
+        if not pts:
             overlapping = [e for e in co if e[0] < tin < e[1]]
             if overlapping:
                 print("AMBIGUOUS_RESOLUTION %s event %d (t_in=%.6e) falls inside the output event "
@@ -310,19 +328,30 @@ def main():
                       % (si, k + 1, tin, overlapping[0][0], overlapping[0][1]))
                 print("MEASUREMENT_VALID=NO")
                 return E['diag']
-            print("NO_RESPONSE %s event %d (t_in=%.6e) has no complete %s output event%s "
-                  "(out_complete=%d out_abandoned=%d); a response that begins after the next input "
-                  "change cannot be credited to this event -- use --in-event to pick the event the "
-                  "waveform actually answers, or --pairing diagnose for a non-acceptance look"
-                  % (si, k + 1, tin, eout,
-                     ('' if t_limit is None else ' before the next input change at %.6e' % t_limit),
-                     len(co), len(ao)))
+            print("NO_RESPONSE %s event %d (t_in=%.6e) has no complete %s output event at or after it "
+                  "(out_complete=%d out_abandoned=%d); use --in-event to pick the event the waveform "
+                  "actually answers, or --pairing diagnose for a non-acceptance look"
+                  % (si, k + 1, tin, eout, len(co), len(ao)))
+            print("MEASUREMENT_VALID=NO")
             return E['noedge']
-        sel = cand[0]
-        to = half(to_, vo_, vdo, 'up' if eout == 'rise' else 'down', (sel[0], sel[1]))
-        if to is None:
-            print("NO_HALF_CROSSING output %s event spanning %.6e..%.6e s has no 50%% crossing of "
-                  "%.6g V" % (so, sel[0], sel[1], 0.5 * vdo))
+        sel, to = pts[0]
+        if sel[0] < tin - 1e-15 and pairing != 'diagnose':
+            print("AMBIGUOUS_RESOLUTION %s event %d (t_in=%.6e) is measured at t_out=%.6e inside an "
+                  "output event that began at %.6e, before the input crossed its own 50 %% level: the "
+                  "two edges cannot be ordered at this sampling resolution"
+                  % (si, k + 1, tin, to, sel[0]))
+            print("MEASUREMENT_VALID=NO")
+            return E['diag']
+        # t_in <= t_out < t_next, strictly: an output that reaches its measurement point exactly when
+        # the input changes again is a race, and it cannot be credited to the earlier event.
+        if pairing == 'accept' and t_next is not None and to >= t_next - 1e-15:
+            print("OUTSIDE_ATTRIBUTION %s event %d: candidate t_out=%.6e (candidate_delay_ns=%.3f) "
+                  "is not inside "
+                  "[t_in=%.6e, t_next=%.6e) -- the input crossed its 50 %% level again before the "
+                  "output reached its measurement point, so this pairing is NOT_MEASURED; use "
+                  "--in-event for the event the waveform answers, or --pairing diagnose to see the "
+                  "candidate without certifying it" % (si, k + 1, to, (to - tin) * 1e9, tin, t_next))
+            print("MEASUREMENT_VALID=NO")
             return E['noedge']
         # A same-direction pairing on an inverting chain is ambiguous, not merely untidy: the
         # opposite-direction event is the one the input edge actually produced.
@@ -330,8 +359,8 @@ def main():
         co_o, _ = attempts(to_, vo_, vdo, eopp)
         earlier = [x for x in co_o if tin <= x[0] < sel[0]]
         marker = ('earlier_opposite_event=%s' % ('YES' if earlier else 'no'))
-        attribution = ('attribution_window=%.6e..%.6e' % (tin, t_limit) if t_limit is not None
-                       else 'attribution_window=%.6e..end_of_window' % tin)
+        attribution = ('attribution_window=[%.6e,%.6e) t_next=input 50%% crossing' % (tin, t_next)
+                       if t_next is not None else 'attribution_window=[%.6e, end_of_data]' % tin)
         valid = 'MEASUREMENT_VALID=NO' if (earlier or pairing == 'diagnose') else 'MEASUREMENT_VALID=YES'
         print("PROPDELAY %s(%s)->%s(%s) event=%d t_in=%.6e t_out=%.6e delay_ns=%.3f in_ev=%d "
               "out_ev=%d %s %s %s%s" % (si, ein, so, eout, k + 1, tin, to, (to - tin) * 1e9,
