@@ -1,59 +1,51 @@
-# Handoff — C2MOS-ADE-READBIND-01
+# Handoff — C2MOS-ADE-READBIND-01（证据修正版 / EVIDENCE-CORRECTED）
 
 | 字段 | 值 |
 |---|---|
 | TASK_ID | `C2MOS-ADE-READBIND-01` |
 | BASE_SHA | `3c4bfbf19890ecbc7ca4f6c102c804f8e414e49a` |
 | BRANCH | `gexing321/scan-driver/c2mos-schematic` |
-| ADE_READBIND_RESULT | **`ADE_READBIND: ERROR`**（任务书情况 E） |
-| 返回值 | 未取得（调用抛错，`load` 在 line 48 中止） |
-| 原始错误 | `*Error* ddGetObjWritePath: argument #1 should be a ddUserType (type template = "b") - nil` |
-| runner | `rc=124`（180 s 超时）/ `TOKEN_FOUND no` / wrapper exit 1 |
-| DUT_UNCHANGED | **PASS**（sha256 `4c9c1658…dc167c` 前后相同） |
-| TB_UNCHANGED | **PASS**（sha256 `7ee683e8…c3f56b` 前后相同；`microled_cells` 36 文件 diff 为空） |
-| PDK_UNCHANGED | **PASS**（3976 文件、176464 KB、model sha256 `fc8d3217…dcf95f` 全同；analogLib 2628 文件全同） |
-| 新 ADE View | 无（`c2mos_dff_tb` 仍只有 `schematic`） |
-| 残留进程/锁 | 0 进程；库内 0 锁、PDK 0 锁 |
+| 实验交付 LOCAL/REMOTE HEAD | `f026a20cbaf48dafac8cf8d4475f88a39f05f1af` == `f026a20cbaf48dafac8cf8d4475f88a39f05f1af` |
+| LOCAL_REMOTE_PARITY | **PASS**（`ls-remote` 独立通道回读，非以 push 输出为准） |
+| **ADE_READBIND_RESULT** | **`ADE_READBIND: ERROR`**（情况 E，未返回句柄也未正常返回 nil） |
+| 原始错误（逐字保留） | `*Error* ddGetObjWritePath: argument #1 should be a ddUserType (type template = "b") - nil` |
+| runner | `rc=124`（180 s 超时）/ `TOKEN_FOUND no` / 一次执行、零重试 |
+| DUT_UNCHANGED | **PASS**（逐文件 sha256，36/36 diff 为空；`4c9c1658…dc167c`） |
+| TB_UNCHANGED | **PASS**（`7ee683e8…c3f56b`） |
+| **PDK_UNCHANGED** | **PARTIAL**（不是 PASS，见下"证据范围"） |
+| SECURITY_GATE | **PASS**（staged + pre-push history + bundle SAFETY_SCAN；provenance/netlist 亦 PASS） |
+| HANDOFF 正式校验器 | **`VALIDATOR_NOT_DEPLOYED`** —— `scripts/validate_handoff.py` 在本机不存在（仓库/全部分支/全history/用户目录均无） |
 | STOP_REASON | `AWAITING_INDEPENDENT_REVIEW` |
 
-## 一句话交接
+## 本轮修正了什么（不改动实验结论）
 
-按本机文档形状（view=`"adexl"`、`?mode "r"`）**只执行一次**绑定：Cadence 抛出
-`ddGetObjWritePath … - nil` 并中止加载，**函数没有正常返回**，因此判为 **情况 E（ERROR）**；
-结合阶段A的实测（该 cell 只有 `schematic`，全工程无任何 `adexl`/setup view），
-最可能的实际条件是"**没有 ADE setup database 可绑**"（DERIVED，未由工具明文确认）。
-上一轮"需要人工开 ADE 窗口"的说法不成立：`axlCreateSession` 在无窗口批处理里就起了会话
-（Cadence banner 为证）。
+1. **撤回**上一轮的 `HANDOFF_STRUCTURE: PASS`：那只是 `python -m json.tool`（可解析性），不是 schema 校验。
+2. 原 JSON **确实缺 11 个正式字段**（`LOCAL/REMOTE_HEAD_SHA`、`PARITY`、`ADE_READBIND_RESULT`、
+   三项 `*_UNCHANGED`、`SECURITY_GATE`、`REPORT_PATH`、`EVIDENCE_PATH`、`KNOWN_LIMITATIONS`）→ 已补齐。
+   检查用自写脚本 `scripts/c2mos_handoff_field_check.py`（文件头声明"非正式校验器"）：
+   修正前 `HANDOFF_FIELD_CHECK: FAIL (missing=11)` → 修正后 `PASS (missing=0)`，真实输出在
+   `results/evidence/c2mos_ade_readbind_once_correction.txt` SECTION 2/2b。
+3. **`PDK_UNCHANGED` 由 PASS 降级为 PARTIAL**，并把四类证据分开陈述：
+   设计库=逐文件 sha256（FULL）；PDK=文件数+du+窗口内 mtime=0+**1 个**关键 model 文件哈希；
+   analogLib=文件数+mtime+**抽样 3 个** `data.dm`。全树内容一致性在实验窗口内是 **NOT_VERIFIED**。
+   本轮另建了 PDK/analogLib 全树 sha256 聚合基线（`20c6d98c…`/`4f73da8e…`），
+   但它只能服务下一轮，不能倒推证明上一轮窗口。
+4. **源码一致性核对（任务2）**：实际运行的 guest 文件与提交文件 **sha256 完全相同**
+   （`445df0a9f957aa9e9603576115af94368ab41aa2e080286b7f85641a605ec721`，各 59 行）。
+   "约 45 行"与"Cadence 报 48 行"是**同一条语句**的数法差异：41 行是 `RB-CREATE-SESSION` 打印，
+   42–46 是一条跨 5 行的 `printf`，48 才是目标调用。不存在两份不同源码。
+5. 因果分级保持：`adexl` setup view 不存在 = **DIRECTLY_OBSERVED**（目录库列举）；
+   "绑定失败是因为缺 setup database" = **DERIVED**（Cadence 没有打印该因果句）。
 
-与上一轮对比是本轮最有价值的新读数：
-
-| 调用 view | 观察 | 含义（DERIVED） |
-|---|---|---|
-| `"schematic"`（上轮，包 errset） | 静默 nil，无错误文本 | view 存在，但里面没有 setup database |
-| `"adexl"` + `?mode "r"`（本轮，不包 errset） | 立即 `ddUserType` 类型错误 | 该 view 根本不存在 |
-
-两条互不支持的读数合起来指向同一个缺失对象，而不是许可、窗口或 API 缺失。
-同时得到一条安全提醒：**`?mode "r"` 并没有阻止代码走到写路径解析**（`ddGetObjWritePath`），
-本轮实测未产生任何写入，但不能把 `"r"` 当作"绝对不会写"的保证。
-
-## 证据与复现
-
-* 报告：`reports/c2mos_ade_readbind_once.md`（16 项全覆盖，标注 DIRECTLY_OBSERVED / DOCUMENTED / DERIVED / NOT_VERIFIED）
-* 原始证据：`results/evidence/c2mos_ade_readbind_once.txt`（SECTION A–E：阶段A指纹与预检、探针源码逐字、会话日志关键行、阶段D完整复核、前后 sha256 清单）
-* 探针：`skill/c2mos_ade_readbind_once.il`
-* 复核命令（任何 reviewer 可重跑，结构校验与本轮一致）：
+## 复核命令（reviewer 可直接重跑）
 
 ```
-python -m json.tool reports/agent_handoffs/C2MOS-ADE-READBIND-01.json > null   # JSON 可解析
+python scripts/c2mos_handoff_field_check.py reports/agent_handoffs/C2MOS-ADE-READBIND-01.json
+sha256sum skill/c2mos_ade_readbind_once.il            # 与 guest 侧同名文件对比
 ```
-键存在性检查见报告；本轮实际执行输出为 `HANDOFF_STRUCTURE: PASS`。
-**注意：`HANDOFF_STRUCTURE: PASS` 只代表交接件结构合法，不代表 Cadence 实验通过**（实验结论是 E/ERROR）。
 
-## 未完成 / 需要授权
+## 仍未解决
 
-* 未生成原生网表、未跑 ADE 仿真、未创建 ADE Setup、未修改 Testbench（全部按禁止项）。
-* 下一步唯一建议：建立 setup database 后重复本探针做对照 —— 需要明确授权，
-  因为 `axlNewSetupDBLCV` 文档明写"automatically overwrites any existing setup db"，
-  且会在 `microled_cells/c2mos_dff_tb` 下新建 view。要求：先 `tar` 前像，后跑 sha256 比对。
-* 替代路径：人工在 GUI 里打开 ADE 并保存一次 setup，再跑本探针（只读对照）。
-* ADE XL 产品许可仍是 NOT_VERIFIED（日志只有 Virtuoso Framework License 一行）。
+* 正式 `validate_handoff.py` 不在本机 → 请把 workflow 包内的校验器交付到仓库，否则只能给字段级结论。
+* 建 setup db 后绑定是否成功、ADE XL 产品许可、`?mode "r"` 在 view 存在时是否真不写、`terms=0` 与原生网表关系：均 NOT_VERIFIED。
+* 下一步两条路（写库建 setup / 人工开 ADE 保存一次 setup）都**需要授权**，本轮未执行任何一项。

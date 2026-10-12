@@ -84,6 +84,14 @@ SCH_VIRTUOSO: FAIL  log=cadence_work/logs/sch_nograph_20261012_202316.log
 
 ## 9–11. 执行前 / 后指纹与 PDK 对比
 
+> **证据范围修正（REWORK 轮，见 `reports/c2mos_ade_readbind_once_correction.md`）**：本节原来写的
+> `PDK_UNCHANGED: PASS` 与 `ANALOGLIB_UNCHANGED: PASS` **夸大了证明范围**。实际做过的只有：
+> 设计库逐文件 sha256（FULL，成立）、PDK 的文件数/du/实验窗口内 mtime=0 + **仅 1 个**关键 model 文件哈希、
+> analogLib 的文件数/mtime + **抽样 3 个** `data.dm`。因此正确结论是
+> **`DUT_UNCHANGED: PASS`、`TB_UNCHANGED: PASS`、`PDK_UNCHANGED: PARTIAL`**；
+> 全树内容一致性在实验窗口内属 **NOT_VERIFIED**（本轮事后建立的全树基线只能服务下一轮）。
+> 同理，本文 §13 中"`.finesimXL_root` 是唯一新增物"仅指设计相关目录，未含 `home/`、`logs/` 下的运行文件。
+
 **DIRECTLY_OBSERVED**，全部为 `sha256`：
 ```
 microled_cells 文件数           before 36   after 36     diff BEFORE/AFTER: 空（逐字节一致）

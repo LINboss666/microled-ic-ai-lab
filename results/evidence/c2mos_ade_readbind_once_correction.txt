@@ -1,0 +1,165 @@
+===============================================================================
+c2mos_ade_readbind_once_correction.txt -- raw evidence for the REWORK of C2MOS-ADE-READBIND-01
+Nothing here re-runs the Cadence experiment. Every line is a file check, a search, or a
+field-checker run. The ADE failure (ADE_READBIND: ERROR) and its raw error text are carried
+over from the experiment unchanged.
+===============================================================================
+
+-------------------------------------------------------------------------------
+SECTION 1  任务1  正式校验器 scripts/validate_handoff.py 是否在本机存在
+           (repo tree, every remote branch tree, whole git history, D:\IC项目, user home tree)
+-------------------------------------------------------------------------------
+### validator search: $ find / ls / git history / all remote branch trees
+$ ls microled-ic-ai-lab/scripts | grep -iE 'handoff|validate|bridge'
+c2mos_handoff_field_check.py
+test_ic617_bridge.ps1
+(only test_ic617_bridge.ps1 above -- no validator)
+
+$ find . -maxdepth 4 -iname '*handoff*'   (under D:/IC项目)
+./microled-ic-ai-lab/reports/agent_handoffs
+./microled-ic-ai-lab/scripts/c2mos_handoff_field_check.py
+
+$ for r in $(git ls-remote --heads origin | cut -f2); do git ls-tree -r $r | grep -i 'validate_handoff'; done
+  (no match above = not in any remote branch tree)
+
+$ git log --all --name-only | grep -i validate_handoff
+  (no match = never committed in history)
+
+$ find C:/Users/38324 -maxdepth 3 -iname 'validate_handoff.py'
+  (no match above = not on the user tree)
+CONCLUSION: scripts/validate_handoff.py NOT_DEPLOYED on this machine
+
+-------------------------------------------------------------------------------
+SECTION 2  任务1  对已提交 JSON 的字段检查（修正前，真实输出，rc=1）
+           注意：这只是本仓库自写的字段存在性检查，不是正式 schema 校验器；
+           上一轮用 python -m json.tool 宣称 HANDOFF_STRUCTURE: PASS 的说法已撤回。
+-------------------------------------------------------------------------------
+$ python scripts/c2mos_handoff_field_check.py reports/agent_handoffs/C2MOS-ADE-READBIND-01.json
+JSON_PARSE: OK (20 top-level keys)
+MISSING_FIELD LOCAL_HEAD_SHA
+MISSING_FIELD REMOTE_HEAD_SHA
+MISSING_FIELD LOCAL_REMOTE_PARITY
+MISSING_FIELD ADE_READBIND_RESULT
+MISSING_FIELD DUT_UNCHANGED
+MISSING_FIELD TB_UNCHANGED
+MISSING_FIELD PDK_UNCHANGED
+MISSING_FIELD SECURITY_GATE
+MISSING_FIELD REPORT_PATH
+MISSING_FIELD EVIDENCE_PATH
+MISSING_FIELD KNOWN_LIMITATIONS
+BAD_VERDICT '' (allowed: SUCCESS NO_HANDLE NO_SETUP_DB LICENSE_BLOCKED ERROR NOT_EXECUTED)
+checked_required_fields=15 missing=11 problems=12
+HANDOFF_FIELD_CHECK: FAIL   (rc=1)
+
+-------------------------------------------------------------------------------
+SECTION 2b 修正后同一检查的输出（命令与上面完全相同）
+-------------------------------------------------------------------------------
+JSON_PARSE: OK (36 top-level keys)
+checked_required_fields=15 missing=0 problems=0
+NOTE this is not scripts/validate_handoff.py; the official validator is not on this machine
+HANDOFF_FIELD_CHECK: PASS
+
+-------------------------------------------------------------------------------
+SECTION 3  任务2  仓库提交文件的原始核对（本机）
+-------------------------------------------------------------------------------
+$ sha256sum skill/c2mos_ade_readbind_once.il
+445df0a9f957aa9e9603576115af94368ab41aa2e080286b7f85641a605ec721 *skill/c2mos_ade_readbind_once.il
+$ wc -l skill/c2mos_ade_readbind_once.il
+59 skill/c2mos_ade_readbind_once.il
+$ grep -n axlSetMainSetupDBLCV skill/c2mos_ade_readbind_once.il
+4:; documents (axlSetMainSetupDBLCV(t_session t_libName t_cellName t_viewName [?mode t_mode]); every
+8:;     axlSetMainSetupDBLCV(session "microled_cells" "c2mos_dff_tb" "adexl" ?mode "r")
+48:sdb = axlSetMainSetupDBLCV(created LIB CELL VIEW ?mode "r")
+$ sed -n "41,48p" (the statement the reviewer counted as ~45)
+     1	printf("RB-CREATE-SESSION %L\n" created)
+     2	printf("RB-STATE-BEFORE axlGetWindowSession=%L axlGetMainSetupDB=%L axlSetupStates=%L\n"
+     3	       errset(axlGetWindowSession())
+     4	       car(errset(axlGetMainSetupDB(created)))
+     5	       car(errset(axlSetupStates(created))))
+     6	
+     7	; ---- THE ONE TARGET CALL, unguarded, exactly once ----
+     8	sdb = axlSetMainSetupDBLCV(created LIB CELL VIEW ?mode "r")
+
+-------------------------------------------------------------------------------
+SECTION 3b 实际在 guest 上运行的那份文件的原始核对（含 sha256 与行号）
+-------------------------------------------------------------------------------
+### 1 the file that actually executed (guest)
+-rw-r--r--. 1 root root 3073 Oct 12 20:23 /root/microled_ai_project/skill/c2mos_ade_readbind_once.il
+445df0a9f957aa9e9603576115af94368ab41aa2e080286b7f85641a605ec721  /root/microled_ai_project/skill/c2mos_ade_readbind_once.il
+59 /root/microled_ai_project/skill/c2mos_ade_readbind_once.il
+--- target call line numbers in the GUEST copy ---
+4:; documents (axlSetMainSetupDBLCV(t_session t_libName t_cellName t_viewName [?mode t_mode]); every
+8:;     axlSetMainSetupDBLCV(session "microled_cells" "c2mos_dff_tb" "adexl" ?mode "r")
+48:sdb = axlSetMainSetupDBLCV(created LIB CELL VIEW ?mode "r")
+--- the line Cadence named (line 48) plus its neighbours, guest copy ---
+ 44|        car(errset(axlGetMainSetupDB(created)))
+ 45|        car(errset(axlSetupStates(created))))
+ 46| 
+ 47| ; ---- THE ONE TARGET CALL, unguarded, exactly once ----
+ 48| sdb = axlSetMainSetupDBLCV(created LIB CELL VIEW ?mode "r")
+ 49| printf("RB-RETURN-VALUE %L\n" sdb)
+ 50| 
+
+### 2 byte-level identity check against what the repo will carry
+  (repo copy is hashed on the Windows side; here we pin the guest bytes)
+  guest_first_line: ; c2mos_ade_readbind_once.il -- C2MOS-ADE-READBIND-01: ONE read-only ADE XL bind attempt.
+  guest_last_line : exit()
+  guest_crlf_count: 0
+0
+         1	created = car(errset(axlCreateSession(SESSION_NAME)))
+         2	printf("RB-CREATE-SESSION %L\n" created)
+         3	printf("RB-STATE-BEFORE axlGetWindowSession=%L axlGetMainSetupDB=%L axlSetupStates=%L\n"
+         4	       errset(axlGetWindowSession())
+         5	       car(errset(axlGetMainSetupDB(created)))
+         6	       car(errset(axlSetupStates(created))))
+         7	
+         8	; ---- THE ONE TARGET CALL, unguarded, exactly once ----
+         9	sdb = axlSetMainSetupDBLCV(created LIB CELL VIEW ?mode "r")
+        10	printf("RB-RETURN-VALUE %L\n" sdb)
+        11	
+        12	printf("RB-STATE-AFTER axlGetMainSetupDB=%L axlSetupStates=%L axlGetWindowSession=%L\n"
+        13	       car(errset(axlGetMainSetupDB(created)))
+
+### 3 PDK: full per-file hash manifest established NOW (after the experiment)
+    NOTE: this cannot retroactively prove the experiment window; it is a going-forward baseline.
+  pdk_manifest_files=3976
+  PDK_MANIFEST_AGGREGATE_SHA256=20c6d98cd71eaa31cab4dc5028bfd29f905564641108d33ad093beabce889d27
+
+### 4 analogLib: full per-file hash manifest (same caveat)
+  analoglib_manifest_files=2628
+  ANALOGLIB_MANIFEST_AGGREGATE_SHA256=4f73da8ebb43b2d04ff3a37efeea480afb9444341fd0c643c8e6700817cae1f3
+
+### 5 what CAN be said about the experiment window (mtime + count + key file)
+  files in PDK with mtime inside 20:21..20:27 : 0
+  files in analogLib with mtime inside window  : 0
+  files in microled_cells with mtime in window : 0
+  key model file: fc8d321752f2bacf530d5c5eb151f4e623086c174be8da3c19ee8d26e3dcf95f  /root/tech/teacher_pdk/models/spectre/ms018_enhanced_v1p2_rev0_spe.lib
+RB_FIX_DONE
+
+-------------------------------------------------------------------------------
+SECTION 4  任务3  PDK / analogLib 证据范围核实（"事后基线"不等于实验窗口证明）
+-------------------------------------------------------------------------------
+ PDK: full per-file hash manifest established NOW (after the experiment)
+    NOTE: this cannot retroactively prove the experiment window; it is a going-forward baseline.
+  pdk_manifest_files=3976
+  PDK_MANIFEST_AGGREGATE_SHA256=20c6d98cd71eaa31cab4dc5028bfd29f905564641108d33ad093beabce889d27
+
+### 4 analogLib: full per-file hash manifest (same caveat)
+  analoglib_manifest_files=2628
+  ANALOGLIB_MANIFEST_AGGREGATE_SHA256=4f73da8ebb43b2d04ff3a37efeea480afb9444341fd0c643c8e6700817cae1f3
+
+### 5 what CAN be said about the experiment window (mtime + count + key file)
+  files in PDK with mtime inside 20:21..20:27 : 0
+  files in analogLib with mtime inside window  : 0
+  files in microled_cells with mtime in window : 0
+  key model file: fc8d321752f2bacf530d5c5eb151f4e623086c174be8da3c19ee8d26e3dcf95f  /root/tech/teacher_pdk/models/spectre/ms018_enhanced_v1p2_rev0_spe.lib
+RB_FIX_DONE
+
+-------------------------------------------------------------------------------
+SECTION 5  任务4  原始 ADE 错误（逐字，未改动；来自实验会话日志）
+-------------------------------------------------------------------------------
+\o RB-STATE-BEFORE axlGetWindowSession=(nil) axlGetMainSetupDB=0 axlSetupStates=nil
+\e *Error* ddGetObjWritePath: argument #1 should be a ddUserType (type template = "b") - nil
+\e *Error* load: error while loading file - "/root/microled_ai_project/skill/c2mos_ade_readbind_once.il" at line 48
+   (grade 保持：most_probable_condition = "no ADE setup database / adexl view" = DERIVED)
+===============================================================================
