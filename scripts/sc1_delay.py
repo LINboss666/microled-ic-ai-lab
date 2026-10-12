@@ -6,7 +6,8 @@
                  --mode edge --edge rise|fall [--t0 T --t1 T]
                  [--event first_attempt|first_complete] [--require-n K]
     sc1_delay.py ... --mode propdelay --sig-in A --sig-out B --vdd-in V --vdd-out V
-                 [--edge-in rise|fall] [--edge-out rise|fall] [--t0 T --t1 T]
+                 [--edge-in rise|fall] [--edge-out rise|fall]
+                 [--in-event first|second|N] [--pairing accept|diagnose] [--t0 T --t1 T]
     sc1_delay.py ... --mode steady --sig NAME --t0 T --t1 T [--require-n K]
 
 Three reproduced defects drove this rewrite:
@@ -24,6 +25,13 @@ Three reproduced defects drove this rewrite:
  3. Two-sample edges. When 10 % and 90 % both fall inside one interval the old code took an empty
     span and crashed in min(span). Both crossings are interpolated from that interval and reported
     as samples_in_edge=0 instead of crashing or inventing samples.
+ 4. (R2B) Attribution. Choosing "the first complete input event" was not enough: the old code then
+    paired it with ANY later output event, so a first pulse that was never answered could borrow the
+    second cycle's response (12.000 ns for a chain whose real delay is 2.000 ns). An output event is
+    now credited to the selected input event only while no further input crossing of either direction
+    has happened; outside that window the answer is NO_RESPONSE with a non-zero code. A same-direction
+    pairing that is beaten by the opposite-direction event is refused in acceptance mode, and a
+    missing 50 % crossing fails instead of falling back to the 10 % point.
 """
 from __future__ import print_function
 import os, sys
@@ -31,7 +39,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import sc1_read_psf as R
 
-E = {'ok': 0, 'nodata': 2, 'nosig': 3, 'noedge': 4, 'badnum': 5,
+E = {'ok': 0, 'nodata': 2, 'nosig': 3, 'noedge': 4, 'badnum': 5, 'diag': 6,
      'trunc': 7, 'badaxis': 8, 'usage': 9}
 
 
@@ -149,6 +157,9 @@ def main():
     if ev_pol not in ('first_attempt', 'first_complete'):
         print("BAD_USAGE --event must be first_attempt or first_complete")
         return E['usage']
+    if opt.get('pairing', 'accept') not in ('accept', 'diagnose'):
+        print("BAD_USAGE --pairing must be accept or diagnose")
+        return E['usage']
     try:
         need = int(opt.get('require-n', '1') or 1)
     except ValueError:
@@ -214,67 +225,127 @@ def main():
             return E['badnum']
         ein = opt.get('edge-in') or opt.get('edge') or 'rise'
         # The legacy interface took one --edge for BOTH signals and meant "same phase", so that is
-        # what it still means; an inverting chain must say so with --edge-in/--edge-out. Defaulting
-        # the output to the opposite direction silently re-judged every existing same-phase caller.
+        # what it still means; an inverting chain must say so with --edge-in/--edge-out.
         eout = opt.get('edge-out') or ein
-        if not opt.get('edge-out') and not opt.get('edge-in'):
-            legacy_iface_note = ' legacy_edge_interface=same_direction'
-        else:
-            legacy_iface_note = ''
+        legacy_iface_note = ('' if (opt.get('edge-in') or opt.get('edge-out'))
+                            else ' legacy_edge_interface=same_direction')
+        pairing = opt.get('pairing', 'accept')
         ssr, sor = series(si), series(so)
         if ssr is None or sor is None:
             return E['nosig']
-        ci, _ai = attempts([x[0] for x in ssr], [x[1] for x in ssr], vdi, ein)
-        co, ao = attempts([x[0] for x in sor], [x[1] for x in sor], vdo, eout)
+        ti_ = [x[0] for x in ssr]
+        vi_ = [x[1] for x in ssr]
+        to_ = [x[0] for x in sor]
+        vo_ = [x[1] for x in sor]
+        ci, _ai = attempts(ti_, vi_, vdi, ein)
+        co, ao = attempts(to_, vo_, vdo, eout)
         if not ci:
             print("NO_EDGE propdelay input %s %s produced no complete event" % (si, ein))
             return E['noedge']
+
         # Propagation delay is defined at 50 % of each rail, not at the 10/90 % slew endpoints.
-        # Complete attempts (above) say WHICH excursion is a real event; the 50 % crossing inside it
-        # says WHEN. Using the 10 % point as the timing reference reported t_in=2.1 ns for a 50 %
-        # crossing that is really at 2.5 ns.
-        def half(tt, vv, vdd, direction, spans):
+        # half() looks only inside the one event span it is given: a missing 50 % crossing is a
+        # failure, never a silent fallback to the 10 % point.
+        def half(tt, vv, vdd, direction, span):
             lvl = 0.5 * vdd
-            for (s0, s1) in spans:
-                for i in range(1, len(vv)):
-                    # the sample interval must OVERLAP the attempt span; requiring a sample to lie
-                    # inside it fails for a fast edge that crosses every threshold within one
-                    # interval, which silently left the 10 % point being reported as t_in/t_out
-                    if tt[i] < s0 or tt[i - 1] > s1:
-                        continue
-                    a, b = vv[i - 1], vv[i]
-                    if b == a:
-                        continue
-                    if direction == 'up' and a < lvl <= b:
-                        return interp(tt[i - 1], a, tt[i], b, lvl)
-                    if direction == 'down' and b < lvl <= a:
-                        return interp(tt[i - 1], a, tt[i], b, lvl)
+            s0, s1 = span
+            for i in range(1, len(vv)):
+                # the sample interval must OVERLAP the event span: requiring a sample inside it
+                # loses a fast edge that crosses every threshold within one interval
+                if tt[i] < s0 or tt[i - 1] > s1:
+                    continue
+                a, b = vv[i - 1], vv[i]
+                if b == a:
+                    continue
+                if direction == 'up' and a < lvl <= b:
+                    return interp(tt[i - 1], a, tt[i], b, lvl)
+                if direction == 'down' and b < lvl <= a:
+                    return interp(tt[i - 1], a, tt[i], b, lvl)
             return None
-        spans_i = [(x[0], x[1]) for x in ci]
-        spans_o = [(x[0], x[1]) for x in co]
-        ti = half([x[0] for x in ssr], [x[1] for x in ssr], vdi,
-                  'up' if ein == 'rise' else 'down', [(ci[0][0], ci[0][1])])
-        tin = ci[0][0] if ti is None else ti
-        cand = [e for e in co if e[0] >= tin]
+
+        sel_pol = opt.get('in-event', 'first')
+        if sel_pol == 'first':
+            k = 0
+        elif sel_pol == 'second':
+            k = 1
+        else:
+            try:
+                k = int(sel_pol) - 1
+            except ValueError:
+                print("BAD_USAGE --in-event must be first, second or a 1-based index, got %r" % sel_pol)
+                return E['usage']
+        if k < 0 or k >= len(ci):
+            print("NO_EDGE propdelay requested input event %r but %s has only %d complete %s event(s)"
+                  % (sel_pol, si, len(ci), ein))
+            return E['noedge']
+        ev = ci[k]
+        tin = half(ti_, vi_, vdi, 'up' if ein == 'rise' else 'down', (ev[0], ev[1]))
+        if tin is None:
+            print("NO_HALF_CROSSING input %s event %d spans %.6e..%.6e s with no 50%% crossing of "
+                  "%.6g V; refusing to quote the 10%% point as a timing reference"
+                  % (si, k + 1, ev[0], ev[1], 0.5 * vdi))
+            return E['noedge']
+
+        # Event attribution. Any later input crossing -- in either direction -- ends the window in
+        # which an output response may still be credited to THIS input event. Without that bound the
+        # first, unanswered pulse happily borrows the second cycle's response, which is how a 12.000
+        # ns answer was produced for a chain whose real delay is 2.000 ns.
+        cf, _af = attempts(ti_, vi_, vdi, 'fall' if ein == 'rise' else 'rise')
+        bounds = sorted([x[0] for x in ci] + [x[0] for x in cf])
+        after = [t for t in bounds if t > tin + 1e-15]
+        t_limit = after[0] if after else None
+        if pairing == 'diagnose':
+            cand = [e for e in co if e[0] >= tin]
+        else:
+            cand = [e for e in co if e[0] >= tin and (t_limit is None or e[0] <= t_limit)]
         if not cand:
-            print("NO_EDGE propdelay output %s %s has no complete event at or after the input "
-                  "crossing (out_complete=%d out_abandoned=%d)" % (so, eout, len(co), len(ao)))
+            # An output event that STARTED before the input's 50 % crossing is not "no response":
+            # the sampling is too coarse to order the two edges at all. Saying NO_RESPONSE there
+            # would misreport an unresolvable measurement as an unanswered input.
+            overlapping = [e for e in co if e[0] < tin < e[1]]
+            if overlapping:
+                print("AMBIGUOUS_RESOLUTION %s event %d (t_in=%.6e) falls inside the output event "
+                      "span %.6e..%.6e: the sample interval cannot order input against output, so no "
+                      "propagation delay is reported (re-run with a finer maxstep)"
+                      % (si, k + 1, tin, overlapping[0][0], overlapping[0][1]))
+                print("MEASUREMENT_VALID=NO")
+                return E['diag']
+            print("NO_RESPONSE %s event %d (t_in=%.6e) has no complete %s output event%s "
+                  "(out_complete=%d out_abandoned=%d); a response that begins after the next input "
+                  "change cannot be credited to this event -- use --in-event to pick the event the "
+                  "waveform actually answers, or --pairing diagnose for a non-acceptance look"
+                  % (si, k + 1, tin, eout,
+                     ('' if t_limit is None else ' before the next input change at %.6e' % t_limit),
+                     len(co), len(ao)))
             return E['noedge']
         sel = cand[0]
-        to = half([x[0] for x in sor], [x[1] for x in sor], vdo,
-                  'up' if eout == 'rise' else 'down', [(sel[0], sel[1])])
+        to = half(to_, vo_, vdo, 'up' if eout == 'rise' else 'down', (sel[0], sel[1]))
         if to is None:
-            to = sel[0]
-        # A same-direction query can pair with a LATER, unrelated response. The opposite-direction
-        # event that begins sooner is the actual answer to this input edge, so say so rather than
-        # returning a number that looks like a propagation delay.
+            print("NO_HALF_CROSSING output %s event spanning %.6e..%.6e s has no 50%% crossing of "
+                  "%.6g V" % (so, sel[0], sel[1], 0.5 * vdo))
+            return E['noedge']
+        # A same-direction pairing on an inverting chain is ambiguous, not merely untidy: the
+        # opposite-direction event is the one the input edge actually produced.
         eopp = 'fall' if eout == 'rise' else 'rise'
-        co_o, _ = attempts([x[0] for x in sor], [x[1] for x in sor], vdo, eopp)
+        co_o, _ = attempts(to_, vo_, vdo, eopp)
         earlier = [x for x in co_o if tin <= x[0] < sel[0]]
         marker = ('earlier_opposite_event=%s' % ('YES' if earlier else 'no'))
-        print("PROPDELAY %s(%s)->%s(%s) t_in=%.6e t_out=%.6e delay_ns=%.3f in_ev=%d out_ev=%d %s%s"
-              % (si, ein, so, eout, tin, to, (to - tin) * 1e9, len(ci), len(co), marker,
-                 legacy_iface_note))
+        attribution = ('attribution_window=%.6e..%.6e' % (tin, t_limit) if t_limit is not None
+                       else 'attribution_window=%.6e..end_of_window' % tin)
+        valid = 'MEASUREMENT_VALID=NO' if (earlier or pairing == 'diagnose') else 'MEASUREMENT_VALID=YES'
+        print("PROPDELAY %s(%s)->%s(%s) event=%d t_in=%.6e t_out=%.6e delay_ns=%.3f in_ev=%d "
+              "out_ev=%d %s %s %s%s" % (si, ein, so, eout, k + 1, tin, to, (to - tin) * 1e9,
+                                        len(ci), len(co), marker, valid, attribution,
+                                        legacy_iface_note))
+        if pairing == 'diagnose':
+            print('mode=diagnose (informational pairing only, never a circuit verdict)')
+            return E['diag']
+        if earlier:
+            print("%s AMBIGUOUS_POLARITY output %s has a complete %s event at %.6e before the "
+                  "same-direction one at %.6e; acceptance mode refuses to call that pair a "
+                  "propagation delay (re-run with --edge-out %s, or --pairing diagnose to print it "
+                  "as a diagnostic)" % (valid, so, eopp, earlier[0][0], sel[0], eopp))
+            return E['diag']
         return 0
 
     sig = opt.get('sig')
