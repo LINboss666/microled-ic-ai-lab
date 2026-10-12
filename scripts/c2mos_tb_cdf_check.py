@@ -84,7 +84,9 @@ def same(golden, stored):
 
 
 def parse_evidence(path):
-    """Rebuild {instance: {'raw': {}, 'cdf': {}, 'master': ''}} from the TBCA-* log lines."""
+    """Rebuild {instance: {'raw': {}, 'cdf': {}, 'master': '', 'connect': [(term, net)]}} from the
+    TBCA-* log lines. The connection list is what lets a deck be rebuilt from the cell instead of
+    from somebody's memory of how it is wired."""
     insts = {}
     cur = None
     with open(path, "rb") as f:
@@ -93,13 +95,17 @@ def parse_evidence(path):
             m = re.match(r'^TBCA-INST name="([^"]+)" master=(".*/[^ ]*) ', line)
             if m:
                 cur = m.group(1)
-                insts[cur] = {"raw": {}, "cdf": {}, "master": m.group(2)}
+                insts[cur] = {"raw": {}, "cdf": {}, "master": m.group(2), "connect": []}
                 continue
             if cur is None:
                 continue
             m = re.match(r'^TBCA-RAWPROP name="([^"]+)" value="([^"]*)"', line)
             if m:
                 insts[cur]["raw"][m.group(1)] = m.group(2)
+                continue
+            m = re.match(r'^TBCA-CONNECT inst="([^"]+)" term="([^"]+)" net="([^"]+)"', line)
+            if m and m.group(1) == cur:
+                insts[cur]["connect"].append((m.group(2), m.group(3)))
                 continue
             m = re.match(r'^TBCA-CDF name="([^"]+)" type=\S+ def=\S+ value="([^"]*)"', line)
             if m and m.group(1) not in insts[cur]["cdf"]:

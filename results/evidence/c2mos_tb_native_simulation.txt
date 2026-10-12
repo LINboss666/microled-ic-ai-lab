@@ -1,0 +1,401 @@
+===============================================================================
+c2mos_tb_native_simulation.txt -- evidence for reports/c2mos_tb_native_simulation.md
+===============================================================================
+Everything below is verbatim command output from the guest (ssh root@192.168.222.129,
+`date` = Mon Oct 12 00:5x CST 2026), IC617 6.1.7-64b + MMSIM 15.1. Nothing was retyped.
+Line prefixes that Cadence writes (\o \e \p \a \r) were stripped; the text after them is
+untouched.
+
+-------------------------------------------------------------------------------
+SECTION A1  Task 1 capability matrix, MODE=restore (-nograph -restore <il>), AUD_CTX=0
+command: SCH3_LIB=microled_cells SCH3_CELLS=c2mos_dff_tb AUD_CTX=0 MODE=restore
+         bash scripts/sch_virtuoso.sh skill/c2mos_tb_native_probe.il 240 NP_DONE
+verdict:   rc=0 / TOKEN_FOUND yes / SCH_VIRTUOSO: PASS
+           schCheck on the testbench cellview returns ((0 0)) -- 0 errors, 0 warnings
+           every netlister entry point below answers nil
+NP-BEGIN
+NP-DISPLAY nil
+NP-MODE "restore"
+NP-CV cell="c2mos_dff_tb" cv=db:0x1649ee1a instances=(8)
+NP "asiCreateSession-sim-cv" -> nil
+NP "asiCreateSession-lcv" -> nil
+NP "asiCreateSession-app" -> nil
+NP "asiCreateSession-dir" -> nil
+NP "asiNetlist-bare" -> nil
+NP "asiInitialize-bare" -> nil
+NP "axlGetWindowSession" -> (nil)
+NP "axlCreateSession-named" -> ("tb_session")
+NP "axlCreateSession-q" -> nil
+NP "axlMainAppCreateSession" -> nil
+NP "axlRunSimulation-bare" -> nil
+NP "axlGetMainSetupDB" -> nil
+NP "axlNewSetupDB" -> nil
+NP "axlGetRunModes" -> nil
+NP "axlGetPointNetlistDir" -> (nil)
+NP "simSetDesign" -> nil
+NP "simSetTool" -> nil
+NP "simTestInit" -> nil
+NP "simRun" -> nil
+NP "simGetVariable" -> nil
+NP "nlCreateDesign-sim" -> nil
+NP "nlCreateFormatter-sim" -> nil
+NP "nlNetlist-bare" -> nil
+NP "schCheck-control" -> ((0 0))
+NP "dbCheck-control" -> (t)
+NP "hiGetSimulationFileData" -> nil
+NP_DONE
+
+-------------------------------------------------------------------------------
+SECTION A2  Task 1/2/3 attempt 1 -- ADE XL (axl*) driven end to end, MODE=restore
+command: SCH3_LIB=microled_cells SCH3_CELLS=c2mos_dff_tb AUD_MODEL=<PDK spe .lib>
+         MODE=restore bash scripts/sch_virtuoso.sh skill/c2mos_tb_native_run.il 420 NR_DONE
+verdict:   axlCreateSession("tb_session") -> ("tb_session")      [session: CREATED]
+           axlSetMainSetupDBLCV(...) -> nil                     [design: NOT ATTACHED]
+           -> no setup db, therefore no tests, no corners, axlRunSimulation -> nil
+           NR-POLL lines in this log = 25 (the run never started; polling has since been
+           guarded on the run id)
+NR-BEGIN
+NR-SESSION "tb_session"
+NR-MAINSETUPDB nil
+NR "axlGetMainSetupDB" -> (0)
+NR "axlGetTests" -> nil
+NR "axlGetEnabledTests" -> nil
+NR "axlGetCorners" -> nil
+NR "axlGetActiveSetup" -> nil
+NR "axlGetSetupInfo" -> nil
+NR "axlGetRunModes" -> nil
+NR "axlGetResultsLocation" -> nil
+NR-TESTS-RAW nil
+NR-PUTTEST nil
+NR "axlSetTestToolArgs-list" -> nil
+NR "axlSetTestToolArgs-flat" -> nil
+NR "axlToolSetSetupOptions" -> (nil)
+NR "after-set toolArgs" -> nil
+NR "axlSetEnabled" -> nil
+NR "addOutputSignal" -> nil
+NR "addOutputSignal-plain" -> nil
+NR "addOutputSignal" -> nil
+NR "addOutputSignal-plain" -> nil
+NR "addOutputSignal" -> nil
+NR "addOutputSignal-plain" -> nil
+NR "addOutputSignal" -> nil
+NR "addOutputSignal-plain" -> nil
+NR "axlAddOutputs" -> (t)
+NR-CORNERS-RAW nil
+NR "axlCommitSetupDB" -> nil
+NR-PRE-RUN-LISTING (0)
+NR-RUNID nil
+NR-POLL 1 finished=nil
+NR-POLL 2 finished=nil
+NR-POLL 3 finished=nil
+NR-POLL 4 finished=nil
+NR-POLL 5 finished=nil
+NR-POLL 6 finished=nil
+NR-POLL 7 finished=nil
+NR-POLL 8 finished=nil
+NR-POLL 9 finished=nil
+NR-POLL 10 finished=nil
+NR-POLL 11 finished=nil
+NR-POLL 12 finished=nil
+NR-POLL 13 finished=nil
+NR-POLL 14 finished=nil
+NR-POLL 15 finished=nil
+NR-POLL 16 finished=nil
+NR-POLL 17 finished=nil
+NR-POLL 18 finished=nil
+NR-POLL 19 finished=nil
+NR-POLL 20 finished=nil
+NR-POLL 21 finished=nil
+NR-POLL 22 finished=nil
+NR-POLL 23 finished=nil
+NR-POLL 24 finished=nil
+NR-POLL 25 finished=nil
+NR-POLL 26 finished=nil
+
+-------------------------------------------------------------------------------
+SECTION A3  attempt 2 -- create the setup database first (documented axlNewSetupDBLCV)
+verdict:   axlNewSetupDBLCV -> nil and axlSetMainSetupDBLCV -> nil again, same downstream nils
+NR-BEGIN
+NR-SESSION "tb_session"
+NR "axlNewSetupDBLCV" -> nil
+NR-MAINSETUPDB nil
+NR "axlGetMainSetupDB" -> (0)
+NR "axlGetTests" -> nil
+NR "axlGetEnabledTests" -> nil
+NR "axlGetCorners" -> nil
+NR "axlGetActiveSetup" -> nil
+NR "axlGetSetupInfo" -> nil
+NR "axlGetRunModes" -> nil
+NR "axlGetResultsLocation" -> nil
+NR-TESTS-RAW nil
+NR-PUTTEST nil
+NR "axlSetTestToolArgs-list" -> nil
+NR "axlSetTestToolArgs-flat" -> nil
+NR "axlToolSetSetupOptions" -> (nil)
+NR "after-set toolArgs" -> nil
+NR "axlSetEnabled" -> nil
+NR "addOutputSignal" -> nil
+NR "addOutputSignal-plain" -> nil
+NR "addOutputSignal" -> nil
+NR "addOutputSignal-plain" -> nil
+NR "addOutputSignal" -> nil
+NR "addOutputSignal-plain" -> nil
+NR "addOutputSignal" -> nil
+NR "addOutputSignal-plain" -> nil
+NR "axlAddOutputs" -> (t)
+NR-CORNERS-RAW nil
+NR "axlCommitSetupDB" -> nil
+NR-PRE-RUN-LISTING (0)
+NR-RUNID nil
+NR "axlGetRunStatus" -> ((0 0))
+NR-HISTORY 0
+NR-HISTORY-NAME nil
+NR "axlGetLocalResultsDir" -> nil
+NR "axlGetPointNetlistDir" -> (nil)
+NR "axlGetPointPsfDir" -> (nil)
+NR "axlGetPointRunDir" -> (nil)
+NR-FILES (0)
+NR_DONE
+
+-------------------------------------------------------------------------------
+SECTION A4  attempt 3 -- the asg batch front end (third startup path)
+command: cd cadence_work && HOME=$PWD/home asg skill/c2mos_tb_native_run.il
+verdict:   rc=0, but under asg even axlCreateSession is nil -- the adexl context is not loaded
+           there, so this path is strictly weaker than -restore
+NR-BEGIN
+NR-SESSION nil
+NR "axlNewSetupDBLCV" -> nil
+NR-MAINSETUPDB nil
+NR "axlGetMainSetupDB" -> nil
+NR "axlGetTests" -> nil
+NR "axlGetEnabledTests" -> nil
+NR "axlGetCorners" -> nil
+NR "axlGetActiveSetup" -> nil
+NR "axlGetSetupInfo" -> nil
+NR "axlGetRunModes" -> nil
+NR "axlGetResultsLocation" -> nil
+NR-TESTS-RAW nil
+NR-PUTTEST nil
+NR "axlSetTestToolArgs-list" -> nil
+NR "axlSetTestToolArgs-flat" -> nil
+NR "axlToolSetSetupOptions" -> nil
+NR "after-set toolArgs" -> nil
+NR "axlSetEnabled" -> nil
+NR "addOutputSignal" -> nil
+NR "addOutputSignal-plain" -> nil
+NR "addOutputSignal" -> nil
+NR "addOutputSignal-plain" -> nil
+NR "addOutputSignal" -> nil
+NR "addOutputSignal-plain" -> nil
+NR "addOutputSignal" -> nil
+NR "addOutputSignal-plain" -> nil
+NR "axlAddOutputs" -> nil
+NR-CORNERS-RAW nil
+NR "axlCommitSetupDB" -> nil
+NR-PRE-RUN-LISTING (0)
+NR-RUNID nil
+NR "axlGetRunStatus" -> nil
+NR-HISTORY nil
+NR-HISTORY-NAME nil
+NR "axlGetLocalResultsDir" -> nil
+NR "axlGetPointNetlistDir" -> nil
+NR "axlGetPointPsfDir" -> nil
+NR "axlGetPointRunDir" -> nil
+NR-FILES (0)
+NR_DONE
+
+-------------------------------------------------------------------------------
+SECTION A5  attempt 4 -- real GUI session, deferred init (DISPLAY=:0 MODE=gui DEFER=1)
+verdict:   the process loaded its contexts (cdf/analog/HSPICE-ADE visible in the tail below) and
+           then idled at the CIW prompt; the deferred sch1Main() never fired, so this path yields
+           NO EVIDEMENT OF SUCCESS AND NO EVIDENCE OF FAILURE -- it is recorded as UNVERIFIED,
+           not as blocked. rc=124 (the runner's own 300 s timeout reaped it).
+tail of that session:
+  ==== HSPICE-ADE Interface installed successfully                   ==== 
+  HSPICE-ADE: use interface at '/opt/synopsys/Hspice-2015.06-3/interface'
+  HSPICE-ADE: use HSPICE at '/opt/synopsys/Hspice-2015.06-3//hspice/bin/hspice'
+  HSPICE-ADE: HSPICE Version K-2015.06-3 linux64 (build id: 3630644)
+> 
+
+
+\# Available memory:          6,391 MB at UTC 2026.10.11 16:38:51.884
+\# Memory report: Maximum memory size now 6,725 MB at UTC 2026.10.11 16:38:51.885
+\# Memory report: using         334 MB, process size 1,156 MB at UTC 2026.10.11 16:38:51.885
+\w *WARNING* Process was terminated by USER with SIGTERM signal
+Local time (crash) Monday 12 October 2026, 12:43:25 AM
+SCH_VIRTUOSO: FAIL  log=/root/microled_ai_project/cadence_work/logs/sch_nograph_20261012_003825.log
+
+
+-------------------------------------------------------------------------------
+SECTION B  Task 2/3 -- the deck generated FROM the OA cell
+command: python scripts/c2mos_tb_deck_from_oa.py
+           --evidence results/evidence/c2mos_tb_cdf_audit.txt
+           --out spectre/c2mos_dff_tb_from_oa.scs
+printed by the generator:
+    SKIPPED_NON_ELECTRICAL [('PIN0', 'basic/iopin/symbol', 'instTerms unbound')]
+    GROUNDED_TERMINALS=6 (gnd! -> 0)
+    SOURCES=Ck Dd Vdd Vss CAPS=Cq Cqb DUT=X1 model=c2mos_dff_1bit ports=d,clk,q,qbar,vdd,vss
+    ANALYSIS tran stop=4.8*T maxstep=1e-4*T save=clk d q qbar
+the file itself, verbatim:
+; c2mos_dff_tb_from_oa.scs -- built from the OA cell microled_cells/c2mos_dff_tb
+;   by scripts/c2mos_tb_deck_from_oa.py; device side comes from the TBCA readback in
+;   results/evidence/c2mos_tb_cdf_audit.txt, analysis side is parsed from the frozen
+;   golden deck. Nothing in this file was typed in by hand.
+; NETLIST_PROVENANCE: OA_READBACK -- Cadence's own netlister is unavailable on this
+;   build (NATIVE_NETLIST_BLOCKED, see reports/c2mos_tb_native_simulation.md).
+;   This is the project's documented readback route, not a native ADE netlist.
+simulator lang=spectre insensitive=yes
+global 0
+include "${QODER_PDK_LIB}" section=tt
+include "generated/c2mos_dff_1bit_from_oa_readback.scs"
+parameters T=2e-07
+parameters VDDV=1.8
+Ck (clk 0) vsource type=pulse val0=0 val1=1.8 period=2e-07 delay=1e-07 rise=1e-09 fall=1e-09 width=1e-07
+Dd (d 0) vsource type=pulse val0=0 val1=1.8 period=4e-07 delay=7e-08 rise=1e-09 fall=1e-09 width=2e-07
+Vdd (vdd 0) vsource dc=1.8
+Vss (vss 0) vsource dc=0
+Cq (q 0) capacitor c=5e-14
+Cqb (qbar 0) capacitor c=5e-14
+X1 (d clk q qbar vdd vss) c2mos_dff_1bit
+tr1 tran stop=4.8*T maxstep=1e-4*T
+save clk d q qbar
+
+
+-------------------------------------------------------------------------------
+SECTION C  Task 3 -- the run, preflight and repeat discipline
+command: bash scripts/c2mos_check.sh ff1_tb 2e-7 native2 2
+TB=ff1_tb T=2e-7 tag=native2
+netlist=/root/microled_ai_project/spectre/run_ff1_tb_native2.scs
+directives=/root/microled_ai_project/logs/c2mos_dirs_ff1_tb_native2.txt rules=33
+--- testbench preflight
+    STATIC_OK vdd net vdd referenced to node 0 at 1.8 V
+    STATIC_OK vss net vss tied to node 0 through an independent source
+    OP_OK vdd net vdd = 1.8 (expected 1.8)
+    OP_OK vss net vss = 0 (must equal the reference)
+    RAIL_WARNINGS=0
+    TESTBENCH_PREFLIGHT: PASS
+[1] spectre finished, datafile=tr1.tran.tran
+[1] assertions: total=33 failed=0
+  TIMING edge=1.40T kind=fall t_CLK50=3.005e-07 t_Q50=3.00684e-07 t_D50=2.715e-07  D50_to_CLK50=2.9e-08  CLK50_to_Q50=1.843e-10 s (0.0922% of T)
+  TIMING edge=2.40T kind=rise t_CLK50=5.005e-07 t_Q50=5.0091e-07 t_D50=4.705e-07  D50_to_CLK50=3e-08  CLK50_to_Q50=4.10301e-10 s (0.205% of T)
+  TIMING edge=3.40T kind=fall t_CLK50=7.005e-07 t_Q50=7.00684e-07 t_D50=6.715e-07  D50_to_CLK50=2.9e-08  CLK50_to_Q50=1.84252e-10 s (0.0921% of T)
+  TIMING edge=4.40T kind=rise t_CLK50=9.005e-07 t_Q50=9.0091e-07 t_D50=8.705e-07  D50_to_CLK50=3e-08  CLK50_to_Q50=4.10301e-10 s (0.205% of T)
+[2] spectre finished, datafile=tr1.tran.tran
+[2] assertions: total=33 failed=0
+  TIMING edge=1.40T kind=fall t_CLK50=3.005e-07 t_Q50=3.00684e-07 t_D50=2.715e-07  D50_to_CLK50=2.9e-08  CLK50_to_Q50=1.843e-10 s (0.0922% of T)
+  TIMING edge=2.40T kind=rise t_CLK50=5.005e-07 t_Q50=5.0091e-07 t_D50=4.705e-07  D50_to_CLK50=3e-08  CLK50_to_Q50=4.10301e-10 s (0.205% of T)
+  TIMING edge=3.40T kind=fall t_CLK50=7.005e-07 t_Q50=7.00684e-07 t_D50=6.715e-07  D50_to_CLK50=2.9e-08  CLK50_to_Q50=1.84252e-10 s (0.0921% of T)
+  TIMING edge=4.40T kind=rise t_CLK50=9.005e-07 t_Q50=9.0091e-07 t_D50=8.705e-07  D50_to_CLK50=3e-08  CLK50_to_Q50=4.10301e-10 s (0.205% of T)
+REPEAT: 2 runs produced byte-identical assertion reports
+TB_CELL_DFF_FUNCTION: PASS
+
+
+-------------------------------------------------------------------------------
+SECTION D  Task 3 -- assertion report (33 directives, every one OK)
+file: logs/c2mos_assert_ff1_tb_native2_1.txt
+sweep_key=time
+OK   ASSERT q [1.4e-07,1.9e-07] gt 1.7  n=2500 min=1.8 max=1.8
+OK   ASSERT q [2.2e-07,2.9e-07] gt 1.7  n=3507 min=1.79941 max=1.84122
+OK   ASSERT qbar [1.4e-07,1.9e-07] lt 0.1  n=2500 min=6.33148e-09 max=6.33178e-09
+OK   ASSERT qbar [2.2e-07,2.9e-07] lt 0.1  n=3507 min=-0.000364368 max=0.000283933
+OK   ASSERT q [3.4e-07,3.9e-07] lt 0.1  n=2500 min=1.04325e-08 max=1.09959e-08
+OK   ASSERT q [4.2e-07,4.9e-07] lt 0.1  n=3508 min=-0.0137425 max=0.0283385
+OK   ASSERT qbar [3.4e-07,3.9e-07] gt 1.7  n=2500 min=1.8 max=1.8
+OK   ASSERT qbar [4.2e-07,4.9e-07] gt 1.7  n=3508 min=1.79973 max=1.80097
+OK   ASSERT q [5.4e-07,5.9e-07] gt 1.7  n=2500 min=1.8 max=1.8
+OK   ASSERT q [6.2e-07,6.9e-07] gt 1.7  n=3508 min=1.79941 max=1.84136
+OK   ASSERT qbar [5.4e-07,5.9e-07] lt 0.1  n=2500 min=5.37579e-09 max=7.17167e-09
+OK   ASSERT qbar [6.2e-07,6.9e-07] lt 0.1  n=3508 min=-0.000365434 max=0.000296838
+OK   ASSERT q [7.4e-07,7.9e-07] lt 0.1  n=2500 min=1.0425e-08 max=1.09929e-08
+OK   ASSERT q [8.2e-07,8.9e-07] lt 0.1  n=3508 min=-0.0137393 max=0.028329
+OK   ASSERT qbar [7.4e-07,7.9e-07] gt 1.7  n=2500 min=1.8 max=1.8
+OK   ASSERT qbar [8.2e-07,8.9e-07] gt 1.7  n=3508 min=1.79973 max=1.80097
+OK   CROSS  d thr=0.9 t=7.05e-08 t0=6e-08 edges=3
+OK   FALL   d thr=0.9 t=2.715e-07 t0=2.6e-07 edges=2
+OK   CROSS  d thr=0.9 t=4.705e-07 t0=4.6e-07 edges=3
+OK   FALL   d thr=0.9 t=6.715e-07 t0=6.6e-07 edges=2
+OK   CROSS  clk thr=0.9 t=1.005e-07 t0=0 edges=5
+OK   CROSS  clk thr=0.9 t=3.005e-07 t0=2.8e-07 edges=5
+OK   FALL   d thr=0.9 t=2.715e-07 t0=2.6e-07 edges=2
+OK   FALL   q thr=0.9 t=3.00684300006e-07 t0=2.8e-07 edges=2
+OK   CROSS  clk thr=0.9 t=5.005e-07 t0=4.8e-07 edges=5
+OK   CROSS  d thr=0.9 t=4.705e-07 t0=4.6e-07 edges=3
+OK   CROSS  q thr=0.9 t=5.00910301118e-07 t0=4.8e-07 edges=3
+OK   CROSS  clk thr=0.9 t=7.005e-07 t0=6.8e-07 edges=5
+OK   FALL   d thr=0.9 t=6.715e-07 t0=6.6e-07 edges=2
+OK   FALL   q thr=0.9 t=7.00684251643e-07 t0=6.8e-07 edges=2
+OK   CROSS  clk thr=0.9 t=9.005e-07 t0=8.8e-07 edges=5
+OK   CROSS  d thr=0.9 t=8.705e-07 t0=8.6e-07 edges=3
+OK   CROSS  q thr=0.9 t=9.00910300611e-07 t0=8.8e-07 edges=3
+SUMMARY directives=33 failed=0
+
+
+-------------------------------------------------------------------------------
+SECTION E  Task 3 -- waveform, as data (this build cannot produce credible screenshots;
+AGENTS.md pitfall 30: import -window root returns a flat image, per-window grabs come back
+black, so the numeric trace table IS the saved waveform)
+command: awk -v every=1000 -v want='clk d q qbar' -f scripts/psf_dump.awk
+           spectre/sim/run_ff1_tb_native2.raw/tr1.tran.tran
+t=1.997999999999975e-08 clk=0.000000 d=0.000000 q=1.799978 qbar=0.000000 
+t=3.998000000000095e-08 clk=0.000000 d=0.000000 q=1.799990 qbar=0.000000 
+t=5.998000000000365e-08 clk=0.000000 d=0.000000 q=1.799994 qbar=0.000000 
+t=7.984248660751814e-08 clk=0.000000 d=1.800000 q=1.800000 qbar=0.000000 
+t=9.984248660751435e-08 clk=0.000000 d=1.800000 q=1.800000 qbar=0.000000 
+t=1.196939848853349e-07 clk=1.800000 d=1.800000 q=1.800000 qbar=0.000000 
+t=1.396939848853311e-07 clk=1.800000 d=1.800000 q=1.800000 qbar=0.000000 
+t=1.596939848853273e-07 clk=1.800000 d=1.800000 q=1.800000 qbar=0.000000 
+t=1.796939848853235e-07 clk=1.800000 d=1.800000 q=1.800000 qbar=0.000000 
+t=1.996939848853197e-07 clk=1.800000 d=1.800000 q=1.800000 qbar=0.000000 
+t=2.196198154767927e-07 clk=0.000000 d=1.800000 q=1.799999 qbar=0.000000 
+t=2.396198154767905e-07 clk=0.000000 d=1.800000 q=1.799999 qbar=0.000000 
+t=2.596198154768132e-07 clk=0.000000 d=1.800000 q=1.799999 qbar=0.000000 
+t=2.794620148406887e-07 clk=0.000000 d=0.000000 q=1.799963 qbar=0.000000 
+t=2.994620148407114e-07 clk=0.000000 d=0.000000 q=1.799996 qbar=0.000000 
+t=3.193821509024227e-07 clk=1.800000 d=0.000000 q=0.000000 qbar=1.800000 
+t=3.393821509024454e-07 clk=1.800000 d=0.000000 q=0.000000 qbar=1.800000 
+t=3.593821509024681e-07 clk=1.800000 d=0.000000 q=0.000000 qbar=1.800000 
+t=3.793821509024908e-07 clk=1.800000 d=0.000000 q=0.000000 qbar=1.800000 
+t=3.993821509025134e-07 clk=1.800000 d=0.000000 q=0.000000 qbar=1.800000 
+t=4.193197014489007e-07 clk=0.000000 d=0.000000 q=0.000006 qbar=1.800000 
+t=4.393197014489234e-07 clk=0.000000 d=0.000000 q=0.000004 qbar=1.800000 
+t=4.593197014489460e-07 clk=0.000000 d=0.000000 q=0.000003 qbar=1.800000 
+t=4.791570297724186e-07 clk=0.000000 d=1.800000 q=0.000042 qbar=1.800000 
+t=4.991570297724413e-07 clk=0.000000 d=1.800000 q=0.000011 qbar=1.800000 
+t=5.189980381427137e-07 clk=1.800000 d=1.800000 q=1.800000 qbar=0.000000 
+t=5.389980381427364e-07 clk=1.800000 d=1.800000 q=1.800000 qbar=0.000000 
+t=5.589980381427591e-07 clk=1.800000 d=1.800000 q=1.800000 qbar=0.000000 
+t=5.789980381427818e-07 clk=1.800000 d=1.800000 q=1.800000 qbar=0.000000 
+t=5.989980381428044e-07 clk=1.800000 d=1.800000 q=1.800000 qbar=0.000000 
+t=6.189204972415879e-07 clk=0.000000 d=1.800000 q=1.799999 qbar=0.000000 
+t=6.389204972416106e-07 clk=0.000000 d=1.800000 q=1.799999 qbar=0.000000 
+t=6.589204972416333e-07 clk=0.000000 d=1.800000 q=1.799999 qbar=0.000000 
+t=6.787785809231901e-07 clk=0.000000 d=0.000000 q=1.799957 qbar=0.000000 
+t=6.987785809232128e-07 clk=0.000000 d=0.000000 q=1.799996 qbar=0.000000 
+t=7.186610386079099e-07 clk=1.800000 d=0.000000 q=0.000000 qbar=1.800000 
+t=7.386610386079326e-07 clk=1.800000 d=0.000000 q=0.000000 qbar=1.800000 
+t=7.586610386079553e-07 clk=1.800000 d=0.000000 q=0.000000 qbar=1.800000 
+t=7.786610386079780e-07 clk=1.800000 d=0.000000 q=0.000000 qbar=1.800000 
+t=7.986610386080007e-07 clk=1.800000 d=0.000000 q=0.000000 qbar=1.800000 
+t=8.185993041722348e-07 clk=0.000000 d=0.000000 q=0.000006 qbar=1.800000 
+t=8.385993041722575e-07 clk=0.000000 d=0.000000 q=0.000004 qbar=1.800000 
+t=8.585993041722802e-07 clk=0.000000 d=0.000000 q=0.000003 qbar=1.800000 
+t=8.784368230415640e-07 clk=0.000000 d=1.800000 q=0.000046 qbar=1.800000 
+t=8.984368230415867e-07 clk=0.000000 d=1.800000 q=0.000011 qbar=1.800000 
+t=9.182779463322186e-07 clk=1.800000 d=1.800000 q=1.800000 qbar=0.000000 
+t=9.382779463322413e-07 clk=1.800000 d=1.800000 q=1.800000 qbar=0.000000 
+t=9.582779463322396e-07 clk=1.800000 d=1.800000 q=1.800000 qbar=0.000000 
+rows_seen=48087 mode=every=1000 printed=0
+
+
+-------------------------------------------------------------------------------
+SECTION F  nothing-was-modified proof, taken AFTER all four sessions above
+### md5 -c over microled_cells (36 files, snapshot taken before today s sessions)
+files_not_matching_OK_count=0
+### cadence_work top-level diff (before the sessions vs after)
+NO_NEW_TOPLEVEL_ENTRIES
+### analogLib content touched today?
+### smic18mmrf PDK touched today?
+### DUT schematic untouched (size+mtime)
+-rw-r--r--. 1 root root 37796 Oct 11 20:02 cadence_work/microled_cells/c2mos_dff_1bit/schematic/sch.oa
+
+===============================================================================

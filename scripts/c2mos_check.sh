@@ -36,6 +36,9 @@ case "$TB" in
   # SCH-1 Part D: the same two assertion tables against the cell rebuilt out of the OA schematic.
   ff1_sch)      TPL="$PROJ/spectre/c2mos_ff1_from_oa_readback.scs";    TOKEN=SCHEMATIC_DFF_FUNCTION;   ;;
   shift3_sch)   TPL="$PROJ/spectre/c2mos_shift3_from_oa_readback.scs"; TOKEN=SCHEMATIC_SHIFT3_FUNCTION ;;
+  # TB-1: the identical ff1 assertion table against the deck rebuilt from the OA TESTBENCH cell
+  # itself (sources, loads, binding and the DUT all read out of microled_cells/c2mos_dff_tb).
+  ff1_tb)       TPL="$PROJ/spectre/c2mos_dff_tb_from_oa.scs";          TOKEN=TB_CELL_DFF_FUNCTION      ;;
   *) echo "FATAL: unknown testbench '$TB'"; exit 8 ;;
 esac
 [ -r "$TPL" ] || { echo "FATAL: template missing $TPL"; exit 8; }
@@ -64,7 +67,7 @@ thr() { if [ "$1" = "1" ]; then echo "gt 1.7"; else echo "lt 0.1"; fi; }
 build_dirs() {
   local f="$1" i s a b c d line
   : > "$f"
-  if [ "$TB" = "ff1" ] || [ "$TB" = "ff1_sch" ]; then
+  if [ "$TB" = "ff1" ] || [ "$TB" = "ff1_sch" ] || [ "$TB" = "ff1_tb" ]; then
     echo "# ---- single C^2MOS DFF: q must repeat d's value one clock later: 1,0,1,0" >> "$f"
     local STARTS="0.5 1.5 2.5 3.5"
     local Q="1 0 1 0"
@@ -180,7 +183,7 @@ run_once() {
   # agent's console output is not evidence a human can re-check.
   local dl="$LOGD/c2mos_delays_${TB}_${TAG}_${idx}.txt"
   : > "$dl"
-  if [ "$TB" = "ff1" ] || [ "$TB" = "ff1_sch" ]; then
+  if [ "$TB" = "ff1" ] || [ "$TB" = "ff1_sch" ] || [ "$TB" = "ff1_tb" ]; then
     local o kind cc qq dd
     for o in "1.40 FALL" "2.40 CROSS" "3.40 FALL" "4.40 CROSS"; do
       set -- $o; o=$1; kind=$2

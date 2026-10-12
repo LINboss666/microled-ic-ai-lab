@@ -1,0 +1,22 @@
+; c2mos_dff_tb_from_oa.scs -- built from the OA cell microled_cells/c2mos_dff_tb
+;   by scripts/c2mos_tb_deck_from_oa.py; device side comes from the TBCA readback in
+;   results/evidence/c2mos_tb_cdf_audit.txt, analysis side is parsed from the frozen
+;   golden deck. Nothing in this file was typed in by hand.
+; NETLIST_PROVENANCE: OA_READBACK -- Cadence's own netlister is unavailable on this
+;   build (NATIVE_NETLIST_BLOCKED, see reports/c2mos_tb_native_simulation.md).
+;   This is the project's documented readback route, not a native ADE netlist.
+simulator lang=spectre insensitive=yes
+global 0
+include "${QODER_PDK_LIB}" section=tt
+include "generated/c2mos_dff_1bit_from_oa_readback.scs"
+parameters T=2e-07
+parameters VDDV=1.8
+Ck (clk 0) vsource type=pulse val0=0 val1=1.8 period=2e-07 delay=1e-07 rise=1e-09 fall=1e-09 width=1e-07
+Dd (d 0) vsource type=pulse val0=0 val1=1.8 period=4e-07 delay=7e-08 rise=1e-09 fall=1e-09 width=2e-07
+Vdd (vdd 0) vsource dc=1.8
+Vss (vss 0) vsource dc=0
+Cq (q 0) capacitor c=5e-14
+Cqb (qbar 0) capacitor c=5e-14
+X1 (d clk q qbar vdd vss) c2mos_dff_1bit
+tr1 tran stop=4.8*T maxstep=1e-4*T
+save clk d q qbar
