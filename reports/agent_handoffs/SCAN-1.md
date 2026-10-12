@@ -189,7 +189,75 @@ comparison for this project is the *subckt block*, not the whole-file hash -- a 
 compares documentation and will keep raising false alarms (and the guest tree carries no `reports/`
 directory at all, so report hashes cannot be taken on the guest).
 
-## Current blocker / next action
+## SCAN-1R status (2026-10-12, this session)
+
+### S1 = REWORK -> now genuinely PASSING, with the real root cause of SFE-874
+
+`SFE-874` was **my syntax, with file and line**:
+
+```
+ERROR (SFE-874): ".../s1_dff.scs" 11: Unexpected real number "100n". Expected close parenthesis.
+ERROR (SFE-874): ".../s1_dff.scs" 13: Unexpected real number "400n". Expected close parenthesis.
+```
+
+Lines 11/13 were `type=pwl time=(0 100n ...) val=(...)`. `spectre -h vsource` on this machine
+shows the supported forms: `type=pwl wave=[t v t v ...]` and `type=pulse val0=.. val1=..`.
+Switching to those made `tb_preflight` PASS (rail + operating point, RAIL_WARNINGS=0) with
+**nothing skipped** -- preflight failure still exits 7.
+
+Truth table, measured volts (not thresholds), `s1r_truth.csv`: `Q=1/BLANK=0 -> 1.8 V`, the other
+three rows `0.000000 V`. Transient, golden DFF + 4-transistor NOR, worst-case-in-window
+(`s1r_transient.csv`): T1 en<=0.075 V, T2 en>=1.7999 V, T3 q>=1.7656 V across the BLANK release,
+T4 en<=0.000004 V, T5 q<=0.002007 V -> **5/5, `SCAN_DIGITAL_BLANK: PASS`**. Stimulus sanity is
+asserted first (clk actually reaches 1.8 V), because otherwise every window verdict is hollow.
+
+Fault injection is now a real fault: the gate's BLANK pin is clamped to vss in a copy, thresholds
+and expected values untouched, measured through the identical path. Correct circuit
+`en=0.075345 V`, faulted circuit `en=1.800096 V` in the same window -> the unchanged T1 assertion
+rejects it. `CHECKER_CAN_FAIL: PASS`. (The earlier attempt was invalid twice over: first it
+swapped a NOR's inputs, which cannot change a symmetric function; then it "detected" via a window
+assertion that had zero samples.)
+
+Harness self-tests pass: unknown signal -> exit 3, empty data file -> exit 2, vss-floating bench
+-> preflight rejects.
+
+Two harness bugs found and fixed along the way, both of which could have produced false verdicts:
+1. `run_spectre.sh` window mode passes `EXPECT_T0=400n` to awk as `-v t0=400n`; awk reads that as
+   the number 400 and compares it against sample times near 4e-7, so windows silently contain zero
+   samples and every `EXPECT_LT` assertion "fails" for a reason unrelated to the circuit. S1
+   window judgement now goes through `sc1_read_psf.py`, which parses SI suffixes properly and
+   refuses to answer with fewer than N samples (`--require-n`).
+2. `sc1_delay.py` initially treated "first crossing above threshold" as an edge in either
+   direction, which measured the end of a rise as a 194 ns "fall". Crossings are now directional;
+   validated against known S1 data (rise 0.774 ns, fall 0.058 ns) and a flat rail correctly
+   returns NO_EDGE/exit 4.
+
+### S2 = BLOCKED, not passed. Do not read anything below as a level-shifter result.
+
+Delivered but unverified: `spectre/sc1_level_shifter.scs` with two candidates -- A: diode-connected
+`p33` load + `n33` driver (2 transistors, inverting, chosen because the S3 high-side PMOS needs
+gate-low = selected); B: A plus one 3.3 V push-pull inverter as the gate buffer, to answer "is a
+buffer needed" from timing data. `scripts/sc1_s2.sh` is written to measure levels, node-referenced
+stress, delay versus 0/0.2/1/5 pF and missing-supply cases.
+
+Blocker: preflight refuses the S2 static decks. Cause chain established so far, in order:
+1. first the iprobe was in the VDD33 leg, so the subckt's `vdd33` pin was no longer driven by an
+   independent source to node 0 -- preflight was right to refuse; removed.
+2. then a single-point DC sweep was illegal: `ERROR (SPECTRE-16108): sw: Stop limit must not equal
+   start limit.`; replaced with the 0/1.8 two-point sweep that S1 uses successfully.
+3. still refusing, and the most likely remaining cause is a **tooling limit rather than a circuit
+   fault**: `tb_preflight.sh` takes one `expected_vdd`, but this bench is dual-rail (vdd18=1.8 and
+   vdd33=3.3 on the same instance), so one rail necessarily mismatches the single expectation.
+   This is the last thing checked before context ran out and is NOT yet confirmed.
+
+Next action for whoever picks this up: decide between (a) extending preflight to accept a per-port
+rail map (a real improvement; must keep the existing negative bench failing), or (b) giving each
+supply its own preflight pass. Do not obtain an S2 PASS by skipping the gate.
+
+Also outstanding for S2: static current through the converter while selected is
+`NOT_MEASURED`. Three bounded attempts failed (iprobe-in-rail broke preflight; two ad-hoc saves
+produced rc=1 and rc=127 from my own harness), so it was dropped rather than faked. Same status
+for the reverse-current-into-a-dead-rail number in the sequencing matrix.
 
 No blocker. Next: **S1** -- transistor-level `SCAN_EN = Q & !BLANK` in n18/p18, 4-row truth table at
 both rails, plus BLANK acting without disturbing the stored DFF state, run through

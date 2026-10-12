@@ -1,0 +1,54 @@
+// ==============================================================================
+// sc1_level_shifter.scs -- SCAN-1 S2: 1.8 V conditional logic -> 3.3 V output domain.
+//
+// Devices used are only the ones proven to exist on THIS PDK by
+// scripts/sc1_pdk_smoke.sh: n33 / p33 / p33_dnw_4t_ckt (4-terminal, D G S B) plus the
+// 1.8 V core parts on the driving side. There is no 5 V family in this PDK, so 3.3 V is
+// already the ceiling of what a legal device can be given here.
+//
+// POLARITY, chosen on purpose (ENGINEERING_TOPOLOGY_CHOICE):
+//   The S3 high-side switch is a PMOS with source at VSCAN=3.3 V, so GATE LOW == selected.
+//   SCAN_EN=1 (select) must therefore produce OUT=0 V, and SCAN_EN=0 must produce OUT=3.3 V.
+//   That is an INVERTING converter, so one inverting stage is the whole job -- no second
+//   inversion is added.
+//
+//   SCAN_EN=1.8 -> MN_LS on  -> OUT ~ 0 V   -> high side ON
+//   SCAN_EN=0   -> MN_LS off -> OUT -> VDD33 -> high side OFF
+//
+// Candidate A (sc1_ls_a): diode-connected p33 pull-up + n33 driver. 2 transistors, the
+//   smallest legal converter. Known cost, measured not asserted: while selected there is a
+//   DC path VDD33 -> MP_LS -> MN_LS -> VSS, i.e. static current, and the pull-up is a weak
+//   current source so the rise edge is load-dependent.
+// Candidate B (sc1_ls_b): A followed by one 3.3 V inverter (p33/n33) as the gate buffer, so
+//   the node that actually drives the power gate is a strong push-pull output. Used to answer
+//   "is a buffer needed?" from timing evidence instead of by assumption.
+//
+// WHY NO 1.8 V DEVICE SEES 3.3 V: the n33 gates are driven by the 1.8 V nets (VGS <= 1.8 V);
+// the node that reaches 3.3 V is a DRAIN, and only n33/p33 drains and sources touch VDD33.
+// The 3.3 V inverter's input is the shifted node, never a core net.
+//
+// NOT claimed: reliability. No readable foundry absolute-maximum rating was found in this
+// delivery, so |VGS|=3.3 V on p33 and |VDS|=3.3 V on n33 are reported as measured stress with
+// SOA_SIGNOFF: NO / FOUNDRY_REVIEW_REQUIRED. Spectre accepting an instance is not a rating.
+// ==============================================================================
+simulator lang=spectre insensitive=yes
+
+subckt sc1_ls_a (en out vdd18 vdd33 vss)
+  parameters l33=3.5e-7 wpf=1e-5 wnf=4e-6
+  // diode-connected 3.3 V PMOS load: D=G=out, S=B=vdd33 so the well sits at the highest
+  // potential and the source/bulk junction is never forward biased
+  mpls (out out vdd33 vdd33) p33 l=l33 w=wpf m=1
+  // 3.3 V NMOS driver, gate fed by the 1.8 V logic (VGS <= 1.8 V), drain is the 3.3 V node
+  mnls (out en vss vss) n33 l=l33 w=wnf m=1
+ends sc1_ls_a
+
+subckt sc1_ls_b (en out outb vdd18 vdd33 vss)
+  parameters l33=3.5e-7 wpf=1e-5 wnf=4e-6 wbu_p=8e-6 wbu_n=4e-6
+  // stage 1: same converter as candidate A, output is the internal shifted node
+  mpls (shift shift vdd33 vdd33) p33 l=l33 w=wpf m=1
+  mnls (shift en vss vss) n33 l=l33 w=wnf m=1
+  // stage 2: a real 3.3 V push-pull inverter used as the gate buffer. Its input is `shift`,
+  // a 3.3 V domain node -- the 1.8 V logic never touches a 3.3 V transistor directly here.
+  mpbu (outb shift vdd33 vdd33) p33 l=l33 w=wbu_p m=1
+  mnbu (outb shift vss vss) n33 l=l33 w=wbu_n m=1
+ends sc1_ls_b

@@ -1,0 +1,6 @@
+check,worst_case_in_window_V,verdict
+T1 BLANK=1 while Q=1 : en must stay low,0.075345,PASS
+T2 BLANK=0 while Q=1 : en must be high,1.799913,PASS
+T3 q undisturbed across BLANK release,1.765552,PASS
+T4 BLANK=0 while Q=0 : en must be low,0.000004,PASS
+T5 q follows the falling-data clock edge,0.002007,PASS

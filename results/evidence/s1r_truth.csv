@@ -1,0 +1,5 @@
+Q,BLANK,en_measured_V,row_expected,assert_verdict
+1,0,1.800000,ON,PASS
+0,0,0.000000,OFF,PASS
+1,1,0.000000,OFF,PASS
+0,1,0.000000,OFF,PASS
