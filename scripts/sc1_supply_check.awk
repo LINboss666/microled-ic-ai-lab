@@ -15,14 +15,15 @@
 #  * a net used inside a subckt body is that subckt's OWN net unless it is one of its port names;
 #    a same-name coincidence with a top-level net is never treated as a connection.
 #  * a supply port that resolves, through the port bindings, to a top-level net is checked against
-#    the source holding that net; a supply port that resolves only to an internal node cannot be
-#    certified statically, so it is reported as SUPPLY_INTERNAL and counted, never skipped.
+#    the source holding that net; a supply port that resolves only to an internal node is reported as
+#    SUPPLY_NOT_CERTIFIED and REFUSES the contract (R2B) -- counting it was never the same as
+#    checking it, and a floating child substrate is exactly the failure this gate exists to catch.
 #  * V(n) is signed: (0 n) vsource dc=-1.8 puts n at +1.8 V, and (n 0) dc=1.8 also does.
 #  * a source wired between two declared supply nets forces a fixed difference between them; a
 #    contract that contradicts it is refused instead of left for the simulator to discover.
 #
 # Emitted tokens (the wrapper requires the positive ones, it does not merely look for failure text):
-#   SUPPLY_OK / SUPPLY_FAIL / SUPPLY_INTERNAL / SUPPLY_TIE_OK / SUPPLY_NET <net>=<volts>
+#   SUPPLY_OK / SUPPLY_FAIL / SUPPLY_NOT_CERTIFIED / SUPPLY_TIE_OK / SUPPLY_NET <net>=<volts>
 #   SUPPLY_INSTANCES top=<n> descendants=<d> checked=<m> internal=<i> masters=<k>
 #   SUPPLY_RESULT PASS | SUPPLY_RESULT FAIL                exit 0 iff PASS
 
@@ -56,8 +57,12 @@ function portidx(def, net,   n, i, p) {
   return 0
 }
 # map a net used inside `def` (caller-side names in g[1..]) up one level. Internal nodes get an
-# "@def.net" marker so nothing downstream can mistake them for a global rail.
-function rname(def, g, net,   pi) { pi = portidx(def, net); if (pi > 0) return g[pi]; return "@" def "." net }
+# "@def.net" marker so nothing downstream can mistake them for a global rail. Node 0 is the
+# simulator reference and is global by definition: a subckt cannot shadow it.
+function rname(def, g, net,   pi) {
+  if (net == "0") return "0"
+  pi = portidx(def, net); if (pi > 0) return g[pi]; return "@" def "." net
+}
 function isinternal(n) { return (substr(n, 1, 1) == "@") }
 # difference of two declared rail potentials cannot be compared bit-exactly: 3.3-1.8 is
 # 1.4999999999999998 in IEEE double. Only a stated tolerance can tell a real conflict from rounding.
@@ -214,8 +219,14 @@ function top_check(cn, a, path, np,   k, pn, key, n, want, sv, ports) {
         printf "SUPPLY_FAIL %s port %s resolves to internal node %s, but the deck also has a top-level net named %s: refusing to guess which rail drives it\n", path, pn, n, lname
         bad = 1
       } else {
-        printf "SUPPLY_INTERNAL %s port %s is internal node %s: potential is set inside the parent, preflight cannot certify it\n", path, pn, n
+        # R2B: counting an uncertifiable supply was not enough. Under a formal supply contract a
+        # supply or reference port that never resolves to a certified rail FAILS the gate -- the
+        # project has already been bitten by a floating vss that left every NMOS dead while the
+        # simulator still finished cleanly. NOT_CERTIFIED is reported for diagnosis only.
+        printf "SUPPLY_NOT_CERTIFIED %s port %s is internal node %s: potential is set inside the parent, preflight cannot certify it\n", path, pn, n
         intern++
+        printf "SUPPLY_FAIL %s port %s is not certified: it maps to internal node %s instead of a rail the contract covers; every supply/reference port must reach a declared rail through subckt ports\n", path, pn, n
+        bad = 1
       }
       continue
     }

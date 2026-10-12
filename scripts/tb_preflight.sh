@@ -281,7 +281,6 @@ if [ -n "$SMAP" ]; then
   if [ -n "$INTERN" ]; then
     NIN=$(count_of "$SC" '^SUPPLY_INTERNAL ')
     [ "$INTERN" = "$NIN" ] || reject supply_contract "count_mismatch_internal=${INTERN}_vs_supply_internal=${NIN}"
-    [ "$NIN" = "0" ] || echo "PREFLIGHT_SCOPE_NOTE: $NIN supply port(s) resolve to internal nodes and are NOT certified by preflight"
   fi
   # a PASS result line that still carries a FAIL detail is a corrupted verdict, not a clean one
   [ "$(count_of "$SC" '^SUPPLY_FAIL ')" = "0" ] || reject supply_contract "pass_with_fail_detail"
