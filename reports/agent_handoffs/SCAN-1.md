@@ -8,13 +8,51 @@ Updated 2026-10-12 during SCAN-1R2 / S2-only. Baseline reviewed by the cloud rev
 
 | item | status | evidence |
 |---|---|---|
-| R0 measurement tools | **PASS** | `results/evidence/sc1_r2_checker.csv` 27/27 offline synthetic cases, 4 of them regression cases reproducing review findings; same tools re-run on real S1 data on the guest |
-| R1 dual-rail preflight | NOT_STARTED | next |
-| R2 S2 circuit matrix | NOT_STARTED | blocked behind R1 |
-| R3 S1 regression + real chaining | NOT_STARTED | tools changed, so old PASSes must be re-derived |
-| S1 (previous round) | conditionally accepted logic POC; **regression required by R3** | `s1r_truth.csv` 4/4, `s1r_transient.csv` 5/5 |
-| S3 / S4 | NOT STARTED, out of scope this round | — |
-| main / teammate branches | untouched, not merged | remote ref re-read |
+| R0 measurement tools | **PASS** | `results/evidence/sc1_r2_checker.csv` 27/27 offline synthetic cases, 4 regression cases |
+| R1 dual-rail preflight | **PASS** | `results/evidence/sc1_r2_preflight.csv` 11/11 matrix; `scripts/sc1_supply_check.awk` + 5th call form, legacy path unchanged |
+| R2 S2 circuit matrix | **NOT STARTED** (unblocked by R1, not attempted this session) | old `sc1_s2.sh` still has the review's defects |
+| R3 S1 regression + real chaining | **NOT STARTED** | required because R0 changed the measuring path |
+| S1 (previous round) | conditionally accepted logic POC; **must be re-run under R3** | `s1r_truth.csv` 4/4, `s1r_transient.csv` 5/5 |
+| S3 / S4 | NOT STARTED, out of scope | — |
+| main / teammate branches | untouched, not merged | remote re-read |
+
+Commits this session on `poc/scan-driver-1ch`: `86df706` (R0), `12125f0` (R1), on top of the
+reviewed baseline `fc6757b`.
+
+### R1 in one line
+
+`tb_preflight.sh` now accepts an explicit supply contract as a 5th argument
+(`vdd18=1.8 vdd33=3.3 vss=0`), matched by declared port name rather than a `vdd` substring, so a
+dual-rail bench is no longer mis-checked whichever single expectation is chosen. A **declared 0 V**
+is a legitimate, still-verified value, which is what makes a power-down scenario expressible;
+an undeclared, unconnected, wrongly-driven or swapped supply rail is refused, a supply-like port
+missing from the map is refused, and a contract over zero instances refuses to pass vacuously. The
+legacy 3-argument behaviour is preserved and proven by the matrix (legacy bench passes, the
+project's floating-vss bench is still refused).
+
+Two matrix rows failed for reasons that were mine, and the tool was left alone: a deck tying `vssx`
+to node 0 through a source is genuinely legal (my "negative" was not negative), and one case invoked
+the checker before its deck existed (rc 8 was a missing file, not a verdict).
+
+### R2 next, in order
+
+1. Rewrite `sc1_s2.sh` against §4.3 before any circuit verdict: `cur="NOT_MEASURED"` currently
+   reaches `float()`, stress formulas assume candidate A's topology for candidate B, S2.4 skips
+   preflight while the script claims it does not, `V18_float` is undefined under `set -u`, row labels
+   must match the sample actually read, the load CSV header says fF but stores pF values, and
+   internal nodes must be read by hierarchical name (`X1:shift`), not as top-level nets.
+2. Implement the §5 cross-coupled core, then C0 and C1 with the polarity table verified by
+   measurement, including the competition question the review flagged: whether a 1.8 V-driven n33 can
+   actually flip the p33 cross-coupled pull-up. Sizes chosen from data, not from "classic circuit".
+3. Use the new contract for every formal deck; report S2_SAFE_OFF_CONDITIONAL at best as
+   `PASS_WITH_ASSUMED_CORE_OK`, and `S2_AUTONOMOUS_POWER_FAIL_SAFE: NOT_IMPLEMENTED`.
+
+### Caution learned this session
+
+Putting awk inside the shell script's single-quoted string produced an unterminated-string awk
+program that silently broke even the previously-working legacy path. The checker now lives in its own
+`.awk` file. Do not nest program text inside shell quoting again in these tools.
+
 
 ### R0 in one line each
 
