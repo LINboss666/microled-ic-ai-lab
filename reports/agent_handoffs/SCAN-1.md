@@ -1,60 +1,81 @@
 # SCAN-1 agent handoff checkpoint
 
-## CURRENT_STATUS (single authoritative table; older sections below are history)
+## CURRENT_STATUS (single authoritative table; everything below this block is history)
 
-Updated 2026-10-12 during SCAN-1R2 / S2-only. Baseline reviewed by the cloud reviewer:
-`poc/scan-driver-1ch` @ `fc6757bda8b410ebf34e4bbcf248eaa2a98a19b6`, main @
-`23e471cb936b421ee97e1250c3be06edf96f9937` (both re-read from the remote this session).
+Updated 2026-10-12 during **SCAN-1R2A / R0-R1 tool rework**. Inputs re-read this session:
+`poc/scan-driver-1ch` @ `41ffbf29673de15acf0fdc491f7daa7d113ddc88` (review start), circuit baseline
+`fc6757bda8b410ebf34e4bbcf248eaa2a98a19b6`, main @ `23e471cb936b421ee97e1250c3be06edf96f9937`.
+
+**The previous round's `27/27` and `11/11` are historical test-set results, not the overall verdict.**
+The cloud review of `41ffbf2` returned REWORK for R0/R1; this round closes the named defects. Until
+the reviewer re-reads the new remote evidence, the overall audit status of the tooling stays REWORK.
 
 | item | status | evidence |
 |---|---|---|
-| R0 measurement tools | **PASS** | `results/evidence/sc1_r2_checker.csv` 27/27 offline synthetic cases, 4 regression cases |
-| R1 dual-rail preflight | **PASS** | `results/evidence/sc1_r2_preflight.csv` 11/11 matrix; `scripts/sc1_supply_check.awk` + 5th call form, legacy path unchanged |
-| R2 S2 circuit matrix | **NOT STARTED** (unblocked by R1, not attempted this session) | old `sc1_s2.sh` still has the review's defects |
-| R3 S1 regression + real chaining | **NOT STARTED** | required because R0 changed the measuring path |
-| S1 (previous round) | conditionally accepted logic POC; **must be re-run under R3** | `s1r_truth.csv` 4/4, `s1r_transient.csv` 5/5 |
-| S3 / S4 | NOT STARTED, out of scope | — |
-| main / teammate branches | untouched, not merged | remote re-read |
+| R0-A edge splicing | **FIXED, proven offline** | `results/evidence/sc1_r2a_checker.csv` cases `r0a_*`; reviewer waveform (0,1,0,0,3.3,3.3 V) now gives NO_EDGE for `first_attempt` and 0.800 ns for `first_complete`, never 3.570 ns |
+| R0-B inverting propdelay | **FIXED, proven offline** | `r0b_inverting_2ns` asserts t_in=2.500 ns, t_out=4.500 ns, delay 2.000 ns via `--edge-in/--edge-out`; `r0b_same_dir_on_inverting_marked` returns 6.000 ns **plus** `earlier_opposite_event=YES`; legacy single-`--edge` interface still same-direction (`r0b_legacy_single_edge_same_phase`) |
+| R0-C reader/delay contracts | **FIXED, proven offline** | `r0c_*`: `--require-n` enforced for window, sweep and whole-file; unordered/duplicate time axis refused (`BAD_AXIS`); two-sample edge interpolates 0.2424->0.800 ns instead of crashing; unknown mode/edge and illegal K are `BAD_USAGE` |
+| R1-A checker fault = refusal | **FIXED, proven with local checker copies** | matrix `t01..t10`: awk syntax error, empty stdout, PASS-then-exit-3, missing/duplicate result token, `checked=0`, count mismatch, internal-count mismatch, PASS-with-FAIL detail, garbled report -- all refused at `PREFLIGHT_STAGE=supply_contract` **before** any Spectre call; the committed checker was never modified |
+| R1-B supply semantics | **FIXED** | unresolved master, non-numeric contract value, zero instances, unmatched entry all refused; node 0 accepted as the 0 V reference; hierarchy resolved through port bindings (`descendants=2` counted); per-master entries let core-domain and high-domain instances coexist; rail-tie contradictions refused; subckt-local net with a global rail's name is refused, not guessed |
+| R1-C negative-case protocol | **FIXED** | `scripts/sc1_preflight_selftest.sh` declares per case an expected rc **set**, rejection stage, required reason tokens (all must appear), the connection actually changed, and whether the simulator may be reached; missing deck/checker are `HARNESS_ERROR` rc 8; a positive whose simulator phase produced no data is BLOCKED, never PASS |
+| Preflight matrix (offline static mode) | **PASS 31/31** | `results/evidence/sc1_r2a_preflight_static.transcript.txt`; no simulator involved |
+| Preflight matrix (real PDK, full mode) | **PASS 31/31** | `results/evidence/sc1_r2a_preflight.csv` + `..._full.transcript.txt`; 7 acceptance cases ran the operating-point probe on the teacher PDK `section=tt` with `sim=yes`, 22 refusals/harness cases never called Spectre |
+| CSV read-back audit | **PASS** | `scripts/sc1_csv_audit.py` on the matrix: 16 columns per record, unique case ids, rc/stage/reason correspondence, verdict recomputed from the recorded logs |
+| Legacy 27-case suite | **PASS 27/27** (guest Python 2.6) | `results/evidence/sc1_r2a_legacy27.csv`; one case renamed because it was called `delay_propdelay_10ns` while asserting 5 ns |
+| `psf_check` 9 cases / `safety_rules` 21 cases | **PASS on Python 3** (Windows + cloud reviewer) | these two suites use `open(..., encoding=)` and cannot run under the guest's Python 2.6 -- recorded as NOT_RUN on the guest, not as a pass there |
+| R2 new S2 circuit | **NOT STARTED** (out of scope this round) | — |
+| R3 real-circuit regression | **NOT STARTED** (out of scope this round) | S1 truth table / transient windows have **not** been re-read with the fixed tools; the old `s1r_*.csv` are prior-round evidence only |
+| S3 / S4, Layout, DRC/LVS/PEX | NOT STARTED, out of scope | — |
+| Golden DFF, S1 NOR, old S2 deck/scripts, frozen DATA | untouched | hashes in `results/evidence/sc1_r2a_manifest.csv` (`protected_netlist` rows) |
 
-Commits this session on `poc/scan-driver-1ch`: `86df706` (R0), `12125f0` (R1), on top of the
-reviewed baseline `fc6757b`.
+### Corrections to statements made in the previous round
 
-### R1 in one line
+* The supply map is the **4th positional argument** (`bash scripts/tb_preflight.sh NET 1.8 TAG "vdd18=1.8
+  vdd33=3.3 vss=0"`, or `SUPPLY_MAP`), not a 5th one; the text below that says "5th call form" is wrong
+  and superseded.
+* `SUPPLY_RESULT PASS` alone was not sufficient evidence: the wrapper now also requires the checker's
+  exit status, a well-formed and unique result token, a non-empty supply list and matching counts.
+* Phase 1 (static parse) previously ran, then the script went on to call Spectre and only failed at the
+  very end. Static refusal now happens before any simulator invocation, and `PREFLIGHT_STAGE` names the
+  stage that refused.
+* Phase 1's per-instance `vdd`/`vss` name checks are superseded (not deleted) when a contract is
+  present: they demanded a port literally named `vdd`, which a dual-rail deck legitimately lacks. The
+  legacy no-contract path is unchanged and still refuses the project's floating-vss bench.
+* `V(0,n) dc=-1.8` puts the rail at **+1.8 V**. The checker now resolves source orientation with a
+  sign; a test of mine that asserted the opposite was wrong and is replaced by two cases: terminals
+  swapped with the sign kept (legal) and terminals swapped without it (rail at -1.8 V, refused).
+* Comparing two declared rails needs a tolerance: `3.3 - 1.8` is not bit-exactly `1.5` in IEEE double,
+  which made a legitimate 1.5 V tie source look like a contradiction.
+* A subckt-local supply node that no preflight can certify is reported as `SUPPLY_INTERNAL` and counted
+  (`internal=N`), and the wrapper prints `PREFLIGHT_SCOPE_NOTE`. It is not silently treated as checked,
+  and if its name collides with a top-level rail the deck is refused instead of guessed.
+* New offline-only entry point: `PREFLIGHT_STATIC_PROBE=1` stops after the static gates and exits **7**
+  with `CIRCUIT_VERDICT: NOT_RUN`, so static-mode evidence can never be read as a circuit PASS.
+* `SUPPLY_CHECK_AWK` exists so tests can point at a broken local copy of the checker; the committed
+  checker is never edited to prove the gate closes.
 
-`tb_preflight.sh` now accepts an explicit supply contract as a 5th argument
-(`vdd18=1.8 vdd33=3.3 vss=0`), matched by declared port name rather than a `vdd` substring, so a
-dual-rail bench is no longer mis-checked whichever single expectation is chosen. A **declared 0 V**
-is a legitimate, still-verified value, which is what makes a power-down scenario expressible;
-an undeclared, unconnected, wrongly-driven or swapped supply rail is refused, a supply-like port
-missing from the map is refused, and a contract over zero instances refuses to pass vacuously. The
-legacy 3-argument behaviour is preserved and proven by the matrix (legacy bench passes, the
-project's floating-vss bench is still refused).
+### Reproducing this round offline (no PDK, no licence)
 
-Two matrix rows failed for reasons that were mine, and the tool was left alone: a deck tying `vssx`
-to node 0 through a source is genuinely legal (my "negative" was not negative), and one case invoked
-the checker before its deck existed (rc 8 was a missing file, not a verdict).
+```
+python scripts/sc1_r2a_selftest.py --out results/evidence/sc1_r2a_checker.csv   # 39 cases
+python scripts/sc1_checker_selftest.py --out results/evidence/sc1_r2a_legacy27.csv
+PROJ=/path/to/checkout bash scripts/sc1_preflight_selftest.sh static            # 31 cases, rc 0
+```
+`static` mode exercises every refusal and the static gate of each acceptance deck; the same command with
+`full` additionally runs the operating-point probe. On the guest, Python 2.6 and gawk 3.1.7 are the
+versions actually used; gawk 3.1.7 exits **1** (not 2) on an awk syntax error, which is why t01 declares
+an allowed exit-code set `1,2` and requires the reason token `checker_exit=` plus the text `syntax error`.
 
-### R2 next, in order
+### Not verified by me, and left open for the reviewer
 
-1. Rewrite `sc1_s2.sh` against §4.3 before any circuit verdict: `cur="NOT_MEASURED"` currently
-   reaches `float()`, stress formulas assume candidate A's topology for candidate B, S2.4 skips
-   preflight while the script claims it does not, `V18_float` is undefined under `set -u`, row labels
-   must match the sample actually read, the load CSV header says fF but stores pF values, and
-   internal nodes must be read by hierarchical name (`X1:shift`), not as top-level nets.
-2. Implement the §5 cross-coupled core, then C0 and C1 with the polarity table verified by
-   measurement, including the competition question the review flagged: whether a 1.8 V-driven n33 can
-   actually flip the p33 cross-coupled pull-up. Sizes chosen from data, not from "classic circuit".
-3. Use the new contract for every formal deck; report S2_SAFE_OFF_CONDITIONAL at best as
-   `PASS_WITH_ASSUMED_CORE_OK`, and `S2_AUTONOMOUS_POWER_FAIL_SAFE: NOT_IMPLEMENTED`.
+* Cloud-side re-run of the 39 + 27 suites and of `static` mode (needs bash + awk + Python only).
+* Whether the S1 truth-table / transient-window numbers still hold when re-read with the fixed reader
+  and delay tool -- that is R3, explicitly not started here.
+* Any S2 circuit behaviour: nothing in this round judges a circuit; `R2` is NOT_STARTED and the old
+  `scripts/sc1_s2.sh` remains defective and unrun.
 
-### Caution learned this session
+### (history, SCAN-1R2 round, superseded by the block above) R0 in one line each
 
-Putting awk inside the shell script's single-quoted string produced an unterminated-string awk
-program that silently broke even the previously-working legacy path. The checker now lives in its own
-`.awk` file. Do not nest program text inside shell quoting again in these tools.
-
-
-### R0 in one line each
 
 Reader and delay tool were rewritten against the specific defects the review reproduced, and are
 now proven **offline** so a DUT simulation is never the evidence that the measuring tool works:
@@ -351,3 +372,60 @@ cellview, Cadence install, licence files, VM/Git/global config. New files are co
 `cadence_work/sc1_sim/` on the guest and `sc1_`/`scan1_`/`scan_driver_` paths in the repo.
 No foundry model text is being copied into the repo; only measured verdicts and the numbers actually
 relied on are recorded.
+
+## Historical sections (kept; superseded parts marked)
+
+### SCAN-1R2 round status block, moved out of CURRENT_STATUS on 2026-10-12 (R2A)
+
+## CURRENT_STATUS (single authoritative table; older sections below are history)
+
+Updated 2026-10-12 during SCAN-1R2 / S2-only. Baseline reviewed by the cloud reviewer:
+`poc/scan-driver-1ch` @ `fc6757bda8b410ebf34e4bbcf248eaa2a98a19b6`, main @
+`23e471cb936b421ee97e1250c3be06edf96f9937` (both re-read from the remote this session).
+
+| item | status | evidence |
+|---|---|---|
+| R0 measurement tools | **PASS** | `results/evidence/sc1_r2_checker.csv` 27/27 offline synthetic cases, 4 regression cases |
+| R1 dual-rail preflight | **PASS** | `results/evidence/sc1_r2_preflight.csv` 11/11 matrix; `scripts/sc1_supply_check.awk` + 5th call form, legacy path unchanged |
+| R2 S2 circuit matrix | **NOT STARTED** (unblocked by R1, not attempted this session) | old `sc1_s2.sh` still has the review's defects |
+| R3 S1 regression + real chaining | **NOT STARTED** | required because R0 changed the measuring path |
+| S1 (previous round) | conditionally accepted logic POC; **must be re-run under R3** | `s1r_truth.csv` 4/4, `s1r_transient.csv` 5/5 |
+| S3 / S4 | NOT STARTED, out of scope | — |
+| main / teammate branches | untouched, not merged | remote re-read |
+
+Commits this session on `poc/scan-driver-1ch`: `86df706` (R0), `12125f0` (R1), on top of the
+reviewed baseline `fc6757b`.
+
+### R1 in one line
+
+`tb_preflight.sh` now accepts an explicit supply contract as a 5th argument
+(`vdd18=1.8 vdd33=3.3 vss=0`), matched by declared port name rather than a `vdd` substring, so a
+dual-rail bench is no longer mis-checked whichever single expectation is chosen. A **declared 0 V**
+is a legitimate, still-verified value, which is what makes a power-down scenario expressible;
+an undeclared, unconnected, wrongly-driven or swapped supply rail is refused, a supply-like port
+missing from the map is refused, and a contract over zero instances refuses to pass vacuously. The
+legacy 3-argument behaviour is preserved and proven by the matrix (legacy bench passes, the
+project's floating-vss bench is still refused).
+
+Two matrix rows failed for reasons that were mine, and the tool was left alone: a deck tying `vssx`
+to node 0 through a source is genuinely legal (my "negative" was not negative), and one case invoked
+the checker before its deck existed (rc 8 was a missing file, not a verdict).
+
+### R2 next, in order
+
+1. Rewrite `sc1_s2.sh` against §4.3 before any circuit verdict: `cur="NOT_MEASURED"` currently
+   reaches `float()`, stress formulas assume candidate A's topology for candidate B, S2.4 skips
+   preflight while the script claims it does not, `V18_float` is undefined under `set -u`, row labels
+   must match the sample actually read, the load CSV header says fF but stores pF values, and
+   internal nodes must be read by hierarchical name (`X1:shift`), not as top-level nets.
+2. Implement the §5 cross-coupled core, then C0 and C1 with the polarity table verified by
+   measurement, including the competition question the review flagged: whether a 1.8 V-driven n33 can
+   actually flip the p33 cross-coupled pull-up. Sizes chosen from data, not from "classic circuit".
+3. Use the new contract for every formal deck; report S2_SAFE_OFF_CONDITIONAL at best as
+   `PASS_WITH_ASSUMED_CORE_OK`, and `S2_AUTONOMOUS_POWER_FAIL_SAFE: NOT_IMPLEMENTED`.
+
+### Caution learned this session
+
+Putting awk inside the shell script's single-quoted string produced an unterminated-string awk
+program that silently broke even the previously-working legacy path. The checker now lives in its own
+`.awk` file. Do not nest program text inside shell quoting again in these tools.
