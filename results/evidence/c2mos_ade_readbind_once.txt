@@ -1,0 +1,275 @@
+===============================================================================
+c2mos_ade_readbind_once.txt -- raw evidence for C2MOS-ADE-READBIND-01
+one read-only ADE XL bind attempt: axlSetMainSetupDBLCV(session lib cell "adexl" ?mode "r")
+===============================================================================
+Guest 192.168.222.129 (work-eda), RHEL 6.5; Cadence from the session log header below.
+Attempt window: Mon Oct 12 20:23:16 -> 20:26:16 CST 2026 (the last stamp is the runner's own
+180 s timeout reaping the process -- see SECTION C). Executed EXACTLY ONCE; no retry, no parameter
+change, no removal of ?mode "r" (task 七).
+
+-------------------------------------------------------------------------------
+SECTION A  阶段A 执行前保护：环境与指纹基线（只读）
+-------------------------------------------------------------------------------
+### 1 VM / time
+Mon Oct 12 20:21:52 CST 2026
+   20:21:52 up  9:27,  1 user,  load average: 0.00, 0.00, 0.00
+  mem Mem:          7914       6068       1846          0        220       5239
+### 2 guest ssh is this session; channel ok
+### 3 any user Virtuoso / ADE session running?
+  virtuoso_pids=[]
+### 4 cds.lib target
+  DEFINE cdsDefTechLib /opt/IC617/tools/dfII/etc/cdsDefTechLib
+  DEFINE basic /opt/IC617/tools/dfII/etc/cdslib/basic
+  DEFINE analogLib /opt/IC617/tools/dfII/etc/cdslib/artist/analogLib
+  DEFINE smic18mmrf /root/tech/teacher_pdk/smic18mmrf
+  DEFINE microled_dirver0 /root/Desktop/microled_dirver0
+  DEFINE microled_cells /root/microled_ai_project/cadence_work/microled_cells
+### 5 cells and their real views (dir library: one dir per view)
+  c2mos_dff_1bit   : data.dm schematic symbol 
+  c2mos_dff_tb     : schematic 
+  data_bias_ref    : data.dm schematic symbol 
+  data_sink_1ch    : data.dm schematic symbol 
+  sch1_top         : data.dm schematic 
+  sch3_top         : data.dm schematic 
+### 6 any ADE/setup-looking view anywhere in the library?
+  NONE_IF_BLANK_ABOVE
+### 7 locks (OA level, must be zero and must NOT be touched)
+  locks_in_lib=0
+  locks_in_pdk=0
+### 8 FINGERPRINT BEFORE: every file under microled_cells (path size mtime sha256)
+  files=36
+  KEY /root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/schematic/data.dm|3316|2026-10-11 20:02:39.9659628760|86df790509dddb3f287b77020563ce4734f70fdc8c07f635088c7349ace4db3b
+  KEY /root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/schematic/sch.oa|37796|2026-10-11 20:02:39.9769628770|4c9c1658c3d67b06ed233f03ab441502917387006d06240724bf22c653dc167c
+  KEY /root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_tb/schematic/data.dm|3388|2026-10-11 21:01:02.1109505620|cb4e3a84cd951a04a63f8e69b2f459b8552b4fa73cb8afa669c737cfe30735d4
+  KEY /root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_tb/schematic/sch.oa|31684|2026-10-11 21:01:02.1129505620|7ee683e8051271f6ed6be3f16adef02105946da407560c2a24f1e0ea92c3f56b
+### 9 PDK baseline (read-only; counts + the model include the runs use + newest mtime)
+  pdk_files=3976
+  pdk_bytes=176464
+  pdk_newest=2026-10-04 21:16 /root/tech/teacher_pdk/pdk资料.zip
+  model_file=/root/tech/teacher_pdk/models/spectre/ms018_enhanced_v1p2_rev0_spe.lib
+  MODEL_SHA256 fc8d321752f2bacf530d5c5eb151f4e623086c174be8da3c19ee8d26e3dcf95f  /root/tech/teacher_pdk/models/spectre/ms018_enhanced_v1p2_rev0_spe.lib
+  MODEL_SIZE=353783 MTIME=Jan 18 2025
+  pdk_files_newer_than_2026-10-12=0
+### 10 analogLib baseline (vendor library must stay untouched)
+  analoglib_files=2628
+  analoglib_files_newer_than_2026-10-12=0
+  ALIB_SHA 08de76370ddef11a2e96bf25fe7d474986a930cb38c47dfbc9d2ea5ce720714d  /opt/IC617/tools/dfII/etc/cdslib/artist/analogLib/vdc/data.dm
+  ALIB_SHA 3ec4bda31d0b172f52942edf1d787908fdeb3c865d216a9e96a79b0456a3d0c9  /opt/IC617/tools/dfII/etc/cdslib/artist/analogLib/vpulse/data.dm
+  ALIB_SHA 947472fa19a693b3abf6014a18df5758da06782abd3ab1d27f0030111a8b3350  /opt/IC617/tools/dfII/etc/cdslib/artist/analogLib/cap/data.dm
+
+
+-------------------------------------------------------------------------------
+SECTION B  阶段B 探针源代码（提交件 skill/c2mos_ade_readbind_once.il，逐字）
+           目标调用刻意不包 errset；禁止调用清单在文件头注释里，实际计数见下
+           axlNewSetupDBLCV=0 axlPutTest=0 axlSetTestToolArgs=0 axlSetEnabled=0
+           axlCommitSetupDB=0 axlRunSimulation=0 dbSave=0 load(=0
+-------------------------------------------------------------------------------
+; c2mos_ade_readbind_once.il -- C2MOS-ADE-READBIND-01: ONE read-only ADE XL bind attempt.
+;
+; Exactly one thing is measured here, with the argument shape the installed reference actually
+; documents (axlSetMainSetupDBLCV(t_session t_libName t_cellName t_viewName [?mode t_mode]); every
+; example in /opt/IC617/doc/adexlSKILLref/sessionIl.html passes an ADE setup view such as "adexl",
+; and one example shows ?mode "r"):
+;
+;     axlSetMainSetupDBLCV(session "microled_cells" "c2mos_dff_tb" "adexl" ?mode "r")
+;
+; The target call is deliberately NOT wrapped in errset. Last round's lesson was that a nil inside
+; errset cannot be told apart from a swallowed exception, so this time Cadence's own message (if any)
+; must reach the log. If the call signals, the load aborts there and that abort is the evidence; the
+; runner's timeout then reaps the idle process.
+;
+; Nothing else is allowed and nothing else is attempted: no axlNewSetupDBLCV, no axlPutTest, no
+; axlSetTestToolArgs, no axlSetEnabled, no axlCommitSetupDB, no axlRunSimulation, no dbSave, no
+; netlist, no simulation, no context loaded via load() (contexts are binary -- reading one as SKILL
+; source is what produced last round's bogus "load failed" line). No cellview is opened for writing.
+; The only side effect intended is an in-memory session, closed at the end by axlCloseSession.
+;
+; Discipline: when() not if() for multi-statement bodies (SKILL's if takes exactly three arguments),
+; %L only, all locals declared, ends with exit().
+;
+; Run (once only, headless, 180 s ceiling):
+;   SCH3_LIB=microled_cells SCH3_CELLS=c2mos_dff_tb ADE_RB_VIEW=adexl MODE=restore \
+;     bash scripts/sch_virtuoso.sh skill/c2mos_ade_readbind_once.il 180 ADE_RB_DONE
+printf("RB-BEGIN\n")
+
+LIB_ENV = getShellEnvVar("SCH3_LIB")
+LIB = if(LIB_ENV LIB_ENV "microled_cells")
+CELL_ENV = getShellEnvVar("SCH3_CELLS")
+CELL = if(CELL_ENV CELL_ENV "c2mos_dff_tb")
+VIEW_ENV = getShellEnvVar("ADE_RB_VIEW")
+VIEW = if(VIEW_ENV VIEW_ENV "adexl")
+SESSION_NAME = "rb_once_session"
+
+printf("RB-TARGET library=%L cell=%L view=%L mode=\"r\" session=%L\n" LIB CELL VIEW SESSION_NAME)
+
+; ---- session creation (in-memory only; measured in earlier rounds to create no files) ----
+created = car(errset(axlCreateSession(SESSION_NAME)))
+printf("RB-CREATE-SESSION %L\n" created)
+printf("RB-STATE-BEFORE axlGetWindowSession=%L axlGetMainSetupDB=%L axlSetupStates=%L\n"
+       errset(axlGetWindowSession())
+       car(errset(axlGetMainSetupDB(created)))
+       car(errset(axlSetupStates(created))))
+
+; ---- THE ONE TARGET CALL, unguarded, exactly once ----
+sdb = axlSetMainSetupDBLCV(created LIB CELL VIEW ?mode "r")
+printf("RB-RETURN-VALUE %L\n" sdb)
+
+printf("RB-STATE-AFTER axlGetMainSetupDB=%L axlSetupStates=%L axlGetWindowSession=%L\n"
+       car(errset(axlGetMainSetupDB(created)))
+       car(errset(axlSetupStates(created)))
+       errset(axlGetWindowSession()))
+
+; ---- close only the session this task created; nothing else is touched ----
+printf("RB-CLOSE-SESSION %L\n" errset(axlCloseSession(SESSION_NAME)))
+printf("ADE_RB_DONE\n")
+exit()
+
+
+-------------------------------------------------------------------------------
+SECTION C  阶段C 正式执行：runner 退出码 + 会话日志全部关键行
+           runner: rc=124 (timeout 180s) / TOKEN_FOUND no / SCH_VIRTUOSO: FAIL
+           说明：绑定调用抛出 SKILL 错误后 load 中止，RB-STATE-AFTER 与 axlCloseSession 因此
+           没有执行，进程空转到 runner 自身超时被 SIGTERM 收走（"Local time (crash)"）。
+           这是本轮唯一一次执行，未重试。
+-------------------------------------------------------------------------------
+\# Local time Monday 12 October 2026, 8:23 pm
+Program:		@(#)$CDS: virtuoso version 6.1.7-64b 11/09/2015 12:45 (sjfnl165) $
+Sub version:		sub-version  IC6.1.7-64b.78  (64-bit addresses)
+\# Command line:	/opt/IC617/tools/dfII/bin/64bit/virtuoso -nograph -log /root/microled_ai_project/cadence_work/logs/sch_nograph_20261012_202316.log -restore /root/microled_ai_project/skill/c2mos_ade_readbind_once.il
+RB-BEGIN
+RB-TARGET library="microled_cells" cell="c2mos_dff_tb" view="adexl" mode="r" session="rb_once_session"
+\# ADE XL session 'rb_once_session' started on Mon Oct 12 20:23:37 2026
+RB-CREATE-SESSION "rb_once_session"
+RB-STATE-BEFORE axlGetWindowSession=(nil) axlGetMainSetupDB=0 axlSetupStates=nil
+*Error* ddGetObjWritePath: argument #1 should be a ddUserType (type template = "b") - nil
+*Error* load: error while loading file - "/root/microled_ai_project/skill/c2mos_ade_readbind_once.il" at line 48
+*WARNING* Process was terminated by USER with SIGTERM signal
+Local time (crash) Monday 12 October 2026, 08:26:16 PM
+
+-------------------------------------------------------------------------------
+SECTION D  阶段D 完整性验证（执行后重新指纹 + 逐项对比）
+-------------------------------------------------------------------------------
+### processes / sessions left behind
+  virtuoso_pids=[]
+### locks now (must still be zero inside the library; nothing was cleaned by us)
+  locks_in_lib=0
+  locks_in_pdk=0
+### views per cell AFTER the run
+  c2mos_dff_tb     : schematic 
+  c2mos_dff_1bit   : data.dm schematic symbol 
+### did an adexl/setup view appear? (expected: NO)
+  NONE_IF_BLANK_ABOVE
+### full re-fingerprint of microled_cells
+  files_after=36  files_before=36
+  --- path set difference (new/removed files) ---
+  --- content/mtime changes ---
+  DUT_UNCHANGED: PASS
+  TB_UNCHANGED:  PASS
+### PDK / analogLib comparison against the Phase A baseline
+  pdk_files_after=3976  (before 3976)
+  pdk_bytes_after=176464  (before 176464)
+  pdk_files_newer_than_the_run=0
+  fc8d321752f2bacf530d5c5eb151f4e623086c174be8da3c19ee8d26e3dcf95f  /root/tech/teacher_pdk/models/spectre/ms018_enhanced_v1p2_rev0_spe.lib
+  PDK_UNCHANGED: PASS
+  analoglib_files_after=2628  (before 2628)  newer=0
+  ANALOGLIB_UNCHANGED: PASS
+### cadence_work top level: what the run added (expected: only log files)
+  new/changed files under cadence_work since the run started (excluding logs dir):
+  OTHER_NEW 2026-10-12 20:23 /root/microled_ai_project/cadence_work
+  OTHER_NEW 2026-10-12 20:23 /root/microled_ai_project/cadence_work/home
+  OTHER_NEW 2026-10-12 20:23 /root/microled_ai_project/cadence_work/home/.cdsinit
+  OTHER_NEW 2026-10-12 20:23 /root/microled_ai_project/cadence_work/home/.vnc-cds
+  OTHER_NEW 2026-10-12 20:23 /root/microled_ai_project/cadence_work/home/.vnc-cds/work-eda:80.pid
+  OTHER_NEW 2026-10-12 20:23 /root/microled_ai_project/cadence_work/home/.vnc-cds/work-eda:80.log
+  OTHER_NEW 2026-10-12 20:23 /root/microled_ai_project/cadence_work/logs
+  OTHER_NEW 2026-10-12 20:23 /root/microled_ai_project/cadence_work/.finesimXL_root
+  files written under the home/cds runtime dirs of the session:
+  HOME_NEW /root/microled_ai_project/cadence_work/home
+  HOME_NEW /root/microled_ai_project/cadence_work/home/.cdsinit
+  HOME_NEW /root/microled_ai_project/cadence_work/home/.vnc-cds
+  HOME_NEW /root/microled_ai_project/cadence_work/home/.vnc-cds/work-eda:80.pid
+  HOME_NEW /root/microled_ai_project/cadence_work/home/.vnc-cds/work-eda:80.log
+RB_POST_DONE
+
+
+-------------------------------------------------------------------------------
+SECTION E  指纹清单原文（path|size|mtime|sha256），before 与 after 完全一致
+-------------------------------------------------------------------------------
+--- BEFORE ---
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/data.dm|5284|2026-10-11 20:02:21.8469629410|bb2fc91331bb1d2c5888bcde9b9472f6a4a14e2c2a92e07d44f5a20b91257332
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/schematic/data.dm|3316|2026-10-11 20:02:39.9659628760|86df790509dddb3f287b77020563ce4734f70fdc8c07f635088c7349ace4db3b
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/schematic/master.tag|35|2026-10-11 20:02:22.5109629380|754d948d84456304dc9c92190e19089b4156a194ac7f002aad93b7d91a110099
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/schematic/sch.oa|37796|2026-10-11 20:02:39.9769628770|4c9c1658c3d67b06ed233f03ab441502917387006d06240724bf22c653dc167c
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/schematic/thumbnail_128x128.png|1326|2026-10-11 20:02:40.0019628770|4bbcc9618097679adcba2b3ebffb2b17ddc55b6bbabfc56555ecd6f40fcb79b6
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/symbol/master.tag|38|2026-10-11 20:02:22.8339629370|14f73fc67b1fd48a1d040157c35b5361471e38eaed0e71114fdc831cf4150da7
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/symbol/symbol.oa|22764|2026-10-11 20:02:22.8449629360|36ac428e6e36718d9d499e4d068abeb85fa6968eac4f9609f93cb0acfea0bfa8
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_tb/schematic/data.dm|3388|2026-10-11 21:01:02.1109505620|cb4e3a84cd951a04a63f8e69b2f459b8552b4fa73cb8afa669c737cfe30735d4
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_tb/schematic/master.tag|35|2026-10-11 21:01:02.1079505620|754d948d84456304dc9c92190e19089b4156a194ac7f002aad93b7d91a110099
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_tb/schematic/sch.oa|31684|2026-10-11 21:01:02.1129505620|7ee683e8051271f6ed6be3f16adef02105946da407560c2a24f1e0ea92c3f56b
+/root/microled_ai_project/cadence_work/microled_cells/cdsinfo.tag|1351|2026-10-03 18:57:58.9250129560|6a364516eef2d8bdf9a138226154edf7787855a3e102bb3216ee7b114d962b0a
+/root/microled_ai_project/cadence_work/microled_cells/data_bias_ref/data.dm|3980|2026-10-11 18:42:13.7129798450|f3e75d432e59f995b35d78e7e51d4374977976674816bea80f745a2ed6be0d83
+/root/microled_ai_project/cadence_work/microled_cells/data_bias_ref/schematic/data.dm|3284|2026-10-11 19:50:27.6849654510|0d9bc99eb5d2244686d59b8ce41e73dd4a11c805c6ede5c611f954152c56a920
+/root/microled_ai_project/cadence_work/microled_cells/data_bias_ref/schematic/master.tag|35|2026-10-11 18:42:14.7679798430|754d948d84456304dc9c92190e19089b4156a194ac7f002aad93b7d91a110099
+/root/microled_ai_project/cadence_work/microled_cells/data_bias_ref/schematic/sch.oa|28404|2026-10-11 19:50:27.6899654500|6b75a14cf1207fb1e50d437a8a13dbb69b8acd2be1ad51dec163ef42cc6cd01e
+/root/microled_ai_project/cadence_work/microled_cells/data_bias_ref/schematic/thumbnail_128x128.png|783|2026-10-11 19:50:27.6969654500|f4a6204a2c456f792a9a680323041e91ab0548ebe7a4cc2f2765569e37e647cd
+/root/microled_ai_project/cadence_work/microled_cells/data_bias_ref/symbol/master.tag|38|2026-10-11 18:42:15.8689798370|14f73fc67b1fd48a1d040157c35b5361471e38eaed0e71114fdc831cf4150da7
+/root/microled_ai_project/cadence_work/microled_cells/data_bias_ref/symbol/symbol.oa|22228|2026-10-11 18:42:15.8809798390|85a608d46570fa228bc70f61911d9afbdab429fa67913dbaf0370f9dfa6c2c00
+/root/microled_ai_project/cadence_work/microled_cells/data.dm|3172|2026-10-03 18:58:17.9520129510|aa6688d780d0eb80d14e82b77a15050f0b9905dfbfa4929057dd3443b657c6d5
+/root/microled_ai_project/cadence_work/microled_cells/data_sink_1ch/data.dm|4700|2026-10-11 18:42:14.8529798430|8775f3c1d61f524941c823f38dc9d1a3d643c4aa1141020d6d07acddcd777897
+/root/microled_ai_project/cadence_work/microled_cells/data_sink_1ch/schematic/data.dm|3324|2026-10-11 19:50:27.5699654510|d631c45622b3881345cf15e6910e824d2773d90b95a43287dd37963e01dd1255
+/root/microled_ai_project/cadence_work/microled_cells/data_sink_1ch/schematic/master.tag|35|2026-10-11 18:42:15.5049798400|754d948d84456304dc9c92190e19089b4156a194ac7f002aad93b7d91a110099
+/root/microled_ai_project/cadence_work/microled_cells/data_sink_1ch/schematic/sch.oa|30612|2026-10-11 19:50:27.5819654490|0eb70f9854fa06d7ba5ac5d7d65d28d3fdb5bf34991ac48e6aabc092af27049a
+/root/microled_ai_project/cadence_work/microled_cells/data_sink_1ch/schematic/thumbnail_128x128.png|1004|2026-10-11 19:50:27.6049654510|88f72e7ee8f49164e38f20053eccdde5e9959695dc19e777b1179f7dd25c93f4
+/root/microled_ai_project/cadence_work/microled_cells/data_sink_1ch/symbol/master.tag|38|2026-10-11 18:42:15.8829798390|14f73fc67b1fd48a1d040157c35b5361471e38eaed0e71114fdc831cf4150da7
+/root/microled_ai_project/cadence_work/microled_cells/data_sink_1ch/symbol/symbol.oa|22796|2026-10-11 18:42:15.8859798390|4d6b4a4524294cf12e1ed9a5a1702e34c11cd05cdc8dc1335c89500a2eebf007
+/root/microled_ai_project/cadence_work/microled_cells/.oalib|142|2026-10-03 18:57:58.9210129660|1f2e02e81d3f64aec8c8fa13112d605e461770a2ee7bfcd649f6287ec809e561
+/root/microled_ai_project/cadence_work/microled_cells/sch1_top/data.dm|3332|2026-10-11 20:02:22.5699629370|226f8d20e225ab5a937ce719f6043bde3561bba3f05575c9d63bc9832f0bb022
+/root/microled_ai_project/cadence_work/microled_cells/sch1_top/schematic/data.dm|3300|2026-10-11 20:02:23.1139629360|d54230d2157c39f77ddb1513e49101d70384eb35002d3d58d54f5e5ec7ac5764
+/root/microled_ai_project/cadence_work/microled_cells/sch1_top/schematic/master.tag|35|2026-10-11 20:02:23.1129629360|754d948d84456304dc9c92190e19089b4156a194ac7f002aad93b7d91a110099
+/root/microled_ai_project/cadence_work/microled_cells/sch1_top/schematic/sch.oa|29508|2026-10-11 20:02:23.1149629360|9222e070696c20c0e151d306d100de087cb758dbcfc43735c825cf2e4a76d181
+/root/microled_ai_project/cadence_work/microled_cells/sch3_top/data.dm|3364|2026-10-11 18:42:15.5689798400|407e424634ecfd63b01bf91e22a6741372256fda15047992f8f421a51e0050ad
+/root/microled_ai_project/cadence_work/microled_cells/sch3_top/schematic/data.dm|3340|2026-10-11 18:42:16.2099798360|47ac5c4b92c6cbe5ae95545d6313c27a8e14a57a9ccbaedd7af5a811c2631b51
+/root/microled_ai_project/cadence_work/microled_cells/sch3_top/schematic/master.tag|35|2026-10-11 18:42:16.2079798360|754d948d84456304dc9c92190e19089b4156a194ac7f002aad93b7d91a110099
+/root/microled_ai_project/cadence_work/microled_cells/sch3_top/schematic/sch.oa|29732|2026-10-11 18:42:16.2119798360|c053c3335692dcffeb53fbee1aa059f7b5cfd836a7497d9f5cd6a5addb47f9ad
+/root/microled_ai_project/cadence_work/microled_cells/tech.db|0|2026-10-11 18:42:14.1789798450|e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+
+--- AFTER ---
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/data.dm|5284|2026-10-11 20:02:21.8469629410|bb2fc91331bb1d2c5888bcde9b9472f6a4a14e2c2a92e07d44f5a20b91257332
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/schematic/data.dm|3316|2026-10-11 20:02:39.9659628760|86df790509dddb3f287b77020563ce4734f70fdc8c07f635088c7349ace4db3b
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/schematic/master.tag|35|2026-10-11 20:02:22.5109629380|754d948d84456304dc9c92190e19089b4156a194ac7f002aad93b7d91a110099
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/schematic/sch.oa|37796|2026-10-11 20:02:39.9769628770|4c9c1658c3d67b06ed233f03ab441502917387006d06240724bf22c653dc167c
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/schematic/thumbnail_128x128.png|1326|2026-10-11 20:02:40.0019628770|4bbcc9618097679adcba2b3ebffb2b17ddc55b6bbabfc56555ecd6f40fcb79b6
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/symbol/master.tag|38|2026-10-11 20:02:22.8339629370|14f73fc67b1fd48a1d040157c35b5361471e38eaed0e71114fdc831cf4150da7
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/symbol/symbol.oa|22764|2026-10-11 20:02:22.8449629360|36ac428e6e36718d9d499e4d068abeb85fa6968eac4f9609f93cb0acfea0bfa8
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_tb/schematic/data.dm|3388|2026-10-11 21:01:02.1109505620|cb4e3a84cd951a04a63f8e69b2f459b8552b4fa73cb8afa669c737cfe30735d4
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_tb/schematic/master.tag|35|2026-10-11 21:01:02.1079505620|754d948d84456304dc9c92190e19089b4156a194ac7f002aad93b7d91a110099
+/root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_tb/schematic/sch.oa|31684|2026-10-11 21:01:02.1129505620|7ee683e8051271f6ed6be3f16adef02105946da407560c2a24f1e0ea92c3f56b
+/root/microled_ai_project/cadence_work/microled_cells/cdsinfo.tag|1351|2026-10-03 18:57:58.9250129560|6a364516eef2d8bdf9a138226154edf7787855a3e102bb3216ee7b114d962b0a
+/root/microled_ai_project/cadence_work/microled_cells/data_bias_ref/data.dm|3980|2026-10-11 18:42:13.7129798450|f3e75d432e59f995b35d78e7e51d4374977976674816bea80f745a2ed6be0d83
+/root/microled_ai_project/cadence_work/microled_cells/data_bias_ref/schematic/data.dm|3284|2026-10-11 19:50:27.6849654510|0d9bc99eb5d2244686d59b8ce41e73dd4a11c805c6ede5c611f954152c56a920
+/root/microled_ai_project/cadence_work/microled_cells/data_bias_ref/schematic/master.tag|35|2026-10-11 18:42:14.7679798430|754d948d84456304dc9c92190e19089b4156a194ac7f002aad93b7d91a110099
+/root/microled_ai_project/cadence_work/microled_cells/data_bias_ref/schematic/sch.oa|28404|2026-10-11 19:50:27.6899654500|6b75a14cf1207fb1e50d437a8a13dbb69b8acd2be1ad51dec163ef42cc6cd01e
+/root/microled_ai_project/cadence_work/microled_cells/data_bias_ref/schematic/thumbnail_128x128.png|783|2026-10-11 19:50:27.6969654500|f4a6204a2c456f792a9a680323041e91ab0548ebe7a4cc2f2765569e37e647cd
+/root/microled_ai_project/cadence_work/microled_cells/data_bias_ref/symbol/master.tag|38|2026-10-11 18:42:15.8689798370|14f73fc67b1fd48a1d040157c35b5361471e38eaed0e71114fdc831cf4150da7
+/root/microled_ai_project/cadence_work/microled_cells/data_bias_ref/symbol/symbol.oa|22228|2026-10-11 18:42:15.8809798390|85a608d46570fa228bc70f61911d9afbdab429fa67913dbaf0370f9dfa6c2c00
+/root/microled_ai_project/cadence_work/microled_cells/data.dm|3172|2026-10-03 18:58:17.9520129510|aa6688d780d0eb80d14e82b77a15050f0b9905dfbfa4929057dd3443b657c6d5
+/root/microled_ai_project/cadence_work/microled_cells/data_sink_1ch/data.dm|4700|2026-10-11 18:42:14.8529798430|8775f3c1d61f524941c823f38dc9d1a3d643c4aa1141020d6d07acddcd777897
+/root/microled_ai_project/cadence_work/microled_cells/data_sink_1ch/schematic/data.dm|3324|2026-10-11 19:50:27.5699654510|d631c45622b3881345cf15e6910e824d2773d90b95a43287dd37963e01dd1255
+/root/microled_ai_project/cadence_work/microled_cells/data_sink_1ch/schematic/master.tag|35|2026-10-11 18:42:15.5049798400|754d948d84456304dc9c92190e19089b4156a194ac7f002aad93b7d91a110099
+/root/microled_ai_project/cadence_work/microled_cells/data_sink_1ch/schematic/sch.oa|30612|2026-10-11 19:50:27.5819654490|0eb70f9854fa06d7ba5ac5d7d65d28d3fdb5bf34991ac48e6aabc092af27049a
+/root/microled_ai_project/cadence_work/microled_cells/data_sink_1ch/schematic/thumbnail_128x128.png|1004|2026-10-11 19:50:27.6049654510|88f72e7ee8f49164e38f20053eccdde5e9959695dc19e777b1179f7dd25c93f4
+/root/microled_ai_project/cadence_work/microled_cells/data_sink_1ch/symbol/master.tag|38|2026-10-11 18:42:15.8829798390|14f73fc67b1fd48a1d040157c35b5361471e38eaed0e71114fdc831cf4150da7
+/root/microled_ai_project/cadence_work/microled_cells/data_sink_1ch/symbol/symbol.oa|22796|2026-10-11 18:42:15.8859798390|4d6b4a4524294cf12e1ed9a5a1702e34c11cd05cdc8dc1335c89500a2eebf007
+/root/microled_ai_project/cadence_work/microled_cells/.oalib|142|2026-10-03 18:57:58.9210129660|1f2e02e81d3f64aec8c8fa13112d605e461770a2ee7bfcd649f6287ec809e561
+/root/microled_ai_project/cadence_work/microled_cells/sch1_top/data.dm|3332|2026-10-11 20:02:22.5699629370|226f8d20e225ab5a937ce719f6043bde3561bba3f05575c9d63bc9832f0bb022
+/root/microled_ai_project/cadence_work/microled_cells/sch1_top/schematic/data.dm|3300|2026-10-11 20:02:23.1139629360|d54230d2157c39f77ddb1513e49101d70384eb35002d3d58d54f5e5ec7ac5764
+/root/microled_ai_project/cadence_work/microled_cells/sch1_top/schematic/master.tag|35|2026-10-11 20:02:23.1129629360|754d948d84456304dc9c92190e19089b4156a194ac7f002aad93b7d91a110099
+/root/microled_ai_project/cadence_work/microled_cells/sch1_top/schematic/sch.oa|29508|2026-10-11 20:02:23.1149629360|9222e070696c20c0e151d306d100de087cb758dbcfc43735c825cf2e4a76d181
+/root/microled_ai_project/cadence_work/microled_cells/sch3_top/data.dm|3364|2026-10-11 18:42:15.5689798400|407e424634ecfd63b01bf91e22a6741372256fda15047992f8f421a51e0050ad
+/root/microled_ai_project/cadence_work/microled_cells/sch3_top/schematic/data.dm|3340|2026-10-11 18:42:16.2099798360|47ac5c4b92c6cbe5ae95545d6313c27a8e14a57a9ccbaedd7af5a811c2631b51
+/root/microled_ai_project/cadence_work/microled_cells/sch3_top/schematic/master.tag|35|2026-10-11 18:42:16.2079798360|754d948d84456304dc9c92190e19089b4156a194ac7f002aad93b7d91a110099
+/root/microled_ai_project/cadence_work/microled_cells/sch3_top/schematic/sch.oa|29732|2026-10-11 18:42:16.2119798360|c053c3335692dcffeb53fbee1aa059f7b5cfd836a7497d9f5cd6a5addb47f9ad
+/root/microled_ai_project/cadence_work/microled_cells/tech.db|0|2026-10-11 18:42:14.1789798450|e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+
+--- diff BEFORE vs AFTER: (empty = identical) ---
+===============================================================================

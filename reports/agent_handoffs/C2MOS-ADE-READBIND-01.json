@@ -1,0 +1,129 @@
+{
+  "task_id": "C2MOS-ADE-READBIND-01",
+  "task_type": "CONTROLLED_EXPERIMENT_READ_ONLY",
+  "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
+  "branch": "gexing321/scan-driver/c2mos-schematic",
+  "base_sha": "3c4bfbf19890ecbc7ca4f6c102c804f8e414e49a",
+  "executed_at_guest": "2026-10-12 20:23:16 .. 2026-10-12 20:26:16 CST",
+  "cadence_version": "virtuoso 6.1.7-64b (sub-version IC6.1.7-64b.78)",
+  "objective": "one read-only ADE XL bind attempt with the documented argument shape",
+  "target_call": {
+    "form": "axlSetMainSetupDBLCV(session \"microled_cells\" \"c2mos_dff_tb\" \"adexl\" ?mode \"r\")",
+    "guarded_by_errset": false,
+    "attempts": 1,
+    "retries": 0,
+    "source_file": "skill/c2mos_ade_readbind_once.il",
+    "source_line": 48
+  },
+  "outcome": {
+    "verdict": "ADE_READBIND: ERROR",
+    "taxonomy_case": "E",
+    "returned_handle": null,
+    "returned_nil_normally": false,
+    "raw_error": "*Error* ddGetObjWritePath: argument #1 should be a ddUserType (type template = \"b\") - nil",
+    "load_aborted_at": "line 48 of skill/c2mos_ade_readbind_once.il",
+    "runner_rc": 124,
+    "runner_timeout_seconds": 180,
+    "token_found": false,
+    "most_probable_condition": {
+      "value": "no ADE setup database / adexl view exists for the design",
+      "grade": "DERIVED"
+    },
+    "explicitly_not_claimed": [
+      "NATIVE_NETLIST: PASS",
+      "ADE_SIMULATION: PASS",
+      "LICENSE_BLOCKED",
+      "API_MISSING"
+    ]
+  },
+  "comparison_with_previous_round": {
+    "previous_call": "axlSetMainSetupDBLCV(session \"microled_cells\" \"c2mos_dff_tb\" \"schematic\")",
+    "previous_observation": {
+      "value": "silent nil, no error text",
+      "grade": "DIRECTLY_OBSERVED"
+    },
+    "this_round_observation": {
+      "value": "immediate ddUserType type error on a nil dd object",
+      "grade": "DIRECTLY_OBSERVED"
+    },
+    "reading": {
+      "value": "view \"schematic\" exists but carries no setup db; view \"adexl\" does not exist at all. Both point at the missing ADE setup database rather than at a missing GUI window.",
+      "grade": "DERIVED"
+    }
+  },
+  "session_state": {
+    "axlCreateSession": "rb_once_session",
+    "cadence_banner": "ADE XL session 'rb_once_session' started",
+    "axlGetWindowSession_before": "(nil)",
+    "axlGetMainSetupDB_before": 0,
+    "axlSetupStates_before": "nil",
+    "window_required": {
+      "value": "not established as a precondition",
+      "grade": "DERIVED"
+    }
+  },
+  "integrity": {
+    "method": "sha256 per file, path|size|mtime|sha256, full library walk excluding *.cdslck",
+    "microled_cells_files_before": 36,
+    "microled_cells_files_after": 36,
+    "fingerprint_diff": "empty",
+    "dut_sha256": "4c9c1658c3d67b06ed233f03ab441502917387006d06240724bf22c653dc167c",
+    "tb_sha256": "7ee683e8051271f6ed6be3f16adef02105946da407560c2a24f1e0ea92c3f56b",
+    "DUT_UNCHANGED": "PASS",
+    "TB_UNCHANGED": "PASS",
+    "PDK_UNCHANGED": "PASS",
+    "ANALOGLIB_UNCHANGED": "PASS",
+    "new_adexl_view_created": false,
+    "locks_in_lib_after": 0,
+    "processes_left": 0,
+    "side_effects": [
+      "cadence_work/.finesimXL_root (empty directory created by the ADE XL/simulator framework)",
+      "cadence_work/home/.cdsinit (rewritten by scripts/sch_virtuoso.sh as designed)",
+      "cadence_work/home/.vnc-cds/work-eda:80.{pid,log}",
+      "cadence_work/logs/sch_nograph_20261012_202316.{log,stdout}"
+    ]
+  },
+  "forbidden_calls_audit": {
+    "axlNewSetupDBLCV": 0,
+    "axlPutTest": 0,
+    "axlSetTestToolArgs": 0,
+    "axlSetEnabled": 0,
+    "axlCommitSetupDB": 0,
+    "axlRunSimulation": 0,
+    "dbSave": 0,
+    "load_of_binary_cxt": 0,
+    "method": "occurrence count over non-comment lines of the probe file"
+  },
+  "not_verified": [
+    "whether creating a setup database makes the bind succeed",
+    "ADE XL product licensing (no licence line other than Virtuoso Framework License appears)",
+    "whether ?mode \"r\" is genuinely write-free when the target view exists",
+    "whether config/maestro views or a GUI-saved setup are additional prerequisites",
+    "terms=0 relevance to native netlisting"
+  ],
+  "next_step_recommendation": {
+    "action": "create a setup database (axlNewSetupDBLCV) on a throwaway target, then repeat this read-only bind",
+    "requires_authorization": true,
+    "risks": [
+      "documented overwrite semantics: 'automatically overwrites any existing setup db'",
+      "writes a new view directory into microled_cells/c2mos_dff_tb",
+      "requires a tar pre-image beforehand and DUT/TB sha256 re-verification afterwards"
+    ],
+    "alternative": "human opens ADE in the real GUI and saves a setup once, then this probe is re-run read-only"
+  },
+  "deliverables": {
+    "report": "reports/c2mos_ade_readbind_once.md",
+    "evidence": "results/evidence/c2mos_ade_readbind_once.txt",
+    "probe": "skill/c2mos_ade_readbind_once.il",
+    "handoff_md": "reports/agent_handoffs/C2MOS-ADE-READBIND-01.md",
+    "handoff_json": "reports/agent_handoffs/C2MOS-ADE-READBIND-01.json"
+  },
+  "stop_reason": "AWAITING_INDEPENDENT_REVIEW",
+  "delivery_note": "local/remote HEAD SHA cannot be self-referential inside the commit they describe; they are reported in the git handback and verified by an independent ls-remote read-back after push.",
+  "evidence_grades_allowed": [
+    "DIRECTLY_OBSERVED",
+    "DOCUMENTED",
+    "DERIVED",
+    "NOT_VERIFIED"
+  ]
+}
