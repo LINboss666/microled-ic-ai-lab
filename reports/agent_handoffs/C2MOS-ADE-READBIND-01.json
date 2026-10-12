@@ -1,43 +1,124 @@
 {
-  "TASK_ID": "C2MOS-ADE-READBIND-01",
-  "BRANCH": "gexing321/scan-driver/c2mos-schematic",
-  "BASE_SHA": "3c4bfbf19890ecbc7ca4f6c102c804f8e414e49a",
-  "LOCAL_HEAD_SHA": "f026a20cbaf48dafac8cf8d4475f88a39f05f1af",
-  "REMOTE_HEAD_SHA": "f026a20cbaf48dafac8cf8d4475f88a39f05f1af",
-  "LOCAL_REMOTE_PARITY": "PASS",
-  "parity_method": "independent ls-remote read-back over a non-push channel (per-command http.proxy only), compared against git rev-parse HEAD",
-  "self_reference_note": "LOCAL/REMOTE_HEAD_SHA name the commit that carried the EXPERIMENT deliverables. A commit cannot contain its own SHA; the correction commit's SHA is given in the git handback and re-verified by ls-remote after push.",
-  "ADE_READBIND_RESULT": "ADE_READBIND: ERROR",
-  "DUT_UNCHANGED": "PASS",
-  "TB_UNCHANGED": "PASS",
-  "PDK_UNCHANGED": "PARTIAL",
-  "SECURITY_GATE": "PASS",
-  "REPORT_PATH": "reports/c2mos_ade_readbind_once.md",
-  "EVIDENCE_PATH": "results/evidence/c2mos_ade_readbind_once.txt",
-  "KNOWN_LIMITATIONS": [
-    "the official workflow validator scripts/validate_handoff.py is not present on this machine, so no formal schema check could be run",
-    "full PDK and analogLib content identity across the experiment window is NOT_VERIFIED -- only file counts, disk usage, an mtime scan, one key model file hash and three sampled analogLib data.dm hashes exist",
-    "whether creating an ADE setup database makes the bind succeed is NOT_VERIFIED (needs write authorisation)",
+  "schema_version": "1.0",
+  "project_id": "microled-ic-ai-lab",
+  "task_id": "C2MOS-ADE-READBIND-01",
+  "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
+  "branch": "gexing321/scan-driver/c2mos-schematic",
+
+  "base_sha": "3c4bfbf19890ecbc7ca4f6c102c804f8e414e49a",
+  "head_sha": "f026a20cbaf48dafac8cf8d4475f88a39f05f1af",
+  "head_sha_semantics": "head_sha is the commit that carries the CADENCE EXPERIMENT deliverables (probe, experiment report, raw evidence) for C2MOS-ADE-READBIND-01. It is deliberately NOT this manifest's own commit: a commit cannot contain its own SHA. Follow-up commits are listed separately in followup_commits.",
+  "followup_commits": [
+    {
+      "sha": "a81093b394dc63e616eca65ca5f8fb41a283aa41",
+      "purpose": "evidence correction round: official validator reported absent, PDK_UNCHANGED downgraded PASS -> PARTIAL, 11 missing handoff fields, source-consistency hash check",
+      "verified_remote": "ls-remote read-back after push reported refs/heads/gexing321/scan-driver/c2mos-schematic = a81093b394dc63e616eca65ca5f8fb41a283aa41"
+    }
+  ],
+
+  "push_status": "REMOTE_VERIFIED",
+  "push_status_basis": "each push was followed by an independent `git ls-remote` read-back over a non-push channel (per-command http.proxy only), comparing the remote ref against git rev-parse HEAD. It states read-back agreement only; it is not proof of content correctness.",
+  "scope_status": "PARTIAL",
+  "scope_status_reason": "the Cadence experiment itself failed (ADE_READBIND: ERROR) and full-tree PDK integrity across the experiment window is unverified, so the task cannot be COMPLETE.",
+  "security_gate": "PASS",
+  "security_gate_detail": {
+    "precommit_safety_check_mode_staged": "SAFETY_GATE: PASS",
+    "precommit_safety_check_mode_history": "SAFETY_GATE: PASS (pre-push hook)",
+    "review_bundle": "MANIFEST_MATCH: PASS, SAFETY_SCAN: PASS, gate(history) rc=0",
+    "provenance_check": "SOURCE_PROVENANCE_CHECK: PASS",
+    "netlist_stats": "DEVICE_COUNT_CHECK: PASS"
+  },
+
+  "tests": [
+    {
+      "name": "ADE_READBIND",
+      "status": "FAIL",
+      "detail": "ADE_READBIND: ERROR -- axlSetMainSetupDBLCV(session \"microled_cells\" \"c2mos_dff_tb\" \"adexl\" ?mode \"r\") raised *Error* ddGetObjWritePath: argument #1 should be a ddUserType (type template = \"b\") - nil; the function never returned. One attempt, no retry, runner rc=124 (180 s timeout), token not found.",
+      "evidence_path": "results/evidence/c2mos_ade_readbind_once.txt"
+    },
+    {
+      "name": "DUT_UNCHANGED",
+      "status": "PASS",
+      "evidence_path": "results/evidence/c2mos_ade_readbind_once.txt"
+    },
+    {
+      "name": "TB_UNCHANGED",
+      "status": "PASS",
+      "evidence_path": "results/evidence/c2mos_ade_readbind_once.txt"
+    },
+    {
+      "name": "PDK_FULL_TREE_INTEGRITY",
+      "status": "UNVERIFIED",
+      "detail": "only file count, disk usage, a zero-hit mtime scan inside the experiment window and ONE key model-file sha256 were available at the time; no full-tree pre-hash existed before the run"
+    },
+    {
+      "name": "PDK_UNCHANGED_SCOPE",
+      "status": "FAIL",
+      "detail": "reported as PARTIAL, not PASS: the previous PASS overstated the evidence (see integrity.pdk)",
+      "evidence_path": "results/evidence/c2mos_ade_readbind_once_correction.txt"
+    },
+    {
+      "name": "ANALOGLIB_FULL_TREE_INTEGRITY",
+      "status": "UNVERIFIED",
+      "detail": "counts + mtime scan + three sampled data.dm hashes at experiment time; full-tree aggregate digest established afterwards only"
+    },
+    {
+      "name": "SOURCE_CONSISTENCY_GUEST_VS_REPO",
+      "status": "PASS",
+      "detail": "guest-run file and committed file share sha256 445df0a9f957aa9e9603576115af94368ab41aa2e080286b7f85641a605ec721 (59 lines each); target call on line 48 in both, matching the line Cadence reported",
+      "evidence_path": "results/evidence/c2mos_ade_readbind_once_correction.txt"
+    },
+    {
+      "name": "OFFICIAL_HANDOFF_VALIDATOR",
+      "status": "PASS",
+      "detail": "scripts/validate_handoff.py, sha256 3c150d543465a5d17a9d63c700f6b895c82fb868cae9408b2afd47643603e1e5, run from a repo-external tool directory (validator itself not committed, not modified); full stdout/stderr in the evidence path",
+      "evidence_path": "results/evidence/c2mos_handoff_schema02_validation.txt"
+    },
+    {
+      "name": "CADENCE_EXPERIMENT_RERUN",
+      "status": "NOT_RUN",
+      "detail": "schema round only: no ADE call, no setup database creation, no OA/PDK/Testbench write, no lock cleanup"
+    },
+    {
+      "name": "NATIVE_NETLIST",
+      "status": "BLOCKED",
+      "detail": "not claimed PASS at any point; netlist generation was never reached because the ADE bind fails before it"
+    }
+  ],
+
+  "evidence_paths": [
+    "results/evidence/c2mos_ade_readbind_once.txt",
+    "results/evidence/c2mos_ade_readbind_once_correction.txt",
+    "results/evidence/c2mos_handoff_schema02_validation.txt",
+    "reports/c2mos_ade_readbind_once.md",
+    "reports/c2mos_ade_readbind_once_correction.md",
+    "reports/c2mos_handoff_schema_once.md"
+  ],
+
+  "known_limitations": [
+    "validator PASS proves field structure only; it does not verify push parity, evidence contents or the Cadence result",
+    "the Cadence experiment still stands as ADE_READBIND: ERROR; whether an existing ADE setup database would let the bind succeed is NOT_VERIFIED and needs write authorisation",
+    "full-tree PDK and analogLib content identity across the experiment window is NOT_VERIFIED; the aggregates recorded this round are a forward baseline only",
     "ADE XL product licensing is NOT_VERIFIED (only the Virtuoso Framework License line appears in any session log)",
     "?mode \"r\" still reached ddGetObjWritePath, so read-only mode is not demonstrated to avoid computing a write path",
-    "terms=0 relevance to native netlisting is untouched and NOT_VERIFIED"
+    "terms=0 relevance to native netlisting is untouched and NOT_VERIFIED",
+    "head_sha cannot be this manifest's own commit; it names the experiment commit and later commits are listed separately"
   ],
-  "STOP_REASON": "AWAITING_INDEPENDENT_REVIEW",
 
-  "task_type": "CONTROLLED_EXPERIMENT_READ_ONLY",
-  "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
-  "executed_at_guest": "2026-10-12 20:23:16 .. 2026-10-12 20:26:16 CST",
-  "cadence_version": "virtuoso 6.1.7-64b (sub-version IC6.1.7-64b.78)",
-  "objective": "one read-only ADE XL bind attempt with the documented argument shape",
-  "target_call": {
-    "form": "axlSetMainSetupDBLCV(session \"microled_cells\" \"c2mos_dff_tb\" \"adexl\" ?mode \"r\")",
-    "guarded_by_errset": false,
-    "attempts": 1,
-    "retries": 0,
-    "source_file": "skill/c2mos_ade_readbind_once.il",
-    "source_line": 48
-  },
-  "outcome": {
+  "stop_reason": "AWAITING_INDEPENDENT_REVIEW",
+
+  "experiment": {
+    "executed_at_guest": "2026-10-12 20:23:16 .. 2026-10-12 20:26:16 CST",
+    "cadence_version": "virtuoso 6.1.7-64b (sub-version IC6.1.7-64b.78)",
+    "objective": "one read-only ADE XL bind attempt with the documented argument shape",
+    "target_call": {
+      "form": "axlSetMainSetupDBLCV(session \"microled_cells\" \"c2mos_dff_tb\" \"adexl\" ?mode \"r\")",
+      "source_file": "skill/c2mos_ade_readbind_once.il",
+      "source_line": 48,
+      "guarded_by_errset": false,
+      "attempts": 1,
+      "retries": 0
+    },
     "verdict": "ADE_READBIND: ERROR",
     "taxonomy_case": "E",
     "returned_handle": null,
@@ -48,42 +129,35 @@
     "runner_timeout_seconds": 180,
     "token_found": false,
     "most_probable_condition": {
-      "value": "no ADE setup database / adexl view exists for the design",
+      "value": "no ADE setup database / no adexl view exists for microled_cells/c2mos_dff_tb",
       "grade": "DERIVED",
-      "why_not_directly_observed": "Cadence printed no sentence saying the setup database is missing; it raised a ddUserType type error on a nil dd object. The absent adexl view is separately DIRECTLY_OBSERVED from the directory-library listing."
+      "why_not_directly_observed": "Cadence never printed a sentence naming the missing setup database; it raised a ddUserType type error on a nil dd object. The absent adexl view is separately DIRECTLY_OBSERVED from the directory-library listing."
     },
-    "explicitly_not_claimed": [
-      "NATIVE_NETLIST: PASS",
-      "ADE_SIMULATION: PASS",
-      "LICENSE_BLOCKED",
-      "API_MISSING"
+    "explicitly_not_claimed": ["NATIVE_NETLIST: PASS", "ADE_SIMULATION: PASS", "LICENSE_BLOCKED", "API_MISSING"],
+    "session_state": {
+      "axlCreateSession": "rb_once_session",
+      "cadence_banner": "ADE XL session 'rb_once_session' started",
+      "axlGetWindowSession_before": "(nil)",
+      "axlGetMainSetupDB_before": 0,
+      "axlSetupStates_before": "nil",
+      "window_required": { "value": "not established as a precondition", "grade": "DERIVED" }
+    },
+    "comparison_with_previous_round": {
+      "previous_call": "axlSetMainSetupDBLCV(session \"microled_cells\" \"c2mos_dff_tb\" \"schematic\")",
+      "previous_observation": { "value": "silent nil, no error text", "grade": "DIRECTLY_OBSERVED" },
+      "this_round_observation": { "value": "immediate ddUserType type error on a nil dd object", "grade": "DIRECTLY_OBSERVED" },
+      "reading": { "value": "the schematic view exists but holds no setup db; the adexl view does not exist at all -- both point at a missing ADE setup database rather than a missing GUI window", "grade": "DERIVED" }
+    },
+    "side_effects": [
+      "cadence_work/.finesimXL_root (empty directory created by the ADE XL / simulator framework)",
+      "cadence_work/home/.cdsinit (rewritten by scripts/sch_virtuoso.sh as designed)",
+      "cadence_work/home/.vnc-cds/work-eda:80.{pid,log}",
+      "cadence_work/logs/sch_nograph_20261012_202316.{log,stdout}"
     ],
-    "original_failure_preserved": true
-  },
-  "comparison_with_previous_round": {
-    "previous_call": "axlSetMainSetupDBLCV(session \"microled_cells\" \"c2mos_dff_tb\" \"schematic\")",
-    "previous_observation": {
-      "value": "silent nil, no error text",
-      "grade": "DIRECTLY_OBSERVED"
-    },
-    "this_round_observation": {
-      "value": "immediate ddUserType type error on a nil dd object",
-      "grade": "DIRECTLY_OBSERVED"
-    },
-    "reading": {
-      "value": "view \"schematic\" exists but carries no setup db; view \"adexl\" does not exist at all. Both point at the missing ADE setup database rather than at a missing GUI window.",
-      "grade": "DERIVED"
-    }
-  },
-  "session_state": {
-    "axlCreateSession": "rb_once_session",
-    "cadence_banner": "ADE XL session 'rb_once_session' started",
-    "axlGetWindowSession_before": "(nil)",
-    "axlGetMainSetupDB_before": 0,
-    "axlSetupStates_before": "nil",
-    "window_required": {
-      "value": "not established as a precondition",
-      "grade": "DERIVED"
+    "forbidden_calls_audit": {
+      "axlNewSetupDBLCV": 0, "axlPutTest": 0, "axlSetTestToolArgs": 0, "axlSetEnabled": 0,
+      "axlCommitSetupDB": 0, "axlRunSimulation": 0, "dbSave": 0, "load_of_binary_cxt": 0,
+      "method": "occurrence count over non-comment lines of the probe file, guest and repo copy"
     }
   },
 
@@ -92,135 +166,53 @@
     "guest_sha256": "445df0a9f957aa9e9603576115af94368ab41aa2e080286b7f85641a605ec721",
     "repo_sha256": "445df0a9f957aa9e9603576115af94368ab41aa2e080286b7f85641a605ec721",
     "identical": true,
-    "guest_lines": 59,
-    "repo_lines": 59,
-    "guest_target_line": 48,
-    "repo_target_line": 48,
-    "cadence_reported_line": 48,
-    "line_45_explained": "lines 41-45 are one multi-line printf (RB-STATE-BEFORE); the target call is the statement on line 48 in both copies, so 45 vs 48 is a block-vs-statement counting difference, not two different files"
+    "lines_each": 59,
+    "line_45_explained": "lines 42-46 are one multi-line printf (RB-STATE-BEFORE); the target call is the statement on line 48 in both copies, so 45 vs 48 is a block-vs-statement counting difference, not two different files"
   },
 
   "integrity": {
-    "scope_discipline": "each claim names its own method and is not extended beyond it",
+    "scope_discipline": "each claim names its own method and is never extended beyond it",
     "microled_cells": {
       "grade": "DIRECTLY_OBSERVED",
       "method": "FULL_PER_FILE_SHA256 over every file in the design library, excluding *.cdslck",
-      "files_before": 36,
-      "files_after": 36,
-      "fingerprint_diff": "empty",
+      "files_before": 36, "files_after": 36, "fingerprint_diff": "empty",
       "dut_sha256": "4c9c1658c3d67b06ed233f03ab441502917387006d06240724bf22c653dc167c",
-      "tb_sha256": "7ee683e8051271f6ed6be3f16adef02105946da407560c2a24f1e0ea92c3f56b",
-      "proves": "the design library was byte-identical before and after the experiment"
+      "tb_sha256": "7ee683e8051271f6ed6be3f16adef02105946da407560c2a24f1e0ea92c3f56b"
     },
     "pdk": {
       "verdict": "PARTIAL",
-      "covered_by_before_and_after_checks": [
-        "file COUNT 3976 -> 3976",
-        "disk usage 176464 KB -> 176464 KB",
-        "mtime scan: files with mtime inside the experiment window 20:21-20:27 = 0",
-        "one key file hashed: models/spectre/ms018_enhanced_v1p2_rev0_spe.lib sha256 fc8d321752f2bacf530d5c5eb151f4e623086c174be8da3c19ee8d26e3dcf95f identical"
-      ],
-      "not_proved": "content identity of all 3976 PDK files during the experiment window -- no full-tree pre-hash existed before the run, so that scope is NOT_VERIFIED",
-      "why_downgraded": "the previous handoff reported PDK_UNCHANGED: PASS from counts + one file hash + an mtime scan, which overstated the evidence",
+      "covered": ["file COUNT 3976 -> 3976", "disk usage 176464 KB unchanged",
+                  "mtime scan inside 20:21-20:27 = 0 files",
+                  "one key model file sha256 fc8d321752f2bacf530d5c5eb151f4e623086c174be8da3c19ee8d26e3dcf95f unchanged"],
+      "not_proved": "content identity of all 3976 PDK files during the experiment window",
       "post_experiment_baseline": {
-        "purpose": "going-forward baseline only; it cannot retroactively cover the experiment window",
         "files": 3976,
-        "manifest_aggregate_sha256": "20c6d98cd71eaa31cab4dc5028bfd29f905564641108d33ad093beabce889d27"
+        "manifest_aggregate_sha256": "20c6d98cd71eaa31cab4dc5028bfd29f905564641108d33ad093beabce889d27",
+        "caveat": "established after the experiment; a baseline for the next round, not proof for the last one"
       }
     },
     "analogLib": {
       "verdict": "PARTIAL",
-      "covered_by_before_and_after_checks": [
-        "file COUNT 2628 -> 2628",
-        "mtime scan inside the window = 0 files",
-        "three SAMPLED data.dm files (vdc / vpulse / cap) unchanged"
-      ],
-      "not_proved": "full-tree content identity at experiment time (sample plus counts only)",
+      "covered": ["file COUNT 2628 -> 2628", "mtime scan inside window = 0", "three sampled data.dm hashes unchanged"],
       "post_experiment_baseline": {
         "files": 2628,
-        "manifest_aggregate_sha256": "4f73da8ebb43b2d04ff3a37efeea480afb9444341fd0c643c8e6700817cae1f3",
-        "caveat": "established after the experiment; baseline for the next round, not proof for the last one"
+        "manifest_aggregate_sha256": "4f73da8ebb43b2d04ff3a37efeea480afb9444341fd0c643c8e6700817cae1f3"
       }
     },
     "new_adexl_view_created": false,
     "locks_in_lib_after": 0,
-    "processes_left": 0,
-    "side_effects": [
-      "cadence_work/.finesimXL_root (empty directory created by the ADE XL / simulator framework)",
-      "cadence_work/home/.cdsinit (rewritten by scripts/sch_virtuoso.sh as designed)",
-      "cadence_work/home/.vnc-cds/work-eda:80.{pid,log}",
-      "cadence_work/logs/sch_nograph_20261012_202316.{log,stdout}"
-    ]
+    "processes_left": 0
   },
 
-  "forbidden_calls_audit": {
-    "axlNewSetupDBLCV": 0,
-    "axlPutTest": 0,
-    "axlSetTestToolArgs": 0,
-    "axlSetEnabled": 0,
-    "axlCommitSetupDB": 0,
-    "axlRunSimulation": 0,
-    "dbSave": 0,
-    "load_of_binary_cxt": 0,
-    "method": "occurrence count over non-comment lines of the probe file, guest and repo copy"
-  },
-
-  "security_gate_detail": {
-    "precommit_safety_check_mode_staged": "SAFETY_GATE: PASS",
-    "precommit_safety_check_mode_history": "run by the pre-push hook, SAFETY_GATE: PASS",
-    "review_bundle": "MANIFEST_MATCH: PASS, SAFETY_SCAN: PASS",
-    "provenance_check": "SOURCE_PROVENANCE_CHECK: PASS",
-    "netlist_stats": "DEVICE_COUNT_CHECK: PASS"
-  },
-
-  "handoff_validator": {
-    "official_validator_path": "scripts/validate_handoff.py",
-    "status": "VALIDATOR_NOT_DEPLOYED",
-    "searched": [
-      "repo working tree (all of scripts/)",
-      "every remote branch tree (git ls-tree per ref taken from ls-remote)",
-      "whole git history (git log --all --name-only)",
-      "D:\\IC项目 tree",
-      "C:\\Users\\38324\\Downloads and the user home tree, top three levels"
-    ],
-    "withdrawn_claim": "python -m json.tool output was previously reported as HANDOFF_STRUCTURE: PASS; that is not schema validation and the claim is withdrawn",
-    "substitute_used": "scripts/c2mos_handoff_field_check.py -- field presence and value shape only, explicitly non-authoritative",
-    "before_correction": "HANDOFF_FIELD_CHECK: FAIL (11 required fields missing)",
-    "after_correction": "see reports/c2mos_ade_readbind_once_correction.md for the verbatim output"
-  },
-
-  "not_verified": [
-    "whether creating a setup database makes the bind succeed",
-    "ADE XL product licensing (no licence line other than Virtuoso Framework License appears)",
-    "whether ?mode \"r\" is genuinely write-free when the target view exists",
-    "whether config/maestro views or a GUI-saved setup are additional prerequisites",
-    "terms=0 relevance to native netlisting",
-    "full-tree PDK and analogLib content identity during the experiment window"
-  ],
-  "next_step_recommendation": {
-    "action": "create a setup database (axlNewSetupDBLCV) on a throwaway target, then repeat this read-only bind",
-    "requires_authorization": true,
-    "risks": [
-      "documented overwrite semantics: 'automatically overwrites any existing setup db'",
-      "writes a new view directory into microled_cells/c2mos_dff_tb",
-      "requires a tar pre-image beforehand and DUT/TB sha256 re-verification afterwards"
-    ],
-    "alternative": "human opens ADE in the real GUI and saves a setup once, then this probe is re-run read-only"
-  },
-  "deliverables": {
-    "report": "reports/c2mos_ade_readbind_once.md",
-    "evidence": "results/evidence/c2mos_ade_readbind_once.txt",
-    "probe": "skill/c2mos_ade_readbind_once.il",
-    "handoff_md": "reports/agent_handoffs/C2MOS-ADE-READBIND-01.md",
-    "handoff_json": "reports/agent_handoffs/C2MOS-ADE-READBIND-01.json",
-    "correction_report": "reports/c2mos_ade_readbind_once_correction.md",
-    "correction_evidence": "results/evidence/c2mos_ade_readbind_once_correction.txt"
-  },
-  "correction_note": "this round changed delivery and evidence fields only; the failure verdict, its raw error and its DERIVED grade are unchanged",
-  "evidence_grades_allowed": [
-    "DIRECTLY_OBSERVED",
-    "DOCUMENTED",
-    "DERIVED",
-    "NOT_VERIFIED"
-  ]
+  "validator_provenance": {
+    "name": "GitHub Bridge Review Workflow v1.0 official validator",
+    "path_used": "D:/IC项目/.tools/validate_handoff.py (outside the repository, not committed)",
+    "supplied_file": "C:/Users/38324/Desktop/validate_handoff(2).py",
+    "sha256": "3c150d543465a5d17a9d63c700f6b895c82fb868cae9408b2afd47643603e1e5",
+    "sha256_verified_before_use": true,
+    "bytes": 3932,
+    "modified": false,
+    "committed_to_repo": false,
+    "supersedes": "scripts/c2mos_handoff_field_check.py, which checked 15 self-defined fields only and is no longer the authority"
+  }
 }

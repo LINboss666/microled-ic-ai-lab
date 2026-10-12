@@ -1,0 +1,53 @@
+===============================================================================
+c2mos_handoff_schema02_validation.txt -- official validator run record
+TASK_ID C2MOS-HANDOFF-SCHEMA-02
+manifest under validation: reports/agent_handoffs/C2MOS-ADE-READBIND-01.json
+===============================================================================
+validator used            : D:\IC项目\.tools\validate_handoff.py
+installed from            : C:/Users/38324/Desktop/validate_handoff(2).py (user-provided)
+  -- kept OUTSIDE the repository (D:/IC项目/.tools), not committed, not modified
+sha256 before use         : 3c150d543465a5d17a9d63c700f6b895c82fb868cae9408b2afd47643603e1e5
+sha256 the task demanded  : 3c150d543465a5d17a9d63c700f6b895c82fb868cae9408b2afd47643603e1e5
+verified before execution : YES
+command                   : python D:\IC项目\.tools\validate_handoff.py reports/agent_handoffs/C2MOS-ADE-READBIND-01.json
+
+--- run #1 (manifest as it stands now; this evidence file did not exist yet) ---
+exit_code=0
+HANDOFF_STRUCTURE: PASS (fields only; evidence/remote truth NOT verified)
+
+--- run #2 (this evidence file now exists, so every referenced evidence path resolves) ---
+exit_code=0
+HANDOFF_STRUCTURE: PASS (fields only; evidence/remote truth NOT verified)
+
+--- run #3 (final confirmation after all files named in evidence_paths exist (report written)) ---
+exit_code=0
+HANDOFF_STRUCTURE: PASS (fields only; evidence/remote truth NOT verified)
+
+-------------------------------------------------------------------------------
+validator self-declared limit, quoted from its own module docstring:
+  "Validate the *structure* of an agent's handoff manifest. No GitHub access and no
+   execution of project tests. PASS here does not verify actual push parity, technical
+   results, or the correctness of evidence contents."
+-------------------------------------------------------------------------------
+sha256 after all runs     : 3c150d543465a5d17a9d63c700f6b895c82fb868cae9408b2afd47643603e1e5
+validator unchanged       : YES
+history note: an earlier run of this same validator on the pre-typofix manifest also returned
+  PASS rc=0; the only change after it was renaming the test entry CADETNCE_EXPERIMENT_RERUN
+  to CADENCE_EXPERIMENT_RERUN, which was then re-validated (the three runs above). No other
+  field was altered afterwards.
+manifest facts under validation: schema_version=1.0, project_id=microled-ic-ai-lab,
+  base_sha=3c4bfbf19890ecbc7ca4f6c102c804f8e414e49a, head_sha=f026a20cbaf48dafac8cf8d4475f88a39f05f1af
+  (the EXPERIMENT commit; this manifest's own commit cannot contain its own SHA and is listed
+   separately under followup_commits), push_status=REMOTE_VERIFIED, scope_status=PARTIAL,
+  security_gate=PASS, 10 tests -- ADE_READBIND=FAIL, PDK_FULL_TREE_INTEGRITY=UNVERIFIED,
+  CADENCE_EXPERIMENT_RERUN=NOT_RUN, NATIVE_NETLIST=BLOCKED -- and the experiment verdict stays
+  ADE_READBIND: ERROR with the raw text
+  "*Error* ddGetObjWritePath: argument #1 should be a ddUserType (type template = \"b\") - nil".
+
+--- run #4 (CORRECTION OF THE RECORD: this is the first run taken when ALL paths named in
+     the manifest exist on disk, including reports/c2mos_handoff_schema_once.md, which was
+     written after run #3 -- run #3's label was therefore inaccurate and is corrected here) ---
+exit_code=0
+HANDOFF_STRUCTURE: PASS (fields only; evidence/remote truth NOT verified)
+paths_named=6 paths_missing=0
+validator sha256 at run #4: 3c150d543465a5d17a9d63c700f6b895c82fb868cae9408b2afd47643603e1e5 (matches required: YES)
