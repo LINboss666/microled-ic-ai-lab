@@ -19,6 +19,25 @@ READER = os.path.join(HERE, 'sc1_read_psf.py')
 DELAY = os.path.join(HERE, 'sc1_delay.py')
 PY = sys.executable
 
+# The guest runs python 2.6, where io.open(..., encoding=) yields a text stream that refuses byte
+# strings, and the csv module only emits byte strings. Convert explicitly and quote by hand.
+try:
+    _text = unicode
+except NameError:
+    _text = str
+
+
+def u(s):
+    if isinstance(s, _text):
+        return s
+    if isinstance(s, bytes):
+        return s.decode('utf-8', 'replace')
+    return _text(s)
+
+
+def csvline(vals):
+    return u(','.join([u('"' + u(v).replace('"', '""') + '"') for v in vals])) + u('\n')
+
 
 def psf(signals, axis='time', header='tran'):
     """signals: (name, [values]) with equal lengths. Build a valid psfascii body."""
@@ -181,12 +200,14 @@ case('delay_steady_window_minmax', DELAY,
                 psf([('time', tt), ('out', [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8,
                                             0.9, 1.05, 0.98, 1.02, 0.99])]), 0, 'min=0.98'),
      note='ringing after the edge: steady min/max inside the window, not the 1.05 overshoot')
-case('delay_propdelay_10ns', DELAY,
+case('delay_propdelay_same_phase_legacy_edge', DELAY,
      lambda f: (['--data', f, '--sig-out', 'out', '--sig-in', 'en', '--vdd-in', '1.8',
                  '--vdd-out', '3.3', '--mode', 'propdelay', '--edge', 'rise'],
                 psf([('time', [i * 1e-9 for i in range(30)]),
                      ('en', [0.0] * 5 + [0.9, 1.8] + [1.8] * 23),
-                     ('out', [0.0] * 10 + [1.65, 3.3] + [3.3] * 18)]), 0, 'delay_ns=5.000'))
+                     ('out', [0.0] * 10 + [1.65, 3.3] + [3.3] * 18)]), 0, 'delay_ns=5.000'),
+     note='input 50 % at t=5 ns, output 50 % at t=10 ns -> 5.000 ns. The case was named "10ns" '
+          'while asserting 5 ns, and 10 ns is only the absolute arrival time, not the delay')
 case('delay_signal_missing', DELAY,
      lambda f: (['--data', f, '--sig', 'absent', '--vdd', '1.0', '--mode', 'edge'],
                 psf([('time', tt), ('out', ramp)]), 3, 'NO_SIGNAL'))
@@ -209,7 +230,7 @@ def main():
             else:
                 a, body = res
             with io.open(path, 'w', encoding='utf-8', newline='\n') as f:
-                f.write(body if body is not None else 'x')
+                f.write(u(body) if body is not None else u('x'))
             if body is None:
                 pass  # negative case that must not find the file
             rc, got = run(tool, a)
@@ -221,7 +242,7 @@ def main():
         else:
             nfail += 1
         rows.append([name, os.path.basename(tool), exp_rc, rc, 'PASS' if ok else 'FAIL',
-                     (got[:70] if got else '').replace(',', ';'), 'YES' if regr else ''])
+                     (got[:400] if got else ''), 'YES' if regr else '', note])
         print('%-34s expect_rc=%-2s rc=%-2s %s  %s' % (name, exp_rc, rc,
                                                        'PASS' if ok else 'FAIL', got[:70]))
     print('CHECKER_VALIDATION: %s (%d/%d cases, %d regression cases)'
@@ -232,9 +253,10 @@ def main():
         if d and not os.path.isdir(d):
             os.makedirs(d)
         with io.open(out, 'w', encoding='utf-8', newline='\n') as f:
-            f.write('case,tool,expected_rc,actual_rc,verdict,output,regression_case\n')
+            f.write(csvline(['case', 'tool', 'expected_rc', 'actual_rc', 'verdict',
+                             'output_evidence', 'regression_case', 'criterion']))
             for r in rows:
-                f.write(','.join(str(x) for x in r) + '\n')
+                f.write(csvline(r))
         print('CHECKER_CSV=%s' % out)
     return 0 if nfail == 0 else 1
 

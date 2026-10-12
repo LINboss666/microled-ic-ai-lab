@@ -1,0 +1,36 @@
+p01  circuit_positive             exp_rc=0  act=0  stage=none            sim=yes PASS 
+p02  circuit_positive             exp_rc=0  act=0  stage=none            sim=yes PASS 
+p03  circuit_positive             exp_rc=0  act=0  stage=none            sim=yes PASS 
+p04  circuit_positive             exp_rc=0  act=0  stage=none            sim=yes PASS 
+p05  circuit_positive             exp_rc=0  act=0  stage=none            sim=yes PASS 
+p06  circuit_positive             exp_rc=0  act=0  stage=none            sim=yes PASS 
+p07  circuit_positive             exp_rc=0  act=0  stage=none            sim=yes PASS 
+n01  circuit_negative             exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+n02  circuit_negative             exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+n03  circuit_negative             exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+n04  circuit_negative             exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+n05  circuit_negative             exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+n06  circuit_negative             exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+n07  circuit_negative             exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+n08  circuit_negative             exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+n09  circuit_negative             exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+n10  circuit_negative             exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+n11  circuit_negative             exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+n12  circuit_negative             exp_rc=1  act=1  stage=static_parse    sim=no  PASS 
+t01  tool_fault                   exp_rc=1,2 act=1  stage=supply_contract sim=no  PASS 
+t02  tool_fault                   exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+t03  tool_fault                   exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+t04  tool_fault                   exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+t05  tool_fault                   exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+t06  tool_fault                   exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+t07  tool_fault                   exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+t08  tool_fault                   exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+t09  tool_fault                   exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+t10  tool_fault                   exp_rc=1  act=1  stage=supply_contract sim=no  PASS 
+h01  harness_error                exp_rc=8  act=8  stage=inputs          sim=no  PASS 
+h02  harness_error                exp_rc=8  act=8  stage=inputs          sim=no  PASS 
+MATRIX_CSV=/root/microled_ai_project/cadence_work/sc1_sim/selftest_r2a/sc1_r2a_preflight.csv  cases=31
+CSV_AUDIT rows=31 columns=16 verdicts=[('PASS', 31)]
+CSV_AUDIT: PASS (structure, unique ids, rc/stage/reason correspondence)
+PREFLIGHT_MODE=full cases=31 fails=0 blocked=0
+PREFLIGHT_VALIDATION: PASS (31/31 in full mode)
