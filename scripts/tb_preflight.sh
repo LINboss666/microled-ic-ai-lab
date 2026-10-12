@@ -37,19 +37,26 @@ TAG="${3:-pre}"
 # that carry supply; a declared 0 V is a legitimate, checked power-down condition. Implemented in
 # sc1_supply_check.awk so no awk program has to be nested inside this shell script's quoting.
 SMAP="${4:-${SUPPLY_MAP:-}}"
-SUPP_AWK="$PROJ_DIR/scripts/sc1_supply_check.awk"
+# A fault-injection test must be able to point at a deliberately broken LOCAL COPY of the checker;
+# the committed checker is never edited to prove the gate closes.
+SUPP_AWK="${SUPPLY_CHECK_AWK:-$PROJ_DIR/scripts/sc1_supply_check.awk}"
 RS="$PROJ/scripts/run_spectre.sh"
 LOGD="$PROJ/logs"
 
-case "$NET" in "$PROJ"/*) ;; *) echo "REFUSED: netlist must be under $PROJ (got $NET)"; exit 9 ;; esac
-[ -r "$NET" ] || { echo "FATAL: $NET not found"; exit 8; }
-[ -r "$RS" ] || { echo "FATAL: $RS missing"; exit 8; }
 mkdir -p "$LOGD"
 
 DIR="$(cd "$(dirname "$NET")" && pwd)"
 BASE="$(basename "$NET" .scs)"
 OUT="$LOGD/preflight_${BASE}_${TAG}.txt"
 exec > >(tee "$OUT") 2>&1
+
+# A harness error is never a circuit verdict, and it is the one case where the stage name has to be
+# printed on the way out -- otherwise a missing file looks exactly like a refused negative.
+harness_fail() { echo "PREFLIGHT_STAGE=inputs"; echo "PREFLIGHT_HARNESS_ERROR: $1";
+                 echo "TESTBENCH_PREFLIGHT: FAIL (harness error, not a circuit verdict)"; exit "$2"; }
+case "$NET" in "$PROJ"/*) ;; *) harness_fail "netlist_outside_project:$NET" 9 ;; esac
+[ -r "$NET" ] || harness_fail "netlist_not_found:$NET" 8
+[ -r "$RS" ] || harness_fail "runner_missing:$RS" 8
 
 echo "== testbench preflight: $NET (expected VDD=$VEXP)"
 
@@ -128,6 +135,12 @@ P1AWK='
   }
   END {
     bad = 0
+    if (contract) {
+      # Dual/multi-rail decks expose vdd18/vdd33/vss, not a port literally named vdd: the legacy
+      # per-instance name check would refuse them for the wrong reason. The supply contract checker
+      # owns that decision when a contract is present, and it has already been satisfied here.
+      printf "STATIC_NOTE contract mode: %d top-level instance(s), rail checks delegated to sc1_supply_check.awk\n", ninst
+    } else
     for (i = 1; i <= ninst; i++) {
       inst = instlist[i]
       vd = conn[inst " vdd"]; vs = conn[inst " vss"]
@@ -222,20 +235,84 @@ for lvl in 1 2 3; do
 done
 echo "--- local cell files parsed for port lists:${CELLFILES:- none}"
 
+# R1-A fail-closed gate. The previous revision only looked for failure TEXT, so an awk syntax error
+# (rc=2, empty stdout) left the expected-supply list empty while the run still claimed CONTRACT=1:
+# a broken tool read as a clean circuit. Entry now requires POSITIVE evidence -- the checker ran,
+# exited 0, printed exactly one well-formed PASS, and its counts match what it actually printed.
+# Refusal happens here, in the static layer, before any Spectre invocation.
+reject() {                      # reject <stage> <reason>
+  echo "PREFLIGHT_STAGE=$1"
+  echo "PREFLIGHT_REJECT: $2"
+  echo "TESTBENCH_PREFLIGHT: FAIL (stage=$1 reason=$2)"
+  exit 1
+}
+count_of() { printf '%s\n' "$1" | grep -c "$2"; }
+
 if [ -n "$SMAP" ]; then
-  [ -r "$SUPP_AWK" ] || { echo "FATAL: supply contract checker missing ($SUPP_AWK)"; exit 8; }
+  [ -r "$SUPP_AWK" ] || harness_fail "checker_missing:$SUPP_AWK" 8
   SC=$(awk -v smap="$SMAP" -f "$SUPP_AWK" $CELLFILES "$NET")
+  SCRC=$?
   echo "$SC" | grep -v '^SUPPLY_NET ' | sed 's/^/  /'
-  SUPPLY_PAIRS=$(echo "$SC" | awk '/^SUPPLY_NET / {print $2}' | sort -u | tr '
-' ' ')
-  case "$SC" in *SUPPLY_RESULT_FAIL*|*"SUPPLY_RESULT FAIL"*)
-    echo "TESTBENCH_PREFLIGHT: FAIL (supply contract not satisfied)"; exit 1 ;;
-  esac
+  if [ "$SCRC" != "0" ]; then
+    # the checker exits 1 for a genuine contract refusal, and only then does it print one well-formed
+    # FAIL line. Any other non-zero status is the tool breaking -- it must be refused as a tool
+    # fault, never reported as if the circuit had been judged.
+    if [ "$SCRC" = "1" ] && [ "$(count_of "$SC" '^SUPPLY_RESULT FAIL$')" = "1" ]; then
+      WHY=$(printf '%s\n' "$SC" | grep -m1 '^SUPPLY_FAIL ' | sed 's/^SUPPLY_FAIL //')
+      reject supply_contract "contract_refused:${WHY:-no-fail-reason-printed}"
+    fi
+    reject supply_contract "checker_exit=$SCRC"
+  fi
+  [ -n "$(printf '%s' "$SC" | tr -d ' \t\n')" ] || reject supply_contract "checker_empty_stdout"
+  NRES=$(count_of "$SC" '^SUPPLY_RESULT ')
+  [ "$NRES" = "1" ] || reject supply_contract "result_token_count=$NRES"
+  [ "$(count_of "$SC" '^SUPPLY_RESULT PASS$')" = "1" ] || reject supply_contract "no_unique_PASS_token"
+  NINST=$(count_of "$SC" '^SUPPLY_INSTANCES ')
+  [ "$NINST" = "1" ] || reject supply_contract "instances_token_count=$NINST"
+  ILINE=$(printf '%s\n' "$SC" | grep '^SUPPLY_INSTANCES ')
+  TOP=$(printf '%s' "$ILINE" | sed -n 's/.*top=\([0-9][0-9]*\).*/\1/p')
+  CHKN=$(printf '%s' "$ILINE" | sed -n 's/.*checked=\([0-9][0-9]*\).*/\1/p')
+  { [ -n "$TOP" ] && [ -n "$CHKN" ]; } || reject supply_contract "instances_line_malformed:${ILINE:-none}"
+  [ "$TOP" -ge 1 ] || reject supply_contract "zero_top_level_instances"
+  [ "$CHKN" -ge 1 ] || reject supply_contract "zero_supply_checks_performed"
+  NOK=$(count_of "$SC" '^SUPPLY_OK ')
+  [ "$CHKN" = "$NOK" ] || reject supply_contract "count_mismatch_checked=${CHKN}_vs_supply_ok=${NOK}"
+  INTERN=$(printf '%s' "$ILINE" | sed -n 's/.*internal=\([0-9][0-9]*\).*/\1/p')
+  if [ -n "$INTERN" ]; then
+    NIN=$(count_of "$SC" '^SUPPLY_INTERNAL ')
+    [ "$INTERN" = "$NIN" ] || reject supply_contract "count_mismatch_internal=${INTERN}_vs_supply_internal=${NIN}"
+    [ "$NIN" = "0" ] || echo "PREFLIGHT_SCOPE_NOTE: $NIN supply port(s) resolve to internal nodes and are NOT certified by preflight"
+  fi
+  # a PASS result line that still carries a FAIL detail is a corrupted verdict, not a clean one
+  [ "$(count_of "$SC" '^SUPPLY_FAIL ')" = "0" ] || reject supply_contract "pass_with_fail_detail"
+  SUPPLY_PAIRS=$(printf '%s\n' "$SC" | awk '/^SUPPLY_NET / {print $2}' | sort -u | tr '\n' ' ')
+  [ -n "$(printf '%s' "$SUPPLY_PAIRS" | tr -d ' \t\n')" ] || reject supply_contract "empty_expected_supply_list"
+  BADP=$(printf '%s\n' $SUPPLY_PAIRS | awk -F= '
+    NF != 2 || $2 !~ /^[+-]?([0-9]+\.?[0-9]*|\.[0-9]+)([eE][+-]?[0-9]+)?$/ { printf " %s", $0 }')
+  [ -z "$BADP" ] || reject supply_contract "malformed_supply_net_entry:$BADP"
+  echo "SUPPLY_GATE: PASS top=$TOP checked=$CHKN supply_nets=$(printf '%s\n' $SUPPLY_PAIRS | grep -c .)"
   CONTRACT=1
 fi
-STATIC=$(awk -v vexp="$VEXP" -v dir="$DIR" "$P1AWK" $CELLFILES "$NET")
+STATIC=$(awk -v vexp="$VEXP" -v dir="$DIR" -v contract="${CONTRACT:-0}" "$P1AWK" $CELLFILES "$NET")
+P1RC=$?
 echo "$STATIC"
 static_verdict=$(echo "$STATIC" | awk '/^STATIC_RESULT/ {print $2}')
+[ "$P1RC" = "0" ] || reject static_parse "phase1_exit=$P1RC"
+[ "$(count_of "$STATIC" '^STATIC_RESULT ')" = "1" ] || reject static_parse "result_token_count_ne_1"
+# enforced BEFORE Spectre now; this revision used to parse phase 1, run the simulator, then fail
+[ "$static_verdict" = "PASS" ] || reject static_parse "STATIC_RESULT_NOT_PASS(${static_verdict:-none})"
+
+# Static probe: lets the offline matrix prove that a deck reaches (or does not reach) the static
+# gates without any simulator run. It exits 7, never 0, and prints no circuit verdict, so it cannot
+# be mistaken for preflight PASS. The default path (unset) is unchanged.
+if [ "${PREFLIGHT_STATIC_PROBE:-0}" = "1" ]; then
+  echo "PREFLIGHT_STAGE=static_gate"
+  echo "STATIC_PROBE: accepted; supply/rail structure only"
+  echo "CIRCUIT_VERDICT: NOT_RUN (static probe does not evaluate the circuit)"
+  echo "TESTBENCH_PREFLIGHT: NOT_RUN (static probe)"
+  exit 7
+fi
+
 SAVE_NETS=$(echo "$STATIC" | awk '/^NETS_TO_SAVE/ {$1=""; print $0}')
 VDD_NETS=$(echo "$STATIC" | awk '/^NETS_TO_SAVE/ {$1=""; for (i=2;i<=NF;i++) print $i}' | tr '\n' ' ')
 
@@ -278,6 +355,7 @@ rc=$?
 DATA=$(grep -aoE "CHECK datafile='[^']+'" "$LOGD/preflight_run_${BASE}_${TAG}.out" | sed -E "s/.*'(.*)'/\1/")
 echo "spectre_rc=$rc datafile=${DATA:-none}"
 if [ "$rc" != "0" ] || [ -z "$DATA" ] || [ ! -r "$DATA" ]; then
+  echo "PREFLIGHT_STAGE=operating_point_sim"
   echo "TESTBENCH_PREFLIGHT: FAIL  (operating-point probe produced no data)"
   grep -aE "ERROR|REFUSED|FATAL" "$LOGD/preflight_run_${BASE}_${TAG}.out" | head -5
   exit 1
@@ -300,6 +378,8 @@ fail=""
 if [ "${CONTRACT:-}" = "1" ]; then
   for pair in $SUPPLY_PAIRS; do
     v=${pair%%=*}; want=${pair##*=}
+    # node 0 IS the reference: it has no PSF entry and needs no 0-to-0 source
+    if [ "$v" = "0" ]; then echo "OP_OK reference node 0 is the potential all other nets are measured against"; continue; fi
     got=$(echo "$OP" | awk -v k="$v" '$1==k {print $2}')
     [ -n "$got" ] || { echo "OP_FAIL no operating-point value for declared supply net $v"; fail=1; continue; }
     ok=$(awk -v a="$got" -v b="$want" 'BEGIN{ d=a-b; if(d<0)d=-d; print (d<=1e-6)?"yes":"no" }')

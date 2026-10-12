@@ -183,7 +183,27 @@ def main():
         return 3
     vals = cols[sig]
     mode = opt.get('mode', 'last')
-    need = int(opt.get('require-n', '1') or 1)
+    if mode not in ('last', 'first', 'max', 'min', 'mean', 'absmax'):
+        print("BAD_USAGE unknown mode %r" % mode)
+        return 9
+    # --require-n is a contract, not a hint: it applies to the sweep branch and to the whole-file
+    # branch too. It used to be enforced only inside the time-window branch, so a 2-point file
+    # asked for 100 samples still returned 1.8 with rc 0.
+    try:
+        need = int(opt.get('require-n', '1') or 1)
+    except ValueError:
+        print("BAD_USAGE --require-n must be an integer, got %r" % opt.get('require-n'))
+        return 9
+    if need < 1:
+        print("BAD_USAGE --require-n must be >= 1, got %d" % need)
+        return 9
+    # a time axis that is not strictly ordered cannot support a window or an edge claim
+    if axisv is not None and (opt.get('t0') or opt.get('t1')):
+        for k in range(1, len(axisv)):
+            if not (axisv[k] > axisv[k - 1]):
+                print("BAD_AXIS time not strictly increasing at index %d (%g -> %g)"
+                      % (k, axisv[k - 1], axisv[k]))
+                return 8
 
     if 'sweep' in opt:
         if axisv is None:
@@ -195,7 +215,16 @@ def main():
             print("BAD_NUMERIC %s" % e)
             return 5
         tol = max(1e-12, abs(want) * 1e-6)
+        if axisv is not None:
+            asc = all(axisv[k] > axisv[k - 1] for k in range(1, len(axisv)))
+            desc = all(axisv[k] < axisv[k - 1] for k in range(1, len(axisv)))
+            if not (asc or desc):
+                print("BAD_AXIS sweep axis is not ordered")
+                return 8
         picked = [v for (s, v) in zip(axisv, vals) if abs(s - want) <= tol]
+        if len(picked) < need:
+            print("TOO_FEW_SAMPLES %d<%d at sweep=%s" % (len(picked), need, opt['sweep']))
+            return 4
         if not picked:
             print("NO_POINT sweep=%s not on axis (n=%d)" % (opt['sweep'], len(axisv)))
             return 4
@@ -219,6 +248,10 @@ def main():
     else:
         picked = vals
 
+    if len(picked) < need and mode in ('max', 'min', 'mean'):
+        # an aggregate over the whole file is still an aggregate: honour the declared sample count
+        print("TOO_FEW_SAMPLES %d<%d for %s over the whole file" % (len(picked), need, mode))
+        return 4
     if not picked:
         print("NO_POINT empty selection")
         return 4
