@@ -9,6 +9,15 @@
 
 ## 结论（一句话）
 
+> **更正（2026-10-12 深夜，见 `reports/c2mos_ade_binding_reaudit.md`）**：本文"卡点被精确锁定在
+> 会话↔设计绑定 …**它不是**参数问题"以及"需要人来开一个 ADE 窗口"两处判断**证据不足，已撤回**。
+> 复核本机文档后发现：`axlSetMainSetupDBLCV` 的第四个参数指的是**存放 setup database 的 view**
+> （文档示例一律为 `"adexl"`/`"adexl_view"`，并给出 `?mode "r"` 只读绑定形状），而本文的代码传的是设计视图
+> `"schematic"` —— 参数语义不符；同时 ADE XL 的 **standalone** 用法有文档支持，日志里也有
+> `# ADE XL session 'probe_session' started` 的 banner 证明无窗口也会起会话。绑定返回的 nil 是**静默 nil**
+> （前后无任何错误文本），因此不足以在"参数不符 / 没有 setup db / 许可未验"之间定论。
+> §A–§I 的 GUI、读库、指纹、副作用读数仍然有效，原文保留以便追溯。
+
 **GUI 真的起来了、编辑器真的初始化了、License 正常、器件读得到 —— 原生网表仍然不通，
 而且卡点被精确锁定在一个步骤上：ADE 的"会话↔设计绑定"（`axlSetMainSetupDBLCV` 返回 nil），
 它不是"API 不存在"，也不是参数、License、DISPLAY/XAUTHORITY 或 terms 的问题。**

@@ -1,0 +1,109 @@
+===============================================================================
+c2mos_ade_binding_reaudit.txt -- READ-ONLY fact check of the ADE design-bind conclusion
+===============================================================================
+Nothing was re-run and nothing was written this round: no SKILL session, no ADE call, no OA access.
+Sources: the installed vendor reference /opt/IC617/doc/adexlSKILLref, the dir-library view folders,
+and the session logs the previous round already left behind. Baseline SHA 670fcb8.
+
+-------------------------------------------------------------------------------
+SECTION A  任务1 本机文档里的函数签名、参数含义、以及文档给出的每一个调用示例
+           (the view argument in every documented example is an ADE XL setup view,
+            never "schematic"; and ?mode "r" is documented for a read-only bind)
+-------------------------------------------------------------------------------
+### T1 local-doc signature, argument meanings, and every example of the bind call
+source: /opt/IC617/doc/adexlSKILLref (installed with this IC617 build)
+FUNCTION_SIGNATURE:
+axlSetMainSetupDBLCV( t_session t_libNamet_cellNamet_viewName[ ?mode t_mode ]) => x_mainSDB / nil,axlSetupStates( t_session ) => l_states ">
+
+DESCRIPTION:
+
+EVERY EXAMPLE (view argument actually used):
+axlSetMainSetupDBLCV(axlSession car(LibraryName)
+axlSetMainSetupDBLCV( axlSession "myLib" "mycell" "adexl")
+axlSetMainSetupDBLCV(axlSession "mylib" "mycell" "adexl_view")
+axlSetMainSetupDBLCV("session0" "myLib" "myCell" "adexl" ?mode "r")
+axlSetMainSetupDBLCV( t_session t_libNamet_cellNamet_viewName[ ?mode t_mode ])
+
+STANDALONE MODE (documented):
+      If you are running an ADE XL script in the standalone mode, after creating a new session, you can set up a database for the session by using the axlSetMainSetupDBLCV function.
+
+axlNewSetupDBLCV (the creator; note the overwrite wording):
+            Creates a new setup db in the specified lib, cell, view location. It automatically overwrites any existing setup db in any of the above mentioned locations.
+          
+        
+--
+      Creates a new setup db in the specified lib, cell, view location. It automatically overwrites any existing setup db in any of the above mentioned locations.
+axlNewSetupDBLCV( t_libraryNamet_cellNamet_viewName) => t / nil ,axlPutNote( x_mainSDB t_item t_namet_note) => t / nil ,axlPutScript( x_element t_scriptName t_path ) => x_script / nil ,axlPutTest( x_hsdb t_test t_tool) => x_test / nil ,axlRemoveElement( x_element ) => t / nil ,axlResetActive( x_hsdb )=> t / nil,axlSaveSetup( ) => t / nil ,axlSaveSetupToLib( x_hsdb t_libName t_cellName t_viewName ) => t / nil ,axlSetAllSweepsEnabled(x_hsdb g_enableStatus) => t / nil ,axlSetCopyRefResultsOption(x_hsdb g_value) => x_hsdb / 0 ,axlSetEnabled( x_element g_enable ) => t / nil,axlSetReferenceHistoryItemName( x_hsdbt_referenceHistoryName ) => x_hsdb / 0,axlSetReuseNetlistOption( x_hsdb g_value) => x_hsdb / 0 ,axlSetScriptPath( x_script t_path ) => t / nil ,axlSetUseIncremental( x_hsdb g_value) => x_hsdb / 0,axlWriteDatasheet( t_axlSession x_historyEntry [ ?directory t_directory ] [ ?resultsSummary g_resultsSummary ] [ ?testsSummary g_testsSummary ] [ ?detailedResults g_detailedResults ] [ ?plots g_plots ] [ ?designVarsSummary g_designVarsSummary ] [ ?paramSummary g_paramSummary ] [ ?cornersSummary g_cornersSummary ] [ ?setupSummary g_setupSummary ] [ ?launchBrowser g_launchBrowser ][ ?name t_name ]=> t / nil,axlWriteDatasheetForm( x_axlSession t_historyEntry ) => t / nil">
+
+axlCreateSession / axlGetWindowSession / axlGetMainSetupDB signatures:
+axlCreateSession( t_sessionName ) => t_sessionName / nil ,axlGetCurrentResultSimulationHost( t_sessi
+axlGetMainSetupDB( t_session ) => x_mainSDB / nil,axlGetSessionCellName( g_value ) => t_cellName / ni
+
+### CURRENT_CALL as committed in skill/c2mos_gui_ade_probe.il
+101:  sdb = car(errset(axlSetMainSetupDBLCV(sess LIB CELL "schematic")))
+129:    printf("GAP-AFTER-ATTACH %L\n" errset(axlSetMainSetupDBLCV(sess2 LIB CELL "schematic")))
+-------------------------------------------------------------------------------
+SECTION B  任务2 该 cell 实际存在的全部 view，以及库里是否存在任何 ADE XL setup view
+SECTION C  任务3-E/F 失败调用的日志上下文、被 errset 与未被 errset 吞掉的信息、许可证读数
+-------------------------------------------------------------------------------
+=== views per cell (a dir library stores one directory per view) ===
+c2mos_dff_tb     : schematic 
+c2mos_dff_1bit   : data.dm schematic symbol 
+data_sink_1ch    : data.dm schematic symbol 
+data_bias_ref    : data.dm schematic symbol 
+sch1_top         : data.dm schematic 
+sch3_top         : data.dm schematic 
+=== any ADE XL / maestro / config / Ade* view anywhere in the library ===
+NONE_IF_BLANK_ABOVE
+=== what a setup database would be stored as: search the whole project for an adexl view ===
+NONE_IF_BLANK_ABOVE
+=== licence lines printed by this round of sessions ===
+\o as authorized in a license agreement controlling such use and disclosure.
+\o //              OR ITS LICENSORS AND IS SUBJECT TO LICENSE TERMS.
+\o Virtuoso Framework License (111) was checked out successfully. Total checkout time was 0.04s.
+\o Virtuoso Framework License (111) was checked out successfully. Total checkout time was 0.05s.
+=== context around the failing bind call in the GUI probe logs ===
+-- /root/microled_ai_project/cadence_work/logs/sch_nograph_20261012_191412.log
+\# ADE XL session 'probe_session' started on Mon Oct 12 19:14:29 2026 
+\o GAP-AXL-SESSION "probe_session"
+\o GAP-AXL-GET-WS (nil)
+\o GAP-AXL-ATTACH nil
+\o GAP_DONE
+\o 
+\o Loading lce.cxt 
+-- /root/microled_ai_project/cadence_work/logs/sch_nograph_20261012_192137.log
+\# ADE XL session 'probe_session' started on Mon Oct 12 19:21:54 2026 
+\o GAP-AXL-SESSION "probe_session"
+\o GAP-AXL-GET-WS (nil)
+\o GAP-AXL-ATTACH nil
+\o GAP-LOAD-hiLoadContext-simui nil
+\o GAP-LOAD-hiLoadContext-adexl nil
+\e *Error* lineread/read: syntax error encountered in input at line 1 column 1 in file /opt/IC617/tools.lnx86/dfII/etc/context/64bit/simui.cxt
+-- /root/microled_ai_project/cadence_work/logs/sch_nograph_20261012_192628.log
+\# ADE XL session 'probe_session' started on Mon Oct 12 19:26:45 2026 
+\o GAP-AXL-SESSION "probe_session"
+\o GAP-AXL-GET-WS (nil)
+\o GAP-AXL-ATTACH nil
+\o GAP-LOAD-hiLoadContext-simui nil
+\o GAP-LOAD-hiLoadContext-adexl nil
+\e *Error* lineread/read: syntax error encountered in input at line 1 column 1 in file /opt/IC617/tools.lnx86/dfII/etc/context/64bit/simui.cxt
+=== do ANY of the probe session logs contain an ADE/nl/asi error text at all? ===
+NONE_IF_BLANK_ABOVE
+-------------------------------------------------------------------------------
+SECTION D  本轮只读性质复核：文件指纹与副作用
+-------------------------------------------------------------------------------
+### integrity re-check AFTER this read-only round
+Mon Oct 12 19:47:44 CST 2026
+md5_failures=0
+0355c086721b51254998f045b87209b8  /root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_tb/schematic/sch.oa
+3de3224df0af59d8ba9953357f1dbe88  /root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/schematic/sch.oa
+locks_in_lib=0
+analoglib_new=0
+pdk_new=0
+virtuoso_pids=
+### the call this audit is about, as committed
+7:; (axlSetMainSetupDBLCV) is queried because the task book asks specifically whether the entry that
+63:  gap("getd-axlSetMainSetupDBLCV" errset(getd('axlSetMainSetupDBLCV)))
+101:  sdb = car(errset(axlSetMainSetupDBLCV(sess LIB CELL "schematic")))
+125:    printf("GAP-AFTER-AXL-BIND-EXIST %L\n" errset(getd('axlSetMainSetupDBLCV)))
+129:    printf("GAP-AFTER-ATTACH %L\n" errset(axlSetMainSetupDBLCV(sess2 LIB CELL "schematic")))
