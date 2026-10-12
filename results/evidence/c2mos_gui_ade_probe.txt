@@ -1,0 +1,209 @@
+===============================================================================
+c2mos_gui_ade_probe.txt -- READ-ONLY evidence: does a real GNOME/Virtuoso GUI session give this
+build an ADE / Spectre native-netlist capability that the batch paths do not?
+===============================================================================
+Channel: ssh root@192.168.222.129 ; guest clock Mon Oct 12 18:52-19:28 CST 2026
+Cadence: IC617 6.1.7-64b at /opt/IC617, project /root/microled_ai_project
+Probe code: skill/c2mos_gui_ade_probe.il (no write-side ADE call exists in it -- see the report)
+Every line below is verbatim command output. Cadence's \o/\e/\p line prefixes were stripped.
+
+-------------------------------------------------------------------------------
+SECTION A  二、执行前检查 (read from the LIVE session, nothing hardcoded)
+-------------------------------------------------------------------------------
+### S2 PRE-FLIGHT (live, nothing hardcoded)
+gnome_session_pid=3032
+  env USER=root
+  env HOME=/root
+  env DISPLAY=:0
+  env XAUTHORITY=/var/run/gdm/auth-for-root-8x8Kba/database
+  x_sockets=X0
+  logged_in_users=root     tty1         2026-10-11 15:37 (:0);
+  virtuoso_pids_before=[]
+  xprop=/usr/bin/xprop  wmctrl=MISSING
+  envexec_helper=/root/microled_ai_project/scripts/gui2_envexec.sh
+### MANIFEST BEFORE
+  cells_files=36
+  FINGERPRINT 3de3224df0af59d8ba9953357f1dbe88  /root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/schematic/sch.oa
+  FINGERPRINT 0355c086721b51254998f045b87209b8  /root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_tb/schematic/sch.oa
+  analogLib_files_newer_than_2026-10-12=0
+  PDK_files_newer_than_2026-10-12=0
+  locks_now=0
+
+-------------------------------------------------------------------------------
+SECTION B  first two attempts and what actually broke them (kept because they are the honest record)
+B1: MODE=gui via scripts/gui2_envexec.sh -- the helper only exports the session environment when it
+    is handed a program and NO extra arguments; my first call passed "env MODE=gui bash ...", so
+    DISPLAY never reached scripts/sch_virtuoso.sh. Observed on that attempt's stdout (that scratch
+    file has since been overwritten by the corrected runs):
+      REFUSED: MODE=gui needs DISPLAY
+    Recorded here as the cause; the surviving artefact is the corrected wrapper in gap_run.sh.
+B2: the repo runner's DEFER=1 path needs hiSetInitFunc, which this build does not define:
+-------------------------------------------------------------------------------
+GAP-BEGIN
+*Error* eval: undefined function - hiSetInitFunc
+
+-------------------------------------------------------------------------------
+SECTION C  a bug in my own probe file, caught by the tool's own reader
+           (an unclosed when()/foreach() made the reader swallow the rest of the file, so the probe
+           printed GAP-BEGIN and nothing else -- this is why "no output" had to be diagnosed rather
+           than interpreted as an ADE answer)
+-------------------------------------------------------------------------------
+GAP-BEGIN
+\w *WARNING* (reader): a '(' at line 47 was still unclosed on EOF, ')' added
+\w                     at line 121 of file /root/microled_ai_project/skill/c2mos_gui_ade_probe.il
+
+-------------------------------------------------------------------------------
+SECTION D  the corrected probe, run in a windowed (MODE=gui) session at .cdsinit time
+command:   bash scripts/gui2_envexec.sh /tmp/tb_audit/gap_launch_cdsinit.sh
+           (wrapper: export MODE=gui; exec bash scripts/sch_virtuoso.sh skill/c2mos_gui_ade_probe.il 300 GAP_DONE)
+GAP-HI-MAINWINDOW nil        <- CIW window handle does not exist yet at .cdsinit time
+GAP-SCHCHECK-CONTROL ((0 0)) <- CONTROL: the Schematic Editor really is initialised
+-------------------------------------------------------------------------------
+GAP-BEGIN
+GAP-ENV DISPLAY=":0" MODE="gui" DEFER=nil
+GAP-XAUTH "/var/run/gdm/auth-for-root-8x8Kba/database"
+GAP-HI-MAINWINDOW nil
+GAP-SCHCHECK-CONTROL ((0 0)) open=db:0x17beee1a
+GAP "getd-asiCreateSession" -> (nil)
+GAP "getd-asiNetlist" -> (nil)
+GAP "getd-axlCreateSession" -> (nil)
+GAP "getd-axlGetWindowSession" -> (nil)
+GAP "getd-axlSetMainSetupDBLCV" -> (nil)
+GAP "getd-simSetDesign" -> (nil)
+GAP "getd-nlCreateDesign" -> (nil)
+GAP-TB-OPEN cell="c2mos_dff_tb" cv=db:0x17beee1a instances=(8) nets=(7) terms=(0)
+GAP-DUT-SYMBOL cell="c2mos_dff_1bit" open=db:0x17bee21a terminals=(6)
+GAP-DUT-SYMPIN name="vss" dir="inputOutput"
+GAP-DUT-SYMPIN name="vdd" dir="inputOutput"
+GAP-DUT-SYMPIN name="qbar" dir="inputOutput"
+GAP-DUT-SYMPIN name="q" dir="inputOutput"
+GAP-DUT-SYMPIN name="clk" dir="inputOutput"
+GAP-DUT-SYMPIN name="d" dir="inputOutput"
+GAP-ASI-1 nil
+GAP-ASI-2 nil
+GAP-ASI-SESSION nil
+GAP-AXL-SESSION "probe_session"
+GAP-AXL-GET-WS (nil)
+GAP-AXL-ATTACH nil
+GAP_DONE
+
+-------------------------------------------------------------------------------
+SECTION E  same GUI session, ADE contexts asked for explicitly (AUD_LOAD=1)
+           hiLoadContext/load answers nil, yet afterwards getd reports real function objects, and
+           the calls still answer nil. simSetDesign never exists (APS is not loaded at all).
+-------------------------------------------------------------------------------
+GAP-ASI-1 nil
+GAP-ASI-2 nil
+GAP-ASI-SESSION nil
+GAP-AXL-SESSION "probe_session"
+GAP-AXL-GET-WS (nil)
+GAP-AXL-ATTACH nil
+GAP-LOAD-hiLoadContext-simui nil
+GAP-LOAD-hiLoadContext-adexl nil
+GAP-LOAD-load-cxt-simui nil
+GAP-LOAD-load-cxt-adexl nil
+GAP-AFTER-ASI-EXIST (funobj:asiCreateSession)
+GAP-AFTER-ASI-CALL nil
+GAP-AFTER-AXL-CALL ("probe_session2")
+GAP-AFTER-ATTACH nil
+
+-------------------------------------------------------------------------------
+SECTION E2  final run with the complete existence matrix
+-------------------------------------------------------------------------------
+GAP-LOAD-hiLoadContext-simui nil
+GAP-LOAD-hiLoadContext-adexl nil
+GAP-LOAD-load-cxt-simui nil
+GAP-LOAD-load-cxt-adexl nil
+GAP-AFTER-ASI-EXIST (funobj:asiCreateSession)
+GAP-AFTER-ASI-NL-EXIST (funobj:asiNetlist)
+GAP-AFTER-NL-EXIST (funobj:nlCreateDesign)
+GAP-AFTER-SIM-EXIST (nil)
+GAP-AFTER-AXL-BIND-EXIST (funobj:axlSetMainSetupDBLCV)
+GAP-AFTER-ASI-CALL nil
+GAP-AFTER-AXL-CALL ("probe_session2")
+GAP-AFTER-ATTACH nil
+
+-------------------------------------------------------------------------------
+SECTION F  does the Virtuoso GUI really appear? (the repo's own verified verifier, not my code)
+command:  bash /root/microled_ai_project/scripts/gui2_real_launch.sh
+-------------------------------------------------------------------------------
+GNOME_SESSION_PID=3032
+  env USER=root
+  env HOME=/root
+  env DISPLAY=:0
+  env XAUTHORITY=/var/run/gdm/auth-for-root-8x8Kba/database
+  env PATH_HEAD=/etc/env:/opt/synopsys/Hspice-2015.06-3//hspice/bin,
+  before_pids=[none]
+VIRTUOSO_PID=47292 (appeared after 3s)
+AFTER_PIDS=[47292 ]
+VIRTUOSO_WINDOW=0x3400020 (viewable after 15s)
+    Map State: IsViewable
+  WM_NAME(STRING) = "Virtuoso® 6.1.7-64b - Log: /root/microled_ai_project/cadence_work/logs/virtuoso_gui_20261012_191734.log"
+  WM_CLASS(STRING) = "Qt-subapplication", "Virtuoso"
+  WM_STATE(WM_STATE):
+VIRTUOSO_WINDOW: VIEWABLE
+REAL_LAUNCH: PASS (process + viewable window on the session display)
+
+-------------------------------------------------------------------------------
+SECTION G  which SKILL contexts the mapped GUI session actually loads
+           -- adexl / simui / asimenv / mmsimenv are NOT in this list (grep -ac adexl = 0)
+-------------------------------------------------------------------------------
+\# X display name (WxH):	:0 (956x876)
+\# Window Manager:	gnome (metacity)
+Loading geView.cxt
+Loading menuBuilder.cxt
+Loading schView.cxt
+Loading selectSv.cxt
+Loading wireEdit.cxt
+Loading pte2.cxt
+Loading xlUI.cxt
+Loading auCore.cxt
+Loading vhdl.cxt
+Loading seismic.cxt
+Loading ci.cxt
+Loading ams.cxt
+Virtuoso Framework License (111) was checked out successfully. Total checkout time was 0.04s.
+Loading HSPICE.cxt
+Loading oasis.cxt
+Loading analog.cxt
+Loading cdf.cxt
+
+-------------------------------------------------------------------------------
+SECTION H  run driver log (session start/stop, verdicts, before/after manifests)
+-------------------------------------------------------------------------------
+  virtuoso_pids_before=[]
+  analogLib_files_newer_than_2026-10-12=0
+  PDK_files_newer_than_2026-10-12=0
+### hiSetInitFunc availability (the hook a deferred run would need)
+### PROBE [cdsinit] env: MODE=gui
+  [t=15s] virtuoso_pid=46776 gui_windows=none-yet
+  [t=20s] probe finished
+  RESULT rc=0
+  SCH_VIRTUOSO: PASS  log=/root/microled_ai_project/cadence_work/logs/sch_nograph_20261012_191412.log
+### MANIFEST AFTER
+  md5 mismatches (blank means every file identical):
+  locks created: 0
+  FINGERPRINT_AFTER 3de3224df0af59d8ba9953357f1dbe88  /root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/schematic/sch.oa
+  FINGERPRINT_AFTER 0355c086721b51254998f045b87209b8  /root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_tb/schematic/sch.oa
+  analogLib_files_newer_than_2026-10-12=0
+  PDK_files_newer_than_2026-10-12=0
+  virtuoso_pids_end=[]
+
+-------------------------------------------------------------------------------
+SECTION I  九/十、final integrity + side effects, taken after every GUI/ADE session this round
+-------------------------------------------------------------------------------
+### FINAL INTEGRITY CHECK (after every GUI/ADE session this round)
+Mon Oct 12 19:27:51 CST 2026
+md5_failures=0
+3de3224df0af59d8ba9953357f1dbe88  /root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_1bit/schematic/sch.oa
+0355c086721b51254998f045b87209b8  /root/microled_ai_project/cadence_work/microled_cells/c2mos_dff_tb/schematic/sch.oa
+analoglib_new=0
+pdk_new=0
+cdslib_defines=6
+virtuoso_pids=
+leftover_logs=
+/root/microled_ai_project/cadence_work/logs/virtuoso_gui_20261012_191734.log.cdslck
+/root/microled_ai_project/cadence_work/logs/sch_nograph_20261012_190754.log.cdslck
+/root/microled_ai_project/cadence_work/logs/sch_nograph_20261012_185629.log.cdslck
+
+===============================================================================
