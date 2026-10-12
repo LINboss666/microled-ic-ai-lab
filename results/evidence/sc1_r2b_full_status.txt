@@ -1,0 +1,29 @@
+SCAN-1 R2B -- simulator-side regression status (recorded, not measured)
+
+full-mode preflight regression on the R2B code
+  STATUS: NOT_RUN_AFTER_R2B / PAUSED_BY_USER
+  REASON: the R2B task book restricts this round to offline synthetic tests, the static supply
+          preflight and the CSV audit ("不调用任何模拟器；不运行preflight full"). The preflight
+          tools changed in this round, so the earlier full-mode numbers do not describe this code.
+  WHAT WAS NOT RUN: sc1_preflight_selftest.sh full (real teacher PDK operating-point probe),
+          C2MOS/S1 real-circuit regression, any S2 deck, and any use of the newly supplied PDK.
+
+previous full-mode evidence, for reference only (produced by the b603820 tools)
+  results/evidence/sc1_r2a_preflight.csv              31/31 PASS, 7 acceptance rows with sim=yes
+  results/evidence/sc1_r2a_preflight_full.transcript.txt
+  Its acceptance rows measured operating points; its refusal rows never reached the simulator.
+  That file stays as history and is NOT claimed for the R2B implementation.
+
+this round's evidence (offline + static only)
+  results/evidence/sc1_r2b_preflight_static.csv        33/33 PASS in static mode
+  results/evidence/sc1_r2b_preflight_static.transcript.txt
+  results/evidence/sc1_r2b_checker.csv                 16/16 cases, 8 reproducing the R2B review
+  results/evidence/sc1_r2b_checker_r2a_subset.csv      48/48 cases (R2A set, corrected semantics)
+  results/evidence/sc1_r2b_legacy27.csv                27/27 cases
+  In every static-mode row simulator_called=no except the acceptance rows probed with
+  PREFLIGHT_STATIC_PROBE=1, which exit 7 and print CIRCUIT_VERDICT: NOT_RUN.
+
+not verified anywhere yet
+  S1 real-circuit regression under the fixed tools: NOT_RUN
+  R2 new S2 circuit, R3 chaining, S3 power stage, S4 scan chain: NOT_STARTED
+  SOA_SIGNOFF: NO / FOUNDRY_REVIEW_REQUIRED. Autonomous power-fail protection: NOT_IMPLEMENTED
