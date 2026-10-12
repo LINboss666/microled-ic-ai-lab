@@ -1,0 +1,147 @@
+// ==============================================================================
+// spectre/sc1_level_shifter_r2d.scs -- SCAN-1 R2D: new S2 level-shift network, STATIC ONLY.
+//
+// STATUS: written and statically reviewed, NEVER SIMULATED. Nothing here is a functional, timing,
+// competition, stress or SOA conclusion. S2_FUNCTIONAL_TT = NOT_RUN, and the pause on C2MOS/PDK/
+// real-circuit simulation was still in force when this file was written.
+//   ENGINEERING_TOPOLOGY_CHOICE : the cross-coupled core and the static CMOS NAND are our choice,
+//                                 not a teacher-specified circuit.
+//   POC_ASSUMPTION              : 1.8 V / 3.3 V, every W/L below, and all load/threshold numbers.
+//
+// Why a new file with new master names instead of editing sc1_level_shifter.scs: the old candidate
+// A (diode-connected PMOS pull-up, static contention when en is high) and candidate B (a declared
+// `out` with no device driving it, plus an inverting extra stage that broke the high-side polarity)
+// are kept untouched as history. This file is the R2D network described in the review.
+//
+// ------------------------------------------------------------------------------
+// Local device facts actually read, not assumed (teacher PDK ms018_enhanced_v1p2_rev0):
+//  * README table of the model set: simple models n18 / p18 / n33 / p33 (plus nmvt/pmvt/nnt and the
+//    *_dnw* families) and the mismatch-capable subckt wrappers n18_ckt / p18_ckt / n33_ckt /
+//    p33_ckt. Recorded with its SHA256 in results/evidence/sc1_r2d_manifest.csv; no model content
+//    is copied into this repository.
+//  * The vendor's own wrappers declare `inline subckt n33_ckt ( d g s b )` and
+//    `inline subckt p33_ckt ( d g s b )`, i.e. D G S B.
+//  * Bare n18/p18/n33/p33 are BSIM4 `model` records in the .mdl file, so an instance here is a
+//    primitive, not a subckt. The previously measured S1 truth table (4/4) and transient windows
+//    (5/5) could only come out as they did if the primitive argument order matches the order written
+//    in these decks (D G S B): under a D G B S reading, sc1_scan_gate.scs's mp_b would tie en to vdd
+//    instead of to the internal node, and the recorded en levels are impossible. This is derivation
+//    from existing measured data, not a fresh confirmation.
+//  * Geometry RANGE (Lmin/Lmax/Wmin/Wmax, absolute maximum ratings) was NOT found in the readable
+//    local model README. So: GEOMETRY_RANGE_READ = NO, FOUNDRY_RATING = NOT_READ ->
+//    SOA_SIGNOFF = NO / FOUNDRY_REVIEW_REQUIRED. The sizes below are therefore not claimed legal by
+//    the foundry; each one reuses a shape that this PDK has already accepted in a completed run
+//    (l=2e-7/w=2e-6..4e-6 from the measured S1 1.8 V gate, l=4e-7/w=5e-6 for n33/p33 from the 3.3 V
+//    device probe and the DATA-route current decks), which is a precedent, not a rating.
+//  * DESIGN RULE APPLIED HERE: every device's bulk is written as its 4th terminal, and where the
+//    bulk and source differ it is only the intentional NMOS well connection (bulk to vss) inside the
+//    C1 stack. Confirming the terminal order with `spectre -h mos` is a small item deferred to the
+//    first authorised simulation session, because this round may not invoke a simulator.
+// ==============================================================================
+
+// ------------------------------------------------------------------------------
+// Cross-coupled level-shift core.  ENGINEERING_TOPOLOGY_CHOICE, POC_ASSUMPTION sizing.
+// Ports (en x y vdd18 vdd33 vss): en is the 1.8 V logic input, x and y are the complementary
+// 3.3 V internal nodes. Internal node enbar is the 1.8 V complement of en.
+//
+//  instance |   D   |   G   |   S   |   B   | model | W/L                 | role
+//  ---------+-------+-------+-------+-------+-------+---------------------+---------------------------
+//  mp_drv   | enbar |  en   | vdd18 | vdd18 | p18   | w18p=4e-6 l18=2e-7  | low-domain driver, PMOS half
+//  mn_drv   | enbar |  en   | vss   | vss   | n18   | w18n=2e-6 l18=2e-7  | low-domain driver, NMOS half
+//  mp_left  |   x   |   y   | vdd33 | vdd33 | p33   | w33=5e-6 l33=4e-7   | cross-coupled pull-up, left
+//  mp_right |   y   |   x   | vdd33 | vdd33 | p33   | w33=5e-6 l33=4e-7   | cross-coupled pull-up, right
+//  mn_left  |   x   |  en   | vss   | vss   | n33   | w33=5e-6 l33=4e-7   | high-domain pull-down, left
+//  mn_right |   y   | enbar | vss   | vss   | n33   | w33=5e-6 l33=4e-7   | high-domain pull-down, right
+//
+// Topology goal (NOT a result): en=0 -> x high / y low ; en=1.8 V -> x low / y high.
+// Whether a 1.8 V gate can actually flip the p33 cross-coupled pull-up, and whether equal W is the
+// right pull-up/pull-down ratio, are QUESTIONS FOR MEASUREMENT. Nothing in this file settles them,
+// and no keeper behaviour is claimed.
+subckt sc1_ls_core_r2d (en x y vdd18 vdd33 vss)
+  parameters l18=2e-7 w18n=2e-6 w18p=4e-6 l33=4e-7 w33=5e-6
+
+  mp_drv  (enbar en    vdd18 vdd18) p18 l=l18 w=w18p
+  mn_drv  (enbar en    vss   vss  ) n18 l=l18 w=w18n
+
+  mp_left (x     y     vdd33 vdd33) p33 l=l33 w=w33
+  mp_right(y     x     vdd33 vdd33) p33 l=l33 w=w33
+  mn_left (x     en    vss   vss  ) n33 l=l33 w=w33
+  mn_right(y     enbar vss   vss  ) n33 l=l33 w=w33
+ends sc1_ls_core_r2d
+
+// ------------------------------------------------------------------------------
+// C0 baseline: two 3.3 V CMOS inverter stages after x, so gate33 keeps x's polarity.
+//
+//  instance |    D    |    G    |   S   |   B   | model | W/L               | role
+//  ---------+---------+---------+-------+-------+-------+-------------------+-------------------------
+//  mp_i1    |   n1    |    x    | vdd33 | vdd33 | p33   | w33=5e-6 l33=4e-7 | stage 1 PMOS
+//  mn_i1    |   n1    |    x    | vss   | vss   | n33   | w33=5e-6 l33=4e-7 | stage 1 NMOS
+//  mp_i2    | gate33  |   n1    | vdd33 | vdd33 | p33   | w33=5e-6 l33=4e-7 | stage 2 PMOS
+//  mn_i2    | gate33  |   n1    | vss   | vss   | n33   | w33=5e-6 l33=4e-7 | stage 2 NMOS
+//
+// Polarity derivation (static, TOPOLOGY_CHECK -- not a simulation result):
+//   x low  -> n1 high -> gate33 low      with en high -> x low  -> gate33 low  -> high-side PMOS ON
+//   x high -> n1 low  -> gate33 high     with en low  -> x high -> gate33 high -> high-side PMOS OFF
+// Two stages are used because one stage would invert and put the wrong polarity on the scan gate;
+// this is exactly the mistake the old candidate B made.
+subckt sc1_ls_c0_r2d (x gate33 vdd33 vss)
+  parameters l33=4e-7 w33=5e-6
+
+  mp_i1 (n1     x     vdd33 vdd33) p33 l=l33 w=w33
+  mn_i1 (n1     x     vss   vss  ) n33 l=l33 w=w33
+  mp_i2 (gate33 n1    vdd33 vdd33) p33 l=l33 w=w33
+  mn_i2 (gate33 n1    vss   vss  ) n33 l=l33 w=w33
+ends sc1_ls_c0_r2d
+
+// ------------------------------------------------------------------------------
+// C1 conditional-shutdown candidate: static 3.3 V CMOS NAND, gate33 = NOT(y AND core_ok33).
+//
+//  instance |    D     |     G      |   S   |   B   | model | W/L               | role
+//  ---------+----------+------------+-------+-------+-------+-------------------+----------------------
+//  mp_na    | gate33   |     y      | vdd33 | vdd33 | p33   | w33n=1e-5 l33=4e-7| pull-up half A (parallel)
+//  mp_nb    | gate33   | core_ok33  | vdd33 | vdd33 | p33   | w33n=1e-5 l33=4e-7| pull-up half B (parallel)
+//  mn_nt    | gate33   |     y      | ns_m  | vss   | n33   | w33=5e-6 l33=4e-7 | stack top, drains to ns_m
+//  mn_nb    | ns_m     | core_ok33  | vss   | vss   | n33   | w33=5e-6 l33=4e-7 | stack bottom
+//
+// ns_m is the series intermediate node, listed explicitly because it is the one node whose
+// potential is set by contention inside the stack and must be measured, not assumed.
+// Both NMOS bulks go to vss (the p-substrate well of the standard n33); only mn_nt's source is the
+// internal node, which is the intentional well/source split of a stacked NMOS.
+// The PMOS devices are sized wider (2x) than the core's pull-ups so that two parallel PMOS still
+// out-pull a series pair of NMOS at the same W/L -- POC_ASSUMPTION from the series/parallel
+// resistance argument, NOT an optimisation result and not a checked noise margin.
+//
+// Polarity table (target, vdd33 valid only):
+//   en low  (y low) ,  core_ok33 high -> gate33 high  = shutdown forced
+//   en high (y high),  core_ok33 high -> gate33 low   = select allowed
+//   any / core unknown , core_ok33 low -> gate33 high  = shutdown forced
+// So the NAND output already has the polarity the high-side PMOS needs (low = select) and no
+// extra inverting stage is required: adding the two-stage buffer would only enlarge the range with
+// no reason, so this round does not add it. If a measured load case later needs it, it becomes a
+// separately named version and is re-checked, not silently inserted here.
+subckt sc1_ls_c1_r2d (y core_ok33 gate33 vdd33 vss)
+  parameters l33=4e-7 w33=5e-6 w33n=1e-5
+
+  mp_na (gate33 y         vdd33 vdd33) p33 l=l33 w=w33n
+  mp_nb (gate33 core_ok33 vdd33 vdd33) p33 l=l33 w=w33n
+  mn_nt (gate33 y         ns_m  vss  ) n33 l=l33 w=w33
+  mn_nb (ns_m   core_ok33 vss   vss  ) n33 l=l33 w=w33
+ends sc1_ls_c1_r2d
+
+// ------------------------------------------------------------------------------
+// Assembled variants. Two masters so a deck selects one without editing devices.
+//
+// core_ok33 is a TESTBENCH-GENERATED high-domain valid signal, limited to the vdd33 rail that exists
+// at that moment. It is NOT a implemented POR / supply detector, NOT a frozen system interface, and
+// it must not be driven to 3.3 V while vdd33 is 0 V. Because the shutdown therefore depends on an
+// assumed control signal, the best future result of C1 is SAFE_OFF_WITH_ASSUMED_CORE_OK;
+// S2_AUTONOMOUS_POWER_FAIL_SAFE stays NOT_IMPLEMENTED.
+subckt sc1_ls_c0_top_r2d (en gate33 vdd18 vdd33 vss)
+  Xcore (en x y vdd18 vdd33 vss) sc1_ls_core_r2d
+  Xbuf  (x  gate33 vdd33 vss    ) sc1_ls_c0_r2d
+ends sc1_ls_c0_top_r2d
+
+subckt sc1_ls_c1_top_r2d (en core_ok33 gate33 vdd18 vdd33 vss)
+  Xcore (en x y vdd18 vdd33 vss) sc1_ls_core_r2d
+  Xnand (y  core_ok33 gate33 vdd33 vss) sc1_ls_c1_r2d
+ends sc1_ls_c1_top_r2d
