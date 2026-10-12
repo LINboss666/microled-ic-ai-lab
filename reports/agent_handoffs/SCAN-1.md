@@ -1,5 +1,48 @@
 # SCAN-1 agent handoff checkpoint
 
+## CURRENT_STATUS (single authoritative table; older sections below are history)
+
+Updated 2026-10-12 during SCAN-1R2 / S2-only. Baseline reviewed by the cloud reviewer:
+`poc/scan-driver-1ch` @ `fc6757bda8b410ebf34e4bbcf248eaa2a98a19b6`, main @
+`23e471cb936b421ee97e1250c3be06edf96f9937` (both re-read from the remote this session).
+
+| item | status | evidence |
+|---|---|---|
+| R0 measurement tools | **PASS** | `results/evidence/sc1_r2_checker.csv` 27/27 offline synthetic cases, 4 of them regression cases reproducing review findings; same tools re-run on real S1 data on the guest |
+| R1 dual-rail preflight | NOT_STARTED | next |
+| R2 S2 circuit matrix | NOT_STARTED | blocked behind R1 |
+| R3 S1 regression + real chaining | NOT_STARTED | tools changed, so old PASSes must be re-derived |
+| S1 (previous round) | conditionally accepted logic POC; **regression required by R3** | `s1r_truth.csv` 4/4, `s1r_transient.csv` 5/5 |
+| S3 / S4 | NOT STARTED, out of scope this round | — |
+| main / teammate branches | untouched, not merged | remote ref re-read |
+
+### R0 in one line each
+
+Reader and delay tool were rewritten against the specific defects the review reproduced, and are
+now proven **offline** so a DUT simulation is never the evidence that the measuring tool works:
+
+* group-wise parsing: `VALUE` is read as groups that each start with the axis, so a signal can no
+  longer slide against `time` (the old parser dropped unparsable rows and returned 0 V for a window
+  whose real max was 1.8 V, rc=0).
+* NaN/Inf/illegal tokens are hard failures (`rc 5`), verified on both Windows Python and guest
+  Python 2.6; a series 0, NaN, 0 can no longer report window max 0 with rc 0.
+* truncation / ragged groups / value-before-axis are distinct non-zero exits (7 / 8).
+* output is 6 **significant** digits, so a nanoampere is not printed as `0.000000`.
+* `qty()` now accepts scientific notation (`1e-6`, `2.5E-12`), which the old regex rejected while
+  its own docstring claimed support.
+* edge measurement is directional and window-scoped: a fall cannot borrow the end of the preceding
+  rise; `steady` requires an explicit window and reports min/max/mean over it instead of using the
+  waveform extremum as "settled"; `propdelay` measures input-50% to output-50% for one event.
+* tools are pure ASCII with a PEP 263 declaration: the guest's Python 2.6 refused a `µ` character
+  in a source comment, which would have broken every guest-side measurement.
+
+Compatibility confirmed: `test_safety_rules.py` and `test_psf_check.py` still pass, and the
+rewritten reader reproduces the previously audited S1 numbers exactly (T1 worst case 0.0753447 V;
+en rise 0.774 ns, fall 0.058 ns).
+
+## Historical sections (kept; superseded parts marked)
+
+
 Purpose: survive context compaction. Every fact below was measured in this session; nothing here is
 carried over from a previous task's memory without a re-read. Updated at the end of each stage.
 

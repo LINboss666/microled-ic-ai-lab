@@ -1,59 +1,70 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python
-"""SCAN-1: read one value out of a Spectre PSF-ASCII file, or fail loudly.
+"""SCAN-1 R0: strict PSF-ASCII reader. Rewritten after the SCAN-1R2 review found the previous
+version could return a wrong number with exit code 0.
 
-    sc1_read_psf.py --data <file> --sig en [--sweep 1.8 | --t0 500n --t1 595n] [--mode max|min|last]
+    sc1_read_psf.py --data FILE | --deck DECK.scs
+                    --sig NAME  [--sweep V | --t0 T --t1 T]
+                    [--mode last|max|min|mean|first] [--require-n K]
 
-Why this exists as its own tool: the S1 evidence CSV first stored the *threshold text*
-("want>0.9") instead of the measured voltage, because the shell picked the value out of a
-diagnostic line with tr/grep. A value in a report has to come from the waveform data.
+Parsing rules that exist because of specific reproduced defects:
 
-Failure is a first-class result here, not a silent empty string:
+ * The VALUE block is a sequence of groups that each start with the axis ("time" for tran, the
+   sweep name for dc). Values are collected PER GROUP, so a signal can never be shifted against
+   the axis. The old parser appended each value with float() inside a try and silently dropped
+   unparsable rows, which desynchronised time and signal: a window whose true max was 1.8 V
+   returned 0 V with rc=0.
+ * A group that does not contain the requested signal is an inconsistency, not a missing sample.
+ * NaN / Inf are rejected as BAD_VALUE. The old code let them through; a series 0, NaN, 0 then
+   reported window max = 0 and rc = 0.
+ * Length mismatch between the axis and a signal, or a file that ends mid-group, is TRUNCATED.
+ * Numbers are printed with 6 significant digits (not 6 decimals) so 1.23e-9 A does not become
+   0.000000. Callers state the unit; this tool reports the stored value.
 
-    exit 2  NO_DATA_FILE     path missing or empty file
-    exit 3  NO_SIGNAL        the signal is not in the TRACE section
-    exit 4  NO_POINT         the sweep point / time window has no samples
-    exit 5  BAD_NUMERIC      a sample is not parseable
-
-An empty CSV or a crashed simulation therefore cannot be mistaken for a pass.
-Time and sweep matching uses a relative window because psfascii samples are not exact.
+Exit codes (all failures are non-zero, by contract):
+    0 ok | 2 NO_DATA_FILE | 3 NO_SIGNAL | 4 NO_POINT / TOO_FEW / empty window
+    5 BAD_NUMERIC | 7 TRUNCATED_OR_LENGTH_MISMATCH | 8 BAD_AXIS
 """
 from __future__ import print_function
-import io, os, re, sys
+import io, math, os, re, sys
 
-SUF = {'f': 1e-15, 'p': 1e-12, 'n': 1e-9, 'u': 1e-6, 'm': 1e-3, 'k': 1e3, 'meg': 1e6, 'g': 1e9}
+SUF = {'f': 1e-15, 'p': 1e-12, 'n': 1e-9, 'u': 1e-6, 'm': 1e-3,
+       'k': 1e3, 'meg': 1e6, 'g': 1e9, 's': 1.0, 'a': 1.0, 'v': 1.0}
 
 
-def qty(tok, default_scale=1.0):
-    """Parse '1.8', '500n', '1e-6', '20meg'. Time args come in seconds, volts as-is."""
-    t = str(tok).strip()
+def finite(v):
+    return not (math.isinf(v) or math.isnan(v))
+
+
+def qty(tok):
+    """'1.8', '500n', '1e-6', '2.5E-12', '-40m', '20meg'. Returns a float or raises ValueError."""
+    t = str(tok).strip().strip('"')
     if not t:
-        raise ValueError('empty')
-    m = re.match(r'^([+-]?[0-9.]+)\s*([a-zA-Z]*)$', t)
+        raise ValueError('empty quantity')
+    m = re.match(r'^([+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)\s*([a-zA-Z]*)$', t)
     if not m:
-        raise ValueError('bad number: %r' % tok)
-    v = float(m.group(1))
+        raise ValueError('not a quantity: %r' % (tok,))
+    val = float(m.group(1))
     unit = m.group(2).lower()
     if not unit:
-        return v * default_scale
+        return val
     if unit in SUF:
-        return v * SUF[unit]
+        return val * SUF[unit]
     raise ValueError('unknown unit %r in %r' % (unit, tok))
 
 
 def locate(explicit=None, deck=None):
-    """Find the psfascii data file. Spectre writes sim/<stem>.raw/<something> where the real
-    data file is the one carrying both VALUE and TRACE sections (the logFile does not)."""
     if explicit:
         return explicit
     if deck:
-        base = os.path.splitext(deck)[0]
-        cand_dir = os.path.join(os.path.dirname(deck), 'sim', os.path.basename(base) + '.raw')
-        if os.path.isdir(cand_dir):
-            for name in sorted(os.listdir(cand_dir)):
-                p = os.path.join(cand_dir, name)
+        stem = os.path.splitext(os.path.abspath(deck))[0]
+        d = os.path.join(os.path.dirname(os.path.abspath(deck)), 'sim',
+                         os.path.basename(stem) + '.raw')
+        if os.path.isdir(d):
+            for name in sorted(os.listdir(d)):
+                p = os.path.join(d, name)
                 try:
-                    with io.open(p, encoding='utf-8', errors='replace') as f:
-                        txt = f.read()
+                    txt = io.open(p, encoding='utf-8', errors='replace').read()
                 except IOError:
                     continue
                 if re.search(r'^VALUE', txt, re.M) and re.search(r'^TRACE', txt, re.M):
@@ -62,25 +73,16 @@ def locate(explicit=None, deck=None):
 
 
 def parse(path):
+    """Return (groups, axis_name). groups = list of dict name->float, in file order."""
     with io.open(path, encoding='utf-8', errors='replace') as f:
         lines = f.readlines()
-    sweep_name = None
-    sigs = {}
     sec = None
-    order = []
-    for line in lines:
-        m = re.match(r'^"([A-Za-z0-9_.:\\[\]-]+)"\s+(TIME|VOLT|CURR)', line)
-        if m:
-            sec = None
-            name, kind = m.group(1), m.group(2)
-            if kind == 'TIME':
-                sigs.setdefault('time', [])
-            else:
-                sigs.setdefault(name, [])
-                if name not in order:
-                    order.append(name)
-            cur = name
-            continue
+    axis = None
+    groups = []
+    cur = None
+    trunc_in_group = False
+    for ln, raw in enumerate(lines, 1):
+        line = raw.rstrip('\n')
         if line.startswith('SWEEP'):
             sec = 'sweep'
             continue
@@ -91,96 +93,149 @@ def parse(path):
             sec = 'value'
             continue
         if line.startswith('END'):
+            if cur:
+                groups.append(cur)
+                cur = None
             sec = None
             continue
-        if sec == 'sweep':
-            t = line.split()
-            # this build writes:   SWEEP \n "dc" "sweep" PROP(   -> axis name is field 1
-            if t and sweep_name is None and not t[0].startswith('!'):
-                cand = t[0].strip('"')
-                if re.match(r'^[A-Za-z_][A-Za-z0-9_.]*$', cand):
-                    sweep_name = cand
+        if sec != 'value':
+            # the SWEEP header carries the axis name on the first quoted line
+            if sec == 'sweep' and axis is None:
+                m = re.match(r'^"([^"]+)"', line)
+                if m:
+                    axis = m.group(1)
             continue
-        if sec == 'value':
-            t = line.split()
-            if len(t) >= 2:
-                k = t[0].strip('"')
-                try:
-                    sigs.setdefault(k, []).append(float(t[1]))
-                except ValueError:
-                    pass
-    return sigs, sweep_name
+        m = re.match(r'^"([^"]+)"\s+(\S+)', line)
+        if not m:
+            if line.strip() and not line.startswith(')'):
+                raise ValueError('BAD_NUMERIC line %d: %r' % (ln, line[:60]))
+            continue
+        name, txt = m.group(1), m.group(2)
+        # a bare number that cannot be parsed must abort, never be dropped
+        low = txt.lower()
+        if low in ('nan', '1.#qnan', '-nan', 'inf', '+inf', '-infinity', '1.#inf'):
+            raise ValueError('BAD_NUMERIC non-finite %s at line %d for %s' % (txt, ln, name))
+        try:
+            v = float(txt)
+        except ValueError:
+            raise ValueError('BAD_NUMERIC line %d: %r' % (ln, txt))
+        if not finite(v):
+            raise ValueError('BAD_NUMERIC non-finite line %d for %s' % (ln, name))
+        if name == axis:
+            if cur is not None:
+                groups.append(cur)
+            cur = {name: v}
+            trunc_in_group = False
+        else:
+            if cur is None:
+                raise ValueError('BAD_AXIS value row before first axis row (line %d)' % ln)
+            if name in cur:
+                raise ValueError('TRUNCATED duplicate %s inside one group (line %d)' % (name, ln))
+            cur[name] = v
+    if cur:
+        raise ValueError('TRUNCATED file ends inside an unfinished group')
+    if not groups:
+        raise ValueError('TRUNCATED no complete data group parsed')
+    # length consistency: every group must carry the same signal set
+    ref = set(k for k in groups[0])
+    for i, g in enumerate(groups):
+        if set(g) != ref:
+            raise ValueError('TRUNCATED group %d has signals %s, group 0 has %s'
+                             % (i, sorted(set(g) - ref), sorted(ref - set(g))))
+    return groups, axis
+
+
+def as_columns(groups, axis):
+    cols = {}
+    for name in groups[0]:
+        cols[name] = [g[name] for g in groups]
+    return cols, (cols.get(axis) if axis in cols else None)
 
 
 def main():
-    args = sys.argv[1:]
+    a = sys.argv[1:]
     opt = {}
     i = 0
-    while i < len(args):
-        if args[i].startswith('--'):
-            opt[args[i][2:]] = args[i + 1] if i + 1 < len(args) else ''
+    while i < len(a):
+        if a[i].startswith('--'):
+            opt[a[i][2:]] = a[i + 1] if i + 1 < len(a) else ''
             i += 2
         else:
             i += 1
     path = locate(opt.get('data'), opt.get('deck'))
-    if not path or not os.path.exists(path) or os.path.getsize(path) == 0:
+    if not path or not os.path.exists(path):
         print("NO_DATA_FILE %s" % (path or 'not-located'))
         return 2
-    sigs, sweep_name = parse(path)
+    if os.path.getsize(path) == 0:
+        print("NO_DATA_FILE empty")
+        return 2
+    try:
+        groups, axis = parse(path)
+    except ValueError as e:
+        msg = str(e)
+        code = 5 if msg.startswith('BAD_NUMERIC') else (7 if msg.startswith('TRUNCATED') else 8)
+        print(msg)
+        return code
+    cols, axisv = as_columns(groups, axis)
     sig = opt.get('sig')
-    if sig not in sigs or not sigs[sig]:
-        print("NO_SIGNAL %s (have: %s)" % (sig, ','.join(sorted(sigs))[:200]))
+    if sig not in cols:
+        print("NO_SIGNAL %s (have: %s)" % (sig, ','.join(sorted(cols))[:160]))
         return 3
-    vals = sigs[sig]
+    vals = cols[sig]
     mode = opt.get('mode', 'last')
+    need = int(opt.get('require-n', '1') or 1)
 
     if 'sweep' in opt:
-        if not sweep_name or sweep_name not in sigs:
-            print("NO_SWEEP_AXIS")
+        if axisv is None:
+            print("BAD_AXIS no axis column")
+            return 8
+        try:
+            want = qty(opt['sweep'])
+        except ValueError as e:
+            print("BAD_NUMERIC %s" % e)
+            return 5
+        tol = max(1e-12, abs(want) * 1e-6)
+        picked = [v for (s, v) in zip(axisv, vals) if abs(s - want) <= tol]
+        if not picked:
+            print("NO_POINT sweep=%s not on axis (n=%d)" % (opt['sweep'], len(axisv)))
             return 4
-        want = qty(opt['sweep'])
-        axis = sigs[sweep_name]
-        idx = [k for k, a in enumerate(axis) if abs(a - want) <= max(1e-9, abs(want) * 1e-6)]
-        if not idx:
-            print("NO_POINT sweep=%g not in axis (n=%d)" % (want, len(axis)))
-            return 4
-        picked = [vals[k] for k in idx]
     elif 't0' in opt or 't1' in opt:
-        if 'time' not in sigs or not sigs['time']:
-            print("NO_TIME_AXIS")
-            return 4
-        t = sigs['time']
-        t0 = qty(opt['t0']) if 't0' in opt else min(t)
-        t1 = qty(opt['t1']) if 't1' in opt else max(t)
-        picked = [v for (tt, v) in zip(t, vals) if t0 <= tt <= t1]
-        need = int(opt.get('require-n', '1') or 1)
+        if axisv is None:
+            print("BAD_AXIS no time column for a window query")
+            return 8
+        try:
+            t0 = qty(opt['t0']) if 't0' in opt else min(axisv)
+            t1 = qty(opt['t1']) if 't1' in opt else max(axisv)
+        except ValueError as e:
+            print("BAD_NUMERIC %s" % e)
+            return 5
+        if t1 < t0:
+            print("BAD_NUMERIC window reversed t0=%g > t1=%g" % (t0, t1))
+            return 5
+        picked = [v for (s, v) in zip(axisv, vals) if t0 <= s <= t1]
         if len(picked) < need:
             print("TOO_FEW_SAMPLES %d<%d window=[%g,%g]" % (len(picked), need, t0, t1))
             return 4
     else:
-        picked = [vals[-1]]
+        picked = vals
 
     if not picked:
         print("NO_POINT empty selection")
         return 4
-    need = int(opt.get('require_n', 1))
-    if len(picked) < need:
-        # an assertion over a window with too few samples proves nothing; refuse to answer
-        print("TOO_FEW_SAMPLES n=%d need=%d" % (len(picked), need))
-        return 6
-    try:
-        if mode == 'max':
-            out = max(picked)
-        elif mode == 'min':
-            out = min(picked)
-        elif mode == 'mean':
-            out = sum(picked) / float(len(picked))
-        else:
-            out = picked[-1]
-    except TypeError:
-        print("BAD_NUMERIC")
-        return 5
-    print("%.6f" % out)
+    if mode == 'max':
+        out = max(picked)
+    elif mode == 'min':
+        out = min(picked)
+    elif mode == 'mean':
+        out = sum(picked) / float(len(picked))
+    elif mode == 'first':
+        out = picked[0]
+    elif mode == 'absmax':
+        out = max(picked, key=lambda x: abs(x))
+    else:
+        out = picked[-1]
+    # 6 significant digits: a nanoampere must not be printed as 0.000000
+    print("%.6g" % out)
     return 0
 
 
