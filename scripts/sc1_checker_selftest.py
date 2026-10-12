@@ -181,13 +181,15 @@ case('delay_window_selects_period', DELAY,
                            [0.9, 0.5, 0.1, 0.0] + [0.0] * 4 + [0.05, 0.5, 0.95, 1.0] + [1.0] * 5)),
                 0, 'duration_ns'),
      note='multiple periods: window picks exactly one event')
-case('delay_partial_then_full', DELAY,
+case('delay_partial_only_holds_low', DELAY,
      lambda f: (['--data', f, '--sig', 'out', '--vdd', '1.0', '--mode', 'edge', '--edge', 'rise',
                  '--t0', '0', '--t1', '12n'],
                 psf([('time', [i * 1e-9 for i in range(20)]),
                      ('out', [0.0, 0.15, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3,
                               0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3])]), 4, 'NO_EDGE'),
-     note='a partial 0->30 % excursion never reaches 90 % and must not be reported as an edge')
+     note='a partial 0->30 % excursion that then holds must not be reported as an edge. Renamed on '
+          'R2A: it was called delay_partial_then_full but contains no second, complete transition -- '
+          'the real double-event counterexample is r0a_splice_first_complete in sc1_r2a_selftest.py')
 case('delay_nonmonotonic_axis', DELAY,
      lambda f: (['--data', f, '--sig', 'out', '--vdd', '1.0', '--mode', 'edge', '--edge', 'rise'],
                 psf([('time', [0.0, 2e-9, 1e-9, 3e-9]), ('out', [0.0, 0.2, 0.5, 1.0])]), 8, 'BAD_AXIS'))

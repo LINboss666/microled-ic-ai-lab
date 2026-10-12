@@ -13,15 +13,15 @@ the reviewer re-reads the new remote evidence, the overall audit status of the t
 | item | status | evidence |
 |---|---|---|
 | R0-A edge splicing | **FIXED, proven offline** | `results/evidence/sc1_r2a_checker.csv` cases `r0a_*`; reviewer waveform (0,1,0,0,3.3,3.3 V) now gives NO_EDGE for `first_attempt` and 0.800 ns for `first_complete`, never 3.570 ns |
-| R0-B inverting propdelay | **FIXED, proven offline** | `r0b_inverting_2ns` asserts t_in=2.500 ns, t_out=4.500 ns, delay 2.000 ns via `--edge-in/--edge-out`; `r0b_same_dir_on_inverting_marked` returns 6.000 ns **plus** `earlier_opposite_event=YES`; legacy single-`--edge` interface still same-direction (`r0b_legacy_single_edge_same_phase`) |
-| R0-C reader/delay contracts | **FIXED, proven offline** | `r0c_*`: `--require-n` enforced for window, sweep and whole-file; unordered/duplicate time axis refused (`BAD_AXIS`); two-sample edge interpolates 0.2424->0.800 ns instead of crashing; unknown mode/edge and illegal K are `BAD_USAGE` |
+| R0-B inverting propdelay | **FIXED, proven offline** | `r0b_inverting_2ns` asserts t_in=2.500 ns, t_out=4.500 ns, delay 2.000 ns via `--edge-in/--edge-out`; `r0b_inverting_fall_to_rise_2ns` covers the other direction (t_in=4.500, t_out=6.500); `r0b_same_dir_on_inverting_marked` returns 6.000 ns **plus** `earlier_opposite_event=YES`; missing response and out-of-window input are `NO_EDGE`; legacy single-`--edge` interface still same-direction (`r0b_legacy_single_edge_same_phase`) |
+| R0-C reader/delay contracts | **FIXED, proven offline** | `r0c_*`: `--require-n` enforced for window, sweep and whole file; unordered/duplicate time axis refused (`BAD_AXIS`); two-sample edge interpolates 0.2424->0.800 ns instead of crashing; unknown mode/edge and illegal K are `BAD_USAGE`; reversed window (`t0>t1`) and non-finite / overflowing / unit-suffixed rail voltage (`nan`, `1e400`, `3V3`) are `BAD_NUMERIC` rc 5 on both tools, never a silent fallback |
 | R1-A checker fault = refusal | **FIXED, proven with local checker copies** | matrix `t01..t10`: awk syntax error, empty stdout, PASS-then-exit-3, missing/duplicate result token, `checked=0`, count mismatch, internal-count mismatch, PASS-with-FAIL detail, garbled report -- all refused at `PREFLIGHT_STAGE=supply_contract` **before** any Spectre call; the committed checker was never modified |
 | R1-B supply semantics | **FIXED** | unresolved master, non-numeric contract value, zero instances, unmatched entry all refused; node 0 accepted as the 0 V reference; hierarchy resolved through port bindings (`descendants=2` counted); per-master entries let core-domain and high-domain instances coexist; rail-tie contradictions refused; subckt-local net with a global rail's name is refused, not guessed |
 | R1-C negative-case protocol | **FIXED** | `scripts/sc1_preflight_selftest.sh` declares per case an expected rc **set**, rejection stage, required reason tokens (all must appear), the connection actually changed, and whether the simulator may be reached; missing deck/checker are `HARNESS_ERROR` rc 8; a positive whose simulator phase produced no data is BLOCKED, never PASS |
 | Preflight matrix (offline static mode) | **PASS 31/31** | `results/evidence/sc1_r2a_preflight_static.transcript.txt`; no simulator involved |
 | Preflight matrix (real PDK, full mode) | **PASS 31/31** | `results/evidence/sc1_r2a_preflight.csv` + `..._full.transcript.txt`; 7 acceptance cases ran the operating-point probe on the teacher PDK `section=tt` with `sim=yes`, 22 refusals/harness cases never called Spectre |
 | CSV read-back audit | **PASS** | `scripts/sc1_csv_audit.py` on the matrix: 16 columns per record, unique case ids, rc/stage/reason correspondence, verdict recomputed from the recorded logs |
-| Legacy 27-case suite | **PASS 27/27** (guest Python 2.6) | `results/evidence/sc1_r2a_legacy27.csv`; one case renamed because it was called `delay_propdelay_10ns` while asserting 5 ns |
+| Legacy 27-case suite | **PASS 27/27** (guest Python 2.6) | `results/evidence/sc1_r2a_legacy27.csv`; two misleading names corrected -- `delay_propdelay_10ns` asserted 5 ns (renamed to the same-phase case) and `delay_partial_then_full` contains no second transition at all (renamed `delay_partial_only_holds_low`; the real double-event counterexample is `r0a_splice_first_complete`) |
 | `psf_check` 9 cases / `safety_rules` 21 cases | **PASS on Python 3** (Windows + cloud reviewer) | these two suites use `open(..., encoding=)` and cannot run under the guest's Python 2.6 -- recorded as NOT_RUN on the guest, not as a pass there |
 | R2 new S2 circuit | **NOT STARTED** (out of scope this round) | — |
 | R3 real-circuit regression | **NOT STARTED** (out of scope this round) | S1 truth table / transient windows have **not** been re-read with the fixed tools; the old `s1r_*.csv` are prior-round evidence only |
@@ -54,10 +54,23 @@ the reviewer re-reads the new remote evidence, the overall audit status of the t
 * `SUPPLY_CHECK_AWK` exists so tests can point at a broken local copy of the checker; the committed
   checker is never edited to prove the gate closes.
 
+### The previous round's 11 matrix cases are all still present, under new ids
+
+`c01 -> p01` (legacy single-rail accepts), `c02 -> n12` (the committed floating-vss bench is still
+refused), `c03 -> p02` (correct 1.8/3.3 dual supply), `c04 -> n01` (rail with no source),
+`c05 -> n02` (wrong rail value), `c06 -> n03` (pins swapped), `c07 -> n04` (reference lifted),
+`c08 -> p05` and `c09 -> p06` (declared 0 V power-down is a legal condition), `c10 -> n08` (a real
+extra source shorting two declared rails), `c11a -> n09` (contract omits a port the cell exposes).
+New rows extend the matrix to zero instances (n05), unknown instance master (n06), illegal contract
+value (n07), reference node 0 (p04), hierarchical buffer with descendants audited (p03), mixed core
+and high-domain instances through per-master entries (p07), local net with a global rail's name
+(n11), ten checker fault-injection cases (t01..t10) and two harness-error cases (h01, h02). No case
+was dropped to keep the suite green, and no expectation was loosened to accept a wrong circuit.
+
 ### Reproducing this round offline (no PDK, no licence)
 
 ```
-python scripts/sc1_r2a_selftest.py --out results/evidence/sc1_r2a_checker.csv   # 39 cases
+python scripts/sc1_r2a_selftest.py --out results/evidence/sc1_r2a_checker.csv   # 48 cases
 python scripts/sc1_checker_selftest.py --out results/evidence/sc1_r2a_legacy27.csv
 PROJ=/path/to/checkout bash scripts/sc1_preflight_selftest.sh static            # 31 cases, rc 0
 ```
@@ -68,7 +81,7 @@ an allowed exit-code set `1,2` and requires the reason token `checker_exit=` plu
 
 ### Not verified by me, and left open for the reviewer
 
-* Cloud-side re-run of the 39 + 27 suites and of `static` mode (needs bash + awk + Python only).
+* Cloud-side re-run of the 48 + 27 suites and of `static` mode (needs bash + awk + Python only).
 * Whether the S1 truth-table / transient-window numbers still hold when re-read with the fixed reader
   and delay tool -- that is R3, explicitly not started here.
 * Any S2 circuit behaviour: nothing in this round judges a circuit; `R2` is NOT_STARTED and the old

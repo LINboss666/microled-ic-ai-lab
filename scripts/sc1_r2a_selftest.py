@@ -179,6 +179,14 @@ check('r0b_window_selects_event', 'window picks the second of two input events',
       DELAY, ['--data', p_same, '--mode', 'propdelay', '--sig-in', 'a', '--sig-out', 'b',
               '--edge-in', 'rise', '--edge-out', 'rise', '--t0', '6n', '--t1', '9n'],
       4, expect_in='NO_EDGE')
+# the other inverting direction: a falling input must pair with a rising output, not with a fall
+p_inv2 = write('inv2.psf', psf([('time', [i * 1e-9 for i in range(10)]),
+                               ('en', [1.8, 1.8, 1.8, 1.8, 1.8, 0.0, 0.0, 0.0, 0.0, 1.8]),
+                               ('out', [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.3, 3.3, 3.3])]))
+check('r0b_inverting_fall_to_rise_2ns', 'en fall -> out rise is 2.0 ns, measured 50% to 50%',
+      DELAY, ['--data', p_inv2, '--mode', 'propdelay', '--sig-in', 'en', '--sig-out', 'out',
+              '--vdd-in', '1.8', '--vdd-out', '3.3', '--edge-in', 'fall', '--edge-out', 'rise'],
+      0, asserts=[('delay_ns', 2.0, 0.05), ('t_in', 4.5e-9, 1e-12), ('t_out', 6.5e-9, 1e-12)])
 
 # ============================================================ R0-C reader contracts
 p_small = write('small.psf', psf([('time', [0.0, 1e-9]), ('en', [0.0, 1.8])]))
@@ -204,6 +212,21 @@ check('r0c_sig_fig_precision_kept', '1.23 nA is not printed as zero',
 check('r0c_unknown_edge_word', 'an unknown edge name is refused by the delay tool',
       DELAY, ['--data', p_ramp, '--sig', 'out', '--vdd', '3.3', '--mode', 'edge',
               '--edge', 'rising'], 9, expect_in='BAD_USAGE')
+
+check('r0c_reversed_window_delay', 'a window that ends before it starts is refused',
+      DELAY, ['--data', p_ramp, '--sig', 'out', '--vdd', '3.3', '--mode', 'edge', '--edge', 'rise',
+              '--t0', '3n', '--t1', '1n'], 5, expect_in='window reversed')
+check('r0c_reversed_window_reader', 'the reader refuses the same reversed window',
+      READER, ['--data', p_ramp, '--sig', 'out', '--mode', 'max', '--t0', '3n', '--t1', '1n'],
+      5, expect_in='window reversed')
+check('r0c_rail_not_finite', 'nan / inf / overflowing VDD is refused, never coerced',
+      DELAY, ['--data', p_ramp, '--sig', 'out', '--vdd', '1e400', '--mode', 'edge'], 5,
+      expect_in='finite')
+check('r0c_rail_unit_suffix_refused', 'a rail written as 3V3 is not silently read as 3',
+      DELAY, ['--data', p_ramp, '--sig', 'out', '--vdd', '3V3', '--mode', 'edge'], 5,
+      expect_in='not a number')
+check('r0c_missing_signal_argument', 'a mode that needs --sig without --sig is BAD_USAGE',
+      DELAY, ['--data', p_ramp, '--vdd', '3.3', '--mode', 'edge'], 9, expect_in='BAD_USAGE')
 
 # ============================================================ R1-B supply checker (structural)
 DUT = ('subckt dut (in out vdd18 vdd33 vss)\n'
@@ -259,6 +282,16 @@ Vss (vss 0) vsource dc=0
 X0 (en nb vdd18 vss) inv18
 X1 (nb out vdd18 vdd33 vss) dut
 """)], 0, expect_in='SUPPLY_RESULT PASS', isawk=True, stage='structure')
+check('r1b_contract_value_with_unit', 'vdd18=1V8 is refused, not truncated to 1',
+      AWK, ['-v', 'smap=vdd18=1V8 vdd33=3.3 vss=0', OK_DECK], 1,
+      expect_in='not a finite number', isawk=True, stage='structure')
+check('r1b_duplicate_conflicting_entry', 'the same port mapped to two voltages is refused',
+      AWK, ['-v', 'smap=vdd18=1.8 vdd18=2.5 vdd33=3.3 vss=0', OK_DECK], 1,
+      expect_in='duplicate contract entry vdd18 conflicts', regression=True,
+      isawk=True, stage='structure')
+check('r1b_empty_contract_entry', 'an empty contract cannot certify anything',
+      AWK, ['-v', 'smap=', OK_DECK], 1, expect_in='empty or malformed contract',
+      isawk=True, stage='structure')
 check('r1b_uncovered_supply_port', 'a supply-like port outside the contract is refused',
       AWK, ['-v', 'smap=vdd18=1.8 vss=0', OK_DECK], 1, expect_in='not covered by the contract',
       isawk=True, stage='structure')
