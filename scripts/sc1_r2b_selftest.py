@@ -127,8 +127,11 @@ base = [PY, DELAY, '--data', p_ev, '--mode', 'propdelay', '--sig-in', 'en', '--s
 
 check('r2ba_first_event_unanswered_refused',
       'the first pulse has no response before the next input change: refuse',
-      base, 4, tokens=['NO_RESPONSE'], forbidden=['delay_ns=12.000'], regression=True,
-      note='b603820 returned rc=0 with delay_ns=12.000 by borrowing cycle 2')
+      base, 4, tokens=['OUTSIDE_ATTRIBUTION'], forbidden=['PROPDELAY', 'MEASUREMENT_VALID=YES'],
+      regression=True,
+      note='b603820 returned rc=0 with delay_ns=12.000 by borrowing cycle 2; R2C named this refusal '
+           'OUTSIDE_ATTRIBUTION because a candidate exists but sits past the bound, and only a '
+           'certified line may print delay_ns=')
 check('r2ba_second_event_2ns',
       'explicitly selecting the second input event gives the real 2.000 ns',
       base + ['--in-event', 'second'], 0,
