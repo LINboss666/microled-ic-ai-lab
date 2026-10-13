@@ -73,6 +73,18 @@ than by accepting a mismatched hash:
 Delivered: **9 preflight processes + 9 DUT processes** (`R3_PROCESS_COUNT preflight=9 DUT=9`), counted
 from artifacts on disk, not asserted — this round is 18 Spectre invocations, not "9 simulations".
 
+The nine deck files the simulator read are still on the guest at
+`cadence_work/sc1_sim/r3_chain/*.scs`, and their sha256 re-read one by one equals the `deck_sha256`
+column of `sc1_r3_chain_manifest.csv` (`r3_q0_off d081864d0e0c…`, `r3_write_q1_on 67fb26b08b26…`,
+`r3_blank_assert 67c590ef2cd4…`, `r3_blank_release e5b458d4f3b9…`, `r3_write_q0_off bd808f961d36…`,
+`r3_repeat_101 f6a3fb12a868…`, `r3_external_guard 4b67ac132290…`, `r3_load5p 71a47958c2f4…`,
+`r3_fault_blank_tied_vss 9989e6da5743…`) — 9 for 9. Following the R2E practice, the deck text is not
+duplicated into the repository: **`--dry --expect 9` regenerates exactly these bytes**, and it does so
+identically from Windows Python 3.12 and from the guest's Python 2.6.6 — the nine files regenerated on
+this host hashed to the same nine values listed above, and the four cell copies written beside them
+came back `d1eed4e242fa…`, `c078637719cc…`, `31324ca541a6…`, `4dffb7856cc4…`, i.e. the repository
+bytes. So a reviewer with only the repository can rebuild the exact deck every number came from.
+
 ## 3 Stimulus framework, and the deck held to its own word
 
 One framework (`POC_ASSUMPTION` stimulus choices, explicitly **not** a setup/hold budget): clock period
