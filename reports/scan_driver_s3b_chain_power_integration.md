@@ -272,6 +272,7 @@ dependency log's absolute paths are scrubbed to `<path-redacted>`):
 | `sc1_s3b_manifest.csv` | 9 256 | `7047685923c63e6cad5a105f9d9e4dce2a34c93d5294e9a24338d72d4be9bc4c` |
 | `sc1_s3b_waveform_samples_p01.csv` … `_p15.csv` | 149 282 … 245 740 each, 3 583 407 in total | one row per part in `sc1_s3b_samples_parts.csv`, whole file `a9e323549d87cd6cea3cd31b31e10783699e899e034273a1c100412cd4023bdd` |
 | `sc1_s3b_identity.csv` | 8 000 | `4e5060b4ba68dbb5a973031e91321122194aa9e3c55cc79c8544eb21344d7f5a` |
+| `sc1_s3b_samples_parts.csv` | 3 690 | `52be5c6e4cd15dd617bb2d257fff15c836180bc448bb80798a42eea7df111f54` |
 | `sc1_s3b_dependency_log.txt` | 40 812 | `b2fd1a39ed04e1dffad1f83dd7ec015ae0dcd2b5644234cd804402399c26094f` |
 
 **Why the sample export is in fifteen pieces.** `scripts/precommit_safety_check.py` refuses any staged
@@ -285,7 +286,10 @@ the original bytes. The whole file is not lost — it is the byte object of reco
 `cadence_work/sc1_sim/delivered_whole_files/` (git-ignored), md5 `21c0fc5b729acd2c6c3b1c63a3b86c8e`,
 identical to the bytes pulled from the simulator host. The verifier reassembles the parts before every
 check and adds one of its own: a part whose digest or length differs from its index row, or a rejoin
-that does not reach the recorded whole-file digest, fails the delivery.
+that does not reach the recorded whole-file digest, fails the delivery. The partition itself is
+reproducible: the same splitter run on the simulator host under Python 2.6.6 over its copy of the
+whole file produced the same fifteen part digests and the same index digest (md5 over the concatenated
+digest list, both sides: `2eac9740f9e570b30c4e6372276498fd`).
 
 `sc1_s3b_identity.csv` pairs each deck's 64-hex digest with the 64-hex digest of the simulator's own
 data file, and every one of the 4 803 sample rows carries that same pair, so a sample can be traced
