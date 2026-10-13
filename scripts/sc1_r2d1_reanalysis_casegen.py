@@ -26,7 +26,8 @@ try:
 except NameError:
     _text = str
 
-STEP_NS = 10
+STEP_NS = 1     # the historical transient ran with maxstep=1n; a 10 ns grid cannot even see
+              # the 450..460 ns release ramp that the T1 and T3 labels name
 V18 = 1.8
 
 
@@ -46,20 +47,56 @@ def ns(t):
     return int(round(t * 1e9))
 
 
+def pwl_eval(t_ns, points):
+    """Linear interpolation of a `wave=[t v t v ...]` stimulus, exactly as vsource would produce it.
+
+    The step approximation used before could not be compared against the frozen PWL: at 1 ns sampling
+    the historical release ramps 1.8 V -> 0 V across 450..460 ns, and a step at 450 ns is a different
+    stimulus. These breakpoints are copied from scripts/sc1_s1r.sh.
+    """
+    if t_ns <= points[0][0]:
+        return points[0][1]
+    for i in range(1, len(points)):
+        if t_ns <= points[i][0]:
+            t0, v0 = points[i - 1]
+            t1, v1 = points[i]
+            if t1 == t0:
+                return v1
+            return v0 + (v1 - v0) * (t_ns - t0) / (t1 - t0)
+    return points[-1][1]
+
+
+BLANK_POINTS = [(0, 1.8), (450, 1.8), (460, 0.0), (900, 0.0)]      # Vbl wave=[0 1.8 450n 1.8 460n 0 900n 0]
+DATA_POINTS = [(0, 0.0), (260, 0.0), (270, 1.8), (620, 1.8), (630, 0.0), (900, 0.0)]
+
+
 def expected_q(t):
     return V18 if 400 <= ns(t) <= 650 else 0.0
 
 
 def expected_clk(t):
-    return V18 if (ns(t) >= 50 and ((ns(t) - 50) % 100) < 50) else 0.0
+    # Vclk type=pulse val0=0 val1=1.8 delay=50n rise=1n fall=1n period=100n width=50n
+    n = ns(t)
+    if n < 50:
+        return 0.0
+    phase = (n - 50) % 100
+    if phase < 1:
+        return V18 * phase
+    if phase < 50:
+        return V18
+    if phase < 51:
+        return V18 * (51 - phase)
+    return 0.0
 
 
 def expected_d(t):
-    return V18 if 270 <= ns(t) <= 620 else 0.0
+    return pwl_eval(ns(t), DATA_POINTS)
 
 
 def expected_blank(t, faulted=False):
-    return 0.0 if faulted else (V18 if ns(t) <= 450 else 0.0)
+    if faulted:
+        return 0.0
+    return pwl_eval(ns(t), BLANK_POINTS)
 
 
 def expected_en(t, faulted=False):
@@ -99,8 +136,13 @@ def write_dc_runs(sim, blank_override=None):
     return blank_override
 
 
-def write_tran_run(sim, signals=None, fault=True):
-    """The transient run, plus the BLANK-rewired negative unless the case drops it."""
+def write_tran_run(sim, signals=None, fault=True, over=None):
+    """The transient run, plus the BLANK-rewired negative unless the case drops it.
+
+    `over` mutates individual signals of the NORMAL run (a constant or a function of the time in ns) so
+    a self-test can express "the label says X, the recorded waveform says Y" without touching the decks,
+    the history or the faulted run.
+    """
     want = signals or ('en', 'blank', 'q', 'qbar', 'd', 'clk')
     ts = times()
     wave = {'time': ts, 'en': [expected_en(t) for t in ts],
@@ -109,13 +151,21 @@ def write_tran_run(sim, signals=None, fault=True):
             'qbar': [V18 - expected_q(t) for t in ts],
             'd': [expected_d(t) for t in ts],
             'clk': [expected_clk(t) for t in ts]}
+    for name, fn in (over or {}).items():
+        if name not in wave:
+            raise ValueError('unknown signal %s' % name)
+        wave[name] = ([fn(ns(t)) for t in ts] if callable(fn)
+                      else [float(fn) for t in ts])
     order = ['time', 'en', 'blank', 'q', 'qbar', 'd', 'clk']
     chosen = [(name, wave[name]) for name in order if name == 'time' or name in want]
     write(os.path.join(sim, 's1r_dff.raw', 'sw1.tran.tran'), psf(chosen))
     if fault:
         fwave = dict(chosen)
         fwave['en'] = [expected_en(t, True) for t in ts]
-        fwave['blank'] = [expected_blank(t, True) for t in ts]
+        # the negative rewires the GATE'S BLANK PIN to vss; the blank NODE keeps its historical PWL,
+        # exactly as the sed in scripts/sc1_s1r.sh left it. Zeroing the node here would describe a
+        # different fault and would make the T1 stimulus check fail for the wrong reason.
+        fwave['blank'] = [expected_blank(t, False) for t in ts]
         for name in ('q', 'qbar', 'd', 'clk', 'time'):
             fwave.setdefault(name, wave[name])
         fchosen = [(name, fwave[name]) for name in order if name in fwave]
@@ -150,9 +200,13 @@ def write_decks(dk):
     pins = {'s1r_dc_blank0': 'blank', 's1r_dc_blank1.8': 'blank', 's1r_dff': 'blank',
             's1r_fault_blank_clamped': 'vss'}
     for name, blankpin in sorted(pins.items()):
+        # the negative differs from the positive in ONE line -- the gate's BLANK pin. The blank SOURCE
+        # keeps its historical PWL, which is what the re-analysis has to see to accept the bench as the
+        # T1 experiment at all.
         write(os.path.join(dk, name + '.scs'),
               'simulator lang=spectre insensitive=yes\n'
               '// synthetic deck identity for %s\n'
+              'Vbl (blank 0) vsource type=pwl wave=[0 1.8 450n 1.8 460n 0 900n 0]\n'
               'X2 (qbar %s en vdd vss) sc1_scan_gate\n' % (name, blankpin))
 
 

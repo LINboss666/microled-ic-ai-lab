@@ -38,7 +38,7 @@ def main():
             ncol = len(fields)
         elif len(fields) != ncol:
             print('CSV_WRITER_ERROR: row has %d fields, first row had %d: %r'
-                  % (len(fields), ncol, raw[:120]))
+                  % (len(fields), ncol, raw[:400]))
             return 1
         lines.append(fields)
     body = u('')

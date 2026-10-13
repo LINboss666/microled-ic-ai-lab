@@ -41,7 +41,7 @@ REANALYSIS = os.path.join(HERE, 'sc1_r2d_s1_reanalysis.py')
 
 
 def build_tree(root, decks=True, history=True, blank_defect=False, evidence_signals=True,
-               fault_raw=True):
+               fault_raw=True, tran_over=None):
     """Write one synthetic input tree and return the argument list for the re-analysis."""
     sim = os.path.join(root, 'sim')
     dk = os.path.join(root, 'deck')
@@ -51,7 +51,7 @@ def build_tree(root, decks=True, history=True, blank_defect=False, evidence_sign
     blank_override = {0.0: 0.7} if blank_defect else None
     tran_signals = ('en', 'q') if not evidence_signals else None
     CG.write_dc_runs(sim, blank_override=blank_override)
-    CG.write_tran_run(sim, signals=tran_signals, fault=fault_raw)
+    CG.write_tran_run(sim, signals=tran_signals, fault=fault_raw, over=tran_over)
     if decks:
         CG.write_decks(dk)
     hp, hn, fh = None, None, None
@@ -91,7 +91,7 @@ def main():
     argv = sys.argv[1:]
     root = os.path.dirname(HERE)
     out_csv = argv[argv.index('--out') + 1] if '--out' in argv else os.path.join(
-        root, 'results', 'evidence', 'sc1_r2d1_reanalysis_selftest.csv')
+        root, 'results', 'evidence', 'sc1_r2d2_reanalysis_selftest.csv')
     work = os.path.join(root, 'cadence_work', 'sc1_sim', 'r2d1_reanalysis_mock')
     if os.path.isdir(work):
         shutil.rmtree(work)
@@ -162,12 +162,38 @@ def main():
          'with no historical values there is nothing to agree with, so agreement is not claimed')
 
     case('unreadable_evidence', {'evidence_signals': False}, 1,
-         ['S1_HISTORICAL_REANALYSIS: FAIL', 'UNREADABLE'], ['S1_HISTORICAL_REANALYSIS: CERTIFIED'],
+         ['S1_HISTORICAL_REANALYSIS: FAIL', 'unreadable', 'rc=3'], ['S1_HISTORICAL_REANALYSIS: CERTIFIED'],
          'a transient raw without the states its window names cannot verify the stimulus')
 
     case('no_fault_run', {'fault_raw': False}, 3,
          ['S1_HISTORICAL_REANALYSIS: PARTIAL_NOT_VERIFIED'], ['S1_HISTORICAL_REANALYSIS: CERTIFIED'],
          'a missing negative leaves the checker uncertified; it is never skipped into a pass')
+
+    # ---- R2D2: whole-window state criteria, added only because the review showed the hole ----------
+    # the reviewer's exact C counter-example: blank = 1.8 V at 410 ns and 0 V at every other sample
+    case('c_blank_spike_at_410ns',
+         {'tran_over': {'blank': lambda t: 1.8 if t == 410 else 0.0}}, 1,
+         ['S1_HISTORICAL_REANALYSIS: FAIL', 'frozen PWL'],
+         ['S1_HISTORICAL_REANALYSIS: CERTIFIED', 'PARTIAL_NOT_VERIFIED'],
+         'one high sample cannot certify a window: the PWL comparison rejects it')
+    case('c_blank_never_releases', {'tran_over': {'blank': 1.8}}, 1,
+         ['S1_HISTORICAL_REANALYSIS: FAIL', 'frozen PWL'],
+         ['S1_HISTORICAL_REANALYSIS: CERTIFIED'],
+         'a release the label names but the waveform never performs is a stimulus mismatch')
+    case('c_high_state_dips',
+         {'tran_over': {'q': lambda t: 0.4 if t == 420 else CG.expected_q(t * 1e-9)}}, 1,
+         ['S1_HISTORICAL_REANALYSIS: FAIL', 'throughout the window'],
+         ['S1_HISTORICAL_REANALYSIS: CERTIFIED'],
+         'a one-sample fall inside a state that must hold high fails that state (window MINIMUM)')
+    case('c_low_state_rises',
+         {'tran_over': {'q': lambda t: 0.0 if t == 560 else CG.expected_q(t * 1e-9)}}, 1,
+         ['S1_HISTORICAL_REANALYSIS: FAIL', 'throughout the window'],
+         ['S1_HISTORICAL_REANALYSIS: CERTIFIED'],
+         'a one-sample rise inside a state that must stay low fails that state (window MAXIMUM)')
+    case('c_clock_stuck_high', {'tran_over': {'clk': 1.8}}, 1,
+         ['S1_HISTORICAL_REANALYSIS: FAIL', 'rise(s) and'],
+         ['S1_HISTORICAL_REANALYSIS: CERTIFIED'],
+         'a clock that never edges is not the frozen stimulus, however plausible the en number looks')
 
     hdr = ['case_id', 'reanalysis_rc', 'reasons', 'verdict', 'note', 'data_class']
     import sc1_r2d_s1_reanalysis as R

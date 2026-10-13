@@ -46,6 +46,9 @@ import csv, hashlib, io, math, optparse, os, re, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 READER = os.path.join(HERE, 'sc1_read_psf.py')
+sys.path.insert(0, HERE)
+import sc1_s1_window_contract as WC       # the window STATE contract, shared with the future entry
+READER_CMD = '%s %s' % (sys.executable, READER)
 VOL = 0.9                      # historical decision level, unchanged on purpose
 N_PROBE_CEIL = 8192            # doubling ceiling of probe_n: reaching it is a lower bound, not an n
 DISPLAY_SIGS = 6               # sc1_read_psf.py prints "%.6g"
@@ -166,27 +169,19 @@ def judge(value, kind):
     return 'PASS' if ((value < VOL) if kind == 'lt' else (value > VOL)) else 'FAIL'
 
 
-# transient windows exactly as scripts/sc1_s1r.sh measured them. The mode follows the assertion, not
-# convenience: a "must stay above 0.9 V" check is only violated by the window MINIMUM, and a "must
-# stay below" check by the maximum.
-# The last field lists the states each window label names, as sig:mode:predicate, and is checked --
-# an en number alone cannot show that the window was applied to the states it claims.
+# the five transient windows, by id. R2D2: the criteria themselves live in ONE place --
+# scripts/sc1_s1_window_contract.py, which the future regression entry imports too -- because this file
+# used to judge a high state with the window MAXIMUM and a low state with the MINIMUM. That proves only
+# that a value appeared once: the reviewer put blank at 1.8 V at 410 ns and 0 V at every other sample and
+# still got CERTIFIED. A state is now required to hold across the whole window, the release ramp is
+# checked sample by sample against the frozen PWL, and the clock is judged by its real edges.
+# (id, historical row label, historical description as written in scripts/sc1_s1r.sh)
 WINDOWS = [
-    ('T1', 'T1_blank_high_while_Q1_en_low', 'en', '400n', '455n', 'max', 'lt',
-     'T1 BLANK=1 while Q=1 : en must stay low',
-     [('blank', 'max', 'ge'), ('q', 'max', 'ge'), ('qbar', 'max', 'le')]),
-    ('T2', 'T2_blank_low_while_Q1_en_high', 'en', '520n', '620n', 'min', 'gt',
-     'T2 BLANK=0 while Q=1 : en must be high',
-     [('blank', 'min', 'le'), ('q', 'max', 'ge'), ('clk', 'max', 'ge')]),
-    ('T3', 'T3_q_undisturbed_on_release', 'q', '410n', '520n', 'min', 'gt',
-     'T3 q undisturbed across BLANK release',
-     [('blank', 'max', 'ge'), ('qbar', 'max', 'le'), ('clk', 'max', 'ge')]),
-    ('T4', 'T4_blank_low_while_Q0_en_low', 'en', '700n', '860n', 'max', 'lt',
-     'T4 BLANK=0 while Q=0 : en must be low',
-     [('blank', 'min', 'le'), ('q', 'max', 'le'), ('d', 'max', 'le')]),
-    ('T5', 'T5_q_follows_falling_data_edge', 'q', '700n', '860n', 'max', 'lt',
-     'T5 q follows the falling-data clock edge',
-     [('blank', 'min', 'le'), ('qbar', 'max', 'ge'), ('clk', 'max', 'ge')]),
+    ('T1', 'T1_blank_high_while_Q1_en_low', 'T1 BLANK=1 while Q=1 : en must stay low'),
+    ('T2', 'T2_blank_low_while_Q1_en_high', 'T2 BLANK=0 while Q=1 : en must be high'),
+    ('T3', 'T3_q_undisturbed_on_release', 'T3 q undisturbed across BLANK release'),
+    ('T4', 'T4_blank_low_while_Q0_en_low', 'T4 BLANK=0 while Q=0 : en must be low'),
+    ('T5', 'T5_q_follows_falling_data_edge', 'T5 q follows the falling-data clock edge'),
 ]
 
 # (label, dc deck, blank source dc, swept qbar, expected state, historical (Q,BLANK) key)
@@ -386,7 +381,10 @@ def main():
 
     # ---- the five transient windows -----------------------------------------
     raw = os.path.join(o.sim_dir, 's1r_dff.raw', 'sw1.tran.tran')
-    for (tid, label, sig, t0, t1, mode, kind, desc, evidence) in WINDOWS:
+    for (tid, label, desc) in WINDOWS:
+        w = WC.WINDOWS[tid]
+        (sig, mode, kind) = w['out']
+        t0, t1 = w['t0'], w['t1']
         dsha = deck_hash('s1r_dff.scs')
         if not os.path.isfile(raw):
             rows.append([label, 'transient_window', 's1r_dff.raw/sw1.tran.tran', 'MISSING',
@@ -402,24 +400,21 @@ def main():
         n, nkind = (probe_n(raw, args) if finite(val) else (0, 'none'))
         xsum, xstat = awk_scan(raw, 'time', sig, si(t0), si(t1))
         agree, _xv = crosscheck_agrees(val, xsum, mode) if xstat == 'OK' else (xstat, None)
-        # the states the window label names have to be present in the same file and consistent with
-        # that label; an en number alone cannot show which circuit state the window was applied to
-        reads = ['%s=%s(rc=%s)' % (sig, tok, rc)]
-        st_fail = 0
-        for (esig, emode, pred) in evidence:
-            ev, erc, etok = read_num(raw, ['--sig', esig, '--t0', t0, '--t1', t1,
-                                           '--mode', emode])
-            if not finite(ev):
-                reads.append('%s=UNREADABLE(rc=%s,%s): %s' % (esig, erc, emode, etok[:40]))
-            else:
-                reads.append('%s=%s(rc=%s,%s)' % (esig, etok, erc, emode))
-            if not finite(ev):
-                st_fail = 1
-            elif pred == 'ge' and ev < VOL:
-                st_fail = 1
-            elif pred == 'le' and ev > VOL:
-                st_fail = 1
-        stimulus = 'FAIL' if st_fail else 'PASS'
+        # one source of truth for the window: the shared contract re-reads the output assertion, every
+        # whole-window state, the blank PWL sample by sample and the clock's edges
+        cverdict, crows = WC.evaluate(raw, tid, reader_cmd=READER_CMD)
+        checks = [r for r in crows if r[1] not in ('window',)]
+        out_row = [r for r in checks if r[1] == 'output_assertion'][0]
+        others = [r for r in checks if r[1] != 'output_assertion']
+        bad = [r for r in others if r[6] != 'PASS']
+        stimulus = 'PASS' if not bad else 'FAIL'
+        reads = ['%s=%s(rc=%s)' % (sig, tok, rc)] + ['%s/%s=%s: %s' % (r[1], r[2], r[6], r[4][:70])
+                                                    for r in others]
+        if out_row[6] != assertion:
+            # the contract and this file must agree on the same assertion; a divergence is a bug and is
+            # reported instead of being papered over by whichever one said PASS
+            reads.append('ASSERTION_DISAGREEMENT contract=%s local=%s' % (out_row[6], assertion))
+            stimulus = 'FAIL'
         hist = hist_win.get(tid, '')
         base = awk_value(xsum, mode)
         base = base if finite(base) else val     # history compares against the full-precision value
@@ -433,15 +428,14 @@ def main():
                 agreement = ('WITHIN_TOLERANCE' if abs(base - hv) <= tol_pair(hv, base)
                              else 'OUTSIDE_TOLERANCE')
         row_status = 'PASS_ROW'
-        if (assertion != 'PASS' or stimulus == 'FAIL' or xstat != 'OK'
-                or agree == 'MISMATCH'):
+        if (assertion != 'PASS' or stimulus == 'FAIL' or xstat != 'OK' or agree == 'MISMATCH'):
             row_status = 'FAIL'
         elif (dsha == 'MISSING' or agreement in ('NO_HISTORY', 'OUTSIDE_TOLERANCE',
                                                  'HISTORY_UNPARSABLE') or nkind == 'lower_bound'
               or not finite(val)):
             row_status = 'NOT_CERTIFIED'
-        trace.append('window %s evidence signals: %d read, %s'
-                     % (tid, 1 + len(evidence), 'all consistent' if not st_fail else 'INCONSISTENT'))
+        trace.append('window %s contract: %s (%d state/stimulus checks, %d failing)'
+                     % (tid, cverdict, len(others), len(bad)))
         rows.append([label, 'transient_window', os.path.relpath(raw, o.sim_dir), sha256(raw),
                      's1r_dff.scs', dsha,
                      'raw present, deck ' + ('present' if dsha != 'MISSING' else 'MISSING'),
@@ -453,8 +447,11 @@ def main():
                      ('%.6g' % tol_pair(as_float(hist), base))
                      if hist and as_float(hist) is not None else '',
                      agreement, row_status, LABELS,
-                     desc + ' ; assertion kept verbatim: %s %g V ; difference against history uses '
-                     'the full-precision awk value ; %s' % (mode, VOL, TOL_SOURCE)])
+                     desc + ' ; the assertion and every state rule come from '
+                     'scripts/sc1_s1_window_contract.py ; a high state must hold at the window MINIMUM '
+                     'and a low state at the MAXIMUM, blank is compared sample by sample against the '
+                     'frozen PWL (band %g V) and the clock by its real edges ; difference against '
+                     'history uses the full-precision awk value ; %s' % (WC.PWL_TOL, TOL_SOURCE)])
 
     # ---- BLANK-clamped fault injection --------------------------------------
     fr = o.fault_raw or os.path.join(o.sim_dir, 's1r_fault_blank_clamped.raw', 'sw1.tran.tran')
@@ -468,22 +465,31 @@ def main():
         n, nkind = (probe_n(fr, args) if finite(val) else (0, 'none'))
         xsum, xstat = awk_scan(fr, 'time', 'en', si('400n'), si('455n'))
         agree, xval = crosscheck_agrees(val, xsum, 'max') if xstat == 'OK' else (xstat, None)
-        # What makes this deck the fault is the WIRING: the gate's BLANK pin is tied to vss, while the
-        # blank node itself is still driven by the historical PWL. So the stimulus check is (a) the deck
-        # text really contains that rewire and (b) Q was 1 in the window -- the state the blank is
-        # supposed to suppress. Checking the blank node for 0 V would describe a different fault (and
-        # the first version of this row did exactly that, failing the real historical negative).
-        ev, erc, etok = read_num(fr, ['--sig', 'q', '--t0', '400n', '--t1', '455n', '--mode', 'max'])
+        # What makes this deck the fault is the WIRING: the gate's BLANK pin is tied to vss while the
+        # blank SOURCE keeps its historical PWL. (An earlier version of this row demanded blank==0 V,
+        # which describes a different fault and wrongly failed the real historical run.) R2D2 checks the
+        # whole T1 contract on the faulted data: Q must hold 1 across 400..455 ns, blank must still
+        # follow the frozen PWL including the release ramp, and the clock must still edge -- only then
+        # does a rejected T1 output assertion mean the checker caught the fault.
+        cverdict, crows = WC.evaluate(fr, 'T1', reader_cmd=READER_CMD)
+        checks = [r for r in crows if r[1] != 'window']
+        out_row = [r for r in checks if r[1] == 'output_assertion'][0]
+        others = [r for r in checks if r[1] != 'output_assertion']
+        bad = [r for r in others if r[6] != 'PASS']
         rewired = 'MISSING_DECK'
         if os.path.isfile(fd):
             with io.open(fd, 'r', encoding='utf-8', errors='replace') as fh:
-                rewired = ('YES' if re.search(r'X2\s*\(qbar\s+vss\s+en', u(fh.read())) else 'NO')
+                text = u(fh.read())
+            rewired = 'YES' if re.search(r'X2\s*\(qbar\s+vss\s+en', text) else 'NO'
+            bsrc = 'PWL_KEPT' if re.search(r'Vbl \(blank 0\) vsource type=pwl', text) else 'PWL_CHANGED'
+        else:
+            bsrc = 'NO_DECK'
         stimulus = ('NOT_VERIFIABLE' if rewired == 'MISSING_DECK'
-                    else 'FAIL' if rewired == 'NO'
-                    else ('PASS' if (finite(ev) and ev > VOL and finite(val) and val > VOL)
-                          else 'FAIL'))
-        reads = ['en=%s(rc=%s)' % (tok, rc), 'q=%s(rc=%s,max)' % (etok, erc),
-                 'gate blank pin tied to vss: %s' % rewired]
+                    else 'FAIL' if (rewired == 'NO' or bsrc != 'PWL_KEPT')
+                    else 'FAIL' if bad else 'PASS')
+        reads = ['en=%s(rc=%s)' % (tok, rc), 'gate blank pin tied to vss: %s' % rewired,
+                 'blank source still the PWL: %s' % bsrc]
+        reads += ['%s/%s=%s: %s' % (r[1], r[2], r[6], r[4][:70]) for r in others]
         base = xval if finite(xval) else val
         diff, agreement = '', 'NO_HISTORY'
         if hist_f and finite(base):
@@ -492,7 +498,9 @@ def main():
             agreement = ('WITHIN_TOLERANCE' if abs(base - hv) <= tol_pair(hv, base)
                          else 'OUTSIDE_TOLERANCE')
         assertion = ('NOT_MEASURED' if not finite(val)
-                     else ('DETECTED' if val > VOL else 'NOT_DETECTED'))
+                     else 'DETECTED' if (val > VOL and not bad)
+                     else 'DETECTED_BUT_SETUP_INVALID' if (val > VOL and bad)
+                     else 'NOT_DETECTED')
         dsha = sha256(fd) if os.path.isfile(fd) else 'MISSING'
         row_status = 'PASS_ROW'
         # a missing deck is a lineage gap, not a circuit failure: the fault not being verifiable demotes
@@ -514,9 +522,11 @@ def main():
                      ('%.6g' % tol_pair(as_float(hist_f), base))
                      if hist_f and as_float(hist_f) is not None else '',
                      agreement, row_status, LABELS,
-                     'DETECTED means the unchanged T1 assertion rejected the faulted deck; no '
-                     'threshold was moved to make that happen. The historical comparison value only '
-                     'exists if --fault-history was supplied; it is not assumed'])
+                     'DETECTED means the unchanged T1 assertion rejected the faulted deck AND the T1 '
+                     'window states still held (failing others=%d: %s); no threshold was moved to make '
+                     'that happen. The historical comparison value only exists if --fault-history was '
+                     'supplied; it is not assumed'
+                     % (len(bad), ', '.join('%s/%s' % (r[1], r[2]) for r in bad) or 'none')])
     else:
         rows.append([label, 'fault_injection', 's1r_fault_blank_clamped.raw/sw1.tran.tran',
                      'MISSING', fdeck_name, 'MISSING', 'raw MISSING; deck '

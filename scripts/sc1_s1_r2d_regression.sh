@@ -47,6 +47,7 @@ PF=${PF_CMD:-"bash $PROJ/scripts/tb_preflight.sh"}
 RS=${RUN_CMD:-"bash $PROJ/scripts/run_spectre.sh"}
 RD=${READ_CMD:-"python $PROJ/scripts/sc1_read_psf.py"}
 CSVW="$PROJ/scripts/sc1_csv_writer.py"
+CONTRACT="$PROJ/scripts/sc1_s1_window_contract.py"
 TSV=""                          # accumulated rows, written once at the end
 OUT_CSV=${OUT_CSV:-"$PROJ/results/evidence/sc1_r2d_s1_regression.csv"}
 PREFLIGHT_RC=NOT_RUN
@@ -101,7 +102,7 @@ EOF
 fi
 
 [ "$PDKSTATE" = ok ] || { echo "S1_R2D_REGRESSION: BLOCKED (no model library resolved)"; exit 7; }
-for f in "$GOLD" "$CELL" "$CSVW"; do
+for f in "$GOLD" "$CELL" "$CSVW" "$CONTRACT"; do
   [ -f "$f" ] || { echo "HARNESS_ERROR: required file missing: $f"; exit 8; }
 done
 mkdir -p "$D" || { echo "HARNESS_ERROR: cannot create $D"; exit 8; }
@@ -158,6 +159,7 @@ tran_deck() { # file  gate_blank_net   -- stimulus copied verbatim from scripts/
 # ------------------------------------------------------------------- helper: reader
 READ_VAL=''
 READ_ERR=''
+READ_RC=NOT_RUN
 run_read() {                      # run_read FILE ARGS...  -> READ_VAL, returns the reader's status
   local file="$1"; shift
   local tmp rc
@@ -166,6 +168,9 @@ run_read() {                      # run_read FILE ARGS...  -> READ_VAL, returns 
   # exactly like the $PF and $RS hooks above.
   $RD --data "$file" "$@" > "$tmp" 2>&1; rc=$?
   if [ "$rc" = "0" ]; then READ_VAL=$(tail -1 "$tmp"); else READ_ERR=$(tail -1 "$tmp"); fi
+  # the reader's own code travels here, in this shell: a row that says "the reader refused" must show
+  # WHICH refusal was seen (3 no-signal, 4 too-few-samples, 5 bad number), never a flattened 1
+  READ_RC=$rc
   rm -f "$tmp"
   return "$rc"
 }
@@ -255,8 +260,8 @@ for pair in "dc_blank0 0" "dc_blank1.8 $VDDC"; do
     if [ "$Q" = 1 ] && [ "$BSTATE" = 0 ]; then want=ON; else want=OFF; fi
     if ! run_read "$DATA" --sig en --sweep "$qmv" --mode last --require-n 1; then
       echo "  Q=$Q BLANK=$BSTATE: READ_FAIL $READ_ERR"
-      row "truth_Q${Q}_BLANK$BSTATE" truth "$DATA" "$deck" en "sweep=$qmv" last NOT_MEASURED 1 1 \
-          "$RUNNER_RC" "$PREFLIGHT_RC" FAIL "the reader refused this row ($READ_ERR)"
+      row "truth_Q${Q}_BLANK$BSTATE" truth "$DATA" "$deck" en "sweep=$qmv" last NOT_MEASURED 1 \
+          "$READ_RC" "$RUNNER_RC" "$PREFLIGHT_RC" FAIL "the reader refused this row ($READ_ERR)"
       fail=1; continue
     fi
     v=$READ_VAL
@@ -285,6 +290,12 @@ for pair in "dc_blank0 0" "dc_blank1.8 $VDDC"; do
 done
 
 # ---------------------------------------------------------------- transient windows
+# R2D2: the window judgement is no longer made here. scripts/sc1_s1_window_contract.py holds the
+# S1 state contract once (output assertion + whole-window states + the frozen blank PWL + the clock's
+# real edges) and the historical re-analysis reads the same table, so the two entries cannot drift
+# apart again. The draft used to read blank/qbar/q/d/clk with --mode max and record PASS as long as
+# the read worked; the reviewer set T2's blank to 1.8 V -- T2 is defined as BLANK=0 -- and the run
+# still reported PASS at rc 0. Reading a state is not agreeing with it.
 deck="$D/s1reg_tran.scs"; tran_deck "$deck" blank
 if run_deck "$deck" tran; then
   # stimulus sanity first: without a clock that actually rises, an en verdict means nothing
@@ -298,35 +309,34 @@ if run_deck "$deck" tran; then
   fi
   row stimulus_sanity evidence "$DATA" "$deck" clk "60n..90n" max "$sv" 3 0 "$RUNNER_RC" "$PREFLIGHT_RC" \
       "$sverdict" "the historical clock must actually edge inside this window"
-  while read -r cid sig t0 t1 mode kind; do
-    [ -z "$cid" ] && continue
-    if ! run_read "$DATA" --sig "$sig" --t0 "$t0" --t1 "$t1" --mode "$mode" --require-n 3; then
-      row "$cid" window "$DATA" "$deck" "$sig" "$t0..$t1" "$mode" NOT_MEASURED 3 1 "$RUNNER_RC" \
-          "$PREFLIGHT_RC" FAIL "the reader refused this window ($READ_ERR)"
-      echo "  $cid: READ_FAIL $READ_ERR"; fail=1; continue
+  for wid in T1 T2 T3 T4 T5; do
+    ranges=$(echo "$WINDOWS" | awk -v w="$wid" '$1==w{print $3".."$4}')
+    creport="$D/$wid.contract.tsv"
+    # the contract's status is its own; carriage returns are stripped afterwards so a Windows host
+    # cannot inject a line break into a CSV field (and stripping must not hide a non-zero exit code)
+    python "$CONTRACT" --data "$DATA" --window "$wid" --reader "$RD" > "$creport.raw" 2>&1
+    crc=$?
+    tr -d '\r' < "$creport.raw" > "$creport"
+    rm -f "$creport.raw"
+    if [ "$crc" = "2" ]; then
+      echo "  $wid: CONTRACT_HARNESS_ERROR (rc 2) -- the window could not be evaluated at all"
+      row "${wid}_contract" contract_harness "$DATA" "$deck" - "$ranges" - NOT_MEASURED 3 "$crc" \
+          "$RUNNER_RC" "$PREFLIGHT_RC" FAIL "harness problem, not a circuit result"
+      fail=1; continue
     fi
-    v=$READ_VAL
-    verdict=$(num_cmp "$v" "$kind") || true
-    [ "$verdict" = PASS ] || fail=1
-    echo "  $cid $sig $t0..$t1 ($mode, $kind $VOL) -> $v $verdict"
-    row "$cid" window "$DATA" "$deck" "$sig" "$t0..$t1" "$mode" "$v" 3 0 "$RUNNER_RC" "$PREFLIGHT_RC" \
-        "$verdict" "historical assertion, threshold unchanged"
-    # a window verdict is only meaningful together with the states that were applied in it
-    ev='' evfail=0
-    for es in blank qbar q d clk; do
-      if run_read "$DATA" --sig "$es" --t0 "$t0" --t1 "$t1" --mode max --require-n 3; then
-        ev="$ev $es=$READ_VAL"
-      else
-        ev="$ev $es=READ_FAIL"; evfail=1
-      fi
-    done
-    [ "$evfail" = 0 ] || fail=1
-    row "${cid}_states" evidence "$DATA" "$deck" "blank,qbar,q,d,clk" "$t0..$t1" max \
-        "NOT_AGGREGATED" 3 "$([ "$evfail" = 0 ] && echo 0 || echo 1)" "$RUNNER_RC" "$PREFLIGHT_RC" \
-        "$([ "$evfail" = 0 ] && echo PASS || echo FAIL)" "stimulus/state read back inside the window:$ev"
-  done <<EOF
-$WINDOWS
-EOF
+    [ "$crc" = 0 ] || fail=1
+    while IFS='	' read -r cw kind sig rule detail rc cv; do
+      [ -z "$kind" ] && continue
+      [ "$kind" = window ] && continue          # the label row, not a check
+      val=$(echo "$detail" | sed -n 's/.*=\(-\?[0-9.][0-9.eE+-]*\).*/\1/p')
+      req=3; [ "$rc" = awk ] && req=per_sample
+      echo "    $wid $kind $sig -> $cv  ${detail:0:96}"
+      row "${wid}_${kind}_${sig}" "$kind" "$DATA" "$deck" "$sig" "$ranges" "$kind" \
+          "${val:-NOT_AGGREGATED}" "$req" "$rc" "$RUNNER_RC" "$PREFLIGHT_RC" "$cv" \
+          "$rule | $detail"
+    done < "$creport"
+    echo "  $wid contract: $([ "$crc" = 0 ] && echo PASS || echo FAIL)"
+  done
 else
   echo "  transient: $STAGE (preflight=$PREFLIGHT_RC)"; fail=1
   row T1 window "$STAGE" "$deck" - - - NOT_MEASURED 3 NOT_RUN "$RUNNER_RC" "$PREFLIGHT_RC" FAIL \
@@ -334,24 +344,45 @@ else
 fi
 
 # ---------------------------------------------------------------- the real negative
+# The negative is the historical one: the gate's BLANK PIN is tied to vss while the blank SOURCE keeps
+# its PWL. R2D2 adds what the draft got wrong twice -- first it demanded blank==0 V (which is a
+# different fault and wrongly failed the real historical run), now it re-reads the whole T1 contract on
+# the faulted data: Q must still hold 1 throughout 400n..455n and the blank stimulus must still follow
+# the frozen PWL, and only then does a rejected T1 output assertion mean the checker caught the fault.
 fdeck="$D/s1reg_fault.scs"; tran_deck "$fdeck" vss
 if run_deck "$fdeck" fault; then
-  if run_read "$DATA" --sig en --t0 400n --t1 455n --mode max --require-n 3; then
-    fv=$READ_VAL
-    # T1's own assertion, unchanged: en max over 400n..455n must be below $VOL. On the faulted data
-    # that assertion must come out FAIL -- a PASS here would mean the checker cannot fail.
-    t1on_fault=$(num_cmp "$fv" lt) || true
-    if [ "$t1on_fault" = FAIL ]; then dverdict=DETECTED
-    elif [ "$t1on_fault" = PASS ]; then dverdict=CHECKER_TOOTHLESS; fail=1
-    else dverdict=READ_BAD; fail=1; fi
-    echo "  F1 BLANK rewired to vss: en=$fv -> $dverdict using the untouched T1 assertion"
-    row F1_blank_clamped negative "$DATA" "$fdeck" en "400n..455n" max "$fv" 3 0 "$RUNNER_RC" \
-        "$PREFLIGHT_RC" "$dverdict" "T1 (en max over 400n..455n must be below $VOL V) gave $t1on_fault on the faulted data"
-  else
-    row F1_blank_clamped negative "$DATA" "$fdeck" en "400n..455n" max NOT_MEASURED 3 1 "$RUNNER_RC" \
-        "$PREFLIGHT_RC" FAIL "the reader refused the negative ($READ_ERR)"
-    fail=1
-  fi
+  # the rewire itself is a wiring fact: read it out of the deck the runner was given
+  if grep -qE 'X2[[:space:]]*\(qbar[[:space:]]+vss[[:space:]]+en' "$fdeck"; then rewire=YES; else rewire=NO; fi
+  if grep -qE 'Vbl \(blank 0\) vsource type=pwl' "$fdeck"; then bsrc=PWL_KEPT; else bsrc=PWL_CHANGED; fi
+  freport="$D/F1.contract.tsv"
+  python "$CONTRACT" --data "$DATA" --window T1 --reader "$RD" > "$freport.raw" 2>&1; fcrc=$?
+  tr -d '\r' < "$freport.raw" > "$freport"; rm -f "$freport.raw"
+  f_out=$(awk -F'\t' '$2=="output_assertion"{print $7}' "$freport")
+  # NF==7 matters: the report's trailing 'WINDOW_CONTRACT ...' summary line has one field, and counting
+  # it as a check made every negative look like a broken setup
+  f_others=$(awk -F'\t' 'NF==7 && $2!="output_assertion" && $2!="window" && $7!="PASS"{n++} END{print n+0}' "$freport")
+  fval=$(awk -F'\t' '$2=="output_assertion"{print $5}' "$freport" | sed -n 's/.* -> \(-\?[0-9.][0-9.eE+-]*\).*/\1/p')
+  if [ "$fcrc" = "2" ] || [ -z "$f_out" ]; then
+    dverdict=CONTRACT_HARNESS; fail=1
+  elif [ "$rewire" != YES ] || [ "$bsrc" != PWL_KEPT ]; then
+    dverdict=FAULT_SETUP_INVALID; fail=1
+  elif [ "$f_others" != "0" ]; then
+    # some state or stimulus check disagrees with the T1 label, so this is not the experiment T1 judges
+    dverdict=FAULT_SETUP_INVALID; fail=1
+  elif [ "$f_out" = FAIL ]; then dverdict=DETECTED
+  elif [ "$f_out" = PASS ]; then dverdict=CHECKER_TOOTHLESS; fail=1
+  else dverdict=READ_BAD; fail=1; fi
+  echo "  F1 BLANK pin -> vss (deck says $rewire, blank source $bsrc): T1 assertion $f_out, other T1 checks failing=$f_others -> $dverdict"
+  row F1_blank_clamped negative "$DATA" "$fdeck" en "400n..455n" output_assertion "${fval:-NOT_MEASURED}" \
+      3 0 "$RUNNER_RC" "$PREFLIGHT_RC" "$dverdict" \
+      "T1's own assertion on the faulted data: $f_out; Q-throughout and the blank PWL were re-checked on this deck (failing others=$f_others, rewire=$rewire, blank source=$bsrc)"
+  # a compact, single-line, tab-free summary of the T1 contract on the faulted data: the raw report
+  # would drop its own separators into a CSV field and the writer would rightly refuse the row
+  fsum=$(awk -F'\t' 'NF==7 && $2!="window"{printf "%s/%s=%s; ", $2, $3, $7}' "$freport")
+  row F1_blank_clamped_setup negative "$DATA" "$fdeck" "blank,q,qbar,clk" "400n..455n" stimulus_setup \
+      "$f_others" per_sample "$fcrc" "$RUNNER_RC" "$PREFLIGHT_RC" \
+      "$([ "$f_others" = 0 ] && echo PASS || echo FAIL)" \
+      "the faulted bench must still be the T1 experiment; $fsum"
 else
   echo "  negative deck: $STAGE -- a missing negative fails the run, it is never skipped"
   row F1_blank_clamped negative "$STAGE" "$fdeck" en "400n..455n" max NOT_MEASURED 3 NOT_RUN \
