@@ -2,6 +2,7 @@
 "reports/scan_driver_r2e_native_tt.md","1eee31a3482a3e44cbf8f24b7df432dcc52834b248b663a9642eea9297203e54","16363","r2e_report","yes","written this round; repository bytes, re-hashable by the reviewer"
 "results/evidence/sc1_r2e_calibration.csv","3731b07619ded48d41cf6224e0e49a67cd38724f281128c4e0ed5f4f9e335684","13176","r2e_evidence","yes","calibration rows: model identity, temperature read-back and the source-current sign"
 "results/evidence/sc1_r2e_calibration_log.txt","7bd864b9b4e94045933964e851568fefd97b94afe20b2146aa44f2e9e4629086","6126","r2e_transcript","yes","simulator transcript with vendor paths redacted before it was written"
+"results/evidence/sc1_r2e_manifest.csv","fd9af80b6e94908347fe3ccfbda5e2d76ca24ee5edf58002f15e69ad4ba9914f","7315","r2e_evidence","yes","written this round; repository bytes, re-hashable by the reviewer"
 "results/evidence/sc1_r2e_s1_regression.csv","4974dc88da005f89ea0c90f0e3cb308c799864ebe27a148d1d6f9077a3599a6d","12181","r2e_evidence","yes","written this round; repository bytes, re-hashable by the reviewer"
 "results/evidence/sc1_r2e_s2_dynamic.csv","623e7c02e1722413e2890ea25d4cae6e116af3c6bd8f5a932738984808aa1aeb","18668","r2e_evidence","yes","written this round; repository bytes, re-hashable by the reviewer"
 "results/evidence/sc1_r2e_s2_dynamic_manifest.csv","f8ca2e35d3eab9524b710db22437a8b2b1315da3c91bbc95d8bef6c21f5cb159","11230","r2e_evidence","yes","written this round; repository bytes, re-hashable by the reviewer"
