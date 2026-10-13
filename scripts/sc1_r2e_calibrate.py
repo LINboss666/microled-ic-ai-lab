@@ -43,6 +43,11 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJ = os.path.dirname(HERE)
+sys.path.insert(0, HERE)
+# R2E1: one shared call contract with the S2 entry. The R2E round decided a preflight from a pipe's
+# exit status and a run from a PASS token; both are replaced by the callee's real rc plus the
+# completion markers, error count and data identity the contract requires.
+import sc1_r2e1_call_contract as CC
 
 try:
     _text = unicode
@@ -106,6 +111,56 @@ sw1 tran stop=20n maxstep=1n
 save rail vss Xcal.node_mid Xcal.Ip1:i Ip1:i
 {saves}
 '''
+
+
+def preflight_and_run(add, log_lines, deck, name, form, tag, volts):
+    """preflight FULL then the runner, through scripts/sc1_r2e1_call_contract.py.
+
+    Split out so the R2E1 call tests can drive THIS path with isolated mocks. The R2E form called both
+    as `... 2>&1 | tail -N`, which reported TAIL's exit code: a supply_contract refusal that printed
+    `TESTBENCH_PREFLIGHT: FAIL` and exited 1 was recorded as rc=0/PASS and the runner was still
+    called. A PASS token alone is also no longer enough for the run: the real runner rc, this label's
+    single completion line, the SPECTRE status rc, CHECK error_hits and this run's own readable
+    datafile and log are all required, and each rc is stored under its own name.
+
+    Returns (preflight_ok, runner_ok, datafile, logfile); a False means the caller reads nothing.
+    """
+    pf_cmd = '%s "%s" %s cal_%s "%s=%s vss=0"' % (
+        CC.hook('QODER_PF_CMD', 'bash ' + os.path.join(HERE, 'tb_preflight.sh')), deck, volts,
+        name.lower(), 'vdd18' if name == 'V18' else 'vdd33', volts)
+    penv = dict(os.environ)
+    penv.pop('PREFLIGHT_STATIC_PROBE', None)          # unset, not empty: this is the full gate
+    pfr, pftxt = CC.call(pf_cmd, env=penv)
+    pf_ok, pf_reason, pf_summary = CC.preflight_verdict(pfr, pftxt)
+    add('PREFLIGHT_FULL', os.path.basename(deck),
+        'the preflight own rc=0 AND exactly one TESTBENCH_PREFLIGHT: PASS',
+        'rc=%s | %s' % (pfr, pf_summary.replace('\n', ' | ')[:120]), pfr,
+        'PASS' if pf_ok else 'BLOCKED', '%s | %s' % (pf_reason, scrub(pftxt.strip()))[:150])
+    if not pf_ok:
+        return False, False, '', ''
+
+    label = 'CAL_%s_%s' % (name, tag)
+    # LABEL travels in the environment because run_spectre.sh's `$1` is the netlist; the mock asserts
+    # that argv shape, so a wrong call shape cannot be mistaken for a successful run
+    renv = dict(os.environ)
+    renv['LABEL'] = label
+    renv.pop('PREFLIGHT_STATIC_PROBE', None)
+    rc, txt = CC.call('%s "%s" 120' % (CC.hook('QODER_RUN_CMD', 'bash ' + os.path.join(
+        HERE, 'run_spectre.sh')), deck), env=renv)
+    runner_ok, run_reasons, parts = CC.runner_verdict(label, deck, rc, txt)
+    err = re.search(r'ERROR \([A-Z0-9-]+\)[^\n]*', txt)
+    add('SIM_RUN', '%s %s' % (name, form),
+        'runner rc=0 + one PASS for this label + spectre rc=0 + error_hits=0 + own data',
+        'runner_rc=%s preflight_rc=%s spectre_rc=%s error_hits=%s pass_lines=%d'
+        % (rc, pfr, parts.get('spectre_rc', ''), parts.get('error_hits', ''),
+           parts.get('pass_lines', 0)), rc, 'PASS' if runner_ok else 'BLOCKED',
+        ('; '.join(run_reasons)[:130] or
+         scrub(err.group(0) if err else 'contract satisfied').replace('\n', ' ')[:130]))
+    log_lines.append('=== %s %s run %s\n%s' % (name, form, 'accepted' if runner_ok else 'REJECTED',
+                                               scrub(txt)))
+    if not runner_ok:
+        return True, False, '', ''
+    return True, True, parts['datafile'], parts['logfile']
 
 
 def main():
@@ -268,33 +323,18 @@ def main():
         deck = os.path.join(scratch, 'cal_%s.scs' % name.lower())
         for form in forms:
             form = form.format(n=name)
+            tag = form.replace(' ', '_').replace(':', '-').replace('.', '_')
+            # one deck FILE per candidate form: three runs sharing one name also shared one raw
+            # directory, so a later failed run could point at an earlier readable file
+            deck = os.path.join(scratch, 'cal_%s_%s.scs' % (name.lower(), tag))
             with io.open(deck, 'w', encoding='utf-8', newline='\n') as f:
                 f.write(u(DECK.format(lib='${QODER_PDK_LIB}', name=name, volts=volts,
                                       saves='save %s' % form)))
-            pfr, pftxt = sh('PREFLIGHT_STATIC_PROBE= bash %s %s %s cal_%s "%s=%s vss=0" 2>&1 | tail -4'
-                            % (os.path.join(HERE, 'tb_preflight.sh'), deck, volts, name.lower(),
-                               'vdd18' if name == 'V18' else 'vdd33', volts))
-            add('PREFLIGHT_FULL', os.path.basename(deck), 'rc=0 with the legal port contract',
-                'rc=%s' % pfr, pfr, 'PASS' if pfr == 0 else 'BLOCKED', scrub(pftxt.strip())[:180])
-            if pfr != 0:
+            pf_ok, runner_ok, df, log = preflight_and_run(add, log_lines, deck, name, form, tag,
+                                                           volts)
+            if not pf_ok or not runner_ok:
+                # the refusal is the end of this deck: no reader is called with a stale file
                 continue
-            # keep the whole runner output: the CHECK lines the parser needs are above the log tail,
-            # and truncating to the last six lines once produced "no data file" for a run that worked
-            rc, txt = sh('LABEL=CAL_%s_%s bash %s %s 120 2>&1'
-                         % (name, form.replace(' ', '_').replace(':', '-'),
-                            os.path.join(HERE, 'run_spectre.sh'), deck))
-            runner_rc = 0 if re.search(r'^CAL_%s_.*: PASS$' % name, txt, re.M) else 1
-            sp = re.search(r'^(SPECTRE name=\S+ rc=\S+)', txt, re.M)
-            err = re.search(r'ERROR \([A-Z0-9-]+\)[^\n]*', txt)
-            add('SIM_RUN', '%s %s' % (name, form), 'runner exit 0 with its own PASS token',
-                'rc=%s %s' % (rc, sp.group(1) if sp else 'no SPECTRE line'), rc,
-                'PASS' if runner_rc == 0 else 'BLOCKED',
-                scrub(err.group(0) if err else txt.strip().split('\n')[0])[:150])
-            if runner_rc != 0:
-                continue
-            df = re.search(r"CHECK datafile='([^']*)'", txt).group(1) if \
-                re.search(r"CHECK datafile='([^']*)'", txt) else ''
-            log = re.search(r'LOGFILE (\S+)', txt).group(1) if re.search(r'LOGFILE (\S+)', txt) else ''
 
             # ---- temperature, read out of the produced files rather than assumed
             temp_log = temp_hdr = None
@@ -325,8 +365,9 @@ def main():
                 if not df:
                     readings[sig] = (9, 'NO_DATAFILE')
                     continue
-                rr2, val = sh('python %s --data %s --sig %s --mode last 2>&1'
-                              % (os.path.join(HERE, 'sc1_read_psf.py'), df, sig))
+                rr2, val = CC.call('%s --data "%s" --sig %s --mode last'
+                                   % (CC.hook('QODER_READ_CMD', '"%s" "%s"' % (sys.executable,
+                                             os.path.join(HERE, 'sc1_read_psf.py'))), df, sig))
                 readings[sig] = (rr2, val.strip().split('\n')[0])
 
             def num(sig):

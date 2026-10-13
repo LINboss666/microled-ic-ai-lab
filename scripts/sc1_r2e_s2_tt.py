@@ -45,6 +45,7 @@ PROJ = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import sc1_s2_r2d_gen as G                       # audited: imported, never modified
 import sc1_read_psf as RD                        # audited: only its quantity grammar is reused
+import sc1_r2e1_call_contract as CC                 # R2E1: one real-exit-code call contract, shared with the calibration entry
 
 try:
     _text = unicode
@@ -55,6 +56,19 @@ READER = os.path.join(HERE, 'sc1_read_psf.py')
 VTX = os.path.join(HERE, 'sc1_r2e_vtx.py')
 DELAY = os.path.join(HERE, 'sc1_delay.py')
 PF = os.path.join(HERE, 'tb_preflight.sh')
+
+
+def reader_cmd():
+    """the audited reader, or a mock in an isolated directory (QODER_READ_CMD) for the call tests"""
+    return CC.hook('QODER_READ_CMD', '"%s" "%s"' % (sys.executable, READER))
+
+
+def vtx_cmd():
+    return CC.hook('QODER_VTX_CMD', '"%s" "%s"' % (sys.executable, VTX))
+
+
+def delay_cmd():
+    return CC.hook('QODER_DELAY_CMD', '"%s" "%s"' % (sys.executable, DELAY))
 RS = os.path.join(HERE, 'run_spectre.sh')
 NETLIST = os.path.join(PROJ, 'spectre', 'sc1_level_shifter_r2d.scs')
 
@@ -307,23 +321,24 @@ class Run(object):
 
 
 def read_sig(R, data, sig, mode, t0=None, t1=None, req='3'):
-    cmd = 'python %s --data %s --sig %s --mode %s --require-n %s' % (READER, data, sig, mode, req)
+    cmd = '%s --data "%s" --sig %s --mode %s --require-n %s' % (reader_cmd(), data, sig, mode, req)
     if t0:
         cmd += ' --t0 %s' % t0
     if t1:
         cmd += ' --t1 %s' % t1
-    cmd += ' 2>&1'
-    rc, out = sh(cmd)
+    # CC.call gives the reader's OWN exit code with stderr already merged; a pipeline would hand back
+    # the last element's status instead, which is what hid the preflight failure in R2E
+    rc, out = CC.call(cmd)
     return rc, out.strip().split('\n')[0]
 
 
 def read_diff(R, data, a, b, mode, t0=None, t1=None):
-    cmd = 'python %s --data "%s" --a "%s" --b "%s" --mode %s --quiet' % (VTX, data, a, b, mode)
+    cmd = '%s --data "%s" --a "%s" --b "%s" --mode %s --quiet' % (vtx_cmd(), data, a, b, mode)
     if t0:
         cmd += ' --t0 %s' % t0
     if t1:
         cmd += ' --t1 %s' % t1
-    rc, out = sh(cmd + ' 2>&1')
+    rc, out = CC.call(cmd)
     txt = out.strip().split('\n')[-1] if out.strip() else ''
     val = txt.split('\t')[0] if '\t' in txt else txt
     return rc, val, txt
@@ -392,10 +407,10 @@ def measure_rails(R, cid, data, t0, t1, has_ok, req='5'):
 
 
 def measure_delay(R, cid, data, t0, t1, ein, eout, want_answer, sig_in='en', sig_out='gate33'):
-    cmd = ('python %s --data "%s" --mode propdelay --sig-in %s --sig-out %s --vdd-in 1.8 '
-           '--vdd-out 3.3 --edge-in %s --edge-out %s --t0 %s --t1 %s 2>&1'
-           % (DELAY, data, sig_in, sig_out, ein, eout, t0, t1))
-    rc, out = sh(cmd)
+    cmd = ('%s --data "%s" --mode propdelay --sig-in %s --sig-out %s --vdd-in 1.8 '
+           '--vdd-out 3.3 --edge-in %s --edge-out %s --t0 %s --t1 %s'
+           % (delay_cmd(), data, sig_in, sig_out, ein, eout, t0, t1))
+    rc, out = CC.call(cmd)
     head = out.strip().split('\n')[0]
     answered = rc == 0 and head.startswith('PROPDELAY')
     refused = ('NO_RESPONSE' in out) or ('NO_EDGE' in out) or ('NO_HALF_CROSSING' in out)
@@ -446,9 +461,9 @@ def measure_edges(R, cid, data, t0, t1, case):
                   'not defined by this stimulus', why, 0, 'EXPECTED_REFUSAL',
                   'the edge tool is not asked for an edge the input cannot create')
             continue
-        cmd = ('python %s --data "%s" --sig gate33 --vdd 3.3 --mode edge --edge %s --t0 %s '
-               '--t1 %s 2>&1' % (DELAY, data, edge, t0, t1))
-        rc, out = sh(cmd)
+        cmd = ('%s --data "%s" --sig gate33 --vdd 3.3 --mode edge --edge %s --t0 %s '
+               '--t1 %s' % (delay_cmd(), data, edge, t0, t1))
+        rc, out = CC.call(cmd)
         head = out.strip().split('\n')[0]
         ok = rc == 0 and head.startswith('EDGE')
         R.add('S2_EDGE', cid, 'gate33 %s in the response window' % edge,
@@ -460,9 +475,9 @@ def measure_edges(R, cid, data, t0, t1, case):
 def measure_plateau(R, cid, data, t0, t1):
     a, b = float(t0), float(t1)
     lo = '%.9g' % (b - 0.25 * (b - a))
-    cmd = 'python %s --data "%s" --mode steady --sig gate33 --t0 %s --t1 %s --require-n 5 2>&1' \
-          % (DELAY, data, lo, t1)
-    rc, out = sh(cmd)
+    cmd = '%s --data "%s" --mode steady --sig gate33 --t0 %s --t1 %s --require-n 5' \
+          % (delay_cmd(), data, lo, t1)
+    rc, out = CC.call(cmd)
     head = out.strip().split('\n')[0]
     ok = rc == 0 and head.startswith('STEADY')
     R.add('S2_PLATEAU', cid, 'gate33 over the last quarter of the window',
@@ -550,10 +565,27 @@ def write_rows(path, rows, hdr):
 
 
 def traces_of(data):
+    """the signal names this run actually wrote, read from the psfascii TRACE block in Python.
+
+    The awk/grep pipeline made the evidence depend on which shell answered, and a pipeline also
+    reports its own status instead of the reader's, so the caller could not tell "no signals" from
+    "the shell could not run".
+    """
     if not data or not os.path.isfile(data):
         return ''
-    _rc, out = sh("awk '/^TRACE/,/^VALUE/' \"%s\" | grep -oE '^\"[^\"]+\"' | tr -d '\"'" % data)
-    return ','.join([l.strip() for l in out.split('\n') if l.strip()])
+    out, inside = [], False
+    for raw in io.open(data, encoding='utf-8', errors='replace'):
+        line = raw.strip()
+        if line.startswith('TRACE'):
+            inside = True
+            continue
+        if inside and line.startswith('VALUE'):
+            break
+        if inside:
+            m = re.match('^"([^"]+)"', line)
+            if m:
+                out.append(m.group(1))
+    return ','.join(out)
 
 
 def fmt_load(pf):
@@ -596,34 +628,52 @@ def run_case(R, cid, scratch, nlsha, libsha, man_rows, opts):
           'x/y are PORTS of Xcore, so Xt.Xcore.x was never a saveable node; the R2E deck keeps the '
           'reviewed line and adds the resolved names (rails were already saved on their own line)')
 
-    pfr, pftxt = sh('PREFLIGHT_STATIC_PROBE= bash %s "%s" 1.8 %s "%s" 2>&1 | tail -5'
-                    % (PF, deck, cid, G.contract(case)))
-    R.add('PREFLIGHT_FULL', cid, os.path.basename(deck), 'rc=0 with the deck supply contract',
-          'rc=%s' % pfr, pfr, 'PASS' if pfr == 0 else 'BLOCKED',
-          scrub(pftxt.strip()).replace('\n', ' | ')[:150])
+    # ---- preflight FULL through the shared call contract: the child's OWN exit code, complete
+    # output, and one completion marker. The R2E form was `... 2>&1 | tail -5`, whose rc is tail's.
+    pf_cmd = '%s "%s" 1.8 %s "%s"' % (CC.hook('QODER_PF_CMD', 'bash ' + PF), deck, cid,
+                                      G.contract(case))
+    penv = dict(os.environ)
+    penv.pop('PREFLIGHT_STATIC_PROBE', None)          # unset, not empty: this is the full gate
+    pfr, pftxt = CC.call(pf_cmd, env=penv)
+    pf_ok, pf_reason, pf_summary = CC.preflight_verdict(pfr, pftxt)
+    R.add('PREFLIGHT_FULL', cid, os.path.basename(deck),
+          "the preflight own rc=0 AND exactly one TESTBENCH_PREFLIGHT: PASS",
+          'rc=%s | %s' % (pfr, pf_summary.replace('\n', ' | ')[:110]), pfr,
+          'PASS' if pf_ok else 'BLOCKED', pf_reason)
     man = [R.run_id, cid, os.path.basename(deck), sha, nlsha, libsha, 'tt', '27',
            '%s/%s' % (case['rails'][0], case['rails'][1]), fmt_load(case['load']),
            'tran stop=%s maxstep=%s' % (case['stop'],
                                         opts.fine if cid.endswith('_fine') else case['maxstep']),
            str(pfr), '', '', '', '', '']
-    if pfr != 0:
-        man[12:14] = ['NOT_RUN', 'BLOCKED']
+    if not pf_ok:
+        # the refusal ends this case: neither the runner nor any reader is called
+        man[12:14] = ['NOT_CALLED', 'BLOCKED_after_preflight']
         man_rows.append(man)
         return
 
-    rc, txt = sh('LABEL=S2_%s bash %s "%s" 240 2>&1' % (cid, RS, deck))
-    sp = re.search(r'SPECTRE name=\S+ rc=\S+', txt)
-    runner_ok = bool(re.search(r'^S2_%s: PASS$' % re.escape(cid), txt, re.M))
+    # ---- runner: real rc=0 + exactly one PASS for THIS label + one SPECTRE status with rc=0 +
+    # error_hits=0 + this run's own readable datafile and log
+    label = 'S2_%s' % cid
+    # LABEL travels in the environment, exactly as run_spectre.sh declares it (`$1` is the netlist);
+    # argv order is asserted by the mock, so a wrong call shape cannot pass as a success
+    renv = dict(os.environ)
+    renv['LABEL'] = label
+    renv.pop('PREFLIGHT_STATIC_PROBE', None)
+    rc, txt = CC.call('%s "%s" 240' % (CC.hook('QODER_RUN_CMD', 'bash ' + RS), deck), env=renv)
+    runner_ok, run_reasons, parts = CC.runner_verdict(label, deck, rc, txt)
+    parts['preflight_rc'] = pfr
     err = re.search(r'ERROR \([A-Z0-9-]+\)[^\n]*', txt)
-    R.add('SIM_RUN', cid, os.path.basename(deck), 'runner exit 0 with its own PASS token',
-          'rc=%s %s' % (rc, sp.group(0) if sp else 'no SPECTRE line'), rc,
-          'PASS' if runner_ok else 'BLOCKED',
-          scrub(err.group(0) if err else '').replace('\n', ' ')[:150])
-    m = re.search(r"CHECK datafile='([^']*)'", txt)
-    data = m.group(1) if m else ''
-    man[12] = sp.group(0).split('rc=')[-1] if sp else '?'
+    R.add('SIM_RUN', cid, os.path.basename(deck),
+          'runner rc=0 + one PASS for this label + spectre rc=0 + error_hits=0 + own data',
+          'runner_rc=%s spectre_rc=%s error_hits=%s pass_lines=%d'
+          % (rc, parts.get('spectre_rc', ''), parts.get('error_hits', ''),
+             parts.get('pass_lines', 0)), rc, 'PASS' if runner_ok else 'BLOCKED',
+          ('; '.join(run_reasons)[:120] or
+           scrub(err.group(0) if err else 'contract satisfied').replace('\n', ' ')[:120]))
+    data = parts['datafile'] if runner_ok else ''
+    man[12] = parts.get('spectre_rc', '') or '?'
     man[13] = 'PASS' if runner_ok else 'BLOCKED'
-    man[14] = traces_of(data)
+    man[14] = traces_of(data) if data else ''
     R.add('SAVED_SIGNALS', cid, 'the dotted and source saves reach the data file',
           'the deck save list', man[14][:150], 0,
           'PASS' if runner_ok and man[14] else 'PARTIAL', 'trace order as the simulator wrote it')

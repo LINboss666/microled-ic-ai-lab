@@ -59,7 +59,8 @@ instantiation `simopt options temp=27`.
 
 The value is then read back from files each run produced, not from a default or a generator comment:
 
-* every calibration deck: log `temp = 27` **and** psfascii header `"temp" 27.0000` (`12/12` runs);
+* every calibration deck: log `temp = 27` **and** psfascii header `"temp" 27.0000` — **6 runs, 12
+  consistent read-back values** (the two places inside one run are one run, not two);
 * every S1 deck of this round (`s1reg_dc_blank0/1.8`, `s1reg_tran`, `s1reg_fault`): log line
   `temp = 27 C`;
 * the S2 decks carry the same `simopt` line, so their 27 C is set explicitly rather than inherited.
@@ -68,9 +69,20 @@ The value is then read back from files each run produced, not from a default or 
 
 Bench: one ideal rail → 10 kΩ → a zero-drop iprobe → vss, inside a subckt instance, i.e. the rail is
 still driven **directly** by the vsource and no series element is inserted in it. Theory is exact:
-1.8 V/10 k = 180 µA, 3.3 V/10 k = 330 µA. `PREFLIGHT_FULL` (same port contract, rc=0) ran before each
-simulator call, and the preflight rc, the runner rc, the tool rc and the model identity are recorded
-per row.
+1.8 V/10 k = 180 µA, 3.3 V/10 k = 330 µA. The runner rc, the tool rc and the model identity are
+recorded per row.
+
+> **Corrected in R2E1 (was: "`PREFLIGHT_FULL` (same port contract, rc=0) ran before each simulator
+> call").** It did not pass. The committed `sc1_r2e_calibration.csv` keeps the note it captured —
+> `SUPPLY_RESULT FAIL`, `PREFLIGHT_STAGE=supply_contract`, `PREFLIGHT_REJECT: contract_refused:contract
+> entry vdd18 matches no instance port`, `TESTBENCH_PREFLIGHT: FAIL` — while the rc column says `0` and
+> the verdict says `PASS`, because the entry called the preflight through `... | tail -4` and recorded
+> *tail's* status. The bench's own rails are `rail`/`vss`, so the supply map has to name them (a
+> `rail=1.8 vss=0` contract), and that re-run still belongs to an authorised session. What survives:
+> the current/temperature values were produced by real runs whose `runner_rc=0` and
+> `SPECTRE … rc=0` came from a call that had no `tail`, so the calibration conclusions stand; the
+> preflight claim does not, and `scripts/sc1_r2e1_call_contract.py` now makes the mistake impossible
+> for both entries (see `reports/scan_driver_r2e1_gate_review.md` §1-§2).
 
 Measured save forms on this build (one candidate per deck, because a fatal save kills the file):
 
@@ -115,10 +127,16 @@ output before the third run; the third is the table above.
   blank per-sample PWL worst deviation `1.93e-14` over 117 samples, clock 1 rise / 1 fall; T2 needs
   `blank max=0`, `q min=1.76571`, `d min=1.8`; T4/T5 `qbar min=1.79994`;
 * **F1 DETECTED**: with the gate's BLANK pin tied to vss (the blank *source* keeping its PWL), the
-  original T1 output assertion fails (`en max=0.0753447` against a `lt 0.9` claim — i.e. it stays low)
-  while every other T1 check still passes, so the refusal is attributable to the fault, not to a
-  broken bench. A preflight or reader failure would have been recorded as `FAULT_SETUP_INVALID`
-  instead, which is not a detection.
+  original T1 output assertion fails while every other T1 check still passes, so the refusal is
+  attributable to the fault, not to a broken bench. The row is
+  `F1_blank_clamped, signal=en, value_V=1.8001, row_verdict=DETECTED` with
+  `F1_blank_clamped_setup … row_verdict=PASS`: **the fault holds `en` high, and 1.8001 V cannot satisfy
+  the T1 claim `en max < 0.9 V`**. A preflight or reader failure would have been recorded as
+  `FAULT_SETUP_INVALID` instead, which is not a detection.
+
+  > Corrected in R2E1: this bullet first quoted `en max=0.0753447`, which is the *normal* T1 row's
+  > value and does satisfy `< 0.9` — it cannot be the failing faulted measurement. The experiment rows
+  > were not touched; only this sentence was wrong.
 
 ## 5. S2_FUNCTIONAL_TT — PASS, 6/6 static cases
 
@@ -156,18 +174,26 @@ Static rail currents, injected positive into the DUT (no budget defined, so `MEA
 on which half of the NAND is off); the `en` source contributes ±0.5 pA at dc — consistent with a
 purely capacitive gate load at a settled level.
 
-### Finding: the audited decks asked for two unreachable node names
+### Finding, stated as two separate facts
 
-`SAVE_PATH_AUDIT` (one row per deck, `PARTIAL`) records that the generated deck line
-`save en Xt.Xcore.enbar Xt.Xcore.x Xt.Xcore.y Xt.Xbuf.n1 gate33` cannot work for x/y: `x` and `y` are
-**ports** of `sc1_ls_core_r2d` and internal nets of the top master, so the simulator's name for them is
-`Xt.x` / `Xt.y`; `Xt.Xcore.x` is ignored with `SPECTRE-8281`, which would have shown up as a missing
-reading rather than as a failure. The R2E decks keep the reviewed line untouched and add the resolved
-names; the connectivity resolver in the entry derives them from the frozen netlist itself, and
-`T10`/`T24..T26` of `scripts/sc1_r2e_s2_selftest.py` (26/26, evidence
-`sc1_r2e_s2_entry_selftest.csv`) keep that rule pinned. The same probe established the general syntax:
-hierarchical names use a **DOT** (`Xt.Xcore.mp_drv:1`, `Xt.x`), and `Xt/Xcore/x`, `Xt.Xcore.mn:i` and
-bare names inside a subckt are all ignored.
+**(a) What the reviewed decks asked for.** The generated line
+`save en Xt.Xcore.enbar Xt.Xcore.x Xt.Xcore.y Xt.Xbuf.n1 gate33` cannot reach x and y: they are
+**ports** of `sc1_ls_core_r2d` and internal nets of the top master, so this build's name for them is
+`Xt.x` / `Xt.y`. It asks for `Xt.Xcore.x` and gets `WARNING (SPECTRE-8281) … Ignoring invalid item`, a
+warning that does not stop the run — so the failure mode would have been a *missing reading*, quietly.
+The generator's bytes stay exactly as reviewed; nothing was done about them here, and the verdict
+`SAVE_PATH_AUDIT = PARTIAL` (one row per deck) is kept rather than renamed to PASS, because it is a
+defect found in a reviewed artifact, not a success of this round.
+
+**(b) What this round actually read.** The R2E decks add the names the resolver derives from the frozen
+netlist (`Xt.x`, `Xt.y`, plus every device terminal node the stress rows need), and each case's
+`SAVED_SIGNALS` row lists the trace names the run really wrote, so "the signal needed was present" is a
+separate, checkable statement from (a). The general syntax came from measurement
+(`scripts/sc1_r2e_two_level_probe.py`): hierarchical names use a **DOT** at any depth
+(`Xt.x`, `Xt.Xcore.mp_drv:1`, `Xt.Xcore.mn_left sigtype=all`), while `Xt/Xcore/x`, `Xt.Xcore.mn:i`,
+bare names inside a subckt and `save all` are ignored. `T10` and `T24..T26` of
+`scripts/sc1_r2e_s2_selftest.py` (26/26; guest copy of this round's run in
+`sc1_r2e1_s2_entry_selftest.csv`) pin the rule.
 
 ## 6. S2_REPRESENTATIVE_DYNAMIC — measured, and the wrong polarity is really refused
 

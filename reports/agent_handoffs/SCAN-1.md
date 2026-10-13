@@ -2,6 +2,48 @@
 
 ## CURRENT_STATUS (single authoritative table; everything below this block is history)
 
+Updated 2026-10-13 during **SCAN-1R2E1 / gate fixes and re-read of the existing waveforms**. Start point
+re-read before editing: remote `poc/scan-driver-1ch` = `593a8beb9a55840d5f3c33633abb635713af84aa` =
+local HEAD (the R2E native TT round), no unknown upstream commits. Full write-up:
+`reports/scan_driver_r2e1_gate_review.md`; artifacts: `results/evidence/sc1_r2e1_*`.
+
+**No simulator was called this round** — no Spectre, no ngspice, no preflight full, no operating-point
+probe, no Virtuoso, no re-run of any S1/S2 deck. Only offline tests against isolated mocks and a re-read
+of files R2E already produced. `spectre/`, the audited reader/delay/preflight/supply checker, the runner,
+the old S1/S2 entries and the S1 window contract are byte-identical (`git diff --name-only 593a8be HEAD`
+over them → 0 files); no old CSV was rewritten.
+
+| item | status | evidence |
+|---|---|---|
+| PREFLIGHT_RC_PROPAGATION | **CLOSED** | both new entries called the preflight through `... 2>&1 \| tail -4/5`, so they recorded *tail's* status: the reviewer's mock printed `TESTBENCH_PREFLIGHT: FAIL` and exited 1 and the row still read `rc=0 / PASS`, and the runner was still called. Now every call goes through `scripts/sc1_r2e1_call_contract.py`, which uses `subprocess.Popen(argv)` with **no shell**, captures the whole output before shortening anything, requires rc=0 **and** exactly one completion marker with no FAIL line, and returns straight to the caller so the runner and readers are never reached. Concretely proven from the R2E record itself: the six `PREFLIGHT_FULL` rows of `sc1_r2e_calibration.csv` carry the retained note `SUPPLY_RESULT FAIL / PREFLIGHT_REJECT: contract_refused:contract entry vdd18 matches no instance port` under `rc=0, PASS` |
+| Erratum on the R2E calibration record | **open as a record, corrected in the write-up** | that bench's rails are `rail`/`vss`, so the contract `vdd18=… vdd33=…` matched no instance port: **preflight full never passed on the calibration bench**, and R2E's §2/§3 claim is corrected in place (`scan_driver_r2e_native_tt.md` §3 correction block). The calibration *numbers* stand (their `runner_rc=0` and `SPECTRE … rc=0` came from a call with no pipeline), but "preflight full with the same legal port contract" is **not** achieved for that bench; the bench needs `rail=1.8 vss=0`, which belongs to a future authorised run. `sc1_r2e1_callpath_selftest.csv` shows the fixed rule refusing the same shape |
+| RUNNER_SUCCESS_CONTRACT | **CLOSED** | accepting a run because `<LABEL>: PASS` appeared is replaced by: the runner's own rc=0, exactly one PASS for **this** label and no FAIL, exactly one `SPECTRE name=<this deck> rc=0`, `CHECK error_hits=0`, a zero-error `done_line`, and this run's own datafile + log present, non-empty and **inside this deck's own `sim/`** (so a failed run pointing at an older readable raw is refused before any reader runs). `preflight_rc` / `runner_rc` / `spectre_rc` stay three separate values. The calibration entry also writes one deck file per candidate save form, because three runs sharing a name shared one raw directory |
+| VTX_STRICT_INPUT | **CLOSED** | `sc1_r2e_vtx.py` no longer has its own parser: it calls the audited `sc1_read_psf.parse()` (which already refuses non-finite values, a duplicate signal inside a group, a file ending mid-group, and any group whose signal set differs) and adds what `parse()` does not check: the axis must be `time`, times strictly increasing, both signals present per sample, the difference finite, unknown mode / reversed window / too-few samples refused. The reviewer's three counterexamples (`1 / 2e-09`, `inf / 1e-09`, reversed axis `2 / 2e-09`, all `rc=0`) now return rc 7/5/8 with no number printed. Tie rule stated: the first sample reaching the extreme wins |
+| Call-path verification | **24/24 on guest 2.6.6 and Windows 3.12** | `scripts/sc1_r2e1_callpath_selftest.py` drives the **real** `sc1_r2e_s2_tt.run_case` and `sc1_r2e_calibrate.preflight_and_run` against preflight/runner/reader mocks that exist only in a temporary directory; the mocks also refuse a path outside that root, refuse if `RUN`/`QODER_SIM_AUTHORISED` is in their environment, and refuse a runner whose `$1` is not the netlist. Each case asserts the concrete row (recorded rc, verdict, reason) **and** the preflight/runner/reader call counts: 11 refusal scenarios at 1/0/0 or 1/1/0 plus the success control at 1/1/16 (S2, reader reached) and 1/1/0 (calibration stops after the run). Rows are labelled `SYNTHETIC_MOCK_NOT_A_CIRCUIT_RUN`; a driver crash is recorded as FAIL, never as a detection |
+| Existing suites kept | **16/16 vtx · 26/26 S2 entry · 5/5 window contract cases unchanged** | `sc1_r2e1_vtx` list runs inside `sc1_r2e_vtx.py --selftest`; the R2E 26-case entry suite re-ran unchanged against the new plumbing (`sc1_r2e1_s2_entry_selftest.csv`). The frozen tools were not reworked because a caller had been wrong |
+| C1 stress re-read | **123/123 PASS, no refusal, no change** | `sc1_r2e1_vtx_reanalysis.csv`: each original `DEVICE_STRESS_PEAKS`/`STRESS_CROSSCHECK` row recomputed with the strict tool **in the same case window**, carrying the re-read file SHA256, node pair, window with sample count, original min/max, strict min/max, difference, extreme times, exit codes. Agreement is judged at the original output's 6-significant-digit display band (±5e-7 V at 1 V), and the three cross-check rows were re-performed (model `:vgs` vs node difference, worst 4.05e-6 V). First attempt compared whole-file extremes against window values and produced four apparent FAILs; that was this tool's own mistake, fixed, not a circuit result |
+| C2 sampled waveforms | **195 rows, 0 missing, 0 refused** | `sc1_r2e1_waveform_samples.csv`: real consecutive samples only (no interpolation, no resampling, no raw PSF committed) for the 1 pF C0/C1 both directions with the input 50 % and the output 90/50/10 % fall band, the 5 pF coarse and fine step at the same crossing, all 12 attributed repeat3 input/output 50 % edges with the next input boundary of either direction, the polarity negative's rise that the normal criterion refused, one device stress extreme with its same-sample D/G/S/B, and one dynamic rail-current peak with its neighbours. Currents keep the raw signed reading and the calibrated `injected = -(Vsource:i)` |
+| C3 report corrections | **applied in place, experiment rows untouched** | (1) R2E §4 claimed the F1 faulted deck gave `en max=0.0753447 V` failing `< 0.9` — that value satisfies it and belongs to the normal T1 row; the CSV's F1 row is `value_V=1.8001, row_verdict=DETECTED` with its setup `PASS`, i.e. the fault holds `en` high. (2) "12/12 calibration runs" is 6 runs with 12 consistent read-back values (log + header inside the same run). (3) the `SAVE_PATH_AUDIT` finding is split into the reviewed decks' ignored save request (a warning, still `PARTIAL`) and this round's actually-read signals, and no verdict was renamed |
+| Native TT results | **unchanged in substance, layered** | S1 stays the R2E native evidence and this round is **not** an S1 fresh rerun; the S2 numbers stay "already recorded native" with the re-read on top. Dynamic figures stay `MEASURED`, `budget NOT_DEFINED`, `SOA_SIGNOFF NO`, `AUTONOMOUS_POWER_FAIL NOT_IMPLEMENTED` |
+| Fixed entries re-run? | **NO_RUN** | no authorisation to simulate this round, so the corrected gates have produced no new native numbers; the next authorised session re-runs calibration (with a bench-appropriate contract), S1 and S2 under them |
+| Guest network | **not touched** | no `dhclient`, no ONBOOT/.vmx/service/licence/VM-power action; the VMware Tools channel carried the files |
+| 37-deck supply matrix / R3 / S3 / S4 / corners / layout | **NOT_RUN / NOT_STARTED** | unchanged |
+
+### Next step is a decision, not a continuation
+
+The three reproduced tool defects and the missing sampled evidence are closed, and the R2E record now
+says what it actually observed about its own preflight. Stopping again at the **native TT results review
+gate**: a re-run of calibration/S1/S2 under the fixed gates, the power-sequence matrix, R3 chaining and
+S3/S4 each need a new authorisation.
+
+## HISTORICAL_STATUS (SCAN-1R2E round, kept for audit; superseded by the R2E1 block above)
+
+> The numbers below are the native TT record and still stand. **Two statements in this block were
+> corrected by R2E1**: the calibration entry's `PREFLIGHT_FULL` rows were a supply-contract *refusal*
+> recorded as PASS (a `| tail` pipeline hid the exit code), and the F1 / "12/12 runs" wording in
+> `reports/scan_driver_r2e_native_tt.md` was fixed. Read the R2E1 block above for the current state.
+
+
 Updated 2026-10-13 during **SCAN-1R2E / minimal native TT verification (executed)**. Start point
 re-read before editing: remote `poc/scan-driver-1ch` = `dd93f6f432a32fc5f1177223a50ff511e83351c2` =
 local HEAD; `git ls-remote` showed no unknown upstream commits, so nothing was merged or overwritten.
