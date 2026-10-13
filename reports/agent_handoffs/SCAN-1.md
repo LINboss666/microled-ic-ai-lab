@@ -2,6 +2,46 @@
 
 ## CURRENT_STATUS (single authoritative table; everything below this block is history)
 
+Updated 2026-10-13 during **SCAN-1R3A / R3 delivery-evidence repair, zero re-simulation**. Start point
+re-read before editing: local HEAD `f199245b66de38e549693d3fec55d0d746075790`, remote ref read back
+through `gh api` as the **same full SHA**. The cloud pulled `f199245`, kept the circuit progress and
+returned **`EVIDENCE_PENDING`** for two files; this round closes exactly that. Full write-up:
+`reports/scan_driver_r3a_delivery_repair.md`; artifacts `results/evidence/sc1_r3_chain_manifest.csv`
+(restored), `sc1_r3_waveform_samples.csv` (re-exported), `sc1_r3_delivery_identity.csv` (new),
+`scripts/sc1_r3a_export_samples.py`, `scripts/sc1_r3a_write_guard_check.py`,
+`scripts/sc1_r3a_verify_evidence.py`. **No Spectre, ngspice, preflight, operating-point or Virtuoso call
+was made in this round.**
+
+| item | status | evidence |
+|---|---|---|
+| the finding | **CONFIRMED against the repository** | `git cat-file -s` at `ff831a5`/`f0368f7`/`f199245`: `sc1_r3_chain_manifest.csv` = **195 B / 0 data rows** and `sc1_r3_waveform_samples.csv` = **67 B / 0 data rows** in every commit, while the report claimed 9 and 177 rows. `sc1_r3_chain_cases.csv` (428 rows) and the dependency log were intact |
+| root cause | **my own verification run, through a real hole** | `main()` recorded `NOT_RUN` and then *still* called `write_rows` on cases/manifest/samples before returning 5; `man_rows`/`samp_rows` are filled only inside `run_case()`. I ran the entry unauthorised to demo the rc, redirecting `--out`/`--scratch` but not `--manifest`/`--samples`, which truncated both at their default paths. The log survived only because of `if R.log:`, and nothing showed in `git diff` because the files were still untracked. Reproduced independently by the reviewer; the mechanism is now confirmed, not inferred |
+| why every gate missed it | **hash checks are not content checks** | `precommit_safety_check`, the round manifest and `MANIFEST_MATCH` all compare bytes; a header-only CSV is valid bytes. Fixed by `scripts/sc1_r3a_verify_evidence.py`: **16/16 PASS on guest 2.6.6 and Windows 3.12**, reading row counts, column widths, finite times/values, case↔manifest correspondence, deck/raw identity and the delay recomputation |
+| overwrite protection | **FIXED + proven** | a refusal now prints and returns 5 **before** any file write; `--dry` without `--out` writes inside the scratch dir. `scripts/sc1_r3a_write_guard_check.py` pre-seeds four files with sentinel data, runs unauthorised, and requires rc 5 + all four hashes unchanged + no `sim/` artifact (no runner call): **9/9 PASS in both environments**; the 4-check timing selftest still **4/4** in both |
+| `sc1_r3_chain_manifest.csv` | **RESTORED byte-for-byte** | guest copy of the delivered batch (4093 B, 9 data rows, 9 unique cases, one `run_id` `R3-CHAIN-20261013T122004Z`, `preflight_rc=0`/`spectre_rc=0`/`PASS` ×9) pulled with md5 read-back; sha256 `31cb61e9c818…` **equals the value the round manifest committed at `ff831a5` recorded for that path** — restored, not reconstructed |
+| `sc1_r3_waveform_samples.csv` | **RE-EXPORTED from the original raw** (not restored) | `scripts/sc1_r3a_export_samples.py` reads the nine `sim/<case>.raw/sw1.tran.tran` files the delivered batch left on disk and calls the R3 entry's own `event_rows()`, so native and export share one rule. **812 rows**: 18 event lists, 9 initialisation rows, 385 segments, 400 window samples. No case was re-run; the original 177-row bytes stay attested by hash at `ff831a5` and are superseded |
+| the event-anchoring defect | **CORRECTED** | the old `emit_samples()` anchored on the first window cause = the **150 ns priming edge**, so `clk 150 → q 250.167 → en → gate33 252.223` mixed initialisation with the write. Each event is now its own block bounded by `_next_after`; initialisation is a separate labelled row. `scripts/sc1_r3a_verify_evidence.py` recomputes **18/18** delays and bounds from the delivered file and they agree with the native rows |
+| plateau statement in the report | **WRONG, now fixed** | the first draft said `clk` was at its plateau when `q` crossed; the exported samples give `clk = 1.02…1.07 V` there, i.e. still inside its 2 ns ramp — which is exactly why the delay is attributed to `clk`'s 50 % crossing |
+| `sc1_r3_delivery_identity.csv` | **NEW, 9 rows** | per case: `run_id`, deck path + manifest sha + sha re-read from disk (all OK), raw path + sha256, rows exported, and the rc/verdict columns explicitly labelled **`ORIGINAL RUN RECORD (committed manifest)`** — quoted, not re-measured |
+| batch labelling and counts | **scoped, no round total claimed** | delivered batch = 9 preflight + 9 DUT; the earlier `…T120713Z` batch wrote the same paths and its own CSVs are **NOT RETAINED**; four aborted attempts are not reconstructible ⇒ round total **UNKNOWN**, and not derived from directory file counts |
+| output-stage wording | **3 corrections** | the PMOS body is a p-type body in an **n-well** (the earlier "p-well" label was wrong) with `D/G/S/B` stated as intent to be read off the real cell, and layout/DRC/LVS/PEX stay out of course scope so it is a modelling question, **not** an S3 precondition; `Ron = (V(S) − V(D))/I(D)` across the **switch's own** drop (`VSCAN − V_electrode`), never `VSCAN − V_data_node`, which also spans the LED and the data driver; and the two blocking sets are separated — P1/P2/P3 gate a *panel* claim, while a `POC_ASSUMPTION` 3.3 V p33 characterisation of `Ron`/current/gate charge needs no LED `Vf`. That is recorded as an **S3-A proposal only**, not run, not a panel result |
+| frozen inputs | **0 files changed** | three cells, the wrapper, the audited reader/delay/vtx/preflight/supply/runner tools, the S1/S2 generators, the call contract and the 428-row record: `git diff f199245 --` over them is empty. No circuit, case, corner, temperature, load or deck was added |
+| boundaries | **clean** | Tools channel only (`guest.sh run/pull`, `push_chunked.sh`); no DHCP/NAT/service/`ifcfg`/`.vmx` change, no VM power or snapshot operation, no licence touch, no PDK/OA write; no raw PSF, model card, credential or vendor absolute path committed |
+| **R3_CONTROL_CHAIN** | **PASS (unchanged)** | the verdict never depended on the two derived files; with them restored the record is now self-consistent |
+| **OUTPUT_STAGE_PRE_DESIGN** | **PARTIAL** | unchanged: no device size chosen, P1/P2/P3 open |
+| **S3_POWER_STAGE** | **NOT_RUN** | still needs P1/P2 (and the S3-A decision if the reviewer wants circuit progress before LED data) |
+| **S4_CHAIN** | **NOT_STARTED** · **SOA** | **NO** · **AUTONOMOUS_POWER_FAIL** | **NOT_IMPLEMENTED** | unchanged, and not entered by this round |
+
+### Next step is a decision, not a continuation
+
+The delivered evidence now matches the report, and the propagation figures are recomputable from files
+in the repository. Stopping again at the **R3 single-channel control-chain + output-stage-plan review
+gate**. The cloud should recompute the delays from `sc1_r3_waveform_samples.csv` and then choose:
+the **S3-A** `POC_ASSUMPTION` 3.3 V p33 characterisation (which needs no LED data and is not a panel
+claim), or wait for P1/P2/P3 and go straight to a panel-level route. Nothing here advances on its own.
+
+## HISTORICAL_STATUS (SCAN-1R3 round, kept for audit; superseded by the R3A block above, which repaired the two evidence files it mis-delivered)
+
 Updated 2026-10-13 during **SCAN-1R3 / single-channel control chain + output-stage pre-design**.
 Start point re-read before editing: local HEAD `281e58757682a00b12f6da9fafaf685dc8dcf120`, and the
 remote ref read back independently through `gh api` as the **same full SHA** (the direct

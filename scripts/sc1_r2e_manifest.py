@@ -34,7 +34,8 @@ PROTECTED = ['spectre/C2MOS_DFF.scs', 'spectre/sc1_scan_gate.scs',
              'scripts/sc1_r2e1_call_contract.py', 'scripts/sc1_r2e_s2_tt.py',
              'scripts/sc1_r2e1_reread.py', 'scripts/sc1_r2e_vtx.py']
 
-ROLES = [(r'^scripts/sc1_r3_.*\.py$', 'r3_new_entry'),
+ROLES = [(r'^scripts/sc1_r3a_.*\.py$', 'r3a_repair_tool'),
+         (r'^scripts/sc1_r3_.*\.py$', 'r3_new_entry'),
          (r'^spectre/sc1_r3_.*\.scs$', 'r3_circuit_new'),
          (r'^results/evidence/sc1_r3_.*_log\.txt$', 'r3_transcript'),
          (r'^results/evidence/sc1_r3_.*\.txt$', 'r3_transcript'),

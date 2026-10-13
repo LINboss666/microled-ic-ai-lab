@@ -672,41 +672,115 @@ def measure_rails(R, cid, data, case_def):
 
 
 # ------------------------------------------------------------------ sampling for the reviewer
-def emit_samples(R, rows, cid, data, case_def, groups, axis):
-    """the real samples around one end-to-end switching event, nothing interpolated"""
-    ref = [w for w in case_def['windows'] if w['cause']]
-    if not ref:
-        return
-    cause = ref[0]['cause']
-    qs = []
-    for sig, path, lvl in (('clk', 'clk', 0.9), ('q', 'Xchain.q', 0.9),
-                           ('en', 'Xchain.en', 0.9), ('gate33', 'gate33', 1.65)):
-        xs = R1.crossing_times(groups, axis, path, lvl)
-        after = [x for x in xs if x[1] >= cause * 1e-9 - 1e-18]
-        qs.append((sig, path, after[0] if after else None))
-    found = [(sig, hit[1]) for sig, _p, hit in qs if hit]
-    rows.append([cid, 'end_to_end_event_list', '%s' % cause,
-                 ' ; '.join('%s crossing at %.9g s' % ft for ft in found),
-                 'the first 50% crossing of each node at or after the declared cause time',
-                 'MEASURED'])
-    for sig, path, hit in qs:
-        if not hit:
-            rows.append([cid, 'segment', sig, '-', 'NO_CROSSING at or after %.1f ns: nothing is '
-                         'invented' % cause, 'NO_CROSSING'])
+def _nodes_of(case_def):
+    """every node this case can legitimately show, at its OWN 50 % level (not a screening threshold)"""
+    out = []
+    for name, path in (('d', 'd'), ('clk', 'clk'), ('blank', 'blank'), ('core_ok33', 'core_ok33'),
+                       ('q', 'Xchain.q'), ('qbar', 'Xchain.qbar'), ('en', 'Xchain.en'),
+                       ('gate33', 'gate33')):
+        out.append((name, path, 0.5 * DOMAIN[name]))
+    return out
+
+
+def _hit_in_window(xs, t_from, t_to=None):
+    """the first crossing at or after t_from, rejected when it lands past t_to"""
+    h = _near(xs, t_from)
+    if h and t_to is not None and h[1] > t_to + 1e-18:
+        return None
+    return h
+
+
+def event_rows(cid, case_def, groups, axis, data, deck_sha='', raw_sha=''):
+    """the real raw samples around ONE declared input event, nothing interpolated and nothing borrowed
+
+    R3A rewrote this: emit_samples() used to take the first window cause of every case, which is the
+    150 ns priming edge, and then the first crossing of each node after it -- so the printed list
+    mixed the initialisation clock with the later write edge. Each judged propagation event is now its
+    own block, bounded by that input's next crossing of either direction, and the priming edge is
+    labelled separately.
+    """
+    rows = []
+    nodes = [(n, p, lv) for (n, p, lv) in _nodes_of(case_def) if groups and p in groups[0]]
+    stamp = [deck_sha, raw_sha]
+
+    def kind_row(event, kind, idx, t, values, status):
+        rows.append([cid, event, kind, ('' if idx is None else str(idx)),
+                     ('' if t is None else '%.9g' % t), values, status] + stamp)
+
+    # 1 -- the reset-free initialisation, kept and labelled for what it is
+    prim = [w for w in case_def['windows'] if w.get('label') == 'established_Q0']
+    if prim:
+        xs = R1.crossing_times(groups, axis, 'clk', 0.5 * V18)
+        h = _hit_in_window(xs, prim[0]['cause'] * 1e-9)
+        kind_row('priming_two_rising_edges', 'initialisation_crossing',
+                 h[0] if h else None, h[1] if h else None,
+                 'clk only: q stays low and qbar high through this edge, so no other node crosses '
+                 'because of it. NOT a cause of any judged response.', 'MEASURED')
+
+    # 2 -- one block per declared propagation event of this case
+    for lab, in_sig, in_dir, vin, out_sig, out_dir, t0, t1 in case_def['delays']:
+        p_in = in_sig if in_sig in ('d', 'clk', 'blank', 'core_ok33') else 'Xchain.%s' % in_sig
+        xs_in = R1.crossing_times(groups, axis, p_in, 0.5 * vin)
+        t_in = _hit_in_window(xs_in, t0 * 1e-9, t1 * 1e-9)
+        if not t_in:
+            kind_row(lab, 'event_crossing_list', None, None,
+                     'no 50%% crossing of %s inside [%s, %s] ns' % (in_sig, tnum(t0), tnum(t1)),
+                     'NO_INPUT_EDGE')
             continue
-        idx = hit[0]
-        for i in range(max(0, idx - 2), min(len(groups), idx + 3)):
-            g = groups[i]
-            vals = ' '.join('%s=%.6g' % (p, g[p]) for _s, p, _h in qs if p in g)
-            rows.append([cid, 'segment', '%s around its 50%% crossing' % sig, '%.9g' % g[axis],
-                         vals, 'MEASURED_SAMPLE'])
+        bound = _next_after(xs_in, t_in[1])       # strictly later, the audited attribution bound
+        t_end = bound[1] if bound else (t1 * 1e-9)
+        found = []
+        for name, path, lvl in nodes:
+            xs = R1.crossing_times(groups, axis, path, lvl)
+            h = _hit_in_window(xs, t_in[1], t_end)
+            if h:
+                found.append((name, h))
+        kind_row(lab, 'event_crossing_list', t_in[0], t_in[1],
+                 'input %s at %.9g s ; %s ; attribution bound t_next=%s'
+                 % (in_sig, t_in[1],
+                    ' ; '.join('%s at %.9g s' % (n, t) for n, (i, t) in found if n != in_sig),
+                    ('%.9g s' % bound[1]) if bound else 'END_OF_DATA'), 'MEASURED')
+        for name, h in found:
+            for i in range(max(0, h[0] - 2), min(len(groups), h[0] + 3)):
+                g = groups[i]
+                vals = ' '.join('%s=%.6g' % (n, g[p]) for (n, p, _l) in nodes if p in g)
+                kind_row('%s/%s' % (lab, name), 'segment', i, g[axis], vals, 'MEASURED_SAMPLE')
+
+    # 3 -- whole judged windows, sample by sample, where the claim needs to be re-computable
+    for w in case_def['windows']:
+        need = (case_def.get('fault') and w.get('refusable')) or \
+            (case_def.get('load', 1.0) != 1.0 and w['label'] == 'selected_250')
+        if not need:
+            continue
+        vals_at = lambda g: ' '.join('%s=%.6g' % (n, g[p]) for (n, p, _l) in nodes if p in g)
+        for i, g in enumerate(groups):
+            if g[axis] < w['t0'] * 1e-9 - 1e-18:
+                continue
+            if g[axis] > w['t1'] * 1e-9 + 1e-18:
+                break
+            kind_row(w['label'], 'window_samples', i, g[axis], vals_at(g), 'MEASURED_SAMPLE')
+    return rows
+
+
+def emit_samples(R, rows, cid, data, case_def, groups, axis, deck_sha='', raw_sha=''):
+    """delegate to event_rows so the native run and the offline export share one selection rule"""
+    rows.extend(event_rows(cid, case_def, groups, axis, data, deck_sha, raw_sha))
 
 
 # ------------------------------------------------------------------ orchestration
+def file_sha(path):
+    """the sha256 of the simulator's own data file, so a sample row names the bytes it came from"""
+    try:
+        return hashlib.sha256(open(path, 'rb').read()).hexdigest()
+    except Exception:
+        return ''
+
+
 MAN_HDR = ['run_id', 'case', 'deck', 'deck_sha256', 'cell_sha256_16', 'section', 'temp_C', 'rails_V',
            'load_pF', 'analysis', 'preflight_rc', 'spectre_rc', 'runner_verdict', 'saved_signals',
            'window_rows', 'state_verdict']
-SAMP_HDR = ['case', 'kind', 'signal_or_cause', 'time_s_or_list', 'values', 'status']
+SAMP_HDR = ['case', 'event', 'kind', 'sample_group_index', 'time_s', 'values', 'status',
+            'deck_sha256', 'raw_sha256']
 ROWS_HDR = S2.ROWS_HDR
 
 
@@ -825,7 +899,7 @@ def run_case(R, cid, scratch, man_rows, samp_rows, opts):
     measure_rails(R, cid, data, case_def)
     if case_def.get('fault'):
         negative_report(R, cid, data, case_def, deck_txt)
-    emit_samples(R, samp_rows, cid, data, case_def, groups, axis)
+    emit_samples(R, samp_rows, cid, data, case_def, groups, axis, sha, file_sha(data))
     state = [r for r in R.rows if r[1] == 'R3_WINDOW_STATE' and r[2] == cid]
     man[14] = str(len(state))
     man[15] = ('PASS' if all(r[7] in ('PASS', 'EXPECTED_REFUSAL') for r in state) and state
@@ -979,6 +1053,10 @@ def main():
     man_csv = o.manifest or os.path.join(PROJ, 'results', 'evidence', 'sc1_r3_chain_manifest.csv')
     samp_csv = o.samples or os.path.join(PROJ, 'results', 'evidence', 'sc1_r3_waveform_samples.csv')
     log_txt = o.log or os.path.join(PROJ, 'results', 'evidence', 'sc1_r3_chain_dependency_log.txt')
+    if o.dry and not o.out:
+        # a dry build is a debugging tool: it must never land on the native evidence file the way it
+        # did in R3, where an unguarded invocation emptied two delivered CSVs
+        out_csv = os.path.join(scratch, 'dry_rows.csv')
     if not os.path.isdir(scratch):
         os.makedirs(scratch)
     write_cells(scratch)
@@ -1017,20 +1095,26 @@ def main():
 
     authorised = os.environ.get('RUN') == '1' and os.environ.get('QODER_SIM_AUTHORISED') == '1'
     if not authorised:
-        for cid in ids:
-            R.add('R3_TT_EXECUTION', cid, 'run', 'RUN=1 and QODER_SIM_AUTHORISED=1', 'refused',
-                  5, 'NOT_RUN', 'this entry calls the simulator only with both flags set')
-    else:
-        for cid in ids:
-            try:
-                run_case(R, cid, scratch, man_rows, samp_rows, o)
-            except Exception:
-                import traceback
-                tb = traceback.format_exc()
-                R.log.append('=== HARNESS_ERROR %s\n%s' % (cid, tb))
-                R.add('HARNESS_ERROR', cid, cid, 'no python exception in the entry',
-                      tb.strip().split('\n')[-1][:120], 1, 'BLOCKED',
-                      'a harness fault is never scored as a circuit result')
+        # A refusal must not touch a single evidence file. R3A was created because this entry used to
+        # record NOT_RUN rows and then still write cases/manifest/samples: the two derived files came
+        # out header-only (9 rows -> 0, 177 rows -> 0) and were committed that way. Nothing is written
+        # before the gate, and the refusal itself is only printed, never stored over a real record.
+        print('R3_TT_REFUSED run=%s authorisation=%s: RUN=1 AND QODER_SIM_AUTHORISED=1 are both '
+              'required. No file under results/evidence is created, truncated or replaced.'
+              % (os.environ.get('RUN') or 'unset',
+                 os.environ.get('QODER_SIM_AUTHORISED') or 'unset'))
+        print('R3_TT_REFUSED cases=%d would_have_been=%s' % (len(ids), ','.join(ids)))
+        return 5
+    for cid in ids:
+        try:
+            run_case(R, cid, scratch, man_rows, samp_rows, o)
+        except Exception:
+            import traceback
+            tb = traceback.format_exc()
+            R.log.append('=== HARNESS_ERROR %s\n%s' % (cid, tb))
+            R.add('HARNESS_ERROR', cid, cid, 'no python exception in the entry',
+                  tb.strip().split('\n')[-1][:120], 1, 'BLOCKED',
+                  'a harness fault is never scored as a circuit result')
     dep, dut = process_counts(scratch)
     R.add('R3_PROCESS_COUNT', 'all', 'preflight dependency runs vs DUT runs',
           'counted from the files this scratch keeps', 'preflight=%d DUT=%d' % (dep, dut), 0,

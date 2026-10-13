@@ -53,8 +53,15 @@ because the readable files were not used to extract an oxide capacitance.
    gate33 ───┼────┤  G        on  at VGS = −3.3 V, off at VGS = 0 V
              │  D ┘
              └──── scan electrode (column line + its pixels)
-        B (p-well) ── tied to the highest potential present, i.e. to S / VSCAN
+        B (the device's own body terminal) ── tied to the highest potential present, i.e. to S / VSCAN
 ```
+
+* **Terminal naming**: `D/G/S/B` above is the *intent*, in the order a high-side switch needs. The
+  port names and the well/body spelling to be used are whatever the p33 cell in this PDK actually
+  declares — the same rule every other netlist in this project follows, read the file rather than the
+  description. A plain PMOS sits in a **p-type body inside an n-well**; that n-well is the structure a
+  body connection has to reach, and the earlier draft of this figure called it "p-well", which is the
+  wrong layer for a PMOS body contact.
 
 * **Connection / polarity**: `D` → scan electrode, `G` → `gate33`, `S` and `B` → `VSCAN`. Low gate
   selects, high gate blocks. No added keeper, no cross pull-up, no change to any accepted cell.
@@ -66,19 +73,24 @@ because the readable files were not used to extract an oxide capacitance.
   Residual charge must be *measured* in a later round, not assumed away by a pull-down.
 * **Sizing method** (procedure, not numbers): pick `L` at the 3.3 V family's legal minimum length
   (lmin 300–350 nm from the readable rules), then sweep `W` and `m` until the measured
-  `Ron(VGS = −3.3 V, VSD = VSCAN − V_data_node)` meets the §5 conditional target at the actual
-  electrode current, and re-measure the same device **attached to `gate33`** so its `Cgg` is inside the
+  `Ron = (V(S) − V(D)) / I(D)` at `VGS = −3.3 V` meets the §5 conditional target at the actual
+  electrode current. **`V(S) − V(D)` is the switch's own source-drain drop** — `VSCAN` minus the scan
+  electrode voltage. It is *not* `VSCAN − V_data_node`: that span contains the LED's own `Vf` and the
+  data driver's absorption voltage as well, so using it would size the transistor against a voltage it
+  does not drop. Then re-measure the same device **attached to `gate33`** so its `Cgg` is inside the
   chain's measured edge budget. Every one of those steps runs on the existing generator → full
   preflight → strict reader route with the same whole-window rule; none of them is a reason to invent a
   schematic dimension. **No illustrative `W` is written down as a final size.**
 * **What this route still needs**: `Vf` (or an I–V) to know whether `3.3 V − I·Ron − margin` can
   actually be delivered to the pixel, and the leakage spec — the old draft's `≤ 0.1 µA/路` figure has
   never been verified against a 3.3 V-domain off device at any temperature.
-* **Device-realizability caution carried from this project's data-driver audit**: the well/body
-  connection of a 3.3 V device in this PDK is a layer-derived, die-wide question that had to be
-  resolved by measurement before a body could be called isolated. **The `p33` / n-well case for a
-  high-side switch has not been audited at all**, so `B`-to-`VSCAN` above is an intention to be
-  verified against the LVS rules, not an established fact.
+* **Body/well question, scoped honestly**: this project had to discover by measurement that a 3.3 V
+  device's body in this PDK is a layer-derived, die-wide node rather than an isolatable terminal, and
+  **the p33 case for a high-side source at `VSCAN` has not been looked at at all**. So `B`-to-`VSCAN`
+  above is an intention, not an established fact. It is a *modelling* question for the netlist stage
+  (which subckt terminal is the body, and what does the model card allow it to be tied to) — the
+  current course explicitly excludes layout, DRC, LVS and PEX, so it is **not** an S3 precondition and
+  must not be turned into a new verification track.
 
 ## 4 Route B — a final `VSCAN` of 5 V is a different problem, and is **not selected**
 
@@ -145,9 +157,21 @@ figures, not scan-rise figures**.
 | P5 | **real electrode RC / load**, or an explicit course-simulation load figure | teacher, or a documented extraction assumption | the scan rise time and the gate charge the `gate33` node must move; without it the 1 pF / 5 pF test loads stay a stand-in and no edge budget exists |
 | P6 | **off-state requirement**: leakage limit and whether a discharged/hi-Z column line is acceptable | teacher / user | whether a bleed or pull-down device belongs in the design at all, and which leakage figure it is judged against |
 | P7 | **absolute ratings / SOA table** for the chosen family | foundry / teacher release | turns the measured `VGS`/`VDS` extremes into a pass/fail statement. Until it exists, `SOA: NO` and no stress claim may be closed |
-| P8 | **`p33` well/body realizability** for a high-side source tied to `VSCAN` | PDK rules + measurement (this project's own audit route) | whether Route A's `B`-to-`VSCAN` is implementable, and whether a DNW variant is required |
+| P8 | **`p33` body / n-well connection** for a high-side source tied to `VSCAN` | the PDK's own device definitions (a netlist/modelling read, not a layout task) | which terminal is the body, and whether `B`-to-`VSCAN` is expressible in a subckt at all. Not an S3 precondition: this course does no layout / DRC / LVS / PEX |
 
-P1, P2 and P3 are the blocking set; P4–P8 can be resolved alongside the first S3 deck.
+**Two different blocking sets, and the difference matters.** P1, P2 and P3 decide whether a *panel*
+output stage can be claimed to work; without them no route may be called feasible and no `Ron` target
+exists. They do **not** block a device-level characterisation performed under a declared
+`POC_ASSUMPTION`: at a stated `VSCAN = 3.3 V`, with a parameterised load and a swept `VGS`/`VDS`, one
+can measure a p33 high-side device's own `Ron = (V(S) − V(D))/I(D)`, its current capability at a
+declared test current, and the gate charge it presents to `gate33` — none of which needs an LED `Vf`.
+That is the shape of a possible **S3-A proposal**: a 3.3 V-domain p33 characterisation round, whose
+results are labelled `POC_ASSUMPTION` and may **not** be written as "the panel meets X", because the
+panel-level questions stay exactly where §5 left them.
+
+**Nothing of S3-A was run in this round.** It is recorded here as a route the reviewer can choose so
+circuit progress does not stall on missing LED data; entering it needs that decision first (P1 plus the
+`POC_ASSUMPTION` framing), and the deliverables above are unchanged either way.
 
 ## 8 What this plan is explicitly not
 

@@ -3,7 +3,14 @@
 Round: **SCAN-1R3**, start point `281e58757682a00b12f6da9fafaf685dc8dcf120` (the R2E2 head the cloud
 pulled and reviewed as `ACCEPT_TT_RECORDS / GO_R3`). Write-up of the record only — the circuit answer
 is in `results/evidence/sc1_r3_chain_cases.csv` (428 rows), `sc1_r3_chain_manifest.csv` (9 rows),
-`sc1_r3_waveform_samples.csv` (177 rows) and `sc1_r3_chain_dependency_log.txt` (296 lines).
+`sc1_r3_waveform_samples.csv` (812 rows) and `sc1_r3_chain_dependency_log.txt` (296 lines).
+
+> **Delivered-evidence note (SCAN-1R3A).** Two of those four files reached the repository at
+> `f199245` as **header rows only** — `sc1_r3_chain_manifest.csv` 195 B / 0 data rows and
+> `sc1_r3_waveform_samples.csv` 67 B / 0 data rows — while this report said "9 rows" and "177 rows".
+> Both claims were true of the batch that ran and false of the bytes that were committed; the cause,
+> the recovery and the corrected sample count are in `reports/scan_driver_r3a_delivery_repair.md`.
+> Nothing about the circuit, the 428 native rows or the verdicts changed.
 
 **Verdict: `R3_CONTROL_CHAIN: PASS`** — 8 normal cases + 1 real wiring fault, all nine decks preflight
 `rc=0` and simulate `rc=0`, **0 functional FAIL, 0 dependency BLOCKED**, and the fault case is
@@ -70,8 +77,17 @@ than by accepting a mismatched hash:
    propdelay answers, the same window values. That agreement is the expected result of a
    comment-only diff and it is what makes the re-run an identity check rather than a second experiment.
 
-Delivered: **9 preflight processes + 9 DUT processes** (`R3_PROCESS_COUNT preflight=9 DUT=9`), counted
-from artifacts on disk, not asserted — this round is 18 Spectre invocations, not "9 simulations".
+Delivered: **9 preflight processes + 9 DUT processes** for the batch this report describes
+(`R3_PROCESS_COUNT preflight=9 DUT=9`), counted from artifacts on disk, not asserted. **That figure is
+the delivered batch, not the round total** — see §9.
+
+Batch labelling, so the two runs are never mixed: every delivered row carries
+`run_id = R3-CHAIN-20261013T122004Z` (the repository-bytes batch). The earlier
+`R3-CHAIN-20261013T120713Z` batch (comment-mismatched mirror) wrote to the **same paths**, so its own
+copies of `sc1_r3_chain_manifest.csv` / `sc1_r3_waveform_samples.csv` / `sc1_r3_chain_cases.csv` / the
+dependency log no longer exist as separate files anywhere; what survives of it is this report's §2
+text plus the fact that its numbers were identical. Its artifacts are therefore **NOT RETAINED**, and
+no claim below is supported by them.
 
 The nine deck files the simulator read are still on the guest at
 `cadence_work/sc1_sim/r3_chain/*.scs`, and their sha256 re-read one by one equals the `deck_sha256`
@@ -130,31 +146,56 @@ generator text alone.
 
 ## 5 One end-to-end waveform, read from the data
 
-`r3_write_q1_on`, `results/evidence/sc1_r3_waveform_samples.csv` — ±2 samples around each node's own
-50 % crossing, with `clk` already at its plateau before `q` crosses, and `gate33` still at 3.3 V after
-`en` has crossed (times in ns, values in V):
+`r3_write_q1_on`, event `clk_up_to_gate33_end_to_end` in
+`results/evidence/sc1_r3_waveform_samples.csv` — the actual consecutive samples around each node's own
+50 % crossing of **one** input edge (the 250 ns write), not a list assembled from different events.
+Times in ns, values in V, `sample_group_index` is the row index in the simulator's own data file:
 
-| t | clk | Xchain.q | Xchain.en | gate33 |
-|---|---|---|---|---|
-| 149.940 | 0.846 | 0.0006 | −5.0e-09 | 3.300 |
-| 250.137 | 1.023 | 0.682 | −3.5e-04 | 3.300 |
-| 250.183 | 1.065 | 1.007 | −2.9e-03 | 3.300 |
-| 250.237 | 1.113 | 1.356 | −9.0e-03 | 3.300 |
-| **250.356** | 1.220 | 1.789 | **0.896** | 3.2999 |
-| 250.406 | 1.265 | 1.798 | 1.330 | 3.2987 |
-| **252.240** | 1.800 | 1.800 | 1.800 | **1.623** |
-| 252.440 | 1.800 | 1.800 | 1.800 | 1.320 |
+| idx | t | clk | q | qbar | en | gate33 |
+|---|---|---|---|---|---|---|
+| 2582 | 249.928 | 0.8356 | −2.8e-05 | 1.79999 | 1.7e-06 | 3.300 |
+| 2584 | 250.003 | **0.9024** | 1.1e-04 | 1.80001 | 2.2e-06 | 3.300 |
+| 2590 | 250.137 | 1.0234 | 0.6822 | 1.82868 | −3.5e-04 | 3.300 |
+| 2592 | 250.183 | 1.0648 | **1.0072** | 1.66483 | −2.9e-03 | 3.300 |
+| 2595 | 250.253 | 1.1274 | 1.4704 | **0.9218** | −1.2e-02 | 3.300 |
+| 2602 | 250.356 | 1.2204 | 1.7891 | 0.0278 | **0.8958** | 3.29992 |
+| 2645 | 252.040 | 1.8000 | 1.8000 | 7.3e-08 | 1.8000 | 1.9364 |
+| 2647 | 252.240 | 1.8000 | 1.8000 | 3.2e-08 | 1.8000 | **1.6230** |
+| 2649 | 252.440 | 1.8000 | 1.8000 | 1.0e-07 | 1.8000 | 1.3198 |
 
-The chain's own event list for the case is `clk 150 ns → q 250.167 ns → en 250.356 ns → gate33
-252.223 ns` (`end_to_end_event_list` rows, one per case). The `en` node rings at sub-millivolt level
-while `q` is still climbing — that is the gate input being pulled, not a driven source.
+The exported event row states the interpolated crossings and the bound in one line:
+
+```
+input clk at 2.5e-07 s ; q at 2.50167135e-07 s ; qbar at 2.50254283e-07 s ;
+en at 2.5035635e-07 s ; gate33 at 2.52222929e-07 s ; attribution bound t_next=3e-07 s
+```
+
+so `gate33 − clk = 2.223 ns` is recomputable from this file alone, and §6's native row agrees exactly.
+
+Two things this table corrects versus the first draft of this report:
+
+* **`clk` is not at its plateau when `q` crosses.** At `q`'s 50 % crossing `clk` reads 1.02–1.06 V,
+  still inside its own 2 ns ramp (the clock's 50 % point is 250.003 ns, the sample at 250.183 ns is
+  1.065 V). The propagation is therefore attributed to `clk`'s 50 % crossing precisely because the
+  clock edge is still moving through the sampling instant — not because a settled clock pushed `q`.
+* the 150 ns priming edge is **not** part of this chain. The first draft printed
+  `clk 150 ns → q 250.167 ns → en → gate33`, which mixed the initialisation clock with the write edge;
+  the initialisation now has its own `initialisation_crossing` row per case, labelled
+  `NOT a cause of any judged response`.
+
+The `en` node swings negative (−3.5e-04 … −1.2e-02 V) while `qbar` falls — the level shifter's input
+being pulled through the gate cell, on a node no source drives.
 
 ## 6 Propagation, attributed by the audited tool
 
 18 `R3_PROPDELAY` rows come from the accepted `scripts/sc1_delay.py` (input 50 % crossing, next
 either-direction 50 % crossing as the attribution bound), and each is paired with an
 `R3_PROPAGATION_50_50` row that prints `t_in`, `t_out`, `t_next` and the output's own 10 % onset so a
-reviewer can recompute the answer from the same crossing lists. 14 are `PASS`, **4 refuse to answer**
+reviewer can recompute the answer from the same crossing lists. Since R3A the delivered
+`sc1_r3_waveform_samples.csv` also carries those crossing lists per event, and
+`scripts/sc1_r3a_verify_evidence.py` performs the recomputation itself: **18 of 18 events reproduce
+their native delay (to the row's own 0.001 ns print precision) and their attribution bound, on the
+guest and on Windows alike.** 14 answers are `PASS`, **4 refuse to answer**
 (`NOT_MEASURED_OVERLAP`), and none of them is replaced by a summed estimate:
 
 | case | input → output | delay | `t_in` / `t_out` / `t_next` (ns) |
@@ -235,8 +276,7 @@ simulator, reader and priming all succeeded here, so this is a circuit detection
 
 `main()` keeps the three classes R2E1 introduced: functional `FAIL` → exit 1; dependency
 `BLOCKED`/`NOT_AVAILABLE`/other `PARTIAL` → exit 2; **informational** (`MEASURED`, `EXPECTED_REFUSAL`,
-`NOT_MEASURED_OVERLAP`, `DETECTED`) printed with their own count and never renamed → exit 0. Both
-`RUN=1` **and** `QODER_SIM_AUTHORISED=1` are required or the entry records `NOT_RUN` and returns 5;
+`NOT_MEASURED_OVERLAP`, `DETECTED`) printed with their own count and never renamed → exit 0.
 `--only` with an unknown id returns 9 instead of silently dropping it, and `--expect N` returns 9 on a
 wrong selection count. Delivered summary line:
 
@@ -247,11 +287,31 @@ R3_TT cases=9 rows=428 functional_FAIL=0 dependency=0 informational=120  -> exit
 Verdict split of the 428 rows: **PASS 307 · MEASURED 109 · EXPECTED_REFUSAL 7 ·
 NOT_MEASURED_OVERLAP 4 · DETECTED 1**.
 
+**Authorisation semantics were changed by R3A.** The version that produced the rows above recorded
+`NOT_RUN` and *then still wrote* `cases`/`manifest`/`samples`, which is how two delivered CSVs reached
+Git as headers. The entry now prints `R3_TT_REFUSED …` and returns 5 **before** touching any file, and
+`--dry` without `--out` writes its rows inside the scratch directory instead of onto the native
+evidence path. `scripts/sc1_r3a_write_guard_check.py` proves it in an isolated temporary directory:
+pre-seeded cases/manifest/samples/log keep their hashes, rc is 5, and no `sim/` artifact appears (no
+runner call) — **9/9 on guest 2.6.6 and on Windows 3.12**.
+
+Process counts, stated per batch rather than as a round total:
+
+| batch | preflight | DUT | status of its own artifacts |
+|---|---|---|---|
+| `R3-CHAIN-20261013T120713Z` (stale comment mirror) | 9 | 9 | overwritten in place by the batch below, NOT RETAINED |
+| `R3-CHAIN-20261013T122004Z` (delivered) | 9 | 9 | the files in `results/evidence/` |
+| four aborted measurement attempts | not reconstructible | not reconstructible | same scratch paths, reused |
+
+So the delivered batch is **18 Spectre invocations**, the round provably issued **at least 36**, and the
+whole-round total is **UNKNOWN** — it cannot be recovered from the directory, because each batch wrote
+to the same filenames. No cumulative count is claimed anywhere in this report.
+
 `--selftest` (4 synthetic checks on the crossing/attribution helpers, including the two helper defects
 this round pinned: `_near(…, after_only=False)` must return the **last** crossing at or before the
 target, and `_next_after()` must be **strict**) passes **4/4 on guest Python 2.6.6 and on Windows
-Python 3.12**. `--dry --expect 9` builds all nine decks and audits the frame with no simulator. The
-offline R2E suites were not re-run: nothing in them changed.
+Python 3.12**, including after the R3A sampling change. `--dry --expect 9` builds all nine decks and
+audits the frame with no simulator. The offline R2E suites were not re-run: nothing in them changed.
 
 ## 10 Deliberate limits of this record
 
