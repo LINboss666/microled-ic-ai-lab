@@ -1,0 +1,296 @@
+=== r3_q0_off run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port 
+runner: SPECTRE name=r3_q0_off.scs rc=0 elapsed=1s timeout=900s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 368
+drwx------. 20 root root 4096 Oct 13 20:20 .
+drwx------.  3 root root 4096 Oct 13 20:20 ..
+-rw-------.  1 root root 7605 Oct 13 20:08 preflight_r3_blank_assert_r3_blank_assert.log
+drwx------.  2 root root 4096 Oct 13 20:08 preflight_r3_blank_assert_r3_blank_assert.raw
+-rw-------.  1 root root 7434 Oct 13 20:08 preflight_r3_blank_assert_r3_blank_assert.stdout
+-rw-------.  1 root root 7634 Oct 13 20:08 preflight_r3_blank_release_r3_blank_release.log
+drwx------.  2 root root 4096 Oct 13 20:08 preflight_r3_blank_release_r3_blank_release.raw
+-rw-------.  1 root root 7463 Oct 13 20:08 preflight_r3_blank_release_r3_blank_release.stdout
+-rw-------.  1 root root 7646 Oct 13 20:10 preflight_r3_external_guard_r3_external_guard.log
+drwx------.  2 root root 4096 Oct 13 20:10 preflight_r3_external_guard_r3_external_guard.raw
+-rw-------.  1 root root 7475 Oct 13 20:10 preflight_r3_external_guard_r3_external_guard.stdout
+----- log tail -----
+
+
+Aggregate audit (8:20:06 PM, Tue Oct 13, 2026):
+Time used: CPU = 834 ms, elapsed = 861 ms, util. = 96.8%.
+Time spent in licensing: elapsed = 57.8 ms, percentage of total = 6.71%.
+Peak memory used = 62.6 Mbytes.
+Simulation started at: 8:20:05 PM, Tue Oct 13, 2026, ended at: 8:20:06 PM, Tue Oct 13, 2026, with elapsed time (wall clock): 861 ms.
+spectre completes with 0 errors, 0 warnings, and 8 notices.
+R3_r3_q0_off: PASS
+
+
+=== r3_write_q1_on run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for 
+runner: SPECTRE name=r3_write_q1_on.scs rc=0 elapsed=1s timeout=900s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 368
+drwx------. 20 root root 4096 Oct 13 20:20 .
+drwx------.  3 root root 4096 Oct 13 20:20 ..
+-rw-------.  1 root root 7605 Oct 13 20:08 preflight_r3_blank_assert_r3_blank_assert.log
+drwx------.  2 root root 4096 Oct 13 20:08 preflight_r3_blank_assert_r3_blank_assert.raw
+-rw-------.  1 root root 7434 Oct 13 20:08 preflight_r3_blank_assert_r3_blank_assert.stdout
+-rw-------.  1 root root 7634 Oct 13 20:08 preflight_r3_blank_release_r3_blank_release.log
+drwx------.  2 root root 4096 Oct 13 20:08 preflight_r3_blank_release_r3_blank_release.raw
+-rw-------.  1 root root 7463 Oct 13 20:08 preflight_r3_blank_release_r3_blank_release.stdout
+-rw-------.  1 root root 7646 Oct 13 20:10 preflight_r3_external_guard_r3_external_guard.log
+drwx------.  2 root root 4096 Oct 13 20:10 preflight_r3_external_guard_r3_external_guard.raw
+-rw-------.  1 root root 7475 Oct 13 20:10 preflight_r3_external_guard_r3_external_guard.stdout
+----- log tail -----
+
+
+Aggregate audit (8:20:33 PM, Tue Oct 13, 2026):
+Time used: CPU = 841 ms, elapsed = 868 ms, util. = 96.8%.
+Time spent in licensing: elapsed = 56.7 ms, percentage of total = 6.53%.
+Peak memory used = 62.7 Mbytes.
+Simulation started at: 8:20:32 PM, Tue Oct 13, 2026, ended at: 8:20:33 PM, Tue Oct 13, 2026, with elapsed time (wall clock): 868 ms.
+spectre completes with 0 errors, 0 warnings, and 8 notices.
+R3_r3_write_q1_on: PASS
+
+
+=== r3_blank_assert run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for
+runner: SPECTRE name=r3_blank_assert.scs rc=0 elapsed=1s timeout=900s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 368
+drwx------. 20 root root 4096 Oct 13 20:21 .
+drwx------.  3 root root 4096 Oct 13 20:21 ..
+-rw-------.  1 root root 7632 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.log
+drwx------.  2 root root 4096 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.raw
+-rw-------.  1 root root 7461 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.stdout
+-rw-------.  1 root root 7634 Oct 13 20:08 preflight_r3_blank_release_r3_blank_release.log
+drwx------.  2 root root 4096 Oct 13 20:08 preflight_r3_blank_release_r3_blank_release.raw
+-rw-------.  1 root root 7463 Oct 13 20:08 preflight_r3_blank_release_r3_blank_release.stdout
+-rw-------.  1 root root 7646 Oct 13 20:10 preflight_r3_external_guard_r3_external_guard.log
+drwx------.  2 root root 4096 Oct 13 20:10 preflight_r3_external_guard_r3_external_guard.raw
+-rw-------.  1 root root 7475 Oct 13 20:10 preflight_r3_external_guard_r3_external_guard.stdout
+----- log tail -----
+
+
+Aggregate audit (8:21:04 PM, Tue Oct 13, 2026):
+Time used: CPU = 839 ms, elapsed = 866 ms, util. = 96.8%.
+Time spent in licensing: elapsed = 56.5 ms, percentage of total = 6.53%.
+Peak memory used = 62.7 Mbytes.
+Simulation started at: 8:21:03 PM, Tue Oct 13, 2026, ended at: 8:21:04 PM, Tue Oct 13, 2026, with elapsed time (wall clock): 866 ms.
+spectre completes with 0 errors, 0 warnings, and 8 notices.
+R3_r3_blank_assert: PASS
+
+
+=== r3_blank_release run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed fo
+runner: SPECTRE name=r3_blank_release.scs rc=0 elapsed=1s timeout=900s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 368
+drwx------. 20 root root 4096 Oct 13 20:21 .
+drwx------.  3 root root 4096 Oct 13 20:21 ..
+-rw-------.  1 root root 7632 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.log
+drwx------.  2 root root 4096 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.raw
+-rw-------.  1 root root 7461 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.stdout
+-rw-------.  1 root root 7613 Oct 13 20:21 preflight_r3_blank_release_r3_blank_release.log
+drwx------.  2 root root 4096 Oct 13 20:21 preflight_r3_blank_release_r3_blank_release.raw
+-rw-------.  1 root root 7442 Oct 13 20:21 preflight_r3_blank_release_r3_blank_release.stdout
+-rw-------.  1 root root 7646 Oct 13 20:10 preflight_r3_external_guard_r3_external_guard.log
+drwx------.  2 root root 4096 Oct 13 20:10 preflight_r3_external_guard_r3_external_guard.raw
+-rw-------.  1 root root 7475 Oct 13 20:10 preflight_r3_external_guard_r3_external_guard.stdout
+----- log tail -----
+
+
+Aggregate audit (8:21:34 PM, Tue Oct 13, 2026):
+Time used: CPU = 856 ms, elapsed = 885 ms, util. = 96.7%.
+Time spent in licensing: elapsed = 56.9 ms, percentage of total = 6.43%.
+Peak memory used = 62.6 Mbytes.
+Simulation started at: 8:21:33 PM, Tue Oct 13, 2026, ended at: 8:21:34 PM, Tue Oct 13, 2026, with elapsed time (wall clock): 885 ms.
+spectre completes with 0 errors, 0 warnings, and 8 notices.
+R3_r3_blank_release: PASS
+
+
+=== r3_write_q0_off run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for
+runner: SPECTRE name=r3_write_q0_off.scs rc=0 elapsed=1s timeout=900s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 368
+drwx------. 20 root root 4096 Oct 13 20:22 .
+drwx------.  3 root root 4096 Oct 13 20:22 ..
+-rw-------.  1 root root 7632 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.log
+drwx------.  2 root root 4096 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.raw
+-rw-------.  1 root root 7461 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.stdout
+-rw-------.  1 root root 7613 Oct 13 20:21 preflight_r3_blank_release_r3_blank_release.log
+drwx------.  2 root root 4096 Oct 13 20:21 preflight_r3_blank_release_r3_blank_release.raw
+-rw-------.  1 root root 7442 Oct 13 20:21 preflight_r3_blank_release_r3_blank_release.stdout
+-rw-------.  1 root root 7646 Oct 13 20:10 preflight_r3_external_guard_r3_external_guard.log
+drwx------.  2 root root 4096 Oct 13 20:10 preflight_r3_external_guard_r3_external_guard.raw
+-rw-------.  1 root root 7475 Oct 13 20:10 preflight_r3_external_guard_r3_external_guard.stdout
+----- log tail -----
+
+
+Aggregate audit (8:22:11 PM, Tue Oct 13, 2026):
+Time used: CPU = 856 ms, elapsed = 885 ms, util. = 96.7%.
+Time spent in licensing: elapsed = 57.8 ms, percentage of total = 6.54%.
+Peak memory used = 62.7 Mbytes.
+Simulation started at: 8:22:10 PM, Tue Oct 13, 2026, ended at: 8:22:11 PM, Tue Oct 13, 2026, with elapsed time (wall clock): 885 ms.
+spectre completes with 0 errors, 0 warnings, and 8 notices.
+R3_r3_write_q0_off: PASS
+
+
+=== r3_repeat_101 run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for p
+runner: SPECTRE name=r3_repeat_101.scs rc=0 elapsed=1s timeout=900s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 368
+drwx------. 20 root root 4096 Oct 13 20:22 .
+drwx------.  3 root root 4096 Oct 13 20:22 ..
+-rw-------.  1 root root 7632 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.log
+drwx------.  2 root root 4096 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.raw
+-rw-------.  1 root root 7461 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.stdout
+-rw-------.  1 root root 7613 Oct 13 20:21 preflight_r3_blank_release_r3_blank_release.log
+drwx------.  2 root root 4096 Oct 13 20:21 preflight_r3_blank_release_r3_blank_release.raw
+-rw-------.  1 root root 7442 Oct 13 20:21 preflight_r3_blank_release_r3_blank_release.stdout
+-rw-------.  1 root root 7646 Oct 13 20:10 preflight_r3_external_guard_r3_external_guard.log
+drwx------.  2 root root 4096 Oct 13 20:10 preflight_r3_external_guard_r3_external_guard.raw
+-rw-------.  1 root root 7475 Oct 13 20:10 preflight_r3_external_guard_r3_external_guard.stdout
+----- log tail -----
+
+
+Aggregate audit (8:22:41 PM, Tue Oct 13, 2026):
+Time used: CPU = 866 ms, elapsed = 898 ms, util. = 96.4%.
+Time spent in licensing: elapsed = 58.5 ms, percentage of total = 6.52%.
+Peak memory used = 64.6 Mbytes.
+Simulation started at: 8:22:40 PM, Tue Oct 13, 2026, ended at: 8:22:41 PM, Tue Oct 13, 2026, with elapsed time (wall clock): 898 ms.
+spectre completes with 0 errors, 0 warnings, and 8 notices.
+R3_r3_repeat_101: PASS
+
+
+=== r3_external_guard run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed f
+runner: SPECTRE name=r3_external_guard.scs rc=0 elapsed=1s timeout=900s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 368
+drwx------. 20 root root 4096 Oct 13 20:23 .
+drwx------.  3 root root 4096 Oct 13 20:23 ..
+-rw-------.  1 root root 7632 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.log
+drwx------.  2 root root 4096 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.raw
+-rw-------.  1 root root 7461 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.stdout
+-rw-------.  1 root root 7613 Oct 13 20:21 preflight_r3_blank_release_r3_blank_release.log
+drwx------.  2 root root 4096 Oct 13 20:21 preflight_r3_blank_release_r3_blank_release.raw
+-rw-------.  1 root root 7442 Oct 13 20:21 preflight_r3_blank_release_r3_blank_release.stdout
+-rw-------.  1 root root 7646 Oct 13 20:23 preflight_r3_external_guard_r3_external_guard.log
+drwx------.  2 root root 4096 Oct 13 20:23 preflight_r3_external_guard_r3_external_guard.raw
+-rw-------.  1 root root 7475 Oct 13 20:23 preflight_r3_external_guard_r3_external_guard.stdout
+----- log tail -----
+
+
+Aggregate audit (8:23:18 PM, Tue Oct 13, 2026):
+Time used: CPU = 787 ms, elapsed = 816 ms, util. = 96.4%.
+Time spent in licensing: elapsed = 56.4 ms, percentage of total = 6.91%.
+Peak memory used = 62.7 Mbytes.
+Simulation started at: 8:23:17 PM, Tue Oct 13, 2026, ended at: 8:23:18 PM, Tue Oct 13, 2026, with elapsed time (wall clock): 816 ms.
+spectre completes with 0 errors, 0 warnings, and 8 notices.
+R3_r3_external_guard: PASS
+
+
+=== r3_load5p run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port 
+runner: SPECTRE name=r3_load5p.scs rc=0 elapsed=1s timeout=900s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 368
+drwx------. 20 root root 4096 Oct 13 20:23 .
+drwx------.  3 root root 4096 Oct 13 20:23 ..
+-rw-------.  1 root root 7632 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.log
+drwx------.  2 root root 4096 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.raw
+-rw-------.  1 root root 7461 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.stdout
+-rw-------.  1 root root 7613 Oct 13 20:21 preflight_r3_blank_release_r3_blank_release.log
+drwx------.  2 root root 4096 Oct 13 20:21 preflight_r3_blank_release_r3_blank_release.raw
+-rw-------.  1 root root 7442 Oct 13 20:21 preflight_r3_blank_release_r3_blank_release.stdout
+-rw-------.  1 root root 7646 Oct 13 20:23 preflight_r3_external_guard_r3_external_guard.log
+drwx------.  2 root root 4096 Oct 13 20:23 preflight_r3_external_guard_r3_external_guard.raw
+-rw-------.  1 root root 7475 Oct 13 20:23 preflight_r3_external_guard_r3_external_guard.stdout
+----- log tail -----
+
+
+Aggregate audit (8:23:54 PM, Tue Oct 13, 2026):
+Time used: CPU = 844 ms, elapsed = 872 ms, util. = 96.8%.
+Time spent in licensing: elapsed = 56.8 ms, percentage of total = 6.52%.
+Peak memory used = 62.6 Mbytes.
+Simulation started at: 8:23:53 PM, Tue Oct 13, 2026, ended at: 8:23:54 PM, Tue Oct 13, 2026, with elapsed time (wall clock): 872 ms.
+spectre completes with 0 errors, 0 warnings, and 8 notices.
+R3_r3_load5p: PASS
+
+
+=== r3_fault_blank_tied_vss run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files pa
+runner: SPECTRE name=r3_fault_blank_tied_vss.scs rc=0 elapsed=0s timeout=900s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 368
+drwx------. 20 root root 4096 Oct 13 20:24 .
+drwx------.  3 root root 4096 Oct 13 20:24 ..
+-rw-------.  1 root root 7632 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.log
+drwx------.  2 root root 4096 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.raw
+-rw-------.  1 root root 7461 Oct 13 20:21 preflight_r3_blank_assert_r3_blank_assert.stdout
+-rw-------.  1 root root 7613 Oct 13 20:21 preflight_r3_blank_release_r3_blank_release.log
+drwx------.  2 root root 4096 Oct 13 20:21 preflight_r3_blank_release_r3_blank_release.raw
+-rw-------.  1 root root 7442 Oct 13 20:21 preflight_r3_blank_release_r3_blank_release.stdout
+-rw-------.  1 root root 7646 Oct 13 20:23 preflight_r3_external_guard_r3_external_guard.log
+drwx------.  2 root root 4096 Oct 13 20:23 preflight_r3_external_guard_r3_external_guard.raw
+-rw-------.  1 root root 7475 Oct 13 20:23 preflight_r3_external_guard_r3_external_guard.stdout
+----- log tail -----
+
+
+Aggregate audit (8:24:30 PM, Tue Oct 13, 2026):
+Time used: CPU = 767 ms, elapsed = 795 ms, util. = 96.4%.
+Time spent in licensing: elapsed = 53.3 ms, percentage of total = 6.71%.
+Peak memory used = 62.7 Mbytes.
+Simulation started at: 8:24:30 PM, Tue Oct 13, 2026, ended at: 8:24:30 PM, Tue Oct 13, 2026, with elapsed time (wall clock): 795 ms.
+spectre completes with 0 errors, 0 warnings, and 9 notices.
+R3_r3_fault_blank_tied_vss: PASS
+

@@ -1,0 +1,36 @@
+simulator lang=spectre insensitive=yes
+// =============================================================================
+// SCAN-1 R3: one scan channel's CONTROL CHAIN, assembled from the three cells this
+// project already has accepted -- no cell body is edited here, this file only wires.
+//
+//   external d/clk -> c2mos_dff -> q/qbar -> sc1_scan_gate -> en -> sc1_ls_c1_top_r2d -> gate33
+//   external blank   -> sc1_scan_gate ; external core_ok33 -> sc1_ls_c1_top_r2d
+//
+// Port orders were read off the cell files, not taken from a description:
+//   spectre/C2MOS_DFF.scs               subckt c2mos_dff         (d clk q qbar vdd vss)                 18 MOS
+//   spectre/sc1_scan_gate.scs           subckt sc1_scan_gate     (qbar blank en vdd vss)                 4 MOS
+//   spectre/sc1_level_shifter_r2d.scs   subckt sc1_ls_c1_top_r2d (en core_ok33 gate33 vdd18 vdd33 vss)   10 MOS
+// so this wrapper holds 18 + 4 + 10 = 32 MOS and NO power output device.
+//
+// q, qbar and en are REAL inter-module nodes: they appear nowhere else in a deck, so nothing drives,
+// clamps or bypasses them with an ideal source, and no ideal logic source replaces the DFF. Their
+// accessible paths are the measured dot form (Xchain.q / Xchain.qbar / Xchain.en).
+//
+// The two 1.8 V cells declare their supply port as `vdd' while the level shifter declares `vdd18', so
+// a deck instantiating this wrapper needs BOTH names in the supply contract -- the frozen checker keys
+// on the port name (scripts/sc1_supply_check.awk, top_check) -- and each entry has to be reached:
+//   "vdd=1.8 vdd18=1.8 vdd33=3.3 vss=0"
+// Both `vdd' connections land on the deck's vdd18 net, which is driven by its own independent source,
+// so the certified potentials stay consistent rather than being assumed.
+//
+// Polarity chain derived from the cell bodies (TOPOLOGY_CHECK, not a measurement):
+//   Q=1 with blank=0 -> qbar=0 -> en=1.8 V -> x low / y high; with core_ok33 high the NAND gives
+//     gate33 low, which is the level the high-side select transistor needs.
+//   Q=0 or blank=1 -> en=0 -> x high / y low -> gate33 high.
+//   core_ok33=0 forces gate33 high regardless of y: that path is an EXTERNAL testbench guard, not an
+//     on-chip undervoltage detector, and it does not clear Q.
+subckt sc1_r3_scan_chain_1ch (d clk blank core_ok33 gate33 vdd18 vdd33 vss)
+  Xff   (d clk q qbar vdd18 vss)          c2mos_dff
+  Xgate (qbar blank en vdd18 vss)         sc1_scan_gate
+  Xls   (en core_ok33 gate33 vdd18 vdd33 vss) sc1_ls_c1_top_r2d
+ends sc1_r3_scan_chain_1ch

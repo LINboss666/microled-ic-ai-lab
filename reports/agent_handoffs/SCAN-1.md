@@ -2,6 +2,54 @@
 
 ## CURRENT_STATUS (single authoritative table; everything below this block is history)
 
+Updated 2026-10-13 during **SCAN-1R3 / single-channel control chain + output-stage pre-design**.
+Start point re-read before editing: local HEAD `281e58757682a00b12f6da9fafaf685dc8dcf120`, and the
+remote ref read back independently through `gh api` as the **same full SHA** (the direct
+`git ls-remote` attempt on this host failed with `curl 28 Recv failure: Connection was reset`, which is
+the known github.com:443 transport instability, not a divergence). No unknown upstream commits. Full
+write-ups: `reports/scan_driver_r3_control_chain.md` and `reports/scan_driver_r3_output_stage_plan.md`;
+artifacts `spectre/sc1_r3_scan_chain.scs`, `scripts/sc1_r3_chain_tt.py`,
+`results/evidence/sc1_r3_*`.
+
+The cloud reviewer pulled `281e587`, reviewed it and decided **`ACCEPT_TT_RECORDS / GO_R3`**; this round
+is that decision's declared scope and nothing beyond it. Three accepted cells were wired into one
+channel and simulated as one channel — 8 normal cases + 1 real wiring fault, TT/27 °C, rails from
+independent sources, `gate33` on a declared 1 pF or 5 pF capacitor only. Spectre really ran (guest
+RHEL6.5, python 2.6.6) over the VMware Tools channel; the VM's power, network, snapshots, licence and
+the teacher PDK/OA libraries were not touched. **No power output stage was simulated, no 5 V deck was
+built, no corner/ramp/power-fail matrix was run, no chain beyond one channel was started.**
+
+| item | status | evidence |
+|---|---|---|
+| R2E2 native TT records | **ACCEPTED_TT_RECORDS (cloud, 2026-10-13)** | the review pulled `281e587` and returned `ACCEPT_TT_RECORDS / GO_R3`; its count clarification is applied here — the R2E2 record holds **15** `SAVE_PATH_AUDIT PARTIAL` rows (6 static + 6 dynamic + 2 load + 1 negative), "six" named only the static group |
+| **R3_CONTROL_CHAIN** | **PASS** | 9 decks, 9 full preflights `rc=0`, 9 DUT runs `rc=0`, `functional_FAIL=0 dependency=0`, 428 rows (PASS 307 / MEASURED 109 / EXPECTED_REFUSAL 7 / NOT_MEASURED_OVERLAP 4 / DETECTED 1). Port orders read off the cell files; `vdd` **and** `vdd18` both in the supply map because the frozen checker keys on the port name |
+| inter-module nodes really chained | **PROVEN, no ideal shortcut** | `R3_NO_IDEAL_INTERPOSE: drivers found: none` in all 9 decks — no source touches `q`/`qbar`/`en`, no ideal logic source replaces the DFF; device count derived from the netlist = **32 four-terminal devices**, no output device |
+| whole-window state logic | **106 rows, 104 PASS + 2 expected refusals** | `r3_q0_off`, `write_q1_on`, `blank_assert`, `blank_release`, `write_q0_off`, `repeat_101`, `external_guard`, `load5p` all satisfy their claims at ≥10 samples/window; blank acts on the output and does **not** clear `Q`; the external guard forces `gate33` high while `Q` and `en` keep their chosen values |
+| end-to-end propagation | **MEASURED, attributed by the audited tool** | clk↑→`q` 0.167 ns, clk↑→`en` 0.356 ns, `en`↑→gate33↓ 1.867 ns, **clk↑→gate33↓ 2.223 ns measured directly**; blank↑→gate33↑ 1.629 ns, blank↓→`en`↑ 0.342 / gate33↓ 2.280 ns; guard↓/↑→gate33 1.293 / 1.246 ns; repeat-101 2.223 / 1.819 / 2.224 ns; 5 pF blank↓→gate33↓ **6.311 ns**. No ns acceptance budget exists (timing spec `NOT DEFINED`), and **4 answers were refused** as `NOT_MEASURED_OVERLAP` instead of being quoted |
+| edges / plateau / rails | **MEASURED** | gate33 10–90 %: 1 pF 2.025 ns fall, 1.849–2.005 ns rise; 5 pF 9.893 / 9.040 ns. `vdd18` injected peak 0.202…0.698 mA, `vdd33` 0.864…2.042 mA, with peak times, converted by the calibrated `injected = −(Vsource:i)` rule; rail rows stay `MEASURED` because no budget is defined |
+| **real fault detection** | **DETECTED** | `r3_fault_blank_tied_vss`: `R3_FAULT_DECK_DIFF` = 1 changed statement pair (the wrapper's `blank` pin → `vss`) + 2 comment lines, nothing else; preflight/spectre/reader/priming all succeeded, and the blank assertion window refuses **2** rows (`en` stays 1.8 V, `gate33` stays 3.2e-09 V) while the other **8** still pass, with the external `blank` read back at 0…1.8 V |
+| process honesty | **9 preflight + 9 DUT = 18 Spectre invocations** | `R3_PROCESS_COUNT` counted from artifacts; no "only 9 simulations" claim |
+| provenance defect found and closed | **guest mirror was stale** | the first attempt recorded `C2MOS_DFF.scs=6f87440ea723…`, not the tracked hash. Diff = one **comment-only** hunk (4497 B/82 lines vs 4754 B/85 lines). Stale bytes were saved in the guest sandbox, repository bytes were pushed back with md5 read-back, all four included files then matched the repository, and the 9 cases were **re-run**: every deck sha256 and every reported number identical to the first attempt |
+| frozen inputs | **0 files changed** | `git diff --name-only 281e587` over the three cells, the reader/delay/vtx/preflight/supply/runner tools, the S1 entry/window contract, the S2 generator and the call contract → empty; the manifest lists 17 `protected_input` rows with their hashes |
+| **OUTPUT_STAGE_PRE_DESIGN** | **PARTIAL** | `reports/scan_driver_r3_output_stage_plan.md`: provenance split (course facts / architecture assumption / old-draft conditions / readable PDK facts / open), Route A (3.3 V-domain high-side p33, `VGS −3.3 V` on / `0 V` off, electrode left high-Z, no bleed device added, sizing **procedure** only), Route B (5 V: gate33 maxes at 3.3 V ⇒ `VGS = 3.3 − 5 = −1.7 V`, and no verified 5 V family — directions for review, none selected), `I_SCAN = N_active × 15 µA` with 11.52 mA as a **conditional** value and `Ron ≤ 8.68 Ω` only if the draft's 0.10 V budget is adopted, `VSCAN ≥ Vf + I·Ron + margin` with `Vf` undefined, and the 1 pF/5 pF test loads kept separate from the undefined electrode RC. **No size is chosen — that is what PARTIAL means here** |
+| spec wording corrected | **DONE** | `spec/system_requirements.md` §2/§3: "课程要求 … 5.0 V 域" → "**旧方案（规格书 V1.2 草案）假设** 5.0 V 输出域，最终输出电压待定"; the 0.10 V drop and 0.5 V margin rows are labelled draft conditions that do not self-promote |
+| **S3_POWER_STAGE** | **NOT_RUN** | needs the plan's P1 (`VSCAN`/`VLED`) and P2 (`Vf` or an I–V) first; no 5 V deck, no output device simulated |
+| **S4_CHAIN** | **NOT_STARTED** | no multi-stage shift chain, no array, no multi-channel |
+| **SOA** | **NO** | a model name containing `33` is not a rating; no absolute-maximum table exists in the readable delivery |
+| **AUTONOMOUS_POWER_FAIL** | **NOT_IMPLEMENTED** | no POR, no UVLO, no power-fail matrix; `core_ok33` is an **external testbench pin**, explicitly not an on-chip detector |
+| tooling | **no new general gate** | all six repairs were inside the R3 entry (`wave=` spelling, ns→s at the reader call, an undefined delay-tuple variable, deck text reused as runner output in the fault diff, window starts that cut the 2 ns ramp, two crossing-helper bugs). `--selftest` 4/4 on guest 2.6.6 **and** Windows 3.12; the R2E2 suites were not re-run because nothing in them changed |
+
+### Next step is a decision, not a continuation
+
+The chain works as one circuit: it selects, it blanks, it releases without a rewrite, its guard path
+behaves, and the injected wiring fault is caught by the normal criteria. The output stage is planned but
+**not sized, because the inputs that size it are still open**. Stopping at the **R3 single-channel
+control-chain + output-stage-plan review gate** with the 9 real results, one end-to-end waveform, the
+fault detection and the pending-parameter table. The cloud decides `S3` from the real Git evidence;
+nothing here advances to an undetermined power stage.
+
+## HISTORICAL_STATUS (SCAN-1R2E2 round, kept for audit; superseded by the R3 block above)
+
 Updated 2026-10-13 during **SCAN-1R2E2 / bounded native re-verification**. Start point re-read before
 editing: remote `poc/scan-driver-1ch` = `b13525ca345fdef5743b19b42e68adb6f932772d` = local HEAD, no
 unknown upstream commits. Full write-up: `reports/scan_driver_r2e2_native_closure.md`; artifacts:
@@ -23,7 +71,7 @@ the VMware Tools channel; nothing about the VM's power, network, snapshots or li
 | S2_REPRESENTATIVE_DYNAMIC | **9/9 cases ran, judgements satisfied** | dynamic 6 decks (89 rows) = C0 3.053/2.861 ns, C1 3.429/1.945 ns, 12 attributed `repeat3` answers; load 2 decks (38 rows) = 5 pF 7.460 ns coarse vs 7.479 ns at `maxstep=0.05 ns`; negative 1 deck (11 rows) = the normal rule refuses it (`NO_RESPONSE`, no complete fall event) while `en(rise)→gate33(rise)` answers at 4.015 ns. All entry rcs 0 with `functional_FAIL=0 dependency=0` |
 | reproduction of R2E's numbers | **EXACT=194, DIFFERS=0** | `sc1_r2e2_native_reproduction.csv` (213 rows, `scripts/sc1_r2e2_reproduce_compare.py`, offline) joins on (item, case, target): every question asked in both rounds came back digit-for-digit identical, including all 12 `repeat3` `t_in/t_out/delay_ns` triples. The 19 `ONLY_R2E` rows are exactly the two deliberately-skipped 1 pF load decks and the two extra save forms `:1` / `:current`; no old row was edited |
 | dependency vs DUT process counts (§3) | **17 + 17 = 34 Spectre invocations** | `sc1_r2e2_dependency_transcript.csv` 102 rows, all `PRESENT`: 17 `PREFLIGHT_DEPENDENCY_RUN` (the full preflight's own operating-point analysis — a dependency, not a circuit result), 17 `DUT_RUN`, 17 `DUT_DATA`, 17 `DECK` with sha256, 34 `RECORDED_RC`. Counted from the artifacts on disk, not asserted from code; no "zero extra simulation" claim is made |
-| exit semantics (§4) | **split into three classes** | `main()` now separates functional `FAIL` from dependency `BLOCKED`/`NOT_AVAILABLE`/other `PARTIAL` and from informational `SAVE_PATH_AUDIT PARTIAL`/`MEASURED`/`EXPECTED_REFUSAL`; exit 0 only with neither failure type (1 functional, 2 dependency, 3 both, 5 unauthorised, 9 bad selection). All four groups exited 0 while still printing the six per-case `SAVE_PATH_AUDIT PARTIAL` rows — the reviewed generator's `Xt.Xcore.x/y` port-alias saves this build cannot reach, kept as they are, with `Xt.x`/`Xt.y` read successfully in the same runs. Also added: `--only` refuses an unknown id with rc 9 instead of dropping it, and `--expect N` refuses a wrong selection count, so an empty filter cannot report rc 0 |
+| exit semantics (§4) | **split into three classes** | `main()` now separates functional `FAIL` from dependency `BLOCKED`/`NOT_AVAILABLE`/other `PARTIAL` and from informational `SAVE_PATH_AUDIT PARTIAL`/`MEASURED`/`EXPECTED_REFUSAL`; exit 0 only with neither failure type (1 functional, 2 dependency, 3 both, 5 unauthorised, 9 bad selection). All four groups exited 0 while still printing **15** per-case `SAVE_PATH_AUDIT PARTIAL` rows in total — **6 static + 6 dynamic + 2 load + 1 negative**, counted from the delivered CSVs (the earlier "six" named only the static group) — the reviewed generator's `Xt.Xcore.x/y` port-alias saves this build cannot reach, kept as they are, with `Xt.x`/`Xt.y` read successfully in the same runs. Also added: `--only` refuses an unknown id with rc 9 instead of dropping it, and `--expect N` refuses a wrong selection count, so an empty filter cannot report rc 0 |
 | authorisation gate | **kept, and now exercised** | the calibration entry refuses without `RUN=1` **and** `QODER_SIM_AUTHORISED=1` (records `NOT_RUN`, returns 5) and `--forms i` restricts this round to the single adopted save form; no second executor was written |
 | S1_REUSED_NATIVE_EVIDENCE | **NO_RUN this round** | S1's independent entry and window contract are unchanged (protected list: 0 files diff vs `b13525c`), so R2E's fresh native S1 regression (32×14 rows, F1 `DETECTED` at `en = 1.8001 V`) stays the S1 evidence. This is **not** an S1 fresh rerun |
 | offline suites | **25/25 · 26/26 · 16/16 · 6/6 in both environments** | `sc1_r2e2_callpath_selftest.csv`, `sc1_r2e2_s2_entry_selftest.csv`, `sc1_r2e2_boundary_selftest.csv`, `sc1_r2e_vtx.py --selftest`; all new outputs under `sc1_r2e2_*` so no earlier evidence file was rewritten |
