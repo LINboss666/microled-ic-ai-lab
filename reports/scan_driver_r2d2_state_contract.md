@@ -168,7 +168,9 @@ user-relayed`, not as a local measurement, and this round ran no C²MOS job loca
 cloud used its own uploaded PDK's original HSPICE/BSIM4 4.5 models under ngspice 42 in `hs` mode, the
 golden source SHA `d1eed4e242fa2874f38d8a2add34eba985e4e14ac8925041f7180e0dfcc5fcf3` (the same SHA
 `results/evidence/sc1_r2d1_manifest.csv` records for `spectre/C2MOS_DFF.scs`), 18 devices unchanged;
-at 1.8 V / 27 °C with 50 fF on Q and Qbar, single-stage and non-overlapping three-stage chains pass
+at 1.8 V / 27 °C with 50 fF on Q and Qbar, single-stage and **same-phase-clock** three-stage chains pass
+(wording corrected in R2E: that experiment clocked all three stages from the same phase, so it was never
+a non-overlapping-clock result)
 in TT/SS/FF/SNFP/FNSP, and the 1 ms hold cases (store 0, store 1, clock held high, clock held low)
 pass; delaying each stage's clock by 1 ns sequentially breaks the three-stage chain, reproduced with
 a finer step and with `gear`. Its stated conclusion is to keep the single-stage topology and to

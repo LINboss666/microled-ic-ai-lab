@@ -2,6 +2,58 @@
 
 ## CURRENT_STATUS (single authoritative table; everything below this block is history)
 
+Updated 2026-10-13 during **SCAN-1R2E / minimal native TT verification (executed)**. Start point
+re-read before editing: remote `poc/scan-driver-1ch` = `dd93f6f432a32fc5f1177223a50ff511e83351c2` =
+local HEAD; `git ls-remote` showed no unknown upstream commits, so nothing was merged or overwritten.
+Full write-up: `reports/scan_driver_r2e_native_tt.md`; artifact index:
+`results/evidence/sc1_r2e_manifest.csv` (35 rows: this round's files plus the protected inputs).
+
+**This round did call the local simulator**, under the authorisation the user recorded at
+2026-10-13 11:39:44 (Asia/Shanghai) for exactly this scope: model/temperature/current calibration, one
+fresh S1 regression, and the S2 minimal normal function + representative dynamics + the real polarity
+negative at TT / 27 °C / 1.8+3.3 V. Everything ran through the VMware Tools channel (SSH is still
+down). Protected inputs are byte-identical: `git diff --name-only dd93f6f HEAD --` over the two S1/S2
+netlists, the C²MOS cell, the reader, the delay tool, the preflight, the supply checker, the runner and
+the audited S1/S2 entries → **0 files**.
+
+| item | status | evidence (all new files, `sc1_r2e_*`; nothing historical was overwritten) |
+|---|---|---|
+| MODEL_BINDING | **PASS** | the deck's include was re-hashed from the loaded path: `.lib fc8d321752f2bacf…`, `section tt` pulls `…_mis_spe.mdl 4b62b398…` and `…_spe.mdl 5187cae1…`, README `f43d2585…` — all three equal the task book's uploaded digests. Geometry limits per model record with file and line: n18/p18 lmin=1.5e-7 lmax=1e-4 wmin=1.9e-7 (lines 53/258), p33 3e-7/1e-4/2.2e-7 (866), n33 3.5e-7/1e-4/2.2e-7 (654); the frozen sizes (l18=2e-7, l33=4e-7, w 2e-6/4e-6/5e-6/1e-5) sit inside every limit |
+| characterisation range vs ratings | **kept separate, `SOA_SIGNOFF: NO`** | the README states `temperature range:-40C~125C` (5 lines), so 27 °C is inside the characterisation range; **no absolute-maximum table exists in the readable files**, so nothing here is an SOA signoff |
+| TEMP_CONFIRMATION | **PASS, read back** | `spectre -h options` lists `temp=27 C`, but `options` is a device master here: a bare `options temp=27` is rejected with `SFE-709 No master specified for instance 'options'`, and the accepted form is `simopt options temp=27` (the vendor's own `section tt` writes `setoption1 options gmin=1e-14`). Every calibration run echoes `temp = 27` in the log and `"temp" 27.0000` in the psf header; the S1 logs echo `temp = 27 C` |
+| SOURCE_CURRENT_CALIBRATION | **PASS with the sign stated** | 10 kΩ bench, rail driven directly (no series rail iprobe — the audited gate refuses one, and the gate was not relaxed): `V18:i` / `V18:1` = **−180 µA**, `Xcal.Ip1:i` = **+180 µA**, `V33` = ∓330 µA, `Xcal.node_mid` = 0 V. The rule used everywhere is **injected = −(Vx:i)**, checked against the independent load-branch iprobe rather than asserted. `V18:current` is ignored (SPECTRE-8059/8287), `save i(V18)` is fatal (SFE-874), and a bare `Ip1:i` inside a subckt is ignored (SPECTRE-8282) — hierarchical names need a **DOT** |
+| S1_FRESH_REGRESSION | **PASS (native, new data)** | `results/evidence/sc1_r2e_s1_regression.csv`, 32 rows × 14 cols: 4 truth rows (1.8 V / 5.4e-9 / 6.5e-9 / 1.0e-9 V) with the stimulus read back per label, T1..T5 whole-window contract (T1 `q min=1.76555`, `qbar max=0.00123537`, blank per-sample vs the PWL worst diff 1.93e-14 over 117 samples), and **F1 `DETECTED`** with its bench setup verified (BLANK pin to vss, blank source keeps the PWL, the other T1 checks still pass) |
+| S1 historical re-analysis | **still `PARTIAL_NOT_VERIFIED`** | the 9-certified / 1-not-certified local rows are unchanged history; the cloud still has no bytes of the local raws and this round does not retrofit them |
+| S2 entry | **NEW, with a real execution path** | `scripts/sc1_r2e_s2_tt.py` imports the audited generator unchanged and adds only the two calibration-verified lines plus the terminal nodes resolved from the frozen cell; it refuses (exit 5) without `RUN=1` **and** `QODER_SIM_AUTHORISED=1`, and a harness exception is recorded per case as `BLOCKED`, never as a circuit verdict |
+| S2_FUNCTIONAL_TT | **PASS 6/6** | `results/evidence/sc1_r2e_s2_static.csv` (110 rows). en low → gate33 3.300 V; en high → gate33 4.2e-10 V (C0) / 3.2e-9 V (C1 with core_ok33 high); core_ok33 low → 3.300 V even while the core selects. **The 1.8 V-gated n33 does beat the cross-coupled p33 at TT/27 °C with the frozen sizes**: x=6.85e-10 V, y=3.300 V. Screening low ≤ 0.30 V / high ≥ 3.135 V (POC_ASSUMPTION), judged on whole-window min/max |
+| finding in the audited decks | **`SAVE_PATH_AUDIT` = PARTIAL, one row per deck** | the generated save line asks for `Xt.Xcore.x` / `Xt.Xcore.y`, but x/y are the core's **ports**, so this build names them `Xt.x` / `Xt.y` and silently ignores the other spelling (SPECTRE-8281). The R2E deck keeps the reviewed line and adds the resolved names; `scripts/sc1_r2e_s2_selftest.py` (26/26, `sc1_r2e_s2_entry_selftest.csv`) pins that rule |
+| S2_REPRESENTATIVE_DYNAMIC | **MEASURED (native)** | `sc1_r2e_s2_dynamic.csv`, `…_dynamic_repeat3.csv`, `…_load.csv`. 1 pF: en↑→gate33↓ 3.053/3.044/3.429 ns (C0 rise/fall, C1), en↓→gate33↑ 2.86/1.94 ns, fall 10–90 % 1.19–2.03 ns, rise 1.85–3.63 ns. 5 pF: delay 7.460 ns, fall 9.893 ns, and the same deck at maxstep 0.05 ns gives 7.479 ns / 9.892 ns (0.3 % / 0.01 %) — the finer-step re-check. repeat3 yields 12 delays, one per input edge, each window closing before the next edge so no cycle can borrow the next response. Rail peaks: vdd18 up to +200.9 µA, vdd33 up to +2.01 mA (1 pF) / +0.90 mA (5 pF) |
+| per-device stress | **`MEASURED`, not a signoff** | VGS/VGD/VDS/VGB extremes formed per sample from the saved D/G/S/B nodes (`scripts/sc1_r2e_vtx.py`, 5/5 offline cases; taking each node's extreme separately would pair instants that never coexisted). One device cross-checked against the model's own exported `:vgs`: worst difference 0 V. `SOA_SIGNOFF: NO` |
+| real polarity negative | **`EXPECTED_REFUSAL` = detected** | `sc1_r2e_s2_negative.csv`: `neg_output_polarity_fault` was simulated (preflight rc 0, Spectre rc 0, reader rc 0) and the normal C0 criterion refused it (`NO_RESPONSE … no complete fall output event`), while `en(rise)→gate33(rise)` answered with 4.015 ns — the wrong polarity is really present and really refused. The vss-miswire and missing-vdd33 cases stay static-gate refusals |
+| guest network | **not touched this round** | no `dhclient`, no ONBOOT/.vmx/service/license/VM-power action: this round's task book does not authorise another lease attempt, and the Tools channel was sufficient. The three earlier exit-1 attempts stay recorded in the R2D2 block below |
+| cloud C²MOS result | **`EXTERNAL_CLOUD_REPORT` / user-relayed, wording corrected** | it is a **same-phase-clock** three-stage experiment (not "non-overlapping"), ngspice 42 on the uploaded HSPICE/BSIM4 package, 1.8 V / 27 °C / 50 fF, broken by 1 ns per-stage skew — not native Spectre; the topology stayed unchanged and S4 did not start |
+| R2 full acceptance / 37-deck power matrix / R3 / S3 / S4 | **NOT_RUN / NOT_STARTED** | not authorised: no brownout or supply-sequence matrix, no chaining, no corners |
+| `core_ok33`, autonomous power-fail | assumed control only; **NOT_IMPLEMENTED** | still a testbench high-domain assumption, not on-chip protection |
+
+### What this round does **not** claim
+
+One corner is not a signoff: every number above is TT / 27 °C / 1.8+3.3 V, all POC_ASSUMPTION, with no
+layout, no DRC/LVS/PEX, no absolute-rating table and no power budget. `MEASURED` rows are readings. A
+passing calibration, preflight or self-test proves the bench, not the circuit; the circuit statements
+are the S1/S2 rows that had a real waveform and a real refusal.
+
+### Next step is a decision, not a continuation
+
+The native TT scope of the authorisation is finished. Stopping at the **native TT results review
+gate**: the power-off / supply-sequence matrix, R3 chaining and S3/S4 each need a new authorisation.
+
+## HISTORICAL_STATUS (SCAN-1R2D2 round, kept for audit; superseded by the R2E block above)
+
+> Everything in this block was preparation without a simulator. **SCAN-1R2E ran the simulator**
+> and closed the rows it marked `NOT_RUN / PAUSED_BY_USER` (S1 fresh regression, S2 functional TT,
+> preflight full, model binding, `temp=` syntax, rail-current sign); read the block above for status.
+
+
 Updated 2026-10-13 during **SCAN-1R2D2 / S1 window-state criteria closed**. Start point re-read before
 editing: remote `poc/scan-driver-1ch` = `c05042779f23151eaa9d5fd83d0c4917269ba36c` = local HEAD; main
 = `23e471cb936b421ee97e1250c3be06edf96f9937`. No divergence, no other agent's work touched.
@@ -43,7 +95,7 @@ Nothing here authorises a run. Under an explicit pause lift, the first real sess
 regression through the entry, whose state contract is now the same one the offline tools use. S3 does
 not follow from this round.
 
-## HISTORICAL_STATUS (SCAN-1R2D1 round, kept for audit; superseded by the R2D2 block above)
+## HISTORICAL_STATUS (SCAN-1R2D1 round, kept for audit; superseded by the blocks above)
 
 Updated 2026-10-13 during **SCAN-1R2D1 / test-preparation fixes on the accepted S2 topology**.
 Baseline re-read before editing: remote `poc/scan-driver-1ch` = `34d5125a4dfd5c7423776547d6eab4f8fb616fee`
@@ -411,8 +463,8 @@ carried over from a previous task's memory without a re-read. Updated at the end
 | stage | state | artifact |
 |---|---|---|
 | S0 read-only inventory | **COMPLETE** | this file, `cadence_work/sc1_sim/pdk_smoke.csv` |
-| S1 1.8 V BLANK/ENABLE logic | **PARTIAL -- truth table proven, drive/fault legs open** | `spectre/sc1_scan_gate.scs`, `scripts/sc1_s1.sh`, `cadence_work/sc1_sim/s1_truth.csv` |
-| S2 level shifter + buffer | NOT_STARTED | — |
+| S1 1.8 V BLANK/ENABLE logic | **native TT regression PASS (one corner; SOA=NO)** | `results/evidence/sc1_r2e_s1_regression.csv`, `spectre/sc1_scan_gate.scs` |
+| S2 level shifter + buffer | **TT function PASS 6/6, dynamics MEASURED; supply matrix/corners NOT_RUN** | `results/evidence/sc1_r2e_s2_static.csv`, `..._dynamic.csv`, `..._load.csv`, `..._negative.csv` |
 | S3 high-side power switch | NOT_STARTED | — |
 | S4 channel + chain + corners | NOT_STARTED | — |
 
