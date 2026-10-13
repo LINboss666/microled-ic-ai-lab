@@ -62,7 +62,7 @@ content), `sc1_r2e_manifest.py` (sha256 + size per file), `make_review_bundle.py
 so all three passed while the evidence was empty. `provenance_check.py` and `netlist_stats.py` read
 reports and netlists, not CSV row counts.
 
-Added in this round (`scripts/sc1_r3a_verify_evidence.py`, offline, both environments, **16/16 PASS**):
+Added in this round (`scripts/sc1_r3a_verify_evidence.py`, offline, both environments, **17/17 PASS**):
 
 ```
 manifest has 9 data rows, not a header alone        rows=9 bytes=4093
@@ -75,10 +75,18 @@ every sample row has the 9-column header width      widths=[9]
 sample times are present and finite                 times=812
 sampled signal values parse to finite numbers       values=6280 non-finite=0
 sample deck hashes equal the manifest deck hashes   PASS
-every deck on disk still hashes to its manifest value all OK
+the identity index records every delivered deck as hash-matched   not-OK=none
+decks present in this copy re-hash to their manifest values       re-hashed=9 present=9 (guest)
+                                                                    absent-in-this-copy=9 (Windows)
 every raw data file is hashed, none missing         PASS
-each exported event list recomputes its native delay and bound  events=18 agree=18
+each exported event list recomputes its native delay and bound    events=18 agree=18
 ```
+
+The deck line deliberately distinguishes the two copies: the decks and raw live in the guest's
+`cadence_work/`, which is not shipped in Git, so re-hashing them is only possible there — **9 of 9
+re-hashed on the guest**, and on Windows the same check reports them absent in this copy rather than
+mismatched, which is the honest reading. The identity index itself is the delivered record of that
+verification.
 
 The last line is the reviewer's own missing capability: **18 of 18** propagation rows now reproduce
 their `t_in`, `t_out`, delay (within the row's 0.001 ns print precision) and `t_next` from the
@@ -199,9 +207,27 @@ event row.
   committed (the identity CSV stores project-relative paths and hashes only).
 * **Open / not claimed:** the original 177-row samples bytes are attested in Git by hash at `ff831a5`
   but are not themselves committed, and are superseded by the re-export; the earlier `…T120713Z`
-  batch's artefacts are not retained; the whole-round Spectre process total is UNKNOWN; `OUTPUT_STAGE_
-  PRE_DESIGN` stays `PARTIAL`; `S3_POWER_STAGE: NOT_RUN`, `S4_CHAIN: NOT_STARTED`, `SOA: NO`,
-  `AUTONOMOUS_POWER_FAIL: NOT_IMPLEMENTED`.
+  batch's artefacts are not retained; the whole-round Spectre process total is UNKNOWN;
+`OUTPUT_STAGE_PRE_DESIGN` stays `PARTIAL`; `S3_POWER_STAGE: NOT_RUN`, `S4_CHAIN: NOT_STARTED`,
+`SOA: NO`, `AUTONOMOUS_POWER_FAIL: NOT_IMPLEMENTED`.
+
+## 9 Review bundle equality — bytes **and** row counts
+
+The review bundle is local-only, but it must not be a different artefact from what Git carries, and a
+hash list that matches itself proves nothing about content. Every R3 CSV was therefore compared to the
+committed blob **and re-parsed inside the bundle**:
+
+| file | sha256 in Git | sha256 in the bundle | identical | data rows read back |
+|---|---|---|---|---|
+| `sc1_r3_chain_manifest.csv` | `31cb61e9c818a298…` | same | yes | **9** |
+| `sc1_r3_waveform_samples.csv` | `7e3dfb6d5dabfc4e…` | same | yes | **812** |
+| `sc1_r3_chain_cases.csv` | `57b539ea4abcc60c…` | same | yes | **428** |
+| `sc1_r3_delivery_identity.csv` | `59d674b05066a0ba…` | same | yes | **9** |
+
+One layout note a reviewer will hit: `make_review_bundle.py` nests each group under its own top
+directory twice (`results/results/evidence/…`, `reports/reports/…`) while scripts land under
+`source/scripts/…`. That is pre-existing behaviour of an accepted tool and was not touched here; the
+files themselves are byte-identical to the repository, so it only affects where to look.
 
 Stopped again at the **R3 single-channel control-chain + output-stage-plan review gate**, this time with
 the evidence files matching the report. Next decision is the cloud's: recompute the delays from

@@ -23,6 +23,7 @@ It runs offline on either environment and calls nothing: no simulator, no prefli
 from __future__ import print_function
 
 import csv
+import hashlib
 import optparse
 import os
 import re
@@ -46,6 +47,10 @@ def read_rows(root, name):
         txt = f.read().decode('utf-8', 'replace')
     rows = list(csv.reader([l for l in txt.split('\n') if l.strip()]))
     return rows[0], rows[1:], path
+
+
+def sha_of(path):
+    return hashlib.sha256(open(path, 'rb').read()).hexdigest()
 
 
 def finite(tok):
@@ -117,8 +122,24 @@ def main():
     check('identity index exists and covers the batch', bool(ident) and len(ident) == len(man),
           'rows=%d' % len(ident or []))
     if ident:
-        check('every deck on disk still hashes to its manifest value',
-              all(r[5] == 'OK' for r in ident), ','.join(r[1] for r in ident if r[5] != 'OK') or 'all OK')
+        # the identity column is the guest-measured fact; where a copy also holds the deck files, this
+        # check re-reads them. A review bundle ships the CSVs but not cadence_work/, so "absent here"
+        # is a different fact from "different bytes" and must not be reported as a mismatch.
+        by_sha = dict((r[1], r[3]) for r in man)
+        on_disk, shipped, absent = 0, 0, 0
+        for r in ident:
+            path = os.path.join(o.root, *r[2].split('/'))
+            if not os.path.isfile(path):
+                absent += 1
+                continue
+            shipped += 1
+            on_disk += 1 if sha_of(path) == by_sha.get(r[1]) else 0
+        check('the identity index records every delivered deck as hash-matched',
+              all(r[5] == 'OK' for r in ident),
+              'not-OK=%s' % (','.join(r[1] for r in ident if r[5] != 'OK') or 'none'))
+        check('decks present in this copy re-hash to their manifest values',
+              shipped == 0 or on_disk == shipped,
+              're-hashed=%d present=%d absent-in-this-copy=%d' % (on_disk, shipped, absent))
         check('every raw data file is hashed, none missing',
               all(r[7] not in ('', 'MISSING') for r in ident), '')
 
