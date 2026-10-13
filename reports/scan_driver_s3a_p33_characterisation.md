@@ -135,20 +135,36 @@ says the accepted level shifter can drive this device — that is exactly the S3
 | drain at the end of the run (480–500 ns) | **`1.52512 V`** (min 1.52512, max 1.61774) | `58.4 nV` |
 
 About the last row, which is the one that gets misread: with the light load the electrode node is still
-at **1.525 V when the run stops**, because the declared `R×C` is 220 ns and only 299 ns elapse after the
-blank edge. That is **not** evidence that the switch failed to turn off — the plateau rows show it
-holding the pixel current at `VSD = 116 µV` while on, and the off-state deck shows the branch current at
-2e-10 A. Equally, it is **not** a reason to add a bleed device to the panel: the discharge path here is a
-testbench resistor, and the real electrode RC is still undefined. The reading was obtained by asking the
-strict reader about the delivered data file (`scripts/sc1_s3a_tail_read.py`, `sc1_s3a_tail_readings.csv`,
-each row carrying the raw sha256 and the file's own last sample time `5e-07 s`) — **no simulator was
-involved**.
+at **1.525 V when the run stops**. That is **not** evidence that the switch failed to turn off — the
+plateau rows show it holding the pixel current at `VSD = 116 µV` while on, and the off-state deck shows
+the branch current at 2e-10 A. Equally, it is **not** a reason to add a bleed device to the panel: the
+discharge path here is a testbench resistor, and the real electrode RC is still undefined.
+
+What the reading is **not yet** is an explained one. A bare 220 kΩ × 1 pF discharge starting from 3.3 V
+over the 299 ns after the blank edge would reach `3.3·exp(-299/220) ≈ 0.848 V`, which is not what the
+deck reads, so the simple `R×C` story does not account for it either: the device's own junction and
+overlap charge, the coupling that happens during turn-off, and the voltage the node actually starts the
+discharge from all still participate. The honest statement is that **this testbench still holds a
+residual voltage with the device attached and the attribution is not complete**. S3-B measures the tail
+after the real connection; nothing is auto-added here to explain it. The reading was obtained by asking
+the strict reader about the delivered data file (`scripts/sc1_s3a_tail_read.py`,
+`sc1_s3a_tail_readings.csv`, each row carrying the raw sha256 and the file's own last sample time
+`5e-07 s`) — **no simulator was involved**.
 
 `C_eff,Q = |Q_G| / 3.3 V` is an **equivalent charge load for this edge**, including the nonlinear and
-Miller contributions of a 3.3 V gate ramp on a device that is turning on; it is deliberately not called
-`Cgg`, and no fixed capacitance was read out of the model. Scale comparison only: the accepted R3 chain
-moved a declared 1 pF in `2.025 ns` (fall) and a 5 pF in `9.893 ns`, and the candidate's charge per edge
-is `1.49–1.51 pF` equivalent — inside the envelope those two loads bracket. **That is a magnitude
+Miller contributions of a 3.3 V gate ramp on a device that is turning on; nothing further is stacked on
+top of it, so no separate "overlap capacitance" term is added. It is deliberately not called `Cgg`, and
+no fixed capacitance was read out of the model. The four edges together give **1.339–1.507 pF**; the two
+`select` edges alone are 1.486–1.507 pF, so a range quoted as "≈1.5 pF" describes only those two.
+
+Scale comparison only, with each figure's own source named: the accepted R3 chain's `R3_EDGE` rows give
+gate33 **10–90 % fall 2.025 ns (21 samples) on its declared 1 pF decks** and **9.893 ns fall (99
+samples) / 9.040 ns rise on 5 pF**; R2E measured the same 9.893 ns for its `load_c1_5pF` case, which is
+why the figure appears in two reports. Those are **edge durations**, not propagation delays — R3's
+propagation rows are a different quantity from a different table (`r3_write_q1_on` at 1 pF:
+`clk→gate33` 2.223 ns end-to-end, `en→gate33` 1.867 ns) — and the 1 pF / 5 pF there are artificial gate
+capacitors on `gate33`, not this device. Against those edges the candidate's per-edge equivalent load of
+1.339–1.507 pF sits inside the envelope the two declared loads bracket. **That is a magnitude
 comparison, not a drive verification.**
 
 ## 7 Evidence, checks, and an honest batch accounting
@@ -158,14 +174,46 @@ Delivered files: `sc1_s3a_cases.csv` (92 rows), `sc1_s3a_dc_points.csv` (77), `s
 `sc1_s3a_dependency_log.txt` (a preflight and a runner excerpt per deck, vendor paths redacted), plus
 three debug-batch logs kept because they are part of the story (§ below).
 
+One column of `sc1_s3a_manifest.csv` is mislabelled and is **left as delivered**: the header says `W_m`
+but the nine rows store the micrometre figure (5/10/20/50/100). Nothing about the devices was wrong —
+`build_deck()` converts before writing `w=`, and `w_total_m` was already in metres — and the symptom was
+this project's own verifier printing `W_best=1e+08 um`. The generator now writes metres under that name,
+the verifier reads the width from `w_total_m / n_devices`, and
+`results/evidence/sc1_s3b_s3a_manifest_correction.csv` (S3-B §2.1, written offline from the delivered
+bytes) carries per row the original token, the corrected metre figure, `W_um`, `n_devices`, `w_total_m`,
+and the sha256 of the deck rebuilt from that geometry — all nine rebuilt hashes equal the delivered
+`deck_sha256`, so the correction is tied to the circuit that ran instead of to a sentence. The
+generator's `--selftest` gained a ninth check: the manifest geometry columns are metres and
+`w_total = W × N` equals the `w=` token the deck writes. The correction file is also machine-independent —
+running it on the guest's Python 2.6.6 into a scratch copy
+(`cadence_work/sc1_sim/s3b_offline/sc1_s3b_manifest_correction_guestcopy.csv`) produced sha256
+`3878decaafc80f76a6dec8c36ed020c6c022c958ce1a63d14fc4630b49fdc198`, byte-identical to the delivered host
+copy. No sample re-export was needed for the charge review: the four declared values already sit inside
+the band derived from the shipped tokens (largest deviation 1.26e-16 C against a 4.45e-16 C band), so the
+old 6-s.f. CSV stays as delivered.
+
 `scripts/sc1_s3a_verify_evidence.py` parses the delivered bytes and **recomputes**: every `Ron` from the
 signed columns (`checked=70, mismatches=0`), the `VSD=0` refusal, the candidate rank from the DC table
-(`N_req=7`, deck ran `N=7`), the gate charge of both edges from the shipped samples
-(`−5.025 pC` / `+4.521 pC` before the baseline the rows name), column widths, finite times and values,
-deck/raw digest presence, and project-relative identity paths. **27/27 PASS on Windows 3.12 and on the
-guest's Python 2.6.6**; the entry's synthetic `--selftest` (8 checks: the trapezoid unit check, the
-`VSD=0` refusal, Ron arithmetic, the sign cross-check, the geometry ceiling, the declared set, the edge
-integral, the temperature header spelling) passes **8/8 in both environments**.
+(`N_req=7`, deck ran `N=7`), column widths, finite times and values, deck/raw digest presence, and
+project-relative identity paths — and, since the S3-B correction round, **each gate edge separately for
+its own case**: that case's own contiguous sample block, its own declared baseline band, and its own
+`raw_Q` / `net_Q` / `C_eff,Q`, compared inside a band derived from the 6-significant-figure export
+propagated through the trapezoid. **59/59 PASS on Windows 3.12 and on the guest's Python 2.6.6**; the
+entry's synthetic `--selftest` (9 checks: the trapezoid unit check, the `VSD=0` refusal, Ron arithmetic,
+the sign cross-check, the geometry ceiling, the declared set, the edge integral, the temperature header
+spelling, the manifest geometry columns) passes **9/9 in both environments**.
+
+**Withdrawn claim, and why.** The version of that script delivered with S3-A reported "27/27 PASS" and
+was quoted as having certified the four charges. It had not: it collected the `select_edge` rows of
+*both* dynamic cases into one list sorted by time, integrated the mixture, and only asserted the result
+was non-zero. A reviewer who edited a declared `net_Q` from `−4.97349 pC` to `−9999 pC` still got rc=0
+and 27/27. The mixed figures quoted there (`−5.025 pC` / `+4.521 pC`) were aggregates of two different
+decks and are removed from this report. The per-case recomputation is what §6's table now states
+(`−4.97351513 / −4.90500583 / +4.41976395 / +4.61411385 pC` before the baseline each of its own rows
+names, differences from the declared values of 2.5e-17…1.3e-16 C, i.e. export precision at 6 s.f.), and
+`--negatives` demonstrates the two ways this could still be faked are refused: tampering one charge
+declaration fails `s3a_dyn_light select_on: net_Q …`, and pasting the column case's `VG:i` samples into
+the light case's block fails that block's `raw_Q` rebuild, while the delivered bytes pass.
 
 Batch accounting, because four batches happened and only one is delivered:
 
@@ -202,16 +250,23 @@ The device questions this round could close: `Ron` versus W, the current one fin
 share it, the off-state branch reading, and the charge each edge moves. The questions that remain are
 all about **connection**, and none of them can be answered from an independent gate:
 
-1. drive: does the accepted C1 level shifter still produce its measured edges with `~1.5 pF` of gate
-   charge plus the `mp` overlap capacitance attached to `gate33` — measured, not compared in scale;
+1. drive: does the accepted C1 level shifter still produce its measured edges with the real seven-device
+   bank on `gate33` — the per-edge equivalent load measured here is **1.339–1.507 pF**, and it already
+   contains the nonlinear and Miller charge of the edge that produced it, so no extra overlap-capacitance
+   term is to be added to that figure; measured, not compared in scale;
 2. polarity and state: `gate33 low = selected` has to hold with the electrode node present, including
    the `blank` and `core_ok33` paths with a real charge on that node;
 3. the `VSD` the switch actually sees when the data driver is absorbing a column current, and what
-   `V(G)` is during the transition while `V(S) = VSCAN` — the 17.1 / 41.8 mA source peaks and the
-   `4.9–6.3 mA` gate spikes measured here are the currents the driver will have to source or sink;
-4. the discharged/hi-Z question the pre-design flagged: this round's 1.525 V tail is a **bench RC**, so
-   whether a real column line needs anything depends on P5 (electrode RC) and P6 (off-state
-   requirement), both still open;
+   `V(G)` is during the transition while `V(S) = VSCAN`. The peaks measured here are **instrument
+   readings of two different branches, not a current spec for the driver**: `−17.09 / −41.85 mA` is what
+   the *source/body supply branch* of the high-side switch carried on the S3-A testbench, and
+   `+6.33 / +4.94 mA` is what the *independent `VG` source* delivered through its own meter at the
+   declared 2 ns edge. Once the real driver is connected, both the edge and the peak re-form from the
+   interaction of `gate33` with the device, so neither number may be read as a minimum peak current that
+   `gate33` must supply;
+4. the discharged/hi-Z question the pre-design flagged: this round's 1.525 V tail is a **bench RC** whose
+   precise attribution is still open (§6), so whether a real column line needs anything depends on P5
+   (electrode RC) and P6 (off-state requirement), both still open;
 5. the body/n-well connection as a netlist question, from the cell's own terminals — not a layout or
    LVS task, which this course excludes.
 
@@ -226,3 +281,12 @@ satisfied thing about `8.6806 Ω` is that the draft arithmetic admits it at the 
 **7 × p33, L=0.4 µm, W=100 µm each (700 µm total)**; whether that becomes the S3-B chain-integration
 deck is the reviewer's decision, as is the still-open P1 (`VSCAN`/`VLED`) and P2 (`Vf` or an I–V) pair
 that gates any panel-level claim.
+
+> **2026-10-14, after the review.** The cloud pulled these bytes and chose
+> `GO_S3_B_3V3_CHAIN_POWER_INTEGRATION`, so the candidate above is what S3-B connects. The same review
+> required three corrections to this report, and they are applied in place rather than in a new file: the
+> `W_m` column of `sc1_s3a_manifest.csv` is a unit mislabel (§7), the four edge charges are now
+> recomputed **per case** and the earlier "27/27 certified the charges" wording is withdrawn (§7), and the
+> attribution of the branch peaks, of `C_eff,Q`, of the R2E/R3 citation and of the 1.525 V tail is
+> corrected (§6, §8). Nothing else about the delivered numbers changed, and no delivered CSV was
+> rewritten.

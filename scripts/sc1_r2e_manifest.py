@@ -34,7 +34,13 @@ PROTECTED = ['spectre/C2MOS_DFF.scs', 'spectre/sc1_scan_gate.scs',
              'scripts/sc1_r2e1_call_contract.py', 'scripts/sc1_r2e_s2_tt.py',
              'scripts/sc1_r2e1_reread.py', 'scripts/sc1_r2e_vtx.py']
 
-ROLES = [(r'^scripts/sc1_s3a_.*\.py$', 's3a_entry_or_check'),
+ROLES = [(r'^scripts/sc1_s3b_.*\.py$', 's3b_entry_or_check'),
+         (r'^spectre/sc1_s3b_.*\.scs$', 's3b_circuit_new'),
+         (r'^results/evidence/sc1_s3b_.*_log\.txt$', 's3b_transcript'),
+         (r'^results/evidence/sc1_s3b_.*\.txt$', 's3b_transcript'),
+         (r'^results/evidence/sc1_s3b_.*\.csv$', 's3b_evidence'),
+         (r'^reports/scan_driver_s3b.*\.md$', 's3b_report'),
+         (r'^scripts/sc1_s3a_.*\.py$', 's3a_entry_or_check'),
          (r'^results/evidence/sc1_s3a_.*_log\.txt$', 's3a_transcript'),
          (r'^results/evidence/sc1_s3a_.*\.txt$', 's3a_transcript'),
          (r'^results/evidence/sc1_s3a_.*\.csv$', 's3a_evidence'),
@@ -100,7 +106,8 @@ def main():
         for _d, _s, fs in os.walk(root):
             for f in fs:
                 if f.startswith(('sc1_r2e', 'scan_driver_r2e', 'sc1_r3', 'scan_driver_r3',
-                                 'sc1_s3a', 'scan_driver_s3a')) and not f.endswith('.pyc'):
+                                 'sc1_s3a', 'scan_driver_s3a', 'sc1_s3b',
+                                 'scan_driver_s3b')) and not f.endswith('.pyc'):
                     rels.append(os.path.relpath(os.path.join(_d, f), PROJ).replace('\\', '/'))
     for rel in sorted(set(rels)):
         if os.path.normpath(os.path.join(PROJ, rel)) == os.path.normpath(os.path.abspath(out)):
@@ -132,6 +139,10 @@ def main():
             # not deliverables: their current repository bytes are recorded, nothing more is claimed
             note = ('earlier-round artifact, listed for lineage; the hash is the current repository '
                     'byte, and a round that edits one of these says so in its own report')
+        if rel in ('scripts/sc1_s3a_p33_tt.py', 'scripts/sc1_s3a_verify_evidence.py'):
+            note = ('S3-A artifact EDITED by the S3-B review corrections: the manifest geometry column '
+                    'now writes metres, and the charge review is per case with two tamper refusals. The '
+                    'delivered S3-A CSVs are byte-unchanged and re-hashed by the correction tool')
         if rel.endswith('scan_driver_r2e2_native_closure.md'):
             note = ('earlier-round report; this round corrected only its SAVE_PATH_AUDIT row COUNT '
                     'statement to 15 (6 static + 6 dynamic + 2 load + 1 negative), no experiment row')

@@ -177,10 +177,13 @@ circuit progress does not stall on missing LED data; entering it needs that deci
 > GO_S3_A_3V3_CHARACTERISATION`**, and **SCAN-1S3A** ran it. The measurement now exists —
 > `Ron ≈ 5560 Ω·µm / W` at `VSD = 0.1 V`, a candidate of **7 × p33, L=0.4 µm, W=100 µm (700 µm)**
 > carrying 12.57 mA at 0.10 V for a measured `Ron = 7.95 Ω`, an off-state branch of `2.06e-10 A` at
-> `VSD = 3.3 V`, and `1.49–1.51 pF` equivalent gate charge per edge — with `CONDITIONAL_RON_TARGET: MET`
-> and the panel questions exactly as this page left them. Everything is in
-> `reports/scan_driver_s3a_p33_characterisation.md`; `S3_CHAIN_POWER_INTEGRATION` is still `NOT_RUN`,
-> and P1/P2/P3 remain the gate on any panel-level statement.
+> `VSD = 3.3 V`, and an equivalent gate charge of **1.339–1.507 pF over its four edges** (the two `select`
+> edges alone are 1.486–1.507 pF) — with `CONDITIONAL_RON_TARGET: MET` and the panel questions exactly as
+> this page left them. Everything is in `reports/scan_driver_s3a_p33_characterisation.md`. The reviewer
+> then chose **`GO_S3_B_3V3_CHAIN_POWER_INTEGRATION`**, so `S3_CHAIN_POWER_INTEGRATION` is the current
+> round rather than a `NOT_RUN`, and P1/P2/P3 remain the gate on any panel-level statement. Those
+> equivalent loads are **not** a driver current spec: with `gate33` really connected, the edge and the
+> peaks re-form — see §6 of the S3-A report for what the two peak figures on that bench actually measure.
 
 ## 8 What this plan is explicitly not
 

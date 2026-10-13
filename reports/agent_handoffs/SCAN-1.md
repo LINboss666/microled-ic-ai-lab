@@ -2,16 +2,24 @@
 
 ## CURRENT_STATUS (single authoritative table; everything below this block is history)
 
-Updated 2026-10-14 during **SCAN-1S3A / p33 high-side electrical characterisation in the 3.3 V domain**.
-Start point re-read before editing: local HEAD `b48a821a7e977a95c981a86c63430e4d796182c6`, remote ref
-read back through `gh api` as the **same full SHA**, no unknown upstream commits. The cloud reviewed
-`b48a821` and decided **`R3_REVIEW: PASS / GO_S3_A_3V3_CHARACTERISATION`**; this round is that decision's
-declared scope. Full write-up: `reports/scan_driver_s3a_p33_characterisation.md`; artifacts
+Updated 2026-10-14 during **SCAN-1S3B / §2 offline corrections**, on top of the S3-A block below. Start
+point re-read before editing: local HEAD `cf04086e99f6cb9b277c8d33b2ec279cdb1ca9f4`, remote ref read back
+through `git ls-remote` and `gh api` as the **same full SHA**, no unknown upstream commits. The cloud
+pulled those bytes, reviewed `b48a821` and decided **`R3_REVIEW: PASS / GO_S3_A_3V3_CHARACTERISATION`**,
+then reviewed `cf04086` and decided **`GO_S3_B_3V3_CHAIN_POWER_INTEGRATION`**. This block therefore keeps
+the S3-A facts **and** corrects three of them, as the reviewer's own review required: the `W_m` unit
+column, the per-case status of the four gate charges, and the physical attribution of the branch peaks,
+the extra overlap-capacitance term, the R2E/R3 citation and the 1.525 V tail. Full write-ups:
+`reports/scan_driver_s3a_p33_characterisation.md` (corrected in place) and, for the circuit work that
+follows, `reports/scan_driver_s3b_chain_power_integration.md`. S3-A artifacts:
 `scripts/sc1_s3a_p33_tt.py`, `scripts/sc1_s3a_verify_evidence.py`, `scripts/sc1_s3a_tail_read.py`,
-`results/evidence/sc1_s3a_*`. Spectre really ran (guest RHEL6.5, python 2.6.6, Tools channel) and the
-VM's power, network, snapshots, licence, the PDK and the OA libraries were not touched. **No 5 V device,
-no stack, no LED, no electrode RC, no corner or temperature sweep, no power-fail matrix, and the device
-is still not connected to the R3 chain.**
+`results/evidence/sc1_s3a_*`; the S3-B correction artifact is
+`scripts/sc1_s3b_s3a_manifest_correction.py` + `results/evidence/sc1_s3b_s3a_manifest_correction.csv`.
+Spectre really ran for S3-A (guest RHEL6.5, python 2.6.6, Tools channel); **this correction commit starts
+no simulator process at all** — it is offline arithmetic on the delivered bytes. The VM's power, network,
+snapshots, licence, the PDK and the OA libraries were not touched, and no delivered S3-A CSV was
+overwritten. **No 5 V device, no stack, no LED, no electrode RC, no corner or temperature sweep, no
+power-fail matrix, and as of this commit the device is still not connected to the R3 chain.**
 
 | item | status | evidence |
 |---|---|---|
@@ -24,26 +32,27 @@ is still not connected to the R3 chain.**
 | the candidate rank | **derived from measurement** | `N_req = ceil(11.52 mA / 1.79623 mA) = 7` → `N=7`, `w_total=700 µm`; explicit device instances, **no `m=`/`nf=` invented**; `S3A_DEVICE_COUNT` declared=counted in all nine decks |
 | **CONDITIONAL_RON_TARGET** | **MET at N=7** | measured candidate `Ron = 7.9532 Ω` vs the conditional `8.6806 Ω` (draft 0.10 V ÷ architecture-assumed 11.52 mA); `total = 12.5736 mA` vs `N × single = 12.5736 mA`, **ratio 1.000** across two separate decks. MET at tt/27 °C/3.3 V only — the 15 µA and 11.52 mA figures are printed side by side precisely so neither is read as a panel spec |
 | off state | **MEASURED, not a pass/fail** | max `\|I_SD\| = 2.05563e-10 A` at `VSD = 3.3 V` (`VD=0`, `VGS=0`, `VGD=3.3`, `VDS=−3.3`, `VGB=0`) over 11 points; the draft `0.1 µA` is printed as a reference; no high-temperature or corner leakage claim |
-| gate charge | **MEASURED per edge** | select `−4.973 / −4.905 pC`, blank `+4.420 / +4.614 pC` (trapezoid of `−VG:i`, 25–30 adjacent samples inside the 2 ns edge, steady baseline `−7e-16…+1.2e-15 A` over 301 off-window points) ⇒ `C_eff,Q = 1.486…1.507 pF`; named an equivalent charge load **including Miller/nonlinearity, not a `Cgg`** |
-| branch peaks | **MEASURED, no budget** | `VS:i` min `−17.09 mA @49.916 ns` (light) and `−41.85 mA @50.181 ns` (column); `VG:i` max `+6.33 mA` / `+4.94 mA` — the currents a real driver must move |
-| the 1.525 V tail | **read, not re-simulated** | at 480–500 ns the light-load drain is `1.52512 V` (its `R×C = 220 ns` vs 299 ns elapsed) while the column load is at `58.4 nV`. Recorded via `sc1_s3a_tail_read.py` calling the strict reader on the delivered raw (sha named per row, last sample `5e-07 s`): **D not at 0 is not a failure to turn off, and it is not a reason to add a bleed device** |
-| magnitude-only comparison to R3 | **stated as a comparison** | R3 measured `gate33` edges of 2.025 ns at 1 pF and 9.893 ns at 5 pF; the candidate's `1.49–1.51 pF` sits inside that bracket — explicitly **not** a drive verification, which is S3-B's question |
-| evidence checks | **27/27 and 8/8 in both environments** | `sc1_s3a_verify_evidence.py` re-parses the delivered bytes and **recomputes** every Ron (70 checked, 0 mismatch), the `VSD=0` refusal, the candidate rank from the DC table, and both edge charges from the shipped samples; `--selftest` 8/8 (includes the trapezoid unit check: 1 µA × 10 µs = 1e-11 C). Windows 3.12 and guest 2.6.6 agree |
+| gate charge | **MEASURED per edge, and now recomputed per case** | select `−4.97351513 / −4.90500583 pC`, blank `+4.41976395 / +4.61411385 pC` (trapezoid of `−VG:i` over 25–30 adjacent samples inside the declared 2 ns edge, each case's own steady baseline `−7e-16…+1.2e-15 A` over 301 off-window points) ⇒ **four-edge `C_eff,Q = 1.339…1.507 pF`**; the two select edges alone are 1.486…1.507 pF, so "≈1.5 pF" describes only those two. Named an equivalent charge load **including Miller/nonlinearity, not a `Cgg`**, and nothing is stacked on top of it |
+| branch peaks | **MEASURED, two instrument readings, no budget** | `VS:i` min `−17.09 mA @49.916 ns` (light) and `−41.85 mA @50.181 ns` (column) is the **source/body supply branch** of the switch on this bench; `VG:i` max `+6.33 / +4.94 mA` is what the **independent `VG` meter** delivered at the declared 2 ns edge. Neither is a minimum peak current `gate33` must supply: with the real driver connected the edge and the peak re-form |
+| the 1.525 V tail | **read; attribution not complete** | at 480–500 ns the light-load drain is `1.52512 V` while the column load is at `58.4 nV`. A bare 220 kΩ × 1 pF discharge from 3.3 V over the 299 ns after the blank edge would give `≈0.848 V`, so the simple `R×C` story does not account for it either — device junction/overlap charge, turn-off coupling and the node's actual starting voltage participate. Recorded via `sc1_s3a_tail_read.py` calling the strict reader on the delivered raw (sha named per row, last sample `5e-07 s`): **D not at 0 is not a failure to turn off, and it is not a reason to add a bleed device** |
+| magnitude-only comparison to R3 | **stated as a comparison, with each figure's own table named** | R3's `R3_EDGE` rows measured `gate33` **10–90 % fall 2.025 ns at 1 pF and 9.893 ns at 5 pF** (the same 9.893 ns R2E measured for `load_c1_5pF`) — edge durations, not the `R3_PROPAGATION_50_50` delays (2.223 ns `clk→gate33`, 1.867 ns `en→gate33` for `r3_write_q1_on`). The candidate's 1.339…1.507 pF sits inside that bracket; explicitly **not** a drive verification, which is S3-B's question |
+| manifest geometry column | **unit defect named, corrected going forward, delivered copy left alone** | `sc1_s3a_manifest.csv` header says `W_m` but its nine rows store the micrometre figure (5/10/20/50/100); `build_deck()` always wrote metres into the deck and `w_total_m` was already metres. The generator now writes metres under that name, the verifier reads width from `w_total_m / n_devices` (the old `token × 1e6` printed `W_best=1e+08 um`), and `results/evidence/sc1_s3b_s3a_manifest_correction.csv` carries per row the original token, `corrected_W_m`, `W_um`, `n_devices`, `w_total_m` and the **rebuilt-deck sha256, which equals the delivered `deck_sha256` in all nine rows** |
+| evidence checks | **59/59 and 9/9 in both environments; the S3-A "27/27 certified the charges" claim is withdrawn** | `sc1_s3a_verify_evidence.py` re-parses the delivered bytes and recomputes every Ron (70 checked, 0 mismatch), the `VSD=0` refusal, the candidate rank from the DC table, and **each gate edge for its own case** — that case's contiguous sample block, its own deck/raw identity, its own baseline band, compared inside a band derived from the 6-s.f. export precision propagated through the trapezoid (observed differences 2.5e-17…1.3e-16 C). `--negatives` refuses a tampered `net_Q` and a cross-case `VG:i` splice while the intact bytes pass; `--selftest` 9/9. Windows 3.12 and guest 2.6.6 agree |
 | batch accounting | **delivered batch separated from 4 retries** | probe 1+1, batch 1 8+7 (tuple-index crash before any write), batch 2 9+9 (2 decks `HARNESS_ERROR/BLOCKED`, per-deck guard), batch 3 9+9 (`temp_read_back=NOT_READ`: the reader looked for `temp=` but the header writes `"temp" 27.0000`), **batch 4 delivered 9+9**; round total 71 processes summed from preserved logs, never merged into the delivered figure |
 | refusal / dry isolation | **built in from the start (AGENTS rule 27)** | unauthorised call prints `S3A_REFUSED …` and returns 5 **before** any write; `--dry` without `--out` writes only inside the scratch dir; every probe/debug output was redirected off the official paths, so no delivered file was ever truncated |
 | frozen inputs | **0 files changed** | the three accepted cells, the R3 wrapper, the audited reader/delay/vtx/preflight/supply/runner/call-contract, the S1/S2 generators and every earlier experiment CSV: `git diff b48a821 HEAD` over them is empty. New content is one entry + two offline check tools + evidence + this report |
 | **FINAL_PANEL_VOLTAGE / LED_IV** | **NOT_DEFINED · NOT_DEFINED** | unchanged and not entered: 3.3 V is a characterisation choice, no LED model was invented, and P1/P2/P3 from the pre-design stay open |
-| **S3_CHAIN_POWER_INTEGRATION** | **NOT_RUN** | the device was never attached to `gate33`; §8 of the report lists the five connection questions S3-B must answer with these numbers as inputs |
+| **S3_CHAIN_POWER_INTEGRATION** | **§2 CORRECTED · CIRCUIT NOT_RUN** | this commit is the reviewer's §2 (units, per-case charge review, attribution wording). The nine TT chain+bank decks that put the 7-device bank on `gate33` are the next step of the same declared scope; §8 of the S3-A report lists the five connection questions they must answer with these numbers as inputs |
 | **S4_CHAIN / SOA / AUTONOMOUS_POWER_FAIL** | **NOT_STARTED · NO · NOT_IMPLEMENTED** | no multi-channel or shift chain, no absolute rating read, no POR/UVLO/power-fail behaviour |
 
-### Next step is a decision, not a continuation
+### Next step is the declared S3-B circuit work, not a continuation of S3-A
 
 The device side now has numbers: a 7 × 100 µm, L=0.4 µm p33 candidate that satisfies the conditional
-draft arithmetic at tt/27 °C, an off-state reading, and a per-edge charge of ~1.5 pF. Nothing about the
-panel is decided. Stopping at the **S3-A electrical-characterisation review gate**: the reviewer can
-recompute every figure above from `sc1_s3a_*.csv`, and then chooses between **S3-B** (connect the
-measured candidate to `gate33` and verify drive, edges and the blank/guard interaction) and waiting for
-P1/P2/P3 (`VSCAN`/`VLED`, LED `Vf`, `N_active`) that alone can close a panel-level statement.
+draft arithmetic at tt/27 °C, an off-state reading, and a per-edge equivalent charge of
+**1.339–1.507 pF**. Nothing about the panel is decided, and the reviewer has already chosen the route:
+**S3-B — connect the measured candidate to the accepted `gate33` and verify select / blank / guard /
+re-select with the bank present**. P1/P2/P3 (`VSCAN`/`VLED`, LED `Vf`, `N_active`) stay open and cannot be
+closed by anything S3-B measures.
 
 ## HISTORICAL_STATUS (SCAN-1R3A round, kept for audit; superseded by the S3-A block above)
 

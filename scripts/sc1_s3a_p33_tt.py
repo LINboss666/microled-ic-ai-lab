@@ -248,6 +248,17 @@ def analysis_of(cs):
     return 'dc dev=%s param=dc start=%s stop=%s step=%s' % (dev, fmt_v(s0), fmt_v(s1), fmt_v(st))
 
 
+def geom_cols(cs):
+    """the four geometry columns of the manifest, every length in metres
+
+    The delivered S3-A copy wrote the micrometre figure into the column named W_m. The decks were
+    never wrong, because build_deck() converts before writing w=; this helper exists so the columns
+    and the deck text can be tied together by one check instead of by prose.
+    """
+    w_m = cs['w_um'] * 1e-6
+    return [fmt_v(L_M), fmt_v(w_m), str(cs['n']), fmt_v(w_m * cs['n'])]
+
+
 # ---------------------------------------------------------------- reading
 def pick(g, *names):
     for n in names:
@@ -560,8 +571,8 @@ def run_deck(R, cid, cs, scratch, man_rows, dc_rows, samp_rows, id_rows, o):
           'rc=%s map=%s | %s' % (pfr, SUPPLY_MAP, pf_summary.replace('\n', ' | ')[:90]), pfr,
           'PASS' if pf_ok else 'BLOCKED', pf_reason)
     man = [R.run_id, cid, cs['kind'], os.path.basename(deck), sha, '', MODEL, o.section, TEMP_C,
-           '', EXPECTED_VDD, fmt_v(L_M), fmt_v(cs['w_um']), str(cs['n']),
-           fmt_v(cs['n'] * cs['w_um'] * 1e-6), analysis_of(cs),
+           '', EXPECTED_VDD] + geom_cols(cs) + [
+           analysis_of(cs),
            fmt_v(cs['load'][0]) if cs['kind'] == 'dyn' else '',
            fmt_v(cs['load'][1]) if cs['kind'] == 'dyn' else '',
            str(pfr), '', '', '', '', '']
@@ -822,6 +833,14 @@ def _selftest():
     checks.append(('the temperature read-back matches the psfascii header spelling',
                    any(re.search(p, hdr) and re.search(p, hdr).group(1) == '27.0000'
                        for p in TEMP_PATTERNS)))
+    gc = geom_cols(case('u', w_um=20.0, n=7))
+    deck_cs = case('u', w_um=20.0, n=1, kind='on_dc', sweep=ON_SWEEP, gate_v=0.0, purpose='unit check')
+    deck_w = re.search(r'^\s*mp1\s*\(.*?\bw=([0-9.eE+-]+)', build_deck(deck_cs, 'tt'), re.M).group(1)
+    checks.append(('the manifest geometry columns are metres and w_total = W x N, matching the w= '
+                   'token the deck writes',
+                   abs(float(gc[1]) - 2e-05) < 1e-20 and
+                   abs(float(gc[3]) - 7 * float(gc[1])) <= abs(float(gc[3])) * 1e-12 and
+                   abs(float(deck_w) - float(gc[1])) < 1e-25))
     bad = [n for n, v in checks if not v]
     for name, v in checks:
         print('   %-66s %s' % (name, 'PASS' if v else 'FAIL'))
