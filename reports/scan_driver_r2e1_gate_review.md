@@ -29,7 +29,11 @@ TESTBENCH_PREFLIGHT: FAIL (stage=supply_contract
 with `rc=0`, `verdict=PASS`. The bench deck's rails are `rail`/`vss`, so the supply map `vdd18=1.8
 vdd33=3.3` matched no instance port: the preflight was refusing all six calibration decks, and the
 claim "preflight full on the same legal port contract, PASS 6/6" in `scan_driver_r2e_native_tt.md` §2
-was wrong. Corrected there (§4 below). It does **not** touch the calibration numbers: those rows carry
+was wrong. **The same applies to the 15 S2 decks' `preflight_rc` values**: also `| tail`-derived, so
+they must be read as unrecorded rather than as 0, and the retained excerpt (cut at 150 characters) shows
+the `OP_OK supply net …` contract lines but stops before the completion marker. Preflight full passing
+on the S2 decks is therefore not established by those files; the fixed rule requires the marker
+explicitly, and satisfying it is the next authorised run's work. Corrected there (§4 below). It does **not** touch the calibration numbers: those rows carry
 `runner_rc=0` and `SPECTRE name=… rc=0` read from the real runner exit (that call had no `tail`), and
 the values are what the simulator produced.
 

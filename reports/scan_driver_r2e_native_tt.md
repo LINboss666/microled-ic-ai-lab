@@ -83,6 +83,16 @@ recorded per row.
 > `SPECTRE … rc=0` came from a call that had no `tail`, so the calibration conclusions stand; the
 > preflight claim does not, and `scripts/sc1_r2e1_call_contract.py` now makes the mistake impossible
 > for both entries (see `reports/scan_driver_r2e1_gate_review.md` §1-§2).
+>
+> **Same void, same reason, for the S2 rows:** the `preflight_rc` column of
+> `sc1_r2e_s2_*_manifest.csv` and of every `PREFLIGHT_FULL` row in `sc1_r2e_s2_{static,dynamic,
+> dynamic_repeat3,load,negative}.csv` is also tail's status (that entry used `| tail -5`), so it must be
+> read as **unrecorded**, not as 0. What the retained 150-character excerpt does show for the 15 decks is
+> the supply-contract detail lines (`OP_OK supply net vdd18 = 1.8 (contract 1.8 V)`, `… vdd33 = 3.3`,
+> `… vss = 0`, then `PREFLIGHT_CO…` cut off), and each case's own `SIM_RUN` row carries the runner's real
+> rc plus the `SPECTRE … rc=` value from an un-piped call. The completion marker itself was truncated out
+> of what was written down, so "preflight full passed on the S2 decks" is **not** established by this
+> file; the fixed entry requires it to be, and a re-run under that rule is the next authorised session's.
 
 Measured save forms on this build (one candidate per deck, because a fatal save kills the file):
 
