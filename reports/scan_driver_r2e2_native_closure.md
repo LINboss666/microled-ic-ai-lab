@@ -274,7 +274,9 @@ forms `:1` / `:current` (4 rows). No old row was edited to make this true.
 
 Exit is `0` only with neither failure type; `1` functional, `2` dependency, `3` both, `5` unauthorised
 or unresolved model binding, `9` a bad selection. All four groups exited **0** while still printing
-their six per-case `SAVE_PATH_AUDIT PARTIAL` rows. Those rows are the reviewed generator's
+**15** `SAVE_PATH_AUDIT PARTIAL` rows in total — **6 static + 6 dynamic + 2 load + 1 negative**, counted
+from the delivered CSVs, one per case deck; "six" names only the static group and was a mis-statement of
+the count, corrected here without touching any experiment row. Those rows are the reviewed generator's
 `Xt.Xcore.x` / `Xt.Xcore.y` save requests — `x`/`y` are **ports** of `Xcore`, so this build never saves
 that spelling; the resolved names `Xt.x` / `Xt.y` were saved and judged in the same runs (see the
 `S2_FUNCTIONAL_TT` rows above). The generator's bytes stay untouched, the warning stays visible, and
