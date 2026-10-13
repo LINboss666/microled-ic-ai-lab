@@ -605,7 +605,8 @@ def run_case(R, cid, scratch, nlsha, libsha, man_rows, opts):
     case = find_case(base)
     if case is None:
         R.add('DECK_BUILD', cid, '-', 'an id from the audited case table', 'UNKNOWN_CASE', 0,
-              'PARTIAL', 'this entry does not invent cases')
+              'NOT_AVAILABLE', 'this entry does not invent cases, and a case that never built is '
+                               'not a circuit result')
         return
     deck_txt = build_r2e_deck(case)
     if cid.endswith('_fine'):
@@ -676,7 +677,8 @@ def run_case(R, cid, scratch, nlsha, libsha, man_rows, opts):
     man[14] = traces_of(data) if data else ''
     R.add('SAVED_SIGNALS', cid, 'the dotted and source saves reach the data file',
           'the deck save list', man[14][:150], 0,
-          'PASS' if runner_ok and man[14] else 'PARTIAL', 'trace order as the simulator wrote it')
+          'PASS' if runner_ok and man[14] else 'NOT_AVAILABLE',
+          'trace order as the simulator wrote it; an empty list means this case measured nothing')
     if not runner_ok or not data or not os.path.isfile(data):
         man_rows.append(man)
         return
@@ -750,6 +752,35 @@ def run_case(R, cid, scratch, nlsha, libsha, man_rows, opts):
     man_rows.append(man)
 
 
+def classify(rows):
+    """split the summary into three classes instead of one rc (R2E2 4).
+
+    R2E judged every row that was not PASS/MEASURED/EXPECTED_REFUSAL as one failure list, so the
+    main entry exited 1 over SAVE_PATH_AUDIT -- the historical record that the reviewed generator
+    asked for `Xt.Xcore.x', a PORT name the simulator never saves. That is neither a circuit result
+    nor a broken dependency, and it must not be renamed PASS either. Three classes, three answers:
+
+      functional  FAIL                  the circuit did not do what the case asserts
+      dependency  BLOCKED/NOT_AVAILABLE and any other PARTIAL
+                                        the tooling or the data did not arrive, so nothing is judged
+      informational  SAVE_PATH_AUDIT PARTIAL, MEASURED, EXPECTED_REFUSAL, NOT_A_NUMBER
+                                        facts worth reading, not failures
+
+    Exit code 0 only with no functional and no dependency failure: 1 functional, 2 dependency,
+    3 both. The informational count is always printed, never dropped.
+    """
+    func, dep, info = [], [], []
+    for r in rows:
+        v = r[7]
+        if v == 'FAIL':
+            func.append(r)
+        elif v in ('BLOCKED', 'NOT_AVAILABLE') or (v == 'PARTIAL' and r[1] != 'SAVE_PATH_AUDIT'):
+            dep.append(r)
+        elif v != 'PASS':
+            info.append(r)
+    return func, dep, info
+
+
 def main():
     op = optparse.OptionParser()
     op.add_option('--group', default='static')
@@ -759,6 +790,9 @@ def main():
     op.add_option('--dry', action='store_true')
     op.add_option('--fine', default='0.05n', help='maxstep for the *_fine re-check decks')
     op.add_option('--only')
+    op.add_option('--expect', type='int', default=0,
+                  help='fail if the selection is not exactly this many decks (R2E2 3.2: an empty '
+                       'filter must not be able to report rc=0)')
     o, _ = op.parse_args()
     ids = GROUPS.get(o.group)
     if ids is None:
@@ -767,7 +801,18 @@ def main():
     if o.group == 'load':
         ids = ids + [c + '_fine' for c in ids if c.endswith('5pF')]
     if o.only:
-        ids = [c for c in ids if c in o.only.split(',')]
+        wanted = [c for c in o.only.split(',') if c]
+        unknown = [c for c in wanted if c not in ids]
+        if unknown:
+            # a typo in an id used to drop silently, so a 15-deck round could "finish" with fewer
+            # decks and still exit 0
+            print('UNKNOWN_CASE %s (group %s offers: %s)'
+                  % (','.join(unknown), o.group, ','.join(ids)))
+            return 9
+        ids = [c for c in ids if c in wanted]
+    if o.expect and len(ids) != o.expect:
+        print('SELECTION_COUNT want=%d got=%d ids=%s' % (o.expect, len(ids), ','.join(ids)))
+        return 9
     scratch = o.scratch or os.path.join(PROJ, 'cadence_work', 'sc1_sim', 'r2e_s2_' + o.group)
     out_csv = o.out or os.path.join(PROJ, 'results', 'evidence', 'sc1_r2e_s2_%s.csv' % o.group)
     man_csv = o.manifest or out_csv.replace('.csv', '_manifest.csv')
@@ -841,14 +886,17 @@ def main():
     if R.log:
         with io.open(out_csv.replace('.csv', '_log.txt'), 'w', encoding='utf-8', newline='\n') as f:
             f.write(u(scrub('\n'.join(R.log))))
-    bad = [r for r in R.rows if r[7] not in ('PASS', 'MEASURED', 'EXPECTED_REFUSAL')]
-    print('S2_R2E_TT group=%s rows=%d not_pass=%d csv=%s'
-          % (o.group, len(R.rows), len(bad), out_csv))
-    for r in bad:
-        print('   %s | %s | %s: %s (%s)' % (r[1], r[2], r[3][:40], r[5][:80], r[7]))
+    func, dep, info = classify(R.rows)
+    print('S2_R2E_TT group=%s rows=%d functional_FAIL=%d dependency=%d informational=%d '
+          'exit=0|1|2|3 as none|func|dep|both -> %s'
+          % (o.group, len(R.rows), len(func), len(dep), len(info), out_csv))
+    for tag, lst in (('FUNCTIONAL', func), ('DEPENDENCY', dep), ('INFORMATIONAL', info)):
+        for r in lst[:12]:
+            print('   %-13s %s | %s | %s: %s (%s)'
+                  % (tag, r[1], r[2], r[3][:40], r[5][:80], r[7]))
     if not authorised or not libsha:
         return 5
-    return 0 if not bad else 1
+    return (1 if func else 0) + (2 if dep else 0)
 
 
 if __name__ == '__main__':

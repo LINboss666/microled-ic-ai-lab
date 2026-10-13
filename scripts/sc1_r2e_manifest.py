@@ -27,7 +27,12 @@ PROTECTED = ['spectre/C2MOS_DFF.scs', 'spectre/sc1_scan_gate.scs',
              'scripts/sc1_s1_r2d_regression.sh', 'scripts/sc1_s1_window_contract.py',
              'scripts/sc1_s2_r2d_gen.py', 'scripts/sc1_s2_r2d.sh', 'scripts/sc1_r2d_s1_reanalysis.py']
 
-ROLES = [(r'^scripts/sc1_r2e1_.*\.py$', 'r2e1_new_entry'),
+ROLES = [(r'^scripts/sc1_r2e2_.*\.py$', 'r2e2_new_entry'),
+         (r'^results/evidence/sc1_r2e2_.*_log\.txt$', 'r2e2_transcript'),
+         (r'^results/evidence/sc1_r2e2_.*\.txt$', 'r2e2_transcript'),
+         (r'^results/evidence/sc1_r2e2_.*\.csv$', 'r2e2_evidence'),
+         (r'^reports/scan_driver_r2e2.*\.md$', 'r2e2_report'),
+         (r'^scripts/sc1_r2e1_.*\.py$', 'r2e1_new_entry'),
          (r'^scripts/sc1_r2e_.*\.py$', 'r2e_new_entry'),
          (r'^results/evidence/sc1_r2e1_.*\.csv$', 'r2e1_evidence'),
          (r'^results/evidence/sc1_r2e_.*_log\.txt$', 'r2e_transcript'),

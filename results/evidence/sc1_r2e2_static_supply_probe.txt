@@ -1,0 +1,35 @@
+SCAN-1R2E2 2.1: static supply-contract A/B on the two calibration benches (PREFLIGHT_STATIC_PROBE=1). The frozen checker is scripts/sc1_supply_check.awk through scripts/tb_preflight.sh; rc=7 with CIRCUIT_VERDICT=NOT_RUN means the STATIC layer accepted the contract, it is not a full preflight PASS and not a circuit verdict. rc=1 with PREFLIGHT_REJECT: supply_contract is the refusal R2E actually hit.
+
+### v18 deck, DERIVED map [rail=1.8 vss=0]
+real rc = 7
+  SUPPLY_RESULT PASS
+SUPPLY_GATE: PASS top=1 checked=2 supply_nets=2
+PREFLIGHT_STAGE=static_gate
+CIRCUIT_VERDICT: NOT_RUN (static probe does not evaluate the circuit)
+TESTBENCH_PREFLIGHT: NOT_RUN (static probe)
+
+### v18 deck, STALE map [vdd18=1.8 vdd33=3.3 vss=0]
+real rc = 1
+  SUPPLY_FAIL contract entry vdd33 matches no instance port
+  SUPPLY_FAIL contract entry vdd18 matches no instance port
+  SUPPLY_RESULT FAIL
+PREFLIGHT_STAGE=supply_contract
+PREFLIGHT_REJECT: contract_refused:contract entry vdd33 matches no instance port
+TESTBENCH_PREFLIGHT: FAIL (stage=supply_contract reason=contract_refused:contract entry vdd33 matches no instance port)
+
+### v33 deck, DERIVED map [rail=3.3 vss=0]
+real rc = 7
+  SUPPLY_RESULT PASS
+SUPPLY_GATE: PASS top=1 checked=2 supply_nets=2
+PREFLIGHT_STAGE=static_gate
+CIRCUIT_VERDICT: NOT_RUN (static probe does not evaluate the circuit)
+TESTBENCH_PREFLIGHT: NOT_RUN (static probe)
+
+### v33 deck, STALE map [vdd18=3.3 vdd33=3.3 vss=0]
+real rc = 1
+  SUPPLY_FAIL contract entry vdd33 matches no instance port
+  SUPPLY_FAIL contract entry vdd18 matches no instance port
+  SUPPLY_RESULT FAIL
+PREFLIGHT_STAGE=supply_contract
+PREFLIGHT_REJECT: contract_refused:contract entry vdd33 matches no instance port
+TESTBENCH_PREFLIGHT: FAIL (stage=supply_contract reason=contract_refused:contract entry vdd33 matches no instance port)

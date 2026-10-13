@@ -1,0 +1,76 @@
+"item","deck_or_target","expected","actual","rc","verdict","note"
+"MODEL_BINDING","ms018_enhanced_v1p2_rev0_spe.lib","section tt declared, file present","sha256=fc8d321752f2bacf section_tt_lines=1","0","PASS","hash of the file the deck includes; recorded without its absolute path"
+"MODEL_INCLUDE_GRAPH","ms018_enhanced_v1p2_rev0_spe.lib","nested includes of section tt, each present","ms018_enhanced_v1p2_rev0_mis_spe.mdl=4b62b398adee ; ms018_enhanced_v1p2_rev0_spe.mdl=5187cae15226","2","PASS","the model records come from these files, not from the .lib alone"
+"UPLOAD_HASH_COMPARISON","lib","digest given in the task book","MATCH on the included file","0","PASS","re-hashed this round from the loaded path"
+"UPLOAD_HASH_COMPARISON","mdl","digest given in the task book","MATCH on the included file","0","PASS","re-hashed this round from the loaded path"
+"UPLOAD_HASH_COMPARISON","readme","digest given in the task book","MATCH on the included file","0","PASS","re-hashed this round from the loaded path"
+"MODEL_RECORD_SOURCE","n18","declared once, or identically wherever it is declared","ms018_enhanced_v1p2_rev0_spe.mdl line 53 lmin=1.5e-007 lmax=0.0001 wmin=1.9e-007","1","PASS","where the geometry limits below were read from"
+"MODEL_RECORD_SOURCE","p18","declared once, or identically wherever it is declared","ms018_enhanced_v1p2_rev0_spe.mdl line 258 lmin=1.5e-007 lmax=0.0001 wmin=1.9e-007","1","PASS","where the geometry limits below were read from"
+"MODEL_RECORD_SOURCE","n33","declared once, or identically wherever it is declared","ms018_enhanced_v1p2_rev0_spe.mdl line 654 lmin=3.5e-007 lmax=0.0001 wmin=2.2e-007","1","PASS","where the geometry limits below were read from"
+"MODEL_RECORD_SOURCE","p33","declared once, or identically wherever it is declared","ms018_enhanced_v1p2_rev0_spe.mdl line 866 lmin=3e-007 lmax=0.0001 wmin=2.2e-007","1","PASS","where the geometry limits below were read from"
+"GEOMETRY_RANGE_READ","low-domain driver p18/n18","lmin=1.5e-007 lmax=0.0001 wmin=1.9e-007","uses l=2e-07..2e-07 w_min=2e-06","0","PASS","model/bin limit read from the included .mdl; NOT an absolute maximum rating and NOT the characterisation range"
+"GEOMETRY_RANGE_READ","low-domain driver n18","lmin=1.5e-007 lmax=0.0001 wmin=1.9e-007","uses l=2e-07..2e-07 w_min=2e-06","0","PASS","model/bin limit read from the included .mdl; NOT an absolute maximum rating and NOT the characterisation range"
+"GEOMETRY_RANGE_READ","cross-coupled / nand p33","lmin=3e-007 lmax=0.0001 wmin=2.2e-007","uses l=4e-07..4e-07 w_min=5e-06","0","PASS","model/bin limit read from the included .mdl; NOT an absolute maximum rating and NOT the characterisation range"
+"GEOMETRY_RANGE_READ","high-domain pull-down n33","lmin=3.5e-007 lmax=0.0001 wmin=2.2e-007","uses l=4e-07..4e-07 w_min=5e-06","0","PASS","model/bin limit read from the included .mdl; NOT an absolute maximum rating and NOT the characterisation range"
+"CHARACTERISATION_RANGE","README","temperature range stated","5 lines state -40C~125C","0","PASS","27 C is inside it; no absolute-rating table exists in the readable files, so SOA_SIGNOFF stays NO"
+"TEMP_SYNTAX_SOURCE","spectre -h options","help lists the option name","5       temp=27 C         Temperature. ; 6       tnom=27 C         Temperature measurement of the default component","0","PASS","this build's own help, not remembered syntax"
+"PREFLIGHT_FULL","cal_v18_V18-i.scs","the preflight own rc=0 AND exactly one TESTBENCH_PREFLIGHT: PASS","rc=0 map=rail=1.8 vss=0 (V18 on rail) | == testbench preflight: /root/microled_ai_project/cadence_work/sc1_sim/r2e2_cal/cal_v18_V18-i.scs (expected VD","0","PASS","preflight_rc=0 with exactly one completion marker | == testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port lists: none
+  SUPPLY_OK Xcal.rail = 1.8 V via net rail
+  SUPPLY_OK Xcal.vss = 0 V via net vss
+  SUPPLY_INSTANCES top=1 descendants=0 checked=2 internal=0 masters=1
+  SUPPLY_RESULT PASS
+SUPPLY_GATE: PASS top=1 checked=2 supply_nets=2
+STATIC_NOTE contract mode: 1 top-level instance(s), rail checks delegated to sc1_supply_check.awk
+STATIC_RESULT PASS
+NETS_TO_SAVE rail vss
+VDD_NETS
+--- preflight netlist: <path-redacted>
+spectre_rc=0 datafile=<path-redacted>
+--- operating point at the first sample
+    V18:i -0.00018
+    Xcal.Ip1:i 0.00018
+    Xcal.node_mid 0
+    rail 1.8
+    vss 0
+OP_OK supply net rail = 1.8 (contract 1.8 V)
+OP_OK supply net vss = 0 (contract 0 V)
+PREFLIGHT_CONTRACT_SATISFIED: PASS
+TESTBENCH_PREFLIGHT: PASS"
+"SIM_RUN","V18 V18:i","runner rc=0 + one PASS for this label + spectre rc=0 + error_hits=0 + own data","runner_rc=0 preflight_rc=0 spectre_rc=0 error_hits=0 pass_lines=1","0","PASS","contract satisfied"
+"TEMP_CONFIRMATION","cal_v18_V18-i.scs","27 C echoed by the run","log temp=27 ; psf header temp=27.0000","0","PASS","both values are read from files this run produced; a generator comment or a build default is not a measurement"
+"SOURCE_CURRENT_CALIBRATION","V18 V18:i","saved as -0.00018 A when the rail delivers 0.00018 A","-0.00018 A (so injected = 0.00018 A)","0","PASS","positive direction = out of the source into the load; the raw reading keeps the simulator's own sign"
+"BRANCH_PROBE_CALIBRATION","V18 Xcal.Ip1:i","0.00018 A, positive first->second","0.00018 A","0","PASS","independent magnitude check of the same bench; dotted hierarchical name"
+"HIERARCHICAL_NODE_READ","V18 Xcal.node_mid","|v| < 1 mV (zero-drop iprobe)","0 V","0","PASS","proves the instance-path save really reaches inside the subckt"
+"SAVE_FORM_BARE_INSIDE_SUBCKT","V18 Ip1:i","refused: the device is not top-level","NO_SIGNAL Ip1:i (have: V18:i,Xcal.Ip1:i,Xcal.node_mid,rail,t","3","EXPECTED_REFUSAL","measured as SPECTRE-8282/8287; if it ever reads, the hierarchy conclusion is wrong"
+"CURRENT_SIGN_CONVENTION","V18","-(source branch) == +iprobe branch","0.00018 vs 0.00018 A","0","PASS","this is the rule the S2 entries use for rail current; a sum of MOS drain currents is not taken as the supply current"
+"PREFLIGHT_FULL","cal_v33_V33-i.scs","the preflight own rc=0 AND exactly one TESTBENCH_PREFLIGHT: PASS","rc=0 map=rail=3.3 vss=0 (V33 on rail) | == testbench preflight: /root/microled_ai_project/cadence_work/sc1_sim/r2e2_cal/cal_v33_V33-i.scs (expected VD","0","PASS","preflight_rc=0 with exactly one completion marker | == testbench preflight: <path-redacted> (expected VDD=3.3)
+--- local cell files parsed for port lists: none
+  SUPPLY_OK Xcal.rail = 3.3 V via net rail
+  SUPPLY_OK Xcal.vss = 0 V via net vss
+  SUPPLY_INSTANCES top=1 descendants=0 checked=2 internal=0 masters=1
+  SUPPLY_RESULT PASS
+SUPPLY_GATE: PASS top=1 checked=2 supply_nets=2
+STATIC_NOTE contract mode: 1 top-level instance(s), rail checks delegated to sc1_supply_check.awk
+STATIC_RESULT PASS
+NETS_TO_SAVE rail vss
+VDD_NETS
+--- preflight netlist: <path-redacted>
+spectre_rc=0 datafile=<path-redacted>
+--- operating point at the first sample
+    V33:i -0.00033
+    Xcal.Ip1:i 0.00033
+    Xcal.node_mid 0
+    rail 3.3
+    vss 0
+OP_OK supply net rail = 3.3 (contract 3.3 V)
+OP_OK supply net vss = 0 (contract 0 V)
+PREFLIGHT_CONTRACT_SATISFIED: PASS
+TESTBENCH_PREFLIGHT: PASS"
+"SIM_RUN","V33 V33:i","runner rc=0 + one PASS for this label + spectre rc=0 + error_hits=0 + own data","runner_rc=0 preflight_rc=0 spectre_rc=0 error_hits=0 pass_lines=1","0","PASS","contract satisfied"
+"TEMP_CONFIRMATION","cal_v33_V33-i.scs","27 C echoed by the run","log temp=27 ; psf header temp=27.0000","0","PASS","both values are read from files this run produced; a generator comment or a build default is not a measurement"
+"SOURCE_CURRENT_CALIBRATION","V33 V33:i","saved as -0.00033 A when the rail delivers 0.00033 A","-0.00033 A (so injected = 0.00033 A)","0","PASS","positive direction = out of the source into the load; the raw reading keeps the simulator's own sign"
+"BRANCH_PROBE_CALIBRATION","V33 Xcal.Ip1:i","0.00033 A, positive first->second","0.00033 A","0","PASS","independent magnitude check of the same bench; dotted hierarchical name"
+"HIERARCHICAL_NODE_READ","V33 Xcal.node_mid","|v| < 1 mV (zero-drop iprobe)","0 V","0","PASS","proves the instance-path save really reaches inside the subckt"
+"SAVE_FORM_BARE_INSIDE_SUBCKT","V33 Ip1:i","refused: the device is not top-level","NO_SIGNAL Ip1:i (have: V33:i,Xcal.Ip1:i,Xcal.node_mid,rail,t","3","EXPECTED_REFUSAL","measured as SPECTRE-8282/8287; if it ever reads, the hierarchy conclusion is wrong"
+"CURRENT_SIGN_CONVENTION","V33","-(source branch) == +iprobe branch","0.00033 vs 0.00033 A","0","PASS","this is the rule the S2 entries use for rail current; a sum of MOS drain currents is not taken as the supply current"

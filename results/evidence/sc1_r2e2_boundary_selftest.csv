@@ -1,0 +1,7 @@
+"kind","what_is_checked","crossing_index","this_code_gives","built_by_hand","verdict"
+"synthetic","crossing list of both directions","3","2.01e-07 ; 2.75e-07 ; 3.75e-07","2.01e-07 ; 2.75e-07 ; 3.75e-07","PASS"
+"synthetic","owning/next for t_in=2.01e-07","0","own=2.01e-07 next=2.75e-07","own=2.01e-07 next=2.75e-07","PASS"
+"synthetic","owning/next for t_in=2.75e-07","1","own=2.75e-07 next=3.75e-07","own=2.75e-07 next=3.75e-07","PASS"
+"synthetic","owning/next for t_in=3.75e-07","2","own=3.75e-07 next=END_OF_DATA","own=3.75e-07 next=END_OF_DATA","PASS"
+"synthetic","t_in after the last input edge","2","next=END_OF_DATA","the owning edge is the 375 ns one and no next edge exists","PASS"
+"synthetic","R2E1 shape: right-hand sample vs true next","2","sample=2.02e-07 next=2.75e-07","the boundary must be the interpolated 275 ns crossing, not the 202 ns sample","PASS"

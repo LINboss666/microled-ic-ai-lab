@@ -113,6 +113,39 @@ save rail vss Xcal.node_mid Xcal.Ip1:i Ip1:i
 '''
 
 
+SRC_LINE = re.compile(r'^\s*(V\S+)\s*\((\S+)\s+(\S+)\)\s+vsource\b([^\n]*)', re.M)
+
+
+def deck_supply_map(path):
+    """Build the supply map from the deck's own independent sources instead of naming it by hand.
+
+    R2E1 called the gate with `vdd18=1.8' while this bench's source and Xcal port are both called
+    `rail', so the audited checker refused every calibration run with
+    `contract entry vdd18 matches no instance port' (kept in sc1_r2e_calibration.csv). Reading the
+    map out of the deck means a renamed net cannot silently survive as a stale contract entry.
+
+    -> (map, rail_instance, rail_net), or (None, ...) unless the deck declares exactly one
+       nonzero-dc source whose second terminal is the ground net.
+    """
+    txt = u(io.open(path, encoding='utf-8', errors='replace').read())
+    entries, rails = [], []
+    for m in SRC_LINE.finditer(txt):
+        inst, na, nb, rest = m.group(1), m.group(2), m.group(3), m.group(4)
+        dc = re.search(r'\bdc=(\S+)', rest)
+        if not dc or nb != '0':
+            continue
+        try:
+            v = float(dc.group(1))
+        except ValueError:
+            continue
+        entries.append('%s=%s' % (na, dc.group(1)))
+        if abs(v) > 1e-12:
+            rails.append((inst, na))
+    if len(rails) != 1:
+        return None, None, None
+    return ' '.join(entries), rails[0][0], rails[0][1]
+
+
 def preflight_and_run(add, log_lines, deck, name, form, tag, volts):
     """preflight FULL then the runner, through scripts/sc1_r2e1_call_contract.py.
 
@@ -125,16 +158,28 @@ def preflight_and_run(add, log_lines, deck, name, form, tag, volts):
 
     Returns (preflight_ok, runner_ok, datafile, logfile); a False means the caller reads nothing.
     """
-    pf_cmd = '%s "%s" %s cal_%s "%s=%s vss=0"' % (
+    # The supply map is read FROM THE DECK rather than named after the source instance: the bench's
+    # independent source is `V18 (rail 0) vsource ...', so the rail net the gate has to see is `rail',
+    # and R2E1 still passed `vdd18=1.8' here, which the supply checker refused as matching no instance
+    # port (kept in sc1_r2e_calibration.csv). Deriving it means a stale name cannot survive a rename.
+    smap, src_inst, rail_net = deck_supply_map(deck)
+    if smap is None:
+        add('PREFLIGHT_FULL', os.path.basename(deck),
+            'the deck declares exactly one nonzero-dc source on a grounded net',
+            'NO_RAIL_SOURCE_FOUND', 9, 'BLOCKED',
+            'the supply map is taken from the deck line, so nothing is called with a guessed name')
+        return False, False, '', ''
+    pf_cmd = '%s "%s" %s cal_%s "%s"' % (
         CC.hook('QODER_PF_CMD', 'bash ' + os.path.join(HERE, 'tb_preflight.sh')), deck, volts,
-        name.lower(), 'vdd18' if name == 'V18' else 'vdd33', volts)
+        name.lower(), smap)
     penv = dict(os.environ)
     penv.pop('PREFLIGHT_STATIC_PROBE', None)          # unset, not empty: this is the full gate
     pfr, pftxt = CC.call(pf_cmd, env=penv)
     pf_ok, pf_reason, pf_summary = CC.preflight_verdict(pfr, pftxt)
     add('PREFLIGHT_FULL', os.path.basename(deck),
         'the preflight own rc=0 AND exactly one TESTBENCH_PREFLIGHT: PASS',
-        'rc=%s | %s' % (pfr, pf_summary.replace('\n', ' | ')[:120]), pfr,
+        'rc=%s map=%s (%s on %s) | %s' % (pfr, smap, src_inst, rail_net,
+                                          pf_summary.replace('\n', ' | ')[:110]), pfr,
         'PASS' if pf_ok else 'BLOCKED', '%s | %s' % (pf_reason, scrub(pftxt.strip()))[:150])
     if not pf_ok:
         return False, False, '', ''
@@ -168,6 +213,10 @@ def main():
     op.add_option('--scratch')
     op.add_option('--out')
     op.add_option('--only')
+    op.add_option('--forms', default='all',
+                  help="'all' runs the three candidate save forms R2E probed; 'i' runs only the form "
+                       "this project actually adopted (save <source>:i), which is what the R2E2 "
+                       "re-verification is limited to")
     o, _ = op.parse_args()
     scratch = o.scratch or os.path.join(PROJ, 'cadence_work', 'sc1_sim', 'r2e_cal')
     out_csv = o.out or os.path.join(PROJ, 'results', 'evidence', 'sc1_r2e_calibration.csv')
@@ -315,10 +364,22 @@ def main():
         'PASS' if 'temp=' in hlp else 'FAIL', 'this build\'s own help, not remembered syntax')
 
     # --------------------------------------------------- 4. the two calibration benches
-    # One candidate save form per run: a fatal save kills the whole deck, and the question is which
-    # form this build accepts. The dotted hierarchical items and the bare `Ip1:i' sit on every deck,
-    # so the run that calibrates the source branch also shows what the build did with them.
-    forms = ['{n}:i', '{n}:1', '{n}:current']
+    # Everything above is read-only file inspection; this section calls the simulator, so it needs the
+    # same two flags the S1/S2 entries need. Without them the read-only rows still stand and this
+    # section records NOT_RUN -- the entry must not be executable "because main could be run".
+    authorised = os.environ.get('RUN') == '1' and os.environ.get('QODER_SIM_AUTHORISED') == '1'
+    if not authorised:
+        for nm in ('V18', 'V33'):
+            add('CALIBRATION_BENCH', 'cal_%s' % nm.lower(), 'RUN=1 and QODER_SIM_AUTHORISED=1',
+                'refused', 5, 'NOT_RUN',
+                'the read-only model/temperature rows above are file inspection; nothing was simulated')
+        write_out(out_csv, rows)
+        print('R2E_CALIBRATION forms=%s authorised=NO -> nothing ran' % o.forms)
+        return 5
+
+    # One candidate save form per run: a fatal save kills the whole deck. R2E probed three; R2E2
+    # re-verifies only the one this project actually adopted, so the scope cannot widen by accident.
+    forms = ['{n}:i'] if o.forms == 'i' else ['{n}:i', '{n}:1', '{n}:current']
     for name, volts, want in (('V18', 1.8, 1.8 / 1e4), ('V33', 3.3, 3.3 / 1e4)):
         deck = os.path.join(scratch, 'cal_%s.scs' % name.lower())
         for form in forms:

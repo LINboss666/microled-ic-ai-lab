@@ -1,0 +1,62 @@
+=== V18 V18:i run accepted
+SPECTRE name=cal_v18_V18-i.scs rc=0 elapsed=0s timeout=120s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 48
+drwx------. 4 root root 4096 Oct 13 17:04 .
+drwx------. 3 root root 4096 Oct 13 17:04 ..
+-rw-------. 1 root root 6120 Oct 13 17:04 cal_v18_V18-i.log
+drwx------. 2 root root 4096 Oct 13 17:04 cal_v18_V18-i.raw
+-rw-------. 1 root root 5877 Oct 13 17:04 cal_v18_V18-i.stdout
+-rw-------. 1 root root 6167 Oct 13 17:04 preflight_cal_v18_V18-i_cal_v18.log
+drwx------. 2 root root 4096 Oct 13 17:04 preflight_cal_v18_V18-i_cal_v18.raw
+-rw-------. 1 root root 5916 Oct 13 17:04 preflight_cal_v18_V18-i_cal_v18.stdout
+----- log tail -----
+
+
+Aggregate audit (5:04:07 PM, Tue Oct 13, 2026):
+Time used: CPU = 174 ms, elapsed = 209 ms, util. = 83.4%.
+Time spent in licensing: elapsed = 58.7 ms, percentage of total = 28.1%.
+Peak memory used = 61.2 Mbytes.
+Simulation started at: 5:04:07 PM, Tue Oct 13, 2026, ended at: 5:04:07 PM, Tue Oct 13, 2026, with elapsed time (wall clock): 209 ms.
+spectre completes with 0 errors, 2 warnings, and 0 notices.
+CAL_V18_V18-i: PASS
+
+=== V18 V18:i run
+<path-redacted>
+
+=== V33 V33:i run accepted
+SPECTRE name=cal_v33_V33-i.scs rc=0 elapsed=1s timeout=120s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 88
+drwx------. 6 root root 4096 Oct 13 17:04 .
+drwx------. 3 root root 4096 Oct 13 17:04 ..
+-rw-------. 1 root root 6120 Oct 13 17:04 cal_v18_V18-i.log
+drwx------. 2 root root 4096 Oct 13 17:04 cal_v18_V18-i.raw
+-rw-------. 1 root root 5877 Oct 13 17:04 cal_v18_V18-i.stdout
+-rw-------. 1 root root 6087 Oct 13 17:04 cal_v33_V33-i.log
+drwx------. 2 root root 4096 Oct 13 17:04 cal_v33_V33-i.raw
+-rw-------. 1 root root 5836 Oct 13 17:04 cal_v33_V33-i.stdout
+-rw-------. 1 root root 6167 Oct 13 17:04 preflight_cal_v18_V18-i_cal_v18.log
+drwx------. 2 root root 4096 Oct 13 17:04 preflight_cal_v18_V18-i_cal_v18.raw
+-rw-------. 1 root root 5916 Oct 13 17:04 preflight_cal_v18_V18-i_cal_v18.stdout
+----- log tail -----
+
+
+Aggregate audit (5:04:08 PM, Tue Oct 13, 2026):
+Time used: CPU = 183 ms, elapsed = 218 ms, util. = 83.9%.
+Time spent in licensing: elapsed = 61.5 ms, percentage of total = 28.2%.
+Peak memory used = 61.2 Mbytes.
+Simulation started at: 5:04:07 PM, Tue Oct 13, 2026, ended at: 5:04:08 PM, Tue Oct 13, 2026, with elapsed time (wall clock): 218 ms.
+spectre completes with 0 errors, 2 warnings, and 0 notices.
+CAL_V33_V33-i: PASS
+
+=== V33 V33:i run
+<path-redacted>

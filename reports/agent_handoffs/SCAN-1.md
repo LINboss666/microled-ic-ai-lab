@@ -2,10 +2,55 @@
 
 ## CURRENT_STATUS (single authoritative table; everything below this block is history)
 
-Updated 2026-10-13 during **SCAN-1R2E1 / gate fixes and re-read of the existing waveforms**. Start point
-re-read before editing: remote `poc/scan-driver-1ch` = `593a8beb9a55840d5f3c33633abb635713af84aa` =
-local HEAD (the R2E native TT round), no unknown upstream commits. Full write-up:
-`reports/scan_driver_r2e1_gate_review.md`; artifacts: `results/evidence/sc1_r2e1_*`.
+Updated 2026-10-13 during **SCAN-1R2E2 / bounded native re-verification**. Start point re-read before
+editing: remote `poc/scan-driver-1ch` = `b13525ca345fdef5743b19b42e68adb6f932772d` = local HEAD, no
+unknown upstream commits. Full write-up: `reports/scan_driver_r2e2_native_closure.md`; artifacts:
+`results/evidence/sc1_r2e2_*`.
+
+This round stays inside the minimal native TT task the user authorised on 2026-10-13: the two small
+fixes in the new callers, 2 calibration cases and the 15 named S2 cases, under the gates R2E1
+corrected. No new model/corner/topology, no R3. Spectre really ran (guest RHEL6.5, python 2.6.6) over
+the VMware Tools channel; nothing about the VM's power, network, snapshots or licence was touched.
+
+| item | status | evidence |
+|---|---|---|
+| CALIBRATION SUPPLY CONTRACT (§2.1) | **CLOSED, and now native-PASS** | the deck's own `vsource` lines give the map (`deck_supply_map()`), so the bench is called with `rail=1.8 vss=0` / `rail=3.3 vss=0` instead of the `vdd18=…` name that matched no port. Against the **frozen** checker, static layer only: derived map → `rc=7`, `SUPPLY_GATE: PASS top=1 checked=2 supply_nets=2`, `CIRCUIT_VERDICT: NOT_RUN`; the pre-fix map → `rc=1`, `contract_refused:contract entry vdd33 matches no instance port` (`sc1_r2e2_static_supply_probe.txt`). Full preflight then genuinely passed on both benches (`PREFLIGHT_FULL rc=0 PASS`, `map=rail=1.8 vss=0 (V18 on rail)`) — under R2E those six calls were refusals |
+| mock list, one added assertion | **25/25 on guest 2.6.6 and Windows 3.12** | the preflight mock now validates the map against the deck it is handed and records the string it received: the calibration success control requires `rail=1.8 vss=0`, and a `stale_map` case restores the old `vdd18=…` map and must be refused with **runner/reader calls 0/0**. `sc1_r2e2_callpath_selftest.csv`; the S2 control still receives the frozen generator's `vdd18=1.8 vdd33=3.3 vss=0` |
+| next-boundary extraction (§2.2) | **CLOSED, new file, old rows kept** | `crossing_times()` lists every 50 % crossing of either direction with the audited tool's own plateau/interpolation rules, `owning_crossing()` returns the edge the answer belongs to plus the one after it (`END_OF_DATA` where none exists). R2E1's `next=102.013852 ns` becomes **252 ns**, matching the reviewer's independent recomputation; all 12 answers satisfy `t_in <= t_out < t_next` (10 `BOUNDARY_OK`, 2 `END_OF_DATA`) in `sc1_r2e2_waveform_samples.csv` (217 rows, 0 refused). `sc1_r2e1_waveform_samples.csv` is untouched. The C0 fall band labels are the right way round (2.97 V = 90 %, 0.33 V = 10 %), the 5 pF decks now carry their **own** input neighbourhood, and the bounded offline case `--what boundary` is 6/6 on both environments |
+| 17 vs 15 case count | **corrected** | the five R2E S2 manifests really hold 6+4+2+4+1 = **17** cases; the "15" repeated in the R2E1 report and here was a counting error, now fixed from the delivered rows. This round re-ran **15** of them: `load_c0_1pF` / `load_c1_1pF` are functionally covered by the 1 pF dynamic decks and stay historical |
+| CALIBRATION_NATIVE_DEPENDENCIES | **PASS, 2 cases** | `sc1_r2e2_calibration.csv` 31 rows, entry rc 0: `runner_rc=0 preflight_rc=0 spectre_rc=0 error_hits=0 pass_lines=1` both benches; log `temp=27` + psf header `temp=27.0000`; source current `−180 µA` / `−330 µA` ⇒ injected `+180 µA` / `+330 µA`, cross-checked by `Xcal.Ip1:i` `+180/+330 µA` with `Xcal.node_mid = 0 V`; `CURRENT_SIGN_CONVENTION` PASS; bare `Ip1:i` still `EXPECTED_REFUSAL`. Hashes re-read from the included path: lib `fc8d321752f2bacf…`, `…_spe.mdl 5187cae15226…`, README `f43d2585330a1cdd…`, and the `section tt` nested `…_mis_spe.mdl = 4b62b398adee…` |
+| S2_STATIC_TT | **6/6 PASS natively** | `sc1_r2e2_s2_static.csv` 110 rows + manifest 6 cases (all `preflight_rc=0 spectre_rc=0 PASS`), entry rc 0 with `functional_FAIL=0 dependency=0`. gate33 HIGH 3.3 V, LOW 4.19e-10 / 3.20e-9 V (≤ 0.30 V), internal nodes at their own domain, 30 per-device stress rows and 3 cross-checks (worst diff 0 V). Rail currents stay `MEASURED`: no dynamic budget exists |
+| S2_REPRESENTATIVE_DYNAMIC | **9/9 cases ran, judgements satisfied** | dynamic 6 decks (89 rows) = C0 3.053/2.861 ns, C1 3.429/1.945 ns, 12 attributed `repeat3` answers; load 2 decks (38 rows) = 5 pF 7.460 ns coarse vs 7.479 ns at `maxstep=0.05 ns`; negative 1 deck (11 rows) = the normal rule refuses it (`NO_RESPONSE`, no complete fall event) while `en(rise)→gate33(rise)` answers at 4.015 ns. All entry rcs 0 with `functional_FAIL=0 dependency=0` |
+| reproduction of R2E's numbers | **EXACT=194, DIFFERS=0** | `sc1_r2e2_native_reproduction.csv` (213 rows, `scripts/sc1_r2e2_reproduce_compare.py`, offline) joins on (item, case, target): every question asked in both rounds came back digit-for-digit identical, including all 12 `repeat3` `t_in/t_out/delay_ns` triples. The 19 `ONLY_R2E` rows are exactly the two deliberately-skipped 1 pF load decks and the two extra save forms `:1` / `:current`; no old row was edited |
+| dependency vs DUT process counts (§3) | **17 + 17 = 34 Spectre invocations** | `sc1_r2e2_dependency_transcript.csv` 102 rows, all `PRESENT`: 17 `PREFLIGHT_DEPENDENCY_RUN` (the full preflight's own operating-point analysis — a dependency, not a circuit result), 17 `DUT_RUN`, 17 `DUT_DATA`, 17 `DECK` with sha256, 34 `RECORDED_RC`. Counted from the artifacts on disk, not asserted from code; no "zero extra simulation" claim is made |
+| exit semantics (§4) | **split into three classes** | `main()` now separates functional `FAIL` from dependency `BLOCKED`/`NOT_AVAILABLE`/other `PARTIAL` and from informational `SAVE_PATH_AUDIT PARTIAL`/`MEASURED`/`EXPECTED_REFUSAL`; exit 0 only with neither failure type (1 functional, 2 dependency, 3 both, 5 unauthorised, 9 bad selection). All four groups exited 0 while still printing the six per-case `SAVE_PATH_AUDIT PARTIAL` rows — the reviewed generator's `Xt.Xcore.x/y` port-alias saves this build cannot reach, kept as they are, with `Xt.x`/`Xt.y` read successfully in the same runs. Also added: `--only` refuses an unknown id with rc 9 instead of dropping it, and `--expect N` refuses a wrong selection count, so an empty filter cannot report rc 0 |
+| authorisation gate | **kept, and now exercised** | the calibration entry refuses without `RUN=1` **and** `QODER_SIM_AUTHORISED=1` (records `NOT_RUN`, returns 5) and `--forms i` restricts this round to the single adopted save form; no second executor was written |
+| S1_REUSED_NATIVE_EVIDENCE | **NO_RUN this round** | S1's independent entry and window contract are unchanged (protected list: 0 files diff vs `b13525c`), so R2E's fresh native S1 regression (32×14 rows, F1 `DETECTED` at `en = 1.8001 V`) stays the S1 evidence. This is **not** an S1 fresh rerun |
+| offline suites | **25/25 · 26/26 · 16/16 · 6/6 in both environments** | `sc1_r2e2_callpath_selftest.csv`, `sc1_r2e2_s2_entry_selftest.csv`, `sc1_r2e2_boundary_selftest.csv`, `sc1_r2e_vtx.py --selftest`; all new outputs under `sc1_r2e2_*` so no earlier evidence file was rewritten |
+| SOA / power-fail / budgets | **NO · NOT_IMPLEMENTED · NOT_DEFINED** | measuring per-device VGS/VGD/VDS/VGB again is not a rating; no absolute-rating table exists in the readable files; every dynamic figure is `MEASURED` against an undefined budget; 1.8/3.3 V, TT/27 °C, 1/5 pF remain `POC_ASSUMPTION` |
+| R3 / S3 / S4 / corners / 37-deck matrix / layout | **NOT_STARTED / NOT_RUN** | unchanged, and not entered by this round |
+
+### Next step is a decision, not a continuation
+
+The native TT record is now complete under the corrected gates: the calibration bench's contract
+refusal is fixed and the fix is proven against the frozen checker, the attribution boundary in the
+sampled evidence agrees with the audited tool, 17 units produced effective native dependency records,
+and 194 recorded values reproduced exactly. Stopping at the **native TT results review gate**. If the
+reviewer accepts these records, the next stage to discuss is **R3 — control-chain chaining and the
+scan output stage design** — not further general tool engineering, and nothing here advances without
+the user's decision.
+
+## HISTORICAL_STATUS (SCAN-1R2E1 round, kept for audit; superseded by the R2E2 block above)
+
+Round: **SCAN-1R2E1**, start point `593a8beb9a55840d5f3c33633abb635713af84aa`, write-up
+`reports/scan_driver_r2e1_gate_review.md`, artifacts `results/evidence/sc1_r2e1_*`. Kept with its
+original wording; **four points were resolved or corrected by R2E2**: "Fixed entries re-run? NO_RUN" —
+R2E2 re-ran the 2 calibration cases and 15 S2 cases under these gates; "the bench needs `rail=1.8
+vss=0`, which belongs to a future authorised run" — that map is now derived from the deck and the full
+preflight passes on both benches; "the `preflight_rc` column of the **15** S2 decks" — the delivered
+manifests really hold **17** cases (6+4+2+4+1), corrected here and in the R2E1 write-up; and the C2
+sample file's `next input boundary` field, computed from the wrong sample — the corrected extraction
+is `sc1_r2e2_waveform_samples.csv`, while `sc1_r2e1_waveform_samples.csv` stays as delivered.
 
 **No simulator was called this round** — no Spectre, no ngspice, no preflight full, no operating-point
 probe, no Virtuoso, no re-run of any S1/S2 deck. Only offline tests against isolated mocks and a re-read

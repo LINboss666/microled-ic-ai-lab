@@ -2,14 +2,21 @@
 # -*- coding: utf-8 -*-
 """SCAN-1 R2E1: re-read what R2E already measured. NO SIMULATOR IS CALLED.
 
-    python scripts/sc1_r2e1_reread.py --what stress   # C1: strict re-read of the stress rows
-    python scripts/sc1_r2e1_reread.py --what samples  # C2: sampled waveform excerpts, no resampling
+    python scripts/sc1_r2e1_reread.py --what stress    # C1: strict re-read of the stress rows
+    python scripts/sc1_r2e1_reread.py --what samples   # C2: sampled waveform excerpts
+    python scripts/sc1_r2e1_reread.py --what boundary  # R2E2 2.2: the next-boundary rule, offline
 
-Both modes open the SAME files the R2E runs produced, under
+Both re-read modes open the SAME files the R2E runs produced, under
 `cadence_work/sc1_sim/r2e_s2_<group>/`, and go through the audited parser
 (scripts/sc1_read_psf.parse) plus the strict difference tool (scripts/sc1_r2e_vtx.py). Nothing is
-re-simulated, nothing is interpolated or resampled, and no old CSV is rewritten: if a re-read
-contradicts the original, the original row stays and the new row says so.
+re-simulated, nothing is interpolated inside a printed segment, and no old CSV is rewritten: if a
+re-read contradicts the original, the original row stays and the new row says so.
+
+R2E2 changed the samples extraction in two ways, both of them in THIS new file rather than in the
+frozen tools: the next input boundary of a repeat3 answer is now a real interpolated 50 % crossing of
+either direction after the owning edge (with END_OF_DATA where no later edge exists), and the 90 %/10 %
+labels of the C0 fall band are put back the right way round. The corrected output is written to
+sc1_r2e2_waveform_samples.csv; sc1_r2e1_waveform_samples.csv keeps R2E1's rows as delivered.
 
 Why the file is found this way and not "the newest raw in the tree": each case's deck path is known,
 and scripts/run_spectre.sh always writes <deck dir>/sim/<deck stem>.raw/, so the candidate is that
@@ -256,6 +263,59 @@ def first_crossing(groups, axis, sig, thr, rising, lo=None, hi=None):
     return None
 
 
+def crossing_times(groups, axis, sig, lvl):
+    """EVERY crossing of `lvl' in either direction, interpolated between its two samples.
+
+    -> [(right-hand sample index, crossing time)] in file order.
+
+    The three rules are the audited tool's own (the `crossings' helper inside sc1_delay.py's
+    propdelay mode, which is where the reported t_next boundary comes from): a sample that sits
+    exactly on the level is credited when it is REACHED, so a left-hand plateau value is skipped;
+    a right-hand exact level is taken at that sample time; anything strictly between is linearly
+    interpolated. R2E1's extractor instead searched for the first SAMPLE whose time was later than
+    t_in, so it reported the current edge's own right-hand sample as the next boundary -- 102.01 ns
+    where the audited tool gives 252 ns. This file is the new extraction layer; sc1_delay.py itself
+    is frozen and untouched.
+    """
+    xs = []
+    for i in range(1, len(groups)):
+        a, b = groups[i - 1].get(sig), groups[i].get(sig)
+        if a is None or b is None:
+            continue
+        t0, t1 = groups[i - 1][axis], groups[i][axis]
+        if a == lvl and b != lvl:
+            continue
+        if b == lvl:
+            xs.append((i, t1))
+        elif (a < lvl < b) or (b < lvl < a):
+            xs.append((i, t0 + (lvl - a) * (t1 - t0) / (b - a)))
+    return xs
+
+
+def owning_crossing(xs, t_in):
+    """the input edge an answer belongs to, and the one after it.
+
+    -> (k, t_own, t_next, t_before) where t_next is None for the last edge (no boundary exists,
+       which is written as END_OF_DATA rather than invented) and t_before is the edge just before
+       the owning one, i.e. the lower bound of the attribution window.
+
+    Matching uses the crossing itself, not the rounded t_in from the old CSV: t_in is quoted to
+    6 significant digits, so the owning edge is the last crossing at or before t_in plus ONE
+    display step of that value.
+    """
+    tol = band(t_in)
+    k = None
+    for i, (_idx, t) in enumerate(xs):
+        if t <= t_in + tol:
+            k = i
+        else:
+            break
+    if k is None:
+        return None, None, (xs[0][1] if xs else None), None
+    return (k, xs[k][1], xs[k + 1][1] if k + 1 < len(xs) else None,
+            xs[k - 1][1] if k else None)
+
+
 def emit_segment(rows, run_id, case, data, label, sigs, idx, span=2, extra=''):
     """the real samples around index idx, in file order, nothing interpolated"""
     groups, axis = samples_of(data)
@@ -269,15 +329,27 @@ def emit_segment(rows, run_id, case, data, label, sigs, idx, span=2, extra=''):
                      extra, 'MEASURED_SAMPLE'])
 
 
+def emit_crossing_segment(rows, run_id, case, data, xs, k, sigs, span=2, extra=''):
+    """the real samples straddling CROSSING k, addressed by the crossing's own sample index.
+
+    R2E1 located the neighbourhood by nearest-sample-to-t_in, which mixes up a crossing with the
+    point its boundary was reported at; here the index comes from crossing_times().
+    """
+    if k is None or k >= len(xs):
+        return
+    emit_segment(rows, run_id, case, data, extra[0], sigs, xs[k][0], span, extra[1])
+
+
 def do_samples():
     rows = []
     PLAN = [
         # (case, signals to print, [(sig, thr, rising, window_lo, window_hi, what)], note)
         ('dyn_c0_rise', ['en', 'gate33', 'Xt.x', 'Xt.y'],
          [('en', 0.9, True, None, None, 'input 50% rise'),
-          ('gate33', 0.33, False, None, None, 'output 90->10 fall band top'),
+          ('gate33', 2.97, False, None, None, 'output 90% high end of the fall (2.97 = 0.9 x 3.3)'),
           ('gate33', 1.65, False, None, None, 'output 50% fall'),
-          ('gate33', 2.97, False, None, None, 'output 10% of the fall')], '1 pF load'),
+          ('gate33', 0.33, False, None, None, 'output 10% low end of the fall (0.33 = 0.1 x 3.3)')],
+         '1 pF load'),
         ('dyn_c0_fall', ['en', 'gate33', 'Xt.x', 'Xt.y'],
          [('en', 0.9, False, None, None, 'input 50% fall'),
           ('gate33', 1.65, True, None, None, 'output 50% rise')], '1 pF load'),
@@ -288,10 +360,13 @@ def do_samples():
          [('en', 0.9, False, None, None, 'input 50% fall'),
           ('gate33', 1.65, True, None, None, 'output 50% rise')], 'guarded C1, 1 pF'),
         ('load_c1_5pF', ['en', 'core_ok33', 'gate33'],
-         [('gate33', 1.65, False, None, None, 'output 50% fall, 5 pF coarse step')],
-         'the heaviest prepared load'),
+         [('en', 0.9, 'any', None, None, 'input 50% crossing'),
+          ('gate33', 1.65, False, None, None, 'output 50% fall, 5 pF coarse step')],
+         'the heaviest prepared load; the input neighbourhood was missing in R2E1 and is read from '
+         'THIS raw, not borrowed from the 1 pF deck'),
         ('load_c1_5pF_fine', ['en', 'core_ok33', 'gate33'],
-         [('gate33', 1.65, False, None, None, 'output 50% fall, same case at maxstep 0.05 ns')],
+         [('en', 0.9, 'any', None, None, 'input 50% crossing'),
+          ('gate33', 1.65, False, None, None, 'output 50% fall, same case at maxstep 0.05 ns')],
          'step-size re-check of the same deck'),
         ('neg_output_polarity_fault', ['en', 'gate33', 'x', 'y'],
          [('en', 0.9, True, None, None, 'input 50% rise'),
@@ -307,6 +382,28 @@ def do_samples():
         run_id = sha(deck)[:8]
         groups, axis = samples_of(data)
         for sig, thr, rising, lo, hi, what in crossings:
+            if rising == 'any':
+                # whichever edges THIS deck's own stimulus actually produces, one segment per
+                # direction: R2E1 asked for a fall the load decks never stimulate and reported the
+                # absence as a refusal, which is a question error, not a circuit fact
+                xs = crossing_times(groups, axis, sig, thr)
+                seen = set()
+                for j, (idx, tc) in enumerate(xs):
+                    a, b = groups[idx - 1][sig], groups[idx][sig]
+                    d = 'rise' if b > a else 'fall'
+                    if d in seen:
+                        continue
+                    seen.add(d)
+                    emit_segment(rows, run_id, case, data,
+                                 '%s (%s at %.9g s) [%s]' % (what, d, tc, note),
+                                 sigs, idx, 2, 'crossing %d of this raw: %s crosses %.3g on a %s'
+                                 % (j + 1, sig, thr, d))
+                if not seen:
+                    rows.append([run_id, case, what, sha(data)[:16], '-', '-', '-',
+                                 'sig=%s thr=%s' % (sig, thr), '-',
+                                 'NO_CROSSING in this file: the original row is kept, nothing is '
+                                 'invented', 'NO_CROSSING'])
+                continue
             i = first_crossing(groups, axis, sig, thr, rising,
                                RD.qty(lo) if lo else None, RD.qty(hi) if hi else None)
             if i is None:
@@ -317,13 +414,18 @@ def do_samples():
                 continue
             emit_segment(rows, run_id, case, data, '%s (%s)' % (what, note), sigs, i, 2,
                          'crossing at group %d: %s crosses %.3g' % (i, sig, thr))
-    # repeat3: the 12 attributed pairs, each with its owning input edge and the next input boundary
+    # repeat3: the 12 attributed pairs, each with its owning input edge and the NEXT true input crossing
+    boundary_rows = []
     for case in ('dyn_c0_repeat3', 'dyn_c1_repeat3'):
         deck, data = datafile_for(case)
         if not data:
+            rows.append(['-', case, 'attribution boundary', '-', '-', '-', '-', '-', '-',
+                         'BLOCKED: this case raw is no longer on disk', 'BLOCKED'])
             continue
         run_id = sha(deck)[:8]
         groups, axis = samples_of(data)
+        in_xs = crossing_times(groups, axis, 'en', 0.9)
+        out_xs = crossing_times(groups, axis, 'gate33', 1.65)
         for r in rows_of(os.path.join(EVID, 'sc1_r2e_s2_dynamic_repeat3.csv')):
             if len(r) < 9 or r[1] != 'S2_DELAY' or r[2] != case:
                 continue
@@ -331,23 +433,42 @@ def do_samples():
             if not m:
                 continue
             t_in, t_out = float(m.group(1)), float(m.group(2))
-            # the next input crossing of EITHER direction after this event's input edge: that is the
-            # boundary past which the audited tool refuses to credit an answer
-            edge = None
-            for i in range(1, len(groups)):
-                a, b = groups[i - 1]['en'], groups[i]['en']
-                if groups[i][axis] <= t_in:
+            # the boundary is the NEXT 50 % crossing of the input waveform of either direction, after
+            # the crossing this answer belongs to -- not the sample that happens to sit right of t_in
+            k, t_own, t_next, t_prev = owning_crossing(in_xs, t_in)
+            nxt = '%.9g' % t_next if t_next is not None else 'END_OF_DATA'
+            own = '%.9g' % t_own if t_own is not None else 'BEFORE_FIRST_EDGE'
+            ordered = t_in <= t_out + band(t_out)
+            inside = ordered and (t_next is None or t_out < t_next - 1e-15)
+            status = ('END_OF_DATA' if t_next is None else
+                      ('BOUNDARY_OK' if inside else 'BOUNDARY_FAIL'))
+            rows.append([run_id, case, 'attribution boundary of input edge %s of %s'
+                         % (k + 1 if k is not None else '?', len(in_xs)), sha(data)[:16],
+                         str(in_xs[k][0]) if k is not None else '-', own, ns(t_own) if t_own else '-',
+                         't_in=%.9g t_out=%.9g t_next=%s' % (t_in, t_out, nxt),
+                         'attribution window [%s, %s)' % (own, nxt),
+                         't_in <= t_out %s t_next: %s' % ('<' if ordered else '>=',
+                                                           'HOLDS' if inside else 'VIOLATED')
+                         + ('' if t_next is not None else ' (no later input edge exists in this data)'),
+                         status])
+            boundary_rows.append((case, t_in, t_out, nxt, status))
+            # the samples themselves, addressed by the crossing index rather than by the rounded t_in
+            ko = None
+            if out_xs:
+                cand = min(range(len(out_xs)), key=lambda j: abs(out_xs[j][1] - t_out))
+                if abs(out_xs[cand][1] - t_out) <= band(t_out):
+                    ko = cand
+            for xs, kk, sig, role in ((in_xs, k, 'en', 'owning input 50%% edge (crossing %s of %s)'
+                                       % (k + 1 if k is not None else '?', len(in_xs))),
+                                      (out_xs, ko, 'gate33', 'answered output 50% edge')):
+                if kk is None:
+                    rows.append([run_id, case, role, sha(data)[:16], '-', '-', '-', 'sig=%s' % sig,
+                                 '-', 'NO_CROSSING matches this reference time; the original row is '
+                                 'kept and nothing is invented', 'NO_CROSSING'])
                     continue
-                if (a < 0.9 <= b) or (a >= 0.9 > b):
-                    edge = groups[i][axis]
-                    break
-            for sig, thr, rising, tref, role in (('en', 0.9, None, t_in, 'owning input 50% edge'),
-                                                 ('gate33', 1.65, None, t_out, 'answered output '
-                                                  '50% edge')):
-                idx = min(range(len(groups)), key=lambda k: abs(groups[k][axis] - tref))
-                emit_segment(rows, run_id, case, data, role, [sig, 'gate33', 'en'], idx, 2,
-                             't_ref=%.9g s; next input 50%% boundary=%s'
-                             % (tref, ('%.9g' % edge) if edge else 'none'))
+                emit_segment(rows, run_id, case, data, role, [sig, 'en', 'gate33'], xs[kk][0], 2,
+                             't_in=%.9g t_out=%.9g; next input 50%% boundary=%s'
+                             % (t_in, t_out, nxt))
     # one per-device stress extreme with its four node voltages at that same sample
     deck, data = datafile_for('st_c1_enhigh_okhigh')
     if data:
@@ -374,6 +495,59 @@ def do_samples():
                          'vdd33 source-branch peak (injected = -V33:i)',
                          ['V18:i', 'V33:i', 'Ven:i', 'Vok:i', 'gate33'], i, 1,
                          'raw signed readings kept; no drain sum is substituted')
+    for case, t_in, t_out, nxt, status in boundary_rows:
+        print('REPEAT3_BOUNDARY %-16s t_in=%.9g t_out=%.9g t_next=%-12s t_in<=t_out<t_next '
+              '-> %s' % (case, t_in, t_out, nxt, status))
+    return rows
+
+
+# ------------------------------------------------------------------ the one bounded offline case
+def do_boundary_selftest():
+    """R2E2 2.2: one synthetic fragment, no simulator and no project raw involved.
+
+    Two adjacent input crossings whose right-hand SAMPLE is later than the owning crossing time --
+    exactly the shape R2E1 got wrong. The extractor has to report the interpolated next crossing
+    (300 ns), not the sample at 202 ns, and END_OF_DATA after the last one.
+    """
+    rows = []
+    frag = [(0.0, 0.0), (200e-9, 0.0), (202e-9, 1.8), (250e-9, 1.8), (300e-9, 0.0),
+            (350e-9, 0.0), (400e-9, 1.8)]
+    groups = [{'time': t, 'en': v} for t, v in frag]
+    xs = crossing_times(groups, 'time', 'en', 0.9)
+    # expectation built by hand, not by calling the code under test again
+    want = [200e-9 + (0.9 / 1.8) * (202e-9 - 200e-9),   # rise 200->202 ns: 201 ns
+            250e-9 + (0.9 / 1.8) * (300e-9 - 250e-9),     # fall 250->300 ns: 275 ns
+            350e-9 + (0.9 / 1.8) * (400e-9 - 350e-9)]     # rise 350->400 ns: 375 ns
+    got = [t for _i, t in xs]
+    ok = len(got) == len(want) and all(abs(a - b) <= 1e-15 for a, b in zip(got, want))
+    rows.append(['synthetic', 'crossing list of both directions', str(len(xs)),
+                 ' ; '.join('%.9g' % t for t in got), ' ; '.join('%.9g' % t for t in want),
+                 'PASS' if ok else 'FAIL'])
+    for t_in, want_own, want_next in ((201e-9, 201e-9, 275e-9), (275e-9, 275e-9, 375e-9),
+                                      (375e-9, 375e-9, None)):
+        k, own, nxt, _prev = owning_crossing(xs, t_in)
+        hit = (abs(own - want_own) <= 1e-15 and
+               ((nxt is None and want_next is None) or (nxt is not None and
+                                                        abs(nxt - want_next) <= 1e-15)))
+        rows.append(['synthetic', 'owning/next for t_in=%.9g' % t_in,
+                     str(k), 'own=%.9g next=%s' % (own, '%.9g' % nxt if nxt is not None
+                                                   else 'END_OF_DATA'),
+                     'own=%.9g next=%s' % (want_own, '%.9g' % want_next if want_next is not None
+                                           else 'END_OF_DATA'),
+                     'PASS' if hit else 'FAIL'])
+    # the last edge has no boundary: reported as END_OF_DATA, never as a made-up time
+    k, own, nxt, _prev = owning_crossing(xs, 500e-9)
+    rows.append(['synthetic', 't_in after the last input edge', str(k),
+                 'next=%s' % ('END_OF_DATA' if nxt is None else '%.9g' % nxt),
+                 'the owning edge is the 375 ns one and no next edge exists',
+                 'PASS' if (nxt is None and abs(own - 375e-9) <= 1e-15) else 'FAIL'])
+    # and the R2E1 mistake explicitly: the right-hand SAMPLE of the owning crossing is 202 ns
+    k, own, nxt, _prev = owning_crossing(xs, 201e-9)
+    sample_right = groups[xs[k][0]]['time']
+    rows.append(['synthetic', 'R2E1 shape: right-hand sample vs true next', str(xs[k][0]),
+                 'sample=%.9g next=%.9g' % (sample_right, nxt),
+                 'the boundary must be the interpolated 275 ns crossing, not the 202 ns sample',
+                 'PASS' if abs(nxt - 275e-9) <= 1e-15 and sample_right < nxt else 'FAIL'])
     return rows
 
 
@@ -382,17 +556,25 @@ def main():
     op.add_option('--what', default='stress')
     op.add_option('--out')
     o, _ = op.parse_args()
+    SAMPLE_HDR = ['run_id', 'case', 'segment', 'datafile_sha256_16', 'sample_group_index', 'time_s',
+                  'time_ns', 'values_at_this_sample', 'window_note', 'why_this_segment', 'status']
     if o.what == 'stress':
         hdr = ['original_run_id', 'case', 'original_item', 'original_target', 'datafile_sha256_16',
                'nodes_A_minus_B', 'window', 'original_min_max_V', 'strict_min_max_V',
                'difference_V', 'reader_rc_and_extreme_time', 'verdict', 'note']
         rows = do_stress()
         out = o.out or os.path.join(EVID, 'sc1_r2e1_vtx_reanalysis.csv')
+    elif o.what == 'boundary':
+        hdr = ['kind', 'what_is_checked', 'crossing_index', 'this_code_gives', 'built_by_hand',
+               'verdict']
+        rows = do_boundary_selftest()
+        out = o.out or os.path.join(EVID, 'sc1_r2e2_boundary_selftest.csv')
     else:
-        hdr = ['run_id', 'case', 'segment', 'datafile_sha256_16', 'sample_group_index', 'time_s',
-               'time_ns', 'values_at_this_sample', 'window_note', 'why_this_segment', 'status']
+        hdr = SAMPLE_HDR
         rows = do_samples()
-        out = o.out or os.path.join(EVID, 'sc1_r2e1_waveform_samples.csv')
+        # R2E1 wrote sc1_r2e1_waveform_samples.csv with the wrong next-boundary field; that file is a
+        # delivered record and is NOT rewritten, so the corrected extraction gets its own name.
+        out = o.out or os.path.join(EVID, 'sc1_r2e2_waveform_samples.csv')
     d = os.path.dirname(out)
     if d and not os.path.isdir(d):
         os.makedirs(d)

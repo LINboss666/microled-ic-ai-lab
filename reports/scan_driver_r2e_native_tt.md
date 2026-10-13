@@ -87,12 +87,25 @@ recorded per row.
 > **Same void, same reason, for the S2 rows:** the `preflight_rc` column of
 > `sc1_r2e_s2_*_manifest.csv` and of every `PREFLIGHT_FULL` row in `sc1_r2e_s2_{static,dynamic,
 > dynamic_repeat3,load,negative}.csv` is also tail's status (that entry used `| tail -5`), so it must be
-> read as **unrecorded**, not as 0. What the retained 150-character excerpt does show for the 15 decks is
+> read as **unrecorded**, not as 0. What the retained 150-character excerpt does show for the **17**
+> decks (6 static + 4 basic dynamic + 2 repeat3 + 4 load + 1 polarity negative — the count this file
+> earlier repeated as "15" was wrong, read back from the five delivered manifests) is
 > the supply-contract detail lines (`OP_OK supply net vdd18 = 1.8 (contract 1.8 V)`, `… vdd33 = 3.3`,
 > `… vss = 0`, then `PREFLIGHT_CO…` cut off), and each case's own `SIM_RUN` row carries the runner's real
 > rc plus the `SPECTRE … rc=` value from an un-piped call. The completion marker itself was truncated out
 > of what was written down, so "preflight full passed on the S2 decks" is **not** established by this
 > file; the fixed entry requires it to be, and a re-run under that rule is the next authorised session's.
+>
+> **Closed by SCAN-1R2E2 (2026-10-13).** Under `scripts/sc1_r2e1_call_contract.py` the calibration bench
+> is now called with the contract its deck declares (`rail=1.8 vss=0`, derived from the deck rather than
+> named after the source instance), and both benches plus the 15 listed S2 cases were re-run natively:
+> every unit records `preflight_rc=0` with exactly one `TESTBENCH_PREFLIGHT: PASS`, `runner_rc=0`,
+> `spectre_rc=0` and `error_hits=0` — **17 preflight operating-point dependency runs plus 17 DUT runs**,
+> counted from the artifacts left on disk (`results/evidence/sc1_r2e2_dependency_transcript.csv`). See
+> `reports/scan_driver_r2e2_native_closure.md` and `results/evidence/sc1_r2e2_*`; every value the two
+> rounds both asked for came back digit-for-digit identical
+> (`results/evidence/sc1_r2e2_native_reproduction.csv`: EXACT=194, DIFFERS=0). The void columns above
+> stay void — they record what R2E actually observed and are not retro-joined to the new run.
 
 Measured save forms on this build (one candidate per deck, because a fatal save kills the file):
 
