@@ -2,6 +2,49 @@
 
 ## CURRENT_STATUS (single authoritative table; everything below this block is history)
 
+Updated 2026-10-13 during **SCAN-1R2D2 / S1 window-state criteria closed**. Start point re-read before
+editing: remote `poc/scan-driver-1ch` = `c05042779f23151eaa9d5fd83d0c4917269ba36c` = local HEAD; main
+= `23e471cb936b421ee97e1250c3be06edf96f9937`. No divergence, no other agent's work touched.
+Full write-up: `reports/scan_driver_r2d2_state_contract.md`.
+
+**No simulator was called in this round** -- no Spectre, no ngspice, no preflight full, no
+operating-point probe, no Virtuoso, no local C²MOS job, no new-PDK run. `spectre/` and every audited
+tool stay byte-identical (`git diff --name-only c050427 HEAD -- spectre/ scripts/sc1_read_psf.py
+scripts/sc1_delay.py scripts/tb_preflight.sh scripts/sc1_supply_check.awk scripts/run_spectre.sh
+scripts/sc1_s1r.sh scripts/sc1_s2.sh` → 0 lines).
+
+| item | status | evidence |
+|---|---|---|
+| S1 window-state contract (shared) | **CLOSED, one implementation for both entries** | `scripts/sc1_s1_window_contract.py`: a state must hold **across the whole window** (high → window minimum above 0.9 V, low → window maximum below it); `blank` is compared **sample by sample** with the frozen PWL (1.8 V to 450 n, ramping to 0 by 460 n, nominally 0.9 V at 455 n) with band 0.09 V = half of one 1 ns step of that ramp (`POC_ASSUMPTION`, sources stated in the module); the clock is judged by its **real edges** (≥1 rise in T1, ≥1 rise + ≥1 fall in T2..T5) instead of "high once"; T2 additionally requires `d` high and T4/T5 require `d`/`q` low with `qbar` high. Reader exit codes are recorded as they come (3/4/5, never flattened to 1). The audited reader/delay/preflight/supply checker are untouched |
+| A: future S1 regression entry | **COMPLETE as preparation, 23/23 cases** | `scripts/sc1_s1_r2d_regression.sh` now delegates every window to the contract instead of asking only whether a signal could be read. Before: the reviewer set `T2` blank to 1.8 V (T2 is *BLANK=0 while Q=1*) and got `T2_states row_verdict=PASS`, `S1_R2D_REGRESSION: PASS`, rc 0. Now: `T2_state_throughout_blank=FAIL` and the run exits non-zero on the value, not on a reader crash. Also fixed here: the row's reader exit code was hard-coded to 1; the contract's `\r\n` on a Windows host corrupted the next CSV field; a tuple-precedence bug made every clock failure raise `ValueError` and silently drop 25 of 32 rows; the "other failing checks" count picked up the module's own summary line and turned every negative into `FAULT_SETUP_INVALID` |
+| C: historical re-analysis | **PARTIAL_NOT_VERIFIED (rc 3): 9 of 10 rows certified, 0 failing** | `scripts/sc1_r2d_s1_reanalysis.py` imports the same contract. Before: the reviewer's mutation (blank = 1.8 V at 410 ns, 0 V at every other sample, decks/history intact) still gave `CERTIFIED rows=10 failing=0` with T1/T3 stimulus PASS. Now that case returns rc 1 and names the PWL mismatch. On the **local** original raws the stricter rules are satisfied: T1 `q min 1.76555 V`, `qbar max 0.00123537 V`, blank matches the PWL over 117 samples (worst diff 1.93e-14), 1 rise / 1 fall; T2 `blank max 0 V`, `d min 1.8 V`; T3 release verified sample by sample over 192 samples; T4/T5 `d`/`q` low with `qbar min 1.79994 V`, 2 rises / 2 falls; F1 `DETECTED` **with** its setup verified (deck ties the gate BLANK pin to vss, blank source still the PWL, Q holds 1 across the window) but `NO_HISTORY` → not certified. `results/evidence/sc1_r2d2_s1_historical_reanalysis.csv` |
+| Tests | **23/23 entry, 11/11 lineage, both platforms** | `results/evidence/sc1_r2d2_entry_selftest.csv`, `results/evidence/sc1_r2d2_reanalysis_selftest.csv`: guest Python 2.6.6 / bash 4.1.2 / gawk 3.1.7 and Windows Python 3.12 / bash 5.2.37. New cases: `a_t2_blank_high`, `c_blank_spike_at_410ns`, `c_blank_never_releases`, `c_high_state_dips`, `c_low_state_rises`, `c_clock_stuck_high`; the earlier 18 and 6 are kept, and each case now also rejects `MOCK_MISS` and a harness abort. Entry mocks stay mocks: preflight and the runner are scripted, the data is synthetic PSF-ASCII at 1 ns sampling read by the audited reader |
+| S2 (no code change) | counts and PENDING wording corrected | static matrix is 37 rows = **35 at rc 7** (34 ordinary + the deliberately accepted legal-wiring/wrong-polarity case) + **2 at rc 1**. Model binding, `temp=` line syntax and the sign of a rail current summed from `save <inst>:1` all stay `PENDING`; a series rail `iprobe` remains refused by the static gate (measured rc 1 / `supply_contract` / 5 `SUPPLY_FAIL`) |
+| Cloud C²MOS result | **EXTERNAL_CLOUD_REPORT / user-relayed, not local** | ngspice 42 `hs`, the cloud's own uploaded HSPICE/BSIM4 4.5 models, golden SHA `d1eed4e242fa...` (same as our `spectre/C2MOS_DFF.scs`), 18 devices unchanged; single stage and non-overlapping three stages pass TT/SS/FF/SNFP/FNSP, the 1 ms hold cases pass, and a 1 ns per-stage clock skew breaks the three-stage chain (reproduced with a finer step and `gear`). Conclusion recorded as theirs: keep single stage, measure inter-stage hold/skew next -- **not** a native-Spectre sign-off, and it started no local run |
+| Guest network | **not restored by me; bounded attempts recorded** | read-only: `eth0` UP/LOWER_UP with 0 IPv4 addresses, empty route table, `sshd` running, host `VMnetDHCP` and `VMware NAT Service` Running (VMnet8 192.168.3.1). Then exactly three bounded `dhclient -1 eth0` runs through the VMware Tools channel: exit **1** each time, no lease. `ONBOOT`, VM power, snapshots, `.vmx`, NAT/VMware services, global SSH and license were all left alone; the Tools path (`scripts/push_chunked.sh`, untracked, md5-verified) stayed the transport. Network recovery is **not** simulation authorisation and nothing was inferred from it |
+| S1 fresh regression / S2 functional TT / preflight full / C²MOS re-run / new-PDK run | **NOT_RUN / PAUSED_BY_USER** | unchanged, and this round's green offline results do not change that |
+| R2 full acceptance / R3 / S3 / S4 | **NOT_COMPLETED / NOT_STARTED** | — |
+| Geometry range / `SOA_SIGNOFF` | **NOT_VERIFIED / NO** | no L/W or rating table read from the model |
+| `core_ok33`, autonomous power-fail | assumed control only; **NOT_IMPLEMENTED** | best future outcome stays `SAFE_OFF_WITH_ASSUMED_CORE_OK` |
+
+### What this round does **not** claim
+
+The contract is a statement about the recorded waveform matching the label. It is not a circuit
+verdict: the local raws being consistent with the historical stimulus does not make S1 a fresh
+regression, and the cloud C²MOS numbers are not local data. `PWL_TOL`, the transition counts and the
+per-window state lists were derived from the frozen `sc1_s1r.sh` stimulus -- if that stimulus is ever
+changed, the contract has to be re-derived, not loosened.
+
+### Next step is a decision, not a continuation
+
+Nothing here authorises a run. Under an explicit pause lift, the first real session should: resolve
+`QODER_PDK_LIB` and run the S2 TT decks (measuring the rail-current sum's sign and, if wanted, a
+`temp=` line -- both still `PENDING` because they have never been exercised), and run one fresh S1
+regression through the entry, whose state contract is now the same one the offline tools use. S3 does
+not follow from this round.
+
+## HISTORICAL_STATUS (SCAN-1R2D1 round, kept for audit; superseded by the R2D2 block above)
+
 Updated 2026-10-13 during **SCAN-1R2D1 / test-preparation fixes on the accepted S2 topology**.
 Baseline re-read before editing: remote `poc/scan-driver-1ch` = `34d5125a4dfd5c7423776547d6eab4f8fb616fee`
 = local HEAD; main = `23e471cb936b421ee97e1250c3be06edf96f9937`. No divergence, no other agent's work

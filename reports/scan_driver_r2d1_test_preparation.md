@@ -11,6 +11,15 @@ What this round is: the review accepted the S2 **connections** statically and re
 preparation*. `reports/scan_driver_r2d_static_review.md` stays as the previous round's record; its
 S1 "10/10" style reading is superseded by §C below.
 
+> **Superseded in part on the same day by R2D2** (`reports/scan_driver_r2d2_state_contract.md`). §A's
+> window rows only checked that a state signal **could be read**, and §C judged a high state with the
+> window maximum and a low state with the minimum — both let a wrong stimulus certify, as the reviewer
+> reproduced. The criteria now live in one shared module and both sections' descriptions of "evidence
+> read back" are historical. Also corrected here: the rc=7 count in §B (35 rows, not 34). The
+> `sc1_r2d1_*.csv` evidence files stay as that round's artifacts; R2D2 changed the synthetic fixtures
+> (the transient is now sampled at 1 ns as `maxstep=1n` produces, and the negative deck keeps its `Vbl`
+> PWL line), so `sc1_r2d2_*.csv` supersedes them and neither set is a circuit result.
+
 **No simulator was called.** Everything here is source preparation, offline re-reads of files already
 on disk, local mock/synthetic data, and `PREFLIGHT_STATIC_PROBE=1`. `S1_FRESH_REGRESSION`,
 `S2_FUNCTIONAL_TT`, preflight full, C²MOS re-simulation and the new PDK stay NOT_RUN / PAUSED_BY_USER.
@@ -74,12 +83,13 @@ supply gate is unchanged and the vss-miswire / absent-vdd33 negatives stay its r
 
 Static matrix over the regenerated decks (`PREFLIGHT_STATIC_PROBE=1`,
 `results/evidence/sc1_r2d1_static_matrix.csv`): 37 rows, **37/37 as the index promises**, every row
-`simulator_called=no` — 34 accepted at rc 7 with `CIRCUIT_VERDICT: NOT_RUN`, `neg_vss_miswire` and
-`neg_vdd33_source_absent` refused at rc 1 / stage `supply_contract`, `neg_output_polarity_fault`
-deliberately accepted (legal wiring; a wrong polarity is a circuit verdict, and this round does not
-claim any detector caught it). Note: the runner must be given **absolute** deck paths — with a
-relative `--decks` all 37 rows returned rc 9 `netlist_outside_project`, which is a harness fault and
-was scored as such, not as a circuit result.
+`simulator_called=no` — **35 rows at rc 7** (34 ordinary cases plus `neg_output_polarity_fault`, which
+is deliberately accepted: legal wiring, so a wrong polarity stays a circuit verdict and this round does
+not claim any detector caught it) and **2 rows at rc 1** at stage `supply_contract`
+(`neg_vss_miswire`, `neg_vdd33_source_absent`). Earlier wording here said "34 accepted at rc 7", which
+reads as if 34 were the rc=7 total; corrected in R2D2 §8. Note: the runner must be given **absolute**
+deck paths — with a relative `--decks` all 37 rows returned rc 9 `netlist_outside_project`, which is a
+harness fault and was scored as such, not as a circuit result.
 
 ## C. S1 historical re-analysis — `scripts/sc1_r2d_s1_reanalysis.py`
 
