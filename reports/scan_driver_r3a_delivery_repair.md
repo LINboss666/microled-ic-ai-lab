@@ -229,6 +229,13 @@ directory twice (`results/results/evidence/…`, `reports/reports/…`) while sc
 `source/scripts/…`. That is pre-existing behaviour of an accepted tool and was not touched here; the
 files themselves are byte-identical to the repository, so it only affects where to look.
 
+The **remote** was read back independently of the local repository, at
+`0405e6d0e6c1c2ed35af8e72ac2ffc41a6ee65df` through `gh api`: `sc1_r3_chain_manifest.csv` is served at
+**4093 bytes** (it was 195 at `f199245`) and `sc1_r3_waveform_samples.csv` at **260849 bytes** (it was
+67). A direct anonymous `raw.githubusercontent.com` fetch returned 0 bytes from this host at the same
+moment, which is the known github.com:443 transport instability rather than a content difference — the
+`api.github.com` route answered, so the sizes above are the served ones.
+
 Stopped again at the **R3 single-channel control-chain + output-stage-plan review gate**, this time with
 the evidence files matching the report. Next decision is the cloud's: recompute the delays from
 `sc1_r3_waveform_samples.csv`, then choose between the S3-A characterisation proposal and the panel-level
