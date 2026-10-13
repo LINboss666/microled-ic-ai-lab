@@ -1,0 +1,152 @@
+=== V18 V18:i run
+SPECTRE name=cal_v18.scs rc=0 elapsed=0s timeout=120s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 28
+drwx------. 3 root root 4096 Oct 13 12:22 .
+drwx------. 3 root root 4096 Oct 13 12:22 ..
+-rw-------. 1 root root 6027 Oct 13 12:22 cal_v18.log
+drwx------. 2 root root 4096 Oct 13 12:22 cal_v18.raw
+-rw-------. 1 root root 5761 Oct 13 12:22 cal_v18.stdout
+----- log tail -----
+
+
+Aggregate audit (12:22:58 PM, Tue Oct 13, 2026):
+Time used: CPU = 174 ms, elapsed = 208 ms, util. = 83.8%.
+Time spent in licensing: elapsed = 56.1 ms, percentage of total = 27%.
+Peak memory used = 61.2 Mbytes.
+Simulation started at: 12:22:58 PM, Tue Oct 13, 2026, ended at: 12:22:58 PM, Tue Oct 13, 2026, with elapsed time (wall clock): 208 ms.
+spectre completes with 0 errors, 2 warnings, and 0 notices.
+CAL_V18_V18-i: PASS
+
+=== V18 V18:1 run
+SPECTRE name=cal_v18.scs rc=0 elapsed=1s timeout=120s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 28
+drwx------. 3 root root 4096 Oct 13 12:22 .
+drwx------. 3 root root 4096 Oct 13 12:22 ..
+-rw-------. 1 root root 6059 Oct 13 12:22 cal_v18.log
+drwx------. 2 root root 4096 Oct 13 12:22 cal_v18.raw
+-rw-------. 1 root root 5793 Oct 13 12:22 cal_v18.stdout
+----- log tail -----
+
+
+Aggregate audit (12:22:59 PM, Tue Oct 13, 2026):
+Time used: CPU = 171 ms, elapsed = 197 ms, util. = 86.6%.
+Time spent in licensing: elapsed = 54.8 ms, percentage of total = 27.8%.
+Peak memory used = 61.2 Mbytes.
+Simulation started at: 12:22:58 PM, Tue Oct 13, 2026, ended at: 12:22:59 PM, Tue Oct 13, 2026, with elapsed time (wall clock): 197 ms.
+spectre completes with 0 errors, 2 warnings, and 0 notices.
+CAL_V18_V18-1: PASS
+
+=== V18 V18:current run
+SPECTRE name=cal_v18.scs rc=0 elapsed=0s timeout=120s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 28
+drwx------. 3 root root 4096 Oct 13 12:22 .
+drwx------. 3 root root 4096 Oct 13 12:22 ..
+-rw-------. 1 root root 6250 Oct 13 12:22 cal_v18.log
+drwx------. 2 root root 4096 Oct 13 12:22 cal_v18.raw
+-rw-------. 1 root root 6000 Oct 13 12:22 cal_v18.stdout
+----- log tail -----
+
+
+Aggregate audit (12:22:59 PM, Tue Oct 13, 2026):
+Time used: CPU = 186 ms, elapsed = 215 ms, util. = 86.6%.
+Time spent in licensing: elapsed = 57.5 ms, percentage of total = 26.8%.
+Peak memory used = 61.2 Mbytes.
+Simulation started at: 12:22:59 PM, Tue Oct 13, 2026, ended at: 12:22:59 PM, Tue Oct 13, 2026, with elapsed time (wall clock): 215 ms.
+spectre completes with 0 errors, 4 warnings, and 0 notices.
+CAL_V18_V18-current: PASS
+
+=== V33 V33:i run
+SPECTRE name=cal_v33.scs rc=0 elapsed=0s timeout=120s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 48
+drwx------. 4 root root 4096 Oct 13 12:22 .
+drwx------. 3 root root 4096 Oct 13 12:22 ..
+-rw-------. 1 root root 6250 Oct 13 12:22 cal_v18.log
+drwx------. 2 root root 4096 Oct 13 12:22 cal_v18.raw
+-rw-------. 1 root root 6000 Oct 13 12:22 cal_v18.stdout
+-rw-------. 1 root root 6090 Oct 13 12:22 cal_v33.log
+drwx------. 2 root root 4096 Oct 13 12:22 cal_v33.raw
+-rw-------. 1 root root 5832 Oct 13 12:22 cal_v33.stdout
+----- log tail -----
+
+
+Aggregate audit (12:22:59 PM, Tue Oct 13, 2026):
+Time used: CPU = 178 ms, elapsed = 203 ms, util. = 87.8%.
+Time spent in licensing: elapsed = 57.2 ms, percentage of total = 28.2%.
+Peak memory used = 61.2 Mbytes.
+Simulation started at: 12:22:59 PM, Tue Oct 13, 2026, ended at: 12:22:59 PM, Tue Oct 13, 2026, with elapsed time (wall clock): 203 ms.
+spectre completes with 0 errors, 2 warnings, and 0 notices.
+CAL_V33_V33-i: PASS
+
+=== V33 V33:1 run
+SPECTRE name=cal_v33.scs rc=0 elapsed=1s timeout=120s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 48
+drwx------. 4 root root 4096 Oct 13 12:23 .
+drwx------. 3 root root 4096 Oct 13 12:23 ..
+-rw-------. 1 root root 6250 Oct 13 12:22 cal_v18.log
+drwx------. 2 root root 4096 Oct 13 12:22 cal_v18.raw
+-rw-------. 1 root root 6000 Oct 13 12:22 cal_v18.stdout
+-rw-------. 1 root root 6082 Oct 13 12:23 cal_v33.log
+drwx------. 2 root root 4096 Oct 13 12:23 cal_v33.raw
+-rw-------. 1 root root 5824 Oct 13 12:23 cal_v33.stdout
+----- log tail -----
+
+
+Aggregate audit (12:23:00 PM, Tue Oct 13, 2026):
+Time used: CPU = 173 ms, elapsed = 198 ms, util. = 87.3%.
+Time spent in licensing: elapsed = 55.7 ms, percentage of total = 28.1%.
+Peak memory used = 61.2 Mbytes.
+Simulation started at: 12:22:59 PM, Tue Oct 13, 2026, ended at: 12:23:00 PM, Tue Oct 13, 2026, with elapsed time (wall clock): 198 ms.
+spectre completes with 0 errors, 2 warnings, and 0 notices.
+CAL_V33_V33-1: PASS
+
+=== V33 V33:current run
+SPECTRE name=cal_v33.scs rc=0 elapsed=0s timeout=120s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 48
+drwx------. 4 root root 4096 Oct 13 12:23 .
+drwx------. 3 root root 4096 Oct 13 12:23 ..
+-rw-------. 1 root root 6250 Oct 13 12:22 cal_v18.log
+drwx------. 2 root root 4096 Oct 13 12:22 cal_v18.raw
+-rw-------. 1 root root 6000 Oct 13 12:22 cal_v18.stdout
+-rw-------. 1 root root 6249 Oct 13 12:23 cal_v33.log
+drwx------. 2 root root 4096 Oct 13 12:23 cal_v33.raw
+-rw-------. 1 root root 5999 Oct 13 12:23 cal_v33.stdout
+----- log tail -----
+
+
+Aggregate audit (12:23:00 PM, Tue Oct 13, 2026):
+Time used: CPU = 178 ms, elapsed = 207 ms, util. = 86.2%.
+Time spent in licensing: elapsed = 60.8 ms, percentage of total = 29.4%.
+Peak memory used = 61.2 Mbytes.
+Simulation started at: 12:23:00 PM, Tue Oct 13, 2026, ended at: 12:23:00 PM, Tue Oct 13, 2026, with elapsed time (wall clock): 207 ms.
+spectre completes with 0 errors, 4 warnings, and 0 notices.
+CAL_V33_V33-current: PASS
