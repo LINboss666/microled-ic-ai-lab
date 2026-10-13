@@ -1,0 +1,34 @@
+simulator lang=spectre insensitive=yes
+// =============================================================================
+// SCAN-1 S3-B fault variant: the SAME channel, with exactly ONE functional connection changed.
+//
+// The accepted R3 wrapper wires its BLANK pin like this:
+//     Xgate (qbar blank en vdd18 vss) sc1_scan_gate
+// In the chain below the third-of-five argument is the vss net instead, so the gate cell's BLANK
+// input is tied low no matter what the external blank source does. Everything else is the same text:
+// the same three instances with the same names and masters, the same port counts, the same
+// measurement iprobe, the same seven-device bank, the same top port order, the same 39 MOS. The
+// deck's blank source and its PWL are identical to the reference case, so the difference is the pin.
+//
+// Why the three instances sit in their own subckt named Xchain: so that BOTH this top and the normal
+// top expose the same measurable paths (Xtop.Xchain.q / .qbar / .en). Two decks whose accessable node
+// names differ would make the same measurement rules read different things, and a fault case must be
+// judged by exactly the same numbers as the case it is supposed to fail.
+//
+// This is a real wiring fault, not a modelling trick: the case is expected to FAIL the normal blank
+// judgement -- Q stays 1, en stays high and gate33 stays low while the external blank asserts -- and
+// the failure has to be detected from the state numbers, not from a reader crash or a blocked run.
+//
+// The wrapper it replaces, spectre/sc1_r3_scan_chain.scs, is NOT edited; this file copies its three
+// instance lines so the fault can exist without touching reviewed bytes.
+subckt sc1_s3b_fault_chain_1ch (d clk blank core_ok33 gate33 vdd18 vdd33 vss)
+  Xff   (d clk q qbar vdd18 vss)          c2mos_dff
+  Xgate (qbar vss en vdd18 vss)           sc1_scan_gate
+  Xls   (en core_ok33 gate33 vdd18 vdd33 vss) sc1_ls_c1_top_r2d
+ends sc1_s3b_fault_chain_1ch
+
+subckt sc1_s3b_scan_power_1ch_fault (d clk blank core_ok33 scan vdd18 vdd33 vscan vss)
+  Xchain (d clk blank core_ok33 gate33 vdd18 vdd33 vss) sc1_s3b_fault_chain_1ch
+  Ip_gate (gate33 bgate) iprobe
+  Xbank (scan bgate vscan) sc1_s3b_p33_bank_7
+ends sc1_s3b_scan_power_1ch_fault

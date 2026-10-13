@@ -1,0 +1,924 @@
+=== s3b_q0_off_light full preflight rc=0
+== testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port lists: <path-redacted> <path-redacted> <path-redacted> <path-redacted> <path-redacted> <path-redacted>
+  SUPPLY_OK Xtop.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.vscan = 3.3 V via net vscan
+  SUPPLY_OK Xtop.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xff.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xff.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xgate.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xgate.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xls.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.Xnand.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.Xnand.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xbank.vscan = 3.3 V via net vscan
+  SUPPLY_INSTANCES top=1 descendants=7 checked=20 internal=0 masters=10
+  SUPPLY_RESULT PASS
+SUPPLY_GATE: PASS top=1 checked=20 supply_nets=4
+STATIC_NOTE contract mode: 1 top-level instance(s), rail checks delegated to sc1_supply_check.awk
+STATIC_RESULT PASS
+NETS_TO_SAVE vdd33 core_ok33 clk vscan vdd18 scan blank d vss
+VDD_NETS
+--- preflight netlist: <path-redacted>
+spectre_rc=0 datafile=<path-redacted>
+--- operating point at the first sample
+    V18:i -1.40900328e-10
+    V33:i -3.76283104e-12
+    VSCAN:i -2.05537607e-10
+    Xtop.Ip_gate:i 0
+    Xtop.Xbank.mp1:1 -2.93625153e-11
+    Xtop.Xbank.mp1:2 6.05845175e-28
+    Xtop.Xbank.mp2:1 -2.93625153e-11
+    Xtop.Xbank.mp2:2 6.05845175e-28
+    Xtop.Xbank.mp3:1 -2.93625153e-11
+    Xtop.Xbank.mp3:2 6.05845175e-28
+    Xtop.Xbank.mp4:1 -2.93625153e-11
+    Xtop.Xbank.mp4:2 6.05845175e-28
+    Xtop.Xbank.mp5:1 -2.93625153e-11
+    Xtop.Xbank.mp5:2 6.05845175e-28
+    Xtop.Xbank.mp6:1 -2.93625153e-11
+    Xtop.Xbank.mp6:2 6.05845175e-28
+    Xtop.Xbank.mp7:1 -2.93625153e-11
+    Xtop.Xbank.mp7:2 6.05845175e-28
+    Xtop.Xchain.q 1.40022627e-08
+    Xtop.Xchain.qbar 1.79999997
+    Xtop.Xchain.en 1.07927736e-09
+    vdd33 3.3
+    core_ok33 0
+    clk 0
+    vscan 3.3
+    vdd18 1.8
+    scan 4.52182736e-05
+    blank 1.8
+    d 0
+    vss 0
+    Xtop.bgate 3.3
+    Xtop.gate33 3.3
+OP_OK supply net vdd18 = 1.8 (contract 1.8 V)
+OP_OK supply net vdd33 = 3.3 (contract 3.3 V)
+OP_OK supply net vscan = 3.3 (contract 3.3 V)
+OP_OK supply net vss = 0 (contract 0 V)
+PREFLIGHT_CONTRACT_SATISFIED: PASS
+TESTBENCH_PREFLIGHT: PASS
+
+=== s3b_q0_off_light run accepted
+runner: SPECTRE name=s3b_q0_off_light.scs rc=0 elapsed=1s timeout=1200s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 64
+drwx------. 4 root root 4096 Oct 14 05:30 .
+drwx------. 3 root root 4096 Oct 14 05:30 ..
+-rw-------. 1 root root 8742 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.log
+drwx------. 2 root root 4096 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.raw
+-rw-------. 1 root root 8627 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.stdout
+-rw-------. 1 root root 8784 Oct 14 05:30 s3b_q0_off_light.log
+drwx------. 2 root root 4096 Oct 14 05:30 s3b_q0_off_light.raw
+-rw-------. 1 root root 8698 Oct 14 05:30 s3b_q0_off_light.stdout
+----- log tail -----
+
+
+Aggregate audit (5:30:18 AM, Wed Oct 14, 2026):
+Time used: CPU = 1.03 s, elapsed = 1.06 s, util. = 96.9%.
+Time spent in licensing: elapsed = 56.5 ms, percentage of total = 5.32%.
+Peak memory used = 62.9 Mbytes.
+Simulation started at: 5:30:17 AM, Wed Oct 14, 2026, ended at: 5:30:18 AM, Wed Oct 14, 2026, with elapsed time (wall clock): 1.06 s.
+spectre completes with 0 errors, 5 warnings, and 9 notices.
+S3B_s3b_q0_off_light: PASS
+
+
+=== s3b_write_q1_light full preflight rc=0
+== testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port lists: <path-redacted> <path-redacted> <path-redacted> <path-redacted> <path-redacted> <path-redacted>
+  SUPPLY_OK Xtop.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.vscan = 3.3 V via net vscan
+  SUPPLY_OK Xtop.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xff.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xff.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xgate.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xgate.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xls.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.Xnand.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.Xnand.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xbank.vscan = 3.3 V via net vscan
+  SUPPLY_INSTANCES top=1 descendants=7 checked=20 internal=0 masters=10
+  SUPPLY_RESULT PASS
+SUPPLY_GATE: PASS top=1 checked=20 supply_nets=4
+STATIC_NOTE contract mode: 1 top-level instance(s), rail checks delegated to sc1_supply_check.awk
+STATIC_RESULT PASS
+NETS_TO_SAVE vdd33 core_ok33 clk vscan vdd18 scan blank d vss
+VDD_NETS
+--- preflight netlist: <path-redacted>
+spectre_rc=0 datafile=<path-redacted>
+--- operating point at the first sample
+    V18:i -1.40900328e-10
+    V33:i -3.76283104e-12
+    VSCAN:i -2.05537607e-10
+    Xtop.Ip_gate:i 0
+    Xtop.Xbank.mp1:1 -2.93625153e-11
+    Xtop.Xbank.mp1:2 6.05845175e-28
+    Xtop.Xbank.mp2:1 -2.93625153e-11
+    Xtop.Xbank.mp2:2 6.05845175e-28
+    Xtop.Xbank.mp3:1 -2.93625153e-11
+    Xtop.Xbank.mp3:2 6.05845175e-28
+    Xtop.Xbank.mp4:1 -2.93625153e-11
+    Xtop.Xbank.mp4:2 6.05845175e-28
+    Xtop.Xbank.mp5:1 -2.93625153e-11
+    Xtop.Xbank.mp5:2 6.05845175e-28
+    Xtop.Xbank.mp6:1 -2.93625153e-11
+    Xtop.Xbank.mp6:2 6.05845175e-28
+    Xtop.Xbank.mp7:1 -2.93625153e-11
+    Xtop.Xbank.mp7:2 6.05845175e-28
+    Xtop.Xchain.q 1.40022627e-08
+    Xtop.Xchain.qbar 1.79999997
+    Xtop.Xchain.en 1.07927736e-09
+    vdd33 3.3
+    core_ok33 0
+    clk 0
+    vscan 3.3
+    vdd18 1.8
+    scan 4.52182736e-05
+    blank 1.8
+    d 0
+    vss 0
+    Xtop.bgate 3.3
+    Xtop.gate33 3.3
+OP_OK supply net vdd18 = 1.8 (contract 1.8 V)
+OP_OK supply net vdd33 = 3.3 (contract 3.3 V)
+OP_OK supply net vscan = 3.3 (contract 3.3 V)
+OP_OK supply net vss = 0 (contract 0 V)
+PREFLIGHT_CONTRACT_SATISFIED: PASS
+TESTBENCH_PREFLIGHT: PASS
+
+=== s3b_write_q1_light run accepted
+runner: SPECTRE name=s3b_write_q1_light.scs rc=0 elapsed=1s timeout=1200s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 120
+drwx------. 6 root root 4096 Oct 14 05:31 .
+drwx------. 3 root root 4096 Oct 14 05:31 ..
+-rw-------. 1 root root 8742 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.log
+drwx------. 2 root root 4096 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.raw
+-rw-------. 1 root root 8627 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.stdout
+-rw-------. 1 root root 8756 Oct 14 05:31 preflight_s3b_write_q1_light_s3b_write_q1_light.log
+drwx------. 2 root root 4096 Oct 14 05:31 preflight_s3b_write_q1_light_s3b_write_q1_light.raw
+-rw-------. 1 root root 8641 Oct 14 05:31 preflight_s3b_write_q1_light_s3b_write_q1_light.stdout
+-rw-------. 1 root root 8784 Oct 14 05:30 s3b_q0_off_light.log
+drwx------. 2 root root 4096 Oct 14 05:30 s3b_q0_off_light.raw
+-rw-------. 1 root root 8698 Oct 14 05:30 s3b_q0_off_light.stdout
+----- log tail -----
+
+
+Aggregate audit (5:31:36 AM, Wed Oct 14, 2026):
+Time used: CPU = 943 ms, elapsed = 973 ms, util. = 96.9%.
+Time spent in licensing: elapsed = 52.7 ms, percentage of total = 5.42%.
+Peak memory used = 62.9 Mbytes.
+Simulation started at: 5:31:35 AM, Wed Oct 14, 2026, ended at: 5:31:36 AM, Wed Oct 14, 2026, with elapsed time (wall clock): 973 ms.
+spectre completes with 0 errors, 5 warnings, and 9 notices.
+S3B_s3b_write_q1_light: PASS
+
+
+=== s3b_write_q1_column full preflight rc=0
+== testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port lists: <path-redacted> <path-redacted> <path-redacted> <path-redacted> <path-redacted> <path-redacted>
+  SUPPLY_OK Xtop.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.vscan = 3.3 V via net vscan
+  SUPPLY_OK Xtop.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xff.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xff.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xgate.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xgate.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xls.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.Xnand.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.Xnand.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xbank.vscan = 3.3 V via net vscan
+  SUPPLY_INSTANCES top=1 descendants=7 checked=20 internal=0 masters=10
+  SUPPLY_RESULT PASS
+SUPPLY_GATE: PASS top=1 checked=20 supply_nets=4
+STATIC_NOTE contract mode: 1 top-level instance(s), rail checks delegated to sc1_supply_check.awk
+STATIC_RESULT PASS
+NETS_TO_SAVE vdd33 core_ok33 clk vscan vdd18 scan blank d vss
+VDD_NETS
+--- preflight netlist: <path-redacted>
+spectre_rc=0 datafile=<path-redacted>
+--- operating point at the first sample
+    V18:i -1.40900072e-10
+    V33:i -3.76283104e-12
+    VSCAN:i -2.05562575e-10
+    Xtop.Ip_gate:i 0
+    Xtop.Xbank.mp1:1 -2.93660821e-11
+    Xtop.Xbank.mp1:2 -2.01948392e-28
+    Xtop.Xbank.mp2:1 -2.93660821e-11
+    Xtop.Xbank.mp2:2 -2.01948392e-28
+    Xtop.Xbank.mp3:1 -2.93660821e-11
+    Xtop.Xbank.mp3:2 -2.01948392e-28
+    Xtop.Xbank.mp4:1 -2.93660821e-11
+    Xtop.Xbank.mp4:2 -2.01948392e-28
+    Xtop.Xbank.mp5:1 -2.93660821e-11
+    Xtop.Xbank.mp5:2 -2.01948392e-28
+    Xtop.Xbank.mp6:1 -2.93660821e-11
+    Xtop.Xbank.mp6:2 -2.01948392e-28
+    Xtop.Xbank.mp7:1 -2.93660821e-11
+    Xtop.Xbank.mp7:2 -2.01948392e-28
+    Xtop.Xchain.q 1.40021228e-08
+    Xtop.Xchain.qbar 1.79999997
+    Xtop.Xchain.en 1.07925843e-09
+    vdd33 3.3
+    core_ok33 0
+    clk 0
+    vscan 3.3
+    vdd18 1.8
+    scan 5.8885044e-08
+    blank 1.8
+    d 0
+    vss 0
+    Xtop.bgate 3.3
+    Xtop.gate33 3.3
+OP_OK supply net vdd18 = 1.8 (contract 1.8 V)
+OP_OK supply net vdd33 = 3.3 (contract 3.3 V)
+OP_OK supply net vscan = 3.3 (contract 3.3 V)
+OP_OK supply net vss = 0 (contract 0 V)
+PREFLIGHT_CONTRACT_SATISFIED: PASS
+TESTBENCH_PREFLIGHT: PASS
+
+=== s3b_write_q1_column run accepted
+runner: SPECTRE name=s3b_write_q1_column.scs rc=0 elapsed=1s timeout=1200s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 176
+drwx------. 8 root root 4096 Oct 14 05:33 .
+drwx------. 3 root root 4096 Oct 14 05:33 ..
+-rw-------. 1 root root 8742 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.log
+drwx------. 2 root root 4096 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.raw
+-rw-------. 1 root root 8627 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.stdout
+-rw-------. 1 root root 9650 Oct 14 05:33 preflight_s3b_write_q1_column_s3b_write_q1_column.log
+drwx------. 2 root root 4096 Oct 14 05:33 preflight_s3b_write_q1_column_s3b_write_q1_column.raw
+-rw-------. 1 root root 9535 Oct 14 05:33 preflight_s3b_write_q1_column_s3b_write_q1_column.stdout
+-rw-------. 1 root root 8756 Oct 14 05:31 preflight_s3b_write_q1_light_s3b_write_q1_light.log
+drwx------. 2 root root 4096 Oct 14 05:31 preflight_s3b_write_q1_light_s3b_write_q1_light.raw
+-rw-------. 1 root root 8641 Oct 14 05:31 preflight_s3b_write_q1_light_s3b_write_q1_light.stdout
+----- log tail -----
+
+
+Aggregate audit (5:33:01 AM, Wed Oct 14, 2026):
+Time used: CPU = 995 ms, elapsed = 1.03 s, util. = 97%.
+Time spent in licensing: elapsed = 59.9 ms, percentage of total = 5.84%.
+Peak memory used = 62.9 Mbytes.
+Simulation started at: 5:33:00 AM, Wed Oct 14, 2026, ended at: 5:33:01 AM, Wed Oct 14, 2026, with elapsed time (wall clock): 1.03 s.
+spectre completes with 0 errors, 5 warnings, and 9 notices.
+S3B_s3b_write_q1_column: PASS
+
+
+=== s3b_blank_assert_column full preflight rc=0
+== testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port lists: <path-redacted> <path-redacted> <path-redacted> <path-redacted> <path-redacted> <path-redacted>
+  SUPPLY_OK Xtop.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.vscan = 3.3 V via net vscan
+  SUPPLY_OK Xtop.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xff.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xff.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xgate.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xgate.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xls.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.Xnand.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.Xnand.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xbank.vscan = 3.3 V via net vscan
+  SUPPLY_INSTANCES top=1 descendants=7 checked=20 internal=0 masters=10
+  SUPPLY_RESULT PASS
+SUPPLY_GATE: PASS top=1 checked=20 supply_nets=4
+STATIC_NOTE contract mode: 1 top-level instance(s), rail checks delegated to sc1_supply_check.awk
+STATIC_RESULT PASS
+NETS_TO_SAVE vdd33 core_ok33 clk vscan vdd18 scan blank d vss
+VDD_NETS
+--- preflight netlist: <path-redacted>
+spectre_rc=0 datafile=<path-redacted>
+--- operating point at the first sample
+    V18:i -1.40900072e-10
+    V33:i -3.76283104e-12
+    VSCAN:i -2.05562575e-10
+    Xtop.Ip_gate:i 0
+    Xtop.Xbank.mp1:1 -2.93660821e-11
+    Xtop.Xbank.mp1:2 -2.01948392e-28
+    Xtop.Xbank.mp2:1 -2.93660821e-11
+    Xtop.Xbank.mp2:2 -2.01948392e-28
+    Xtop.Xbank.mp3:1 -2.93660821e-11
+    Xtop.Xbank.mp3:2 -2.01948392e-28
+    Xtop.Xbank.mp4:1 -2.93660821e-11
+    Xtop.Xbank.mp4:2 -2.01948392e-28
+    Xtop.Xbank.mp5:1 -2.93660821e-11
+    Xtop.Xbank.mp5:2 -2.01948392e-28
+    Xtop.Xbank.mp6:1 -2.93660821e-11
+    Xtop.Xbank.mp6:2 -2.01948392e-28
+    Xtop.Xbank.mp7:1 -2.93660821e-11
+    Xtop.Xbank.mp7:2 -2.01948392e-28
+    Xtop.Xchain.q 1.40021228e-08
+    Xtop.Xchain.qbar 1.79999997
+    Xtop.Xchain.en 1.07925843e-09
+    vdd33 3.3
+    core_ok33 0
+    clk 0
+    vscan 3.3
+    vdd18 1.8
+    scan 5.8885044e-08
+    blank 1.8
+    d 0
+    vss 0
+    Xtop.bgate 3.3
+    Xtop.gate33 3.3
+OP_OK supply net vdd18 = 1.8 (contract 1.8 V)
+OP_OK supply net vdd33 = 3.3 (contract 3.3 V)
+OP_OK supply net vscan = 3.3 (contract 3.3 V)
+OP_OK supply net vss = 0 (contract 0 V)
+PREFLIGHT_CONTRACT_SATISFIED: PASS
+TESTBENCH_PREFLIGHT: PASS
+
+=== s3b_blank_assert_column run accepted
+runner: SPECTRE name=s3b_blank_assert_column.scs rc=0 elapsed=1s timeout=1200s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 232
+drwx------. 10 root root 4096 Oct 14 05:34 .
+drwx------.  3 root root 4096 Oct 14 05:34 ..
+-rw-------.  1 root root 9655 Oct 14 05:34 preflight_s3b_blank_assert_column_s3b_blank_assert_column.log
+drwx------.  2 root root 4096 Oct 14 05:34 preflight_s3b_blank_assert_column_s3b_blank_assert_column.raw
+-rw-------.  1 root root 9540 Oct 14 05:34 preflight_s3b_blank_assert_column_s3b_blank_assert_column.stdout
+-rw-------.  1 root root 8742 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.log
+drwx------.  2 root root 4096 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.raw
+-rw-------.  1 root root 8627 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.stdout
+-rw-------.  1 root root 9650 Oct 14 05:33 preflight_s3b_write_q1_column_s3b_write_q1_column.log
+drwx------.  2 root root 4096 Oct 14 05:33 preflight_s3b_write_q1_column_s3b_write_q1_column.raw
+-rw-------.  1 root root 9535 Oct 14 05:33 preflight_s3b_write_q1_column_s3b_write_q1_column.stdout
+----- log tail -----
+
+
+Aggregate audit (5:34:24 AM, Wed Oct 14, 2026):
+Time used: CPU = 1.05 s, elapsed = 1.08 s, util. = 97.5%.
+Time spent in licensing: elapsed = 57.8 ms, percentage of total = 5.37%.
+Peak memory used = 62.9 Mbytes.
+Simulation started at: 5:34:23 AM, Wed Oct 14, 2026, ended at: 5:34:24 AM, Wed Oct 14, 2026, with elapsed time (wall clock): 1.08 s.
+spectre completes with 0 errors, 5 warnings, and 9 notices.
+S3B_s3b_blank_assert_column: PASS
+
+
+=== s3b_blank_release_column full preflight rc=0
+== testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port lists: <path-redacted> <path-redacted> <path-redacted> <path-redacted> <path-redacted> <path-redacted>
+  SUPPLY_OK Xtop.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.vscan = 3.3 V via net vscan
+  SUPPLY_OK Xtop.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xff.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xff.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xgate.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xgate.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xls.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.Xnand.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.Xnand.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xbank.vscan = 3.3 V via net vscan
+  SUPPLY_INSTANCES top=1 descendants=7 checked=20 internal=0 masters=10
+  SUPPLY_RESULT PASS
+SUPPLY_GATE: PASS top=1 checked=20 supply_nets=4
+STATIC_NOTE contract mode: 1 top-level instance(s), rail checks delegated to sc1_supply_check.awk
+STATIC_RESULT PASS
+NETS_TO_SAVE vdd33 core_ok33 clk vscan vdd18 scan blank d vss
+VDD_NETS
+--- preflight netlist: <path-redacted>
+spectre_rc=0 datafile=<path-redacted>
+--- operating point at the first sample
+    V18:i -1.40900072e-10
+    V33:i -3.76283104e-12
+    VSCAN:i -2.05562575e-10
+    Xtop.Ip_gate:i 0
+    Xtop.Xbank.mp1:1 -2.93660821e-11
+    Xtop.Xbank.mp1:2 -2.01948392e-28
+    Xtop.Xbank.mp2:1 -2.93660821e-11
+    Xtop.Xbank.mp2:2 -2.01948392e-28
+    Xtop.Xbank.mp3:1 -2.93660821e-11
+    Xtop.Xbank.mp3:2 -2.01948392e-28
+    Xtop.Xbank.mp4:1 -2.93660821e-11
+    Xtop.Xbank.mp4:2 -2.01948392e-28
+    Xtop.Xbank.mp5:1 -2.93660821e-11
+    Xtop.Xbank.mp5:2 -2.01948392e-28
+    Xtop.Xbank.mp6:1 -2.93660821e-11
+    Xtop.Xbank.mp6:2 -2.01948392e-28
+    Xtop.Xbank.mp7:1 -2.93660821e-11
+    Xtop.Xbank.mp7:2 -2.01948392e-28
+    Xtop.Xchain.q 1.40021228e-08
+    Xtop.Xchain.qbar 1.79999997
+    Xtop.Xchain.en 1.07925843e-09
+    vdd33 3.3
+    core_ok33 0
+    clk 0
+    vscan 3.3
+    vdd18 1.8
+    scan 5.8885044e-08
+    blank 1.8
+    d 0
+    vss 0
+    Xtop.bgate 3.3
+    Xtop.gate33 3.3
+OP_OK supply net vdd18 = 1.8 (contract 1.8 V)
+OP_OK supply net vdd33 = 3.3 (contract 3.3 V)
+OP_OK supply net vscan = 3.3 (contract 3.3 V)
+OP_OK supply net vss = 0 (contract 0 V)
+PREFLIGHT_CONTRACT_SATISFIED: PASS
+TESTBENCH_PREFLIGHT: PASS
+
+=== s3b_blank_release_column run accepted
+runner: SPECTRE name=s3b_blank_release_column.scs rc=0 elapsed=2s timeout=1200s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 288
+drwx------. 12 root root 4096 Oct 14 05:35 .
+drwx------.  3 root root 4096 Oct 14 05:35 ..
+-rw-------.  1 root root 9655 Oct 14 05:34 preflight_s3b_blank_assert_column_s3b_blank_assert_column.log
+drwx------.  2 root root 4096 Oct 14 05:34 preflight_s3b_blank_assert_column_s3b_blank_assert_column.raw
+-rw-------.  1 root root 9540 Oct 14 05:34 preflight_s3b_blank_assert_column_s3b_blank_assert_column.stdout
+-rw-------.  1 root root 9656 Oct 14 05:35 preflight_s3b_blank_release_column_s3b_blank_release_column.log
+drwx------.  2 root root 4096 Oct 14 05:35 preflight_s3b_blank_release_column_s3b_blank_release_column.raw
+-rw-------.  1 root root 9541 Oct 14 05:35 preflight_s3b_blank_release_column_s3b_blank_release_column.stdout
+-rw-------.  1 root root 8742 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.log
+drwx------.  2 root root 4096 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.raw
+-rw-------.  1 root root 8627 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.stdout
+----- log tail -----
+
+
+Aggregate audit (5:35:49 AM, Wed Oct 14, 2026):
+Time used: CPU = 1.03 s, elapsed = 1.06 s, util. = 97.2%.
+Time spent in licensing: elapsed = 56.4 ms, percentage of total = 5.31%.
+Peak memory used = 62.9 Mbytes.
+Simulation started at: 5:35:48 AM, Wed Oct 14, 2026, ended at: 5:35:49 AM, Wed Oct 14, 2026, with elapsed time (wall clock): 1.06 s.
+spectre completes with 0 errors, 5 warnings, and 9 notices.
+S3B_s3b_blank_release_column: PASS
+
+
+=== s3b_write_q0_column full preflight rc=0
+== testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port lists: <path-redacted> <path-redacted> <path-redacted> <path-redacted> <path-redacted> <path-redacted>
+  SUPPLY_OK Xtop.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.vscan = 3.3 V via net vscan
+  SUPPLY_OK Xtop.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xff.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xff.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xgate.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xgate.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xls.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.Xnand.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.Xnand.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xbank.vscan = 3.3 V via net vscan
+  SUPPLY_INSTANCES top=1 descendants=7 checked=20 internal=0 masters=10
+  SUPPLY_RESULT PASS
+SUPPLY_GATE: PASS top=1 checked=20 supply_nets=4
+STATIC_NOTE contract mode: 1 top-level instance(s), rail checks delegated to sc1_supply_check.awk
+STATIC_RESULT PASS
+NETS_TO_SAVE vdd33 core_ok33 clk vscan vdd18 scan blank d vss
+VDD_NETS
+--- preflight netlist: <path-redacted>
+spectre_rc=0 datafile=<path-redacted>
+--- operating point at the first sample
+    V18:i -1.40900072e-10
+    V33:i -3.76283104e-12
+    VSCAN:i -2.05562575e-10
+    Xtop.Ip_gate:i 0
+    Xtop.Xbank.mp1:1 -2.93660821e-11
+    Xtop.Xbank.mp1:2 -2.01948392e-28
+    Xtop.Xbank.mp2:1 -2.93660821e-11
+    Xtop.Xbank.mp2:2 -2.01948392e-28
+    Xtop.Xbank.mp3:1 -2.93660821e-11
+    Xtop.Xbank.mp3:2 -2.01948392e-28
+    Xtop.Xbank.mp4:1 -2.93660821e-11
+    Xtop.Xbank.mp4:2 -2.01948392e-28
+    Xtop.Xbank.mp5:1 -2.93660821e-11
+    Xtop.Xbank.mp5:2 -2.01948392e-28
+    Xtop.Xbank.mp6:1 -2.93660821e-11
+    Xtop.Xbank.mp6:2 -2.01948392e-28
+    Xtop.Xbank.mp7:1 -2.93660821e-11
+    Xtop.Xbank.mp7:2 -2.01948392e-28
+    Xtop.Xchain.q 1.40021228e-08
+    Xtop.Xchain.qbar 1.79999997
+    Xtop.Xchain.en 1.07925843e-09
+    vdd33 3.3
+    core_ok33 0
+    clk 0
+    vscan 3.3
+    vdd18 1.8
+    scan 5.8885044e-08
+    blank 1.8
+    d 0
+    vss 0
+    Xtop.bgate 3.3
+    Xtop.gate33 3.3
+OP_OK supply net vdd18 = 1.8 (contract 1.8 V)
+OP_OK supply net vdd33 = 3.3 (contract 3.3 V)
+OP_OK supply net vscan = 3.3 (contract 3.3 V)
+OP_OK supply net vss = 0 (contract 0 V)
+PREFLIGHT_CONTRACT_SATISFIED: PASS
+TESTBENCH_PREFLIGHT: PASS
+
+=== s3b_write_q0_column run accepted
+runner: SPECTRE name=s3b_write_q0_column.scs rc=0 elapsed=1s timeout=1200s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 344
+drwx------. 14 root root 4096 Oct 14 05:37 .
+drwx------.  3 root root 4096 Oct 14 05:37 ..
+-rw-------.  1 root root 9655 Oct 14 05:34 preflight_s3b_blank_assert_column_s3b_blank_assert_column.log
+drwx------.  2 root root 4096 Oct 14 05:34 preflight_s3b_blank_assert_column_s3b_blank_assert_column.raw
+-rw-------.  1 root root 9540 Oct 14 05:34 preflight_s3b_blank_assert_column_s3b_blank_assert_column.stdout
+-rw-------.  1 root root 9656 Oct 14 05:35 preflight_s3b_blank_release_column_s3b_blank_release_column.log
+drwx------.  2 root root 4096 Oct 14 05:35 preflight_s3b_blank_release_column_s3b_blank_release_column.raw
+-rw-------.  1 root root 9541 Oct 14 05:35 preflight_s3b_blank_release_column_s3b_blank_release_column.stdout
+-rw-------.  1 root root 8742 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.log
+drwx------.  2 root root 4096 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.raw
+-rw-------.  1 root root 8627 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.stdout
+----- log tail -----
+
+
+Aggregate audit (5:37:28 AM, Wed Oct 14, 2026):
+Time used: CPU = 943 ms, elapsed = 972 ms, util. = 97%.
+Time spent in licensing: elapsed = 53.2 ms, percentage of total = 5.47%.
+Peak memory used = 62.9 Mbytes.
+Simulation started at: 5:37:27 AM, Wed Oct 14, 2026, ended at: 5:37:28 AM, Wed Oct 14, 2026, with elapsed time (wall clock): 972 ms.
+spectre completes with 0 errors, 5 warnings, and 9 notices.
+S3B_s3b_write_q0_column: PASS
+
+
+=== s3b_repeat101_column full preflight rc=0
+== testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port lists: <path-redacted> <path-redacted> <path-redacted> <path-redacted> <path-redacted> <path-redacted>
+  SUPPLY_OK Xtop.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.vscan = 3.3 V via net vscan
+  SUPPLY_OK Xtop.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xff.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xff.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xgate.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xgate.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xls.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.Xnand.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.Xnand.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xbank.vscan = 3.3 V via net vscan
+  SUPPLY_INSTANCES top=1 descendants=7 checked=20 internal=0 masters=10
+  SUPPLY_RESULT PASS
+SUPPLY_GATE: PASS top=1 checked=20 supply_nets=4
+STATIC_NOTE contract mode: 1 top-level instance(s), rail checks delegated to sc1_supply_check.awk
+STATIC_RESULT PASS
+NETS_TO_SAVE vdd33 core_ok33 clk vscan vdd18 scan blank d vss
+VDD_NETS
+--- preflight netlist: <path-redacted>
+spectre_rc=0 datafile=<path-redacted>
+--- operating point at the first sample
+    V18:i -1.40900072e-10
+    V33:i -3.76283104e-12
+    VSCAN:i -2.05562575e-10
+    Xtop.Ip_gate:i 0
+    Xtop.Xbank.mp1:1 -2.93660821e-11
+    Xtop.Xbank.mp1:2 -2.01948392e-28
+    Xtop.Xbank.mp2:1 -2.93660821e-11
+    Xtop.Xbank.mp2:2 -2.01948392e-28
+    Xtop.Xbank.mp3:1 -2.93660821e-11
+    Xtop.Xbank.mp3:2 -2.01948392e-28
+    Xtop.Xbank.mp4:1 -2.93660821e-11
+    Xtop.Xbank.mp4:2 -2.01948392e-28
+    Xtop.Xbank.mp5:1 -2.93660821e-11
+    Xtop.Xbank.mp5:2 -2.01948392e-28
+    Xtop.Xbank.mp6:1 -2.93660821e-11
+    Xtop.Xbank.mp6:2 -2.01948392e-28
+    Xtop.Xbank.mp7:1 -2.93660821e-11
+    Xtop.Xbank.mp7:2 -2.01948392e-28
+    Xtop.Xchain.q 1.40021228e-08
+    Xtop.Xchain.qbar 1.79999997
+    Xtop.Xchain.en 1.07925843e-09
+    vdd33 3.3
+    core_ok33 0
+    clk 0
+    vscan 3.3
+    vdd18 1.8
+    scan 5.8885044e-08
+    blank 1.8
+    d 0
+    vss 0
+    Xtop.bgate 3.3
+    Xtop.gate33 3.3
+OP_OK supply net vdd18 = 1.8 (contract 1.8 V)
+OP_OK supply net vdd33 = 3.3 (contract 3.3 V)
+OP_OK supply net vscan = 3.3 (contract 3.3 V)
+OP_OK supply net vss = 0 (contract 0 V)
+PREFLIGHT_CONTRACT_SATISFIED: PASS
+TESTBENCH_PREFLIGHT: PASS
+
+=== s3b_repeat101_column run accepted
+runner: SPECTRE name=s3b_repeat101_column.scs rc=0 elapsed=1s timeout=1200s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 400
+drwx------. 16 root root 4096 Oct 14 05:38 .
+drwx------.  3 root root 4096 Oct 14 05:38 ..
+-rw-------.  1 root root 9655 Oct 14 05:34 preflight_s3b_blank_assert_column_s3b_blank_assert_column.log
+drwx------.  2 root root 4096 Oct 14 05:34 preflight_s3b_blank_assert_column_s3b_blank_assert_column.raw
+-rw-------.  1 root root 9540 Oct 14 05:34 preflight_s3b_blank_assert_column_s3b_blank_assert_column.stdout
+-rw-------.  1 root root 9656 Oct 14 05:35 preflight_s3b_blank_release_column_s3b_blank_release_column.log
+drwx------.  2 root root 4096 Oct 14 05:35 preflight_s3b_blank_release_column_s3b_blank_release_column.raw
+-rw-------.  1 root root 9541 Oct 14 05:35 preflight_s3b_blank_release_column_s3b_blank_release_column.stdout
+-rw-------.  1 root root 8742 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.log
+drwx------.  2 root root 4096 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.raw
+-rw-------.  1 root root 8627 Oct 14 05:30 preflight_s3b_q0_off_light_s3b_q0_off_light.stdout
+----- log tail -----
+
+
+Aggregate audit (5:38:52 AM, Wed Oct 14, 2026):
+Time used: CPU = 953 ms, elapsed = 978 ms, util. = 97.4%.
+Time spent in licensing: elapsed = 52.3 ms, percentage of total = 5.34%.
+Peak memory used = 62.9 Mbytes.
+Simulation started at: 5:38:51 AM, Wed Oct 14, 2026, ended at: 5:38:52 AM, Wed Oct 14, 2026, with elapsed time (wall clock): 978 ms.
+spectre completes with 0 errors, 5 warnings, and 9 notices.
+S3B_s3b_repeat101_column: PASS
+
+
+=== s3b_guard_cycle_column full preflight rc=0
+== testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port lists: <path-redacted> <path-redacted> <path-redacted> <path-redacted> <path-redacted> <path-redacted>
+  SUPPLY_OK Xtop.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.vscan = 3.3 V via net vscan
+  SUPPLY_OK Xtop.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xff.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xff.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xgate.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xgate.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xls.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.Xnand.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.Xnand.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xbank.vscan = 3.3 V via net vscan
+  SUPPLY_INSTANCES top=1 descendants=7 checked=20 internal=0 masters=10
+  SUPPLY_RESULT PASS
+SUPPLY_GATE: PASS top=1 checked=20 supply_nets=4
+STATIC_NOTE contract mode: 1 top-level instance(s), rail checks delegated to sc1_supply_check.awk
+STATIC_RESULT PASS
+NETS_TO_SAVE vdd33 core_ok33 clk vscan vdd18 scan blank d vss
+VDD_NETS
+--- preflight netlist: <path-redacted>
+spectre_rc=0 datafile=<path-redacted>
+--- operating point at the first sample
+    V18:i -1.40900072e-10
+    V33:i -3.76283104e-12
+    VSCAN:i -2.05562575e-10
+    Xtop.Ip_gate:i 0
+    Xtop.Xbank.mp1:1 -2.93660821e-11
+    Xtop.Xbank.mp1:2 -2.01948392e-28
+    Xtop.Xbank.mp2:1 -2.93660821e-11
+    Xtop.Xbank.mp2:2 -2.01948392e-28
+    Xtop.Xbank.mp3:1 -2.93660821e-11
+    Xtop.Xbank.mp3:2 -2.01948392e-28
+    Xtop.Xbank.mp4:1 -2.93660821e-11
+    Xtop.Xbank.mp4:2 -2.01948392e-28
+    Xtop.Xbank.mp5:1 -2.93660821e-11
+    Xtop.Xbank.mp5:2 -2.01948392e-28
+    Xtop.Xbank.mp6:1 -2.93660821e-11
+    Xtop.Xbank.mp6:2 -2.01948392e-28
+    Xtop.Xbank.mp7:1 -2.93660821e-11
+    Xtop.Xbank.mp7:2 -2.01948392e-28
+    Xtop.Xchain.q 1.40021228e-08
+    Xtop.Xchain.qbar 1.79999997
+    Xtop.Xchain.en 1.07925843e-09
+    vdd33 3.3
+    core_ok33 0
+    clk 0
+    vscan 3.3
+    vdd18 1.8
+    scan 5.8885044e-08
+    blank 1.8
+    d 0
+    vss 0
+    Xtop.bgate 3.3
+    Xtop.gate33 3.3
+OP_OK supply net vdd18 = 1.8 (contract 1.8 V)
+OP_OK supply net vdd33 = 3.3 (contract 3.3 V)
+OP_OK supply net vscan = 3.3 (contract 3.3 V)
+OP_OK supply net vss = 0 (contract 0 V)
+PREFLIGHT_CONTRACT_SATISFIED: PASS
+TESTBENCH_PREFLIGHT: PASS
+
+=== s3b_guard_cycle_column run accepted
+runner: SPECTRE name=s3b_guard_cycle_column.scs rc=0 elapsed=1s timeout=1200s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 456
+drwx------. 18 root root 4096 Oct 14 05:40 .
+drwx------.  3 root root 4096 Oct 14 05:40 ..
+-rw-------.  1 root root 9655 Oct 14 05:34 preflight_s3b_blank_assert_column_s3b_blank_assert_column.log
+drwx------.  2 root root 4096 Oct 14 05:34 preflight_s3b_blank_assert_column_s3b_blank_assert_column.raw
+-rw-------.  1 root root 9540 Oct 14 05:34 preflight_s3b_blank_assert_column_s3b_blank_assert_column.stdout
+-rw-------.  1 root root 9656 Oct 14 05:35 preflight_s3b_blank_release_column_s3b_blank_release_column.log
+drwx------.  2 root root 4096 Oct 14 05:35 preflight_s3b_blank_release_column_s3b_blank_release_column.raw
+-rw-------.  1 root root 9541 Oct 14 05:35 preflight_s3b_blank_release_column_s3b_blank_release_column.stdout
+-rw-------.  1 root root 9675 Oct 14 05:40 preflight_s3b_guard_cycle_column_s3b_guard_cycle_column.log
+drwx------.  2 root root 4096 Oct 14 05:40 preflight_s3b_guard_cycle_column_s3b_guard_cycle_column.raw
+-rw-------.  1 root root 9560 Oct 14 05:40 preflight_s3b_guard_cycle_column_s3b_guard_cycle_column.stdout
+----- log tail -----
+
+
+Aggregate audit (5:40:36 AM, Wed Oct 14, 2026):
+Time used: CPU = 1.03 s, elapsed = 1.06 s, util. = 97.1%.
+Time spent in licensing: elapsed = 56.2 ms, percentage of total = 5.29%.
+Peak memory used = 62.9 Mbytes.
+Simulation started at: 5:40:35 AM, Wed Oct 14, 2026, ended at: 5:40:36 AM, Wed Oct 14, 2026, with elapsed time (wall clock): 1.06 s.
+spectre completes with 0 errors, 5 warnings, and 9 notices.
+S3B_s3b_guard_cycle_column: PASS
+
+
+=== s3b_fault_blank_to_vss_column full preflight rc=0
+== testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port lists: <path-redacted> <path-redacted> <path-redacted> <path-redacted> <path-redacted> <path-redacted>
+  SUPPLY_OK Xtop.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.vscan = 3.3 V via net vscan
+  SUPPLY_OK Xtop.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xff.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xff.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xgate.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xgate.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xls.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.Xcore.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xchain.Xls.Xnand.vdd33 = 3.3 V via net vdd33
+  SUPPLY_OK Xtop.Xchain.Xls.Xnand.vss = 0 V via net vss
+  SUPPLY_OK Xtop.Xbank.vscan = 3.3 V via net vscan
+  SUPPLY_INSTANCES top=1 descendants=7 checked=20 internal=0 masters=11
+  SUPPLY_RESULT PASS
+SUPPLY_GATE: PASS top=1 checked=20 supply_nets=4
+STATIC_NOTE contract mode: 1 top-level instance(s), rail checks delegated to sc1_supply_check.awk
+STATIC_RESULT PASS
+NETS_TO_SAVE vdd33 core_ok33 clk vscan vdd18 scan blank d vss
+VDD_NETS
+--- preflight netlist: <path-redacted>
+spectre_rc=0 datafile=<path-redacted>
+--- operating point at the first sample
+    V18:i -1.52331761e-10
+    V33:i -3.76283105e-12
+    VSCAN:i -2.05562575e-10
+    Xtop.Ip_gate:i 0
+    Xtop.Xbank.mp1:1 -2.93660821e-11
+    Xtop.Xbank.mp1:2 -2.01948392e-28
+    Xtop.Xbank.mp2:1 -2.93660821e-11
+    Xtop.Xbank.mp2:2 -2.01948392e-28
+    Xtop.Xbank.mp3:1 -2.93660821e-11
+    Xtop.Xbank.mp3:2 -2.01948392e-28
+    Xtop.Xbank.mp4:1 -2.93660821e-11
+    Xtop.Xbank.mp4:2 -2.01948392e-28
+    Xtop.Xbank.mp5:1 -2.93660821e-11
+    Xtop.Xbank.mp5:2 -2.01948392e-28
+    Xtop.Xbank.mp6:1 -2.93660821e-11
+    Xtop.Xbank.mp6:2 -2.01948392e-28
+    Xtop.Xbank.mp7:1 -2.93660821e-11
+    Xtop.Xbank.mp7:2 -2.01948392e-28
+    Xtop.Xchain.q 1.40021435e-08
+    Xtop.Xchain.qbar 1.79999997
+    Xtop.Xchain.en 5.46694862e-09
+    Xtop.gate33 3.3
+    vdd33 3.3
+    core_ok33 0
+    clk 0
+    vscan 3.3
+    vdd18 1.8
+    scan 5.8885044e-08
+    blank 1.8
+    d 0
+    vss 0
+    Xtop.bgate 3.3
+OP_OK supply net vdd18 = 1.8 (contract 1.8 V)
+OP_OK supply net vdd33 = 3.3 (contract 3.3 V)
+OP_OK supply net vscan = 3.3 (contract 3.3 V)
+OP_OK supply net vss = 0 (contract 0 V)
+PREFLIGHT_CONTRACT_SATISFIED: PASS
+TESTBENCH_PREFLIGHT: PASS
+
+=== s3b_fault_blank_to_vss_column run accepted
+runner: SPECTRE name=s3b_fault_blank_to_vss_column.scs rc=0 elapsed=1s timeout=1200s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 512
+drwx------. 20 root root 4096 Oct 14 05:42 .
+drwx------.  3 root root 4096 Oct 14 05:42 ..
+-rw-------.  1 root root 9655 Oct 14 05:34 preflight_s3b_blank_assert_column_s3b_blank_assert_column.log
+drwx------.  2 root root 4096 Oct 14 05:34 preflight_s3b_blank_assert_column_s3b_blank_assert_column.raw
+-rw-------.  1 root root 9540 Oct 14 05:34 preflight_s3b_blank_assert_column_s3b_blank_assert_column.stdout
+-rw-------.  1 root root 9656 Oct 14 05:35 preflight_s3b_blank_release_column_s3b_blank_release_column.log
+drwx------.  2 root root 4096 Oct 14 05:35 preflight_s3b_blank_release_column_s3b_blank_release_column.raw
+-rw-------.  1 root root 9541 Oct 14 05:35 preflight_s3b_blank_release_column_s3b_blank_release_column.stdout
+-rw-------.  1 root root 9073 Oct 14 05:42 preflight_s3b_fault_blank_to_vss_column_s3b_fault_blank_to_vss_column.log
+drwx------.  2 root root 4096 Oct 14 05:42 preflight_s3b_fault_blank_to_vss_column_s3b_fault_blank_to_vss_column.raw
+-rw-------.  1 root root 8966 Oct 14 05:42 preflight_s3b_fault_blank_to_vss_column_s3b_fault_blank_to_vss_column.stdout
+----- log tail -----
+
+
+Aggregate audit (5:42:17 AM, Wed Oct 14, 2026):
+Time used: CPU = 1.03 s, elapsed = 1.06 s, util. = 96.7%.
+Time spent in licensing: elapsed = 57.3 ms, percentage of total = 5.39%.
+Peak memory used = 62.9 Mbytes.
+Simulation started at: 5:42:16 AM, Wed Oct 14, 2026, ended at: 5:42:17 AM, Wed Oct 14, 2026, with elapsed time (wall clock): 1.06 s.
+spectre completes with 0 errors, 5 warnings, and 11 notices.
+S3B_s3b_fault_blank_to_vss_column: PASS
+
+

@@ -1,0 +1,36 @@
+simulator lang=spectre insensitive=yes
+// =============================================================================
+// SCAN-1 S3-B: one scan channel with its control chain AND its output switches, assembled by wiring
+// only. The accepted R3 wrapper and the three cells behind it are instantiated, never edited:
+//
+//   external d/clk -> c2mos_dff -> q/qbar -> sc1_scan_gate -> en -> sc1_ls_c1_top_r2d -> gate33
+//     -> iprobe (measurement only) -> bgate -> 7 x p33 -> scan
+//
+// Device tree, counted from the master bodies rather than from this comment:
+//   c2mos_dff 18 + sc1_scan_gate 4 + sc1_ls_c1_top_r2d 10 = 32 control devices,
+//   sc1_s3b_p33_bank_7                                      =  7 output devices,
+//   total                                                   = 39 MOS.
+//
+// Port order of THIS master, which is also the order a deck must connect it:
+//   (d clk blank core_ok33 scan vdd18 vdd33 vscan vss)
+// `vscan' is the bank's source/body rail. It is a SECOND, independent 3.3 V connection to the same
+// potential as `vdd33' purely so the two current paths can be measured apart: the control chain's
+// high-domain rail and the switching rail. It is not a new product voltage -- both are held at
+// 3.3 V by their own ideal source in the deck, and the supply contract has to name each one.
+//
+// Why the iprobe is here and what it is not. The preferred gate current is the sum of the MOS gate
+// terminal currents, but only `mp<k>:1' (terminal 1 = D) has been confirmed on this build; assuming
+// another terminal index works just because :1 did is the kind of guess this project has been burned
+// by. The deck therefore also carries a zero-drop current meter in the ONE branch between gate33 and
+// the bank gates. It produces no logic level, connects no rail, and the deck is required to show that
+// the two sides sit at the same potential (Xtop.gate33 vs Xtop.bgate) before its current is used. It
+// is not allowed to move onto a power rail.
+//
+// No artificial capacitance is attached to gate33 anywhere in this file or its decks: the gate load is
+// the real seven devices plus the measurement branch. The 1 pF / 5 pF figures that appear in the decks
+// are TESTBENCH capacitances on the SCAN node, together with the proxy load resistors.
+subckt sc1_s3b_scan_power_1ch (d clk blank core_ok33 scan vdd18 vdd33 vscan vss)
+  Xchain (d clk blank core_ok33 gate33 vdd18 vdd33 vss) sc1_r3_scan_chain_1ch
+  Ip_gate (gate33 bgate) iprobe
+  Xbank (scan bgate vscan) sc1_s3b_p33_bank_7
+ends sc1_s3b_scan_power_1ch

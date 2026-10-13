@@ -1,0 +1,36 @@
+simulator lang=spectre insensitive=yes
+// =============================================================================
+// SCAN-1 S3-B: the output bank one scan channel actually switches.
+//
+// Seven p33 devices in parallel for ONE physical channel. This is the candidate S3-A measured and
+// picked: N=7 came from ceil(11.52 mA / the 1.79623 mA one finger carried at VSD = 0.10 V), and
+// L=0.4 um / W=100 um is the largest size inside the model's own read-back limits (lmin=3e-7
+// lmax=1e-4 wmin=2.2e-7 wmax=1e-4, ms018_enhanced_v1p2_rev0_spe.mdl). Total gate width 700 um.
+// A model range is not an absolute rating: SOA_SIGNOFF stays NO.
+//
+// Terminal order is D G S B, the order the accepted S3-A decks really used and the order this build
+// reads off the model record: `mp1 (d g vdd33 vdd33) p33 ...' put the source and the body on the rail.
+// Here the rail is the deck's `vscan' net, so S and B both connect to it -- a PMOS body in an n-well
+// tied to its own source is the high-side connection, and it is a netlist question, not a layout one.
+//
+// Seven EXPLICIT instances, no m= and no nf=: this build never verified a multiplier interface, and
+// inventing one would silently assume how finger area and perimeter are summed. N is the parallel
+// size of one channel, not an extra scan channel.
+//
+// The gate port is named `bgate' because the driving node inside the S3-B top is `gate33' and the
+// measurement iprobe sits between them; the two are the same potential by the iprobe's definition and
+// the deck proves that instead of assuming it. D is the scan electrode node, which is where the
+// declared testbench proxy load (R || C to vss) sits.
+//
+// Nothing here is connected to an LED model, to a data driver, or to a panel: P1/P2/P3 (final
+// VSCAN/VLED, LED Vf or I-V, N_active) stay NOT_DEFINED, and the 3.3 V on this bank is the same
+// POC_ASSUMPTION the accepted S3-A decks used.
+subckt sc1_s3b_p33_bank_7 (scan bgate vscan)
+  mp1 (scan bgate vscan vscan) p33 l=4e-07 w=0.0001
+  mp2 (scan bgate vscan vscan) p33 l=4e-07 w=0.0001
+  mp3 (scan bgate vscan vscan) p33 l=4e-07 w=0.0001
+  mp4 (scan bgate vscan vscan) p33 l=4e-07 w=0.0001
+  mp5 (scan bgate vscan vscan) p33 l=4e-07 w=0.0001
+  mp6 (scan bgate vscan vscan) p33 l=4e-07 w=0.0001
+  mp7 (scan bgate vscan vscan) p33 l=4e-07 w=0.0001
+ends sc1_s3b_p33_bank_7
