@@ -129,9 +129,9 @@ def main():
                 reasons.append('forbidden token present: %s' % tok)
         if os.path.exists(out):
             n = csv_field_count(out)
-            if n != 24:
+            if n != 25:
                 met = False
-                reasons.append('CSV has %d columns, expected 24' % n)
+                reasons.append('CSV has %d columns, expected 25' % n)
         else:
             met = False
             reasons.append('no CSV written')

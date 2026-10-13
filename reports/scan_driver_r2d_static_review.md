@@ -13,6 +13,13 @@ Labels used throughout: `ENGINEERING_TOPOLOGY_CHOICE` (our circuit choice, not a
 CMOS cell), `POC_ASSUMPTION` (1.8 V / 3.3 V, W/L, loads, edges, windows), `NOT_DEFINED` /
 `NOT_MEASURED` where no number exists, `TOPOLOGY_CHECK` for what a static review can establish.
 
+> **Superseded in part on 2026-10-13.** The S2 cell topology and its static review below stay accepted.
+> Three claims below were retracted by the R2D1 round and are corrected in
+> `reports/scan_driver_r2d1_test_preparation.md`: the S1 "PASS 10/10 rows" reading (a re-read of output
+> values is not a certification; it is now `PARTIAL_NOT_VERIFIED`, 9/10 rows certified, rc 3), the
+> statement that no deck drives 3.3 V into a 0 V rail (`seq_ok_early_release` did), and the two extra
+> "cases" whose decks were byte-identical to `st_c1_enhigh_okhigh`. Read as history, not as status.
+
 ---
 
 ## 1. What was wrong in the old S2, and where each item now lives

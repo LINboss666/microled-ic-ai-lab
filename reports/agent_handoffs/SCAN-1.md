@@ -2,6 +2,60 @@
 
 ## CURRENT_STATUS (single authoritative table; everything below this block is history)
 
+Updated 2026-10-13 during **SCAN-1R2D1 / test-preparation fixes on the accepted S2 topology**.
+Baseline re-read before editing: remote `poc/scan-driver-1ch` = `34d5125a4dfd5c7423776547d6eab4f8fb616fee`
+= local HEAD; main = `23e471cb936b421ee97e1250c3be06edf96f9937`. No divergence, no other agent's work
+touched.
+
+**No simulator was used in this round** -- no Spectre, no ngspice, no preflight full, no
+operating-point probe, no Virtuoso, and the newly supplied PDK was not used for anything. The only gate
+run is `PREFLIGHT_STATIC_PROBE=1`. The new S2 cell netlist stays byte-identical to the accepted version
+and the audited tools are unchanged (`git diff --name-only 34d5125 HEAD -- <protected>` returns
+nothing). Full write-up: `reports/scan_driver_r2d1_test_preparation.md`.
+
+| item | status | evidence |
+|---|---|---|
+| S2 topology | **STATIC ACCEPTED (unchanged this round)** | `spectre/sc1_level_shifter_r2d.scs` sha `31324ca541a6a645...`; the per-device review stays in `reports/scan_driver_r2d_static_review.md` |
+| A: future S1 regression entry | **COMPLETE as preparation, 18/18 mock cases** | `scripts/sc1_s1_r2d_regression.sh`: `-f` checks; reader status returned in this shell and judged before any numeric conversion (the draft's `$(...); rc=$READ_RC` died with `unbound variable`, rc 127); non-zero preflight = `PRECHECK_FAIL` with runner calls **0**; `SIM_FAIL` unless exit 0 **and** exactly one `S1REG_<tag>: PASS` **and** `CHECK error_hits=0` **and** a readable data file (an older raw is never used); truth rows asserted per row with blank/qbar read back at their own labels; stimulus verbatim from `sc1_s1r.sh` (clock `delay=50n rise=1n fall=1n period=100n width=50n`, data/blank PWLs, `stop=900n maxstep=1n method=traponly`), gate-only DC decks, real BLANK-to-vss rewire; rows via `scripts/sc1_csv_writer.py`; PDK bound in this shell (cad_env then git-ignored `spectre/pdk_local.env`), unresolved → BLOCKED before a deck exists. Dry run rc 0, `RUN=1` rc 5, authorised+unresolved rc 7. `results/evidence/sc1_r2d1_entry_selftest.csv`, every row `SYNTHETIC_MOCK_not_a_circuit_regression`, run from a local copy with mocked preflight/runner/reader |
+| B: S2 decks and measurement prep | **COMPLETE as preparation: 37 decks / 37 distinct hashes, 64 envelope checks 0 failures, static 37/37 as promised** | `scripts/sc1_s2_r2d_gen.py`. B1 `seq_ok_early_release` rebuilt (vdd33 at 3.3 V from t=0, only the core ramps late) — the old deck drove 3.3 V into a 0 V rail. B2 the three held-`en` decks are labelled `EXTERNAL_DRIVE_FAULT` and each has an `en_follows` twin. B3 `include "${QODER_PDK_LIB}" section=tt` with `DECK_BINDING_PENDING` per row; no `temp=` line invented (`TEMP_LINE_SYNTAX_PENDING`); a series rail `iprobe` was **measured** with the static gate — rc 1, stage `supply_contract`, 5 `SUPPLY_FAIL` lines — so rails stay directly driven and the decks save per-device `save <inst>:1` currents plus every terminal node (sign convention of the sum PENDING). B4 C1 gained `dyn_c1_rise/fall/repeat3` and `load_c1_0/0.2/1/5pF` on the final `gate33`. B5 `load_pF` numeric; `future_verdict=NOT_RUN`; `static_certifies_dynamic_rail_range=no`. Duplicate deck emitted → refused (exit 3). `results/evidence/sc1_r2d1_{deck_index,static_matrix,pwl_audit,iprobe_static_probe}.csv` |
+| C: S1 historical re-analysis | **PARTIAL_NOT_VERIFIED (rc 3) — 9 of 10 rows certified, 0 failing; NOT 10/10** | `scripts/sc1_r2d_s1_reanalysis.py` now keeps assertion, stimulus check, traceability and historical difference in separate columns (25), verifies each DC row's own blank/qbar read-back, requires the window's state signals to be readable, never converts a reader exit code into a number, lets the independent awk cross-check participate in the verdict, marks ceiling-reaching sample counts `lower_bound`, and states the tolerance band with its source (history = 6-decimal text, half step 5e-7; reader = 6 significant digits). Local raws reproduce history with diffs 0 … 4.8e-07 V. The one non-certified row is the fault injection: no committed CSV holds a historical value for it. `results/evidence/sc1_r2d1_s1_historical_reanalysis.csv`; synthetic lineage suite `results/evidence/sc1_r2d1_reanalysis_selftest.csv` (6/6: CERTIFIED / wrong_blank FAIL / missing_deck PARTIAL / missing_history PARTIAL + `ASSERTION_CHECK_ONLY` / unreadable_evidence FAIL / no_fault_run PARTIAL) |
+| Local vs cloud provenance | **stated separately** | the 10 re-read rows come from raw PSF-ASCII on this machine only (`cadence_work/sc1_sim/sim/`, never committed). Manifest rows for that data and for the instructor PDK carry `cloud_can_verify_bytes=no`; nothing here claims cloud verification of bytes the cloud does not have |
+| Protected inputs | **zero diff vs 34d5125** | whole `spectre/`, `scripts/sc1_s1r.sh`, `scripts/sc1_s2.sh`, `scripts/run_spectre.sh`, `sc1_read_psf.py`, `sc1_delay.py`, `tb_preflight.sh`, `sc1_supply_check.awk`; R2D evidence CSVs untouched, this round writes `sc1_r2d1_*` |
+| S1 fresh regression, C²MOS re-run, preflight full | **NOT_RUN / PAUSED_BY_USER** | A proves control flow with mocks only |
+| S2 functional TT, dynamic, power sequence, stress | **NOT_RUN** | no deck has been run; a static acceptance is not a rail-range statement |
+| R2 full acceptance / R3 chaining / S3 / S4 | **NOT_COMPLETED / NOT_STARTED** | — |
+| Geometry legality / `SOA_SIGNOFF` | **NOT_VERIFIED / NO** | no L/W range or absolute-rating table read from the model |
+| `core_ok33`, autonomous power-fail | assumed control only; **NOT_IMPLEMENTED** | best future outcome stays `SAFE_OFF_WITH_ASSUMED_CORE_OK` |
+
+### Retractions made this round (the blocks below keep their original wording as history)
+
+* "S1 historical re-analysis **PASS 10/10 rows**" in the R2D block is **retracted**. Ten rows re-read
+  with plausible values is not a certification: without decks or history the run must report
+  PARTIAL / NOT_VERIFIED. The historical waveforms themselves still agree within the stated bands —
+  the defect was the verdict, not the data.
+* "the decks never drive 3.3 V into a 0 V rail" is **retracted**: `seq_ok_early_release` did exactly
+  that. Fixed, and the offline audit now carries a mirrored copy of that waveform as a case it must
+  reject.
+* `st_c1_enhigh_no_guard` and `rail_18_33` are **retracted as separate cases**: both were
+  byte-identical to `st_c1_enhigh_okhigh` (sha `5da1fac7a6fd2732`), so neither was a control.
+
+### Next step is a decision, not a continuation
+
+Nothing here authorises a run. When the owner lifts the pause, the first authorised action is the real
+TT verification of the S2 decks with `QODER_PDK_LIB` resolved (static levels, rail currents with a
+confirmed sign convention, per-device terminal voltages including `ns_m`, delay/slew per load, both
+power-order ramps, backfeed), plus one fresh S1 regression through the new entry. It is **not** S3 and
+it does not follow automatically from this round's offline results.
+
+### Bridge state worth recording
+
+Guest SSH was unreachable all round (`vmrun getGuestIPAddress` fails; tcp/22 times out) while the
+VMware Tools channel worked, so files moved through an untracked local helper
+`scripts/push_chunked.sh` (base64 chunks with md5 read-back verified). No VM, network or license
+configuration was changed — bringing the guest interface up needs the owner's approval.
+
+## HISTORICAL_STATUS (SCAN-1R2D round, kept for audit; superseded by the R2D1 block above)
+
 Updated 2026-10-12 during **SCAN-1R2D / S2 static implementation + S1 offline re-analysis**.
 Baseline re-read before editing: remote `poc/scan-driver-1ch` = `f7364f5df658cab60e037a1fe1cc65dae2e760cf`
 = local HEAD; main = `23e471cb936b421ee97e1250c3be06edf96f9937`. No divergence, no other agent's work

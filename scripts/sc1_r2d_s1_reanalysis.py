@@ -201,7 +201,8 @@ HEADERS = ['case_id', 'kind', 'raw_file', 'raw_sha256', 'deck_file', 'deck_sha25
            'window_or_sweep', 'decision_level_V', 'measured_value_V', 'samples_accepted_by_reader',
            'sample_count_kind', 'reader_rc', 'independent_awk_crosscheck', 'crosscheck_status',
            'assertion_verdict', 'stimulus_check', 'signals_read_back', 'historical_value_V',
-           'tolerance_V', 'historical_agreement', 'row_status', 'labels', 'note']
+           'historical_difference_V', 'tolerance_V', 'historical_agreement', 'row_status', 'labels',
+           'note']
 
 LABELS = 'HISTORICAL_DATA,OFFLINE_REREAD'
 
@@ -326,7 +327,7 @@ def main():
                          'raw MISSING; deck ' + ('present' if dsha != 'MISSING' else 'MISSING'),
                          'sweep qbar=%g' % qbar, VOL, 'NOT_AVAILABLE', 0, 'none', 'NOT_RUN',
                          'not_read', 'NOT_READ', 'NOT_AVAILABLE', 'NOT_READ', 'not read',
-                         hist_truth.get(hkey, ''), '', 'NO_HISTORY', 'INCOMPLETE', LABELS,
+                         hist_truth.get(hkey, ''), '', '', 'NO_HISTORY', 'INCOMPLETE', LABELS,
                          'raw PSF-ASCII not on disk'])
             continue
         # the swept source is qbar, so the row's own stimulus must read back at that point and the
@@ -377,7 +378,7 @@ def main():
                      'swept qbar=%g V at dc=%g V' % (qbar, qbar), VOL,
                      'NOT_MEASURED' if not finite(en) else '%.6g' % en, n, nkind,
                      'en rc=%s' % en_rc, xsum, xstatus, assertion, stimulus, ' ; '.join(reads),
-                     hist, ('%.6g' % tol_pair(as_float(hist), en))
+                     hist, diff, ('%.6g' % tol_pair(as_float(hist), en))
                      if hist and as_float(hist) is not None else '', agreement, row_status, LABELS,
                      'the swept source is qbar, so the row is Q=%g as the historical table labels it;'
                      ' expected %s, read %s ; tolerance source: %s'
@@ -393,7 +394,7 @@ def main():
                          + ('present' if dsha != 'MISSING' else 'MISSING'),
                          '%s..%s' % (t0, t1), VOL, 'NOT_AVAILABLE', 0, 'none', 'NOT_RUN',
                          'not_read', 'NOT_READ', 'NOT_AVAILABLE', 'NOT_READ', 'not read',
-                         hist_win.get(tid, ''), '', 'NO_HISTORY', 'INCOMPLETE', LABELS, desc])
+                         hist_win.get(tid, ''), '', '', 'NO_HISTORY', 'INCOMPLETE', LABELS, desc])
             continue
         args = ['--sig', sig, '--t0', t0, '--t1', t1, '--mode', mode]
         val, rc, tok = read_num(raw, args + ['--require-n', '3'])
@@ -448,7 +449,7 @@ def main():
                      'NOT_MEASURED' if not finite(val) else '%.6g' % val, n, nkind,
                      '%s rc=%s' % (sig, rc), xsum,
                      '%s reader_vs_awk=%s' % (xstat, agree), assertion, stimulus,
-                     ' ; '.join(reads), hist,
+                     ' ; '.join(reads), hist, diff,
                      ('%.6g' % tol_pair(as_float(hist), base))
                      if hist and as_float(hist) is not None else '',
                      agreement, row_status, LABELS,
@@ -509,7 +510,7 @@ def main():
                      '400n..455n ns, mode=max', VOL,
                      'NOT_MEASURED' if not finite(val) else '%.6g' % val, n, nkind,
                      'en rc=%s' % rc, xsum, '%s reader_vs_awk=%s' % (xstat, agree), assertion,
-                     stimulus, ' ; '.join(reads), hist_f,
+                     stimulus, ' ; '.join(reads), hist_f, diff,
                      ('%.6g' % tol_pair(as_float(hist_f), base))
                      if hist_f and as_float(hist_f) is not None else '',
                      agreement, row_status, LABELS,
@@ -521,7 +522,7 @@ def main():
                      'MISSING', fdeck_name, 'MISSING', 'raw MISSING; deck '
                      + ('present' if os.path.isfile(fd) else 'MISSING'),
                      '400n..455n', VOL, 'NOT_AVAILABLE', 0, 'none', 'NOT_RUN', 'not_read',
-                     'NOT_READ', 'NOT_AVAILABLE', 'NOT_READ', 'not read', hist_f, '', 'NO_HISTORY',
+                     'NOT_READ', 'NOT_AVAILABLE', 'NOT_READ', 'not read', hist_f, '', '', 'NO_HISTORY',
                      'INCOMPLETE', LABELS,
                      'faulted run is not on disk; without the negative the checker is uncertified, '
                      'so the overall result cannot be CERTIFIED'])
@@ -550,7 +551,15 @@ def main():
             f.write(csvline(r))
         f.write(csvline(overall))
 
-    i_st, i_assert, i_row = 16, 15, 21
+    # read the column positions from HEADERS: hard-coded indices silently tracked the wrong column
+    # when the historical_difference_V column was added
+    i_st = HEADERS.index('stimulus_check')
+    i_assert = HEADERS.index('assertion_verdict')
+    i_row = HEADERS.index('row_status')
+    i_samp = HEADERS.index('samples_accepted_by_reader')
+    i_kind = HEADERS.index('sample_count_kind')
+    i_hist = HEADERS.index('historical_agreement')
+    i_val = HEADERS.index('measured_value_V')
     nfail = sum(1 for r in rows if r[i_row] == 'FAIL')
     ncert = sum(1 for r in rows if r[i_row] == 'PASS_ROW')
     nnas = sum(1 for r in rows if r[i_row] in ('INCOMPLETE', 'NOT_CERTIFIED'))
@@ -568,7 +577,7 @@ def main():
           'not a claim that the historical data is wrong, and it is never reported as 10/10.')
     for r in rows:
         print('  %-34s %-16s %-13s n=%-6s(%s) assert=%-8s stim=%-6s hist=%-18s val=%s' %
-              (r[0], r[1], r[i_row], r[10], r[11], r[i_assert], r[i_st], r[20], r[9]))
+              (r[0], r[1], r[i_row], r[i_samp], r[i_kind], r[i_assert], r[i_st], r[i_hist], r[i_val]))
     print('R2D_S1_CSV=%s   (offline re-read only; no simulator was called)' % o.out)
     return rc
 
