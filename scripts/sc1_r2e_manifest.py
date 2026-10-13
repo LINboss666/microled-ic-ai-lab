@@ -75,7 +75,7 @@ def main():
                 if f.startswith(('sc1_r2e', 'scan_driver_r2e')) and not f.endswith('.pyc'):
                     rels.append(os.path.relpath(os.path.join(_d, f), PROJ).replace('\\', '/'))
     for rel in sorted(set(rels)):
-        if os.path.join(PROJ, rel) == os.path.abspath(out):
+        if os.path.normpath(os.path.join(PROJ, rel)) == os.path.normpath(os.path.abspath(out)):
             # a manifest cannot hash itself honestly: the bytes it would record are the ones from
             # before it was written, so the output file is left out of its own rows
             continue
