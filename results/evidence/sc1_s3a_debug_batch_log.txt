@@ -1,0 +1,74 @@
+RUN_ID S3A-20261013T155530Z section=tt temp_written=27 L=0.4 um W_set=5,10,20,50,100 rail=3.3(POC_ASSUMPTION) N_ceiling=16 conditional_target=8.68056 ohm
+S3A_GEOMETRY               s3a_on_w005            W=5 um, L=0.4 um, N=1      PASS
+S3A_DEVICE_COUNT           s3a_on_w005            1 explicit device instance PASS
+S3A_ISOLATION              s3a_on_w005            what drives the gate and t PASS
+PREFLIGHT_FULL             s3a_on_w005            s3a_on_w005.scs            PASS
+SIM_RUN                    s3a_on_w005            s3a_on_w005.scs            PASS
+S3A_DC_READ                s3a_on_w005            dc                         MEASURED
+S3A_CURRENT_SIGN           s3a_on_w005            I_SD := +VD:i, cross-check MEASURED
+S3A_N_SCALING              s3a_on_w005            single device: terminal cu MEASURED
+S3A_GEOMETRY               s3a_on_w010            W=10 um, L=0.4 um, N=1     PASS
+S3A_DEVICE_COUNT           s3a_on_w010            1 explicit device instance PASS
+S3A_ISOLATION              s3a_on_w010            what drives the gate and t PASS
+PREFLIGHT_FULL             s3a_on_w010            s3a_on_w010.scs            PASS
+SIM_RUN                    s3a_on_w010            s3a_on_w010.scs            PASS
+S3A_DC_READ                s3a_on_w010            dc                         MEASURED
+S3A_CURRENT_SIGN           s3a_on_w010            I_SD := +VD:i, cross-check MEASURED
+S3A_N_SCALING              s3a_on_w010            single device: terminal cu MEASURED
+S3A_GEOMETRY               s3a_on_w020            W=20 um, L=0.4 um, N=1     PASS
+S3A_DEVICE_COUNT           s3a_on_w020            1 explicit device instance PASS
+S3A_ISOLATION              s3a_on_w020            what drives the gate and t PASS
+PREFLIGHT_FULL             s3a_on_w020            s3a_on_w020.scs            PASS
+SIM_RUN                    s3a_on_w020            s3a_on_w020.scs            PASS
+S3A_DC_READ                s3a_on_w020            dc                         MEASURED
+S3A_CURRENT_SIGN           s3a_on_w020            I_SD := +VD:i, cross-check MEASURED
+S3A_N_SCALING              s3a_on_w020            single device: terminal cu MEASURED
+S3A_GEOMETRY               s3a_on_w050            W=50 um, L=0.4 um, N=1     PASS
+S3A_DEVICE_COUNT           s3a_on_w050            1 explicit device instance PASS
+S3A_ISOLATION              s3a_on_w050            what drives the gate and t PASS
+PREFLIGHT_FULL             s3a_on_w050            s3a_on_w050.scs            PASS
+SIM_RUN                    s3a_on_w050            s3a_on_w050.scs            PASS
+S3A_DC_READ                s3a_on_w050            dc                         MEASURED
+S3A_CURRENT_SIGN           s3a_on_w050            I_SD := +VD:i, cross-check MEASURED
+S3A_N_SCALING              s3a_on_w050            single device: terminal cu MEASURED
+S3A_GEOMETRY               s3a_on_w100            W=100 um, L=0.4 um, N=1    PASS
+S3A_DEVICE_COUNT           s3a_on_w100            1 explicit device instance PASS
+S3A_ISOLATION              s3a_on_w100            what drives the gate and t PASS
+PREFLIGHT_FULL             s3a_on_w100            s3a_on_w100.scs            PASS
+SIM_RUN                    s3a_on_w100            s3a_on_w100.scs            PASS
+S3A_DC_READ                s3a_on_w100            dc                         MEASURED
+S3A_CURRENT_SIGN           s3a_on_w100            I_SD := +VD:i, cross-check MEASURED
+S3A_N_SCALING              s3a_on_w100            single device: terminal cu MEASURED
+S3A_CANDIDATE              all                    N = ceil(0.01152 A / measu MEASURED
+S3A_GEOMETRY               s3a_on_par             W=100 um, L=0.4 um, N=7    PASS
+S3A_DEVICE_COUNT           s3a_on_par             7 explicit device instance PASS
+S3A_ISOLATION              s3a_on_par             what drives the gate and t PASS
+PREFLIGHT_FULL             s3a_on_par             s3a_on_par.scs             PASS
+SIM_RUN                    s3a_on_par             s3a_on_par.scs             PASS
+S3A_DC_READ                s3a_on_par             dc                         MEASURED
+S3A_CURRENT_SIGN           s3a_on_par             I_SD := +VD:i, cross-check MEASURED
+S3A_N_SCALING              s3a_on_par             7 devices in parallel: mea MEASURED
+S3A_GEOMETRY               s3a_off_par            W=100 um, L=0.4 um, N=7    PASS
+S3A_DEVICE_COUNT           s3a_off_par            7 explicit device instance PASS
+S3A_ISOLATION              s3a_off_par            what drives the gate and t PASS
+PREFLIGHT_FULL             s3a_off_par            s3a_off_par.scs            PASS
+SIM_RUN                    s3a_off_par            s3a_off_par.scs            PASS
+S3A_DC_READ                s3a_off_par            dc                         MEASURED
+S3A_CURRENT_SIGN           s3a_off_par            I_SD := +VD:i, cross-check MEASURED
+S3A_N_SCALING              s3a_off_par            7 devices in parallel: mea MEASURED
+S3A_OFF_STATE              s3a_off_par            off-state branch current o MEASURED
+S3A_GEOMETRY               s3a_dyn_light          W=100 um, L=0.4 um, N=7    PASS
+S3A_DEVICE_COUNT           s3a_dyn_light          7 explicit device instance PASS
+S3A_ISOLATION              s3a_dyn_light          what drives the gate and t PASS
+PREFLIGHT_FULL             s3a_dyn_light          s3a_dyn_light.scs          PASS
+Traceback (most recent call last):
+  File "scripts/sc1_s3a_p33_tt.py", line 987, in <module>
+    sys.exit(main())
+  File "scripts/sc1_s3a_p33_tt.py", line 940, in main
+    per = run_deck(R, cs['id'], cs, scratch, man_rows, dc_rows, samp_rows, id_rows, o)
+  File "scripts/sc1_s3a_p33_tt.py", line 546, in run_deck
+    fmt_v(cs['load'][2]) if cs['kind'] == 'dyn' else '',
+  File "scripts/sc1_s3a_p33_tt.py", line 83, in fmt_v
+    return '%.6g' % x
+TypeError: float argument required, not str
+FULL_RC=1

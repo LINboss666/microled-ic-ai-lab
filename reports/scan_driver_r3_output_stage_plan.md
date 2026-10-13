@@ -173,6 +173,15 @@ panel-level questions stay exactly where §5 left them.
 circuit progress does not stall on missing LED data; entering it needs that decision first (P1 plus the
 `POC_ASSUMPTION` framing), and the deliverables above are unchanged either way.
 
+> **Update, 2026-10-14.** The reviewer took that option: **`R3_REVIEW: PASS /
+> GO_S3_A_3V3_CHARACTERISATION`**, and **SCAN-1S3A** ran it. The measurement now exists —
+> `Ron ≈ 5560 Ω·µm / W` at `VSD = 0.1 V`, a candidate of **7 × p33, L=0.4 µm, W=100 µm (700 µm)**
+> carrying 12.57 mA at 0.10 V for a measured `Ron = 7.95 Ω`, an off-state branch of `2.06e-10 A` at
+> `VSD = 3.3 V`, and `1.49–1.51 pF` equivalent gate charge per edge — with `CONDITIONAL_RON_TARGET: MET`
+> and the panel questions exactly as this page left them. Everything is in
+> `reports/scan_driver_s3a_p33_characterisation.md`; `S3_CHAIN_POWER_INTEGRATION` is still `NOT_RUN`,
+> and P1/P2/P3 remain the gate on any panel-level statement.
+
 ## 8 What this plan is explicitly not
 
 * not a sized output device, not a schematic, not a netlist for the power stage;

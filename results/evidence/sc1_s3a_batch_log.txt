@@ -1,0 +1,96 @@
+RUN_ID S3A-20261013T160844Z section=tt temp_written=27 L=0.4 um W_set=5,10,20,50,100 rail=3.3(POC_ASSUMPTION) N_ceiling=16 conditional_target=8.68056 ohm
+S3A_GEOMETRY               s3a_on_w005            W=5 um, L=0.4 um, N=1      PASS
+S3A_DEVICE_COUNT           s3a_on_w005            1 explicit device instance PASS
+S3A_ISOLATION              s3a_on_w005            what drives the gate and t PASS
+PREFLIGHT_FULL             s3a_on_w005            s3a_on_w005.scs            PASS
+SIM_RUN                    s3a_on_w005            s3a_on_w005.scs            PASS
+S3A_DC_READ                s3a_on_w005            dc                         MEASURED
+S3A_CURRENT_SIGN           s3a_on_w005            I_SD := +VD:i, cross-check MEASURED
+S3A_N_SCALING              s3a_on_w005            single device: terminal cu MEASURED
+S3A_GEOMETRY               s3a_on_w010            W=10 um, L=0.4 um, N=1     PASS
+S3A_DEVICE_COUNT           s3a_on_w010            1 explicit device instance PASS
+S3A_ISOLATION              s3a_on_w010            what drives the gate and t PASS
+PREFLIGHT_FULL             s3a_on_w010            s3a_on_w010.scs            PASS
+SIM_RUN                    s3a_on_w010            s3a_on_w010.scs            PASS
+S3A_DC_READ                s3a_on_w010            dc                         MEASURED
+S3A_CURRENT_SIGN           s3a_on_w010            I_SD := +VD:i, cross-check MEASURED
+S3A_N_SCALING              s3a_on_w010            single device: terminal cu MEASURED
+S3A_GEOMETRY               s3a_on_w020            W=20 um, L=0.4 um, N=1     PASS
+S3A_DEVICE_COUNT           s3a_on_w020            1 explicit device instance PASS
+S3A_ISOLATION              s3a_on_w020            what drives the gate and t PASS
+PREFLIGHT_FULL             s3a_on_w020            s3a_on_w020.scs            PASS
+SIM_RUN                    s3a_on_w020            s3a_on_w020.scs            PASS
+S3A_DC_READ                s3a_on_w020            dc                         MEASURED
+S3A_CURRENT_SIGN           s3a_on_w020            I_SD := +VD:i, cross-check MEASURED
+S3A_N_SCALING              s3a_on_w020            single device: terminal cu MEASURED
+S3A_GEOMETRY               s3a_on_w050            W=50 um, L=0.4 um, N=1     PASS
+S3A_DEVICE_COUNT           s3a_on_w050            1 explicit device instance PASS
+S3A_ISOLATION              s3a_on_w050            what drives the gate and t PASS
+PREFLIGHT_FULL             s3a_on_w050            s3a_on_w050.scs            PASS
+SIM_RUN                    s3a_on_w050            s3a_on_w050.scs            PASS
+S3A_DC_READ                s3a_on_w050            dc                         MEASURED
+S3A_CURRENT_SIGN           s3a_on_w050            I_SD := +VD:i, cross-check MEASURED
+S3A_N_SCALING              s3a_on_w050            single device: terminal cu MEASURED
+S3A_GEOMETRY               s3a_on_w100            W=100 um, L=0.4 um, N=1    PASS
+S3A_DEVICE_COUNT           s3a_on_w100            1 explicit device instance PASS
+S3A_ISOLATION              s3a_on_w100            what drives the gate and t PASS
+PREFLIGHT_FULL             s3a_on_w100            s3a_on_w100.scs            PASS
+SIM_RUN                    s3a_on_w100            s3a_on_w100.scs            PASS
+S3A_DC_READ                s3a_on_w100            dc                         MEASURED
+S3A_CURRENT_SIGN           s3a_on_w100            I_SD := +VD:i, cross-check MEASURED
+S3A_N_SCALING              s3a_on_w100            single device: terminal cu MEASURED
+S3A_CANDIDATE              all                    N = ceil(0.01152 A / measu MEASURED
+S3A_GEOMETRY               s3a_on_par             W=100 um, L=0.4 um, N=7    PASS
+S3A_DEVICE_COUNT           s3a_on_par             7 explicit device instance PASS
+S3A_ISOLATION              s3a_on_par             what drives the gate and t PASS
+PREFLIGHT_FULL             s3a_on_par             s3a_on_par.scs             PASS
+SIM_RUN                    s3a_on_par             s3a_on_par.scs             PASS
+S3A_DC_READ                s3a_on_par             dc                         MEASURED
+S3A_CURRENT_SIGN           s3a_on_par             I_SD := +VD:i, cross-check MEASURED
+S3A_N_SCALING              s3a_on_par             7 devices in parallel: mea MEASURED
+S3A_GEOMETRY               s3a_off_par            W=100 um, L=0.4 um, N=7    PASS
+S3A_DEVICE_COUNT           s3a_off_par            7 explicit device instance PASS
+S3A_ISOLATION              s3a_off_par            what drives the gate and t PASS
+PREFLIGHT_FULL             s3a_off_par            s3a_off_par.scs            PASS
+SIM_RUN                    s3a_off_par            s3a_off_par.scs            PASS
+S3A_DC_READ                s3a_off_par            dc                         MEASURED
+S3A_CURRENT_SIGN           s3a_off_par            I_SD := +VD:i, cross-check MEASURED
+S3A_N_SCALING              s3a_off_par            7 devices in parallel: mea MEASURED
+S3A_OFF_STATE              s3a_off_par            off-state branch current o MEASURED
+S3A_GEOMETRY               s3a_dyn_light          W=100 um, L=0.4 um, N=7    PASS
+S3A_DEVICE_COUNT           s3a_dyn_light          7 explicit device instance PASS
+S3A_ISOLATION              s3a_dyn_light          what drives the gate and t PASS
+PREFLIGHT_FULL             s3a_dyn_light          s3a_dyn_light.scs          PASS
+SIM_RUN                    s3a_dyn_light          s3a_dyn_light.scs          PASS
+S3A_DYN_READ               s3a_dyn_light          time                       MEASURED
+S3A_DYN_BASELINE           s3a_dyn_light          VG:i over 10..40 ns (gate  MEASURED
+S3A_DYN_PLATEAU            s3a_dyn_light          drain over the selected st MEASURED
+S3A_GATE_CHARGE            s3a_dyn_light          select_on edge 49..51 ns   MEASURED
+S3A_GATE_CHARGE            s3a_dyn_light          blank_off edge 199..201 ns MEASURED
+S3A_BRANCH_PEAK            s3a_dyn_light          VS:i min over the run      MEASURED
+S3A_BRANCH_PEAK            s3a_dyn_light          VS:i max over the run      MEASURED
+S3A_BRANCH_PEAK            s3a_dyn_light          VG:i min over the run      MEASURED
+S3A_BRANCH_PEAK            s3a_dyn_light          VG:i max over the run      MEASURED
+S3A_STIMULUS_READBACK      s3a_dyn_light          VG pwl and the analysis li PASS
+S3A_GEOMETRY               s3a_dyn_column         W=100 um, L=0.4 um, N=7    PASS
+S3A_DEVICE_COUNT           s3a_dyn_column         7 explicit device instance PASS
+S3A_ISOLATION              s3a_dyn_column         what drives the gate and t PASS
+PREFLIGHT_FULL             s3a_dyn_column         s3a_dyn_column.scs         PASS
+SIM_RUN                    s3a_dyn_column         s3a_dyn_column.scs         PASS
+S3A_DYN_READ               s3a_dyn_column         time                       MEASURED
+S3A_DYN_BASELINE           s3a_dyn_column         VG:i over 10..40 ns (gate  MEASURED
+S3A_DYN_PLATEAU            s3a_dyn_column         drain over the selected st MEASURED
+S3A_GATE_CHARGE            s3a_dyn_column         select_on edge 49..51 ns   MEASURED
+S3A_GATE_CHARGE            s3a_dyn_column         blank_off edge 199..201 ns MEASURED
+S3A_BRANCH_PEAK            s3a_dyn_column         VS:i min over the run      MEASURED
+S3A_BRANCH_PEAK            s3a_dyn_column         VS:i max over the run      MEASURED
+S3A_BRANCH_PEAK            s3a_dyn_column         VG:i min over the run      MEASURED
+S3A_BRANCH_PEAK            s3a_dyn_column         VG:i max over the run      MEASURED
+S3A_STIMULUS_READBACK      s3a_dyn_column         VG pwl and the analysis li PASS
+S3A_PARALLEL_CHECK         all                    the measured candidate tot MEASURED
+S3A_CONDITIONAL_CURRENTS   all                    15 uA (one selected pixel) MEASURED
+S3A_CONDITIONAL_TARGET     all                    Ron <= 8.68056 ohm, the dr MET
+S3A_PROCESS_COUNT          all                    preflight dependency runs  MEASURED
+S3A_TT rows=92 dc_points=77 dyn_samples=256 decks=9 functional_FAIL=0 dependency=0 informational=92 -> <path-redacted>
+S3A_CANDIDATE W=100 um N=7 (N_req=7) w_total=0.0007 m I_SD_single=0.00179623 A at VSD=0.1 V Ron_single=55.6722 ohm
+FULL_RC=0

@@ -2,6 +2,51 @@
 
 ## CURRENT_STATUS (single authoritative table; everything below this block is history)
 
+Updated 2026-10-14 during **SCAN-1S3A / p33 high-side electrical characterisation in the 3.3 V domain**.
+Start point re-read before editing: local HEAD `b48a821a7e977a95c981a86c63430e4d796182c6`, remote ref
+read back through `gh api` as the **same full SHA**, no unknown upstream commits. The cloud reviewed
+`b48a821` and decided **`R3_REVIEW: PASS / GO_S3_A_3V3_CHARACTERISATION`**; this round is that decision's
+declared scope. Full write-up: `reports/scan_driver_s3a_p33_characterisation.md`; artifacts
+`scripts/sc1_s3a_p33_tt.py`, `scripts/sc1_s3a_verify_evidence.py`, `scripts/sc1_s3a_tail_read.py`,
+`results/evidence/sc1_s3a_*`. Spectre really ran (guest RHEL6.5, python 2.6.6, Tools channel) and the
+VM's power, network, snapshots, licence, the PDK and the OA libraries were not touched. **No 5 V device,
+no stack, no LED, no electrode RC, no corner or temperature sweep, no power-fail matrix, and the device
+is still not connected to the R3 chain.**
+
+| item | status | evidence |
+|---|---|---|
+| **R3_CONTROL_CHAIN** | **ACCEPTED** (cloud, 2026-10-14: `R3_REVIEW: PASS`) | the 428 native rows, the restored 9-row manifest, the re-exported 812-row samples and the 9-row identity index were independently rebuilt and recomputed by the reviewer; the 4 `NOT_MEASURED_OVERLAP` refusals stayed refusals |
+| batch and conditions | **COMPLETE for the declared point**: 9 decks, 9 preflights `rc=0`, 9 DUT runs `rc=0`, 92 rows + 77 DC points + 256 transient samples, `functional_FAIL=0 dependency=0` | `run_id S3A-20261013T160844Z`; `sc1_s3a_manifest.csv` carries per-deck sha256 of deck and raw, `section=tt`, `temp_read_back=psf=27.0000` **from the data header**, rails, L/W/N, load, and the four real rcs |
+| PDK identity | **read back, hashes only** | lib `fc8d321752f2bacf…`, `…_spe.mdl 5187cae15226…`, README `f43d2585330a…`, and the `tt`-nested `…_mis_spe.mdl 4b62b398adee…` in `sc1_s3a_identity.csv`; no model card, path or PDK content is committed |
+| geometry, not ratings | **READ BACK from the model record** | `lmin=3e-7 lmax=1e-4 wmin=2.2e-7 wmax=1e-4` off the p33 record (so 100 µm is the model's own ceiling, not a reported figure); `S3A_GEOMETRY` passes for all nine decks with `a range, not a rating`; **`SOA: NO`** |
+| single-device conductance | **MEASURED, and linear in W** | `Ron@VSD=0.1 V` = 1106.5 / 555.17 / 278.03 / 111.31 / 55.672 Ω for W = 5/10/20/50/100 µm; `W × Ron` spans only **0.63 %** across a 20× width range; Ron is 2.4 % lower at 0.01 V than at 0.10 V, so the full 11-point `I–V` per deck is shipped |
+| current sign convention | **verified, not assumed** | `I_SD := +VD:i`; `max \|VD:i − (−VS:i)| = 0…1.2e-30 A` (worst `1.04e-17 A` at N=7); `mp<k>:1` observed **opposite in sign** to `+VD:i` on every point, so sums are compared on magnitudes; the VSD=0 point is `NOT_DEFINED` with no resistance written, in all seven on-state decks |
+| the candidate rank | **derived from measurement** | `N_req = ceil(11.52 mA / 1.79623 mA) = 7` → `N=7`, `w_total=700 µm`; explicit device instances, **no `m=`/`nf=` invented**; `S3A_DEVICE_COUNT` declared=counted in all nine decks |
+| **CONDITIONAL_RON_TARGET** | **MET at N=7** | measured candidate `Ron = 7.9532 Ω` vs the conditional `8.6806 Ω` (draft 0.10 V ÷ architecture-assumed 11.52 mA); `total = 12.5736 mA` vs `N × single = 12.5736 mA`, **ratio 1.000** across two separate decks. MET at tt/27 °C/3.3 V only — the 15 µA and 11.52 mA figures are printed side by side precisely so neither is read as a panel spec |
+| off state | **MEASURED, not a pass/fail** | max `\|I_SD\| = 2.05563e-10 A` at `VSD = 3.3 V` (`VD=0`, `VGS=0`, `VGD=3.3`, `VDS=−3.3`, `VGB=0`) over 11 points; the draft `0.1 µA` is printed as a reference; no high-temperature or corner leakage claim |
+| gate charge | **MEASURED per edge** | select `−4.973 / −4.905 pC`, blank `+4.420 / +4.614 pC` (trapezoid of `−VG:i`, 25–30 adjacent samples inside the 2 ns edge, steady baseline `−7e-16…+1.2e-15 A` over 301 off-window points) ⇒ `C_eff,Q = 1.486…1.507 pF`; named an equivalent charge load **including Miller/nonlinearity, not a `Cgg`** |
+| branch peaks | **MEASURED, no budget** | `VS:i` min `−17.09 mA @49.916 ns` (light) and `−41.85 mA @50.181 ns` (column); `VG:i` max `+6.33 mA` / `+4.94 mA` — the currents a real driver must move |
+| the 1.525 V tail | **read, not re-simulated** | at 480–500 ns the light-load drain is `1.52512 V` (its `R×C = 220 ns` vs 299 ns elapsed) while the column load is at `58.4 nV`. Recorded via `sc1_s3a_tail_read.py` calling the strict reader on the delivered raw (sha named per row, last sample `5e-07 s`): **D not at 0 is not a failure to turn off, and it is not a reason to add a bleed device** |
+| magnitude-only comparison to R3 | **stated as a comparison** | R3 measured `gate33` edges of 2.025 ns at 1 pF and 9.893 ns at 5 pF; the candidate's `1.49–1.51 pF` sits inside that bracket — explicitly **not** a drive verification, which is S3-B's question |
+| evidence checks | **27/27 and 8/8 in both environments** | `sc1_s3a_verify_evidence.py` re-parses the delivered bytes and **recomputes** every Ron (70 checked, 0 mismatch), the `VSD=0` refusal, the candidate rank from the DC table, and both edge charges from the shipped samples; `--selftest` 8/8 (includes the trapezoid unit check: 1 µA × 10 µs = 1e-11 C). Windows 3.12 and guest 2.6.6 agree |
+| batch accounting | **delivered batch separated from 4 retries** | probe 1+1, batch 1 8+7 (tuple-index crash before any write), batch 2 9+9 (2 decks `HARNESS_ERROR/BLOCKED`, per-deck guard), batch 3 9+9 (`temp_read_back=NOT_READ`: the reader looked for `temp=` but the header writes `"temp" 27.0000`), **batch 4 delivered 9+9**; round total 71 processes summed from preserved logs, never merged into the delivered figure |
+| refusal / dry isolation | **built in from the start (AGENTS rule 27)** | unauthorised call prints `S3A_REFUSED …` and returns 5 **before** any write; `--dry` without `--out` writes only inside the scratch dir; every probe/debug output was redirected off the official paths, so no delivered file was ever truncated |
+| frozen inputs | **0 files changed** | the three accepted cells, the R3 wrapper, the audited reader/delay/vtx/preflight/supply/runner/call-contract, the S1/S2 generators and every earlier experiment CSV: `git diff b48a821 HEAD` over them is empty. New content is one entry + two offline check tools + evidence + this report |
+| **FINAL_PANEL_VOLTAGE / LED_IV** | **NOT_DEFINED · NOT_DEFINED** | unchanged and not entered: 3.3 V is a characterisation choice, no LED model was invented, and P1/P2/P3 from the pre-design stay open |
+| **S3_CHAIN_POWER_INTEGRATION** | **NOT_RUN** | the device was never attached to `gate33`; §8 of the report lists the five connection questions S3-B must answer with these numbers as inputs |
+| **S4_CHAIN / SOA / AUTONOMOUS_POWER_FAIL** | **NOT_STARTED · NO · NOT_IMPLEMENTED** | no multi-channel or shift chain, no absolute rating read, no POR/UVLO/power-fail behaviour |
+
+### Next step is a decision, not a continuation
+
+The device side now has numbers: a 7 × 100 µm, L=0.4 µm p33 candidate that satisfies the conditional
+draft arithmetic at tt/27 °C, an off-state reading, and a per-edge charge of ~1.5 pF. Nothing about the
+panel is decided. Stopping at the **S3-A electrical-characterisation review gate**: the reviewer can
+recompute every figure above from `sc1_s3a_*.csv`, and then chooses between **S3-B** (connect the
+measured candidate to `gate33` and verify drive, edges and the blank/guard interaction) and waiting for
+P1/P2/P3 (`VSCAN`/`VLED`, LED `Vf`, `N_active`) that alone can close a panel-level statement.
+
+## HISTORICAL_STATUS (SCAN-1R3A round, kept for audit; superseded by the S3-A block above)
+
 Updated 2026-10-13 during **SCAN-1R3A / R3 delivery-evidence repair, zero re-simulation**. Start point
 re-read before editing: local HEAD `f199245b66de38e549693d3fec55d0d746075790`, remote ref read back
 through `gh api` as the **same full SHA**. The cloud pulled `f199245`, kept the circuit progress and

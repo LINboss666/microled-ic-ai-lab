@@ -1,0 +1,293 @@
+=== s3a_on_w005 run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=3.3)
+--- local cell files parsed for port
+runner: SPECTRE name=s3a_on_w005.scs rc=0 elapsed=1s timeout=600s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 48
+drwx------. 4 root root 4096 Oct 14 00:08 .
+drwx------. 3 root root 4096 Oct 14 00:08 ..
+-rw-------. 1 root root 7657 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.log
+drwx------. 2 root root 4096 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.raw
+-rw-------. 1 root root 7467 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.stdout
+-rw-------. 1 root root 4735 Oct 14 00:08 s3a_on_w005.log
+drwx------. 2 root root 4096 Oct 14 00:08 s3a_on_w005.raw
+-rw-------. 1 root root 4485 Oct 14 00:08 s3a_on_w005.stdout
+----- log tail -----
+
+
+Aggregate audit (12:08:45 AM, Wed Oct 14, 2026):
+Time used: CPU = 179 ms, elapsed = 206 ms, util. = 86.7%.
+Time spent in licensing: elapsed = 57.2 ms, percentage of total = 27.7%.
+Peak memory used = 63.3 Mbytes.
+Simulation started at: 12:08:45 AM, Wed Oct 14, 2026, ended at: 12:08:45 AM, Wed Oct 14, 2026, with elapsed time (wall clock): 206 ms.
+spectre completes with 0 errors, 0 warnings, and 1 notice.
+S3A_s3a_on_w005: PASS
+
+
+=== s3a_on_w010 run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=3.3)
+--- local cell files parsed for port
+runner: SPECTRE name=s3a_on_w010.scs rc=0 elapsed=0s timeout=600s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 88
+drwx------. 6 root root 4096 Oct 14 00:08 .
+drwx------. 3 root root 4096 Oct 14 00:08 ..
+-rw-------. 1 root root 7657 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.log
+drwx------. 2 root root 4096 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.raw
+-rw-------. 1 root root 7467 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.stdout
+-rw-------. 1 root root 7654 Oct 14 00:08 preflight_s3a_on_w010_s3a_on_w010.log
+drwx------. 2 root root 4096 Oct 14 00:08 preflight_s3a_on_w010_s3a_on_w010.raw
+-rw-------. 1 root root 7456 Oct 14 00:08 preflight_s3a_on_w010_s3a_on_w010.stdout
+-rw-------. 1 root root 4735 Oct 14 00:08 s3a_on_w005.log
+drwx------. 2 root root 4096 Oct 14 00:08 s3a_on_w005.raw
+-rw-------. 1 root root 4485 Oct 14 00:08 s3a_on_w005.stdout
+----- log tail -----
+
+
+Aggregate audit (12:08:45 AM, Wed Oct 14, 2026):
+Time used: CPU = 173 ms, elapsed = 201 ms, util. = 86.1%.
+Time spent in licensing: elapsed = 57.5 ms, percentage of total = 28.6%.
+Peak memory used = 61.4 Mbytes.
+Simulation started at: 12:08:45 AM, Wed Oct 14, 2026, ended at: 12:08:45 AM, Wed Oct 14, 2026, with elapsed time (wall clock): 201 ms.
+spectre completes with 0 errors, 0 warnings, and 1 notice.
+S3A_s3a_on_w010: PASS
+
+
+=== s3a_on_w020 run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=3.3)
+--- local cell files parsed for port
+runner: SPECTRE name=s3a_on_w020.scs rc=0 elapsed=0s timeout=600s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 128
+drwx------. 8 root root 4096 Oct 14 00:08 .
+drwx------. 3 root root 4096 Oct 14 00:08 ..
+-rw-------. 1 root root 7657 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.log
+drwx------. 2 root root 4096 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.raw
+-rw-------. 1 root root 7467 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.stdout
+-rw-------. 1 root root 7654 Oct 14 00:08 preflight_s3a_on_w010_s3a_on_w010.log
+drwx------. 2 root root 4096 Oct 14 00:08 preflight_s3a_on_w010_s3a_on_w010.raw
+-rw-------. 1 root root 7456 Oct 14 00:08 preflight_s3a_on_w010_s3a_on_w010.stdout
+-rw-------. 1 root root 7675 Oct 14 00:08 preflight_s3a_on_w020_s3a_on_w020.log
+drwx------. 2 root root 4096 Oct 14 00:08 preflight_s3a_on_w020_s3a_on_w020.raw
+-rw-------. 1 root root 7477 Oct 14 00:08 preflight_s3a_on_w020_s3a_on_w020.stdout
+----- log tail -----
+
+
+Aggregate audit (12:08:46 AM, Wed Oct 14, 2026):
+Time used: CPU = 174 ms, elapsed = 201 ms, util. = 86.5%.
+Time spent in licensing: elapsed = 56 ms, percentage of total = 27.9%.
+Peak memory used = 61.4 Mbytes.
+Simulation started at: 12:08:46 AM, Wed Oct 14, 2026, ended at: 12:08:46 AM, Wed Oct 14, 2026, with elapsed time (wall clock): 201 ms.
+spectre completes with 0 errors, 0 warnings, and 1 notice.
+S3A_s3a_on_w020: PASS
+
+
+=== s3a_on_w050 run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=3.3)
+--- local cell files parsed for port
+runner: SPECTRE name=s3a_on_w050.scs rc=0 elapsed=1s timeout=600s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 168
+drwx------. 10 root root 4096 Oct 14 00:08 .
+drwx------.  3 root root 4096 Oct 14 00:08 ..
+-rw-------.  1 root root 7657 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.log
+drwx------.  2 root root 4096 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.raw
+-rw-------.  1 root root 7467 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.stdout
+-rw-------.  1 root root 7654 Oct 14 00:08 preflight_s3a_on_w010_s3a_on_w010.log
+drwx------.  2 root root 4096 Oct 14 00:08 preflight_s3a_on_w010_s3a_on_w010.raw
+-rw-------.  1 root root 7456 Oct 14 00:08 preflight_s3a_on_w010_s3a_on_w010.stdout
+-rw-------.  1 root root 7675 Oct 14 00:08 preflight_s3a_on_w020_s3a_on_w020.log
+drwx------.  2 root root 4096 Oct 14 00:08 preflight_s3a_on_w020_s3a_on_w020.raw
+-rw-------.  1 root root 7477 Oct 14 00:08 preflight_s3a_on_w020_s3a_on_w020.stdout
+----- log tail -----
+
+
+Aggregate audit (12:08:47 AM, Wed Oct 14, 2026):
+Time used: CPU = 182 ms, elapsed = 209 ms, util. = 86.9%.
+Time spent in licensing: elapsed = 56.8 ms, percentage of total = 27.1%.
+Peak memory used = 61.4 Mbytes.
+Simulation started at: 12:08:46 AM, Wed Oct 14, 2026, ended at: 12:08:47 AM, Wed Oct 14, 2026, with elapsed time (wall clock): 209 ms.
+spectre completes with 0 errors, 0 warnings, and 1 notice.
+S3A_s3a_on_w050: PASS
+
+
+=== s3a_on_w100 run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=3.3)
+--- local cell files parsed for port
+runner: SPECTRE name=s3a_on_w100.scs rc=0 elapsed=0s timeout=600s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 208
+drwx------. 12 root root 4096 Oct 14 00:08 .
+drwx------.  3 root root 4096 Oct 14 00:08 ..
+-rw-------.  1 root root 7657 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.log
+drwx------.  2 root root 4096 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.raw
+-rw-------.  1 root root 7467 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.stdout
+-rw-------.  1 root root 7654 Oct 14 00:08 preflight_s3a_on_w010_s3a_on_w010.log
+drwx------.  2 root root 4096 Oct 14 00:08 preflight_s3a_on_w010_s3a_on_w010.raw
+-rw-------.  1 root root 7456 Oct 14 00:08 preflight_s3a_on_w010_s3a_on_w010.stdout
+-rw-------.  1 root root 7675 Oct 14 00:08 preflight_s3a_on_w020_s3a_on_w020.log
+drwx------.  2 root root 4096 Oct 14 00:08 preflight_s3a_on_w020_s3a_on_w020.raw
+-rw-------.  1 root root 7477 Oct 14 00:08 preflight_s3a_on_w020_s3a_on_w020.stdout
+----- log tail -----
+
+
+Aggregate audit (12:08:47 AM, Wed Oct 14, 2026):
+Time used: CPU = 161 ms, elapsed = 187 ms, util. = 86.1%.
+Time spent in licensing: elapsed = 53.8 ms, percentage of total = 28.8%.
+Peak memory used = 61.4 Mbytes.
+Simulation started at: 12:08:47 AM, Wed Oct 14, 2026, ended at: 12:08:47 AM, Wed Oct 14, 2026, with elapsed time (wall clock): 187 ms.
+spectre completes with 0 errors, 1 warning, and 1 notice.
+S3A_s3a_on_w100: PASS
+
+
+=== s3a_on_par run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=3.3)
+--- local cell files parsed for port 
+runner: SPECTRE name=s3a_on_par.scs rc=0 elapsed=0s timeout=600s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 256
+drwx------. 14 root root 4096 Oct 14 00:08 .
+drwx------.  3 root root 4096 Oct 14 00:08 ..
+-rw-------.  1 root root 8579 Oct 14 00:08 preflight_s3a_on_par_s3a_on_par.log
+drwx------.  2 root root 4096 Oct 14 00:08 preflight_s3a_on_par_s3a_on_par.raw
+-rw-------.  1 root root 8461 Oct 14 00:08 preflight_s3a_on_par_s3a_on_par.stdout
+-rw-------.  1 root root 7657 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.log
+drwx------.  2 root root 4096 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.raw
+-rw-------.  1 root root 7467 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.stdout
+-rw-------.  1 root root 7654 Oct 14 00:08 preflight_s3a_on_w010_s3a_on_w010.log
+drwx------.  2 root root 4096 Oct 14 00:08 preflight_s3a_on_w010_s3a_on_w010.raw
+-rw-------.  1 root root 7456 Oct 14 00:08 preflight_s3a_on_w010_s3a_on_w010.stdout
+----- log tail -----
+
+
+Aggregate audit (12:08:48 AM, Wed Oct 14, 2026):
+Time used: CPU = 184 ms, elapsed = 212 ms, util. = 86.7%.
+Time spent in licensing: elapsed = 58.8 ms, percentage of total = 27.7%.
+Peak memory used = 61.4 Mbytes.
+Simulation started at: 12:08:48 AM, Wed Oct 14, 2026, ended at: 12:08:48 AM, Wed Oct 14, 2026, with elapsed time (wall clock): 212 ms.
+spectre completes with 0 errors, 5 warnings, and 2 notices.
+S3A_s3a_on_par: PASS
+
+
+=== s3a_off_par run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=3.3)
+--- local cell files parsed for port
+runner: SPECTRE name=s3a_off_par.scs rc=0 elapsed=0s timeout=600s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 304
+drwx------. 16 root root 4096 Oct 14 00:08 .
+drwx------.  3 root root 4096 Oct 14 00:08 ..
+-rw-------.  1 root root 8574 Oct 14 00:08 preflight_s3a_off_par_s3a_off_par.log
+drwx------.  2 root root 4096 Oct 14 00:08 preflight_s3a_off_par_s3a_off_par.raw
+-rw-------.  1 root root 8456 Oct 14 00:08 preflight_s3a_off_par_s3a_off_par.stdout
+-rw-------.  1 root root 8579 Oct 14 00:08 preflight_s3a_on_par_s3a_on_par.log
+drwx------.  2 root root 4096 Oct 14 00:08 preflight_s3a_on_par_s3a_on_par.raw
+-rw-------.  1 root root 8461 Oct 14 00:08 preflight_s3a_on_par_s3a_on_par.stdout
+-rw-------.  1 root root 7657 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.log
+drwx------.  2 root root 4096 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.raw
+-rw-------.  1 root root 7467 Oct 14 00:08 preflight_s3a_on_w005_s3a_on_w005.stdout
+----- log tail -----
+
+
+Aggregate audit (12:08:48 AM, Wed Oct 14, 2026):
+Time used: CPU = 183 ms, elapsed = 210 ms, util. = 86.9%.
+Time spent in licensing: elapsed = 60.2 ms, percentage of total = 28.6%.
+Peak memory used = 61.4 Mbytes.
+Simulation started at: 12:08:48 AM, Wed Oct 14, 2026, ended at: 12:08:48 AM, Wed Oct 14, 2026, with elapsed time (wall clock): 210 ms.
+spectre completes with 0 errors, 5 warnings, and 2 notices.
+S3A_s3a_off_par: PASS
+
+
+=== s3a_dyn_light run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=3.3)
+--- local cell files parsed for po
+runner: SPECTRE name=s3a_dyn_light.scs rc=0 elapsed=0s timeout=600s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 344
+drwx------. 18 root root 4096 Oct 14 00:08 .
+drwx------.  3 root root 4096 Oct 14 00:08 ..
+-rw-------.  1 root root 6852 Oct 14 00:08 preflight_s3a_dyn_light_s3a_dyn_light.log
+drwx------.  2 root root 4096 Oct 14 00:08 preflight_s3a_dyn_light_s3a_dyn_light.raw
+-rw-------.  1 root root 6681 Oct 14 00:08 preflight_s3a_dyn_light_s3a_dyn_light.stdout
+-rw-------.  1 root root 8574 Oct 14 00:08 preflight_s3a_off_par_s3a_off_par.log
+drwx------.  2 root root 4096 Oct 14 00:08 preflight_s3a_off_par_s3a_off_par.raw
+-rw-------.  1 root root 8456 Oct 14 00:08 preflight_s3a_off_par_s3a_off_par.stdout
+-rw-------.  1 root root 8579 Oct 14 00:08 preflight_s3a_on_par_s3a_on_par.log
+drwx------.  2 root root 4096 Oct 14 00:08 preflight_s3a_on_par_s3a_on_par.raw
+-rw-------.  1 root root 8461 Oct 14 00:08 preflight_s3a_on_par_s3a_on_par.stdout
+----- log tail -----
+
+
+Aggregate audit (12:08:49 AM, Wed Oct 14, 2026):
+Time used: CPU = 289 ms, elapsed = 319 ms, util. = 90.7%.
+Time spent in licensing: elapsed = 60.1 ms, percentage of total = 18.8%.
+Peak memory used = 62.1 Mbytes.
+Simulation started at: 12:08:49 AM, Wed Oct 14, 2026, ended at: 12:08:49 AM, Wed Oct 14, 2026, with elapsed time (wall clock): 319 ms.
+spectre completes with 0 errors, 5 warnings, and 1 notice.
+S3A_s3a_dyn_light: PASS
+
+
+=== s3a_dyn_column run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=3.3)
+--- local cell files parsed for p
+runner: SPECTRE name=s3a_dyn_column.scs rc=0 elapsed=0s timeout=600s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 384
+drwx------. 20 root root 4096 Oct 14 00:08 .
+drwx------.  3 root root 4096 Oct 14 00:08 ..
+-rw-------.  1 root root 7900 Oct 14 00:08 preflight_s3a_dyn_column_s3a_dyn_column.log
+drwx------.  2 root root 4096 Oct 14 00:08 preflight_s3a_dyn_column_s3a_dyn_column.raw
+-rw-------.  1 root root 7758 Oct 14 00:08 preflight_s3a_dyn_column_s3a_dyn_column.stdout
+-rw-------.  1 root root 6852 Oct 14 00:08 preflight_s3a_dyn_light_s3a_dyn_light.log
+drwx------.  2 root root 4096 Oct 14 00:08 preflight_s3a_dyn_light_s3a_dyn_light.raw
+-rw-------.  1 root root 6681 Oct 14 00:08 preflight_s3a_dyn_light_s3a_dyn_light.stdout
+-rw-------.  1 root root 8574 Oct 14 00:08 preflight_s3a_off_par_s3a_off_par.log
+drwx------.  2 root root 4096 Oct 14 00:08 preflight_s3a_off_par_s3a_off_par.raw
+-rw-------.  1 root root 8456 Oct 14 00:08 preflight_s3a_off_par_s3a_off_par.stdout
+----- log tail -----
+
+
+Aggregate audit (12:08:52 AM, Wed Oct 14, 2026):
+Time used: CPU = 288 ms, elapsed = 313 ms, util. = 92%.
+Time spent in licensing: elapsed = 56.5 ms, percentage of total = 18%.
+Peak memory used = 64.1 Mbytes.
+Simulation started at: 12:08:52 AM, Wed Oct 14, 2026, ended at: 12:08:52 AM, Wed Oct 14, 2026, with elapsed time (wall clock): 313 ms.
+spectre completes with 0 errors, 5 warnings, and 8 notices.
+S3A_s3a_dyn_column: PASS
+

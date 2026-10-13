@@ -34,7 +34,12 @@ PROTECTED = ['spectre/C2MOS_DFF.scs', 'spectre/sc1_scan_gate.scs',
              'scripts/sc1_r2e1_call_contract.py', 'scripts/sc1_r2e_s2_tt.py',
              'scripts/sc1_r2e1_reread.py', 'scripts/sc1_r2e_vtx.py']
 
-ROLES = [(r'^scripts/sc1_r3a_.*\.py$', 'r3a_repair_tool'),
+ROLES = [(r'^scripts/sc1_s3a_.*\.py$', 's3a_entry_or_check'),
+         (r'^results/evidence/sc1_s3a_.*_log\.txt$', 's3a_transcript'),
+         (r'^results/evidence/sc1_s3a_.*\.txt$', 's3a_transcript'),
+         (r'^results/evidence/sc1_s3a_.*\.csv$', 's3a_evidence'),
+         (r'^reports/scan_driver_s3a.*\.md$', 's3a_report'),
+         (r'^scripts/sc1_r3a_.*\.py$', 'r3a_repair_tool'),
          (r'^scripts/sc1_r3_.*\.py$', 'r3_new_entry'),
          (r'^spectre/sc1_r3_.*\.scs$', 'r3_circuit_new'),
          (r'^results/evidence/sc1_r3_.*_log\.txt$', 'r3_transcript'),
@@ -94,8 +99,8 @@ def main():
             continue
         for _d, _s, fs in os.walk(root):
             for f in fs:
-                if f.startswith(('sc1_r2e', 'scan_driver_r2e', 'sc1_r3', 'scan_driver_r3')) \
-                        and not f.endswith('.pyc'):
+                if f.startswith(('sc1_r2e', 'scan_driver_r2e', 'sc1_r3', 'scan_driver_r3',
+                                 'sc1_s3a', 'scan_driver_s3a')) and not f.endswith('.pyc'):
                     rels.append(os.path.relpath(os.path.join(_d, f), PROJ).replace('\\', '/'))
     for rel in sorted(set(rels)):
         if os.path.normpath(os.path.join(PROJ, rel)) == os.path.normpath(os.path.abspath(out)):
