@@ -252,6 +252,14 @@ def main():
     # ---- 4. ports: names + directions against the netlist, and ONE order shared by both views
     seen = sum(1 for c in G.CELL_ORDER
                if ports.get((c, 'schematic')) or ports.get((c, 'symbol')))
+    # the reused read-back also dumps one PDK reference cell (p33:symbol) to evidence the terminal
+    # ORDER difference per device family. Its rows are deliberately excluded from every comparison
+    # above, so counting them together with the delivered terminals made an aggregate that a reviewer
+    # could not reconcile with 46 ports x 2 views -- delivered and reference are counted apart now.
+    delivered = dict((k, v) for k, v in ports.items() if k[0] in G.CELL_ORDER)
+    reference = sorted(set(k[0] for k in ports if k[0] not in G.CELL_ORDER))
+    n_delivered = sum(len(v) for v in delivered.values())
+    n_reference = sum(len(v) for k, v in ports.items() if k[0] not in G.CELL_ORDER)
     bad_port = []
     view_order = []
     seq_kept = []
@@ -270,17 +278,20 @@ def main():
             seq_kept.append(cell)
     verdict = 'NOT_AVAILABLE' if not seen else ('PASS' if not bad_port and not view_order
                                                 else 'FAIL')
-    R.add('D6_OA_PORTS', 'all', '%d of %d cells report terminals, %d rows read'
-          % (seen, len(G.CELL_ORDER), sum(len(v) for v in ports.values())),
+    R.add('D6_OA_PORTS', 'all', '%d of %d cells report terminals, %d delivered terminal objects'
+          % (seen, len(G.CELL_ORDER), n_delivered),
           'both views carry exactly the declared port names with the declared directions, and the '
           'schematic and the symbol agree on the ORDER',
-          'name/direction mismatches=%d | view-order diffs=%d | %d of %d cells keep the netlist '
-          'textual order (%s) | %s'
-          % (len(bad_port), len(view_order), len(seq_kept), len(G.CELL_ORDER),
-             ','.join(seq_kept)[:40] or 'none',
+          'expected %d = 46 ports x 2 views, read %d ; reference-cell rows %d from %s ; '
+          'name/direction mismatches=%d | view-order diffs=%d | %d of %d cells happen to keep the '
+          'netlist textual order | %s'
+          % (2 * sum(len(masters[cell]['ports']) for cell in G.CELL_ORDER), n_delivered,
+             n_reference, ', '.join(reference) or 'none', len(bad_port), len(view_order),
+             len(seq_kept), len(G.CELL_ORDER),
              ' ; '.join(bad_port[:1] + view_order[:1])[:80] or 'none'), 0, verdict,
           'the terminal SEQUENCE a netlist spells is a naming matter; what is claimed here is that '
-          'no port is missing, wrongly directed, or ordered differently between the two views')
+          'no port is missing, wrongly directed, or ordered differently between the two views. The '
+          "IL's own PDK reference dump is counted apart and compared to nothing")
 
     # ---- 5. library and model identity
     models = set(unq(m.get('model')) for m in mos)

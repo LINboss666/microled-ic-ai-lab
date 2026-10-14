@@ -944,20 +944,65 @@ def measure_settle(R, cid, groups, axis, w, enxs):
           'reported beside the window row, never instead of it')
 
 
-def emit_key_samples(R, rows, cid, data, case_def, groups, axis, deck_sha, raw_sha):
-    """a handful of untouched samples around each declared event, for a reviewer to recompute from"""
-    sigs = ['d', 'clk', 'blank', NODES['q'], NODES['data_en'], IOUT]
-    clk, _dch, bl = event_steps(case_def)
-    centres = sorted(set([t for t, v in clk if v > 0] + [t for t, v in bl]))
-    for t in centres:
-        idx = _sample_index(groups, axis, t * 1e-9 - 30e-9)
-        if idx is None:
+def _anchor_after(xs, t_from, t_to=None):
+    """the sample index on the right side of the first crossing at or after t_from"""
+    for i, t in xs:
+        if t < t_from - 1e-18:
             continue
-        for i in range(max(0, idx), min(len(groups), idx + 7)):
-            g = groups[i]
-            vals = ' '.join('%s=%s' % (s, '%.6g' % g[s]) for s in sigs if s in g)
-            rows.append([cid, 'event_at_%s' % tns(t), 'raw_samples_around_edge', str(i),
-                         '%.9g' % g[axis], vals, 'MEASURED_SAMPLE', deck_sha, raw_sha])
+        if t_to is not None and t > t_to + 1e-18:
+            return None
+        return i
+    return None
+
+
+def _extreme_index(groups, axis, sig, t_from, t_to):
+    best = None
+    for i in range(len(groups)):
+        t = groups[i][axis]
+        if t < t_from - 1e-18:
+            continue
+        if t > t_to + 1e-18:
+            break
+        v = groups[i].get(sig)
+        if v is None:
+            continue
+        if best is None or abs(v) > abs(groups[best].get(sig) or 0.0):
+            best = i
+    return best
+
+
+def emit_key_samples(rows, cid, case_def, groups, axis, deck_sha, raw_sha):
+    """the raw samples a reviewer needs in order to re-derive a delay or a peak
+
+    The first version of this function took seven consecutive samples starting 30 ns before each
+    event; at 1 ns maxstep that block ends before the transition, so no excerpt contained the thing
+    it was supposed to evidence. Every block is now centred on a real 50 % crossing index or on the
+    current's own extreme, which puts samples on both sides of it by construction.
+    """
+    sigs = ['d', 'clk', 'blank', NODES['q'], NODES['data_en'], IOUT]
+    qxs = R1.crossing_times(groups, axis, NODES['q'], _half('q'))
+    enxs = R1.crossing_times(groups, axis, NODES['data_en'], _half('data_en'))
+    clxx = R1.crossing_times(groups, axis, 'clk', _half('clk'))
+    blxx = R1.crossing_times(groups, axis, 'blank', _half('blank'))
+    for e in sorted(case_def['events'], key=lambda x: x['slot']):
+        t = e['slot'] * SLOT
+        insig = clxx if e['kind'] == 'write' else blxx
+        tr = t * 1e-9
+        bound = tr + WIN_AHEAD * 1e-9
+        anchors = [('input_50pct', _anchor_after(insig, tr - EDGE_NS * 1e-9, bound)),
+                   ('q_50pct', _anchor_after(qxs, tr, bound)),
+                   ('data_en_50pct', _anchor_after(enxs, tr, bound)),
+                   ('iout_extreme', _extreme_index(groups, axis, IOUT, tr, bound))]
+        for kind, idx in anchors:
+            if idx is None:
+                rows.append([cid, 'event_%s' % tns(t), kind, '', '', '', 'NO_ANCHOR', deck_sha,
+                             raw_sha])
+                continue
+            for i in range(max(0, idx - 2), min(len(groups), idx + 3)):
+                g = groups[i]
+                vals = ' '.join('%s=%s' % (s, '%.6g' % g[s]) for s in sigs if s in g)
+                rows.append([cid, 'event_%s' % tns(t), kind, str(i), '%.9g' % g[axis], vals,
+                             'MEASURED_SAMPLE', deck_sha, raw_sha])
 
 
 # ------------------------------------------------------------------ negative proof
@@ -1148,7 +1193,7 @@ def run_case(R, cid, scratch, man_rows, samp_rows, opts):
     if case_def.get('fault'):
         negative_report(R, cid, data, case_def, 'D6-04')
     deck_sha = sha[:16]
-    emit_key_samples(R, samp_rows, cid, data, case_def, groups, axis, deck_sha,
+    emit_key_samples(samp_rows, cid, case_def, groups, axis, deck_sha,
                      R3.file_sha(data)[:16])
     state = [r for r in R.rows if r[1] in ('D6_WINDOW_STATE', 'D6_WINDOW_CURRENT') and r[2] == cid]
     man[14] = str(len(state))
@@ -1319,6 +1364,30 @@ def _selftest():
     checks.append(('the three attribution outcomes stay three separate verdicts (%s/%s/%s)'
                    % tuple(r[7] for r in Rx.rows),
                    [r[7] for r in Rx.rows] == ['MEASURED', 'NOT_MEASURED_OVERLAP', 'NOT_EXPECTED']))
+    # the excerpt anchor test: a block that stops before its own event proves nothing, and that is
+    # exactly how the first version of emit_key_samples shipped (seven samples from t-30 ns)
+    ev = SLOT
+    g3 = []
+    for i in range(0, 3000):
+        t = i * MAXSTEP_NS
+        g3.append({'time': t * 1e-9, 'clk': 0.0, 'd': 0.0,
+                   'blank': V18 if t < ev + 1.0 else 0.0,
+                   NODES['q']: V18 if t < ev + 25.0 else 0.0,
+                   NODES['data_en']: V18 if t < ev + 25.0 else 0.0,
+                   IOUT: 15e-6 if t < ev + 30.0 else 0.0})
+    srows = []
+    emit_key_samples(srows, 'SYN', case('SYN', events=[lv(1, 'blank', 0.0)], windows=[],
+                                        purpose='synthetic'), g3, 'time', 'sha', 'raw')
+    by_kind = {}
+    for r in srows:
+        if r[6] == 'MEASURED_SAMPLE':
+            by_kind.setdefault(r[2], []).append(float(r[4]) * 1e9)
+    en_cross = [t for k, t in R1.crossing_times(g3, 'time', NODES['data_en'], 0.9)][0] * 1e9
+    checks.append(('each excerpt block straddles its anchor and reaches past its event '
+                   '(%s)' % ', '.join(sorted(by_kind)),
+                   len(by_kind) >= 3
+                   and min(by_kind['data_en_50pct']) < en_cross <= max(by_kind['data_en_50pct'])
+                   and all(max(v) >= ev for v in by_kind.values())))
     ref = build_deck(find_case('D6-04'), SECTION)
     flt = build_deck(find_case('D6-N1'), SECTION)
     st, cm = R3.fault_diff(full_netlist(ref, cell_texts()), full_netlist(flt, cell_texts(

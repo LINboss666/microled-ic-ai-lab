@@ -132,10 +132,20 @@ that run kept as the record; then the other seven.
 `D6_SETTLE` measures from the `data_en` 50 % crossing, not from the window opening, so a wide window
 is never mistaken for speed:
 
-* turn-on: **17.8 – 20.5 ns** from the enable crossing to the first in-band sample (D6-03 20.191 ns,
-  D6-06 17.783 ns at the lower clamp).
-* turn-off (blank asserted while Q = 1): **22.4 – 23.1 ns**, with the current passing through a peak of
-  **19.0 – 19.2 µA** on the way down — the bank capacitance dumping, reported as a peak, not certified.
+* turn-on: **17.8 – 20.5 ns** from the enable crossing to the **first** in-band sample (D6-03
+  20.191 ns, D6-06 17.783 ns at the lower clamp).
+* turn-off (blank asserted while Q = 1): **22.4 – 23.1 ns** to the first sample inside the disabled
+  band, with the current passing through a peak of **19.0 – 19.2 µA** on the way down — the bank
+  capacitance dumping, reported as a peak, not certified.
+
+What those two rows do **not** say, stated plainly: they are time-of-first-entry, so they certify that
+the reading arrives inside its band, not that it then stays there. Continuous stability over the whole
+declared window is a separate claim resting on the window rows themselves — `D6_WINDOW_CURRENT`
+reports the whole-window min **and** max of the signed current (e.g. `min = max = 1.49319e-05 A`
+across `sampled_1_on_again`, `7.3306e-13` to `7.33059e-13 A` in an off window), and `D6_WINDOW_STATE`
+likewise judges a level by the window minimum for high and maximum for low. The token is still called
+`D6_SETTLE` in the delivered rows; read it as first-in-band, and note that no ripple or
+max-deviation-after-arrival figure is claimed anywhere in this round because none was computed.
 * the 0→1 write of D6-03 shows an extreme of **40.0 µA** during the falling transition. Candidate value
   only; no current or power budget exists for this POC, so no limit is applied to it.
 
@@ -206,7 +216,16 @@ ids — D6-03's rows are from pass B (`D6-UNIT-20261014T175419Z`) and the other 
 (`D6-UNIT-20261014T181220Z`); the merge is recorded in the header of `dd1_d6_dependency_log.txt`. The
 key-sample excerpts (`dd1_d6_samples.csv`, 210 rows) exist for the seven cases of pass D only: pass C
 overwrote pass B's sample file before it failed, and re-simulating D6-03 to regenerate them would have
-crossed the 20-process ceiling. Nothing was re-derived from pass C's raw data instead, because
+crossed the 20-process ceiling. **And those 210 rows are not usable as independent recomputation
+evidence**: `emit_key_samples` took seven consecutive samples starting 30 ns *before* each event, so at
+1 ns maxstep every block ends at about 23 ns before the transition it names and contains neither the
+crossing nor the response. The delays and peaks in §5 therefore rest on that section's own measurement
+rows, which do carry their bounds, and not on the excerpts. `emit_key_samples` now anchors each block
+on a real 50 % crossing index or on the current's own extreme and emits ±2 samples around it (four
+kinds per event: `input_50pct`, `q_50pct`, `data_en_50pct`, `iout_extreme`), and `--selftest` pins that
+property so a regression cannot return silently — 16 checks, 0 failures, on the guest's python 2.6 as
+well. That is a forward fix for the next round's export; the delivered file was produced by the
+pre-fix version and no simulation was re-run to prettify it. Nothing was re-derived from pass C's raw data instead, because
 re-analysis without lineage is not a certificate. Pass B's five `D6_RESPONSE` rows also say "no q
 crossing inside the bound" where pass D's wording is `NOT_MEASURED_OVERLAP`; the underlying numbers
 are the ones quoted in §5 and were re-checked by reading pass B's own data file directly.
@@ -222,9 +241,13 @@ CDF was touched. Port directions were then written on the terminal objects of bo
 `spiceIn` had given every terminal `inputOutput` (`D6D-VIEWS 16 MATCHED 92 WANT 92`).
 
 The comparison runs against two read-backs taken in **separate sessions after the writing sessions
-exited** (29 device rows, 7 sub-instance bindings, 96 terminal rows) and gives
-`D6_OA_GRAPH_EQUIVALENCE: PASS`: model, CDF-parsed l/w, all four terminal names per device, every pin
-binding, and the port name/direction/order agreement between schematic and symbol. `dbCheck` is
+exited** and gives `D6_OA_GRAPH_EQUIVALENCE: PASS`: model, CDF-parsed l/w, all four terminal names
+per device, every pin binding, and the port name/direction/order agreement between schematic and
+symbol. Terminal objects are counted as **92 delivered = 46 declared ports x 2 views**, which is what
+the eight cells hold (4/5/6/7/8/2/8/8 per cell in both views). The reused read-back additionally dumps
+**4 rows of its own PDK reference cell** (`p33:symbol`, terminals `B D G S`) as evidence that this PDK
+orders terminals differently per device family; those 4 are reported apart and compared to nothing, so
+an aggregate of 96 in an earlier draft of this report was a counting fault, not a graph difference. `dbCheck` is
 reported as `dbCheck`; `schCheck` came back `((0 9))` on a schematic and `nil` on a symbol after the
 editor package was force-loaded, and neither is presented as the editor's GUI Check-and-Save.
 
@@ -259,3 +282,23 @@ who wants to re-derive a number without re-simulating: `dd1_d6_manifest.csv` nam
 case, `dd1_d6_cases.csv` holds every judgement row with the window bounds in its `expected` column,
 `dd1_d6_samples.csv` gives untouched raw samples around each declared event, and
 `dd1_d6_oa_log_summary.txt` lists every tool token this round printed.
+
+## 10. Reviewer reservations kept open (recorded, not developed away)
+
+The review accepted the functional result and held back three items. All three are measurement or
+documentation reservations about **this round's own records**; per the reviewer's instruction no new
+development round was opened for them, and no circuit, deck, threshold or delivered number was touched
+to make them go away.
+
+| # | reservation | disposition now | what would actually close it |
+|---|---|---|---|
+| R1 | the row named `D6_SETTLE` measures **first entry** into the band; it does not prove the reading then stays put | kept open as a wording/scope reservation; §5 now says so explicitly and points at `D6_WINDOW_CURRENT`'s whole-window min/max as the only sustained-stability claim made | a declared sustained-band criterion (max deviation or ripple after arrival, over a stated window) computed in the entry and judged per case |
+| R2 | all 210 sample excerpts sit ~30–23 ns **before** their events, and D6-03's are missing, so §5's delays and peaks cannot be recomputed from them | accepted as stated in §7: the excerpts do **not** support independent recomputation; §5's numbers rest on its own bounded measurement rows. `emit_key_samples` is fixed forward-only (blocks now straddle a real crossing index or the current's extreme) and `--selftest` gained check 16 to keep it that way; nothing was re-simulated | a future export pass over the retained raw, or the next round's sample file, produced by the fixed emitter |
+| R3 | 46 ports across two views is 92 terminal objects; the report said 96 | corrected in §8: **92 delivered** (4/5/6/7/8/2/8/8 per cell, both views) plus **4 rows from the read-back's own `p33:symbol` PDK reference dump**, which is family-terminal-order evidence and is compared to nothing; `D6_OA_PORTS` now prints the two counts apart | nothing pending — the verifier and its CSV row carry the split (`dd1_d6_oa_verify.csv`) |
+
+Scope the review restated and that this report keeps in front of the reader: the data side still runs
+on an **external IREF and external VCAS** as TESTBENCH_ASSUMPTION, and this 29-device integration is
+accepted **only under this round's TT conditions** — it is not a full-operating-range characterisation
+and not a panel sign-off. `SOA_SIGNOFF=NO`; final VSCAN/VLED, LED I-V, real electrode RC and every
+budget remain undefined; corners, temperature, array, multi-channel, layout, DRC/LVS/PEX and an
+autonomous reference remain unrun. Symbol prettification and its screenshots stay a human task.
