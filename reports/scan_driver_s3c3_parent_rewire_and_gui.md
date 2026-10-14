@@ -7,7 +7,7 @@ s4: NOT_STARTED
 soa_signoff: NO
 ---
 
-# SCAN-1 S3-C3 —— 两个父原理图按实际接线修好，GUI 目视交付未完成
+# SCAN-1 S3-C3 —— 两个父原理图按实际接线修好，GUI 已正确启动、截图转人工
 
 任务书 `MicroLED_Qoder_SCAN-1S3C3_7a1fc43_reconnect_parents.md`。本轮只改
 `microled_scan_s3c` 里的 `sc1_ls_c1_top_r2d:schematic` 与 `sc1_r3_scan_chain_1ch:schematic`，
@@ -24,7 +24,7 @@ soa_signoff: NO
 | POST_CHECK_SAVE_GRAPH_MATCH | **PASS** —— 每个视图都是「schCheck 现场提取 → 打印 instTerm/net → dbSave → 独立会话按磁盘字节重开 → 复算」；顶层 Check and Save 后 errors=0 warnings=0 | `sc1_s3c3_log_apply_ls_direct.txt`、`..._chain_direct.txt`、`..._top_check_and_save.txt`、`..._reopen_dump_39pins.txt` |
 | PORT_DIRECTIONS | **96/96 未变**（本轮不碰 Symbol/端口方向；`sc1_s3c3_dump_pins.txt` 里每个 instTerm 的 dir 与 S3C2 记录一致） | `sc1_s3c3_dump_pins.txt` |
 | SYMBOL_PLACEMENT | **48/48 保持**（Symbol 视图本轮只读；实例/端口移动只发生在两张父原理图内） | `sc1_s3c3_dump_pins.txt`（DP-SYM 段）、S3C2 报告 §3 |
-| VISUAL_REVIEW | **PENDING —— 0 张截图交付**。两次正确形式的 GUI 启动都跑到，但没有任何视图窗口出现；具体错误见 §5 | `sc1_s3c3_log_gui_session2_cdslog.txt`、`..._stdout.txt`、`..._windows_seen.txt` |
+| VISUAL_REVIEW | **MANUAL —— 截图永久转人工，本轮 0 张自动交付**。GUI 会话本身已正确启动：六个视图窗口都是真实 X 窗口（`IsViewable`，600x450，六个互不重叠栅格位，`slots_confirmed=6/6`），但这台显示系统取不到可信像素（顶层窗口 134 字节空图，最大子窗口 `IsUnMapped`）。会话已留在屏幕上供人工截图，见 §5 | `sc1_s3c3_gui_manual_checklist.csv`、`sc1_s3c3_log_gui_manual_session.txt`、`sc1_s3c3_gui_window_tree_manual.txt`、`sc1_s3c3_gui_capture_attempts.txt` |
 
 `S3-C 整体 = REWORK 未完`：目视审核仍未关闭，所以不写 COMPLETE/ACCEPTED；未进 S4，`NEW_SIMULATION_RUNS=0`。
 
@@ -97,27 +97,35 @@ S3C2 说两个父视图的告警“主要是 SCH-2162”，错。当时磁盘字
 `0 error` 不再被当作必要接线有效的证明：有效性由 §0 的三项（逐 pin net 比对、几何吸附、post-check-save
 重开复算）与上面这张表共同支撑。
 
-## 5 GUI 与截图：两次正确启动都没出图，交付的是错误本身
+## 5 GUI 与截图：会话已正确启动并把六个窗口放上屏幕，像素抓取失败，截图永久转人工
 
-`scripts/s3c3_gui_shot.sh`：隔离 `cds.lib` 与 `HOME`（工程内 `s3c_oa/home`），
-`DISPLAY`/`XAUTHORITY` 从 `/proc/<gnome-session>/environ` 读；启动的是
-`/opt/IC617/tools/dfII/bin/virtuoso -log …`（确认过 `type -a virtuoso` 不是 `/etc/env` 的包装脚本）；
-初始化文件只 `load(sc1_s3c3_gui_open.il)`，**不写 exit()**；抓图完全在 shell 侧用
-`xwininfo` 找窗口 + `import -window` 落 PNG，绝不在 SKILL 里同步抓。
+启动方式（`scripts/s3c3_gui_manual_session.sh`，前身 `scripts/s3c3_gui_shot.sh`）：隔离 `cds.lib` 与
+`HOME`（工程内 `s3c_oa/home`），`DISPLAY`/`XAUTHORITY` 从 `/proc/<gnome-session>/environ` 读；
+启动的是 `/opt/IC617/tools/dfII/bin/virtuoso -log …`（`type -a virtuoso` 确认不是 `/etc/env` 包装脚本）；
+`$HOME/.cdsinit` 只 `load(sc1_s3c3_gui_open.il)`，**不写 exit()**；该入口不自己开窗口，而是
+`hiEnqueueCmd` 把 `sc1_s3c3_gui_body.il` 排进事件循环——§6 要求的正是这个形状。
 
-两次运行的事实（`sc1_s3c3_log_gui_session2_*`、`sc1_s3c3_log_gui_windows_seen.txt`）：
+六次会话，一次比一次更远，每步都留了原始日志：
 
-* 会话进程活着（`SESSION_ALIVE_BEFORE_KILL=1`），但 `GW-BEGIN/GW-END-OF-OPENS` 一次都没出现，
-  `.cdsinit` 的 `load` 没有执行到；stdout 只有一行
-  `Display :0 Error "BadAtom (invalid Atom parameter)" request 20 error 5 serial 233`
-  （GUI-2 已记：成功会话也会有这条，不能当根因）；
-* 轮询到的窗口树里只有 `Library Manager`、`Library Select`、`opus`（0x3a0000c，S3C1 那次的残留）
-  与桌面组件，**没有任何视图窗口**；`SCREENSHOTS=0 non-empty=0`。
-* 结论：根因是 GUI 会话没能走到 init 脚本执行阶段（停在启动对话框阶段），不是 API 不存在。
-  §4 的两次机会用完，按任务书交最短 CIW 路线：把 `skill/sc1_s3c3_gui_open.il` 贴进 CIW 执行
-  （或逐条 `geOpen(?lib "microled_scan_s3c" ?cell "sc1_scan_power_1ch_s3c" ?view "schematic" ?mode "r")`，
-  目标清单在 `skill/s3c3_targets.txt`），窗口出来后 `import -window <id> shot.png` 即可，
-  抓图索引留了 `sc1_s3c3_gui_capture_index.csv` 表头给这一步填。
+| 会话 | 结果 | 具体证据 |
+|---|---|---|
+| 1 | `OPENS_SEEN no` —— 我的 SKILL 用了 `foreach(t …)`，`t` 是受保护符号 | `sc1_s3c3_log_gui_session2_cdslog.txt`（这是调用方缺陷，不是显示系统） |
+| 2 | 直接在 `.cdsinit` 里开：`geOpen` 返回 `window:2..7`，但 X 里没有任何视图窗口；日志根因 `*Error* eval: unbound variable - ciwHelpMenuSpec`，来自 `/opt/IC617/tools.lnx86/dfII/etc/tools/menus/schView.menus` line 342（厂商文件越界，不改） | 同上 |
+| 3 | `hiEnqueueCmd` 延后 → **菜单错误消失，六个真实编辑器窗口出现在 X 里**（`("Qt-subapplication" "Virtuoso") 900x690`，各带 20 个子窗口）。但六个都落在同一像素 `+122+274`，且**没有 WM_NAME**，所以按标题 `"<cell> <view>"` 匹配抓不到 → `SCREENSHOTS=0`。`hiResizeWindow(w list(20 20 900 660))` 每次打印 `*WARNING* Invalid bounding box` 并返回 nil | `sc1_s3c3_log_gui_session3_enqueue.txt` |
+| 4 | `hiResizeWindow` 换成两点形式 `list(list(llx lly) list(urx ury))` → **`resize=t`**，六个窗口落在六个互不重叠的 600x450 栅格位；`GW-SHOT` 握手 6/6 打出。抓图脚本在会话起来之前就枚举了一次窗口 → 0 张 | `sc1_s3c3_log_gui_session4_grid.txt`、`sc1_s3c3_gui_capture_attempts.txt` |
+| 5 | 每个 marker 重新枚举 → **身份确认 `slots_confirmed=6/6`**（窗口确实坐在 SKILL 要求的栅格位上）。但 `import -window <顶层id>` 每张都是 134 字节的均匀图：Qt 顶层只是容器。`_NET_CLIENT_LIST_STACKING` 六次 raise 全部不变 → “抓最顶层”不能用来认 cell | `sc1_s3c3_log_gui_session5_topwindow.txt`、`sc1_s3c3_gui_capture_index.csv` |
+| 6 | 改成向子窗口递归取最大者 → 选中的是**未映射**的 640x480 helper：`state=IsUnMapped`、`import: unable to read X window image '0x…': Resource …`、0 字节 | `sc1_s3c3_log_gui_session6_canvas.txt` |
+| 人工 | 放弃自动像素，会话启动后**不 kill、留在屏幕上**：`READY_FOR_MANUAL_CAPTURE=yes`、六个窗口 id/几何写入 `sc1_s3c3_gui_manual_checklist.csv` | `sc1_s3c3_log_gui_manual_session.txt`、`sc1_s3c3_gui_window_tree_manual.txt` |
+
+因此本轮 §6 的交付物换成任务书允许的另外两件：具体错误（上表）＋最短 CIW 打开脚本
+`skill/sc1_s3c3_gui_body.il`（六个 `geOpen(?lib "microled_scan_s3c" ?cell … ?view … ?mode "r")`
++ 各自独立栅格位，`NEW_SIMULATION_RUNS=0`，全部只读）。`scripts/s3c3_gui_shot.sh` 与
+`scripts/s3c3_gui_capture.py` 已删除，不留下一个已知取不到可信像素的工具冒充截图管线。
+
+人工截图怎么做（会话仍在跑，pid 由启动器的 `SESSION_LEFT_RUNNING pid=…` 行给出，`kill <pid>` 即关）：
+按 `sc1_s3c3_gui_manual_checklist.csv` 的六行点窗口，用 gnome-screenshot / PrintScreen 各截一张，
+存为 `results/evidence/sc1_s3c3_shot_<cell>_<view>.png`（六张：顶层 schematic+symbol、DFF、bank、
+两张修复父图），把 `map_state` 列的 `TODO_MANUAL` 填成实际状态，再跑一次清单生成即可入库。
 
 ## 6 边界复述
 

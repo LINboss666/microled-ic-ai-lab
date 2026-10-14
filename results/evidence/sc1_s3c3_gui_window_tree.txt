@@ -1,0 +1,379 @@
+
+xwininfo: Window id: 0x25e (the root window) (has no name)
+
+  Root window id: 0x25e (the root window) (has no name)
+  Parent window id: 0x0 (none)
+     56 children:
+     0x24000ef "gnome-screensaver": ("gnome-screensaver" "Gnome-screensaver")  1920x1153+0+0  +0+0
+        2 children:
+        0x24000f3 (has no name): ()  1920x1153+0+0  +0+0
+        0x24000f0 (has no name): ()  1x1+-1+-1  +-1+-1
+     0x2a00023 (has no name): ()  1x1+0+0  +0+0
+     0x2a00022 (has no name): ()  1x1+0+0  +0+0
+     0x2a0000c "opus": ("opus" "Opus")  795x193+0+0  +0+0
+     0x1e00001 "notification-daemon": ("notification-daemon" "Notification-daemon")  10x10+10+10  +10+10
+        1 child:
+        0x1e00002 (has no name): ()  1x1+-1+-1  +9+9
+     0x3400020 "rhsm-icon": ("rhsm-icon" "Rhsm-icon")  48x48+0+0  +0+0
+        1 child:
+        0x3400021 (has no name): ()  1x1+-1+-1  +-1+-1
+     0x3800021 "vmware-user": ()  10x10+-100+-100  +-100+-100
+     0x3800020 "vmware-user": ()  10x10+-100+-100  +-100+-100
+     0x18000b9 "nautilus": ()  10x10+-100+-100  +-100+-100
+     0x380001e "vmware-user": ()  10x10+-100+-100  +-100+-100
+     0x3800003 "vmware-user": ()  10x10+-100+-100  +-100+-100
+     0x3800001 "vmware-user": ("vmware-user" "Vmware-user")  10x10+10+10  +10+10
+        1 child:
+        0x3800002 (has no name): ()  1x1+-1+-1  +9+9
+     0x2c00004 "gnome-power-manager": ("gnome-power-manager" "Gnome-power-manager")  200x200+0+0  +0+0
+        1 child:
+        0x2c00005 (has no name): ()  1x1+-1+-1  +-1+-1
+     0x2800024 "gnome-volume-control-applet": ("gnome-volume-control-applet" "Gnome-volume-control-applet")  48x48+0+0  +0+0
+        1 child:
+        0x2800025 (has no name): ()  1x1+-1+-1  +-1+-1
+     0x1800003 "nautilus": ()  10x10+-100+-100  +-100+-100
+     0x3600001 "abrt-applet": ("abrt-applet" "Abrt-applet")  10x10+10+10  +10+10
+        1 child:
+        0x3600002 (has no name): ()  1x1+-1+-1  +9+9
+     0x2c00001 "gnome-power-manager": ("gnome-power-manager" "Gnome-power-manager")  10x10+10+10  +10+10
+        1 child:
+        0x2c00002 (has no name): ()  1x1+-1+-1  +9+9
+     0x3400001 "rhsm-icon": ("rhsm-icon" "Rhsm-icon")  10x10+10+10  +10+10
+        1 child:
+        0x3400002 (has no name): ()  1x1+-1+-1  +9+9
+     0x2000044 (has no name): ()  10x10+0+0  +0+0
+     0x2400003 "gnome-screensaver": ()  10x10+-100+-100  +-100+-100
+     0x3200001 "gdu-notification-daemon": ("gdu-notification-daemon" "Gdu-notification-daemon")  10x10+10+10  +10+10
+        1 child:
+        0x3200002 (has no name): ()  1x1+-1+-1  +9+9
+     0x2e00003 "Update Applet": ("gpk-update-icon" "Gpk-update-icon")  200x200+0+0  +0+0
+        1 child:
+        0x2e00004 (has no name): ()  1x1+-1+-1  +-1+-1
+     0x2e00001 "Update Applet": ("gpk-update-icon" "Gpk-update-icon")  10x10+10+10  +10+10
+        1 child:
+        0x2e00002 (has no name): ()  1x1+-1+-1  +9+9
+     0x2800001 "gnome-volume-control-applet": ("gnome-volume-control-applet" "Gnome-volume-control-applet")  10x10+10+10  +10+10
+        1 child:
+        0x2800002 (has no name): ()  1x1+-1+-1  +9+9
+     0x2600001 "Bluetooth Applet": ("bluetooth-applet" "Bluetooth-applet")  10x10+10+10  +10+10
+        1 child:
+        0x2600002 (has no name): ()  1x1+-1+-1  +9+9
+     0x2200003 "NetworkManager Applet": ("nm-applet" "Nm-applet")  16x16+0+0  +0+0
+        1 child:
+        0x2200004 (has no name): ()  1x1+-1+-1  +-1+-1
+     0x2400001 "gnome-screensaver": ("gnome-screensaver" "Gnome-screensaver")  10x10+10+10  +10+10
+        1 child:
+        0x2400002 (has no name): ()  1x1+-1+-1  +9+9
+     0x2200001 "NetworkManager Applet": ("nm-applet" "Nm-applet")  10x10+10+10  +10+10
+        1 child:
+        0x2200002 (has no name): ()  1x1+-1+-1  +9+9
+     0x2000001 "wnck-applet": ("wnck-applet" "Wnck-applet")  10x10+10+10  +10+10
+        1 child:
+        0x2000002 (has no name): ()  1x1+-1+-1  +9+9
+     0x1a00001 "polkit-gnome-authentication-agent-1": ("polkit-gnome-authentication-agent-1" "Polkit-gnome-authentication-agent-1")  10x10+10+10  +10+10
+        1 child:
+        0x1a00002 (has no name): ()  1x1+-1+-1  +9+9
+     0x1c00001 "Trash Applet": ("trashapplet" "Trashapplet")  10x10+10+10  +10+10
+        1 child:
+        0x1c00002 (has no name): ()  1x1+-1+-1  +9+9
+     0x1800001 "nautilus": ("nautilus" "Nautilus")  10x10+10+10  +10+10
+        1 child:
+        0x1800002 (has no name): ()  1x1+-1+-1  +9+9
+     0x1400003 "Bottom Expanded Edge Panel": ("gnome-panel" "Gnome-panel")  1920x37+0+1116  +0+1116
+        2 children:
+        0x1400025 (has no name): ()  1920x36+0+1  +0+1117
+           4 children:
+           0x1400037 (has no name): ()  111x36+1767+0  +1767+1117
+              1 child:
+              0x2000045 "wnck-applet": ("wnck-applet" "Wnck-applet")  111x36+0+0  +1767+1117
+                 1 child:
+                 0x2000046 (has no name): ()  1x1+-1+-1  +1766+1116
+           0x1400036 (has no name): ()  1408x36+148+0  +148+1117
+              1 child:
+              0x2000031 "wnck-applet": ("wnck-applet" "Wnck-applet")  1408x36+0+0  +148+1117
+                 1 child:
+                 0x2000032 (has no name): ()  1x1+-1+-1  +147+1116
+           0x1400034 (has no name): ()  1x36+11+0  +11+1117
+              1 child:
+              0x2000003 "wnck-applet": ("wnck-applet" "Wnck-applet")  1x36+0+0  +11+1117
+                 1 child:
+                 0x2000004 (has no name): ()  1x1+-1+-1  +10+1116
+           0x1400035 (has no name): ()  34x36+1886+0  +1886+1117
+              1 child:
+              0x1c00003 "Trash Applet": ("trashapplet" "Trashapplet")  34x36+0+0  +1886+1117
+                 1 child:
+                 0x1c00004 (has no name): ()  1x1+-1+-1  +1885+1116
+        0x1400004 (has no name): ()  1x1+-1+-1  +-1+1115
+     0x1203581 (has no name): ()  604x480+1262+636  +1262+636
+        1 child:
+        0x2a00889 ": ("Qt-subapplication" "Virtuoso")  600x450+2+26  +1264+662
+           20 children:
+           0x2a008ee (has no name): ()  640x480+0+0  +1264+662
+           0x2a008ec (has no name): ()  183x180+0+94  +1264+756
+           0x2a008ea (has no name): ()  640x480+0+0  +1264+662
+           0x2a008e8 (has no name): ()  183x130+0+280  +1264+942
+           0x2a008e6 (has no name): ()  640x480+0+0  +1264+662
+           0x2a008e4 (has no name): ()  640x480+0+0  +1264+662
+           0x2a008e2 (has no name): ()  132x32+370+62  +1634+724
+           0x2a008e0 (has no name): ()  90x32+502+62  +1766+724
+           0x2a008de (has no name): ()  55x30+545+32  +1809+694
+           0x2a008dc (has no name): ()  55x30+490+32  +1754+694
+           0x2a008da (has no name): ()  358x30+132+32  +1396+694
+           0x2a008d8 (has no name): ()  132x30+0+32  +1264+694
+           0x2a008d6 (has no name): ()  218x32+152+62  +1416+724
+           0x2a008d4 (has no name): ()  8x32+592+62  +1856+724
+           0x2a008d2 (has no name): ()  152x32+0+62  +1264+724
+           0x2a008d0 (has no name): ()  600x18+0+410  +1264+1072
+           0x2a00813 (has no name): ()  600x22+0+428  +1264+1090
+           0x2a0087e (has no name): ()  600x32+0+0  +1264+662
+           0x2a008c3 (has no name): ()  411x316+189+94  +1453+756
+              2 children:
+              0x2a008f2 (has no name): ()  100x30+0+0  +1453+756
+              0x2a008f0 (has no name): ()  411x316+0+0  +1453+756
+                 1 child:
+                 0x2a008f4 (has no name): ()  411x316+0+0  +1453+756
+                    1 child:
+                    0x2a008f6 (has no name): ()  411x314+0+2  +1453+758
+                       4 children:
+                       0x2a008fe (has no name): ()  411x314+0+0  +1453+758
+                          1 child:
+                          0x2a00900 (has no name): ()  411x314+0+0  +1453+758
+                       0x2a008fc (has no name): ()  100x22+0+0  +1453+758
+                       0x2a008fa (has no name): ()  100x30+0+0  +1453+758
+                       0x2a008f8 (has no name): ()  100x30+0+0  +1453+758
+           0x2a00751 (has no name): ()  1x1+-1000+-1000  +264+-338
+     0x12034af (has no name): ()  604x480+642+636  +642+636
+        1 child:
+        0x2a007f7 ": ("Qt-subapplication" "Virtuoso")  600x450+2+26  +644+662
+           20 children:
+           0x2a0085c (has no name): ()  640x480+0+0  +644+662
+           0x2a0085a (has no name): ()  183x180+0+94  +644+756
+           0x2a00858 (has no name): ()  640x480+0+0  +644+662
+           0x2a00856 (has no name): ()  183x130+0+280  +644+942
+           0x2a00854 (has no name): ()  640x480+0+0  +644+662
+           0x2a00852 (has no name): ()  640x480+0+0  +644+662
+           0x2a00850 (has no name): ()  132x32+370+62  +1014+724
+           0x2a0084e (has no name): ()  90x32+502+62  +1146+724
+           0x2a0084c (has no name): ()  55x30+545+32  +1189+694
+           0x2a0084a (has no name): ()  55x30+490+32  +1134+694
+           0x2a00848 (has no name): ()  358x30+132+32  +776+694
+           0x2a00846 (has no name): ()  132x30+0+32  +644+694
+           0x2a00844 (has no name): ()  218x32+152+62  +796+724
+           0x2a00842 (has no name): ()  8x32+592+62  +1236+724
+           0x2a00840 (has no name): ()  152x32+0+62  +644+724
+           0x2a0083e (has no name): ()  600x18+0+410  +644+1072
+           0x2a006ab (has no name): ()  600x22+0+428  +644+1090
+           0x2a007ac (has no name): ()  600x32+0+0  +644+662
+           0x2a00831 (has no name): ()  411x316+189+94  +833+756
+              2 children:
+              0x2a00860 (has no name): ()  100x30+0+0  +833+756
+              0x2a0085e (has no name): ()  411x316+0+0  +833+756
+                 1 child:
+                 0x2a00862 (has no name): ()  411x316+0+0  +833+756
+                    1 child:
+                    0x2a00864 (has no name): ()  411x314+0+2  +833+758
+                       4 children:
+                       0x2a0086c (has no name): ()  411x314+0+0  +833+758
+                          1 child:
+                          0x2a0086e (has no name): ()  411x314+0+0  +833+758
+                       0x2a0086a (has no name): ()  100x22+0+0  +833+758
+                       0x2a00868 (has no name): ()  100x30+0+0  +833+758
+                       0x2a00866 (has no name): ()  100x30+0+0  +833+758
+           0x2a007aa (has no name): ()  1x1+-1000+-1000  +-356+-338
+     0x12033dd (has no name): ()  604x480+22+636  +22+636
+        1 child:
+        0x2a00764 ": ("Qt-subapplication" "Virtuoso")  600x450+2+26  +24+662
+           20 children:
+           0x2a007cb (has no name): ()  640x480+0+0  +24+662
+           0x2a007c9 (has no name): ()  183x180+0+94  +24+756
+           0x2a007c7 (has no name): ()  640x480+0+0  +24+662
+           0x2a007c5 (has no name): ()  183x130+0+280  +24+942
+           0x2a007c3 (has no name): ()  640x480+0+0  +24+662
+           0x2a007c1 (has no name): ()  640x480+0+0  +24+662
+           0x2a007bf (has no name): ()  132x32+370+62  +394+724
+           0x2a007bd (has no name): ()  90x32+502+62  +526+724
+           0x2a007bb (has no name): ()  55x30+545+32  +569+694
+           0x2a007b9 (has no name): ()  55x30+490+32  +514+694
+           0x2a007b7 (has no name): ()  358x30+132+32  +156+694
+           0x2a007b5 (has no name): ()  132x30+0+32  +24+694
+           0x2a007b3 (has no name): ()  218x32+152+62  +176+724
+           0x2a007b1 (has no name): ()  8x32+592+62  +616+724
+           0x2a007af (has no name): ()  152x32+0+62  +24+724
+           0x2a007ad (has no name): ()  600x18+0+410  +24+1072
+           0x2a00717 (has no name): ()  600x22+0+428  +24+1090
+           0x2a0057d (has no name): ()  600x32+0+0  +24+662
+           0x2a007a0 (has no name): ()  411x316+189+94  +213+756
+              2 children:
+              0x2a007cf (has no name): ()  100x30+0+0  +213+756
+              0x2a007cd (has no name): ()  411x316+0+0  +213+756
+                 1 child:
+                 0x2a007d1 (has no name): ()  411x316+0+0  +213+756
+                    1 child:
+                    0x2a007d3 (has no name): ()  411x314+0+2  +213+758
+                       4 children:
+                       0x2a007db (has no name): ()  411x314+0+0  +213+758
+                          1 child:
+                          0x2a007dd (has no name): ()  411x314+0+0  +213+758
+                       0x2a007d9 (has no name): ()  100x22+0+0  +213+758
+                       0x2a007d7 (has no name): ()  100x30+0+0  +213+758
+                       0x2a007d5 (has no name): ()  100x30+0+0  +213+758
+           0x2a00671 (has no name): ()  1x1+-1000+-1000  +-976+-338
+     0x120330b (has no name): ()  604x480+1262+199  +1262+199
+        1 child:
+        0x2a006d3 ": ("Qt-subapplication" "Virtuoso")  600x450+2+26  +1264+225
+           20 children:
+           0x2a00738 (has no name): ()  640x480+0+0  +1264+225
+           0x2a00736 (has no name): ()  183x180+0+94  +1264+319
+           0x2a00734 (has no name): ()  640x480+0+0  +1264+225
+           0x2a00732 (has no name): ()  183x130+0+280  +1264+505
+           0x2a00730 (has no name): ()  640x480+0+0  +1264+225
+           0x2a0072e (has no name): ()  640x480+0+0  +1264+225
+           0x2a0072c (has no name): ()  132x32+370+62  +1634+287
+           0x2a0072a (has no name): ()  90x32+502+62  +1766+287
+           0x2a00728 (has no name): ()  55x30+545+32  +1809+257
+           0x2a00726 (has no name): ()  55x30+490+32  +1754+257
+           0x2a00724 (has no name): ()  358x30+132+32  +1396+257
+           0x2a00722 (has no name): ()  132x30+0+32  +1264+257
+           0x2a00720 (has no name): ()  218x32+152+62  +1416+287
+           0x2a0071e (has no name): ()  8x32+592+62  +1856+287
+           0x2a0071c (has no name): ()  152x32+0+62  +1264+287
+           0x2a0071a (has no name): ()  600x18+0+410  +1264+635
+           0x2a006b6 (has no name): ()  600x22+0+428  +1264+653
+           0x2a006b2 (has no name): ()  600x32+0+0  +1264+225
+           0x2a0070d (has no name): ()  411x316+189+94  +1453+319
+              2 children:
+              0x2a0073c (has no name): ()  100x30+0+0  +1453+319
+              0x2a0073a (has no name): ()  411x316+0+0  +1453+319
+                 1 child:
+                 0x2a0073e (has no name): ()  411x316+0+0  +1453+319
+                    1 child:
+                    0x2a00740 (has no name): ()  411x314+0+2  +1453+321
+                       4 children:
+                       0x2a00748 (has no name): ()  411x314+0+0  +1453+321
+                          1 child:
+                          0x2a0074a (has no name): ()  411x314+0+0  +1453+321
+                       0x2a00746 (has no name): ()  100x22+0+0  +1453+321
+                       0x2a00744 (has no name): ()  100x30+0+0  +1453+321
+                       0x2a00742 (has no name): ()  100x30+0+0  +1453+321
+           0x2a0053f (has no name): ()  1x1+-1000+-1000  +264+-775
+     0x1203239 (has no name): ()  604x480+642+199  +642+199
+        1 child:
+        0x2a00603 ": ("Qt-subapplication" "Virtuoso")  600x450+2+26  +644+225
+           17 children:
+           0x2a00652 (has no name): ()  640x480+0+0  +644+225
+           0x2a00650 (has no name): ()  183x182+0+92  +644+317
+           0x2a0064e (has no name): ()  640x480+0+0  +644+225
+           0x2a0064c (has no name): ()  183x130+0+280  +644+505
+           0x2a0064a (has no name): ()  100x30+0+0  +644+225
+           0x2a00648 (has no name): ()  222x30+370+62  +1014+287
+           0x2a00646 (has no name): ()  55x30+545+32  +1189+257
+           0x2a00644 (has no name): ()  413x30+132+32  +776+257
+           0x2a00642 (has no name): ()  132x30+0+32  +644+257
+           0x2a00640 (has no name): ()  218x30+152+62  +796+287
+           0x2a0063e (has no name): ()  8x30+592+62  +1236+287
+           0x2a0063c (has no name): ()  152x30+0+62  +644+287
+           0x2a0063a (has no name): ()  600x18+0+410  +644+635
+           0x2a0061b (has no name): ()  600x22+0+428  +644+653
+           0x2a00617 (has no name): ()  600x32+0+0  +644+225
+           0x2a0056d (has no name): ()  411x318+189+92  +833+317
+              2 children:
+              0x2a00656 (has no name): ()  100x30+0+0  +833+317
+              0x2a00654 (has no name): ()  411x318+0+0  +833+317
+                 1 child:
+                 0x2a00658 (has no name): ()  411x318+0+0  +833+317
+                    1 child:
+                    0x2a0065a (has no name): ()  411x316+0+2  +833+319
+                       4 children:
+                       0x2a00662 (has no name): ()  411x316+0+0  +833+319
+                          1 child:
+                          0x2a00664 (has no name): ()  411x316+0+0  +833+319
+                       0x2a00660 (has no name): ()  100x22+0+0  +833+319
+                       0x2a0065e (has no name): ()  100x30+0+0  +833+319
+                       0x2a0065c (has no name): ()  100x30+0+0  +833+319
+           0x2a0056b (has no name): ()  1x1+-1000+-1000  +-356+-775
+     0x1203167 (has no name): ()  604x480+22+199  +22+199
+        1 child:
+        0x2a0029a ": ("Qt-subapplication" "Virtuoso")  600x450+2+26  +24+225
+           20 children:
+           0x2a0045e (has no name): ()  640x480+0+0  +24+225
+           0x2a0045c (has no name): ()  183x180+0+94  +24+319
+           0x2a0045a (has no name): ()  640x480+0+0  +24+225
+           0x2a00458 (has no name): ()  183x130+0+280  +24+505
+           0x2a00456 (has no name): ()  640x480+0+0  +24+225
+           0x2a00454 (has no name): ()  640x480+0+0  +24+225
+           0x2a00452 (has no name): ()  132x32+370+62  +394+287
+           0x2a00450 (has no name): ()  90x32+502+62  +526+287
+           0x2a0044e (has no name): ()  55x30+545+32  +569+257
+           0x2a0044c (has no name): ()  55x30+490+32  +514+257
+           0x2a0044a (has no name): ()  358x30+132+32  +156+257
+           0x2a00448 (has no name): ()  132x30+0+32  +24+257
+           0x2a00446 (has no name): ()  218x32+152+62  +176+287
+           0x2a00444 (has no name): ()  8x32+592+62  +616+287
+           0x2a00442 (has no name): ()  152x32+0+62  +24+287
+           0x2a00440 (has no name): ()  600x18+0+410  +24+635
+           0x2a0043e (has no name): ()  600x22+0+428  +24+653
+           0x2a0043c (has no name): ()  600x32+0+0  +24+225
+           0x2a0043a (has no name): ()  411x316+189+94  +213+319
+              2 children:
+              0x2a00462 (has no name): ()  100x30+0+0  +213+319
+              0x2a00460 (has no name): ()  411x316+0+0  +213+319
+                 1 child:
+                 0x2a00464 (has no name): ()  411x316+0+0  +213+319
+                    1 child:
+                    0x2a00466 (has no name): ()  411x314+0+2  +213+321
+                       4 children:
+                       0x2a0046e (has no name): ()  411x314+0+0  +213+321
+                          1 child:
+                          0x2a00470 (has no name): ()  411x314+0+0  +213+321
+                       0x2a0046c (has no name): ()  100x22+0+0  +213+321
+                       0x2a0046a (has no name): ()  100x30+0+0  +213+321
+                       0x2a00468 (has no name): ()  100x30+0+0  +213+321
+           0x2a00438 (has no name): ()  1x1+-1000+-1000  +-976+-775
+     0x1203092 (has no name): ()  799x223+596+870  +596+870
+        1 child:
+        0x2a00020 ": ("Qt-subapplication" "Virtuoso")  795x193+2+26  +598+896
+           5 children:
+           0x2a0014e (has no name): ()  795x18+0+153  +598+1049
+           0x2a0014c (has no name): ()  795x22+0+171  +598+1067
+           0x2a0014a (has no name): ()  795x121+0+32  +598+928
+              1 child:
+              0x2a00150 (has no name): ()  795x121+0+0  +598+928
+                 4 children:
+                 0x2a00158 (has no name): ()  795x6+0+79  +598+1007
+                 0x2a00156 (has no name): ()  100x30+0+0  +598+928
+                 0x2a00154 (has no name): ()  795x79+0+0  +598+928
+                 0x2a00152 (has no name): ()  795x36+0+85  +598+1013
+           0x2a00148 (has no name): ()  795x32+0+0  +598+896
+           0x2a00146 (has no name): ()  1x1+-1000+-1000  +-402+-104
+     0x180001e "x-nautilus-desktop": ("desktop_window" "Nautilus")  1920x1153+0+0  +0+0
+        2 children:
+        0x18000a5 (has no name): ()  1920x1153+0+0  +0+0
+        0x180001f (has no name): ()  1x1+-1+-1  +-1+-1
+     0x1400001 "Panel": ("gnome-panel" "Gnome-panel")  10x10+10+10  +10+10
+        1 child:
+        0x1400002 (has no name): ()  1x1+-1+-1  +9+9
+     0xe00004 (has no name): ()  10x10+0+0  +0+0
+     0x120000f "metacity": ("metacity" "Metacity")  200x200+0+0  +0+0
+        1 child:
+        0x1200010 (has no name): ()  1x1+-1+-1  +-1+-1
+     0x120000e (has no name): ()  1x1+-100+-100  +-100+-100
+     0x1200006 (has no name): ()  1x1+-100+-100  +-100+-100
+     0x1200005 (has no name): ()  1x1+-100+-100  +-100+-100
+     0x1200004 (has no name): ()  1x1+-100+-100  +-100+-100
+     0x1200003 "Metacity": ()  1x1+-100+-100  +-100+-100
+     0x1200001 "metacity": ("metacity" "Metacity")  10x10+10+10  +10+10
+        1 child:
+        0x1200002 (has no name): ()  1x1+-1+-1  +9+9
+     0x1000001 "Seahorse Daemon": ("seahorse-daemon" "Seahorse-daemon")  10x10+10+10  +10+10
+        1 child:
+        0x1000002 (has no name): ()  1x1+-1+-1  +9+9
+     0xe00003 (has no name): ()  10x10+0+0  +0+0
+     0xe00001 "gnome-settings-daemon": ("gnome-settings-daemon" "Gnome-settings-daemon")  10x10+10+10  +10+10
+        1 child:
+        0xe00002 (has no name): ()  1x1+-1+-1  +9+9
+     0xc00001 "gnome-session": ("gnome-session" "Gnome-session")  10x10+10+10  +10+10
+        1 child:
+        0xc00002 (has no name): ()  1x1+-1+-1  +9+9
+     0x800001 (has no name): ()  10x10+-20+-20  +-20+-20
+     0x400001 (has no name): ()  10x10+-20+-20  +-20+-20
+

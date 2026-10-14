@@ -1,0 +1,7 @@
+open_index,cell,view,window_id,geometry,map_state
+"0","sc1_scan_power_1ch_s3c","schematic","0x2a0029a","600x450+24+225","TODO_MANUAL"
+"1","sc1_scan_power_1ch_s3c","symbol","0x2a00603","600x450+644+225","TODO_MANUAL"
+"2","c2mos_dff","schematic","0x2a006d3","600x450+1264+225","TODO_MANUAL"
+"3","sc1_s3b_p33_bank_7","schematic","0x2a00764","600x450+24+662","TODO_MANUAL"
+"4","sc1_ls_c1_top_r2d","schematic","0x2a007f7","600x450+644+662","TODO_MANUAL"
+"5","sc1_r3_scan_chain_1ch","schematic","0x2a00889","600x450+1264+662","TODO_MANUAL"

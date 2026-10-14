@@ -1,0 +1,40 @@
+== capture attempt s4
+ENUMERATE virtuoso_toplevels=0 ciw=NONE design_ids=
+MISSING no topmost window for sc1_scan_power_1ch_s3c:schematic
+MISSING no topmost window for sc1_scan_power_1ch_s3c:symbol
+MISSING no topmost window for c2mos_dff:schematic
+MISSING no topmost window for sc1_s3b_p33_bank_7:schematic
+MISSING no topmost window for sc1_ls_c1_top_r2d:schematic
+MISSING no topmost window for sc1_r3_scan_chain_1ch:schematic
+ROOT_SHOT rc=0 
+CAPTURE_INDEX /root/microled_ai_project/cadence_work/s3c_oa/s3c3_shots7/s3c3_windows.csv
+S3C3_GUI_CAPTURE: markers=6 shots=0 nonempty=0 distinct=0
+S3C3_GUI_CAPTURE: INCOMPLETE_OR_DUPLICATE
+== capture attempt s5
+ENUMERATE virtuoso_toplevels=0 ciw=NONE design_ids=
+ENUMERATE_TOO_EARLY only 0 design windows at start, re-enumerating per marker
+SHOT n=0 sc1_scan_power_1ch_s3c:schematic cap=0x3a00889 exp=0x3a0029c stack=MISMATCH slot=NO state=IsViewable bytes=134 sha=a06d7f124b14 mean=0 std=0 
+SHOT n=1 sc1_scan_power_1ch_s3c:symbol cap=0x3a00889 exp=0x3a00603 stack=MISMATCH slot=NO state=IsViewable bytes=134 sha=a06d7f124b14 mean=0 std=0 
+SHOT n=2 c2mos_dff:schematic cap=0x3a00889 exp=0x3a006d3 stack=MISMATCH slot=YES state=IsViewable bytes=134 sha=a06d7f124b14 mean=0 std=0 
+SHOT n=3 sc1_s3b_p33_bank_7:schematic cap=0x3a00889 exp=0x3a00764 stack=MISMATCH slot=NO state=IsViewable bytes=134 sha=a06d7f124b14 mean=0 std=0 
+SHOT n=4 sc1_ls_c1_top_r2d:schematic cap=0x3a00889 exp=0x3a007f7 stack=MISMATCH slot=NO state=IsViewable bytes=134 sha=a06d7f124b14 mean=0 std=0 
+SHOT n=5 sc1_r3_scan_chain_1ch:schematic cap=0x3a00889 exp=0x3a00889 stack=OK slot=YES state=IsViewable bytes=134 sha=a06d7f124b14 mean=0 std=0 
+ROOT_SHOT rc=0 
+CAPTURE_INDEX /root/microled_ai_project/cadence_work/s3c_oa/s3c3_shots8/s3c3_windows.csv
+CAPTURE markers=6 shots=6 nonempty=0 distinct=0
+S3C3_GUI_CAPTURE: identity_confirmed_by_stack_and_slot=1 of 6
+S3C3_GUI_CAPTURE: INCOMPLETE_OR_DUPLICATE
+== capture attempt s6
+ENUMERATE virtuoso_toplevels=0 ciw=NONE design_ids=
+ENUMERATE_TOO_EARLY only 0 design windows at start, re-enumerating per marker
+SHOT n=0 sc1_scan_power_1ch_s3c:schematic slot=0x2a0029a canvas=0x2a0045e stack=0x2a00889(xwininfo-order) want_ok=YES state=IsUnMapped bytes=0 sha= mean= std= import: unable to read X window image `0x2a0045e': Resource 
+SHOT n=1 sc1_scan_power_1ch_s3c:symbol slot=0x2a00603 canvas=0x2a00652 stack=0x2a00889(xwininfo-order) want_ok=YES state=IsUnMapped bytes=0 sha= mean= std= import: unable to read X window image `0x2a00652': Resource 
+SHOT n=2 c2mos_dff:schematic slot=0x2a006d3 canvas=0x2a00738 stack=0x2a00889(xwininfo-order) want_ok=YES state=IsUnMapped bytes=0 sha= mean= std= import: unable to read X window image `0x2a00738': Resource 
+SHOT n=3 sc1_s3b_p33_bank_7:schematic slot=0x2a00764 canvas=0x2a007cb stack=0x2a00889(xwininfo-order) want_ok=YES state=IsUnMapped bytes=0 sha= mean= std= import: unable to read X window image `0x2a007cb': Resource 
+SHOT n=4 sc1_ls_c1_top_r2d:schematic slot=0x2a007f7 canvas=0x2a0085c stack=0x2a00889(xwininfo-order) want_ok=YES state=IsUnMapped bytes=0 sha= mean= std= import: unable to read X window image `0x2a0085c': Resource 
+SHOT n=5 sc1_r3_scan_chain_1ch:schematic slot=0x2a00889 canvas=0x2a008ee stack=0x2a00889(xwininfo-order) want_ok=YES state=IsUnMapped bytes=0 sha= mean= std= import: unable to read X window image `0x2a008ee': Resource 
+ROOT_SHOT rc=0 
+CAPTURE_INDEX /root/microled_ai_project/cadence_work/s3c_oa/s3c3_shots9/s3c3_windows.csv
+CAPTURE markers=6 shots=0 nonempty=0 distinct=0
+S3C3_GUI_CAPTURE: slots_confirmed=6 of markers=6
+S3C3_GUI_CAPTURE: INCOMPLETE_DUPLICATE_OR_UNIDENTIFIED
