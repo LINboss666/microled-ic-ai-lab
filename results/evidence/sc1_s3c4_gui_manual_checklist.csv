@@ -1,0 +1,5 @@
+open_index,cell,view,window_id,geometry,map_state
+"0","sc1_scan_power_1ch_s3c","schematic","0x2a002b1","600x450+24+432","TODO_MANUAL"
+"1","sc1_scan_power_1ch_s3c","symbol","0x2a006aa","600x450+644+432","TODO_MANUAL"
+"2","sc1_r3_scan_chain_1ch","schematic","0x2a0077c","600x450+24+869","TODO_MANUAL"
+"3","sc1_ls_c1_top_r2d","schematic","0x2a007fa","600x450+644+869","TODO_MANUAL"

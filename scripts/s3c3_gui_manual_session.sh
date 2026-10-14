@@ -23,8 +23,8 @@ PROJ="${PROJ:-/root/microled_ai_project}"
 S3C="$PROJ/cadence_work/s3c_oa"
 OUT="${1:?usage: s3c3_gui_manual_session.sh <outDir> [waitSeconds]}"
 WAIT="${2:-150}"
-IL="$S3C/sc1_s3c3_gui_open.il"
-TARGETS="$S3C/s3c3_targets.txt"
+IL="${S3C_GUI_IL:-$S3C/sc1_s3c3_gui_open.il}"
+TARGETS="${S3C_GUI_TARGETS:-$S3C/s3c3_targets.txt}"
 
 mkdir -p "$OUT"
 [ -f "$IL" ] || { echo "REFUSED: $IL missing"; exit 9; }
