@@ -1,0 +1,5 @@
+S3C4_PLAN symbol_views=8 cells_seen=9 pairing_rows=48 paired_by_ownership=48
+S3C4_PLAN labels_misplaced=2 labels_already_next_to_pin=46
+S3C4_PLAN stub_missing=0 stub_stale_to_delete=0 body_lines_kept=0
+S3C4_PLAN pairing_problems=0
+S3C4_PLAN views_needing_label_moves=2

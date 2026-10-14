@@ -1,0 +1,251 @@
+DP-BEGIN
+DP-VIEW "sc1_ls_c1_top_r2d" opened=db:0x16c3e81a nets=8 instances=8 terminals=6 shapes=34
+DP-INST "sc1_ls_c1_top_r2d" "Xnand" master="sc1_ls_c1_r2d" transform=((4.4 1.0) "R0" 1.0) bBox=((3.225 0.325) (5.575 1.675)) instTerms=5 symPinBoxes=5
+DP-ITERM "sc1_ls_c1_top_r2d" "Xnand" "y" dir="input" net="y" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_ls_c1_top_r2d" "Xnand" "y" RAW (-1.175 -0.15) (-1.0 -0.1) XFORMED (3.225 0.85) (3.4 0.9) purpose="drawing" layer="pin"
+DP-ITERM "sc1_ls_c1_top_r2d" "Xnand" "core_ok33" dir="input" net="core_ok33" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_ls_c1_top_r2d" "Xnand" "core_ok33" RAW (-1.175 0.1) (-1.0 0.15) XFORMED (3.225 1.1) (3.4 1.15) purpose="drawing" layer="pin"
+DP-ITERM "sc1_ls_c1_top_r2d" "Xnand" "gate33" dir="output" net="gate33" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_ls_c1_top_r2d" "Xnand" "gate33" RAW (1.0 -0.025) (1.175 0.025) XFORMED (5.4 0.975) (5.575 1.025) purpose="drawing" layer="pin"
+DP-ITERM "sc1_ls_c1_top_r2d" "Xnand" "vdd33" dir="inputOutput" net="vdd33" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_ls_c1_top_r2d" "Xnand" "vdd33" RAW (-0.025 0.5) (0.025 0.675) XFORMED (4.375 1.5) (4.425 1.675) purpose="drawing" layer="pin"
+DP-ITERM "sc1_ls_c1_top_r2d" "Xnand" "vss" dir="inputOutput" net="vss" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_ls_c1_top_r2d" "Xnand" "vss" RAW (-0.025 -0.675) (0.025 -0.5) XFORMED (4.375 0.325) (4.425 0.5) purpose="drawing" layer="pin"
+DP-INST "sc1_ls_c1_top_r2d" "Xcore" master="sc1_ls_core_r2d" transform=((1.0 1.0) "R0" 1.0) bBox=((-0.175 0.2) (2.175 1.8)) instTerms=6 symPinBoxes=6
+DP-ITERM "sc1_ls_c1_top_r2d" "Xcore" "en" dir="input" net="en" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_ls_c1_top_r2d" "Xcore" "en" RAW (-1.175 -0.025) (-1.0 0.025) XFORMED (-0.175 0.975) (0.0 1.025) purpose="drawing" layer="pin"
+DP-ITERM "sc1_ls_c1_top_r2d" "Xcore" "x" dir="output" net="x" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_ls_c1_top_r2d" "Xcore" "x" RAW (1.0 0.1) (1.175 0.15) XFORMED (2.0 1.1) (2.175 1.15) purpose="drawing" layer="pin"
+DP-ITERM "sc1_ls_c1_top_r2d" "Xcore" "y" dir="output" net="y" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_ls_c1_top_r2d" "Xcore" "y" RAW (1.0 -0.15) (1.175 -0.1) XFORMED (2.0 0.85) (2.175 0.9) purpose="drawing" layer="pin"
+DP-ITERM "sc1_ls_c1_top_r2d" "Xcore" "vdd18" dir="inputOutput" net="vdd18" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_ls_c1_top_r2d" "Xcore" "vdd18" RAW (0.175 0.625) (0.225 0.8) XFORMED (1.175 1.625) (1.225 1.8) purpose="drawing" layer="pin"
+DP-ITERM "sc1_ls_c1_top_r2d" "Xcore" "vdd33" dir="inputOutput" net="vdd33" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_ls_c1_top_r2d" "Xcore" "vdd33" RAW (-0.225 0.625) (-0.175 0.8) XFORMED (0.775 1.625) (0.825 1.8) purpose="drawing" layer="pin"
+DP-ITERM "sc1_ls_c1_top_r2d" "Xcore" "vss" dir="inputOutput" net="vss" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_ls_c1_top_r2d" "Xcore" "vss" RAW (-0.025 -0.8) (0.025 -0.625) XFORMED (0.975 0.2) (1.025 0.375) purpose="drawing" layer="pin"
+DP-INST "sc1_ls_c1_top_r2d" "PIN5" master="iopin" transform=((-1.6 0.9) "R0" 1.0) bBox=((-1.7125 0.8375) (-1.4875 1.15625)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_ls_c1_top_r2d" "PIN4" master="iopin" transform=((3.2 1.275) "R0" 1.0) bBox=((3.0875 1.2125) (3.3125 1.53125)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_ls_c1_top_r2d" "PIN3" master="iopin" transform=((6.6 0.9) "R0" 1.0) bBox=((6.4875 0.8375) (6.7125 1.15625)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_ls_c1_top_r2d" "PIN2" master="iopin" transform=((1.2 2.5) "R0" 1.0) bBox=((1.0875 2.4375) (1.3125 2.75625)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_ls_c1_top_r2d" "PIN1" master="iopin" transform=((0.6 2.8) "R0" 1.0) bBox=((0.4875 2.7375) (0.7125 3.05625)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_ls_c1_top_r2d" "PIN0" master="iopin" transform=((1.0 -1.1) "R0" 1.0) bBox=((0.8875 -1.1625) (1.1125 -0.84375)) instTerms=0 symPinBoxes=0
+DP-PORT "sc1_ls_c1_top_r2d" "vss" dir="inputOutput" net="vss" fig="inst" "pin" bBox=((0.8875 -1.1625) (1.1125 -0.84375))
+DP-PORT "sc1_ls_c1_top_r2d" "vdd33" dir="inputOutput" net="vdd33" fig="inst" "pin" bBox=((0.4875 2.7375) (0.7125 3.05625))
+DP-PORT "sc1_ls_c1_top_r2d" "vdd18" dir="inputOutput" net="vdd18" fig="inst" "pin" bBox=((1.0875 2.4375) (1.3125 2.75625))
+DP-PORT "sc1_ls_c1_top_r2d" "gate33" dir="output" net="gate33" fig="inst" "pin" bBox=((6.4875 0.8375) (6.7125 1.15625))
+DP-PORT "sc1_ls_c1_top_r2d" "core_ok33" dir="input" net="core_ok33" fig="inst" "pin" bBox=((3.0875 1.2125) (3.3125 1.53125))
+DP-PORT "sc1_ls_c1_top_r2d" "en" dir="input" net="en" fig="inst" "pin" bBox=((-1.7125 0.8375) (-1.4875 1.15625))
+DP-NET "sc1_ls_c1_top_r2d" "vss" figs=6
+DP-NET "sc1_ls_c1_top_r2d" "vdd33" figs=6
+DP-NET "sc1_ls_c1_top_r2d" "vdd18" figs=4
+DP-NET "sc1_ls_c1_top_r2d" "gate33" figs=2
+DP-NET "sc1_ls_c1_top_r2d" "en" figs=2
+DP-NET "sc1_ls_c1_top_r2d" "core_ok33" figs=4
+DP-NET "sc1_ls_c1_top_r2d" "x" figs=2
+DP-NET "sc1_ls_c1_top_r2d" "y" figs=2
+DP-LABEL "sc1_ls_c1_top_r2d" "label" theLabel="y" xy=(2.7 0.875) net="y" just="NONE"
+DP-LABEL "sc1_ls_c1_top_r2d" "label" theLabel="x" xy=(2.475 1.125) net="x" just="NONE"
+DP-LABEL "sc1_ls_c1_top_r2d" "label" theLabel="vss" xy=(0.4125 -1.0) net="vss" just="NONE"
+DP-LABEL "sc1_ls_c1_top_r2d" "label" theLabel="vss" xy=(4.4 0.025) net="vss" just="NONE"
+DP-LABEL "sc1_ls_c1_top_r2d" "label" theLabel="vss" xy=(1.0 -0.1) net="vss" just="NONE"
+DP-LABEL "sc1_ls_c1_top_r2d" "label" theLabel="vdd33" xy=(0.0125 2.9) net="vdd33" just="NONE"
+DP-LABEL "sc1_ls_c1_top_r2d" "label" theLabel="vdd33" xy=(4.4 1.975) net="vdd33" just="NONE"
+DP-LABEL "sc1_ls_c1_top_r2d" "label" theLabel="vdd33" xy=(0.8 2.1) net="vdd33" just="NONE"
+DP-LABEL "sc1_ls_c1_top_r2d" "label" theLabel="vdd18" xy=(0.6125 2.6) net="vdd18" just="NONE"
+DP-LABEL "sc1_ls_c1_top_r2d" "label" theLabel="vdd18" xy=(1.2 2.1) net="vdd18" just="NONE"
+DP-LABEL "sc1_ls_c1_top_r2d" "label" theLabel="gate33" xy=(6.13125 1.0) net="gate33" just="NONE"
+DP-LABEL "sc1_ls_c1_top_r2d" "label" theLabel="en" xy=(-0.93125 1.0) net="en" just="NONE"
+DP-LABEL "sc1_ls_c1_top_r2d" "label" theLabel="core_ok33" xy=(2.6125 1.375) net="core_ok33" just="NONE"
+DP-LABEL "sc1_ls_c1_top_r2d" "label" theLabel="core_ok33" xy=(2.925 1.125) net="core_ok33" just="NONE"
+DP-WIRE "sc1_ls_c1_top_r2d" objType="line" net="y" points=((2.0875 0.875) (3.3125 0.875)) bbox=((2.0875 0.875) (3.3125 0.875))
+DP-WIRE "sc1_ls_c1_top_r2d" objType="line" net="x" points=((2.0875 1.125) (2.475 1.125)) bbox=((2.0875 1.125) (2.475 1.125))
+DP-WIRE "sc1_ls_c1_top_r2d" objType="line" net="vss" points=((0.4125 -1.0) (1.0 -1.0)) bbox=((0.4125 -1.0) (1.0 -1.0))
+DP-WIRE "sc1_ls_c1_top_r2d" objType="line" net="vss" points=((4.4 0.025) (4.4 0.4125)) bbox=((4.4 0.025) (4.4 0.4125))
+DP-WIRE "sc1_ls_c1_top_r2d" objType="line" net="vss" points=((1.0 -0.1) (1.0 0.2875)) bbox=((1.0 -0.1) (1.0 0.2875))
+DP-WIRE "sc1_ls_c1_top_r2d" objType="line" net="vdd33" points=((0.0125 2.9) (0.6 2.9)) bbox=((0.0125 2.9) (0.6 2.9))
+DP-WIRE "sc1_ls_c1_top_r2d" objType="line" net="vdd33" points=((4.4 1.5875) (4.4 1.975)) bbox=((4.4 1.5875) (4.4 1.975))
+DP-WIRE "sc1_ls_c1_top_r2d" objType="line" net="vdd33" points=((0.8 1.7125) (0.8 2.1)) bbox=((0.8 1.7125) (0.8 2.1))
+DP-WIRE "sc1_ls_c1_top_r2d" objType="line" net="vdd18" points=((0.6125 2.6) (1.2 2.6)) bbox=((0.6125 2.6) (1.2 2.6))
+DP-WIRE "sc1_ls_c1_top_r2d" objType="line" net="vdd18" points=((1.2 1.7125) (1.2 2.1)) bbox=((1.2 1.7125) (1.2 2.1))
+DP-WIRE "sc1_ls_c1_top_r2d" objType="line" net="gate33" points=((5.4875 1.0) (6.775 1.0)) bbox=((5.4875 1.0) (6.775 1.0))
+DP-WIRE "sc1_ls_c1_top_r2d" objType="line" net="en" points=((-1.775 1.0) (-0.0875 1.0)) bbox=((-1.775 1.0) (-0.0875 1.0))
+DP-WIRE "sc1_ls_c1_top_r2d" objType="line" net="core_ok33" points=((2.6125 1.375) (3.2 1.375)) bbox=((2.6125 1.375) (3.2 1.375))
+DP-WIRE "sc1_ls_c1_top_r2d" objType="line" net="core_ok33" points=((2.925 1.125) (3.3125 1.125)) bbox=((2.925 1.125) (3.3125 1.125))
+DP-VIEW "sc1_r3_scan_chain_1ch" opened=db:0x16c3e81a nets=11 instances=11 terminals=8 shapes=44
+DP-INST "sc1_r3_scan_chain_1ch" "Xls" master="sc1_ls_c1_top_r2d" transform=((7.5 1.125) "R0" 1.0) bBox=((6.1375 0.325) (8.8625 1.925)) instTerms=6 symPinBoxes=6
+DP-ITERM "sc1_r3_scan_chain_1ch" "Xls" "en" dir="input" net="en" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_r3_scan_chain_1ch" "Xls" "en" RAW (-1.3625 -0.15) (-1.1875 -0.1) XFORMED (6.1375 0.975) (6.3125 1.025) purpose="drawing" layer="pin"
+DP-ITERM "sc1_r3_scan_chain_1ch" "Xls" "core_ok33" dir="input" net="core_ok33" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_r3_scan_chain_1ch" "Xls" "core_ok33" RAW (-1.3625 0.1) (-1.1875 0.15) XFORMED (6.1375 1.225) (6.3125 1.275) purpose="drawing" layer="pin"
+DP-ITERM "sc1_r3_scan_chain_1ch" "Xls" "gate33" dir="output" net="gate33" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_r3_scan_chain_1ch" "Xls" "gate33" RAW (1.1875 -0.025) (1.3625 0.025) XFORMED (8.6875 1.1) (8.8625 1.15) purpose="drawing" layer="pin"
+DP-ITERM "sc1_r3_scan_chain_1ch" "Xls" "vdd18" dir="inputOutput" net="vdd18" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_r3_scan_chain_1ch" "Xls" "vdd18" RAW (0.175 0.625) (0.225 0.8) XFORMED (7.675 1.75) (7.725 1.925) purpose="drawing" layer="pin"
+DP-ITERM "sc1_r3_scan_chain_1ch" "Xls" "vdd33" dir="inputOutput" net="vdd33" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_r3_scan_chain_1ch" "Xls" "vdd33" RAW (-0.225 0.625) (-0.175 0.8) XFORMED (7.275 1.75) (7.325 1.925) purpose="drawing" layer="pin"
+DP-ITERM "sc1_r3_scan_chain_1ch" "Xls" "vss" dir="inputOutput" net="vss" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_r3_scan_chain_1ch" "Xls" "vss" RAW (-0.025 -0.8) (0.025 -0.625) XFORMED (7.475 0.325) (7.525 0.5) purpose="drawing" layer="pin"
+DP-INST "sc1_r3_scan_chain_1ch" "Xgate" master="sc1_scan_gate" transform=((4.0 1.0) "R0" 1.0) bBox=((2.95 0.325) (5.05 1.675)) instTerms=5 symPinBoxes=5
+DP-ITERM "sc1_r3_scan_chain_1ch" "Xgate" "qbar" dir="input" net="qbar" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_r3_scan_chain_1ch" "Xgate" "qbar" RAW (-1.05 -0.15) (-0.875 -0.1) XFORMED (2.95 0.85) (3.125 0.9) purpose="drawing" layer="pin"
+DP-ITERM "sc1_r3_scan_chain_1ch" "Xgate" "blank" dir="input" net="blank" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_r3_scan_chain_1ch" "Xgate" "blank" RAW (-1.05 0.1) (-0.875 0.15) XFORMED (2.95 1.1) (3.125 1.15) purpose="drawing" layer="pin"
+DP-ITERM "sc1_r3_scan_chain_1ch" "Xgate" "en" dir="output" net="en" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_r3_scan_chain_1ch" "Xgate" "en" RAW (0.875 -0.025) (1.05 0.025) XFORMED (4.875 0.975) (5.05 1.025) purpose="drawing" layer="pin"
+DP-ITERM "sc1_r3_scan_chain_1ch" "Xgate" "vdd" dir="inputOutput" net="vdd18" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_r3_scan_chain_1ch" "Xgate" "vdd" RAW (-0.025 0.5) (0.025 0.675) XFORMED (3.975 1.5) (4.025 1.675) purpose="drawing" layer="pin"
+DP-ITERM "sc1_r3_scan_chain_1ch" "Xgate" "vss" dir="inputOutput" net="vss" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_r3_scan_chain_1ch" "Xgate" "vss" RAW (-0.025 -0.675) (0.025 -0.5) XFORMED (3.975 0.325) (4.025 0.5) purpose="drawing" layer="pin"
+DP-INST "sc1_r3_scan_chain_1ch" "Xff" master="c2mos_dff" transform=((1.0 1.0) "R0" 1.0) bBox=((0.1375 0.2) (1.8625 1.8)) instTerms=6 symPinBoxes=6
+DP-ITERM "sc1_r3_scan_chain_1ch" "Xff" "d" dir="input" net="d" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_r3_scan_chain_1ch" "Xff" "d" RAW (-0.8625 -0.15) (-0.6875 -0.1) XFORMED (0.1375 0.85) (0.3125 0.9) purpose="drawing" layer="pin"
+DP-ITERM "sc1_r3_scan_chain_1ch" "Xff" "clk" dir="input" net="clk" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_r3_scan_chain_1ch" "Xff" "clk" RAW (-0.8625 0.1) (-0.6875 0.15) XFORMED (0.1375 1.1) (0.3125 1.15) purpose="drawing" layer="pin"
+DP-ITERM "sc1_r3_scan_chain_1ch" "Xff" "q" dir="output" net="q" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_r3_scan_chain_1ch" "Xff" "q" RAW (0.6875 0.1) (0.8625 0.15) XFORMED (1.6875 1.1) (1.8625 1.15) purpose="drawing" layer="pin"
+DP-ITERM "sc1_r3_scan_chain_1ch" "Xff" "qbar" dir="output" net="qbar" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_r3_scan_chain_1ch" "Xff" "qbar" RAW (0.6875 -0.15) (0.8625 -0.1) XFORMED (1.6875 0.85) (1.8625 0.9) purpose="drawing" layer="pin"
+DP-ITERM "sc1_r3_scan_chain_1ch" "Xff" "vdd" dir="inputOutput" net="vdd18" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_r3_scan_chain_1ch" "Xff" "vdd" RAW (-0.025 0.625) (0.025 0.8) XFORMED (0.975 1.625) (1.025 1.8) purpose="drawing" layer="pin"
+DP-ITERM "sc1_r3_scan_chain_1ch" "Xff" "vss" dir="inputOutput" net="vss" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_r3_scan_chain_1ch" "Xff" "vss" RAW (-0.025 -0.8) (0.025 -0.625) XFORMED (0.975 0.2) (1.025 0.375) purpose="drawing" layer="pin"
+DP-INST "sc1_r3_scan_chain_1ch" "PIN7" master="iopin" transform=((-0.6 0.775) "R0" 1.0) bBox=((-0.7125 0.7125) (-0.4875 1.03125)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_r3_scan_chain_1ch" "PIN6" master="iopin" transform=((-0.6 1.025) "R0" 1.0) bBox=((-0.7125 0.9625) (-0.4875 1.28125)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_r3_scan_chain_1ch" "PIN5" master="iopin" transform=((2.5 1.025) "R0" 1.0) bBox=((2.3875 0.9625) (2.6125 1.28125)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_r3_scan_chain_1ch" "PIN4" master="iopin" transform=((5.9 1.15) "R0" 1.0) bBox=((5.7875 1.0875) (6.0125 1.40625)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_r3_scan_chain_1ch" "PIN3" master="iopin" transform=((9.6 1.025) "R0" 1.0) bBox=((9.4875 0.9625) (9.7125 1.28125)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_r3_scan_chain_1ch" "PIN2" master="iopin" transform=((1.2 2.5) "R0" 1.0) bBox=((1.0875 2.4375) (1.3125 2.75625)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_r3_scan_chain_1ch" "PIN1" master="iopin" transform=((0.6 2.8) "R0" 1.0) bBox=((0.4875 2.7375) (0.7125 3.05625)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_r3_scan_chain_1ch" "PIN0" master="iopin" transform=((1.0 -1.1) "R0" 1.0) bBox=((0.8875 -1.1625) (1.1125 -0.84375)) instTerms=0 symPinBoxes=0
+DP-PORT "sc1_r3_scan_chain_1ch" "vss" dir="inputOutput" net="vss" fig="inst" "pin" bBox=((0.8875 -1.1625) (1.1125 -0.84375))
+DP-PORT "sc1_r3_scan_chain_1ch" "vdd33" dir="inputOutput" net="vdd33" fig="inst" "pin" bBox=((0.4875 2.7375) (0.7125 3.05625))
+DP-PORT "sc1_r3_scan_chain_1ch" "vdd18" dir="inputOutput" net="vdd18" fig="inst" "pin" bBox=((1.0875 2.4375) (1.3125 2.75625))
+DP-PORT "sc1_r3_scan_chain_1ch" "gate33" dir="output" net="gate33" fig="inst" "pin" bBox=((9.4875 0.9625) (9.7125 1.28125))
+DP-PORT "sc1_r3_scan_chain_1ch" "core_ok33" dir="input" net="core_ok33" fig="inst" "pin" bBox=((5.7875 1.0875) (6.0125 1.40625))
+DP-PORT "sc1_r3_scan_chain_1ch" "blank" dir="input" net="blank" fig="inst" "pin" bBox=((2.3875 0.9625) (2.6125 1.28125))
+DP-PORT "sc1_r3_scan_chain_1ch" "clk" dir="input" net="clk" fig="inst" "pin" bBox=((-0.7125 0.9625) (-0.4875 1.28125))
+DP-PORT "sc1_r3_scan_chain_1ch" "d" dir="input" net="d" fig="inst" "pin" bBox=((-0.7125 0.7125) (-0.4875 1.03125))
+DP-NET "sc1_r3_scan_chain_1ch" "qbar" figs=2
+DP-NET "sc1_r3_scan_chain_1ch" "q" figs=2
+DP-NET "sc1_r3_scan_chain_1ch" "gate33" figs=2
+DP-NET "sc1_r3_scan_chain_1ch" "en" figs=2
+DP-NET "sc1_r3_scan_chain_1ch" "d" figs=2
+DP-NET "sc1_r3_scan_chain_1ch" "core_ok33" figs=2
+DP-NET "sc1_r3_scan_chain_1ch" "clk" figs=2
+DP-NET "sc1_r3_scan_chain_1ch" "blank" figs=2
+DP-NET "sc1_r3_scan_chain_1ch" "vdd18" figs=8
+DP-NET "sc1_r3_scan_chain_1ch" "vdd33" figs=4
+DP-NET "sc1_r3_scan_chain_1ch" "vss" figs=8
+DP-LABEL "sc1_r3_scan_chain_1ch" "label" theLabel="vss" xy=(0.4125 -1.0) net="vss" just="NONE"
+DP-LABEL "sc1_r3_scan_chain_1ch" "label" theLabel="vss" xy=(7.5 0.025) net="vss" just="NONE"
+DP-LABEL "sc1_r3_scan_chain_1ch" "label" theLabel="vss" xy=(4.0 0.025) net="vss" just="NONE"
+DP-LABEL "sc1_r3_scan_chain_1ch" "label" theLabel="vss" xy=(1.0 -0.1) net="vss" just="NONE"
+DP-LABEL "sc1_r3_scan_chain_1ch" "label" theLabel="vdd33" xy=(0.0125 2.9) net="vdd33" just="NONE"
+DP-LABEL "sc1_r3_scan_chain_1ch" "label" theLabel="vdd33" xy=(7.3 2.225) net="vdd33" just="NONE"
+DP-LABEL "sc1_r3_scan_chain_1ch" "label" theLabel="vdd18" xy=(0.6125 2.6) net="vdd18" just="NONE"
+DP-LABEL "sc1_r3_scan_chain_1ch" "label" theLabel="vdd18" xy=(7.7 2.225) net="vdd18" just="NONE"
+DP-LABEL "sc1_r3_scan_chain_1ch" "label" theLabel="vdd18" xy=(4.0 1.975) net="vdd18" just="NONE"
+DP-LABEL "sc1_r3_scan_chain_1ch" "label" theLabel="vdd18" xy=(1.0 2.1) net="vdd18" just="NONE"
+DP-LABEL "sc1_r3_scan_chain_1ch" "label" theLabel="qbar" xy=(2.40625 0.875) net="qbar" just="NONE"
+DP-LABEL "sc1_r3_scan_chain_1ch" "label" theLabel="q" xy=(2.1625 1.125) net="q" just="NONE"
+DP-LABEL "sc1_r3_scan_chain_1ch" "label" theLabel="gate33" xy=(9.275 1.125) net="gate33" just="NONE"
+DP-LABEL "sc1_r3_scan_chain_1ch" "label" theLabel="en" xy=(5.59375 1.0) net="en" just="NONE"
+DP-LABEL "sc1_r3_scan_chain_1ch" "label" theLabel="d" xy=(-0.275 0.875) net="d" just="NONE"
+DP-LABEL "sc1_r3_scan_chain_1ch" "label" theLabel="core_ok33" xy=(5.975 1.25) net="core_ok33" just="NONE"
+DP-LABEL "sc1_r3_scan_chain_1ch" "label" theLabel="clk" xy=(-0.275 1.125) net="clk" just="NONE"
+DP-LABEL "sc1_r3_scan_chain_1ch" "label" theLabel="blank" xy=(2.68125 1.125) net="blank" just="NONE"
+DP-WIRE "sc1_r3_scan_chain_1ch" objType="line" net="vss" points=((0.4125 -1.0) (1.0 -1.0)) bbox=((0.4125 -1.0) (1.0 -1.0))
+DP-WIRE "sc1_r3_scan_chain_1ch" objType="line" net="vss" points=((7.5 0.025) (7.5 0.4125)) bbox=((7.5 0.025) (7.5 0.4125))
+DP-WIRE "sc1_r3_scan_chain_1ch" objType="line" net="vss" points=((4.0 0.025) (4.0 0.4125)) bbox=((4.0 0.025) (4.0 0.4125))
+DP-WIRE "sc1_r3_scan_chain_1ch" objType="line" net="vss" points=((1.0 -0.1) (1.0 0.2875)) bbox=((1.0 -0.1) (1.0 0.2875))
+DP-WIRE "sc1_r3_scan_chain_1ch" objType="line" net="vdd33" points=((0.0125 2.9) (0.6 2.9)) bbox=((0.0125 2.9) (0.6 2.9))
+DP-WIRE "sc1_r3_scan_chain_1ch" objType="line" net="vdd33" points=((7.3 1.8375) (7.3 2.225)) bbox=((7.3 1.8375) (7.3 2.225))
+DP-WIRE "sc1_r3_scan_chain_1ch" objType="line" net="vdd18" points=((0.6125 2.6) (1.2 2.6)) bbox=((0.6125 2.6) (1.2 2.6))
+DP-WIRE "sc1_r3_scan_chain_1ch" objType="line" net="vdd18" points=((7.7 1.8375) (7.7 2.225)) bbox=((7.7 1.8375) (7.7 2.225))
+DP-WIRE "sc1_r3_scan_chain_1ch" objType="line" net="vdd18" points=((4.0 1.5875) (4.0 1.975)) bbox=((4.0 1.5875) (4.0 1.975))
+DP-WIRE "sc1_r3_scan_chain_1ch" objType="line" net="vdd18" points=((1.0 1.7125) (1.0 2.1)) bbox=((1.0 1.7125) (1.0 2.1))
+DP-WIRE "sc1_r3_scan_chain_1ch" objType="line" net="qbar" points=((1.775 0.875) (3.0375 0.875)) bbox=((1.775 0.875) (3.0375 0.875))
+DP-WIRE "sc1_r3_scan_chain_1ch" objType="line" net="q" points=((1.775 1.125) (2.1625 1.125)) bbox=((1.775 1.125) (2.1625 1.125))
+DP-WIRE "sc1_r3_scan_chain_1ch" objType="line" net="gate33" points=((8.775 1.125) (9.775 1.125)) bbox=((8.775 1.125) (9.775 1.125))
+DP-WIRE "sc1_r3_scan_chain_1ch" objType="line" net="en" points=((4.9625 1.0) (6.225 1.0)) bbox=((4.9625 1.0) (6.225 1.0))
+DP-WIRE "sc1_r3_scan_chain_1ch" objType="line" net="d" points=((-0.775 0.875) (0.225 0.875)) bbox=((-0.775 0.875) (0.225 0.875))
+DP-WIRE "sc1_r3_scan_chain_1ch" objType="line" net="core_ok33" points=((5.725 1.25) (6.225 1.25)) bbox=((5.725 1.25) (6.225 1.25))
+DP-WIRE "sc1_r3_scan_chain_1ch" objType="line" net="clk" points=((-0.775 1.125) (0.225 1.125)) bbox=((-0.775 1.125) (0.225 1.125))
+DP-WIRE "sc1_r3_scan_chain_1ch" objType="line" net="blank" points=((2.325 1.125) (3.0375 1.125)) bbox=((2.325 1.125) (3.0375 1.125))
+DP-VIEW "sc1_scan_power_1ch_s3c" opened=db:0x16c3e81a nets=10 instances=11 terminals=9 shapes=29
+DP-INST "sc1_scan_power_1ch_s3c" "Xbank" master="sc1_s3b_p33_bank_7" transform=((4.9625 1.25) "R0" 1.0) bBox=((3.725 0.875) (6.2 1.8)) instTerms=3 symPinBoxes=3
+DP-ITERM "sc1_scan_power_1ch_s3c" "Xbank" "scan" dir="output" net="scan" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_scan_power_1ch_s3c" "Xbank" "scan" RAW (1.0625 -0.025) (1.2375 0.025) XFORMED (6.025 1.225) (6.2 1.275) purpose="drawing" layer="pin"
+DP-ITERM "sc1_scan_power_1ch_s3c" "Xbank" "bgate" dir="input" net="gate33" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_scan_power_1ch_s3c" "Xbank" "bgate" RAW (-1.2375 -0.025) (-1.0625 0.025) XFORMED (3.725 1.225) (3.9 1.275) purpose="drawing" layer="pin"
+DP-ITERM "sc1_scan_power_1ch_s3c" "Xbank" "vscan" dir="inputOutput" net="vscan" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_scan_power_1ch_s3c" "Xbank" "vscan" RAW (-0.025 0.375) (0.025 0.55) XFORMED (4.9375 1.625) (4.9875 1.8) purpose="drawing" layer="pin"
+DP-INST "sc1_scan_power_1ch_s3c" "Xchain" master="sc1_r3_scan_chain_1ch" transform=((1.4875 1.25) "R0" 1.0) bBox=((0.0 0.325) (2.975 2.175)) instTerms=8 symPinBoxes=8
+DP-ITERM "sc1_scan_power_1ch_s3c" "Xchain" "d" dir="input" net="d" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_scan_power_1ch_s3c" "Xchain" "d" RAW (-1.4875 -0.4) (-1.3125 -0.35) XFORMED (0.0 0.85) (0.175 0.9) purpose="drawing" layer="pin"
+DP-ITERM "sc1_scan_power_1ch_s3c" "Xchain" "clk" dir="input" net="clk" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_scan_power_1ch_s3c" "Xchain" "clk" RAW (-1.4875 0.1) (-1.3125 0.15) XFORMED (0.0 1.35) (0.175 1.4) purpose="drawing" layer="pin"
+DP-ITERM "sc1_scan_power_1ch_s3c" "Xchain" "blank" dir="input" net="blank" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_scan_power_1ch_s3c" "Xchain" "blank" RAW (-1.4875 0.35) (-1.3125 0.4) XFORMED (0.0 1.6) (0.175 1.65) purpose="drawing" layer="pin"
+DP-ITERM "sc1_scan_power_1ch_s3c" "Xchain" "core_ok33" dir="input" net="core_ok33" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_scan_power_1ch_s3c" "Xchain" "core_ok33" RAW (-1.4875 -0.15) (-1.3125 -0.1) XFORMED (0.0 1.1) (0.175 1.15) purpose="drawing" layer="pin"
+DP-ITERM "sc1_scan_power_1ch_s3c" "Xchain" "gate33" dir="output" net="gate33" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_scan_power_1ch_s3c" "Xchain" "gate33" RAW (1.3125 -0.025) (1.4875 0.025) XFORMED (2.8 1.225) (2.975 1.275) purpose="drawing" layer="pin"
+DP-ITERM "sc1_scan_power_1ch_s3c" "Xchain" "vdd18" dir="inputOutput" net="vdd18" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_scan_power_1ch_s3c" "Xchain" "vdd18" RAW (0.175 0.75) (0.225 0.925) XFORMED (1.6625 2.0) (1.7125 2.175) purpose="drawing" layer="pin"
+DP-ITERM "sc1_scan_power_1ch_s3c" "Xchain" "vdd33" dir="inputOutput" net="vdd33" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_scan_power_1ch_s3c" "Xchain" "vdd33" RAW (-0.225 0.75) (-0.175 0.925) XFORMED (1.2625 2.0) (1.3125 2.175) purpose="drawing" layer="pin"
+DP-ITERM "sc1_scan_power_1ch_s3c" "Xchain" "vss" dir="inputOutput" net="vss" figure="NONE" figs="NONE" pinFigs="NONE" objType="instTerm"
+DP-PIN "sc1_scan_power_1ch_s3c" "Xchain" "vss" RAW (-0.025 -0.925) (0.025 -0.75) XFORMED (1.4625 0.325) (1.5125 0.5) purpose="drawing" layer="pin"
+DP-INST "sc1_scan_power_1ch_s3c" "PIN8" master="iopin" transform=((-0.75 0.875) "R0" 1.0) bBox=((-0.8625 0.8125) (-0.6375 1.13125)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_scan_power_1ch_s3c" "PIN7" master="iopin" transform=((-0.75 1.375) "R0" 1.0) bBox=((-0.8625 1.3125) (-0.6375 1.63125)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_scan_power_1ch_s3c" "PIN6" master="iopin" transform=((-0.75 1.625) "R0" 1.0) bBox=((-0.8625 1.5625) (-0.6375 1.88125)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_scan_power_1ch_s3c" "PIN5" master="iopin" transform=((-0.75 1.125) "R0" 1.0) bBox=((-0.8625 1.0625) (-0.6375 1.38125)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_scan_power_1ch_s3c" "PIN4" master="iopin" transform=((6.95 1.25) "R0" 1.0) bBox=((6.8375 1.1875) (7.0625 1.50625)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_scan_power_1ch_s3c" "PIN3" master="iopin" transform=((1.6875 2.925) "R0" 1.0) bBox=((1.575 2.8625) (1.8 3.18125)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_scan_power_1ch_s3c" "PIN2" master="iopin" transform=((1.2875 2.925) "R0" 1.0) bBox=((1.175 2.8625) (1.4 3.18125)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_scan_power_1ch_s3c" "PIN1" master="iopin" transform=((4.9625 2.925) "R0" 1.0) bBox=((4.85 2.8625) (5.075 3.18125)) instTerms=0 symPinBoxes=0
+DP-INST "sc1_scan_power_1ch_s3c" "PIN0" master="iopin" transform=((1.4875 -0.425) "R0" 1.0) bBox=((1.375 -0.4875) (1.6 -0.16875)) instTerms=0 symPinBoxes=0
+DP-PORT "sc1_scan_power_1ch_s3c" "vss" dir="inputOutput" net="vss" fig="inst" "pin" bBox=((1.375 -0.4875) (1.6 -0.16875))
+DP-PORT "sc1_scan_power_1ch_s3c" "vscan" dir="inputOutput" net="vscan" fig="inst" "pin" bBox=((4.85 2.8625) (5.075 3.18125))
+DP-PORT "sc1_scan_power_1ch_s3c" "vdd33" dir="inputOutput" net="vdd33" fig="inst" "pin" bBox=((1.175 2.8625) (1.4 3.18125))
+DP-PORT "sc1_scan_power_1ch_s3c" "vdd18" dir="inputOutput" net="vdd18" fig="inst" "pin" bBox=((1.575 2.8625) (1.8 3.18125))
+DP-PORT "sc1_scan_power_1ch_s3c" "scan" dir="output" net="scan" fig="inst" "pin" bBox=((6.8375 1.1875) (7.0625 1.50625))
+DP-PORT "sc1_scan_power_1ch_s3c" "core_ok33" dir="input" net="core_ok33" fig="inst" "pin" bBox=((-0.8625 1.0625) (-0.6375 1.38125))
+DP-PORT "sc1_scan_power_1ch_s3c" "blank" dir="input" net="blank" fig="inst" "pin" bBox=((-0.8625 1.5625) (-0.6375 1.88125))
+DP-PORT "sc1_scan_power_1ch_s3c" "clk" dir="input" net="clk" fig="inst" "pin" bBox=((-0.8625 1.3125) (-0.6375 1.63125))
+DP-PORT "sc1_scan_power_1ch_s3c" "d" dir="input" net="d" fig="inst" "pin" bBox=((-0.8625 0.8125) (-0.6375 1.13125))
+DP-NET "sc1_scan_power_1ch_s3c" "d" figs=2
+DP-NET "sc1_scan_power_1ch_s3c" "vdd33" figs=2
+DP-NET "sc1_scan_power_1ch_s3c" "blank" figs=2
+DP-NET "sc1_scan_power_1ch_s3c" "core_ok33" figs=2
+DP-NET "sc1_scan_power_1ch_s3c" "scan" figs=2
+DP-NET "sc1_scan_power_1ch_s3c" "vscan" figs=2
+DP-NET "sc1_scan_power_1ch_s3c" "vdd18" figs=2
+DP-NET "sc1_scan_power_1ch_s3c" "clk" figs=2
+DP-NET "sc1_scan_power_1ch_s3c" "gate33" figs=2
+DP-NET "sc1_scan_power_1ch_s3c" "vss" figs=2
+DP-LABEL "sc1_scan_power_1ch_s3c" "label" theLabel="vss" xy=(1.4875 -0.00625) net="vss" just="NONE"
+DP-LABEL "sc1_scan_power_1ch_s3c" "label" theLabel="vdd33" xy=(1.2875 2.50625) net="vdd33" just="NONE"
+DP-LABEL "sc1_scan_power_1ch_s3c" "label" theLabel="blank" xy=(-0.33125 1.625) net="blank" just="NONE"
+DP-LABEL "sc1_scan_power_1ch_s3c" "label" theLabel="core_ok33" xy=(-0.33125 1.125) net="core_ok33" just="NONE"
+DP-LABEL "sc1_scan_power_1ch_s3c" "label" theLabel="scan" xy=(6.53125 1.25) net="scan" just="NONE"
+DP-LABEL "sc1_scan_power_1ch_s3c" "label" theLabel="vscan" xy=(4.9625 2.31875) net="vscan" just="NONE"
+DP-LABEL "sc1_scan_power_1ch_s3c" "label" theLabel="vdd18" xy=(1.6875 2.50625) net="vdd18" just="NONE"
+DP-LABEL "sc1_scan_power_1ch_s3c" "label" theLabel="gate33" xy=(3.35 1.25) net="gate33" just="NONE"
+DP-LABEL "sc1_scan_power_1ch_s3c" "label" theLabel="clk" xy=(-0.33125 1.375) net="clk" just="NONE"
+DP-LABEL "sc1_scan_power_1ch_s3c" "label" theLabel="d" xy=(-0.33125 0.875) net="d" just="NONE"
+DP-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="vscan" points=((4.9625 1.7125) (4.9625 2.925)) bbox=((4.9625 1.7125) (4.9625 2.925))
+DP-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="vss" points=((1.4875 -0.425) (1.4875 0.4125)) bbox=((1.4875 -0.425) (1.4875 0.4125))
+DP-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="vdd18" points=((1.6875 2.0875) (1.6875 2.925)) bbox=((1.6875 2.0875) (1.6875 2.925))
+DP-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="vdd33" points=((1.2875 2.0875) (1.2875 2.925)) bbox=((1.2875 2.0875) (1.2875 2.925))
+DP-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="gate33" points=((2.8875 1.25) (3.8125 1.25)) bbox=((2.8875 1.25) (3.8125 1.25))
+DP-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="blank" points=((-0.75 1.625) (0.0875 1.625)) bbox=((-0.75 1.625) (0.0875 1.625))
+DP-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="clk" points=((-0.75 1.375) (0.0875 1.375)) bbox=((-0.75 1.375) (0.0875 1.375))
+DP-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="core_ok33" points=((-0.75 1.125) (0.0875 1.125)) bbox=((-0.75 1.125) (0.0875 1.125))
+DP-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="d" points=((-0.75 0.875) (0.0875 0.875)) bbox=((-0.75 0.875) (0.0875 0.875))
+DP-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="scan" points=((6.1125 1.25) (6.95 1.25)) bbox=((6.1125 1.25) (6.95 1.25))
+DP-VIEW "s3c3_ls_copy" opened="NONE" nets=0 instances=0 terminals=0 shapes=0
+DP-VIEW "s3c3_chain_copy" opened="NONE" nets=0 instances=0 terminals=0 shapes=0
+DP-DONE

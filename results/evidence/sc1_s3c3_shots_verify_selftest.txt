@@ -1,0 +1,4 @@
+CASE real_state_no_pngs rc=1 :: S3C3_SHOTS_VERIFY: FAIL -- VISUAL_REVIEW stays open
+CASE checklist_5_rows rc=1 :: S3C3_SHOTS_VERIFY: FAIL
+CASE checklist_duplicate_pair rc=1 :: S3C3_SHOTS_VERIFY: FAIL
+CASE six_distinct_20kB_files rc=1 :: FAIL VARIANCE_UNREADABLE sc1_s3c3_shot_sc1_ls_c1_top_r2d_schematic.png (convert gave no standard deviation) || FAIL VARIANCE_UNREADABLE sc1_s3c3_shot_sc1_r3_scan_chain_1ch_schematic.png (convert gave no standard deviation) || S3C3_SHOTS_VERIFY: FAIL -- VISUAL_REVIEW stays open

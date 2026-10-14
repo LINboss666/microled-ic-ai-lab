@@ -1,0 +1,8 @@
+S4-BEGIN jobs=2 moves=2 stubs=0
+S4-MOVE "sc1_ls_c1_r2d" "vdd33" from=(0.13125 0.0625) delta=(-0.00625 0.275) moved=db:0x1825e5a0 text="vdd33" now=(0.125 0.3375)
+S4-SAVED "sc1_ls_c1_r2d"
+S4-CLOSED "sc1_ls_c1_r2d"
+S4-MOVE "sc1_scan_gate" "vdd" from=(0.075 0.0625) delta=(0.0 0.275) moved=db:0x1825e420 text="vdd" now=(0.075 0.3375)
+S4-SAVED "sc1_scan_gate"
+S4-CLOSED "sc1_scan_gate"
+S4-DONE

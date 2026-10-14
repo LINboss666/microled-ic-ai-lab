@@ -44,6 +44,11 @@ C²MOS cell — were not written.
 | **S3C3_LABEL_SEMANTICS** | **retraction: label text IS readable, and labels are what name a net** | `lab~>theLabel` and `dbGet(lab 'theLabel)` return the net name (`dbGetq` does not); a wire that only touches pins geometrically stayed on its own `netNN` while both pins still reported floating, so every segment carries its own name label. `schCreateWireLabel` never appeared even once the schematic package had loaded (`schCheck` did) |
 | **S3C3_WARNING_ATTRIBUTION** | **corrected: those warnings were floating pins and nets, not SCH-2162** | the two S3C2-blocked views really listed 13 floating pins + 9 floating nets and 25 + 14; after this round the only floating left are the two single-endpoint nets §3 allows (`Xcore.x`, `Xff.q`) -> `reports/scan_driver_s3c3_parent_rewire_and_gui.md` §4 |
 | **S3C3_VISUAL_REVIEW** | **MANUAL - screenshots are a human deliverable from here on; 0 automated PNGs** | the isolated GUI session now starts CORRECTLY: `hiEnqueueCmd` deferral removes the vendor menu abort (`ciwHelpMenuSpec`, schView.menus:342), and six real editor windows are `IsViewable` in six non-overlapping 600x450 slots (`slots_confirmed=6/6`, `resize=t` each). What does not work is reading their pixels on this display/build: `import -window <top-level>` writes a 134-byte uniform PNG (the Qt top level is a container), the largest child is `IsUnMapped` (`import: unable to read X window image … Resource`), the windows carry no WM_NAME so title matching finds nothing, and `_NET_CLIENT_LIST_STACKING` never follows `hiRaiseWindow`. `scripts/s3c3_gui_shot.sh` + `s3c3_gui_capture.py` were deleted rather than kept as a tool that cannot produce trustworthy images; `scripts/s3c3_gui_manual_session.sh` leaves the session RUNNING and writes `results/evidence/sc1_s3c3_gui_manual_checklist.csv` (six window ids/geometry) for a person to screenshot, and `scripts/sc1_s3c3_shots_verify.py` is the intake gate (six named PNGs must exist, be ≥20 000 bytes, have distinct SHA-256 and a non-zero standard deviation; at this close-out it reports 6 MISSING in `sc1_s3c3_shots_verify.txt`). Evidence: `sc1_s3c3_log_gui_session{3,4,5,6}_*.txt`, `sc1_s3c3_gui_capture_attempts.txt`, `sc1_s3c3_gui_capture_index.csv`, `sc1_s3c3_log_gui_manual_session.txt`, `sc1_s3c3_gui_window_tree_manual.txt`; shortest CIW script `skill/sc1_s3c3_gui_body.il` |
+| **S3C3_VISUAL_REVIEW_OUTCOME** | **REVIEWED - screenshots were taken by hand and reached the reviewer; verdict REVIEWED_FAIL_SYMBOL_LABELS** | `SCREENSHOTS_RECEIVED_BY_REVIEWER=YES`: six full native views plus an mp5 close-up, from the user, not from the agent. The local repo still reports 6 MISSING and that is not a contradiction - the images live with the user/cloud. The finding was about DISPLAY, not the wiring: Symbol name labels did not follow their pins |
+| **S3C4_LABEL_PAIRING** | **PASS - 48/48 paired by object ownership before anything moved** | `skill/sc1_s3c4_dump_symbols.il` read-only dump: every one of the 48 pin figures owns exactly one child text object whose `theLabel` equals its terminal name, so the database already carried the right relation and S3C2's coordinate-based `s2aFindAxis` never consulted it; 43 labels were in the wrong place, 5 were already adjacent. `sc1_s3c4_labels_before.csv` (58 rows incl. stub verdicts), `sc1_s3c4_label_plan.csv`, `sc1_s3c4_stub_actions.csv`, `sc1_s3c4_plan_report.txt` |
+| **S3C4_SYMBOL_LABEL_FIX** | **PASS - copy first, then all eight, verified on independent reopen** | `dbCopyCellView` proof copy `s3c4_top_sym_copy` → 9/9 PASS, copy since moved out to `scratch_not_delivered_20261014_s3c4/`. Pass 1 (43 moves, 10 stale stubs deleted, 10 body→pin stubs drawn) was REJECTED by the comparator for two labels left 0.4688 from their pin (coarse stagger vs the `[@instanceName]` band); the inset search now scans the 0.00625 grid and slides along the edge, pass 2 moved those two, and the final reopen export is 48/48 ADJACENT, max gap 0.225, all boxes inside the body, no overlap, no stale stub, terminals/directions/pin rectangles identical to BEFORE, cell name and `[@instanceName]` kept: `sc1_s3c4_labels_after.csv`, `sc1_s3c4_log_apply_pass{1,2}.txt`, `sc1_s3c4_log_dump_symbols_after.txt`, `scripts/sc1_s3c4_verify_labels.py` |
+| **S3C4_PARENTS_NOT_REWIRED** | **PASS - 146 before/after rows byte-identical, warning set identical to S3C3** | leaf→root Check and Save `sc1_ls_c1_top_r2d` 0 errors/10 warnings, `sc1_r3_scan_chain_1ch` 0/8, top `sc1_scan_power_1ch_s3c` 0/0, all saved; the same script dumped instTerm-nets + wire points + pin text before and after and the 146 rows are identical, and the 18 warnings equal the 18 already committed in S3C3 (`sc1_s3c4_log_check_parents.txt`); `scripts/sc1_s3c3_verify.py` re-run on both dumps gives pins=39 attached=39 ports=23 ports_on_wire=23 PROBLEMS 0 |
+| **S3C4_VISUAL_REVIEW** | **WAITING_REVIEWER - four AFTER images are a human deliverable** | per the task book only `sc1_scan_power_1ch_s3c:schematic+symbol`, `sc1_r3_scan_chain_1ch:schematic`, `sc1_ls_c1_top_r2d:schematic` need re-shooting; DFF and bank images were untouched and may be reused with their source noted. The agent does not retry automated capture and does not rename existing PNGs to fake an AFTER. Intake gate tightened as demanded: checklist must be exactly 6 unique cell/view pairs and an unreadable/non-finite variance now FAILs instead of printing a non-blank PASS (`sc1_s3c3_shots_verify_selftest.txt`, 4 negative cases) - on this Windows box without ImageMagick that gate can only be run where `convert` exists |
 | **FINAL_VSCAN / LED_IV / N_ACTIVE / REAL_ELECTRODE_RC / BUDGETS** | **NOT_DEFINED ×5** | unchanged; the S3-B bench load is still a proxy, and rearranging a drawing changes no assumption |
 | **S4_CHAIN / SOA / AUTONOMOUS_POWER_FAIL** | **NOT_STARTED · NO · NOT_IMPLEMENTED** | no multi-channel or shift chain, no absolute rating read, no POR/UVLO/power-fail behaviour |
 | **NEW_SIMULATION_RUNS** | **0** | no simulator was invoked in S3-C, S3C1 or S3C2 |
@@ -1065,3 +1070,33 @@ the checker before its deck existed (rc 8 was a missing file, not a verdict).
 Putting awk inside the shell script's single-quoted string produced an unterminated-string awk
 program that silently broke even the previously-working legacy path. The checker now lives in its own
 `.awk` file. Do not nest program text inside shell quoting again in these tools.
+
+
+## SCAN-1 S3C4 (round 2026-10-14, audit start 50a630e) - Symbol name labels only
+
+Updated during **SCAN-1 S3C4**. Nothing was rewired: the S3C3 delivery (39/39 hierarchical pin attachment,
+23/23 external port attachment, both parents 0 errors, post-check-save reopen) stays as reviewed, and the
+six hand-taken native images the owner submitted were reviewed as **REVIEWED_FAIL_SYMBOL_LABELS** - the
+display error, not the connectivity. This round repaired the display error and stopped.
+
+* Cause measured, not assumed: every Symbol pin figure already owns one child text object whose
+  `theLabel` equals that terminal's name, so S3C2's `s2aFindAxis` (match by nearest coordinate) never
+  used the relation that was already in the database, and its 48/48 geometric pass proved nothing about
+  the text. 43 of 48 labels were simply left where their pins had been before the role-side move.
+* Method: build all pairings offline first and refuse on any ambiguity, then move with relative
+  `dbMoveFig` (justification preserved), delete only stale `device/drawing` stubs matched by exact
+  endpoints and draw the missing body→pin stubs. Proof on a copy first, then the eight real views,
+  then an independent reopen exporting 48 rows: 48/48 adjacent, max gap 0.225, no overlap, no stale
+  stub, terminals/directions/pin rectangles identical, cell name and `[@instanceName]` kept.
+* The comparator REJECTED pass 1 (two labels 0.4688 from their own pin because a coarse stagger dodged
+  the `[@instanceName]` band); pass 2 fixed exactly those two. That rejection is the evidence that the
+  gate works, and it is recorded rather than smoothed over.
+* Parents got a leaf→root Check and Save only, and the before/after dump of instTerm nets, wire points
+  and pin text is 146 rows byte-identical, with the same 18 warnings already committed in S3C3 - so the
+  "clears the update-time prompt" claim cannot double as a rewiring claim.
+* STOP CONDITION: local fix + evidence committed and pushed for cloud review. `VISUAL_REVIEW =
+  WAITING_REVIEWER`, four AFTER images are `WAITING_USER` (top Symbol, top schematic, chain, LS parent).
+  No S4, `NEW_SIMULATION_RUNS = 0`, `SOA_SIGNOFF = NO`, panel parameters still undefined.
+* Also still `WAITING_USER`: the leftover read-only Virtuoso session this agent started in the guest
+  (pid 24385) should be closed by whoever is done looking at it; this round did not kill it because the
+  task book forbids killing sessions it does not own.

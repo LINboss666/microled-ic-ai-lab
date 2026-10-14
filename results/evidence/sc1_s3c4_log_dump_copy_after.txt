@@ -1,0 +1,52 @@
+SD-BEGIN
+SD-VIEW "s3c4_top_sym_copy" opened=t terminals=9 shapes=31 objName=nil
+SD-TERM "s3c4_top_sym_copy" name="vss" direction="inputOutput" pins=1
+SD-PINFIG "s3c4_top_sym_copy" term="vss" objType="rect" layer="pin" purpose="drawing" bbox=((-0.025 -0.925) (0.025 -0.75)) owner="vss" children=1
+SD-CHILD "s3c4_top_sym_copy" "vss" objType="label" layer="pin" purpose="label" xy=(0.06875 -0.56875) bbox=((-0.06875 -0.5875) (0.06875 -0.55)) theLabel="vss" text=nil strings=nil val=nil name=nil just=nil assoc=nil
+SD-TERM "s3c4_top_sym_copy" name="vscan" direction="inputOutput" pins=1
+SD-PINFIG "s3c4_top_sym_copy" term="vscan" objType="rect" layer="pin" purpose="drawing" bbox=((-0.425 0.75) (-0.375 0.925)) owner="vscan" children=1
+SD-CHILD "s3c4_top_sym_copy" "vscan" objType="label" layer="pin" purpose="label" xy=(-0.28125 0.56875) bbox=((-0.525 0.55) (-0.28125 0.5875)) theLabel="vscan" text=nil strings=nil val=nil name=nil just=nil assoc=nil
+SD-TERM "s3c4_top_sym_copy" name="vdd33" direction="inputOutput" pins=1
+SD-PINFIG "s3c4_top_sym_copy" term="vdd33" objType="rect" layer="pin" purpose="drawing" bbox=((-0.025 0.75) (0.025 0.925)) owner="vdd33" children=1
+SD-CHILD "s3c4_top_sym_copy" "vdd33" objType="label" layer="pin" purpose="label" xy=(0.125 0.55625) bbox=((-0.13125 0.525) (0.125 0.5875)) theLabel="vdd33" text=nil strings=nil val=nil name=nil just="lowCenter" assoc=nil
+SD-TERM "s3c4_top_sym_copy" name="vdd18" direction="inputOutput" pins=1
+SD-PINFIG "s3c4_top_sym_copy" term="vdd18" objType="rect" layer="pin" purpose="drawing" bbox=((0.375 0.75) (0.425 0.925)) owner="vdd18" children=1
+SD-CHILD "s3c4_top_sym_copy" "vdd18" objType="label" layer="pin" purpose="label" xy=(0.525 0.55625) bbox=((0.275 0.525) (0.525 0.5875)) theLabel="vdd18" text=nil strings=nil val=nil name=nil just=nil assoc=nil
+SD-TERM "s3c4_top_sym_copy" name="scan" direction="output" pins=1
+SD-PINFIG "s3c4_top_sym_copy" term="scan" objType="rect" layer="pin" purpose="drawing" bbox=((1.375 -0.025) (1.55 0.025)) owner="scan" children=1
+SD-CHILD "s3c4_top_sym_copy" "scan" objType="label" layer="pin" purpose="label" xy=(1.2125 0.0) bbox=((1.0125 -0.01875) (1.2125 0.01875)) theLabel="scan" text=nil strings=nil val=nil name=nil just="centerRight" assoc=nil
+SD-TERM "s3c4_top_sym_copy" name="core_ok33" direction="input" pins=1
+SD-PINFIG "s3c4_top_sym_copy" term="core_ok33" objType="rect" layer="pin" purpose="drawing" bbox=((-1.55 -0.15) (-1.375 -0.1)) owner="core_ok33" children=1
+SD-CHILD "s3c4_top_sym_copy" "core_ok33" objType="label" layer="pin" purpose="label" xy=(-0.7625 -0.125) bbox=((-1.20625 -0.1625) (-0.7625 -0.09375)) theLabel="core_ok33" text=nil strings=nil val=nil name=nil just="centerLeft" assoc=nil
+SD-TERM "s3c4_top_sym_copy" name="blank" direction="input" pins=1
+SD-PINFIG "s3c4_top_sym_copy" term="blank" objType="rect" layer="pin" purpose="drawing" bbox=((-1.55 0.35) (-1.375 0.4)) owner="blank" children=1
+SD-CHILD "s3c4_top_sym_copy" "blank" objType="label" layer="pin" purpose="label" xy=(-0.9875 0.375) bbox=((-1.2125 0.34375) (-0.9875 0.40625)) theLabel="blank" text=nil strings=nil val=nil name=nil just="lowCenter" assoc=nil
+SD-TERM "s3c4_top_sym_copy" name="clk" direction="input" pins=1
+SD-PINFIG "s3c4_top_sym_copy" term="clk" objType="rect" layer="pin" purpose="drawing" bbox=((-1.55 0.1) (-1.375 0.15)) owner="clk" children=1
+SD-CHILD "s3c4_top_sym_copy" "clk" objType="label" layer="pin" purpose="label" xy=(-1.0875 0.125) bbox=((-1.20625 0.09375) (-1.0875 0.15625)) theLabel="clk" text=nil strings=nil val=nil name=nil just="topCenter" assoc=nil
+SD-TERM "s3c4_top_sym_copy" name="d" direction="input" pins=1
+SD-PINFIG "s3c4_top_sym_copy" term="d" objType="rect" layer="pin" purpose="drawing" bbox=((-1.55 -0.4) (-1.375 -0.35)) owner="d" children=1
+SD-CHILD "s3c4_top_sym_copy" "d" objType="label" layer="pin" purpose="label" xy=(-1.125 -0.375) bbox=((-1.18125 -0.40625) (-1.125 -0.34375)) theLabel="d" text=nil strings=nil val=nil name=nil just="centerLeft" assoc=nil
+SD-TXT "s3c4_top_sym_copy" objType="label" layer="pin" purpose="label" xy=(0.06875 -0.56875) bbox=((-0.06875 -0.5875) (0.06875 -0.55)) theLabel="vss" text=nil strings=nil val=nil name=nil just=nil assoc=nil
+SD-TXT "s3c4_top_sym_copy" objType="label" layer="pin" purpose="label" xy=(-0.28125 0.56875) bbox=((-0.525 0.55) (-0.28125 0.5875)) theLabel="vscan" text=nil strings=nil val=nil name=nil just=nil assoc=nil
+SD-TXT "s3c4_top_sym_copy" objType="label" layer="pin" purpose="label" xy=(0.125 0.55625) bbox=((-0.13125 0.525) (0.125 0.5875)) theLabel="vdd33" text=nil strings=nil val=nil name=nil just="lowCenter" assoc=nil
+SD-TXT "s3c4_top_sym_copy" objType="label" layer="pin" purpose="label" xy=(0.525 0.55625) bbox=((0.275 0.525) (0.525 0.5875)) theLabel="vdd18" text=nil strings=nil val=nil name=nil just=nil assoc=nil
+SD-TXT "s3c4_top_sym_copy" objType="label" layer="pin" purpose="label" xy=(1.2125 0.0) bbox=((1.0125 -0.01875) (1.2125 0.01875)) theLabel="scan" text=nil strings=nil val=nil name=nil just="centerRight" assoc=nil
+SD-TXT "s3c4_top_sym_copy" objType="label" layer="pin" purpose="label" xy=(-0.7625 -0.125) bbox=((-1.20625 -0.1625) (-0.7625 -0.09375)) theLabel="core_ok33" text=nil strings=nil val=nil name=nil just="centerLeft" assoc=nil
+SD-TXT "s3c4_top_sym_copy" objType="label" layer="pin" purpose="label" xy=(-0.9875 0.375) bbox=((-1.2125 0.34375) (-0.9875 0.40625)) theLabel="blank" text=nil strings=nil val=nil name=nil just="lowCenter" assoc=nil
+SD-TXT "s3c4_top_sym_copy" objType="label" layer="pin" purpose="label" xy=(-1.0875 0.125) bbox=((-1.20625 0.09375) (-1.0875 0.15625)) theLabel="clk" text=nil strings=nil val=nil name=nil just="topCenter" assoc=nil
+SD-TXT "s3c4_top_sym_copy" objType="label" layer="pin" purpose="label" xy=(-1.125 -0.375) bbox=((-1.18125 -0.40625) (-1.125 -0.34375)) theLabel="d" text=nil strings=nil val=nil name=nil just="centerLeft" assoc=nil
+SD-TXT "s3c4_top_sym_copy" objType="label" layer="device" purpose="label" xy=(0.125 -0.25) bbox=((-0.6 -0.3125) (0.85 -0.2125)) theLabel="sc1_scan_power_1ch_s3c" text=nil strings=nil val=nil name=nil just=nil assoc=nil
+SD-TXT "s3c4_top_sym_copy" objType="label" layer="instance" purpose="label" xy=(0.125 0.375) bbox=((-0.35625 0.33125) (0.60625 0.41875)) theLabel="[@instanceName]" text=nil strings=nil val=nil name=nil just=nil assoc=nil
+SD-GRAPH "s3c4_top_sym_copy" objType="rect" layer="device" purpose="drawing" bbox=((-1.25 -0.625) (1.25 0.625)) xy=nil pts=nil numpts=0
+SD-GRAPH "s3c4_top_sym_copy" objType="line" layer="device" purpose="drawing" bbox=((-1.375 0.125) (-1.25 0.125)) xy=nil pts=((-1.25 0.125) (-1.375 0.125)) numpts=2
+SD-GRAPH "s3c4_top_sym_copy" objType="line" layer="device" purpose="drawing" bbox=((-0.4 0.625) (-0.4 0.75)) xy=nil pts=((-0.4 0.625) (-0.4 0.75)) numpts=2
+SD-GRAPH "s3c4_top_sym_copy" objType="line" layer="device" purpose="drawing" bbox=((-1.375 0.375) (-1.25 0.375)) xy=nil pts=((-1.25 0.375) (-1.375 0.375)) numpts=2
+SD-GRAPH "s3c4_top_sym_copy" objType="line" layer="device" purpose="drawing" bbox=((0.4 0.625) (0.4 0.75)) xy=nil pts=((0.4 0.625) (0.4 0.75)) numpts=2
+SD-GRAPH "s3c4_top_sym_copy" objType="line" layer="device" purpose="drawing" bbox=((-1.375 -0.375) (-1.25 -0.375)) xy=nil pts=((-1.375 -0.375) (-1.25 -0.375)) numpts=2
+SD-GRAPH "s3c4_top_sym_copy" objType="line" layer="device" purpose="drawing" bbox=((0.0 0.625) (0.0 0.75)) xy=nil pts=((0.0 0.625) (0.0 0.75)) numpts=2
+SD-GRAPH "s3c4_top_sym_copy" objType="line" layer="device" purpose="drawing" bbox=((-1.375 -0.125) (-1.25 -0.125)) xy=nil pts=((-1.375 -0.125) (-1.25 -0.125)) numpts=2
+SD-GRAPH "s3c4_top_sym_copy" objType="line" layer="device" purpose="drawing" bbox=((1.25 0.0) (1.375 0.0)) xy=nil pts=((1.25 0.0) (1.375 0.0)) numpts=2
+SD-GRAPH "s3c4_top_sym_copy" objType="label" layer="device" purpose="label" bbox=((-0.6 -0.3125) (0.85 -0.2125)) xy=(0.125 -0.25) pts=nil numpts=0
+SD-GRAPH "s3c4_top_sym_copy" objType="line" layer="device" purpose="drawing" bbox=((0.0 -0.75) (0.0 -0.625)) xy=nil pts=((0.0 -0.75) (0.0 -0.625)) numpts=2
+SD-DONE

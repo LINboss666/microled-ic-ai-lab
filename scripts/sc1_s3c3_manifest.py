@@ -20,7 +20,10 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EV = os.path.join('results', 'evidence')
-MANIFEST = os.path.join(EV, 'sc1_s3c3_round_manifest.csv')
+# the same generator serves every round of this branch, so the destination and the role prefix are
+# configured instead of duplicated into a per-round copy of this file
+MANIFEST = os.environ.get('S3C_MANIFEST', os.path.join(EV, 'sc1_s3c3_round_manifest.csv'))
+PREFIX = os.environ.get('S3C_ROLE_PREFIX', 's3c3')
 BASE = os.environ.get('S3C3_BASE', '7a1fc43db9b9d7a17c5accdac2296196cb0bf709')
 NOTE = (u'hashed from the staged blob, which is what this round commits; excluded row: '
         u'the manifest itself')
@@ -70,10 +73,10 @@ def blob(rel):
 
 def role(rel):
     if rel.startswith('results/evidence/'):
-        return 's3c3_evidence'
+        return PREFIX + '_evidence'
     if rel.startswith('reports/agent_handoffs/'):
-        return 's3c3_agent_handoffs'
-    return 's3c3_' + os.path.basename(rel)
+        return PREFIX + '_agent_handoffs'
+    return PREFIX + '_' + os.path.basename(rel)
 
 
 def main():
@@ -85,7 +88,8 @@ def main():
     for row in rows:
         lines.append(','.join('"%s"' % c for c in row))
     io.open(os.path.join(ROOT, MANIFEST), 'wb').write(('\n'.join(lines) + '\n').encode('utf-8'))
-    print('S3C3_MANIFEST rows=%d base=%s' % (len(rows) - 1, BASE[:7]))
+    print('%s rows=%d base=%s' % (os.path.basename(MANIFEST).upper().replace('.CSV', '_GENERATED'),
+                                  len(rows) - 1, BASE[:7]))
     return 0
 
 

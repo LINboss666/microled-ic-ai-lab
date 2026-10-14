@@ -24,7 +24,7 @@ soa_signoff: NO
 | POST_CHECK_SAVE_GRAPH_MATCH | **PASS** —— 每个视图都是「schCheck 现场提取 → 打印 instTerm/net → dbSave → 独立会话按磁盘字节重开 → 复算」；顶层 Check and Save 后 errors=0 warnings=0 | `sc1_s3c3_log_apply_ls_direct.txt`、`..._chain_direct.txt`、`..._top_check_and_save.txt`、`..._reopen_dump_39pins.txt` |
 | PORT_DIRECTIONS | **96/96 未变**（本轮不碰 Symbol/端口方向；`sc1_s3c3_dump_pins.txt` 里每个 instTerm 的 dir 与 S3C2 记录一致） | `sc1_s3c3_dump_pins.txt` |
 | SYMBOL_PLACEMENT | **48/48 保持**（Symbol 视图本轮只读；实例/端口移动只发生在两张父原理图内） | `sc1_s3c3_dump_pins.txt`（DP-SYM 段）、S3C2 报告 §3 |
-| VISUAL_REVIEW | **MANUAL —— 截图永久转人工，本轮 0 张自动交付**。GUI 会话本身已正确启动：六个视图窗口都是真实 X 窗口（`IsViewable`，600x450，六个互不重叠栅格位，`slots_confirmed=6/6`），但这台显示系统取不到可信像素（顶层窗口 134 字节空图，最大子窗口 `IsUnMapped`）。会话已留在屏幕上供人工截图，入库判定是 `scripts/sc1_s3c3_shots_verify.py`，当前状态 6 张 MISSING，见 §5 | `sc1_s3c3_gui_manual_checklist.csv`、`sc1_s3c3_shots_verify.txt`、`sc1_s3c3_log_gui_manual_session.txt`、`sc1_s3c3_gui_window_tree_manual.txt`、`sc1_s3c3_gui_capture_attempts.txt` |
+| VISUAL_REVIEW | **REVIEWED —— 六张人工原生图 + mp5 局部图已交云端，结论 REVIEWED_FAIL_SYMBOL_LABELS**（显示错误是 Symbol 名称标签位置/归属，修复在 S3C4 报告）。GUI 会话本身已正确启动：六个视图窗口都是真实 X 窗口（`IsViewable`，600x450，六个互不重叠栅格位，`slots_confirmed=6/6`），但这台显示系统取不到可信像素（顶层窗口 134 字节空图，最大子窗口 `IsUnMapped`），故截图永久转人工，自动像素工具已删 | `sc1_s3c3_gui_manual_checklist.csv`、`sc1_s3c3_shots_verify.txt`（本地仍 6 MISSING，与云端已收图不矛盾：图在用户侧）、`sc1_s3c3_log_gui_manual_session.txt`、`sc1_s3c3_gui_window_tree_manual.txt`、`sc1_s3c3_gui_capture_attempts.txt`、S3C4 报告 §0/§1 |
 
 `S3-C 整体 = REWORK 未完`：目视审核仍未关闭，所以不写 COMPLETE/ACCEPTED；未进 S4，`NEW_SIMULATION_RUNS=0`。
 
@@ -130,6 +130,12 @@ S3C2 说两个父视图的告警“主要是 SCH-2162”，错。当时磁盘字
 SHA-256 互不相同、且 `standard_deviation>0`（空白图会被判 BLANK），通过才允许把 VISUAL_REVIEW 写成
 已交付；本轮收尾时它的输出是 6 个 MISSING（`sc1_s3c3_shots_verify.txt`，即已知失败态）。
 清单文件名与窗口身份的绑定来自启动器，不手抄，所以截错窗口会被判 MISSING 而不是被当成通过。
+
+**后续事实（S3C4 任务书带来）**：这六张图与 mp5 局部图已由用户人工截好并提交云端审核，
+`SCREENSHOTS_RECEIVED_BY_REVIEWER=YES`，审核结论 `REVIEWED_FAIL_SYMBOL_LABELS` —— 失败点不是接线，
+而是 Symbol 的名称标签没跟着 pin 走。因此上面那段"把 PNG 放进 results/evidence"的入库路径不再是本轮的
+完成条件：图在用户/云端侧，本地工程仍报 MISSING，两者不矛盾。修复与复验见
+`reports/scan_driver_s3c4_symbol_labels.md`。
 
 ## 6 边界复述
 
