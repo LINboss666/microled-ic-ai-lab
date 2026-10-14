@@ -43,6 +43,14 @@
     "refs/heads/gexing321/docs/collaborator-rules": "876c198ab894796b7ff91b290654882ad5b782f8 (unchanged)",
     "refs/heads/gexing321/scan-driver/c2mos-schematic": "6d23fb77ab7248a13d95dc6e82a215eb13bdc064 (unchanged by this round)"
   },
+  "git_handback": {
+    "why_this_block_exists": "a commit cannot state its own SHA, and a file cannot state whether the commit carrying it reached the remote; both facts are only visible from outside, so they are written here as of the moment of writing and are checkable by anyone in one command",
+    "remote_tip_at_time_of_writing": "e307e304cd7a5281d037f12a146a95929ac7d0de (verified by ls-remote immediately after the push)",
+    "this_file_is_in_a_later_commit": true,
+    "later_commit_push_state": "PUSH_PENDING -- the host lost its route to github.com (443) after the first push: three subsequent attempts each failed with 'Failed to connect to github.com:443' or 'Empty reply from server', and the local proxy 127.0.0.1:10090 is not running. No force, no retry loop beyond that, no proxy or remote configuration change.",
+    "how_to_check": "git -C <clone> log --oneline origin/gexing321/scan-unit/1ch-beautify..HEAD  -- empty means the follow-ups landed; non-empty means they are still local",
+    "local_head_at_time_of_writing": "the last commit on gexing321/scan-unit/1ch-beautify in this clone; its SHA is printed in the chat handback, not here"
+  },
   "source_divergence": {
     "remote_tip_now": "0038821e6a93861848ac922ccca35c41a4de9bbb",
     "relation": "9049f11 is an ancestor; the branch is one commit ahead",
