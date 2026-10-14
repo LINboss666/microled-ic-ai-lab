@@ -1,0 +1,17 @@
+# S3C3 manual-screenshot intake gate, run from the repo root before the visual review can close:
+#   python scripts/sc1_s3c3_shots_verify.py
+# expected six files: sc1_s3c3_shot_<cell>_<view>.png, named per sc1_s3c3_gui_manual_checklist.csv
+SHOT 0 sc1_scan_power_1ch_s3c:schematic = MISSING
+SHOT 1 sc1_scan_power_1ch_s3c:symbol = MISSING
+SHOT 2 c2mos_dff:schematic = MISSING
+SHOT 3 sc1_s3b_p33_bank_7:schematic = MISSING
+SHOT 4 sc1_ls_c1_top_r2d:schematic = MISSING
+SHOT 5 sc1_r3_scan_chain_1ch:schematic = MISSING
+S3C3_SHOTS_VERIFY expected=6 present=0 problems=6
+FAIL MISSING sc1_s3c3_shot_sc1_scan_power_1ch_s3c_schematic.png (window 0x2a0029a 600x450+24+225)
+FAIL MISSING sc1_s3c3_shot_sc1_scan_power_1ch_s3c_symbol.png (window 0x2a00603 600x450+644+225)
+FAIL MISSING sc1_s3c3_shot_c2mos_dff_schematic.png (window 0x2a006d3 600x450+1264+225)
+FAIL MISSING sc1_s3c3_shot_sc1_s3b_p33_bank_7_schematic.png (window 0x2a00764 600x450+24+662)
+FAIL MISSING sc1_s3c3_shot_sc1_ls_c1_top_r2d_schematic.png (window 0x2a007f7 600x450+644+662)
+FAIL MISSING sc1_s3c3_shot_sc1_r3_scan_chain_1ch_schematic.png (window 0x2a00889 600x450+1264+662)
+S3C3_SHOTS_VERIFY: FAIL -- VISUAL_REVIEW stays open
