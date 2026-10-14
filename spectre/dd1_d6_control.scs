@@ -1,0 +1,19 @@
+// dd1_d6_control.scs -- DATA-6 digital front end of ONE channel: store, mask, complement.
+//
+// 24 MOS expanded = the frozen 18-device C2MOS DFF + the frozen 4-device scan gate (its electrical
+// function en = NOR(qbar, blank) = Q AND NOT blank is what is reused here, not the scan power stage)
+// + the 2-device inverter added this round. Interface order is fixed by the task book.
+// Nothing in here is ideal: q, qbar, data_en and data_en_b are real transistor nodes.
+
+subckt dd1_control_1ch (d clk blank data_en data_en_b vdd vss)
+  parameters d input
+  parameters clk input
+  parameters blank input
+  parameters data_en output
+  parameters data_en_b output
+  parameters vdd inputOutput
+  parameters vss inputOutput
+  Xff   (d clk q qbar vdd vss) c2mos_dff
+  Xmask (qbar blank data_en vdd vss) sc1_scan_gate
+  Xinv  (data_en data_en_b vdd vss) dd1_inv18
+ends dd1_control_1ch

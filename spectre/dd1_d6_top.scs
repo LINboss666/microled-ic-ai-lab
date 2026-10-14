@@ -1,0 +1,20 @@
+// dd1_d6_top.scs -- DATA-6 single-bit Data Driver POC top: one shared reference + one channel.
+//
+// 29 MOS expanded = 28 (dd1_sink_unit_1ch) + 1 (Mref in data_bias_ref). `iref_in` is the node the
+// bench current meter INJECTS into the diode-connected reference, not an ideal voltage: treating it
+// as an ideal VBIAS source would bypass the very device the shared bias exists to create. IREF and
+// VCAS stay external bench inputs this round (TESTBENCH_ASSUMPTION) -- no autonomous reference, bandgap,
+// greyscale, PWM, shift array or TCON is claimed or designed.
+
+subckt dd1_data_top_1ch (d clk blank iref_in vcas data_out vdd18 vss)
+  parameters d input
+  parameters clk input
+  parameters blank input
+  parameters iref_in input
+  parameters vcas input
+  parameters data_out output
+  parameters vdd18 inputOutput
+  parameters vss inputOutput
+  Xbias (iref_in vss) data_bias_ref
+  Xunit (d clk blank iref_in vcas data_out vdd18 vss) dd1_sink_unit_1ch
+ends dd1_data_top_1ch

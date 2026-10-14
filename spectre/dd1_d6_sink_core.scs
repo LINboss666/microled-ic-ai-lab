@@ -1,0 +1,12 @@
+subckt data_sink_1ch (DATA_EN DATA_EN_B VBIAS_SHARED VCAS DATA_OUT VSS)
+  parameters DATA_EN input
+  parameters DATA_EN_B input
+  parameters VBIAS_SHARED input
+  parameters VCAS input
+  parameters DATA_OUT output
+  parameters VSS inputOutput
+  Mbleed_local (vbias_ch DATA_EN_B VSS VSS) n33 l=2e-6 w=2e-6
+  Mcas (DATA_OUT VCAS node_m VSS) n33 l=2e-6 w=2e-5
+  Mout (node_m vbias_ch VSS VSS) n33 l=2e-6 w=2e-5
+  Mpass_local (VBIAS_SHARED DATA_EN vbias_ch vbias_ch) n33_dnw_4t_ckt l=2e-6 w=5e-6
+ends data_sink_1ch

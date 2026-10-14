@@ -1,0 +1,21 @@
+// dd1_d6_inv18.scs -- DATA-6 inverter that makes DATA_EN_B for the sink's bleed device.
+//
+// Why this exists at all: `qbar` is not usable as DATA_EN_B. When blank=1 the channel has to be
+// switched off no matter what the stored bit is, which means pass OFF and bleed ON -- and with
+// qbar=DATA_EN_B, blank=1 and Q=0 would ask for pass OFF and bleed OFF at the same time. So the
+// accepted mask gate's output is inverted instead, giving (data_en, data_en_b) = (0,1) in exactly
+// that case. Functional role only: this inverter is not a new analogue core.
+//
+// Sizes are this round's engineering start (POC_ASSUMPTION, not a course number): L=200n,
+// NMOS W=2u, PMOS W=4u, m=fingers=1, bulk tied to the rail it belongs to. 1.8 V devices n18/p18,
+// the same masters the frozen C2MOS DFF and scan gate already use.
+// Spectre BSIM4 terminal order on this build is Name ( d g s b ) ModelName.
+
+subckt dd1_inv18 (a z vdd vss)
+  parameters a input
+  parameters z output
+  parameters vdd inputOutput
+  parameters vss inputOutput
+  Mn1 (z a vss vss) n18 l=2e-7 w=2e-6 m=1
+  Mp1 (z a vdd vdd) p18 l=2e-7 w=4e-6 m=1
+ends dd1_inv18

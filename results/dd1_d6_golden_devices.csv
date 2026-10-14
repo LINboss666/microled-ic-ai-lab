@@ -1,0 +1,6 @@
+instance_name,model,D,G,S,B,golden_L_raw,golden_L_m,golden_W_raw,golden_W_m,golden_fingers,golden_fingers_source,golden_multiplier,golden_multiplier_source,cell
+Mbleed_local,n33,vbias_ch,data_en_b,vss,vss,2e-6,2e-06,2e-6,2e-06,1,DEFAULT_FROM_NETLIST_ABSENCE,1,DEFAULT_FROM_NETLIST_ABSENCE,data_sink_1ch
+Mcas,n33,data_out,vcas,node_m,vss,2e-6,2e-06,2e-5,2e-05,1,DEFAULT_FROM_NETLIST_ABSENCE,1,DEFAULT_FROM_NETLIST_ABSENCE,data_sink_1ch
+Mout,n33,node_m,vbias_ch,vss,vss,2e-6,2e-06,2e-5,2e-05,1,DEFAULT_FROM_NETLIST_ABSENCE,1,DEFAULT_FROM_NETLIST_ABSENCE,data_sink_1ch
+Mpass_local,n33_dnw_4t_ckt,vbias,data_en,vbias_ch,vbias_ch,2e-6,2e-06,5e-6,5e-06,1,DEFAULT_FROM_NETLIST_ABSENCE,1,DEFAULT_FROM_NETLIST_ABSENCE,data_sink_1ch
+Mref,n33,vbias,vbias,vss,vss,2e-6,2e-06,2e-5,2e-05,1,DEFAULT_FROM_NETLIST_ABSENCE,1,DEFAULT_FROM_NETLIST_ABSENCE,data_bias_ref

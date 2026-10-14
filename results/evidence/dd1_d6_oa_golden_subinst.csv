@@ -1,0 +1,8 @@
+"cell","inst","child_master","nets","bindings"
+"dd1_control_1ch","Xff","c2mos_dff","d clk q qbar vdd vss","d=d clk=clk q=q qbar=qbar vdd=vdd vss=vss"
+"dd1_control_1ch","Xmask","sc1_scan_gate","qbar blank data_en vdd vss","qbar=qbar blank=blank en=data_en vdd=vdd vss=vss"
+"dd1_control_1ch","Xinv","dd1_inv18","data_en data_en_b vdd vss","a=data_en z=data_en_b vdd=vdd vss=vss"
+"dd1_sink_unit_1ch","Xctrl","dd1_control_1ch","d clk blank data_en data_en_b vdd18 vss","d=d clk=clk blank=blank data_en=data_en data_en_b=data_en_b vdd=vdd18 vss=vss"
+"dd1_sink_unit_1ch","Xsink","data_sink_1ch","data_en data_en_b VBIAS_SHARED VCAS DATA_OUT vss","DATA_EN=data_en DATA_EN_B=data_en_b VBIAS_SHARED=VBIAS_SHARED VCAS=VCAS DATA_OUT=DATA_OUT VSS=vss"
+"dd1_data_top_1ch","Xbias","data_bias_ref","iref_in vss","VBIAS_SHARED=iref_in VSS=vss"
+"dd1_data_top_1ch","Xunit","dd1_sink_unit_1ch","d clk blank iref_in vcas data_out vdd18 vss","d=d clk=clk blank=blank VBIAS_SHARED=iref_in VCAS=vcas DATA_OUT=data_out vdd18=vdd18 vss=vss"

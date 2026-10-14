@@ -1,0 +1,224 @@
+DATA-6 dd1 dependency / call log. Written by scripts/dd1_d6_unit_tt.py on the guest and
+pulled with md5 verification; every /root, /opt, /etc path inside it was replaced by
+scripts/sc1_r2e_s2_tt.scrub before the file left the guest.
+
+LINEAGE (this file covers the seven cases of the second authorised pass)
+  pass A  D6-03 preflight only, refused at stage=operating_point_sim (SFE-59, see report)
+  pass B  D6-03 preflight + DUT, run_id D6-UNIT-20261014T175419Z  <- the retained case record
+  pass C  D6-03 preflight + DUT, discarded: a python defect in this entry's response layer
+          truncated its rows (HARNESS_ERROR). Its own rows and run_id live only in the
+          superseded guest file cadence_work/../results/evidence/dd1_d6_cases.csv of that
+          pass; no circuit conclusion is taken from it.
+  pass D  D6-01/02/04/05/06/07/N1, run_id D6-UNIT-20261014T181220Z <- the seven records below
+Native PSF/raw and the per-case deck directories stay on the guest; deck sha256 per case is in
+results/evidence/dd1_d6_manifest.csv, which is what names the bytes each row came from.
+
+=== D6-01 run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port 
+runner: SPECTRE name=D6-01.scs rc=0 elapsed=1s timeout=1200s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 48
+drwx------. 4 root root 4096 Oct 15 02:12 .
+drwx------. 3 root root 4096 Oct 15 02:12 ..
+-rw-------. 1 root root 6978 Oct 15 02:12 D6-01.log
+drwx------. 2 root root 4096 Oct 15 02:12 D6-01.raw
+-rw-------. 1 root root 6801 Oct 15 02:12 D6-01.stdout
+-rw-------. 1 root root 7945 Oct 15 02:12 preflight_D6-01_D6-01.log
+drwx------. 2 root root 4096 Oct 15 02:12 preflight_D6-01_D6-01.raw
+-rw-------. 1 root root 7766 Oct 15 02:12 preflight_D6-01_D6-01.stdout
+----- log tail -----
+
+
+Aggregate audit (2:12:22 AM, Thur Oct 15, 2026):
+Time used: CPU = 825 ms, elapsed = 860 ms, util. = 95.9%.
+Time spent in licensing: elapsed = 56.7 ms, percentage of total = 6.6%.
+Peak memory used = 62.7 Mbytes.
+Simulation started at: 2:12:21 AM, Thur Oct 15, 2026, ended at: 2:12:22 AM, Thur Oct 15, 2026, with elapsed time (wall clock): 860 ms.
+spectre completes with 0 errors, 0 warnings, and 1 notice.
+D6_D6-01: PASS
+
+
+=== D6-02 run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port 
+runner: SPECTRE name=D6-02.scs rc=0 elapsed=1s timeout=1200s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 48
+drwx------. 4 root root 4096 Oct 15 02:13 .
+drwx------. 3 root root 4096 Oct 15 02:13 ..
+-rw-------. 1 root root 6970 Oct 15 02:13 D6-02.log
+drwx------. 2 root root 4096 Oct 15 02:13 D6-02.raw
+-rw-------. 1 root root 6793 Oct 15 02:13 D6-02.stdout
+-rw-------. 1 root root 7907 Oct 15 02:13 preflight_D6-02_D6-02.log
+drwx------. 2 root root 4096 Oct 15 02:13 preflight_D6-02_D6-02.raw
+-rw-------. 1 root root 7728 Oct 15 02:13 preflight_D6-02_D6-02.stdout
+----- log tail -----
+
+
+Aggregate audit (2:13:19 AM, Thur Oct 15, 2026):
+Time used: CPU = 992 ms, elapsed = 1.03 s, util. = 96.1%.
+Time spent in licensing: elapsed = 59 ms, percentage of total = 5.72%.
+Peak memory used = 62.7 Mbytes.
+Simulation started at: 2:13:18 AM, Thur Oct 15, 2026, ended at: 2:13:19 AM, Thur Oct 15, 2026, with elapsed time (wall clock): 1.03 s.
+spectre completes with 0 errors, 0 warnings, and 1 notice.
+D6_D6-02: PASS
+
+
+=== D6-04 run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port 
+runner: SPECTRE name=D6-04.scs rc=0 elapsed=1s timeout=1200s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 48
+drwx------. 4 root root 4096 Oct 15 02:14 .
+drwx------. 3 root root 4096 Oct 15 02:14 ..
+-rw-------. 1 root root 6934 Oct 15 02:14 D6-04.log
+drwx------. 2 root root 4096 Oct 15 02:14 D6-04.raw
+-rw-------. 1 root root 6757 Oct 15 02:14 D6-04.stdout
+-rw-------. 1 root root 7938 Oct 15 02:14 preflight_D6-04_D6-04.log
+drwx------. 2 root root 4096 Oct 15 02:14 preflight_D6-04_D6-04.raw
+-rw-------. 1 root root 7759 Oct 15 02:14 preflight_D6-04_D6-04.stdout
+----- log tail -----
+
+
+Aggregate audit (2:14:48 AM, Thur Oct 15, 2026):
+Time used: CPU = 1.14 s, elapsed = 1.17 s, util. = 97.1%.
+Time spent in licensing: elapsed = 57 ms.
+Peak memory used = 62.7 Mbytes.
+Simulation started at: 2:14:47 AM, Thur Oct 15, 2026, ended at: 2:14:48 AM, Thur Oct 15, 2026, with elapsed time (wall clock): 1.17 s.
+spectre completes with 0 errors, 0 warnings, and 1 notice.
+D6_D6-04: PASS
+
+
+=== D6-05 run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port 
+runner: SPECTRE name=D6-05.scs rc=0 elapsed=1s timeout=1200s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 48
+drwx------. 4 root root 4096 Oct 15 02:16 .
+drwx------. 3 root root 4096 Oct 15 02:16 ..
+-rw-------. 1 root root 6937 Oct 15 02:16 D6-05.log
+drwx------. 2 root root 4096 Oct 15 02:16 D6-05.raw
+-rw-------. 1 root root 6760 Oct 15 02:16 D6-05.stdout
+-rw-------. 1 root root 7944 Oct 15 02:16 preflight_D6-05_D6-05.log
+drwx------. 2 root root 4096 Oct 15 02:16 preflight_D6-05_D6-05.raw
+-rw-------. 1 root root 7765 Oct 15 02:16 preflight_D6-05_D6-05.stdout
+----- log tail -----
+
+
+Aggregate audit (2:16:50 AM, Thur Oct 15, 2026):
+Time used: CPU = 1.17 s, elapsed = 1.21 s, util. = 96.7%.
+Time spent in licensing: elapsed = 58 ms.
+Peak memory used = 62.7 Mbytes.
+Simulation started at: 2:16:49 AM, Thur Oct 15, 2026, ended at: 2:16:50 AM, Thur Oct 15, 2026, with elapsed time (wall clock): 1.21 s.
+spectre completes with 0 errors, 0 warnings, and 1 notice.
+D6_D6-05: PASS
+
+
+=== D6-06 run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port 
+runner: SPECTRE name=D6-06.scs rc=0 elapsed=1s timeout=1200s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 48
+drwx------. 4 root root 4096 Oct 15 02:18 .
+drwx------. 3 root root 4096 Oct 15 02:18 ..
+-rw-------. 1 root root 6665 Oct 15 02:18 D6-06.log
+drwx------. 2 root root 4096 Oct 15 02:18 D6-06.raw
+-rw-------. 1 root root 6488 Oct 15 02:18 D6-06.stdout
+-rw-------. 1 root root 7683 Oct 15 02:18 preflight_D6-06_D6-06.log
+drwx------. 2 root root 4096 Oct 15 02:18 preflight_D6-06_D6-06.raw
+-rw-------. 1 root root 7504 Oct 15 02:18 preflight_D6-06_D6-06.stdout
+----- log tail -----
+
+
+Aggregate audit (2:18:47 AM, Thur Oct 15, 2026):
+Time used: CPU = 1.14 s, elapsed = 1.18 s, util. = 96.3%.
+Time spent in licensing: elapsed = 57.1 ms.
+Peak memory used = 62.6 Mbytes.
+Simulation started at: 2:18:46 AM, Thur Oct 15, 2026, ended at: 2:18:47 AM, Thur Oct 15, 2026, with elapsed time (wall clock): 1.18 s.
+spectre completes with 0 errors, 0 warnings, and 0 notices.
+D6_D6-06: PASS
+
+
+=== D6-07 run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port 
+runner: SPECTRE name=D6-07.scs rc=0 elapsed=1s timeout=1200s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 48
+drwx------. 4 root root 4096 Oct 15 02:20 .
+drwx------. 3 root root 4096 Oct 15 02:20 ..
+-rw-------. 1 root root 6673 Oct 15 02:20 D6-07.log
+drwx------. 2 root root 4096 Oct 15 02:20 D6-07.raw
+-rw-------. 1 root root 6496 Oct 15 02:20 D6-07.stdout
+-rw-------. 1 root root 7686 Oct 15 02:20 preflight_D6-07_D6-07.log
+drwx------. 2 root root 4096 Oct 15 02:20 preflight_D6-07_D6-07.raw
+-rw-------. 1 root root 7507 Oct 15 02:20 preflight_D6-07_D6-07.stdout
+----- log tail -----
+
+
+Aggregate audit (2:20:48 AM, Thur Oct 15, 2026):
+Time used: CPU = 1.14 s, elapsed = 1.19 s, util. = 96.4%.
+Time spent in licensing: elapsed = 59.9 ms, percentage of total = 5.05%.
+Peak memory used = 62.7 Mbytes.
+Simulation started at: 2:20:47 AM, Thur Oct 15, 2026, ended at: 2:20:48 AM, Thur Oct 15, 2026, with elapsed time (wall clock): 1.19 s.
+spectre completes with 0 errors, 0 warnings, and 0 notices.
+D6_D6-07: PASS
+
+
+=== D6-N1 run accepted
+preflight: == testbench preflight: <path-redacted> (expected VDD=1.8)
+--- local cell files parsed for port 
+runner: SPECTRE name=D6-N1.scs rc=0 elapsed=2s timeout=1200s
+LOGFILE <path-redacted>
+RAWDIR  <path-redacted>
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='<path-redacted>'
+total 48
+drwx------. 4 root root 4096 Oct 15 02:22 .
+drwx------. 3 root root 4096 Oct 15 02:22 ..
+-rw-------. 1 root root 6979 Oct 15 02:22 D6-N1.log
+drwx------. 2 root root 4096 Oct 15 02:22 D6-N1.raw
+-rw-------. 1 root root 6801 Oct 15 02:22 D6-N1.stdout
+-rw-------. 1 root root 8034 Oct 15 02:22 preflight_D6-N1_D6-N1.log
+drwx------. 2 root root 4096 Oct 15 02:22 preflight_D6-N1_D6-N1.raw
+-rw-------. 1 root root 7855 Oct 15 02:22 preflight_D6-N1_D6-N1.stdout
+----- log tail -----
+
+
+Aggregate audit (2:22:49 AM, Thur Oct 15, 2026):
+Time used: CPU = 1.2 s, elapsed = 1.23 s, util. = 97.1%.
+Time spent in licensing: elapsed = 57.5 ms.
+Peak memory used = 62.7 Mbytes.
+Simulation started at: 2:22:47 AM, Thur Oct 15, 2026, ended at: 2:22:49 AM, Thur Oct 15, 2026, with elapsed time (wall clock): 1.23 s.
+spectre completes with 0 errors, 0 warnings, and 2 notices.
+D6_D6-N1: PASS
+

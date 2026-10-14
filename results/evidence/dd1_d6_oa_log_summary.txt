@@ -1,0 +1,69 @@
+DATA-6 section 8: the OpenAccess steps, one line per tool token, exactly as the guest printed them.
+Project paths only; no vendor path, no PDK file, no credential. Raw session logs stay on the guest
+under cadence_work/data_d6_oa/logs/, and the deliverable comparison is the CSV pair
+dd1_d6_oa_verify.csv / dd1_d6_oa_readback.csv.
+
+1) isolated work directory -- scripts/dd1_d6_setup_oa.sh
+   SHARED_CDS_LIB_MD5_BEFORE = SHARED_CDS_LIB_MD5_AFTER, SHARED_CDS_LIB_UNCHANGED: yes
+   D6_SETUP_OA: done lib=microled_data_d6 dir=/root/microled_ai_project/cadence_work/data_d6_oa/microled_data_d6
+
+2) golden derived from the masters -- scripts/dd1_d6_golden.py
+   D6_GOLDEN devices=29 subinst=7 ports=46 params=29 dirs=46
+   D6_SELFTEST_OA: PASS          (re-resolving the emitted import copy gives the same 29 devices,
+                                  the same nets and the same port order per cell)
+
+3) netlist -> schematic + symbol -- scripts/dd1_d6_asg.sh (spiceIn / Analog Schematic Generation)
+   IMPORT_COPY=.../asg_in/dd1_d6_import.scs  TOP=dd1_d6_asg_shell  CELLS=8  MOS_LINES=29
+   INFO (SPICEIN-54): Spice In successfully imported the netlist file
+   INFO (SPICEIN-33): Spice In successfully created the schematic view
+                      microled_data_d6.dd1_d6_asg_shell::schematic
+   ASG rc=0 / ASG_PROBLEM_LINES: 0
+   CELL=<each of the eight> schematic=yes symbol=yes
+   D6_ASG: DONE lib=microled_data_d6 cells=8 mos=29
+
+4) golden sizes written through the CDF parameters -- skill/sc1_s3c_build_oa.il (reused, env-driven)
+   D6_RUN_OA: PASS   TOKEN S3CB_DONE found; S3CB-PROP lines = 145
+   why this step exists, measured in its own BEFORE/AFTER pair:
+     S3CB-BEFORE "c2mos_dff" "mn_c" raw_l="2e-07" raw_w="ABSENT" cdf_l="200n" cdf_w="220n"
+     S3CB-AFTER  "c2mos_dff" "mn_c" raw_l="200n" raw_w="2u" raw_fw="2u" raw_m="1" raw_fingers="1"
+                 cdf_l="200n" cdf_w="2u" num_l=2e-07 num_w=2e-06
+   spiceIn had left the PDK default 220n on the CDF width; simW is reported, never written.
+
+5) declared port directions onto the terminal objects -- skill/dd1_d6_apply_dirs.il (new)
+   D6D-ROWS items=47 expect=47 (46 declared ports plus the leading nil)
+   D6D-VIEWS 16 MATCHED 92 WANT 92
+   D6D-SCHCHECK "c2mos_dff" "schematic" => ((0 9))     [0 errors, 9 warnings]
+   D6D-SCHCHECK "c2mos_dff" "symbol"    => nil
+   reason: the import gave EVERY terminal inputOutput; the netlist declares d/clk input,
+   q/qbar output, vdd/vss inputOutput. First pass of this IL printed a false
+   "D6D-REFUSE the table has 0 rows" because `car(errset(cdr loaded))' came back nil on this
+   build; the guard now counts by walking the table and the writes it guarded had already been
+   verified independently by the read-back below.
+
+6) independent read-back, off the disk, in a session of its own
+   skill/sc1_s3c_readback.il  -> readback/oa_readback.log    (29 S3CR-MOS rows, 53 instance rows,
+                                                              8 S3CR-DBCHECK rows)
+   skill/sc1_s3c1_readback.il -> readback/oa_readback_terms.log (96 S3C1-TERM rows = 46 ports x 2 views)
+   D6_RUN_OA: PASS for both sessions
+
+7) the comparison -- scripts/dd1_d6_verify_oa.py
+   D6_OA_DEVICE_COUNT all PASS / D6_OA_GEOMETRY all PASS / D6_OA_CONNECTIVITY devices PASS
+   D6_OA_CONNECTIVITY instances PASS / D6_OA_PORTS all PASS / D6_OA_LIBRARY all PASS
+   D6_OA_CHECKS all MEASURED (dbCheck on 8 cells; schCheck is reported as schCheck, never as the
+   editor's Check-and-Save of a GUI session)
+   D6_OA_GRAPH_EQUIVALENCE: PASS rows=7 failures=0
+
+8) registration into the map the desktop shortcut reads -- scripts/dd1_d6_libregister.sh
+   BACKUP /root/microled_ai_project/cadence_work/cds.lib.bak.dd1_d6_libreg
+   CDS_LIB_SHA_BEFORE 8792832803a385aa5413fdb220c1c24bb2e65058374672ba9f0215f902066ede
+   CDS_LIB_SHA_AFTER  4227d9d3cbaaf695f927058b91c7caab70e6dc7ce99aea05e1bc4731adbd05b8
+   DEFINE_COUNT_AFTER 7  TARGET_LINES 1
+   +DEFINE microled_data_d6 /root/microled_ai_project/cadence_work/data_d6_oa/microled_data_d6
+   LIBREGISTER: DONE
+
+9) visibility from a session started the way the shortcut starts one -- scripts/sc1_libcheck.sh
+   LIBCHECK session_cwd=/root/microled_ai_project/cadence_work cds_lib=.../cadence_work/cds.lib
+   HOME=/root / cds_lib_lines=7
+   LC-LIB "microled_data_d6" obj=t cells=9   (the eight delivered cells plus the import shell)
+   LC-VIEW rows 18, opened=NONE rows 0
+   LIBCHECK: PASS

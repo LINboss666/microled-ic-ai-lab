@@ -1,0 +1,19 @@
+// dd1_d6_sink_unit.scs -- DATA-6: the stored bit gating the frozen 4-device current sink.
+//
+// 28 MOS expanded = 24 (dd1_control_1ch) + 4 (data_sink_1ch, byte-for-byte the accepted Candidate
+// E-DNW core). The shared bias reference is deliberately NOT here: Mref is one device per column,
+// instantiated once at the top level, so counting it in both places would double-count the unit.
+// vbias_ch and node_m stay inside data_sink_1ch and are not exported as globals.
+
+subckt dd1_sink_unit_1ch (d clk blank VBIAS_SHARED VCAS DATA_OUT vdd18 vss)
+  parameters d input
+  parameters clk input
+  parameters blank input
+  parameters VBIAS_SHARED input
+  parameters VCAS input
+  parameters DATA_OUT output
+  parameters vdd18 inputOutput
+  parameters vss inputOutput
+  Xctrl (d clk blank data_en data_en_b vdd18 vss) dd1_control_1ch
+  Xsink (data_en data_en_b VBIAS_SHARED VCAS DATA_OUT vss) data_sink_1ch
+ends dd1_sink_unit_1ch
