@@ -1,0 +1,6 @@
+sc1_scan_power_1ch_s3c schematic
+sc1_scan_power_1ch_s3c symbol
+c2mos_dff schematic
+sc1_s3b_p33_bank_7 schematic
+sc1_ls_c1_top_r2d schematic
+sc1_r3_scan_chain_1ch schematic

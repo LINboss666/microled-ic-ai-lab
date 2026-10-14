@@ -1,0 +1,6 @@
+S3C3_PLAN rows=32 views=2
+  sc1_ls_c1_top_r2d stub rows=11
+  sc1_ls_c1_top_r2d wire rows=3
+  sc1_r3_scan_chain_1ch stub rows=11
+  sc1_r3_scan_chain_1ch wire rows=7
+S3C3_PLAN_PROBLEMS 0

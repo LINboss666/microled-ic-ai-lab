@@ -1,0 +1,2 @@
+\e Display :0 Error "BadAtom (invalid Atom parameter)"
+\e  request 20 error 5 serial 233 

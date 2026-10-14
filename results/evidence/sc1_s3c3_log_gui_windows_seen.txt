@@ -1,0 +1,164 @@
+
+xwininfo: Window id: 0x25e (the root window) (has no name)
+
+  Root window id: 0x25e (the root window) (has no name)
+  Parent window id: 0x0 (none)
+     56 children:
+     0x24000ef "gnome-screensaver": ("gnome-screensaver" "Gnome-screensaver")  1920x1153+0+0  +0+0
+        2 children:
+        0x24000f3 (has no name): ()  1920x1153+0+0  +0+0
+        0x24000f0 (has no name): ()  1x1+-1+-1  +-1+-1
+     0x3e00029 (has no name): ()  1x1+0+0  +0+0
+     0x3e00028 (has no name): ()  1x1+0+0  +0+0
+     0x3e00026 "Library Manager: Directory ...ai_project/cadence_work/s3c_oa": ("Qt-subapplication" "LibManager")  600x403+0+0  +0+0
+        1 child:
+        0x3e00035 (has no name): ()  7000x7000+-100+-100  +-100+-100
+     0x3c00025 (has no name): ()  1x1+0+0  +0+0
+     0x3c00024 (has no name): ()  1x1+0+0  +0+0
+     0x3c00022 "Library Select": ("Qt-subapplication" "LibSelect")  600x400+0+0  +0+0
+        1 child:
+        0x3c00031 (has no name): ()  7000x7000+-100+-100  +-100+-100
+     0x3a00023 (has no name): ()  1x1+0+0  +0+0
+     0x3a00022 (has no name): ()  1x1+0+0  +0+0
+     0x3a0000c "opus": ("opus" "Opus")  795x193+0+0  +0+0
+     0x1e00001 "notification-daemon": ("notification-daemon" "Notification-daemon")  10x10+10+10  +10+10
+        1 child:
+        0x1e00002 (has no name): ()  1x1+-1+-1  +9+9
+     0x3400020 "rhsm-icon": ("rhsm-icon" "Rhsm-icon")  48x48+0+0  +0+0
+        1 child:
+        0x3400021 (has no name): ()  1x1+-1+-1  +-1+-1
+     0x3800021 "vmware-user": ()  10x10+-100+-100  +-100+-100
+     0x3800020 "vmware-user": ()  10x10+-100+-100  +-100+-100
+     0x18000b9 "nautilus": ()  10x10+-100+-100  +-100+-100
+     0x380001e "vmware-user": ()  10x10+-100+-100  +-100+-100
+     0x3800003 "vmware-user": ()  10x10+-100+-100  +-100+-100
+     0x3800001 "vmware-user": ("vmware-user" "Vmware-user")  10x10+10+10  +10+10
+        1 child:
+        0x3800002 (has no name): ()  1x1+-1+-1  +9+9
+     0x2c00004 "gnome-power-manager": ("gnome-power-manager" "Gnome-power-manager")  200x200+0+0  +0+0
+        1 child:
+        0x2c00005 (has no name): ()  1x1+-1+-1  +-1+-1
+     0x2800024 "gnome-volume-control-applet": ("gnome-volume-control-applet" "Gnome-volume-control-applet")  48x48+0+0  +0+0
+        1 child:
+        0x2800025 (has no name): ()  1x1+-1+-1  +-1+-1
+     0x1800003 "nautilus": ()  10x10+-100+-100  +-100+-100
+     0x3600001 "abrt-applet": ("abrt-applet" "Abrt-applet")  10x10+10+10  +10+10
+        1 child:
+        0x3600002 (has no name): ()  1x1+-1+-1  +9+9
+     0x2c00001 "gnome-power-manager": ("gnome-power-manager" "Gnome-power-manager")  10x10+10+10  +10+10
+        1 child:
+        0x2c00002 (has no name): ()  1x1+-1+-1  +9+9
+     0x3400001 "rhsm-icon": ("rhsm-icon" "Rhsm-icon")  10x10+10+10  +10+10
+        1 child:
+        0x3400002 (has no name): ()  1x1+-1+-1  +9+9
+     0x2000044 (has no name): ()  10x10+0+0  +0+0
+     0x2400003 "gnome-screensaver": ()  10x10+-100+-100  +-100+-100
+     0x3200001 "gdu-notification-daemon": ("gdu-notification-daemon" "Gdu-notification-daemon")  10x10+10+10  +10+10
+        1 child:
+        0x3200002 (has no name): ()  1x1+-1+-1  +9+9
+     0x2e00003 "Update Applet": ("gpk-update-icon" "Gpk-update-icon")  200x200+0+0  +0+0
+        1 child:
+        0x2e00004 (has no name): ()  1x1+-1+-1  +-1+-1
+     0x2e00001 "Update Applet": ("gpk-update-icon" "Gpk-update-icon")  10x10+10+10  +10+10
+        1 child:
+        0x2e00002 (has no name): ()  1x1+-1+-1  +9+9
+     0x2800001 "gnome-volume-control-applet": ("gnome-volume-control-applet" "Gnome-volume-control-applet")  10x10+10+10  +10+10
+        1 child:
+        0x2800002 (has no name): ()  1x1+-1+-1  +9+9
+     0x2600001 "Bluetooth Applet": ("bluetooth-applet" "Bluetooth-applet")  10x10+10+10  +10+10
+        1 child:
+        0x2600002 (has no name): ()  1x1+-1+-1  +9+9
+     0x2200003 "NetworkManager Applet": ("nm-applet" "Nm-applet")  16x16+0+0  +0+0
+        1 child:
+        0x2200004 (has no name): ()  1x1+-1+-1  +-1+-1
+     0x2400001 "gnome-screensaver": ("gnome-screensaver" "Gnome-screensaver")  10x10+10+10  +10+10
+        1 child:
+        0x2400002 (has no name): ()  1x1+-1+-1  +9+9
+     0x2200001 "NetworkManager Applet": ("nm-applet" "Nm-applet")  10x10+10+10  +10+10
+        1 child:
+        0x2200002 (has no name): ()  1x1+-1+-1  +9+9
+     0x2000001 "wnck-applet": ("wnck-applet" "Wnck-applet")  10x10+10+10  +10+10
+        1 child:
+        0x2000002 (has no name): ()  1x1+-1+-1  +9+9
+     0x1a00001 "polkit-gnome-authentication-agent-1": ("polkit-gnome-authentication-agent-1" "Polkit-gnome-authentication-agent-1")  10x10+10+10  +10+10
+        1 child:
+        0x1a00002 (has no name): ()  1x1+-1+-1  +9+9
+     0x1c00001 "Trash Applet": ("trashapplet" "Trashapplet")  10x10+10+10  +10+10
+        1 child:
+        0x1c00002 (has no name): ()  1x1+-1+-1  +9+9
+     0x1800001 "nautilus": ("nautilus" "Nautilus")  10x10+10+10  +10+10
+        1 child:
+        0x1800002 (has no name): ()  1x1+-1+-1  +9+9
+     0x1400003 "Bottom Expanded Edge Panel": ("gnome-panel" "Gnome-panel")  1920x37+0+1116  +0+1116
+        2 children:
+        0x1400025 (has no name): ()  1920x36+0+1  +0+1117
+           4 children:
+           0x1400037 (has no name): ()  111x36+1767+0  +1767+1117
+              1 child:
+              0x2000045 "wnck-applet": ("wnck-applet" "Wnck-applet")  111x36+0+0  +1767+1117
+                 1 child:
+                 0x2000046 (has no name): ()  1x1+-1+-1  +1766+1116
+           0x1400036 (has no name): ()  202x36+148+0  +148+1117
+              1 child:
+              0x2000031 "wnck-applet": ("wnck-applet" "Wnck-applet")  202x36+0+0  +148+1117
+                 1 child:
+                 0x2000032 (has no name): ()  1x1+-1+-1  +147+1116
+           0x1400034 (has no name): ()  1x36+11+0  +11+1117
+              1 child:
+              0x2000003 "wnck-applet": ("wnck-applet" "Wnck-applet")  1x36+0+0  +11+1117
+                 1 child:
+                 0x2000004 (has no name): ()  1x1+-1+-1  +10+1116
+           0x1400035 (has no name): ()  34x36+1886+0  +1886+1117
+              1 child:
+              0x1c00003 "Trash Applet": ("trashapplet" "Trashapplet")  34x36+0+0  +1886+1117
+                 1 child:
+                 0x1c00004 (has no name): ()  1x1+-1+-1  +1885+1116
+        0x1400004 (has no name): ()  1x1+-1+-1  +-1+1115
+     0x12017f9 (has no name): ()  799x223+596+870  +596+870
+        1 child:
+        0x3a00020 ": ("Qt-subapplication" "Virtuoso")  795x193+2+26  +598+896
+           5 children:
+           0x3a0014e (has no name): ()  795x18+0+153  +598+1049
+           0x3a0014c (has no name): ()  795x22+0+171  +598+1067
+           0x3a0014a (has no name): ()  795x121+0+32  +598+928
+              1 child:
+              0x3a00150 (has no name): ()  795x121+0+0  +598+928
+                 4 children:
+                 0x3a00158 (has no name): ()  795x6+0+79  +598+1007
+                 0x3a00156 (has no name): ()  100x30+0+0  +598+928
+                 0x3a00154 (has no name): ()  795x79+0+0  +598+928
+                 0x3a00152 (has no name): ()  795x36+0+85  +598+1013
+           0x3a00148 (has no name): ()  795x32+0+0  +598+896
+           0x3a00146 (has no name): ()  1x1+-1000+-1000  +-402+-104
+     0x180001e "x-nautilus-desktop": ("desktop_window" "Nautilus")  1920x1153+0+0  +0+0
+        2 children:
+        0x18000a5 (has no name): ()  1920x1153+0+0  +0+0
+        0x180001f (has no name): ()  1x1+-1+-1  +-1+-1
+     0x1400001 "Panel": ("gnome-panel" "Gnome-panel")  10x10+10+10  +10+10
+        1 child:
+        0x1400002 (has no name): ()  1x1+-1+-1  +9+9
+     0xe00004 (has no name): ()  10x10+0+0  +0+0
+     0x120000f "metacity": ("metacity" "Metacity")  200x200+0+0  +0+0
+        1 child:
+        0x1200010 (has no name): ()  1x1+-1+-1  +-1+-1
+     0x120000e (has no name): ()  1x1+-100+-100  +-100+-100
+     0x1200006 (has no name): ()  1x1+-100+-100  +-100+-100
+     0x1200005 (has no name): ()  1x1+-100+-100  +-100+-100
+     0x1200004 (has no name): ()  1x1+-100+-100  +-100+-100
+     0x1200003 "Metacity": ()  1x1+-100+-100  +-100+-100
+     0x1200001 "metacity": ("metacity" "Metacity")  10x10+10+10  +10+10
+        1 child:
+        0x1200002 (has no name): ()  1x1+-1+-1  +9+9
+     0x1000001 "Seahorse Daemon": ("seahorse-daemon" "Seahorse-daemon")  10x10+10+10  +10+10
+        1 child:
+        0x1000002 (has no name): ()  1x1+-1+-1  +9+9
+     0xe00003 (has no name): ()  10x10+0+0  +0+0
+     0xe00001 "gnome-settings-daemon": ("gnome-settings-daemon" "Gnome-settings-daemon")  10x10+10+10  +10+10
+        1 child:
+        0xe00002 (has no name): ()  1x1+-1+-1  +9+9
+     0xc00001 "gnome-session": ("gnome-session" "Gnome-session")  10x10+10+10  +10+10
+        1 child:
+        0xc00002 (has no name): ()  1x1+-1+-1  +9+9
+     0x800001 (has no name): ()  10x10+-20+-20  +-20+-20
+     0x400001 (has no name): ()  10x10+-20+-20  +-20+-20
+

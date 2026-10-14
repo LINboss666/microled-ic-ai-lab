@@ -128,3 +128,6 @@ microled/
 # ---- bridge run logs: local absolute paths, hostnames, guest IP, command
 # echoes. Evidence that matters is copied into results/evidence/ instead.
 logs/
+
+# round scratch: guest pull landing area, never committed (S3C1 manifest listed a row from here)
+results/evidence/_incoming/

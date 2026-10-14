@@ -1,0 +1,107 @@
+COPYRIGHT © 1992-2015  CADENCE DESIGN SYSTEMS INC.  ALL RIGHTS RESERVED.
+          © 1992-2015  UNIX SYSTEMS Laboratories INC.,
+                         Reproduced with permission.
+
+This Cadence Design Systems program and online documentation are
+proprietary/confidential information and may be disclosed/used only
+as authorized in a license agreement controlling such use and disclosure.
+
+          RESTRICTED RIGHTS NOTICE (SHORT FORM)
+Use/reproduction/disclosure is subject to restriction
+set forth at FAR 1252.227-19 or its equivalent.
+Loading geView.cxt 
+Loading menuBuilder.cxt 
+Loading schView.cxt 
+Loading selectSv.cxt 
+Loading wireEdit.cxt 
+Loading pte2.cxt 
+Loading xlUI.cxt 
+Loading auCore.cxt 
+Loading vhdl.cxt 
+Loading seismic.cxt 
+Loading ci.cxt 
+Loading ams.cxt 
+Virtuoso Framework License (111) was checked out successfully. Total checkout time was 0.02s.
+*WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+LIB microled_scan_s3c from the same file (defined earlier.)
+END OF SITE CUSTOMIZATION
+Loading $HOME/.cdsinit init file from the site init file.
+CT-BEGIN
+*WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+LIB microled_scan_s3c from the same file (defined earlier.)
+CT-READONLY opened=t shapes=29 insts=11 nets=10 terminals=9
+CT-X "sc1_scan_power_1ch_s3c" "Xbank" "scan" net="scan"
+CT-X "sc1_scan_power_1ch_s3c" "Xbank" "bgate" net="gate33"
+CT-X "sc1_scan_power_1ch_s3c" "Xbank" "vscan" net="vscan"
+CT-X "sc1_scan_power_1ch_s3c" "Xchain" "d" net="d"
+CT-X "sc1_scan_power_1ch_s3c" "Xchain" "clk" net="clk"
+CT-X "sc1_scan_power_1ch_s3c" "Xchain" "blank" net="blank"
+CT-X "sc1_scan_power_1ch_s3c" "Xchain" "core_ok33" net="core_ok33"
+CT-X "sc1_scan_power_1ch_s3c" "Xchain" "gate33" net="gate33"
+CT-X "sc1_scan_power_1ch_s3c" "Xchain" "vdd18" net="vdd18"
+CT-X "sc1_scan_power_1ch_s3c" "Xchain" "vdd33" net="vdd33"
+CT-X "sc1_scan_power_1ch_s3c" "Xchain" "vss" net="vss"
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="vss" points=nil
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="vdd33" points=nil
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="blank" points=nil
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="core_ok33" points=nil
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="scan" points=nil
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="vscan" points=((4.9625 1.7125) (4.9625 2.925))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="vss" points=((1.4875 -0.425) (1.4875 0.4125))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="vdd18" points=((1.6875 2.0875) (1.6875 2.925))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="vdd33" points=((1.2875 2.0875) (1.2875 2.925))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="gate33" points=((2.8875 1.25) (3.8125 1.25))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="blank" points=((-0.75 1.625) (0.0875 1.625))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="clk" points=((-0.75 1.375) (0.0875 1.375))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="core_ok33" points=((-0.75 1.125) (0.0875 1.125))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="d" points=((-0.75 0.875) (0.0875 0.875))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="scan" points=((6.1125 1.25) (6.95 1.25))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="vscan" points=nil
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="vdd18" points=nil
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="gate33" points=nil
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="clk" points=nil
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="d" points=nil
+CT-OPEN writable=t shapes=29
+CT-API-before-schCheck="NIL"
+Loading schematic.cxt 
+INFO (SCH-1170): Extracting "sc1_scan_power_1ch_s3c schematic"
+CT-CHECK errors=0 warnings=0 raw=((0 0))
+CT-X "sc1_scan_power_1ch_s3c" "Xbank" "scan" net="scan"
+CT-X "sc1_scan_power_1ch_s3c" "Xbank" "bgate" net="gate33"
+CT-X "sc1_scan_power_1ch_s3c" "Xbank" "vscan" net="vscan"
+CT-X "sc1_scan_power_1ch_s3c" "Xchain" "d" net="d"
+CT-X "sc1_scan_power_1ch_s3c" "Xchain" "clk" net="clk"
+CT-X "sc1_scan_power_1ch_s3c" "Xchain" "blank" net="blank"
+CT-X "sc1_scan_power_1ch_s3c" "Xchain" "core_ok33" net="core_ok33"
+CT-X "sc1_scan_power_1ch_s3c" "Xchain" "gate33" net="gate33"
+CT-X "sc1_scan_power_1ch_s3c" "Xchain" "vdd18" net="vdd18"
+CT-X "sc1_scan_power_1ch_s3c" "Xchain" "vdd33" net="vdd33"
+CT-X "sc1_scan_power_1ch_s3c" "Xchain" "vss" net="vss"
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="vss" points=nil
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="vdd33" points=nil
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="blank" points=nil
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="core_ok33" points=nil
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="scan" points=nil
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="vscan" points=((4.9625 1.7125) (4.9625 2.925))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="vss" points=((1.4875 -0.425) (1.4875 0.4125))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="vdd18" points=((1.6875 2.0875) (1.6875 2.925))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="vdd33" points=((1.2875 2.0875) (1.2875 2.925))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="gate33" points=((2.8875 1.25) (3.8125 1.25))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="blank" points=((-0.75 1.625) (0.0875 1.625))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="clk" points=((-0.75 1.375) (0.0875 1.375))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="core_ok33" points=((-0.75 1.125) (0.0875 1.125))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="d" points=((-0.75 0.875) (0.0875 0.875))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="line" net="scan" points=((6.1125 1.25) (6.95 1.25))
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="vscan" points=nil
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="vdd18" points=nil
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="gate33" points=nil
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="clk" points=nil
+CT-WIRE "sc1_scan_power_1ch_s3c" objType="label" net="d" points=nil
+Loading lx.cxt 
+Loading lce.cxt 
+Loading le.cxt 
+Loading rte.cxt 
+CT-SAVE rc=t
+CT-VERDICT "sc1_scan_power_1ch_s3c" errors=0 warnings=0 saved=t
+CT-END
+

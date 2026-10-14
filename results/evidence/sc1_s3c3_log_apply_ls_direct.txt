@@ -1,0 +1,141 @@
+COPYRIGHT © 1992-2015  CADENCE DESIGN SYSTEMS INC.  ALL RIGHTS RESERVED.
+          © 1992-2015  UNIX SYSTEMS Laboratories INC.,
+                         Reproduced with permission.
+
+This Cadence Design Systems program and online documentation are
+proprietary/confidential information and may be disclosed/used only
+as authorized in a license agreement controlling such use and disclosure.
+
+          RESTRICTED RIGHTS NOTICE (SHORT FORM)
+Use/reproduction/disclosure is subject to restriction
+set forth at FAR 1252.227-19 or its equivalent.
+Loading geView.cxt 
+Loading menuBuilder.cxt 
+Loading schView.cxt 
+Loading selectSv.cxt 
+Loading wireEdit.cxt 
+Loading pte2.cxt 
+Loading xlUI.cxt 
+Loading auCore.cxt 
+Loading vhdl.cxt 
+Loading seismic.cxt 
+Loading ci.cxt 
+Loading ams.cxt 
+Virtuoso Framework License (111) was checked out successfully. Total checkout time was 0.02s.
+*WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+LIB microled_scan_s3c from the same file (defined earlier.)
+END OF SITE CUSTOMIZATION
+Loading $HOME/.cdsinit init file from the site init file.
+S3-BEGIN
+*WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+LIB microled_scan_s3c from the same file (defined earlier.)
+*WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_c1_r2d symbol" has been updated since "microled_scan_s3c sc1_ls_c1_top_r2d schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+*WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_core_r2d symbol" has been updated since "microled_scan_s3c sc1_ls_c1_top_r2d schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+S3-DIRECT "sc1_ls_c1_top_r2d" opened=t shapes=42 insts=8 nets=8 terminals=6 oldGeometry=34
+S3-MOVE "vss" want=(1 -1.0969) rc=t bbox ((6.3875 2.0625) (6.6125 2.38125)) -> ((0.8875 -1.1625) (1.1125 -0.84375))
+S3-MOVE "vdd33" want=(0.6 2.8031) rc=t bbox ((6.3875 2.1875) (6.6125 2.50625)) -> ((0.4875 2.7375) (0.7125 3.05625))
+S3-MOVE "vdd18" want=(1.2 2.5031) rc=t bbox ((6.3875 1.3125) (6.6125 1.63125)) -> ((1.0875 2.4375) (1.3125 2.75625))
+S3-MOVE "gate33" want=(6.6 0.9031) rc=t bbox ((6.3875 0.0625) (6.6125 0.38125)) -> ((6.4875 0.8375) (6.7125 1.15625))
+S3-MOVE "core_ok33" want=(3.2 1.2781) rc=t bbox ((6.3875 0.1875) (6.6125 0.50625)) -> ((3.0875 1.2125) (3.3125 1.53125))
+S3-MOVE "en" want=(-1.6 0.9031) rc=t bbox ((6.3875 0.8125) (6.6125 1.13125)) -> ((-1.7125 0.8375) (-1.4875 1.15625))
+S3-MOVE "Xnand" want=(4.4 1) rc=t bbox ((-0.3 0.575) (2.05 1.925)) -> ((3.225 0.325) (5.575 1.675))
+S3-MOVE "Xcore" want=(1 1) rc=t bbox ((3.075 0.45) (5.425 2.05)) -> ((-0.175 0.2) (2.175 1.8))
+S3-MOVES "sc1_ls_c1_top_r2d" applied=8 want=8
+S3-DRAW "sc1_ls_c1_top_r2d" "y" seg=(2.0875 0.875)-(3.3125 0.875) objType="line" layer="wire" dbGaveNet="NONE" matches=nil
+S3-DRAW "sc1_ls_c1_top_r2d" "x" seg=(2.0875 1.125)-(2.475 1.125) objType="line" layer="wire" dbGaveNet="NONE" matches=nil
+S3-DRAW "sc1_ls_c1_top_r2d" "vss" seg=(0.4125 -1)-(1 -1) objType="line" layer="wire" dbGaveNet="NONE" matches=nil
+S3-DRAW "sc1_ls_c1_top_r2d" "vss" seg=(4.4 0.025)-(4.4 0.4125) objType="line" layer="wire" dbGaveNet="NONE" matches=nil
+S3-DRAW "sc1_ls_c1_top_r2d" "vss" seg=(1 -0.1)-(1 0.2875) objType="line" layer="wire" dbGaveNet="NONE" matches=nil
+S3-DRAW "sc1_ls_c1_top_r2d" "vdd33" seg=(0.0125 2.9)-(0.6 2.9) objType="line" layer="wire" dbGaveNet="NONE" matches=nil
+S3-DRAW "sc1_ls_c1_top_r2d" "vdd33" seg=(4.4 1.5875)-(4.4 1.975) objType="line" layer="wire" dbGaveNet="NONE" matches=nil
+S3-DRAW "sc1_ls_c1_top_r2d" "vdd33" seg=(0.8 1.7125)-(0.8 2.1) objType="line" layer="wire" dbGaveNet="NONE" matches=nil
+S3-DRAW "sc1_ls_c1_top_r2d" "vdd18" seg=(0.6125 2.6)-(1.2 2.6) objType="line" layer="wire" dbGaveNet="NONE" matches=nil
+S3-DRAW "sc1_ls_c1_top_r2d" "vdd18" seg=(1.2 1.7125)-(1.2 2.1) objType="line" layer="wire" dbGaveNet="NONE" matches=nil
+S3-DRAW "sc1_ls_c1_top_r2d" "gate33" seg=(5.4875 1)-(6.775 1) objType="line" layer="wire" dbGaveNet="NONE" matches=nil
+S3-DRAW "sc1_ls_c1_top_r2d" "en" seg=(-1.775 1)-(-0.0875 1) objType="line" layer="wire" dbGaveNet="NONE" matches=nil
+S3-DRAW "sc1_ls_c1_top_r2d" "core_ok33" seg=(2.6125 1.375)-(3.2 1.375) objType="line" layer="wire" dbGaveNet="NONE" matches=nil
+S3-DRAW "sc1_ls_c1_top_r2d" "core_ok33" seg=(2.925 1.125)-(3.3125 1.125) objType="line" layer="wire" dbGaveNet="NONE" matches=nil
+S3-LABEL "sc1_ls_c1_top_r2d" text="y" at=(2.7 0.875) just="lowerLeft" theLabel="y" net="NONE"
+S3-LABEL "sc1_ls_c1_top_r2d" text="x" at=(2.475 1.125) just="lowerLeft" theLabel="x" net="NONE"
+S3-LABEL "sc1_ls_c1_top_r2d" text="vss" at=(0.4125 -1) just="lowerRight" theLabel="vss" net="NONE"
+S3-LABEL "sc1_ls_c1_top_r2d" text="vss" at=(4.4 0.025) just="upperCenter" theLabel="vss" net="NONE"
+S3-LABEL "sc1_ls_c1_top_r2d" text="vss" at=(1 -0.1) just="upperCenter" theLabel="vss" net="NONE"
+S3-LABEL "sc1_ls_c1_top_r2d" text="vdd33" at=(0.0125 2.9) just="lowerRight" theLabel="vdd33" net="NONE"
+S3-LABEL "sc1_ls_c1_top_r2d" text="vdd33" at=(4.4 1.975) just="lowerCenter" theLabel="vdd33" net="NONE"
+S3-LABEL "sc1_ls_c1_top_r2d" text="vdd33" at=(0.8 2.1) just="lowerCenter" theLabel="vdd33" net="NONE"
+S3-LABEL "sc1_ls_c1_top_r2d" text="vdd18" at=(0.6125 2.6) just="lowerRight" theLabel="vdd18" net="NONE"
+S3-LABEL "sc1_ls_c1_top_r2d" text="vdd18" at=(1.2 2.1) just="lowerCenter" theLabel="vdd18" net="NONE"
+S3-LABEL "sc1_ls_c1_top_r2d" text="gate33" at=(6.13125 1) just="lowerLeft" theLabel="gate33" net="NONE"
+S3-LABEL "sc1_ls_c1_top_r2d" text="en" at=(-0.93125 1) just="lowerLeft" theLabel="en" net="NONE"
+S3-LABEL "sc1_ls_c1_top_r2d" text="core_ok33" at=(2.6125 1.375) just="lowerRight" theLabel="core_ok33" net="NONE"
+S3-LABEL "sc1_ls_c1_top_r2d" text="core_ok33" at=(2.925 1.125) just="lowerRight" theLabel="core_ok33" net="NONE"
+S3-DRAWN "sc1_ls_c1_top_r2d" ok=14 of 14 ; LABELLED ok=14 of 14 ; shapes now=70
+S3-OLD-LABELS "sc1_ls_c1_top_r2d" deleted=34 of 34
+S3-API "sc1_ls_c1_top_r2d" schCheck="NIL" hiCheckAndSave="NIL" dbCreateLine-exists="EXISTS"
+Loading schematic.cxt 
+INFO (SCH-1170): Extracting "sc1_ls_c1_top_r2d schematic"
+Warning: Pin "x" on instance "Xcore": floating output.
+Warning: Floating net "vdd33" at (0.0125, 2.9000).
+Warning: Floating net "vss" at (0.4125, -1.0000).
+Warning: Floating net "vdd33" at (0.6000, 2.9000).
+Warning: Floating net "vdd18" at (0.6125, 2.6000).
+Warning: Floating net "vss" at (1.0000, -1.0000).
+Warning: Floating net "vdd18" at (1.2000, 2.6000).
+Warning: Floating net "x" at (2.4750, 1.1250).
+Warning: Floating net "core_ok33" at (2.6125, 1.3750).
+Warning: Floating net "core_ok33" at (3.2000, 1.3750).
+S3-CHECK "sc1_ls_c1_top_r2d" errors=0 warnings=10 raw=((0 10))
+S3-WIRE "sc1_ls_c1_top_r2d" net="y" objType="line" points=((2.0875 0.875) (3.3125 0.875))
+S3-WIRE "sc1_ls_c1_top_r2d" net="x" objType="line" points=((2.0875 1.125) (2.475 1.125))
+S3-WIRE "sc1_ls_c1_top_r2d" net="vss" objType="line" points=((0.4125 -1.0) (1.0 -1.0))
+S3-WIRE "sc1_ls_c1_top_r2d" net="vss" objType="line" points=((4.4 0.025) (4.4 0.4125))
+S3-WIRE "sc1_ls_c1_top_r2d" net="vss" objType="line" points=((1.0 -0.1) (1.0 0.2875))
+S3-WIRE "sc1_ls_c1_top_r2d" net="vdd33" objType="line" points=((0.0125 2.9) (0.6 2.9))
+S3-WIRE "sc1_ls_c1_top_r2d" net="vdd33" objType="line" points=((4.4 1.5875) (4.4 1.975))
+S3-WIRE "sc1_ls_c1_top_r2d" net="vdd33" objType="line" points=((0.8 1.7125) (0.8 2.1))
+S3-WIRE "sc1_ls_c1_top_r2d" net="vdd18" objType="line" points=((0.6125 2.6) (1.2 2.6))
+S3-WIRE "sc1_ls_c1_top_r2d" net="vdd18" objType="line" points=((1.2 1.7125) (1.2 2.1))
+S3-WIRE "sc1_ls_c1_top_r2d" net="gate33" objType="line" points=((5.4875 1.0) (6.775 1.0))
+S3-WIRE "sc1_ls_c1_top_r2d" net="en" objType="line" points=((-1.775 1.0) (-0.0875 1.0))
+S3-WIRE "sc1_ls_c1_top_r2d" net="core_ok33" objType="line" points=((2.6125 1.375) (3.2 1.375))
+S3-WIRE "sc1_ls_c1_top_r2d" net="core_ok33" objType="line" points=((2.925 1.125) (3.3125 1.125))
+S3-X "sc1_ls_c1_top_r2d" "Xnand" "y" dir="input" net="y"
+S3-X "sc1_ls_c1_top_r2d" "Xnand" "core_ok33" dir="input" net="core_ok33"
+S3-X "sc1_ls_c1_top_r2d" "Xnand" "gate33" dir="output" net="gate33"
+S3-X "sc1_ls_c1_top_r2d" "Xnand" "vdd33" dir="inputOutput" net="vdd33"
+S3-X "sc1_ls_c1_top_r2d" "Xnand" "vss" dir="inputOutput" net="vss"
+S3-X "sc1_ls_c1_top_r2d" "Xcore" "en" dir="input" net="en"
+S3-X "sc1_ls_c1_top_r2d" "Xcore" "x" dir="output" net="x"
+S3-X "sc1_ls_c1_top_r2d" "Xcore" "y" dir="output" net="y"
+S3-X "sc1_ls_c1_top_r2d" "Xcore" "vdd18" dir="inputOutput" net="vdd18"
+S3-X "sc1_ls_c1_top_r2d" "Xcore" "vdd33" dir="inputOutput" net="vdd33"
+S3-X "sc1_ls_c1_top_r2d" "Xcore" "vss" dir="inputOutput" net="vss"
+S3-NET "sc1_ls_c1_top_r2d" "vss" figs=6 terminals=2
+S3-NET "sc1_ls_c1_top_r2d" "vdd33" figs=6 terminals=2
+S3-NET "sc1_ls_c1_top_r2d" "vdd18" figs=4 terminals=1
+S3-NET "sc1_ls_c1_top_r2d" "gate33" figs=2 terminals=1
+S3-NET "sc1_ls_c1_top_r2d" "en" figs=2 terminals=1
+S3-NET "sc1_ls_c1_top_r2d" "core_ok33" figs=4 terminals=1
+S3-NET "sc1_ls_c1_top_r2d" "x" figs=2 terminals=1
+S3-NET "sc1_ls_c1_top_r2d" "y" figs=2 terminals=2
+S3-READLABEL "sc1_ls_c1_top_r2d" theLabel="y" xy=(2.7 0.875) net="y"
+S3-READLABEL "sc1_ls_c1_top_r2d" theLabel="x" xy=(2.475 1.125) net="x"
+S3-READLABEL "sc1_ls_c1_top_r2d" theLabel="vss" xy=(0.4125 -1.0) net="vss"
+S3-READLABEL "sc1_ls_c1_top_r2d" theLabel="vss" xy=(4.4 0.025) net="vss"
+S3-READLABEL "sc1_ls_c1_top_r2d" theLabel="vss" xy=(1.0 -0.1) net="vss"
+S3-READLABEL "sc1_ls_c1_top_r2d" theLabel="vdd33" xy=(0.0125 2.9) net="vdd33"
+S3-READLABEL "sc1_ls_c1_top_r2d" theLabel="vdd33" xy=(4.4 1.975) net="vdd33"
+S3-READLABEL "sc1_ls_c1_top_r2d" theLabel="vdd33" xy=(0.8 2.1) net="vdd33"
+S3-READLABEL "sc1_ls_c1_top_r2d" theLabel="vdd18" xy=(0.6125 2.6) net="vdd18"
+S3-READLABEL "sc1_ls_c1_top_r2d" theLabel="vdd18" xy=(1.2 2.1) net="vdd18"
+S3-READLABEL "sc1_ls_c1_top_r2d" theLabel="gate33" xy=(6.13125 1.0) net="gate33"
+S3-READLABEL "sc1_ls_c1_top_r2d" theLabel="en" xy=(-0.93125 1.0) net="en"
+S3-READLABEL "sc1_ls_c1_top_r2d" theLabel="core_ok33" xy=(2.6125 1.375) net="core_ok33"
+S3-READLABEL "sc1_ls_c1_top_r2d" theLabel="core_ok33" xy=(2.925 1.125) net="core_ok33"
+Loading lx.cxt 
+Loading lce.cxt 
+Loading le.cxt 
+Loading rte.cxt 
+S3-VERDICT "sc1_ls_c1_top_r2d" PASS saved=t errors=0 warnings=10 drawn=14 labelled=14 moved=8
+S3-END
+
