@@ -1,0 +1,15 @@
+# official validator: D:/IC项目/.tools/validate_handoff.py (outside the repository, unmodified)
+# sha256 3c150d543465a5d17a9d63c700f6b895c82fb868cae9408b2afd47643603e1e5
+# run 1, before the status fields it validates were filled in
+# 2026-10-14T16:56:28Z
+  HANDOFF_STRUCTURE: PASS (fields only; evidence/remote truth NOT verified)
+  rc=0
+# run 2, after filling in security_gate and HANDOFF_STRUCTURE
+# 2026-10-14T16:56:55Z
+  HANDOFF_STRUCTURE: PASS (fields only; evidence/remote truth NOT verified)
+# negative control: the same manifest with scope_status=COMPLETE while a test is FAIL
+# (GUEST_CADENCE_CHANNEL is FAIL, so a COMPLETE scope must be rejected)
+# 2026-10-14T16:57:04Z
+  HANDOFF_STRUCTURE: FAIL
+  - scope_status COMPLETE conflicts with a FAIL test
+  rc=1

@@ -1,0 +1,162 @@
+{
+  "schema_version": "1.0",
+  "project_id": "microled-ic-ai-lab",
+  "task_id": "SCAN_UNIT_TEAM_BEAUTIFY",
+  "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
+  "branch": "gexing321/scan-unit/1ch-beautify",
+  "base_sha": "9049f111d943e9b322f21e1fa059a932cac93207",
+  "head_sha": "9049f111d943e9b322f21e1fa059a932cac93207",
+  "head_sha_semantics": "PROVISIONAL while push_status is PUSH_PENDING: set to the fixed source commit this round verifies. A commit cannot carry its own SHA, so after the push this field is re-pointed by a follow-up commit to the commit that contains the deliverables, and the remote tip is read back independently with ls-remote rather than trusted from the push output.",
+  "source": {
+    "read_only_branch": "poc/scan-driver-1ch",
+    "fixed_source_sha": "9049f111d943e9b322f21e1fa059a932cac93207",
+    "audited_baseline_sha": "f21f30d249f729ef0108c9d1dcc78f642ba8bb18",
+    "reads": "every file in the master/golden checks goes through `git show <fixed SHA>:<path>`, so CRLF in the working copy cannot be mistaken for a circuit change",
+    "worktree_policy": "new isolated clone D:/IC项目/scan-unit-beautify/repo; the pre-existing clone at D:/IC项目/microled-ic-ai-lab (gexing321/scan-driver/c2mos-schematic @ 6d23fb7) was not switched, pulled, reset, cleaned or force-checked-out"
+  },
+  "statuses": {
+    "SOURCE_FETCH": "COMPLETE",
+    "OA_IMPORT": "BLOCKED",
+    "ELECTRICAL_EQUIVALENCE": "BLOCKED",
+    "SCHEMATIC_PRESENTATION": "NOT_STARTED",
+    "SYMBOL_PRESENTATION": "NOT_STARTED",
+    "VISUAL_REVIEW": "WAITING_USER"
+  },
+  "target_library": {
+    "planned_name": "sc1_s3c_team_pretty",
+    "planned_path": "/root/microled_ai_project/cadence_work/s3c_oa/sc1_s3c_team_pretty",
+    "created": false,
+    "name_accepted_by_source_setup_script": true,
+    "note": "nothing was created; this is the plan for the round that is blocked"
+  },
+  "push_status": "PUSH_PENDING",
+  "push_status_basis": "to be replaced by an independent `git ls-remote` read-back after an ordinary push of the single ref refs/heads/gexing321/scan-unit/1ch-beautify",
+  "scope_status": "BLOCKED",
+  "security_gate": "PASS",
+  "security_gate_basis": "scripts/precommit_safety_check.py --mode staged on the 5 staged deliverables -> SAFETY_GATE: PASS with PDK/CREDENTIAL/PRIVATE_KEY/VENDOR_MODEL tracked-file counts all 0; scripts/provenance_check.py -> SOURCE_PROVENANCE_CHECK: PASS (files=374 labelled_lines=506 violations=0); scripts/precommit_safety_check.py --mode history runs independently again in the pre-push hook",
+  "tests": [
+    {
+      "name": "SIX_FROZEN_MASTERS_SHA256",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_s3c_offline_verify.txt",
+      "detail": "6/6 blob hashes of `git show 9049f11:<path>` equal the task book table, with byte counts recorded"
+    },
+    {
+      "name": "GOLDEN_TABLE_REPRODUCTION",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_s3c_offline_verify.txt",
+      "detail": "mos 39 / ports 48 / hier 8 / subinst 39 rows re-emitted by scripts/sc1_s3c_golden.py and identical to the committed tables in row order and content"
+    },
+    {
+      "name": "GOLDEN_SELFTEST",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_s3c_offline_verify.txt",
+      "detail": "S3C_SELFTEST: PASS, S3C_GOLDEN_CELLS: 8, S3C_GOLDEN_LEAF_DEVICES: 39"
+    },
+    {
+      "name": "IMPORT_AND_APPLY_EMISSION",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_s3c_offline_verify.txt",
+      "detail": "scan_import.scs 104 lines, scan_params.il 39 device rows, scan_dirs.il 48 rows covering both views (96 objects)"
+    },
+    {
+      "name": "EXISTING_C2MOS_VS_GOLDEN_FIELDS",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_s3c_c2mos_reuse_compare.csv",
+      "detail": "18 instance names equal as sets; model/L/W/D/G/S/B compared over 126 fields with 0 mismatches; OA port order d clk q qbar vdd vss equals the frozen order"
+    },
+    {
+      "name": "EXISTING_C2MOS_INSTANCE_COUNT",
+      "status": "UNVERIFIED",
+      "detail": "the 2026-10-11 read-back reported instances=24 for microled_cells/c2mos_dff_1bit while only 18 carry a model property; what the other 6 objects are is not established, so reuse of the old graphics is conditional on one live read-back"
+    },
+    {
+      "name": "OA_IMPORT_SPICEIN",
+      "status": "BLOCKED",
+      "detail": "no Cadence session could be started"
+    },
+    {
+      "name": "OA_READBACK_VS_FOUR_GOLDEN_TABLES",
+      "status": "BLOCKED",
+      "detail": "39 devices, 7 sub-instance bindings, 48 schematic ports and 48 symbol terminals cannot be checked against an OA database that does not exist yet"
+    },
+    {
+      "name": "CHECK_AND_SAVE_LEAF_TO_PARENT",
+      "status": "BLOCKED",
+      "detail": "no views to check"
+    },
+    {
+      "name": "SCHEMATIC_AND_SYMBOL_PRESENTATION",
+      "status": "BLOCKED",
+      "detail": "beautification cannot precede the import"
+    },
+    {
+      "name": "VISUAL_REVIEW",
+      "status": "BLOCKED",
+      "detail": "pixel capture is not available on this machine and is not a gate; a human open checklist is in the handoff"
+    },
+    {
+      "name": "GUEST_CADENCE_CHANNEL",
+      "status": "FAIL",
+      "detail": "vmrun list shows the guest running and checkToolsState=running, but getGuestIPAddress fails and ssh to 192.168.222.129:22 times out; three read-only probes were made this round and then the round stopped, with no state-changing command attempted"
+    },
+    {
+      "name": "HANDOFF_STRUCTURE",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_s3c_handoff_validation.txt",
+      "detail": "official validator sha256 3c150d543465a5d17a9d63c700f6b895c82fb868cae9408b2afd47643603e1e5, kept outside the repository and unmodified; PASS means the field names and enums are legal -- it explicitly does not verify evidence contents or remote truth"
+    }
+  ],
+  "evidence_paths": [
+    "results/evidence/sc1_s3c_offline_verify.txt",
+    "results/evidence/sc1_s3c_c2mos_reuse_compare.csv",
+    "results/evidence/sc1_s3c_handoff_validation.txt",
+    "scripts/sc1_s3c_offline_verify.py",
+    "reports/agent_handoffs/SCAN_UNIT_TEAM_BEAUTIFY.md"
+  ],
+  "local_adaptation_points": [
+    {
+      "file": "scripts/sc1_s3c_verify_oa.py",
+      "line": 449,
+      "fact": "if 'microled_scan_s3c' not in master: continue -- only sub-instances whose master path carries the source library name are recognised, so a rebuilt library under another name would make the whole hierarchy read as missing",
+      "plan": "parameterise the library name; the golden tables and thresholds stay untouched"
+    },
+    {
+      "file": "scripts/sc1_s3c_setup.sh",
+      "line": "22-25",
+      "fact": "the whitelist is sc1_s3c_*|microled_scan_s3c. An earlier second-hand claim that it refuses sc1_s3c_team_pretty is corrected: re-running the case statement gives sc1_s3c_team_pretty ALLOWED, sc1_team_pretty REJECTED",
+      "plan": "no change needed"
+    },
+    {
+      "file": "cadence_work/cds.lib (guest, shared)",
+      "fact": "sc1_s3c_setup.sh deliberately does not touch it; acceptance item 1 (cells visible through the desktop shortcut) needs one additive DEFINE there after a backup, with every original line kept",
+      "plan": "append one DEFINE only, never rewrite"
+    }
+  ],
+  "known_limitations": [
+    "nothing in this manifest is evidence about the OA side; no library, schematic, symbol, netlist import or Check and Save happened",
+    "the C2MOS comparison uses a database read-back snapshot from 2026-10-11, not a live read, and that snapshot does not identify 6 of the 24 instances",
+    "golden-table reproduction proves the tooling and the frozen sources agree; it does not prove the OA copy will agree",
+    "a beautified OA library, when it exists, stays on this machine only -- it is not transferred through Git, and no claim of upload is made",
+    "the branch name deviates from the suggested feature/scan-unit-beautify-<id> because this machine's push guardrail only permits refs/heads/gexing321/*; the guardrail was not loosened",
+    "no Spectre/ngspice/preflight/operating-point work, no layout/DRC/LVS/PEX, no array/multi-channel/POR/UVLO/5V was attempted, per the task book",
+    "the guest channel can only be restored by a person at the VMware Workstation console; running anything in the guest already requires the channel",
+    "git gc and prune were not run; the repository's pre-existing unreachable-object cleanup issue is out of scope"
+  ],
+  "forbidden_actions_confirmed_not_taken": [
+    "reset --hard / clean -fd / checkout -f on any working tree",
+    "force push, tag push, merge or cherry-pick of unreviewed work",
+    "any write to the captain's refs (poc/scan-driver-1ch and every other ref)",
+    "skipping hooks",
+    "committing PDK, model cards, cds.lib, *.oa, raw PSF, credentials, machine library maps or vendor absolute paths",
+    "VM power, snapshot, .vmx, global ssh, proxy or license changes",
+    "killing user processes or deleting lock files"
+  ],
+  "next_action_required": {
+    "who": "user at the VMware Workstation console",
+    "what": "restore the guest's DHCP lease (previously approved single command: pkill -9 dhclient; sleep 2; dhclient eth0), then tell this session the address",
+    "then": "the ordered plan in reports/agent_handoffs/SCAN_UNIT_TEAM_BEAUTIFY.md section 4 resumes at step 1 and needs no re-planning"
+  },
+  "stop_reason": "WAITING_USER: guest Cadence machine unreachable; source-side work is complete and committed to the personal branch",
+  "evidence_grades_used": ["DIRECTLY_OBSERVED", "DOCUMENTED", "DERIVED", "NOT_VERIFIED"]
+}

@@ -1,0 +1,137 @@
+================================================================================
+SCAN-1 S3-C single-channel scan driver -- OFFLINE verification record
+Round: receive the eight delivered cells from the fixed source commit and rebuild
+       them into this team member's own OA library, then beautify.
+Scope of this file: everything provable WITHOUT Cadence, without the PDK and
+       without the guest machine. It is deliberately separated from the OA side,
+       which is blocked (SECTION G).
+================================================================================
+
+SECTION A. SOURCE IDENTITY
+  repository        https://github.com/LINboss666/microled-ic-ai-lab
+  read-only source  poc/scan-driver-1ch
+  fixed source SHA  9049f111d943e9b322f21e1fa059a932cac93207  (all file reads in
+                    SECTION B/C/D go through `git show <SHA>:<path>`, never a
+                    working-copy file, so Windows CRLF in the checkout cannot
+                    masquerade as a circuit change)
+  audited baseline  f21f30d249f729ef0108c9d1dcc78f642ba8bb18 (the task book records
+                    only read-only AFTER-graph GUI entry points between the two;
+                    the six masters are re-hashed here rather than trusting that)
+  this member's     gexing321/scan-unit/1ch-beautify, created at the fixed SHA in a
+  work branch       NEW isolated clone: D:/IC项目/scan-unit-beautify/repo
+                    (`git clone --no-checkout` of the existing local clone, then
+                    `git checkout 9049f11`). The pre-existing working tree at
+                    D:/IC项目/microled-ic-ai-lab was not switched, pulled, reset or
+                    cleaned; `git -C ... status` stayed clean at 6d23fb7.
+
+SECTION F. FACTS READ OUT OF THE SOURCE-SIDE TOOLING (for the OA round that must still run)
+  scripts/sc1_s3c_setup.sh:22-25
+      case "$LIBNAME" in
+        sc1_s3c_*|microled_scan_s3c) ;;
+        *) echo "REFUSE: library name must be this task's own (got $LIBNAME)"; exit 9 ;;
+      The task book's suggested name sc1_s3c_team_pretty DOES match sc1_s3c_* and is
+      therefore accepted. Verified by re-running the case statement against three
+      names, not by reading it:
+        sc1_s3c_team_pretty  ALLOWED
+        sc1_team_pretty      REJECTED
+        microled_scan_s3c    ALLOWED
+  scripts/sc1_s3c_setup.sh:31,45-50
+      the script writes its OWN library map at $WORK/s3c_oa/cds.lib, copies every
+      DEFINE out of the shared $WORK/cds.lib with relative paths made absolute,
+      appends exactly one DEFINE for this task's library, and prints the shared
+      file's md5 before and after to prove it was not written.
+      Consequence for acceptance item 1 (cells visible through the normal desktop
+      shortcut): the shortcut resolves the SHARED cadence_work/cds.lib, so a second,
+      additive DEFINE for the same library directory has to be appended there after
+      a backup. Everything original in that file is kept; nothing is removed.
+  scripts/sc1_s3c_verify_oa.py:449
+      if 'microled_scan_s3c' not in master: continue
+      the hierarchy check recognises sub-circuit instances only when their master
+      path contains the SOURCE library name. Rebuilt into sc1_s3c_team_pretty it
+      would find zero sub-instances and report the whole hierarchy as missing.
+      This is the one line that must be parameterised locally; the golden tables it
+      compares against stay untouched.
+      scripts/sc1_s3c_asg.sh:57-66  topCell / outputLib / refLibList "smic18mmrf
+      analogLib" / overwriteCells "NONE", plus the SPICE-77 guard at line 34 that
+      refuses a topCell which is also a subckt in the file.
+
+SECTION E. WHAT THIS FILE DOES NOT PROVE
+  * nothing about the OA side. No library was created, no spiceIn import ran, no
+    schematic or symbol exists yet, so ELECTRICAL_EQUIVALENCE against the four golden
+    tables in the OA database is still open (it is the read-back comparison, not this
+    file, that settles it).
+  * the C2MOS row-for-row result in SECTION D comes from a netlist that was itself
+    read back out of the OA database on 2026-10-11; it is the database's own numbers,
+    but it is a snapshot, not a live read.
+  * that snapshot lists instances=24 for microled_cells/c2mos_dff_1bit while only 18
+    carry a `model` property and are therefore dumped as transistor rows. The identity
+    of the other 6 objects is NOT established here and must be read back live before
+    the existing cell is reused. Until then the reuse verdict is "equivalent on every
+    field that was compared, with one unexplained instance-count difference".
+  * symbol views, port ORDER inside OA, and every graphical property.
+
+SECTION G. BLOCKER -- THE CADENCE MACHINE IS NOT REACHABLE
+  Reproduced raw output below. vmrun shows the guest powered on and its tools
+  running, but no address is published and ssh gets nothing. The only route into
+  this guest is ssh; runProgramInGuest needs a guest password the agent is not
+  given, and the recovery that worked before (a dhclient retry inside the guest)
+  itself needs a working channel. Nothing here is fixable from this host: it needs
+  someone at the Workstation console. No state-changing command was attempted.
+  Note on the /dev/tcp line: it prints nothing in either outcome because the
+  pipeline's exit status came from sed, so read it as inconclusive; the ssh attempt
+  underneath it is the authoritative result.
+
+SECTION H. REPRODUCTION (host: Windows 10.0.26200 x64, git for Windows, CPython 3.12)
+  python scripts/sc1_s3c_offline_verify.py \
+    --repo . \
+    --oa-readback-netlist <path to spectre/generated/c2mos_dff_1bit_from_oa_readback.scs> \
+    --scratch <disposable output dir>
+  exit code 0 means masters, golden reproduction and the C2MOS comparison all passed.
+  The four golden tables are re-emitted into the scratch dir; the committed tables are
+  read from git and compared row by row in order.
+--------------------------------------------------------------------------------
+
+=== SECTION B/C/D + E raw run (scripts/sc1_s3c_offline_verify.py stdout) ===
+REPO=D:\IC项目\scan-unit-beautify\repo SHA=9049f111d943e9b322f21e1fa059a932cac93207
+GIT_HEAD=9049f111d943e9b322f21e1fa059a932cac93207
+MASTER spectre/C2MOS_DFF.scs                  MATCH sha256=d1eed4e242fa2874f38d8a2add34eba985e4e14ac8925041f7180e0dfcc5fcf3
+MASTER spectre/sc1_scan_gate.scs              MATCH sha256=c078637719cc6bd3a761c519683b7d0e04f95e6184874b5ef7c4f2c84eecc53b
+MASTER spectre/sc1_level_shifter_r2d.scs      MATCH sha256=31324ca541a6a645e542a3570613b034e446e5f118cd051397dc07155082da66
+MASTER spectre/sc1_r3_scan_chain.scs          MATCH sha256=4dffb7856cc4b7375bdd8e9c80458365871cf27fa7ed8555b3de1ceb95a80198
+MASTER spectre/sc1_s3b_p33_bank.scs           MATCH sha256=99799725f570bde1b5111d41045644e6d3858e0626d043875a743686c9d54f9e
+MASTER spectre/sc1_s3b_scan_power_1ch.scs     MATCH sha256=921ab7229f27eacf5e0758a8b4634ec4c3dd6ba834391087f76f9dc018b6e88b
+S3C_MASTERS: 6/6
+EMIT S3C_SELFTEST: PASS
+EMIT S3C_GOLDEN_CELLS: 8
+EMIT S3C_GOLDEN_LEAF_DEVICES: 39
+EMIT S3C_GOLDEN_SUBINST_ROWS: 39
+EMIT S3C_GOLDEN_ROWS: 39 dir=D:\IC项目\scan-unit-beautify\scratch\offline\out
+EMIT S3C_IMPORT_LINES: 104 file=D:\IC项目\scan-unit-beautify\scratch\offline\scan_import.scs
+EMIT S3C_PARAM_ROWS: 39 file=D:\IC项目\scan-unit-beautify\scratch\offline\scan_params.il
+EMIT S3C_DIR_ROWS: 48 file=D:\IC项目\scan-unit-beautify\scratch\offline\scan_dirs.il (each is written on BOTH views, so 96 objects)
+GOLDEN mos      rows=39/39 order_and_content=IDENTICAL
+GOLDEN ports    rows=48/48 order_and_content=IDENTICAL
+GOLDEN hier     rows=8/8 order_and_content=IDENTICAL
+GOLDEN subinst  rows=39/39 order_and_content=IDENTICAL
+EMISSION scan_import.scs  lines=104
+EMISSION scan_params.il   lines=44
+EMISSION scan_dirs.il     lines=52
+S3C_GOLDEN_REPRODUCTION: PASS
+C2MOS golden_insts=18 oa_insts=18 name_set_equal=True
+C2MOS oa_port_order=d clk q qbar vdd vss
+C2MOS fields_compared=126 mismatches=0 -> EQUIVALENT
+S3C_C2MOS_REUSE: PASS
+S3C_OFFLINE_SUMMARY masters=PASS golden=PASS c2mos_reuse=PASS
+
+=== SECTION G raw probe ===
+PROBE_UTC=2026-10-14T16:51:29Z  PROBE_LOCAL=2026-10-15 00:51:29    
+--- vmrun list ---
+  Total running VMs: 1
+  D:\BaiduNetdiskDownload\Cadence Virtuoso IC617&IC514(内附IC617&514虚拟机和安装教程））\Cadence IC617-IC514共存虚拟机\RHEL6_ic617\RHEL6_ic617\RHEL6_ic617\RHEL6_WORK.vmx
+--- vmrun getGuestIPAddress ---
+  Error: Unable to get the IP address
+--- vmrun checkToolsState ---
+  running
+--- tcp/22 probe 192.168.222.129 ---
+--- ssh BatchMode attempt ---
+  ssh: connect to host 192.168.222.129 port 22: Connection timed out
