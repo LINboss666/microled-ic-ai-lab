@@ -13,7 +13,7 @@
 | 本轮工作树 | 新建独立 clone `D:/IC项目/scan-unit-beautify/repo`；原有 `D:/IC项目/microled-ic-ai-lab`（`gexing321/scan-driver/c2mos-schematic` @ `6d23fb7`）未被切分支、未 pull、未 reset/clean/checkout -f |
 | 目标新库（尚未创建） | `sc1_s3c_team_pretty`，库目录 `cadence_work/s3c_oa/sc1_s3c_team_pretty` |
 | 本轮交付物 | 仅离线证据 + 本交接；**没有任何 OA 写入发生** |
-| 推送 | 远端 `refs/heads/gexing321/scan-unit/1ch-beautify` = **`e307e304…`（交付提交，已 `ls-remote` 回读一致，普通推送、单 ref refspec、非 force）**；其余全部 ref 一字未动。**其后的三个补记提交仍只在本地**（`bccdfda`、`e4690f9`、本次）：第一次推送成功之后本机到 `github.com:443` 的通道断了，4 次重试分别得到 `Empty reply from server` 与 `Failed to connect … after ~21000 ms`，本地代理 `127.0.0.1:10090` 当前没在运行。未 force、未跳 hook、未改 remote/代理配置，也没有把这些提交说成已送达。核对：`git log --oneline origin/gexing321/scan-unit/1ch-beautify..HEAD`（空 = 已落地） |
+| 推送 | 远端 `refs/heads/gexing321/scan-unit/1ch-beautify` = **`c6ffdd0caaf31d83ae86152ac685cf1c0af34bf6`**，`git ls-remote` 独立回读 = 本地 HEAD，普通推送、单 ref refspec、非 force、未跳 hook。途中通道断过一次（4 次失败已记在证据 APPENDIX C），恢复后全部落地。其余 ref 全部核对为未动：`main 23e471cb`、`poc/c2mos-dff cdd8597f`、`poc/data-driver-1ch b3d8bf43`、`poc/scan-driver-1ch 0038821e`、两个 `feature/* 6a8ba7dc / 51ca02a3`、`gexing321/docs 876c198`、`gexing321/scan-driver/c2mos-schematic 6d23fb7`。写这句话的提交在 `c6ffdd0` 之后，它自己是否落地请用同一条命令复查：`git ls-remote origin refs/heads/gexing321/scan-unit/1ch-beautify` |
 
 ### 六个状态（完成与阻塞严格分开）
 

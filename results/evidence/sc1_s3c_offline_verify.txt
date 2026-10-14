@@ -224,8 +224,21 @@ observed_utc=2026-10-14T17:09:10Z
   event 8  direct push retry                                -> fatal: Failed to connect to
               github.com:443 after 21061 ms   -> stop, report
 
-  Consequence, stated as it is: refs/heads/gexing321/scan-unit/1ch-beautify on the remote is the
-  deliverable commit e307e304 (verified once, at event 3). Everything after it -- the head_sha and
-  push_status fill-in, the divergence record and this appendix -- is local on this machine until the
-  channel returns. No force, no --no-verify, no retry storm, no remote or proxy configuration was
-  touched; the commits are kept here rather than described as delivered.
+  Consequence at the time of writing that block: the remote held only the deliverable commit
+  e307e304, and the fill-in commits were local. That was true, and then it stopped being true:
+
+  event 9  the correction commit was made locally and pushed on the next attempt
+           -> SUCCESS: e307e30..c6ffdd0  gexing321/scan-unit/1ch-beautify -> same
+              pre-push history gate ran again and printed SAFETY_GATE: PASS
+  event 10 git ls-remote origin, full read-back after event 9
+              c6ffdd0caaf31d83ae86152ac685cf1c0af34bf6  refs/heads/gexing321/scan-unit/1ch-beautify
+              23e471cb936b421ee97e1250c3be06edf96f9937  refs/heads/main
+              cdd8597f80f1a87d7b4f2a0a38a4adfaec3fb063  refs/heads/poc/c2mos-dff
+              b3d8bf4383ad9f2d898dcdec5efdbedb90e99b68  refs/heads/poc/data-driver-1ch
+              0038821e6a93861848ac922ccca35c41a4de9bbb  refs/heads/poc/scan-driver-1ch
+              6a8ba7dc48471329d09a2dcc4701b198da7623e6  refs/heads/feature/c2mos-virtuoso-schematic
+              51ca02a3604c565dd4efce27625c93349ce617f7  refs/heads/feature/data-driver-virtuoso-schematic
+              876c198ab894796b7ff91b290654882ad5b782f8  refs/heads/gexing321/docs/collaborator-rules
+              6d23fb77ab7248a13d95dc6e82a215eb13bdc064  refs/heads/gexing321/scan-driver/c2mos-schematic
+           every ref except this branch is at its pre-round value; nothing of the captain's moved.
+           The commit that added these ten lines sits after c6ffdd0 and is checked the same way.

@@ -31,7 +31,7 @@
     "note": "nothing was created; this is the plan for the round that is blocked"
   },
   "push_status": "REMOTE_VERIFIED",
-  "push_status_basis": "ordinary (non-forced) push of exactly one ref, refs/heads/gexing321/scan-unit/1ch-beautify, after the pre-push hook re-ran scripts/precommit_safety_check.py --mode history (140 commits, 1314 objects, PDK/CREDENTIAL/PRIVATE_KEY/VENDOR_MODEL all 0, SAFETY_GATE: PASS); then `git ls-remote origin` read refs/heads/gexing321/scan-unit/1ch-beautify = e307e304cd7a5281d037f12a146a95929ac7d0de, equal to the local head of the deliverable commit. PASS here means parity of a git ref only.",
+  "push_status_basis": "two ordinary (non-forced) pushes of exactly one ref, refs/heads/gexing321/scan-unit/1ch-beautify, each after the pre-push hook re-ran scripts/precommit_safety_check.py --mode history (140+ commits, 1314+ objects, PDK/CREDENTIAL/PRIVATE_KEY/VENDOR_MODEL all 0, SAFETY_GATE: PASS). Read-back 1 put the deliverable commit e307e304cd7a5281d037f12a146a95929ac7d0de on the remote; read-back 2, after a transport outage of four failed attempts, put c6ffdd0caaf31d83ae86152ac685cf1c0af34bf6 there and equal to the local HEAD. Every other branch read back at its pre-round value. PASS here means parity of a git ref only.",
   "remote_readback": {
     "read_with": "git ls-remote origin, run after the push, through a separate connection",
     "refs/heads/gexing321/scan-unit/1ch-beautify": "e307e304cd7a5281d037f12a146a95929ac7d0de",
@@ -45,9 +45,9 @@
   },
   "git_handback": {
     "why_this_block_exists": "a commit cannot state its own SHA, and a file cannot state whether the commit carrying it reached the remote; both facts are only visible from outside, so they are written here as of the moment of writing and are checkable by anyone in one command",
-    "remote_tip_at_time_of_writing": "e307e304cd7a5281d037f12a146a95929ac7d0de (verified by ls-remote immediately after the push)",
-    "this_file_is_in_a_later_commit": true,
-    "later_commit_push_state": "PUSH_PENDING -- after the first push landed, this host lost its route to github.com:443. Four consecutive failures: 'Empty reply from server', then three times 'Failed to connect to github.com:443 after ~21000 ms'. The local proxy 127.0.0.1:10090 is not running right now, and a push through it fails at the proxy instead. Nothing was forced, no remote or proxy configuration was changed, and the commits are kept here rather than described as delivered.",
+    "remote_tip_at_time_of_writing": "c6ffdd0caaf31d83ae86152ac685cf1c0af34bf6 (read back with git ls-remote after the channel came back; equal to the local HEAD at that moment)",
+    "this_file_is_in_a_later_commit": "true by construction -- the commit carrying this sentence is the one after c6ffdd0, and whether it landed is answered by the same ls-remote call, not by this field",
+    "later_commit_push_state": "LANDED except for this last bookkeeping commit. The route to github.com:443 dropped for four consecutive attempts after the first push (Empty reply from server, then three Failed-to-connect timeouts), was reported rather than fought, and returned on the next attempt: e307e30..c6ffdd0 pushed normally and read back. No force, no --no-verify, no remote or proxy configuration change.",
     "how_to_check": "git -C <clone> log --oneline origin/gexing321/scan-unit/1ch-beautify..HEAD  -- empty means the follow-ups landed; non-empty means they are still local",
     "local_head_at_time_of_writing": "the last commit on gexing321/scan-unit/1ch-beautify in this clone; its SHA is printed in the chat handback, not here"
   },
