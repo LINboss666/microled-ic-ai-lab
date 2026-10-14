@@ -135,3 +135,72 @@ PROBE_UTC=2026-10-14T16:51:29Z  PROBE_LOCAL=2026-10-15 00:51:29
 --- tcp/22 probe 192.168.222.129 ---
 --- ssh BatchMode attempt ---
   ssh: connect to host 192.168.222.129 port 22: Connection timed out
+
+=== APPENDIX A. SOURCE BRANCH HAD ADVANCED (recorded read-only, nothing merged) ===
+recorded_utc=2026-10-14T17:01:45Z
+git ls-remote refs/heads/poc/scan-driver-1ch = 0038821e6a93861848ac922ccca35c41a4de9bbb
+9049f11 is an ancestor of the tip: yes;  commits ahead = 1
+
+new commit 0038821 "local: register microled_scan_s3c in the cds.lib the desktop shortcut actually reads"
+ reports/local_register_scan_library_20261015.md | 72 +++++++++++++++++++++++++
+ scripts/sc1_libcheck.sh                         | 42 +++++++++++++++
+ scripts/sc1_libregister.sh                      | 67 +++++++++++++++++++++++
+ skill/sc1_libcheck.il                           | 53 ++++++++++++++++++
+ 4 files changed, 234 insertions(+)
+
+byte comparison 9049f11 -> 0038821 for the six masters and the four golden tables:
+  (empty list = every one of them unchanged, so the fixed-SHA verification above stays valid)
+byte comparison for the tooling this round must reuse:
+  (empty = identical)
+
+adopted by reference only (read through git show, NOT merged, NOT cherry-picked):
+  scripts/sc1_libregister.sh  -- checks the target library and both views are on disk, then appends
+                                one DEFINE to cadence_work/cds.lib after cp -n backup; idempotent
+                                (second run prints ALREADY_REGISTERED and changes nothing).
+  scripts/sc1_libcheck.sh + skill/sc1_libcheck.il -- starts a headless session the same way the
+                                desktop shortcut does (cwd=cadence_work, HOME=/root, same cds.lib, no
+                                -cdslib) and judges visibility on its own LC-DONE resolved=t line,
+                                because dbAccess returns 0 even when the SKILL failed to load.
+build fact reported there and kept, because it matches this machine: this SKILL has no getenv;
+  environment reads must use getshellenv, still wrapped in errset.
+
+=== APPENDIX B. PUSH AND INDEPENDENT REMOTE READ-BACK ===
+push command: git push origin refs/heads/gexing321/scan-unit/1ch-beautify:refs/heads/gexing321/scan-unit/1ch-beautify
+  explicit single-ref refspec; this clone also carries the guardrail
+  remote.origin.push=refs/heads/gexing321/*:refs/heads/gexing321/* (installed here, not inherited).
+  an earlier attempt through the local proxy 127.0.0.1:10090 failed - that proxy is not running
+  now - and the direct push then succeeded, so no proxy setting was changed.
+pre-push hook (scripts/precommit_safety_check.py --mode history), verbatim:
+  history: 140 commits scanned
+  mode=history objects_checked=1314
+  PDK_TRACKED_FILES = 0
+  CREDENTIAL_TRACKED_FILES = 0
+  PRIVATE_KEYS_TRACKED_FILES = 0
+  VENDOR_MODEL_TRACKED_FILES = 0
+  SAFETY_GATE: PASS
+remote result: * [new branch]  gexing321/scan-unit/1ch-beautify -> gexing321/scan-unit/1ch-beautify
+  no force, no tag, no other ref was named in any push.
+
+read-back 1 (git ls-remote origin, separate connection, immediately after the push), verbatim:
+  6a8ba7dc48471329d09a2dcc4701b198da7623e6	refs/heads/feature/c2mos-virtuoso-schematic
+  51ca02a3604c565dd4efce27625c93349ce617f7	refs/heads/feature/data-driver-virtuoso-schematic
+  876c198ab894796b7ff91b290654882ad5b782f8	refs/heads/gexing321/docs/collaborator-rules
+  6d23fb77ab7248a13d95dc6e82a215eb13bdc064	refs/heads/gexing321/scan-driver/c2mos-schematic
+  e307e304cd7a5281d037f12a146a95929ac7d0de	refs/heads/gexing321/scan-unit/1ch-beautify
+  23e471cb936b421ee97e1250c3be06edf96f9937	refs/heads/main
+  cdd8597f80f1a87d7b4f2a0a38a4adfaec3fb063	refs/heads/poc/c2mos-dff
+  b3d8bf4383ad9f2d898dcdec5efdbedb90e99b68	refs/heads/poc/data-driver-1ch
+  0038821e6a93861848ac922ccca35c41a4de9bbb	refs/heads/poc/scan-driver-1ch
+  LOCAL_REMOTE_PARITY for the deliverable commit e307e304cd7a5281d037f12a146a95929ac7d0de: PASS
+  every other ref above equals what this round recorded before pushing, so nothing of the
+  captain's or of a teammate moved. This same read-back is what established the divergence in
+  APPENDIX A (poc/scan-driver-1ch had moved from 9049f11 to 0038821).
+
+read-back 2 and 3, attempted later from this host to double-confirm: both failed
+  2026-10-14T17:05:03Z
+    attempt a: fatal: unable to access ... Empty reply from server
+    attempt b: fatal: unable to access ... Failed to connect to github.com:443
+    attempt c: fatal: unable to access ... Failed to connect to github.com:443
+  recorded as a transport fact, not smoothed over: read-back 1 did succeed and is the basis of
+  push_status=REMOTE_VERIFIED; if the reviewer wants a second opinion, any later ls-remote or
+  gh api call against refs/heads/gexing321/scan-unit/1ch-beautify will answer it.

@@ -13,3 +13,6 @@
   HANDOFF_STRUCTURE: FAIL
   - scope_status COMPLETE conflicts with a FAIL test
   rc=1
+# run 3, after the remote read-back and divergence were filled in
+# 2026-10-14T17:05:31Z
+  HANDOFF_STRUCTURE: PASS (fields only; evidence/remote truth NOT verified)

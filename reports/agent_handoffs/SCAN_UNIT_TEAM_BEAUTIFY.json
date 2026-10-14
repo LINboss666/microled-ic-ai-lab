@@ -5,8 +5,9 @@
   "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
   "branch": "gexing321/scan-unit/1ch-beautify",
   "base_sha": "9049f111d943e9b322f21e1fa059a932cac93207",
-  "head_sha": "9049f111d943e9b322f21e1fa059a932cac93207",
-  "head_sha_semantics": "PROVISIONAL while push_status is PUSH_PENDING: set to the fixed source commit this round verifies. A commit cannot carry its own SHA, so after the push this field is re-pointed by a follow-up commit to the commit that contains the deliverables, and the remote tip is read back independently with ls-remote rather than trusted from the push output.",
+  "head_sha": "e307e304cd7a5281d037f12a146a95929ac7d0de",
+  "head_sha_semantics": "the commit that carries the deliverables this manifest describes (script + two evidence tables + this handoff). A commit cannot contain its own SHA, so that commit recorded PUSH_PENDING and the source SHA here as a placeholder; this follow-up commit is the one that names it. The remote tip is read back with git ls-remote, not trusted from the push output, and is recorded in remote_readback below.",
+  "followup_commits_note": "this file was updated by one further commit on the same branch, whose own SHA is only readable from outside it (git log or git ls-remote). It changes nothing but head_sha, push_status, the remote read-back and the source-divergence record.",
   "source": {
     "read_only_branch": "poc/scan-driver-1ch",
     "fixed_source_sha": "9049f111d943e9b322f21e1fa059a932cac93207",
@@ -29,8 +30,27 @@
     "name_accepted_by_source_setup_script": true,
     "note": "nothing was created; this is the plan for the round that is blocked"
   },
-  "push_status": "PUSH_PENDING",
-  "push_status_basis": "to be replaced by an independent `git ls-remote` read-back after an ordinary push of the single ref refs/heads/gexing321/scan-unit/1ch-beautify",
+  "push_status": "REMOTE_VERIFIED",
+  "push_status_basis": "ordinary (non-forced) push of exactly one ref, refs/heads/gexing321/scan-unit/1ch-beautify, after the pre-push hook re-ran scripts/precommit_safety_check.py --mode history (140 commits, 1314 objects, PDK/CREDENTIAL/PRIVATE_KEY/VENDOR_MODEL all 0, SAFETY_GATE: PASS); then `git ls-remote origin` read refs/heads/gexing321/scan-unit/1ch-beautify = e307e304cd7a5281d037f12a146a95929ac7d0de, equal to the local head of the deliverable commit. PASS here means parity of a git ref only.",
+  "remote_readback": {
+    "read_with": "git ls-remote origin, run after the push, through a separate connection",
+    "refs/heads/gexing321/scan-unit/1ch-beautify": "e307e304cd7a5281d037f12a146a95929ac7d0de",
+    "refs/heads/main": "23e471cb936b421ee97e1250c3be06edf96f9937 (unchanged)",
+    "refs/heads/poc/c2mos-dff": "cdd8597f80f1a87d7b4f2a0a38a4adfaec3fb063 (unchanged)",
+    "refs/heads/poc/data-driver-1ch": "b3d8bf4383ad9f2d898dcdec5efdbedb90e99b68 (unchanged)",
+    "refs/heads/feature/c2mos-virtuoso-schematic": "6a8ba7dc48471329d09a2dcc4701b198da7623e6 (unchanged)",
+    "refs/heads/feature/data-driver-virtuoso-schematic": "51ca02a3604c565dd4efce27625c93349ce617f7 (unchanged)",
+    "refs/heads/gexing321/docs/collaborator-rules": "876c198ab894796b7ff91b290654882ad5b782f8 (unchanged)",
+    "refs/heads/gexing321/scan-driver/c2mos-schematic": "6d23fb77ab7248a13d95dc6e82a215eb13bdc064 (unchanged by this round)"
+  },
+  "source_divergence": {
+    "remote_tip_now": "0038821e6a93861848ac922ccca35c41a4de9bbb",
+    "relation": "9049f11 is an ancestor; the branch is one commit ahead",
+    "circuit_and_golden_impact": "none -- `git diff --name-only 9049f11 0038821` over the six masters, the four golden tables and the seven tooling files this round reuses prints an empty list, so every check made at the fixed SHA stays valid",
+    "what_the_new_commit_adds": "reports/local_register_scan_library_20261015.md, scripts/sc1_libregister.sh, scripts/sc1_libcheck.sh, skill/sc1_libcheck.il -- the source machine registered its own library in the cds.lib the desktop shortcut reads and proved visibility with a session started the same way",
+    "adopted": "by reference only, read through `git show 0038821:<path>`; no merge, no cherry-pick, no fast-forward of this branch",
+    "kept_fact": "this build has no getenv (undefined function) -- environment reads must use getshellenv wrapped in errset, and dbAccess -load returns 0 even when the SKILL failed to load, so a script's own verdict line is the only judge"
+  },
   "scope_status": "BLOCKED",
   "security_gate": "PASS",
   "security_gate_basis": "scripts/precommit_safety_check.py --mode staged on the 5 staged deliverables -> SAFETY_GATE: PASS with PDK/CREDENTIAL/PRIVATE_KEY/VENDOR_MODEL tracked-file counts all 0; scripts/provenance_check.py -> SOURCE_PROVENANCE_CHECK: PASS (files=374 labelled_lines=506 violations=0); scripts/precommit_safety_check.py --mode history runs independently again in the pre-push hook",
@@ -101,6 +121,23 @@
       "detail": "vmrun list shows the guest running and checkToolsState=running, but getGuestIPAddress fails and ssh to 192.168.222.129:22 times out; three read-only probes were made this round and then the round stopped, with no state-changing command attempted"
     },
     {
+      "name": "SOURCE_BRANCH_DIVERGENCE_RECORDED",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_s3c_offline_verify.txt",
+      "detail": "the source branch had moved to 0038821e (one commit ahead, 9049f11 is its ancestor); git diff --name-only over the six masters, the four golden tables and the seven reused tooling files is empty, so the fixed-SHA verification still holds; nothing was merged or cherry-picked"
+    },
+    {
+      "name": "REMOTE_REF_PARITY",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_s3c_offline_verify.txt",
+      "detail": "ls-remote read refs/heads/gexing321/scan-unit/1ch-beautify = e307e304cd7a5281d037f12a146a95929ac7d0de, and main, both poc refs, both feature refs and the two gexing321 refs are unchanged"
+    },
+    {
+      "name": "SECOND_REMOTE_READBACK",
+      "status": "BLOCKED",
+      "detail": "three later attempts to re-confirm the tip from this host failed at transport (Empty reply from server, then two connection failures to github.com:443); the parity claim rests on the one read-back that did succeed"
+    },
+    {
       "name": "HANDOFF_STRUCTURE",
       "status": "PASS",
       "evidence_path": "results/evidence/sc1_s3c_handoff_validation.txt",
@@ -134,6 +171,7 @@
     }
   ],
   "known_limitations": [
+    "push_status REMOTE_VERIFIED rests on a single successful ls-remote immediately after the push; the three re-confirmations attempted afterwards all failed at the transport layer, so remote parity is verified once, not twice",
     "nothing in this manifest is evidence about the OA side; no library, schematic, symbol, netlist import or Check and Save happened",
     "the C2MOS comparison uses a database read-back snapshot from 2026-10-11, not a live read, and that snapshot does not identify 6 of the 24 instances",
     "golden-table reproduction proves the tooling and the frozen sources agree; it does not prove the OA copy will agree",

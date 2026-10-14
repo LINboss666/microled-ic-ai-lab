@@ -13,6 +13,7 @@
 | 本轮工作树 | 新建独立 clone `D:/IC项目/scan-unit-beautify/repo`；原有 `D:/IC项目/microled-ic-ai-lab`（`gexing321/scan-driver/c2mos-schematic` @ `6d23fb7`）未被切分支、未 pull、未 reset/clean/checkout -f |
 | 目标新库（尚未创建） | `sc1_s3c_team_pretty`，库目录 `cadence_work/s3c_oa/sc1_s3c_team_pretty` |
 | 本轮交付物 | 仅离线证据 + 本交接；**没有任何 OA 写入发生** |
+| 推送 | `e307e304cd7a5281d037f12a146a95929ac7d0de` 已普通推送（单 ref refspec，非 force），`git ls-remote` 回读一致；其余全部 ref 一字未动 |
 
 ### 六个状态（完成与阻塞严格分开）
 
@@ -79,7 +80,22 @@
 5. 另开只读会话跑 `skill/sc1_s3c_readback.il` → `python scripts/sc1_s3c_verify_oa.py`：39 管 master/L/W/D/G/S/B、7 子实例 39 条绑定、48 schematic 端口 + 48 symbol terminal 全部对齐，取 `S3C_OA_GRAPH_EQUIVALENCE: PASS`。**在此之前不美化。**
 6. 美化（只改几何与展示）：叶层 → symbol pin 定位 → 父图；父图按 DFF → BLANK gate → level shifter → PMOS bank 控制流；电源在上、地在下、信号左到右；只画真实连接点；`Xff.q`、`Xcore.x` 保留真实悬空并注明；移动 symbol pin 必须同步修新库所有受影响父图的线端点。
 7. 叶到父 `Check and Save`：电气 error 零容忍，warning 分类记录（已知未用输出允许保留），不为清零 warning 加假负载。
-8. 追加一条 `DEFINE sc1_s3c_team_pretty …` 到共享 `cadence_work/cds.lib`（保留全部原行），使 8 cell 在桌面快捷方式的 Library Manager 可见。
+8. 让 8 cell 在桌面快捷方式里可见：照 `scripts/sc1_libregister.sh` 的做法（只读参考，见 §4.5）备份 `cadence_work/cds.lib` 后追加**一条** `DEFINE sc1_s3c_team_pretty …`，保留全部原有 DEFINE/INCLUDE；再用 `scripts/sc1_libcheck.sh` + `skill/sc1_libcheck.il` 的同一种会话（cwd=`cadence_work`、HOME=`/root`、同一份 `cds.lib`、不带 `-cdslib`）证明可见，判据取脚本自己打印的 `LC-DONE resolved=t`，不取 `dbAccess` 的退出码。
+
+## 4.5 来源分支在我固定之后又前进了 1 个提交（记录差异，不合并）
+
+| 项 | 事实 |
+|---|---|
+| 远端 `poc/scan-driver-1ch` 现 tip | `0038821e6a93861848ac922ccca35c41a4de9bbb`（`git ls-remote` 独立回读） |
+| 与固定 SHA 关系 | `9049f11` 是其祖先，领先 **1** 个提交：`local: register microled_scan_s3c in the cds.lib the desktop shortcut actually reads` |
+| 六份母本 + 四份黄金表 | `git diff --name-only 9049f11 0038821 -- <十一个路径>` 输出**为空** ⇒ 一字未改，本轮按固定 SHA 做的核验继续有效 |
+| 本轮要复用的七个工具文件 | 同样为空 ⇒ `sc1_s3c_golden.py / sc1_s3c_asg.sh / sc1_s3c_setup.sh / sc1_s3c_verify_oa.py / sc1_s3c_build_oa.il / sc1_s3c1_apply_dirs.il / sc1_s3c_readback.il` 与固定 SHA 完全一致 |
+| 该提交只新增 | `reports/local_register_scan_library_20261015.md`、`scripts/sc1_libregister.sh`、`scripts/sc1_libcheck.sh`、`skill/sc1_libcheck.il` |
+| 我的处置 | **未 merge、未 cherry-pick**（护栏与任务书都不允许把未审成果搬进我的工作分支）。只用 `git show 0038821:<path>` 读，把"注册 + 同一入口验证可见性"的做法在 §4 第 8 步本地重写 |
+| 顺带收到的本机事实 | 那份报告实测这个 build 的 SKILL **没有 `getenv`**（`*Error* eval: undefined function - getenv`），取环境变量必须 `getshellenv` 且仍包 `errset`；`dbAccess -load` 在 SKILL 加载报错时照样返回 0，所以退出码不是判据。两条都与本机此前观察一致，继续生效 |
+
+一个重要含义：源端那台机器的 `microled_scan_s3c` 已经**有完整 8 cell × 2 view 在盘上**（那份报告列了 72 个文件与顶层 `sch.oa`/`symbol.oa` 的字节数），但 `.gitignore` 排除 `*.oa`，所以 Git 里拿不到它。我这轮仍然是"按母本重建 + 自己美化"，不是"下载源端原 OA 字节"；若负责人另行私下发来源端最终 OA 包，可在核验来源后采用，但本轮没有等它，也没停住能做的源文件核验。
+
 
 ## 5. 需要人工的两件事
 
