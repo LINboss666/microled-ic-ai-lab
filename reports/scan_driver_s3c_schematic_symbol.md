@@ -385,13 +385,17 @@ placement, deliberately untouched, because moving instances without re-routing b
 * **RETRACTED IN S3C2, kept here as written above**: "the S3C1 manifest matches **194 of 194** rows"
   is wrong. The audit was run against the working tree; re-run against the committed bytes with
   `git cat-file` (`scripts/sc1_s3c2_manifest_audit.py`, output saved as
-  `results/evidence/sc1_s3c2_manifest_audit_output.txt`) it matches **192 of 194**:
+  `results/evidence/sc1_s3c2_manifest_audit_output.txt`) it matches **192 of 194 at the commit that
+  published it (`22af9d0`)** and **190 of 194 at today's HEAD** -- the two-row drop is
+  `reports/scan_driver_s3c_schematic_symbol.md` and `skill/sc1_s3c1_geom_dump.il`, which S3C2
+  legitimately revised, so those rows are classified `SUPERSEDED` and are not defects:
   `results/evidence/_incoming/sc1_s3c1_symbol_side.csv` was listed but never committed, and
   `results/evidence/sc1_s3c1_comparator_final.txt` recorded the sha256 and length of its **CRLF
   working copy** (`8cd9229a8398…`/766 bytes) while `.gitattributes` (`* text=auto eol=lf`) serves the
   LF-normalised blob (`145142988e32…`/750 bytes, 16 CRLF lines collapsed) -- the file's content was
   never wrong, only the bytes the manifest hashed. The refreshed
-  S3-C manifest is 191 of 194 for the same two rows plus a stale cross-reference to the S3C1
+  S3-C manifest is 191 of 194 at `22af9d0` (189 of 194 at HEAD) for the same two rows plus a stale
+  cross-reference to the S3C1
   manifest (that row matches neither the working copy nor the blob, which agree with each other). The per-row detail is in `results/evidence/sc1_s3c2_manifest_corrections.csv`; the
   old manifests are left byte-identical, as the task book requires. Also corrected in the same
   audit: the role breakdown of the 48 Symbol ports is 18 inputs / 10 outputs / 13 supplies /

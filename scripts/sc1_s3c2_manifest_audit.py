@@ -14,6 +14,7 @@ This tool classifies every row of a manifest into one of:
   bytes_wrong     the file is tracked but the recorded length differs from the committed blob
   eol_normalised  the recorded sha/length are the CRLF working copy's, the blob is the LF version
   stale_row       the row matches neither the working copy nor the blob, which agree with each other
+  superseded      the row was right at --origin but a later round revised the file: not a defect
   not_in_git      the recorded path is not in the commit at all (untracked / scratch)
   missing         the recorded path is not present in the working tree either
 
@@ -40,23 +41,47 @@ def eol_variants(rel):
             d.count(b'\r\n'))
 
 
+def blob_at(ref, rel):
+    """(sha256, length) of the bytes `rel` has at `ref`, or None when ref does not carry it."""
+    p = subprocess.Popen(['git', 'cat-file', '-e', '%s:%s' % (ref, rel)],
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p.communicate()
+    if p.returncode != 0:
+        return None
+    p = subprocess.Popen(['git', 'cat-file', 'blob', '%s:%s' % (ref, rel)],
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    data = p.communicate()[0]
+    if p.returncode != 0:
+        return None
+    return hashlib.sha256(data).hexdigest(), len(data)
+
+
 def main():
     args = sys.argv[1:]
     if not args:
-        print('usage: sc1_s3c2_manifest_audit.py <manifest.csv> [--ref HEAD]')
+        print('usage: sc1_s3c2_manifest_audit.py <manifest.csv> [--ref HEAD] '
+              '[--origin <commit that delivered the manifest>]')
         return 9
     path = args[0]
     ref = args[args.index('--ref') + 1] if '--ref' in args else 'HEAD'
+    origin = args[args.index('--origin') + 1] if '--origin' in args else None
     lines = [l.rstrip('\n') for l in io.open(path, encoding='utf-8') if l.strip()]
     hdr = [clean(h) for h in lines[0].split(',')]
     fi, si, bi = hdr.index('file'), hdr.index('sha256'), hdr.index('bytes')
 
     counts = {'ok': 0, 'sha_wrong': 0, 'bytes_wrong': 0, 'not_in_git': 0, 'missing': 0,
-              'eol_normalised': 0, 'stale_row': 0}
+              'eol_normalised': 0, 'superseded': 0, 'stale_row': 0}
     detail = []
+    match_origin = 0
     for l in lines[1:]:
         f = [clean(c) for c in l.split(',')]
         rel, want_sha, want_bytes = f[fi], f[si], int(f[bi])
+        if origin:
+            # independent of the HEAD verdict: how many rows re-hash at the commit that delivered
+            # this manifest, which is the question "was the manifest true when it was published?"
+            o = blob_at(origin, rel)
+            if o and o[0] == want_sha and o[1] == want_bytes:
+                match_origin += 1
         if not os.path.isfile(rel):
             counts['missing'] += 1
             detail.append('MISSING %s' % rel)
@@ -89,6 +114,13 @@ def main():
                               % (rel, want_sha[:12], want_bytes, got_sha[:12], got_bytes, crlf))
                 continue
             if r_sha == got_sha and r_bytes == got_bytes:
+                # the row was right when its own round delivered it; a later round changed the file
+                at_origin = blob_at(origin, rel) if origin else None
+                if at_origin and at_origin[0] == want_sha and at_origin[1] == want_bytes:
+                    counts['superseded'] += 1
+                    detail.append('SUPERSEDED %s recorded=%s/%d actual=%s/%d correct_at=%s'
+                                  % (rel, want_sha[:12], want_bytes, got_sha[:12], got_bytes, origin))
+                    continue
                 # working copy and commit agree now, so the row was written against other bytes
                 counts['stale_row'] += 1
                 detail.append('STALE_ROW %s recorded=%s/%d actual=%s/%d working_matches_commit=yes'
@@ -115,6 +147,10 @@ def main():
         print('  %s' % d)
     verifiable = counts['ok']
     print('CLOUD_VERIFIABLE_ROWS %d of %d' % (verifiable, len(lines) - 1))
+    # the count a reviewer gets when checking each row against the commit that published the manifest
+    print('VERIFIABLE_AT_ORIGIN_ROWS %d of %d%s'
+          % (match_origin, len(lines) - 1,
+             ' origin=%s' % origin if origin else ' (no --origin given, not computed)'))
     return 0 if verifiable == len(lines) - 1 else 1
 
 

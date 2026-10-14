@@ -74,16 +74,23 @@ def redact(path):
     return t.replace('/root/microled_ai_project', '$PROJ').encode('utf-8')
 
 
+BASE = os.environ.get('S3C2_BASE', '22af9d025457c077aeeb7ca10ace08049550de9e')
+
+
 def git_files():
-    out = subprocess.Popen(['git', '-C', ROOT, 'status', '--porcelain'], stdout=subprocess.PIPE,
+    """every path this round delivers: the diff between the audit base and the index, so a round
+    that lands as two commits still gets one authoritative list. Taken from staged content, not
+    from whatever happens to sit in the working tree."""
+    out = subprocess.Popen(['git', '-C', ROOT, 'diff', '--cached', '--name-only', '-M', BASE],
+                           stdout=subprocess.PIPE,
                            stderr=subprocess.STDOUT).communicate()[0].decode('utf-8', 'replace')
     files = set()
     for line in out.splitlines():
-        p = line[3:].strip().replace('\\', '/')
+        p = line.strip().replace('\\', '/')
+        if not p:
+            continue
         if p.startswith('results/evidence/_incoming/') or p.endswith('.bundle'):
             continue
-        if ' -> ' in p:
-            p = p.split(' -> ')[-1]
         files.add(p)
     return sorted(files)
 
@@ -107,10 +114,15 @@ def main():
             write(os.path.join(EV, dst), read(sp))
 
     out = []
+    # each old manifest is audited against HEAD and against the last commit that touched it, so a
+    # row a later round legitimately revised reads as SUPERSEDED instead of being called a defect
     for old in ('sc1_s3c1_round_manifest.csv', 'sc1_s3c_round_manifest.csv'):
+        origin = subprocess.Popen(['git', '-C', ROOT, 'log', '-1', '--format=%H', '--',
+                                   'results/evidence/' + old],
+                                  stdout=subprocess.PIPE).communicate()[0].decode().strip()
         p = subprocess.Popen([sys.executable, os.path.join(ROOT, 'scripts',
                                                            'sc1_s3c2_manifest_audit.py'),
-                              os.path.join(EV, old)],
+                              os.path.join(EV, old), '--origin', origin],
                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]
         out.append(p.decode('utf-8', 'replace'))
     audit = u'\n'.join(out)
@@ -127,7 +139,7 @@ def main():
             current = [x.split('=', 1)[1] for x in f if x.startswith('file=')][0]
             continue
         if f[0] in ('NOT_IN_GIT', 'SHA_WRONG', 'BYTES_WRONG', 'BOTH_WRONG', 'MISSING',
-                    'EOL_NORMALISED', 'STALE_ROW'):
+                    'EOL_NORMALISED', 'STALE_ROW', 'SUPERSEDED'):
             row = [current, f[1], f[0], '', '', '', '']
             for kv in f[2:]:
                 k, v = kv.split('=', 1)
@@ -144,10 +156,17 @@ def main():
                    u'.gitattributes (`* text=auto eol=lf`) commits the LF-normalised bytes, so the '
                    u'row describes bytes that were never committed. Content is not wrong.'
                    if f[0] == 'EOL_NORMALISED' else
-                   u'the row hashes a file that is neither in the working tree nor in the commit; '
-                   u'the path names the untracked results/evidence/_incoming/ scratch area, so no '
-                   u'remote byte can verify it. This is the defect, not a formatting issue.'
+                   u'the row names a file that is neither in the working tree nor in the commit; the '
+                   u'path is the untracked results/evidence/_incoming/ scratch area, so no remote byte '
+                   u'can verify it. Where a tracked twin exists (sc1_s3c1_symbol_side.csv is at '
+                   u'results/evidence/sc1_s3c1_symbol_side.csv) the row simply pointed at the wrong '
+                   u'path. This is the defect, not a formatting issue.'
                    if f[0] == 'NOT_IN_GIT' else
+                   u'NOT A DEFECT: the row matched the committed bytes of the round that delivered '
+                   u'the manifest; this round revised the file, so it no longer matches HEAD. '
+                   u'The origin commit is the `correct_at=` field of the same row in '
+                   u'sc1_s3c2_manifest_audit_output.txt.'
+                   if f[0] == 'SUPERSEDED' else
                    u'the working copy and the committed blob agree now, so this row was written '
                    u'against a different earlier content; it is stale, not a byte-level mismatch.'
                    if f[0] == 'STALE_ROW' else
@@ -156,7 +175,12 @@ def main():
             corr.append(row + [why])
         if f[0] == 'CLOUD_VERIFIABLE_ROWS':
             corr.append([current, '(summary)', 'CLOUD_VERIFIABLE_ROWS', '', '', '', '',
-                         '%s of %s rows re-hash to the committed bytes' % (f[1], f[3])])
+                         '%s of %s rows re-hash to the bytes committed at HEAD' % (f[1], f[3])])
+        if f[0] == 'VERIFIABLE_AT_ORIGIN_ROWS':
+            corr.append([current, '(summary)', 'VERIFIABLE_AT_ORIGIN_ROWS', '', '', '', '',
+                         '%s of %s rows re-hash at the commit that delivered the manifest '
+                         '(the rest were revised by a later round or name a path that was never '
+                         'committed)' % (f[1], f[3])])
     with io.open(os.path.join(EV, 'sc1_s3c2_manifest_corrections.csv'), 'wb') as fh:
         for r in corr:
             fh.write((u','.join([u'"%s"' % c for c in r]) + u'\n').encode('utf-8'))
@@ -167,11 +191,14 @@ def main():
     for p in git_files():
         if p == skip:
             continue
-        ap = os.path.join(ROOT, p.replace('/', os.sep))
-        if not os.path.isfile(ap):
-            print('MANIFEST-SKIP-MISSING %s' % p)
+        # hash what the index will commit, not what the working tree holds: those differ for any
+        # file edited after staging, and the reviewable artefact is the commit
+        proc = subprocess.Popen(['git', '-C', ROOT, 'cat-file', 'blob', ':%s' % p],
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        b = proc.communicate()[0]
+        if proc.returncode != 0:
+            print('MANIFEST-SKIP-NOSTAGED %s' % p)
             continue
-        b = lf(read(ap))
         rows.append([p, sha(b), len(b), 'yes'])
     with io.open(os.path.join(EV, 'sc1_s3c2_round_manifest.csv'), 'wb') as fh:
         fh.write(u'"file","sha256","bytes","role","cloud_can_verify_bytes","note"\n'.encode(
@@ -179,8 +206,8 @@ def main():
         for p, h, n, ok in rows:
             role = p.split('/')[1] if '/' in p and p.split('/')[0] in ('reports', 'results',
                                                                         'scripts', 'skill') else p
-            fh.write((u'"%s","%s","%d","s3c2_%s","%s","hashed on the bytes git commits (CRLF '
-                      u'normalised to LF by .gitattributes); excluded row: the manifest itself"\n'
+            fh.write((u'"%s","%s","%d","s3c2_%s","%s","hashed from the staged blob, which is what '
+                      u'this round commits; excluded row: the manifest itself"\n'
                       % (p, h, n, role, ok)).encode('utf-8'))
     print('S3C2_ROUND_MANIFEST rows=%d' % len(rows))
     return 0

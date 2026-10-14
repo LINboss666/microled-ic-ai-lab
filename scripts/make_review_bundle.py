@@ -642,11 +642,19 @@ def main():
         fh.write(body)
 
     zpath = os.path.join(out_dir, "review_bundle_%s.zip" % head[:7])
+    # Fixed entry timestamps: z.write() otherwise stamps each entry with its own mtime, so two
+    # builds of the same commit produce different zip bytes and a reviewer cannot re-derive the
+    # archive they were handed from the payload hashes in manifest.txt.
     with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as z:
-        for dirpath, _dn, fnames in os.walk(stag):
-            for fn in fnames:
+        for dirpath, _dn, fnames in sorted(os.walk(stag)):
+            for fn in sorted(fnames):
                 full = os.path.join(dirpath, fn)
-                z.write(full, os.path.relpath(full, out_dir).replace("\\", "/"))
+                arc = os.path.relpath(full, out_dir).replace("\\", "/")
+                zi = zipfile.ZipInfo(arc, date_time=(1980, 1, 1, 0, 0, 0))
+                zi.compress_type = zipfile.ZIP_DEFLATED
+                zi.external_attr = 0o644 << 16
+                with open(full, "rb") as fh:
+                    z.writestr(zi, fh.read())
 
     with zipfile.ZipFile(zpath) as z:
         in_zip = set(i.filename for i in z.infolist() if not i.is_dir())

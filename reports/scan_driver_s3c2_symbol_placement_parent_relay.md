@@ -11,7 +11,7 @@ NEW_SIMULATION_RUNS = 0. Only `cadence_work/s3c_oa/microled_scan_s3c` was writte
 | READBACK_FIELDS | MATCHED (unchanged from S3C1, re-read from disk this round) | `results/evidence/sc1_s3c2_log_final_verify_disk_reopen.txt`, `sc1_s3c2_comparator_final.txt` |
 | PORT_DIRECTIONS | MATCHED 96 of 96, 0 mismatch | `results/evidence/sc1_s3c2_ports.csv` |
 | SYMBOL_GRAPHICS | EXIST (8 views, body + pin rects + stubs + labels) | `results/evidence/sc1_s3c1_graphics.csv` (recomputed on the new dump) |
-| PIN_PLACEMENT | **DONE 48 of 48** on the role side | `S3C1_SIDE_MATCHED 48 of 48`, `results/evidence/sc1_s3c1_symbol_side.csv` |
+| PIN_PLACEMENT | **DONE 48 of 48** on the role side | `S3C1_SIDE_MATCHED 48 of 48` in `results/evidence/sc1_s3c2_side_summary.txt`, per-port rows in `results/evidence/sc1_s3c1_symbol_side.csv` (tracked path; the S3C1 manifest listed its untracked `_incoming` copy — §8) |
 | SCHEMATIC_PRESENTATION | **PARTIAL** — the bank's parent is re-laid and role-arranged; `sc1_ls_c1_top_r2d` and `sc1_r3_scan_chain_1ch` are blocked and sit at their pre-S3C2 geometry | §5, §6 below |
 | EDITOR_CHECK | 0 errors in all 8 schematics; warnings 0…39 per view, itemised in §6 | `results/evidence/sc1_s3c2_editor_check.csv` |
 | GRAPH_EQUIVALENCE | PASS — 39 devices, 7 sub-instances, 46/46 connections, 8/8 canonical graphs, after disk reopen | `results/evidence/sc1_s3c2_comparator_final.txt` |
@@ -187,18 +187,55 @@ session maps — the shortest route is the user's own open Virtuoso: `geOpen(?li
 `symbol`, then capture. `skill/sc1_s3c2_ciw_parents.il` prints the current pins/nets of the two
 blocked views for whoever finishes them there.
 
+## 7a Delivery: manifest self-verification, gates, push and bundle
+
+* `results/evidence/sc1_s3c2_round_manifest.csv` is the single authoritative list for this round; it
+  excludes itself, walks nothing under `results/evidence/_incoming/`, and hashes **the staged blob**
+  (`git cat-file blob :<path>`) rather than the working copy, so the CRLF defect it documents in the
+  S3C1 manifest cannot be repeated here. It also lists everything between the audit base and the
+  index, which matters because this round lands as more than one commit.
+* `scripts/sc1_s3c2_check_round.py` is the gate that would have caught the S3C1 defect before it was
+  published: it re-hashes every row from a git blob (index or `--ref <commit>`) instead of from disk,
+  and refuses a row that is the manifest itself or points into `results/evidence/_incoming/`. On this
+  manifest: `S3C2_ROUND_MANIFEST_CHECK: PASS` (ref=index rows=44 failures=0). Two negative cases were
+  run against throwaway copies in `_incoming/` and both failed closed -- one row's sha256 set to
+  zeros gives `FAIL SHA ... recorded=000000000000 blob=ecfcd1dd2f86` with rc=1, and a row repointed at
+  `_incoming/SCAN-1.md` gives `FAIL SCRATCH_ROW` with rc=1; the published manifest was byte-identical
+  afterwards.
+* Gates, recorded separately as the task book asks: `precommit_safety_check.py --mode staged` PASS,
+  `--mode history` PASS, `--mode objects` **BLOCKED on the one pre-existing unreachable 3,583,407-byte
+  blob `955497fb18ac…`** (untouched, not cleaned, `objects_checked=1460`); `provenance_check.py`
+  PASS (files=622 violations=0); `netlist_stats.py` PASS; `sc1_r3a_write_guard_check.py`
+  checks=18 failures=0; `sc1_s3b_verify_evidence.py` checks=49 failures=0;
+  `sc1_s3c_check_staged.py` PASS (30); `sc1_s3c1_check.py` PASS (35).
+* `make_review_bundle.py` wrote entry timestamps from each staged file's mtime, so two builds of the
+  same pair of commits produced different zip bytes and a reviewer could not re-derive the archive
+  from `manifest.txt`. The writer now pins `date_time=(1980,1,1,0,0,0)`, sorts the walk, and fixes
+  the mode bits; two consecutive builds of `22af9d0…08b70b3` hash to the same value. The archive a
+  reviewer should get is `review/review_bundle_<head7>.zip`, rebuilt with
+  `python scripts/make_review_bundle.py 22af9d025457c077aeeb7ca10ace08049550de9e <head>` -- its
+  sha256 is quoted in the round handoff message rather than in this file, because a file cannot
+  record the hash of the archive that contains it (same reason the manifest excludes itself).
+
 ## 8 Retractions and corrections this round owns
 
-1. "the S3C1 manifest matches 194 of 194 rows" — wrong; against the bytes a fetch actually gets it
-   matches 192 of 194, and the refreshed S3-C manifest 191 of 194. The two manifests share two
-   defects, and the S3-C manifest has a third:
+1. "the S3C1 manifest matches 194 of 194 rows" — wrong, in two ways depending on which commit you
+   check against. Re-hashed row by row (`scripts/sc1_s3c2_manifest_audit.py`, `git cat-file`):
+   * at the commit that published it, `22af9d0`: **192 of 194**;
+   * at today's HEAD, after this round revised two of its files: **190 of 194**, the two extra rows
+     being `SUPERSEDED` (`reports/scan_driver_s3c_schematic_symbol.md` and
+     `skill/sc1_s3c1_geom_dump.il`, which S3C2 legitimately edited) and not defects.
+   The refreshed S3-C manifest gives 191 of 194 at `22af9d0` and 189 of 194 at HEAD. Two of the
+   failing rows are shared defects, the third is unique to the S3-C manifest:
    * `results/evidence/_incoming/sc1_s3c1_symbol_side.csv` is listed although the scratch area it
-     lives in was never tracked, so no remote byte can verify the row (`NOT_IN_GIT`);
+     lives in was never tracked, so no remote byte can verify the row (`NOT_IN_GIT`). The data itself
+     is fine and is in the repo under its real path `results/evidence/sc1_s3c1_symbol_side.csv` --
+     the row pointed at the wrong place, which is why §0's PIN_PLACEMENT evidence line cites both.
    * `results/evidence/sc1_s3c1_comparator_final.txt` records `8cd9229a8398…`/766 while the commit
      serves `145142988e32…`/750. Verified root cause: the manifest hashed the CRLF Windows working
      copy, and `.gitattributes` (`* text=auto eol=lf`) commits the LF-normalised bytes -- the file's
      content was never wrong (`EOL_NORMALISED`, 16 CRLF lines). This round's manifest hashes the
-     LF-normalised bytes for that reason.
+     staged blob instead, so the same mistake cannot hide here.
    * the S3-C row for `sc1_s3c1_round_manifest.csv` matches neither the working copy nor the blob
      while those two agree, so it was written against an earlier capture (`STALE_ROW`).
    Detail: `sc1_s3c2_manifest_corrections.csv`, raw: `sc1_s3c2_manifest_audit_output.txt`.
