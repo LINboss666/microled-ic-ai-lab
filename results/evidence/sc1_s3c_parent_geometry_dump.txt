@@ -1,0 +1,298 @@
+\o S3BG-BEGIN
+\o S3BG-LIB "sc1_s3c_team_pretty" CELLS ("sc1_ls_c1_top_r2d" "sc1_r3_scan_chain_1ch" "sc1_scan_power_1ch_s3c")
+\o S3BG-CELL "sc1_ls_c1_top_r2d" insts=8 nets=8 shapes=42 terms=6
+\o S3BG-INST cell="sc1_ls_c1_top_r2d" name="Xnand" master="sc1_s3c_team_pretty"/"sc1_ls_c1_r2d" bbox=((0.0 0.875) (2.025 1.625)) type="inst"
+\o S3BG-INST cell="sc1_ls_c1_top_r2d" name="Xcore" master="sc1_s3c_team_pretty"/"sc1_ls_core_r2d" bbox=((3.375 0.75) (5.4 1.75)) type="inst"
+\o S3BG-INST cell="sc1_ls_c1_top_r2d" name="PIN5" master="basic"/"iopin" bbox=((6.3875 0.8125) (6.6125 1.13125)) type="inst"
+\o S3BG-INST cell="sc1_ls_c1_top_r2d" name="PIN4" master="basic"/"iopin" bbox=((6.3875 0.1875) (6.6125 0.50625)) type="inst"
+\o S3BG-INST cell="sc1_ls_c1_top_r2d" name="PIN3" master="basic"/"iopin" bbox=((6.3875 0.0625) (6.6125 0.38125)) type="inst"
+\o S3BG-INST cell="sc1_ls_c1_top_r2d" name="PIN2" master="basic"/"iopin" bbox=((6.3875 1.3125) (6.6125 1.63125)) type="inst"
+\o S3BG-INST cell="sc1_ls_c1_top_r2d" name="PIN1" master="basic"/"iopin" bbox=((6.3875 2.1875) (6.6125 2.50625)) type="inst"
+\o S3BG-INST cell="sc1_ls_c1_top_r2d" name="PIN0" master="basic"/"iopin" bbox=((6.3875 2.0625) (6.6125 2.38125)) type="inst"
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="ellipse" bbox=((5.96875 2.21875) (6.03125 2.28125)) owner="NIL" text=nil net=nil layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((5.3125 0.875) (6.5 0.875)) owner="NIL" text=nil net="en" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="label" bbox=((6.25 0.9375) (6.3875 0.9875)) owner="NIL" text=nil net="en" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="textDisplay" bbox=((6.3375 0.19375) (6.6625 0.28125)) owner="gate33" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((2.875 0.25) (2.875 1.125)) owner="NIL" text=nil net="core_ok33" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((1.9375 1.125) (2.875 1.125)) owner="NIL" text=nil net="core_ok33" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((2.875 0.25) (6.5 0.25)) owner="NIL" text=nil net="core_ok33" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="label" bbox=((6.25 0.3) (6.84375 0.3875)) owner="NIL" text=nil net="core_ok33" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="textDisplay" bbox=((6.41875 2.21875) (6.58125 2.2625)) owner="vss" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((2.75 0.125) (2.75 1.25)) owner="NIL" text=nil net="gate33" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((1.9375 1.25) (2.75 1.25)) owner="NIL" text=nil net="gate33" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((2.75 0.125) (6.5 0.125)) owner="NIL" text=nil net="gate33" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="label" bbox=((6.25 0.1625) (6.64375 0.2625)) owner="NIL" text=nil net="gate33" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="textDisplay" bbox=((6.35625 2.34375) (6.64375 2.40625)) owner="vdd33" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((5.3125 1.375) (6.5 1.375)) owner="NIL" text=nil net="vdd18" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="label" bbox=((6.25 1.4375) (6.58125 1.5125)) owner="NIL" text=nil net="vdd18" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="textDisplay" bbox=((6.3625 1.46875) (6.6375 1.53125)) owner="vdd18" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((1.9375 1.375) (2.625 1.375)) owner="NIL" text=nil net="vdd33" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((5.3125 1.5) (6.0 1.5)) owner="NIL" text=nil net="vdd33" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((2.625 2.25) (6.0 2.25)) owner="NIL" text=nil net="vdd33" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((2.625 1.375) (2.625 2.25)) owner="NIL" text=nil net="vdd33" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((6.0 1.5) (6.0 2.25)) owner="NIL" text=nil net="vdd33" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((6.0 2.25) (6.5 2.25)) owner="NIL" text=nil net="vdd33" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="label" bbox=((6.25 2.3125) (6.59375 2.3875)) owner="NIL" text=nil net="vdd33" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="ellipse" bbox=((5.84375 2.09375) (5.90625 2.15625)) owner="NIL" text=nil net=nil layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((1.9375 1.5) (2.5 1.5)) owner="NIL" text=nil net="vss" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((5.3125 1.625) (5.875 1.625)) owner="NIL" text=nil net="vss" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((2.5 2.125) (5.875 2.125)) owner="NIL" text=nil net="vss" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((2.5 1.5) (2.5 2.125)) owner="NIL" text=nil net="vss" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((5.875 1.625) (5.875 2.125)) owner="NIL" text=nil net="vss" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((5.875 2.125) (6.5 2.125)) owner="NIL" text=nil net="vss" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="label" bbox=((6.25 2.1875) (6.4375 2.2375)) owner="NIL" text=nil net="vss" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((5.3125 1.0) (5.375 1.0)) owner="NIL" text=nil net="x" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="label" bbox=((5.3125 1.0625) (5.38125 1.1125)) owner="NIL" text=nil net="x" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((1.9375 1.0) (2.375 1.0)) owner="NIL" text=nil net="y" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((2.375 0.0) (2.375 1.0)) owner="NIL" text=nil net="y" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((2.375 0.0) (5.75 0.0)) owner="NIL" text=nil net="y" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((5.75 0.0) (5.75 1.125)) owner="NIL" text=nil net="y" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="line" bbox=((5.3125 1.125) (5.75 1.125)) owner="NIL" text=nil net="y" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="label" bbox=((2.2625 0.4625) (2.3375 0.525)) owner="NIL" text=nil net="y" layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="textDisplay" bbox=((6.25 0.3375) (6.75 0.40625)) owner="core_ok33" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_ls_c1_top_r2d" type="textDisplay" bbox=((6.4375 0.96875) (6.5625 1.0125)) owner="en" text="name" net=nil layer=nil
+\o S3BG-NET cell="sc1_ls_c1_top_r2d" name="vss" pins=1
+\o S3BG-NET cell="sc1_ls_c1_top_r2d" name="x" pins=0
+\o S3BG-NET cell="sc1_ls_c1_top_r2d" name="y" pins=0
+\o S3BG-NET cell="sc1_ls_c1_top_r2d" name="vdd33" pins=1
+\o S3BG-NET cell="sc1_ls_c1_top_r2d" name="vdd18" pins=1
+\o S3BG-NET cell="sc1_ls_c1_top_r2d" name="gate33" pins=1
+\o S3BG-NET cell="sc1_ls_c1_top_r2d" name="core_ok33" pins=1
+\o S3BG-NET cell="sc1_ls_c1_top_r2d" name="en" pins=1
+\o S3BG-TERM cell="sc1_ls_c1_top_r2d" name="vss" dir="inputOutput" net="vss"
+\o S3BG-TERM cell="sc1_ls_c1_top_r2d" name="vdd33" dir="inputOutput" net="vdd33"
+\o S3BG-TERM cell="sc1_ls_c1_top_r2d" name="vdd18" dir="inputOutput" net="vdd18"
+\o S3BG-TERM cell="sc1_ls_c1_top_r2d" name="gate33" dir="output" net="gate33"
+\o S3BG-TERM cell="sc1_ls_c1_top_r2d" name="core_ok33" dir="input" net="core_ok33"
+\o S3BG-TERM cell="sc1_ls_c1_top_r2d" name="en" dir="input" net="en"
+\o S3BG-SYM cell="sc1_ls_c1_top_r2d" figs=0 terms=6 bbox=((-1.0625 -0.5) (1.3375 0.5))
+\o S3BG-SYMT cell="sc1_ls_c1_top_r2d" name="vss" dir="inputOutput" pins=1
+\o S3BG-SYMPIN cell="sc1_ls_c1_top_r2d" term="vss" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_ls_c1_top_r2d" term="vss" figType="rect" bbox=((1.1625 0.35) (1.3375 0.4))
+\o S3BG-SYMT cell="sc1_ls_c1_top_r2d" name="vdd33" dir="inputOutput" pins=1
+\o S3BG-SYMPIN cell="sc1_ls_c1_top_r2d" term="vdd33" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_ls_c1_top_r2d" term="vdd33" figType="rect" bbox=((1.1625 0.225) (1.3375 0.275))
+\o S3BG-SYMT cell="sc1_ls_c1_top_r2d" name="vdd18" dir="inputOutput" pins=1
+\o S3BG-SYMPIN cell="sc1_ls_c1_top_r2d" term="vdd18" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_ls_c1_top_r2d" term="vdd18" figType="rect" bbox=((1.1625 0.1) (1.3375 0.15))
+\o S3BG-SYMT cell="sc1_ls_c1_top_r2d" name="gate33" dir="output" pins=1
+\o S3BG-SYMPIN cell="sc1_ls_c1_top_r2d" term="gate33" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_ls_c1_top_r2d" term="gate33" figType="rect" bbox=((1.1625 -0.15) (1.3375 -0.1))
+\o S3BG-SYMT cell="sc1_ls_c1_top_r2d" name="core_ok33" dir="input" pins=1
+\o S3BG-SYMPIN cell="sc1_ls_c1_top_r2d" term="core_ok33" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_ls_c1_top_r2d" term="core_ok33" figType="rect" bbox=((1.1625 -0.275) (1.3375 -0.225))
+\o S3BG-SYMT cell="sc1_ls_c1_top_r2d" name="en" dir="input" pins=1
+\o S3BG-SYMPIN cell="sc1_ls_c1_top_r2d" term="en" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_ls_c1_top_r2d" term="en" figType="rect" bbox=((1.1625 -0.4) (1.3375 -0.35))
+\o S3BG-CELL "sc1_r3_scan_chain_1ch" insts=11 nets=11 shapes=60 terms=8
+\o S3BG-INST cell="sc1_r3_scan_chain_1ch" name="Xls" master="sc1_s3c_team_pretty"/"sc1_ls_c1_top_r2d" bbox=((-0.0625 2.125) (2.3375 3.125)) type="inst"
+\o S3BG-INST cell="sc1_r3_scan_chain_1ch" name="Xgate" master="sc1_s3c_team_pretty"/"sc1_scan_gate" bbox=((3.875 2.25) (5.65 3.0)) type="inst"
+\o S3BG-INST cell="sc1_r3_scan_chain_1ch" name="Xff" master="sc1_s3c_team_pretty"/"c2mos_dff" bbox=((3.9375 0.0) (5.3375 1.0)) type="inst"
+\o S3BG-INST cell="sc1_r3_scan_chain_1ch" name="PIN7" master="basic"/"iopin" bbox=((6.7625 0.0625) (6.9875 0.38125)) type="inst"
+\o S3BG-INST cell="sc1_r3_scan_chain_1ch" name="PIN6" master="basic"/"iopin" bbox=((6.7625 0.1875) (6.9875 0.50625)) type="inst"
+\o S3BG-INST cell="sc1_r3_scan_chain_1ch" name="PIN5" master="basic"/"iopin" bbox=((6.7625 2.4375) (6.9875 2.75625)) type="inst"
+\o S3BG-INST cell="sc1_r3_scan_chain_1ch" name="PIN4" master="basic"/"iopin" bbox=((6.7625 1.5625) (6.9875 1.88125)) type="inst"
+\o S3BG-INST cell="sc1_r3_scan_chain_1ch" name="PIN3" master="basic"/"iopin" bbox=((6.7625 1.4375) (6.9875 1.75625)) type="inst"
+\o S3BG-INST cell="sc1_r3_scan_chain_1ch" name="PIN2" master="basic"/"iopin" bbox=((6.7625 3.5625) (6.9875 3.88125)) type="inst"
+\o S3BG-INST cell="sc1_r3_scan_chain_1ch" name="PIN1" master="basic"/"iopin" bbox=((6.7625 3.6875) (6.9875 4.00625)) type="inst"
+\o S3BG-INST cell="sc1_r3_scan_chain_1ch" name="PIN0" master="basic"/"iopin" bbox=((6.7625 3.4375) (6.9875 3.75625)) type="inst"
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="ellipse" bbox=((6.34375 3.59375) (6.40625 3.65625)) owner="NIL" text=nil net=nil layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((5.25 0.125) (6.875 0.125)) owner="NIL" text=nil net="d" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="label" bbox=((6.625 0.1875) (6.7 0.2625)) owner="NIL" text=nil net="d" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="textDisplay" bbox=((6.7125 1.56875) (7.0375 1.65625)) owner="gate33" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((5.25 0.25) (6.875 0.25)) owner="NIL" text=nil net="clk" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="label" bbox=((6.625 0.3125) (6.7875 0.3875)) owner="NIL" text=nil net="clk" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="ellipse" bbox=((6.21875 2.84375) (6.28125 2.90625)) owner="NIL" text=nil net=nil layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((5.5625 2.5) (6.875 2.5)) owner="NIL" text=nil net="blank" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="label" bbox=((6.625 2.5625) (6.925 2.6375)) owner="NIL" text=nil net="blank" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="ellipse" bbox=((6.21875 3.46875) (6.28125 3.53125)) owner="NIL" text=nil net=nil layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((3.375 1.625) (3.375 2.375)) owner="NIL" text=nil net="core_ok33" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((2.25 2.375) (3.375 2.375)) owner="NIL" text=nil net="core_ok33" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((3.375 1.625) (6.875 1.625)) owner="NIL" text=nil net="core_ok33" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="label" bbox=((6.625 1.675) (7.21875 1.7625)) owner="NIL" text=nil net="core_ok33" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="textDisplay" bbox=((6.73125 3.84375) (7.01875 3.90625)) owner="vdd33" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((3.25 1.5) (3.25 2.5)) owner="NIL" text=nil net="gate33" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((2.25 2.5) (3.25 2.5)) owner="NIL" text=nil net="gate33" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((3.25 1.5) (6.875 1.5)) owner="NIL" text=nil net="gate33" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="label" bbox=((6.625 1.5375) (7.01875 1.6375)) owner="NIL" text=nil net="gate33" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="textDisplay" bbox=((6.7375 3.71875) (7.0125 3.78125)) owner="vdd18" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((5.25 0.75) (6.375 0.75)) owner="NIL" text=nil net="vdd18" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((2.25 2.75) (3.0 2.75)) owner="NIL" text=nil net="vdd18" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((5.5625 2.75) (6.375 2.75)) owner="NIL" text=nil net="vdd18" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((3.0 3.625) (6.375 3.625)) owner="NIL" text=nil net="vdd18" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((3.0 2.75) (3.0 3.625)) owner="NIL" text=nil net="vdd18" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((6.375 0.75) (6.375 2.75)) owner="NIL" text=nil net="vdd18" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((6.375 2.75) (6.375 3.625)) owner="NIL" text=nil net="vdd18" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((6.375 3.625) (6.875 3.625)) owner="NIL" text=nil net="vdd18" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="label" bbox=((6.625 3.6875) (6.95625 3.7625)) owner="NIL" text=nil net="vdd18" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="ellipse" bbox=((6.34375 2.71875) (6.40625 2.78125)) owner="NIL" text=nil net=nil layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((3.125 2.875) (3.125 3.75)) owner="NIL" text=nil net="vdd33" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((2.25 2.875) (3.125 2.875)) owner="NIL" text=nil net="vdd33" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((3.125 3.75) (6.875 3.75)) owner="NIL" text=nil net="vdd33" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="label" bbox=((6.625 3.8125) (6.96875 3.8875)) owner="NIL" text=nil net="vdd33" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="textDisplay" bbox=((6.79375 3.59375) (6.95625 3.6375)) owner="vss" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((5.25 0.875) (6.25 0.875)) owner="NIL" text=nil net="vss" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((2.25 3.0) (2.875 3.0)) owner="NIL" text=nil net="vss" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((5.5625 2.875) (6.25 2.875)) owner="NIL" text=nil net="vss" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((2.875 3.5) (6.25 3.5)) owner="NIL" text=nil net="vss" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((2.875 3.0) (2.875 3.5)) owner="NIL" text=nil net="vss" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((6.25 0.875) (6.25 2.875)) owner="NIL" text=nil net="vss" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((6.25 2.875) (6.25 3.5)) owner="NIL" text=nil net="vss" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((6.25 3.5) (6.875 3.5)) owner="NIL" text=nil net="vss" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="label" bbox=((6.625 3.5625) (6.8125 3.6125)) owner="NIL" text=nil net="vss" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((5.25 0.375) (5.3125 0.375)) owner="NIL" text=nil net="q" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="label" bbox=((5.25 0.4125) (5.325 0.4875)) owner="NIL" text=nil net="q" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((5.5625 2.375) (6.125 2.375)) owner="NIL" text=nil net="qbar" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((6.125 0.625) (6.125 2.375)) owner="NIL" text=nil net="qbar" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((5.25 0.625) (6.125 0.625)) owner="NIL" text=nil net="qbar" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="label" bbox=((5.6625 2.4125) (5.91875 2.5125)) owner="NIL" text=nil net="qbar" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((2.25 2.25) (2.75 2.25)) owner="NIL" text=nil net="en" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((2.75 1.375) (2.75 2.25)) owner="NIL" text=nil net="en" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((2.75 1.375) (6.0 1.375)) owner="NIL" text=nil net="en" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((6.0 1.375) (6.0 2.625)) owner="NIL" text=nil net="en" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="line" bbox=((5.5625 2.625) (6.0 2.625)) owner="NIL" text=nil net="en" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="label" bbox=((2.6375 1.7375) (2.6875 1.875)) owner="NIL" text=nil net="en" layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="textDisplay" bbox=((6.625 1.7125) (7.125 1.78125)) owner="core_ok33" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="textDisplay" bbox=((6.75 2.59375) (7.0 2.65625)) owner="blank" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="textDisplay" bbox=((6.80625 0.34375) (6.94375 0.40625)) owner="clk" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_r3_scan_chain_1ch" type="textDisplay" bbox=((6.84375 0.21875) (6.90625 0.28125)) owner="d" text="name" net=nil layer=nil
+\o S3BG-NET cell="sc1_r3_scan_chain_1ch" name="vss" pins=1
+\o S3BG-NET cell="sc1_r3_scan_chain_1ch" name="q" pins=0
+\o S3BG-NET cell="sc1_r3_scan_chain_1ch" name="qbar" pins=0
+\o S3BG-NET cell="sc1_r3_scan_chain_1ch" name="en" pins=0
+\o S3BG-NET cell="sc1_r3_scan_chain_1ch" name="vdd33" pins=1
+\o S3BG-NET cell="sc1_r3_scan_chain_1ch" name="vdd18" pins=1
+\o S3BG-NET cell="sc1_r3_scan_chain_1ch" name="gate33" pins=1
+\o S3BG-NET cell="sc1_r3_scan_chain_1ch" name="core_ok33" pins=1
+\o S3BG-NET cell="sc1_r3_scan_chain_1ch" name="blank" pins=1
+\o S3BG-NET cell="sc1_r3_scan_chain_1ch" name="clk" pins=1
+\o S3BG-NET cell="sc1_r3_scan_chain_1ch" name="d" pins=1
+\o S3BG-TERM cell="sc1_r3_scan_chain_1ch" name="vss" dir="inputOutput" net="vss"
+\o S3BG-TERM cell="sc1_r3_scan_chain_1ch" name="vdd33" dir="inputOutput" net="vdd33"
+\o S3BG-TERM cell="sc1_r3_scan_chain_1ch" name="vdd18" dir="inputOutput" net="vdd18"
+\o S3BG-TERM cell="sc1_r3_scan_chain_1ch" name="gate33" dir="output" net="gate33"
+\o S3BG-TERM cell="sc1_r3_scan_chain_1ch" name="core_ok33" dir="input" net="core_ok33"
+\o S3BG-TERM cell="sc1_r3_scan_chain_1ch" name="blank" dir="input" net="blank"
+\o S3BG-TERM cell="sc1_r3_scan_chain_1ch" name="clk" dir="input" net="clk"
+\o S3BG-TERM cell="sc1_r3_scan_chain_1ch" name="d" dir="input" net="d"
+\o S3BG-SYM cell="sc1_r3_scan_chain_1ch" figs=0 terms=8 bbox=((-1.1875 -0.625) (1.4625 0.625))
+\o S3BG-SYMT cell="sc1_r3_scan_chain_1ch" name="vss" dir="inputOutput" pins=1
+\o S3BG-SYMPIN cell="sc1_r3_scan_chain_1ch" term="vss" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_r3_scan_chain_1ch" term="vss" figType="rect" bbox=((1.2875 0.475) (1.4625 0.525))
+\o S3BG-SYMT cell="sc1_r3_scan_chain_1ch" name="vdd33" dir="inputOutput" pins=1
+\o S3BG-SYMPIN cell="sc1_r3_scan_chain_1ch" term="vdd33" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_r3_scan_chain_1ch" term="vdd33" figType="rect" bbox=((1.2875 0.35) (1.4625 0.4))
+\o S3BG-SYMT cell="sc1_r3_scan_chain_1ch" name="vdd18" dir="inputOutput" pins=1
+\o S3BG-SYMPIN cell="sc1_r3_scan_chain_1ch" term="vdd18" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_r3_scan_chain_1ch" term="vdd18" figType="rect" bbox=((1.2875 0.225) (1.4625 0.275))
+\o S3BG-SYMT cell="sc1_r3_scan_chain_1ch" name="gate33" dir="output" pins=1
+\o S3BG-SYMPIN cell="sc1_r3_scan_chain_1ch" term="gate33" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_r3_scan_chain_1ch" term="gate33" figType="rect" bbox=((1.2875 0.1) (1.4625 0.15))
+\o S3BG-SYMT cell="sc1_r3_scan_chain_1ch" name="core_ok33" dir="input" pins=1
+\o S3BG-SYMPIN cell="sc1_r3_scan_chain_1ch" term="core_ok33" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_r3_scan_chain_1ch" term="core_ok33" figType="rect" bbox=((1.2875 -0.15) (1.4625 -0.1))
+\o S3BG-SYMT cell="sc1_r3_scan_chain_1ch" name="blank" dir="input" pins=1
+\o S3BG-SYMPIN cell="sc1_r3_scan_chain_1ch" term="blank" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_r3_scan_chain_1ch" term="blank" figType="rect" bbox=((1.2875 -0.275) (1.4625 -0.225))
+\o S3BG-SYMT cell="sc1_r3_scan_chain_1ch" name="clk" dir="input" pins=1
+\o S3BG-SYMPIN cell="sc1_r3_scan_chain_1ch" term="clk" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_r3_scan_chain_1ch" term="clk" figType="rect" bbox=((1.2875 -0.4) (1.4625 -0.35))
+\o S3BG-SYMT cell="sc1_r3_scan_chain_1ch" name="d" dir="input" pins=1
+\o S3BG-SYMPIN cell="sc1_r3_scan_chain_1ch" term="d" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_r3_scan_chain_1ch" term="d" figType="rect" bbox=((1.2875 -0.525) (1.4625 -0.475))
+\o S3BG-CELL "sc1_scan_power_1ch_s3c" insts=11 nets=10 shapes=37 terms=9
+\o S3BG-INST cell="sc1_scan_power_1ch_s3c" name="Xbank" master="sc1_s3c_team_pretty"/"sc1_s3b_p33_bank_7" bbox=((-0.0625 1.0) (2.0875 1.5)) type="inst"
+\o S3BG-INST cell="sc1_scan_power_1ch_s3c" name="Xchain" master="sc1_s3c_team_pretty"/"sc1_r3_scan_chain_1ch" bbox=((3.0625 0.625) (5.7125 1.875)) type="inst"
+\o S3BG-INST cell="sc1_scan_power_1ch_s3c" name="PIN8" master="basic"/"iopin" bbox=((6.5125 0.6875) (6.7375 1.00625)) type="inst"
+\o S3BG-INST cell="sc1_scan_power_1ch_s3c" name="PIN7" master="basic"/"iopin" bbox=((6.5125 0.8125) (6.7375 1.13125)) type="inst"
+\o S3BG-INST cell="sc1_scan_power_1ch_s3c" name="PIN6" master="basic"/"iopin" bbox=((6.5125 0.9375) (6.7375 1.25625)) type="inst"
+\o S3BG-INST cell="sc1_scan_power_1ch_s3c" name="PIN5" master="basic"/"iopin" bbox=((6.5125 1.0625) (6.7375 1.38125)) type="inst"
+\o S3BG-INST cell="sc1_scan_power_1ch_s3c" name="PIN4" master="basic"/"iopin" bbox=((6.5125 0.0625) (6.7375 0.38125)) type="inst"
+\o S3BG-INST cell="sc1_scan_power_1ch_s3c" name="PIN3" master="basic"/"iopin" bbox=((6.5125 1.4375) (6.7375 1.75625)) type="inst"
+\o S3BG-INST cell="sc1_scan_power_1ch_s3c" name="PIN2" master="basic"/"iopin" bbox=((6.5125 1.5625) (6.7375 1.88125)) type="inst"
+\o S3BG-INST cell="sc1_scan_power_1ch_s3c" name="PIN1" master="basic"/"iopin" bbox=((6.5125 2.1875) (6.7375 2.50625)) type="inst"
+\o S3BG-INST cell="sc1_scan_power_1ch_s3c" name="PIN0" master="basic"/"iopin" bbox=((6.5125 1.6875) (6.7375 2.00625)) type="inst"
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="textDisplay" bbox=((6.375 1.2125) (6.875 1.28125)) owner="core_ok33" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="line" bbox=((5.625 0.75) (6.625 0.75)) owner="NIL" text=nil net="d" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="label" bbox=((6.375 0.8125) (6.45 0.8875)) owner="NIL" text=nil net="d" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="textDisplay" bbox=((6.5 1.09375) (6.75 1.15625)) owner="blank" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="line" bbox=((5.625 0.875) (6.625 0.875)) owner="NIL" text=nil net="clk" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="label" bbox=((6.375 0.9375) (6.5375 1.0125)) owner="NIL" text=nil net="clk" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="textDisplay" bbox=((6.54375 1.84375) (6.70625 1.8875)) owner="vss" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="line" bbox=((5.625 1.0) (6.625 1.0)) owner="NIL" text=nil net="blank" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="label" bbox=((6.375 1.0625) (6.675 1.1375)) owner="NIL" text=nil net="blank" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="textDisplay" bbox=((6.4875 2.34375) (6.7625 2.3875)) owner="vscan" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="line" bbox=((5.625 1.125) (6.625 1.125)) owner="NIL" text=nil net="core_ok33" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="label" bbox=((6.375 1.175) (6.96875 1.2625)) owner="NIL" text=nil net="core_ok33" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="textDisplay" bbox=((6.48125 1.71875) (6.76875 1.78125)) owner="vdd33" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="line" bbox=((2.75 0.125) (2.75 1.125)) owner="NIL" text=nil net="scan" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="line" bbox=((2.0 1.125) (2.75 1.125)) owner="NIL" text=nil net="scan" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="line" bbox=((2.75 0.125) (6.625 0.125)) owner="NIL" text=nil net="scan" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="label" bbox=((6.375 0.1875) (6.64375 0.2375)) owner="NIL" text=nil net="scan" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="textDisplay" bbox=((6.4875 1.59375) (6.7625 1.65625)) owner="vdd18" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="line" bbox=((5.625 1.5) (6.625 1.5)) owner="NIL" text=nil net="vdd18" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="label" bbox=((6.375 1.5625) (6.70625 1.6375)) owner="NIL" text=nil net="vdd18" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="textDisplay" bbox=((6.5125 0.21875) (6.7375 0.2625)) owner="scan" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="line" bbox=((5.625 1.625) (6.625 1.625)) owner="NIL" text=nil net="vdd33" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="label" bbox=((6.375 1.6875) (6.71875 1.7625)) owner="NIL" text=nil net="vdd33" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="textDisplay" bbox=((6.55625 0.96875) (6.69375 1.03125)) owner="clk" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="line" bbox=((2.625 1.375) (2.625 2.25)) owner="NIL" text=nil net="vscan" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="line" bbox=((2.0 1.375) (2.625 1.375)) owner="NIL" text=nil net="vscan" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="line" bbox=((2.625 2.25) (6.625 2.25)) owner="NIL" text=nil net="vscan" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="label" bbox=((6.375 2.3125) (6.7 2.3625)) owner="NIL" text=nil net="vscan" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="textDisplay" bbox=((6.59375 0.84375) (6.65625 0.90625)) owner="d" text="name" net=nil layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="line" bbox=((5.625 1.75) (6.625 1.75)) owner="NIL" text=nil net="vss" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="label" bbox=((6.375 1.8125) (6.5625 1.8625)) owner="NIL" text=nil net="vss" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="line" bbox=((2.0 1.25) (2.5 1.25)) owner="NIL" text=nil net="gate33" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="line" bbox=((2.5 0.0) (2.5 1.25)) owner="NIL" text=nil net="gate33" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="line" bbox=((2.5 0.0) (6.125 0.0)) owner="NIL" text=nil net="gate33" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="line" bbox=((6.125 0.0) (6.125 1.375)) owner="NIL" text=nil net="gate33" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="line" bbox=((5.625 1.375) (6.125 1.375)) owner="NIL" text=nil net="gate33" layer=nil
+\o S3BG-FIG cell="sc1_scan_power_1ch_s3c" type="label" bbox=((2.3625 0.3375) (2.4625 0.73125)) owner="NIL" text=nil net="gate33" layer=nil
+\o S3BG-NET cell="sc1_scan_power_1ch_s3c" name="vss" pins=1
+\o S3BG-NET cell="sc1_scan_power_1ch_s3c" name="gate33" pins=0
+\o S3BG-NET cell="sc1_scan_power_1ch_s3c" name="vscan" pins=1
+\o S3BG-NET cell="sc1_scan_power_1ch_s3c" name="vdd33" pins=1
+\o S3BG-NET cell="sc1_scan_power_1ch_s3c" name="vdd18" pins=1
+\o S3BG-NET cell="sc1_scan_power_1ch_s3c" name="scan" pins=1
+\o S3BG-NET cell="sc1_scan_power_1ch_s3c" name="core_ok33" pins=1
+\o S3BG-NET cell="sc1_scan_power_1ch_s3c" name="blank" pins=1
+\o S3BG-NET cell="sc1_scan_power_1ch_s3c" name="clk" pins=1
+\o S3BG-NET cell="sc1_scan_power_1ch_s3c" name="d" pins=1
+\o S3BG-TERM cell="sc1_scan_power_1ch_s3c" name="vss" dir="inputOutput" net="vss"
+\o S3BG-TERM cell="sc1_scan_power_1ch_s3c" name="vscan" dir="inputOutput" net="vscan"
+\o S3BG-TERM cell="sc1_scan_power_1ch_s3c" name="vdd33" dir="inputOutput" net="vdd33"
+\o S3BG-TERM cell="sc1_scan_power_1ch_s3c" name="vdd18" dir="inputOutput" net="vdd18"
+\o S3BG-TERM cell="sc1_scan_power_1ch_s3c" name="scan" dir="output" net="scan"
+\o S3BG-TERM cell="sc1_scan_power_1ch_s3c" name="core_ok33" dir="input" net="core_ok33"
+\o S3BG-TERM cell="sc1_scan_power_1ch_s3c" name="blank" dir="input" net="blank"
+\o S3BG-TERM cell="sc1_scan_power_1ch_s3c" name="clk" dir="input" net="clk"
+\o S3BG-TERM cell="sc1_scan_power_1ch_s3c" name="d" dir="input" net="d"
+\o S3BG-SYM cell="sc1_scan_power_1ch_s3c" figs=0 terms=9 bbox=((-1.25 -0.625) (1.525 0.625))
+\o S3BG-SYMT cell="sc1_scan_power_1ch_s3c" name="vss" dir="inputOutput" pins=1
+\o S3BG-SYMPIN cell="sc1_scan_power_1ch_s3c" term="vss" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_scan_power_1ch_s3c" term="vss" figType="rect" bbox=((1.35 0.475) (1.525 0.525))
+\o S3BG-SYMT cell="sc1_scan_power_1ch_s3c" name="vscan" dir="inputOutput" pins=1
+\o S3BG-SYMPIN cell="sc1_scan_power_1ch_s3c" term="vscan" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_scan_power_1ch_s3c" term="vscan" figType="rect" bbox=((1.35 0.35) (1.525 0.4))
+\o S3BG-SYMT cell="sc1_scan_power_1ch_s3c" name="vdd33" dir="inputOutput" pins=1
+\o S3BG-SYMPIN cell="sc1_scan_power_1ch_s3c" term="vdd33" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_scan_power_1ch_s3c" term="vdd33" figType="rect" bbox=((1.35 0.225) (1.525 0.275))
+\o S3BG-SYMT cell="sc1_scan_power_1ch_s3c" name="vdd18" dir="inputOutput" pins=1
+\o S3BG-SYMPIN cell="sc1_scan_power_1ch_s3c" term="vdd18" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_scan_power_1ch_s3c" term="vdd18" figType="rect" bbox=((1.35 0.1) (1.525 0.15))
+\o S3BG-SYMT cell="sc1_scan_power_1ch_s3c" name="scan" dir="output" pins=1
+\o S3BG-SYMPIN cell="sc1_scan_power_1ch_s3c" term="scan" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_scan_power_1ch_s3c" term="scan" figType="rect" bbox=((1.35 -0.025) (1.525 0.025))
+\o S3BG-SYMT cell="sc1_scan_power_1ch_s3c" name="core_ok33" dir="input" pins=1
+\o S3BG-SYMPIN cell="sc1_scan_power_1ch_s3c" term="core_ok33" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_scan_power_1ch_s3c" term="core_ok33" figType="rect" bbox=((1.35 -0.15) (1.525 -0.1))
+\o S3BG-SYMT cell="sc1_scan_power_1ch_s3c" name="blank" dir="input" pins=1
+\o S3BG-SYMPIN cell="sc1_scan_power_1ch_s3c" term="blank" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_scan_power_1ch_s3c" term="blank" figType="rect" bbox=((1.35 -0.275) (1.525 -0.225))
+\o S3BG-SYMT cell="sc1_scan_power_1ch_s3c" name="clk" dir="input" pins=1
+\o S3BG-SYMPIN cell="sc1_scan_power_1ch_s3c" term="clk" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_scan_power_1ch_s3c" term="clk" figType="rect" bbox=((1.35 -0.4) (1.525 -0.35))
+\o S3BG-SYMT cell="sc1_scan_power_1ch_s3c" name="d" dir="input" pins=1
+\o S3BG-SYMPIN cell="sc1_scan_power_1ch_s3c" term="d" type="pin" bbox=nil owner="NIL"
+\o S3BG-PINFIG cell="sc1_scan_power_1ch_s3c" term="d" figType="rect" bbox=((1.35 -0.525) (1.525 -0.475))

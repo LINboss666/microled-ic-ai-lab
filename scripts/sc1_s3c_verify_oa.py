@@ -30,7 +30,13 @@ import re
 import sys
 
 TERMINALS = ['D', 'G', 'S', 'B']
-LIB_HINT = 'microled_scan_s3c (this task\'s own OA library)'
+# SCAN_UNIT_TEAM_BEAUTIFY local adaptation (the only one this round makes to a shared tool):
+# the source build recognised its own sub-circuits by the literal library name below, which is
+# correct for microled_scan_s3c and silently wrong for any other library -- it would read a whole
+# hierarchy as missing. The name is now taken from S3C_LIB and defaults to the original value, so
+# nothing changes for the source build. Golden tables, thresholds and every comparison are as-is.
+LIB_NAME = os.environ.get('S3C_LIB', 'microled_scan_s3c')
+LIB_HINT = '%s (this task\'s own OA library)' % LIB_NAME
 CELL_ORDER = ['c2mos_dff', 'sc1_scan_gate', 'sc1_ls_core_r2d', 'sc1_ls_c1_r2d',
               'sc1_ls_c1_top_r2d', 'sc1_r3_scan_chain_1ch', 'sc1_s3b_p33_bank_7',
               'sc1_scan_power_1ch_s3c']
@@ -446,7 +452,7 @@ def main():
     oa_sub = {}
     for (cell, inst), f in insts_o.items():
         master = f.get('master', '')
-        if 'microled_scan_s3c' not in master:
+        if LIB_NAME not in master:
             continue
         oa_sub[(cell, inst)] = {'child': f.get('model', '').strip('"'),
                                 'map': dict((a, b.strip('"')) for a, b in

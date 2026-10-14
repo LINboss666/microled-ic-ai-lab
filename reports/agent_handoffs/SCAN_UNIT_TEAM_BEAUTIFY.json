@@ -17,18 +17,19 @@
   },
   "statuses": {
     "SOURCE_FETCH": "COMPLETE",
-    "OA_IMPORT": "BLOCKED",
-    "ELECTRICAL_EQUIVALENCE": "BLOCKED",
-    "SCHEMATIC_PRESENTATION": "NOT_STARTED",
-    "SYMBOL_PRESENTATION": "NOT_STARTED",
+    "OA_IMPORT": "COMPLETE",
+    "ELECTRICAL_EQUIVALENCE": "COMPLETE",
+    "SCHEMATIC_PRESENTATION": "PARTIAL",
+    "SYMBOL_PRESENTATION": "PARTIAL",
     "VISUAL_REVIEW": "WAITING_USER"
   },
   "target_library": {
-    "planned_name": "sc1_s3c_team_pretty",
+    "name": "sc1_s3c_team_pretty",
     "planned_path": "/root/microled_ai_project/cadence_work/s3c_oa/sc1_s3c_team_pretty",
-    "created": false,
-    "name_accepted_by_source_setup_script": true,
-    "note": "nothing was created; this is the plan for the round that is blocked"
+    "created": true,
+    "files_on_disk": 55,
+    "delivered_views": "8 cells x schematic+symbol = 16, all opened read-only in a separate session",
+    "registered_in_shared_cds_lib": "one additive DEFINE, 6 original DEFINEs intact, second run ALREADY_REGISTERED (idempotent, measured)"
   },
   "push_status": "REMOTE_VERIFIED",
   "push_status_basis": "two ordinary (non-forced) pushes of exactly one ref, refs/heads/gexing321/scan-unit/1ch-beautify, each after the pre-push hook re-ran scripts/precommit_safety_check.py --mode history (140+ commits, 1314+ objects, PDK/CREDENTIAL/PRIVATE_KEY/VENDOR_MODEL all 0, SAFETY_GATE: PASS). Read-back 1 put the deliverable commit e307e304cd7a5281d037f12a146a95929ac7d0de on the remote; read-back 2, after a transport outage of four failed attempts, put c6ffdd0caaf31d83ae86152ac685cf1c0af34bf6 there and equal to the local HEAD. Every other branch read back at its pre-round value. PASS here means parity of a git ref only.",
@@ -59,7 +60,7 @@
     "adopted": "by reference only, read through `git show 0038821:<path>`; no merge, no cherry-pick, no fast-forward of this branch",
     "kept_fact": "this build has no getenv (undefined function) -- environment reads must use getshellenv wrapped in errset, and dbAccess -load returns 0 even when the SKILL failed to load, so a script's own verdict line is the only judge"
   },
-  "scope_status": "BLOCKED",
+  "scope_status": "PARTIAL",
   "security_gate": "PASS",
   "security_gate_basis": "scripts/precommit_safety_check.py --mode staged on the 5 staged deliverables -> SAFETY_GATE: PASS with PDK/CREDENTIAL/PRIVATE_KEY/VENDOR_MODEL tracked-file counts all 0; scripts/provenance_check.py -> SOURCE_PROVENANCE_CHECK: PASS (files=374 labelled_lines=506 violations=0); scripts/precommit_safety_check.py --mode history runs independently again in the pre-push hook",
   "tests": [
@@ -95,38 +96,43 @@
     },
     {
       "name": "EXISTING_C2MOS_INSTANCE_COUNT",
-      "status": "UNVERIFIED",
-      "detail": "the 2026-10-11 read-back reported instances=24 for microled_cells/c2mos_dff_1bit while only 18 carry a model property; what the other 6 objects are is not established, so reuse of the old graphics is conditional on one live read-back"
+      "status": "PASS",
+      "detail": "closed with a live read-back: the golden c2mos_dff imported into OA is also instances=24 with pdkMos=18, and the six extra rows are inst=\"PIN0\"..\"PIN5\" master=\"basic\"/\"iopin\" with instTerms=0 -- the six port pins, not devices. So the old cell and the golden have the same instance shape and the reuse condition in section 7 holds.",
+      "evidence_path": "results/evidence/sc1_s3c_oa_readback_pass1.txt"
     },
     {
       "name": "OA_IMPORT_SPICEIN",
-      "status": "BLOCKED",
-      "detail": "no Cadence session could be started"
+      "status": "PASS",
+      "detail": "spiceIn created 8 cells x (schematic+symbol) in sc1_s3c_team_pretty: INFO (SPICEIN-33) x9, INFO (SPICEIN-54), ASG_PROBLEM_LINES: 0, 55 files on disk, no new locks. Sizes applied from the master-derived table (39 devices, S3CB-SAVE (t) x8, CDF numbers re-read, simW never written) and 48 direction rows applied to both views (S3C1D-VIEWS 16 MATCHED 96 WANT 96, 96/96 with after==want).",
+      "evidence_path": "results/evidence/sc1_s3c_oa_session_verdicts.txt"
     },
     {
       "name": "OA_READBACK_VS_FOUR_GOLDEN_TABLES",
-      "status": "BLOCKED",
-      "detail": "39 devices, 7 sub-instance bindings, 48 schematic ports and 48 symbol terminals cannot be checked against an OA database that does not exist yet"
+      "status": "PASS",
+      "detail": "read back in a separate read-only session, then scripts/sc1_s3c_verify_oa.py: S3C_OA_GRAPH_EQUIVALENCE PASS, failures=0 notes=3, 39 devices, 7 sub-instances, 48 schematic ports, 48 symbol terminals, 46/46 connectivity rows, 8/8 cells, dbCheck all t. The checker's own negative control fired (S3C_NEGATIVE rc_tampered=1 rc_intact=0), so the PASS is not vacuous.",
+      "evidence_path": "results/evidence/sc1_s3c_connectivity_beautify.csv"
     },
     {
       "name": "CHECK_AND_SAVE_LEAF_TO_PARENT",
-      "status": "BLOCKED",
-      "detail": "no views to check"
+      "status": "PASS",
+      "detail": "leaf-to-parent, in a session started the way the desktop shortcut starts one: schCheck's error slot is 0 on all eight cells (11 non-error notices in total) and dbCheck=t on all eight. This is the batch editor check, not a GUI Check-and-Save click; the notes are the known unused outputs (Xff.q, Xcore.x) which stay as they are in the golden.",
+      "evidence_path": "results/evidence/sc1_s3c_libvis_check.txt"
     },
     {
       "name": "SCHEMATIC_AND_SYMBOL_PRESENTATION",
-      "status": "BLOCKED",
-      "detail": "beautification cannot precede the import"
+      "status": "UNVERIFIED",
+      "detail": "not started and not claimed: the imported sheets keep spiceIn's default arrangement. Measured state -- parents are NOT degenerate (Xbank near x=-0.06, Xchain near x=3.06, with 18/26/37 line figures and 9-11 labels already on the sheet), while every symbol pin sits on the symbol's right edge (x 1.1625-1.3375) with no body outline and no pin name (text=nil). Arranging pins by role would move parent connection points, so it is left for its own round with the wire repair done in the same pass, rather than attempted half-way here."
     },
     {
       "name": "VISUAL_REVIEW",
       "status": "BLOCKED",
-      "detail": "pixel capture is not available on this machine and is not a gate; a human open checklist is in the handoff"
+      "detail": "no pixel path from this host to the guest and it is not a gate; a human open-and-look checklist is in the handoff, and no placeholder image was made."
     },
     {
       "name": "GUEST_CADENCE_CHANNEL",
-      "status": "FAIL",
-      "detail": "vmrun list shows the guest running and checkToolsState=running, but getGuestIPAddress fails and ssh to 192.168.222.129:22 times out; three read-only probes were made this round and then the round stopped, with no state-changing command attempted"
+      "status": "PASS",
+      "detail": "restored at the console by the user (pkill -9 dhclient; dhclient eth0) on 2026-10-15: vmrun reported 192.168.222.129 and ssh key auth worked with the legacy algorithm flags. Everything above ran on that guest afterwards.",
+      "evidence_path": "results/evidence/sc1_s3c_oa_session_verdicts.txt"
     },
     {
       "name": "SOURCE_BRANCH_DIVERGENCE_RECORDED",
@@ -142,8 +148,9 @@
     },
     {
       "name": "SECOND_REMOTE_READBACK",
-      "status": "BLOCKED",
-      "detail": "three later attempts to re-confirm the tip from this host failed at transport (Empty reply from server, then two connection failures to github.com:443); the parity claim rests on the one read-back that did succeed"
+      "status": "PASS",
+      "detail": "the channel came back during this round and the branch tip was re-read after the later pushes; see the push record.",
+      "evidence_path": "results/evidence/sc1_s3c_offline_verify.txt"
     },
     {
       "name": "HANDOFF_STRUCTURE",
@@ -157,37 +164,46 @@
     "results/evidence/sc1_s3c_c2mos_reuse_compare.csv",
     "results/evidence/sc1_s3c_handoff_validation.txt",
     "scripts/sc1_s3c_offline_verify.py",
-    "reports/agent_handoffs/SCAN_UNIT_TEAM_BEAUTIFY.md"
+    "reports/agent_handoffs/SCAN_UNIT_TEAM_BEAUTIFY.md",
+    "results/evidence/sc1_s3c_oa_readback_pass1.txt",
+    "results/evidence/sc1_s3c_oa_session_verdicts.txt",
+    "results/evidence/sc1_s3c_parent_geometry_dump.txt",
+    "results/evidence/sc1_s3c_libvis_check.txt",
+    "results/evidence/sc1_s3c_connectivity_beautify.csv",
+    "results/evidence/sc1_s3c_equivalence_beautify.csv",
+    "results/evidence/sc1_s3c_ports_beautify.csv",
+    "results/evidence/sc1_s3c_oa_readback_beautify.csv",
+    "spectre/generated/sc1_s3c_team_pretty_from_schematic.scs",
+    "scripts/sc1_libreg_team.sh",
+    "skill/sc1_libvis_check.il",
+    "skill/sc1_s3cb_geom_dump.il"
   ],
   "local_adaptation_points": [
     {
       "file": "scripts/sc1_s3c_verify_oa.py",
-      "line": 449,
-      "fact": "if 'microled_scan_s3c' not in master: continue -- only sub-instances whose master path carries the source library name are recognised, so a rebuilt library under another name would make the whole hierarchy read as missing",
-      "plan": "parameterise the library name; the golden tables and thresholds stay untouched"
+      "line": "31-36 and 449",
+      "change": "the sub-instance filter and the display hint recognised only the literal source library name; both now read S3C_LIB and default to microled_scan_s3c, so the source build behaves identically. Golden tables, thresholds and every comparison untouched.",
+      "made_on": "this round, committed"
+    },
+    {
+      "file": "skill/sc1_s3c1_apply_dirs.il",
+      "line": "31",
+      "observation": "rows = car(errset(cdr loaded)) hits 'unbound variable - cdr' in this build, so the guard prints 'REFUSE ... 0 rows' and then keeps going, because when() only prints. The 96/96 result this round is real (it is carried by the per-row after==want read), but the row-count guard is decorative and should be fixed.",
+      "made_on": "reported, not changed -- it is the shared writer and the outcome was verified good"
     },
     {
       "file": "scripts/sc1_s3c_setup.sh",
       "line": "22-25",
-      "fact": "the whitelist is sc1_s3c_*|microled_scan_s3c. An earlier second-hand claim that it refuses sc1_s3c_team_pretty is corrected: re-running the case statement gives sc1_s3c_team_pretty ALLOWED, sc1_team_pretty REJECTED",
-      "plan": "no change needed"
-    },
-    {
-      "file": "cadence_work/cds.lib (guest, shared)",
-      "fact": "sc1_s3c_setup.sh deliberately does not touch it; acceptance item 1 (cells visible through the desktop shortcut) needs one additive DEFINE there after a backup, with every original line kept",
-      "plan": "append one DEFINE only, never rewrite"
+      "observation": "whitelist is sc1_s3c_*|microled_scan_s3c; sc1_s3c_team_pretty is ACCEPTED (measured by running the case statement). An earlier second-hand claim that it refused the name is withdrawn.",
+      "made_on": "corrected in this handoff"
     }
   ],
   "known_limitations": [
-    "push_status REMOTE_VERIFIED rests on a single successful ls-remote immediately after the push; the three re-confirmations attempted afterwards all failed at the transport layer, so remote parity is verified once, not twice",
-    "nothing in this manifest is evidence about the OA side; no library, schematic, symbol, netlist import or Check and Save happened",
-    "the C2MOS comparison uses a database read-back snapshot from 2026-10-11, not a live read, and that snapshot does not identify 6 of the 24 instances",
-    "golden-table reproduction proves the tooling and the frozen sources agree; it does not prove the OA copy will agree",
-    "a beautified OA library, when it exists, stays on this machine only -- it is not transferred through Git, and no claim of upload is made",
-    "the branch name deviates from the suggested feature/scan-unit-beautify-<id> because this machine's push guardrail only permits refs/heads/gexing321/*; the guardrail was not loosened",
-    "no Spectre/ngspice/preflight/operating-point work, no layout/DRC/LVS/PEX, no array/multi-channel/POR/UVLO/5V was attempted, per the task book",
-    "the guest channel can only be restored by a person at the VMware Workstation console; running anything in the guest already requires the channel",
-    "git gc and prune were not run; the repository's pre-existing unreachable-object cleanup issue is out of scope"
+    "the OA library lives only on this guest machine; *.oa, cadence_work/ and cds.lib are ignored by the repository, so nothing about the rebuilt views was transferred through Git and no claim of upload is made",
+    "presentation work is not done: symbols have no body outline, no pin names and all 48 pins on the right edge; leaf schematics keep spiceIn's default placement. Nothing here says the graphics are acceptable, only that the circuit they describe is correct",
+    "the batch editor check (schCheck/dbCheck) ran in a headless session; nobody clicked Check and Save in the GUI, and no screenshot or pixel comparison was produced or faked",
+    "the C2MOS reuse comparison is against a 2026-10-11 database read-back snapshot plus this round's live read-back of the newly imported cell; the old cell itself was not re-opened for writing and its stale write-lock was left in place",
+    "git gc/prune were not run; no Spectre/ngspice/preflight/operating-point work, no layout/DRC/LVS/PEX, no array/multi-channel/POR/UVLO/5V was attempted"
   ],
   "forbidden_actions_confirmed_not_taken": [
     "reset --hard / clean -fd / checkout -f on any working tree",
@@ -203,6 +219,17 @@
     "what": "restore the guest's DHCP lease (previously approved single command: pkill -9 dhclient; sleep 2; dhclient eth0), then tell this session the address",
     "then": "the ordered plan in reports/agent_handoffs/SCAN_UNIT_TEAM_BEAUTIFY.md section 4 resumes at step 1 and needs no re-planning"
   },
-  "stop_reason": "WAITING_USER: guest Cadence machine unreachable; source-side work is complete and committed to the personal branch",
-  "evidence_grades_used": ["DIRECTLY_OBSERVED", "DOCUMENTED", "DERIVED", "NOT_VERIFIED"]
+  "stop_reason": "PARTIAL: source, OA rebuild and electrical equivalence are complete and verified on this machine; schematic/symbol arrangement is deliberately not started because moving symbol pins invalidates parent wire endpoints and needs its own pass",
+  "evidence_grades_used": [
+    "DIRECTLY_OBSERVED",
+    "DOCUMENTED",
+    "DERIVED",
+    "NOT_VERIFIED"
+  ],
+  "cadence_run": {
+    "guest": "192.168.222.129 (RHEL6.5, IC617 6.1.7-64b), reached by ssh key auth after the user restored the lease at the console",
+    "backups": "cadence_work/backup_scan_unit_20261015/{microled_cells,cds.lib.bak}; tree fingerprint 8ecc6aa4274aef18da663b22df5c4a73 identical before and after; existing stale write-lock on microled_cells/c2mos_dff_1bit_pretty/schematic left untouched",
+    "shared_library_map": "690b623f229567f59d7efbfa83564c24bcb4c6995223fbdb2dd8c4144718813f -> b3712feb0b877bbd61a9c03fd244225d627148ec7edb5848bbe062aee133c5a8, and the only difference is the one appended DEFINE for this round's library",
+    "no_simulation": "nothing in this round ran Spectre, ngspice, preflight or an operating-point solve; spiceIn here is netlist-to-database conversion only"
+  }
 }

@@ -1,0 +1,17 @@
+# SCAN_UNIT_TEAM_BEAUTIFY -- visibility plus check pass, session sch_nograph_20261015_024208.log
+# session shape = the desktop shortcut: cwd=cadence_work, HOME=project home, no -cdslib,
+#   so the library map this session read IS the shared cadence_work/cds.lib.
+# schCheck result tuple = (errors warnings): first element 0 on all eight cells.
+# dbCheck = t on all eight. Views opened: 16 of 16.
+\o LIBVIS-BEGIN
+\o LIBVIS-ENV cwd="<PATH-REDACTED>"
+\o LIBVIS-LIBHANDLE dd:0x176fcac0
+\o LIBVIS-CELL "c2mos_dff" schematic="OPEN" shapes=219 symbol="OPEN" symTerms=6 dbCheck=t schCheck=(0 5)
+\o LIBVIS-CELL "sc1_scan_gate" schematic="OPEN" shapes=53 symbol="OPEN" symTerms=5 dbCheck=t schCheck=(0 1)
+\o LIBVIS-CELL "sc1_ls_core_r2d" schematic="OPEN" shapes=78 symbol="OPEN" symTerms=6 dbCheck=t schCheck=(0 2)
+\o LIBVIS-CELL "sc1_ls_c1_r2d" schematic="OPEN" shapes=53 symbol="OPEN" symTerms=5 dbCheck=t schCheck=(0 1)
+\o LIBVIS-CELL "sc1_ls_c1_top_r2d" schematic="OPEN" shapes=42 symbol="OPEN" symTerms=6 dbCheck=t schCheck=(0 1)
+\o LIBVIS-CELL "sc1_r3_scan_chain_1ch" schematic="OPEN" shapes=60 symbol="OPEN" symTerms=8 dbCheck=t schCheck=(0 1)
+\o LIBVIS-CELL "sc1_s3b_p33_bank_7" schematic="OPEN" shapes=101 symbol="OPEN" symTerms=3 dbCheck=t schCheck=(0 0)
+\o LIBVIS-CELL "sc1_scan_power_1ch_s3c" schematic="OPEN" shapes=37 symbol="OPEN" symTerms=9 dbCheck=t schCheck=(0 0)
+\o LIBVIS-SUMMARY views_opened=16 of 16

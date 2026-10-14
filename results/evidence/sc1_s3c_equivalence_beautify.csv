@@ -1,0 +1,9 @@
+cell,golden_device_lines,oa_device_lines,identical,verdict
+"c2mos_dff","24","24","1","MATCH"
+"sc1_ls_c1_r2d","9","9","1","MATCH"
+"sc1_ls_c1_top_r2d","8","8","1","MATCH"
+"sc1_ls_core_r2d","12","12","1","MATCH"
+"sc1_r3_scan_chain_1ch","11","11","1","MATCH"
+"sc1_s3b_p33_bank_7","10","10","1","MATCH"
+"sc1_scan_gate","9","9","1","MATCH"
+"sc1_scan_power_1ch_s3c","11","11","1","MATCH"

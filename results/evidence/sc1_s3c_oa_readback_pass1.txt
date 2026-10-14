@@ -1,0 +1,281 @@
+S3CR-BEGIN
+S3CR-LIB "sc1_s3c_team_pretty" CELLS ("c2mos_dff" "sc1_scan_gate" "sc1_ls_core_r2d" "sc1_ls_c1_r2d" "sc1_ls_c1_top_r2d" "sc1_r3_scan_chain_1ch" "sc1_s3b_p33_bank_7" "sc1_scan_power_1ch_s3c")
+S3CR-API dbCheck=lambda:dbCheck schCheck=nil dbCreateFig=nil ddCreateCell=nil schCreateSym=nil symCreate=nil
+S3CR-CELL cell="c2mos_dff" instances=24 nets=13 shapes=219 terms=0
+S3CR-DBCHECK cell="c2mos_dff" result=t
+S3CR-MOS cell="c2mos_dff" inst="mp_k4" master="smic18mmrf"/"p18":"symbol" model="p18" raw_l="200n" raw_w="1u" raw_fw="1u" raw_m="1" raw_fingers="1" raw_simW="1e-06" cdf_l="200n" cdf_w="1u" cdf_fw="1u" cdf_m="1" cdf_fingers="1" cdf_model="p18" num_l=2e-07 num_w=1e-06 terminals=("B" "D" "G" "S") D="q" G="qbar" S="vdd" B="vdd" bbox=((0.075 9.3875) (1.3 10.03125))
+S3CR-MOS cell="c2mos_dff" inst="mp_k3" master="smic18mmrf"/"p18":"symbol" model="p18" raw_l="200n" raw_w="1u" raw_fw="1u" raw_m="1" raw_fingers="1" raw_simW="1e-06" cdf_l="200n" cdf_w="1u" cdf_fw="1u" cdf_m="1" cdf_fingers="1" cdf_model="p18" num_l=2e-07 num_w=1e-06 terminals=("B" "D" "G" "S") D="qbar" G="q" S="vdd" B="vdd" bbox=((1.45 9.3875) (2.675 10.03125))
+S3CR-MOS cell="c2mos_dff" inst="mp_s2" master="smic18mmrf"/"p18":"symbol" model="p18" raw_l="200n" raw_w="4u" raw_fw="4u" raw_m="1" raw_fingers="1" raw_simW="4e-06" cdf_l="200n" cdf_w="4u" cdf_fw="4u" cdf_m="1" cdf_fingers="1" cdf_model="p18" num_l=2e-07 num_w=4e-06 terminals=("B" "D" "G" "S") D="q" G="m" S="y1" B="vdd" bbox=((5.825 2.7625) (7.05 3.40625))
+S3CR-MOS cell="c2mos_dff" inst="mp_s1" master="smic18mmrf"/"p18":"symbol" model="p18" raw_l="200n" raw_w="4u" raw_fw="4u" raw_m="1" raw_fingers="1" raw_simW="4e-06" cdf_l="200n" cdf_w="4u" cdf_fw="4u" cdf_m="1" cdf_fingers="1" cdf_model="p18" num_l=2e-07 num_w=4e-06 terminals=("B" "D" "G" "S") D="y1" G="clkb" S="vdd" B="vdd" bbox=((5.825 4.0125) (7.05 4.65625))
+S3CR-MOS cell="c2mos_dff" inst="mp_k2" master="smic18mmrf"/"p18":"symbol" model="p18" raw_l="200n" raw_w="1u" raw_fw="1u" raw_m="1" raw_fingers="1" raw_simW="1e-06" cdf_l="200n" cdf_w="1u" cdf_fw="1u" cdf_m="1" cdf_fingers="1" cdf_model="p18" num_l=2e-07 num_w=1e-06 terminals=("B" "D" "G" "S") D="m" G="mb" S="vdd" B="vdd" bbox=((4.2 9.3875) (5.425 10.03125))
+S3CR-MOS cell="c2mos_dff" inst="mp_k1" master="smic18mmrf"/"p18":"symbol" model="p18" raw_l="200n" raw_w="1u" raw_fw="1u" raw_m="1" raw_fingers="1" raw_simW="1e-06" cdf_l="200n" cdf_w="1u" cdf_fw="1u" cdf_m="1" cdf_fingers="1" cdf_model="p18" num_l=2e-07 num_w=1e-06 terminals=("B" "D" "G" "S") D="mb" G="m" S="vdd" B="vdd" bbox=((2.825 9.3875) (4.05 10.03125))
+S3CR-MOS cell="c2mos_dff" inst="mp_m2" master="smic18mmrf"/"p18":"symbol" model="p18" raw_l="200n" raw_w="4u" raw_fw="4u" raw_m="1" raw_fingers="1" raw_simW="4e-06" cdf_l="200n" cdf_w="4u" cdf_fw="4u" cdf_m="1" cdf_fingers="1" cdf_model="p18" num_l=2e-07 num_w=4e-06 terminals=("B" "D" "G" "S") D="m" G="d" S="x1" B="vdd" bbox=((7.575 2.7625) (8.8 3.40625))
+S3CR-MOS cell="c2mos_dff" inst="mp_m1" master="smic18mmrf"/"p18":"symbol" model="p18" raw_l="200n" raw_w="4u" raw_fw="4u" raw_m="1" raw_fingers="1" raw_simW="4e-06" cdf_l="200n" cdf_w="4u" cdf_fw="4u" cdf_m="1" cdf_fingers="1" cdf_model="p18" num_l=2e-07 num_w=4e-06 terminals=("B" "D" "G" "S") D="x1" G="clk" S="vdd" B="vdd" bbox=((7.7 4.0125) (8.925 4.65625))
+S3CR-MOS cell="c2mos_dff" inst="mp_c" master="smic18mmrf"/"p18":"symbol" model="p18" raw_l="200n" raw_w="4u" raw_fw="4u" raw_m="1" raw_fingers="1" raw_simW="4e-06" cdf_l="200n" cdf_w="4u" cdf_fw="4u" cdf_m="1" cdf_fingers="1" cdf_model="p18" num_l=2e-07 num_w=4e-06 terminals=("B" "D" "G" "S") D="clkb" G="clk" S="vdd" B="vdd" bbox=((7.575 9.3875) (8.8 10.03125))
+S3CR-MOS cell="c2mos_dff" inst="mn_k4" master="smic18mmrf"/"n18":"symbol" model="n18" raw_l="200n" raw_w="500n" raw_fw="500n" raw_m="1" raw_fingers="1" raw_simW="5e-07" cdf_l="200n" cdf_w="500n" cdf_fw="500n" cdf_m="1" cdf_fingers="1" cdf_model="n18" num_l=2e-07 num_w=5e-07 terminals=("B" "D" "G" "S") D="q" G="qbar" S="vss" B="vss" bbox=((0.075 6.5125) (1.3 7.15625))
+S3CR-MOS cell="c2mos_dff" inst="mn_k3" master="smic18mmrf"/"n18":"symbol" model="n18" raw_l="200n" raw_w="500n" raw_fw="500n" raw_m="1" raw_fingers="1" raw_simW="5e-07" cdf_l="200n" cdf_w="500n" cdf_fw="500n" cdf_m="1" cdf_fingers="1" cdf_model="n18" num_l=2e-07 num_w=5e-07 terminals=("B" "D" "G" "S") D="qbar" G="q" S="vss" B="vss" bbox=((1.45 8.0125) (2.675 8.65625))
+S3CR-MOS cell="c2mos_dff" inst="mn_s2" master="smic18mmrf"/"n18":"symbol" model="n18" raw_l="200n" raw_w="2u" raw_fw="2u" raw_m="1" raw_fingers="1" raw_simW="2e-06" cdf_l="200n" cdf_w="2u" cdf_fw="2u" cdf_m="1" cdf_fingers="1" cdf_model="n18" num_l=2e-07 num_w=2e-06 terminals=("B" "D" "G" "S") D="q" G="m" S="y2" B="vss" bbox=((7.325 6.5125) (8.55 7.15625))
+S3CR-MOS cell="c2mos_dff" inst="mn_s1" master="smic18mmrf"/"n18":"symbol" model="n18" raw_l="200n" raw_w="2u" raw_fw="2u" raw_m="1" raw_fingers="1" raw_simW="2e-06" cdf_l="200n" cdf_w="2u" cdf_fw="2u" cdf_m="1" cdf_fingers="1" cdf_model="n18" num_l=2e-07 num_w=2e-06 terminals=("B" "D" "G" "S") D="y2" G="clk" S="vss" B="vss" bbox=((7.45 5.2625) (8.675 5.90625))
+S3CR-MOS cell="c2mos_dff" inst="mn_k2" master="smic18mmrf"/"n18":"symbol" model="n18" raw_l="200n" raw_w="500n" raw_fw="500n" raw_m="1" raw_fingers="1" raw_simW="5e-07" cdf_l="200n" cdf_w="500n" cdf_fw="500n" cdf_m="1" cdf_fingers="1" cdf_model="n18" num_l=2e-07 num_w=5e-07 terminals=("B" "D" "G" "S") D="m" G="mb" S="vss" B="vss" bbox=((4.2 1.5125) (5.425 2.15625))
+S3CR-MOS cell="c2mos_dff" inst="mn_k1" master="smic18mmrf"/"n18":"symbol" model="n18" raw_l="200n" raw_w="500n" raw_fw="500n" raw_m="1" raw_fingers="1" raw_simW="5e-07" cdf_l="200n" cdf_w="500n" cdf_fw="500n" cdf_m="1" cdf_fingers="1" cdf_model="n18" num_l=2e-07 num_w=5e-07 terminals=("B" "D" "G" "S") D="mb" G="m" S="vss" B="vss" bbox=((2.825 8.0125) (4.05 8.65625))
+S3CR-MOS cell="c2mos_dff" inst="mn_m2" master="smic18mmrf"/"n18":"symbol" model="n18" raw_l="200n" raw_w="2u" raw_fw="2u" raw_m="1" raw_fingers="1" raw_simW="2e-06" cdf_l="200n" cdf_w="2u" cdf_fw="2u" cdf_m="1" cdf_fingers="1" cdf_model="n18" num_l=2e-07 num_w=2e-06 terminals=("B" "D" "G" "S") D="m" G="d" S="x2" B="vss" bbox=((7.575 1.5125) (8.8 2.15625))
+S3CR-MOS cell="c2mos_dff" inst="mn_m1" master="smic18mmrf"/"n18":"symbol" model="n18" raw_l="200n" raw_w="2u" raw_fw="2u" raw_m="1" raw_fingers="1" raw_simW="2e-06" cdf_l="200n" cdf_w="2u" cdf_fw="2u" cdf_m="1" cdf_fingers="1" cdf_model="n18" num_l=2e-07 num_w=2e-06 terminals=("B" "D" "G" "S") D="x2" G="clkb" S="vss" B="vss" bbox=((7.575 0.1375) (8.8 0.78125))
+S3CR-MOS cell="c2mos_dff" inst="mn_c" master="smic18mmrf"/"n18":"symbol" model="n18" raw_l="200n" raw_w="2u" raw_fw="2u" raw_m="1" raw_fingers="1" raw_simW="2e-06" cdf_l="200n" cdf_w="2u" cdf_fw="2u" cdf_m="1" cdf_fingers="1" cdf_model="n18" num_l=2e-07 num_w=2e-06 terminals=("B" "D" "G" "S") D="clkb" G="clk" S="vss" B="vss" bbox=((7.575 8.0125) (8.8 8.65625))
+S3CR-INST cell="c2mos_dff" inst="PIN5" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="c2mos_dff" inst="PIN4" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="c2mos_dff" inst="PIN3" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="c2mos_dff" inst="PIN2" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="c2mos_dff" inst="PIN1" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="c2mos_dff" inst="PIN0" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-NET cell="c2mos_dff" name="clkb" pins=0 instTerms=4 termViews=0
+S3CR-NET cell="c2mos_dff" name="y1" pins=0 instTerms=2 termViews=0
+S3CR-NET cell="c2mos_dff" name="vss" pins=1 instTerms=16 termViews=0
+S3CR-PIN cell="c2mos_dff" net="vss" dir=nil term=db:0x171acf9a objType="pin" ownerInst="-" figTerm="PIN0"
+S3CR-NET cell="c2mos_dff" name="y2" pins=0 instTerms=2 termViews=0
+S3CR-NET cell="c2mos_dff" name="x1" pins=0 instTerms=2 termViews=0
+S3CR-NET cell="c2mos_dff" name="m" pins=0 instTerms=8 termViews=0
+S3CR-NET cell="c2mos_dff" name="x2" pins=0 instTerms=2 termViews=0
+S3CR-NET cell="c2mos_dff" name="mb" pins=0 instTerms=4 termViews=0
+S3CR-NET cell="c2mos_dff" name="vdd" pins=1 instTerms=16 termViews=0
+S3CR-PIN cell="c2mos_dff" net="vdd" dir=nil term=db:0x171acf9b objType="pin" ownerInst="-" figTerm="PIN1"
+S3CR-NET cell="c2mos_dff" name="qbar" pins=1 instTerms=4 termViews=0
+S3CR-PIN cell="c2mos_dff" net="qbar" dir=nil term=db:0x171acf9c objType="pin" ownerInst="-" figTerm="PIN2"
+S3CR-NET cell="c2mos_dff" name="q" pins=1 instTerms=6 termViews=0
+S3CR-PIN cell="c2mos_dff" net="q" dir=nil term=db:0x171acf9d objType="pin" ownerInst="-" figTerm="PIN3"
+S3CR-NET cell="c2mos_dff" name="clk" pins=1 instTerms=4 termViews=0
+S3CR-PIN cell="c2mos_dff" net="clk" dir=nil term=db:0x171acf9e objType="pin" ownerInst="-" figTerm="PIN4"
+S3CR-NET cell="c2mos_dff" name="d" pins=1 instTerms=2 termViews=0
+S3CR-PIN cell="c2mos_dff" net="d" dir=nil term=db:0x171acf9f objType="pin" ownerInst="-" figTerm="PIN5"
+S3CR-SYM cell="c2mos_dff" figures=0 terms=0 terminals=6
+S3CR-SYMT cell="c2mos_dff" name="vss" dir="inputOutput"
+S3CR-SYMT cell="c2mos_dff" name="vdd" dir="inputOutput"
+S3CR-SYMT cell="c2mos_dff" name="qbar" dir="output"
+S3CR-SYMT cell="c2mos_dff" name="q" dir="output"
+S3CR-SYMT cell="c2mos_dff" name="clk" dir="input"
+S3CR-SYMT cell="c2mos_dff" name="d" dir="input"
+S3CR-CELL cell="sc1_scan_gate" instances=9 nets=6 shapes=53 terms=0
+S3CR-DBCHECK cell="sc1_scan_gate" result=t
+S3CR-MOS cell="sc1_scan_gate" inst="mn_b" master="smic18mmrf"/"n18":"symbol" model="n18" raw_l="200n" raw_w="2u" raw_fw="2u" raw_m="1" raw_fingers="1" raw_simW="2e-06" cdf_l="200n" cdf_w="2u" cdf_fw="2u" cdf_m="1" cdf_fingers="1" cdf_model="n18" num_l=2e-07 num_w=2e-06 terminals=("B" "D" "G" "S") D="en" G="blank" S="vss" B="vss" bbox=((1.45 0.2625) (2.675 0.90625))
+S3CR-MOS cell="sc1_scan_gate" inst="mn_a" master="smic18mmrf"/"n18":"symbol" model="n18" raw_l="200n" raw_w="2u" raw_fw="2u" raw_m="1" raw_fingers="1" raw_simW="2e-06" cdf_l="200n" cdf_w="2u" cdf_fw="2u" cdf_m="1" cdf_fingers="1" cdf_model="n18" num_l=2e-07 num_w=2e-06 terminals=("B" "D" "G" "S") D="en" G="qbar" S="vss" B="vss" bbox=((0.075 0.2625) (1.3 0.90625))
+S3CR-MOS cell="sc1_scan_gate" inst="mp_b" master="smic18mmrf"/"p18":"symbol" model="p18" raw_l="200n" raw_w="4u" raw_fw="4u" raw_m="1" raw_fingers="1" raw_simW="4e-06" cdf_l="200n" cdf_w="4u" cdf_fw="4u" cdf_m="1" cdf_fingers="1" cdf_model="p18" num_l=2e-07 num_w=4e-06 terminals=("B" "D" "G" "S") D="en" G="blank" S="n1" B="vdd" bbox=((1.45 1.3875) (2.675 2.03125))
+S3CR-MOS cell="sc1_scan_gate" inst="mp_a" master="smic18mmrf"/"p18":"symbol" model="p18" raw_l="200n" raw_w="4u" raw_fw="4u" raw_m="1" raw_fingers="1" raw_simW="4e-06" cdf_l="200n" cdf_w="4u" cdf_fw="4u" cdf_m="1" cdf_fingers="1" cdf_model="p18" num_l=2e-07 num_w=4e-06 terminals=("B" "D" "G" "S") D="n1" G="qbar" S="vdd" B="vdd" bbox=((1.45 2.6375) (2.675 3.28125))
+S3CR-INST cell="sc1_scan_gate" inst="PIN4" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_scan_gate" inst="PIN3" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_scan_gate" inst="PIN2" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_scan_gate" inst="PIN1" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_scan_gate" inst="PIN0" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-NET cell="sc1_scan_gate" name="vss" pins=1 instTerms=4 termViews=0
+S3CR-PIN cell="sc1_scan_gate" net="vss" dir=nil term=db:0x171acd9a objType="pin" ownerInst="-" figTerm="PIN0"
+S3CR-NET cell="sc1_scan_gate" name="n1" pins=0 instTerms=2 termViews=0
+S3CR-NET cell="sc1_scan_gate" name="vdd" pins=1 instTerms=3 termViews=0
+S3CR-PIN cell="sc1_scan_gate" net="vdd" dir=nil term=db:0x171acd9b objType="pin" ownerInst="-" figTerm="PIN1"
+S3CR-NET cell="sc1_scan_gate" name="en" pins=1 instTerms=3 termViews=0
+S3CR-PIN cell="sc1_scan_gate" net="en" dir=nil term=db:0x171acd9c objType="pin" ownerInst="-" figTerm="PIN2"
+S3CR-NET cell="sc1_scan_gate" name="blank" pins=1 instTerms=2 termViews=0
+S3CR-PIN cell="sc1_scan_gate" net="blank" dir=nil term=db:0x171acd9d objType="pin" ownerInst="-" figTerm="PIN3"
+S3CR-NET cell="sc1_scan_gate" name="qbar" pins=1 instTerms=2 termViews=0
+S3CR-PIN cell="sc1_scan_gate" net="qbar" dir=nil term=db:0x171acd9e objType="pin" ownerInst="-" figTerm="PIN4"
+S3CR-SYM cell="sc1_scan_gate" figures=0 terms=0 terminals=5
+S3CR-SYMT cell="sc1_scan_gate" name="vss" dir="inputOutput"
+S3CR-SYMT cell="sc1_scan_gate" name="vdd" dir="inputOutput"
+S3CR-SYMT cell="sc1_scan_gate" name="en" dir="output"
+S3CR-SYMT cell="sc1_scan_gate" name="blank" dir="input"
+S3CR-SYMT cell="sc1_scan_gate" name="qbar" dir="input"
+S3CR-CELL cell="sc1_ls_core_r2d" instances=12 nets=7 shapes=78 terms=0
+S3CR-DBCHECK cell="sc1_ls_core_r2d" result=t
+S3CR-MOS cell="sc1_ls_core_r2d" inst="mn_right" master="smic18mmrf"/"n33":"symbol" model="n33" raw_l="400n" raw_w="5u" raw_fw="5u" raw_m="1" raw_fingers="1" raw_simW="5e-06" cdf_l="400n" cdf_w="5u" cdf_fw="5u" cdf_m="1" cdf_fingers="1" cdf_model="n33" num_l=4e-07 num_w=5e-06 terminals=("B" "D" "G" "S") D="y" G="enbar" S="vss" B="vss" bbox=((1.325 0.1375) (2.55 0.78125))
+S3CR-MOS cell="sc1_ls_core_r2d" inst="mn_left" master="smic18mmrf"/"n33":"symbol" model="n33" raw_l="400n" raw_w="5u" raw_fw="5u" raw_m="1" raw_fingers="1" raw_simW="5e-06" cdf_l="400n" cdf_w="5u" cdf_fw="5u" cdf_m="1" cdf_fingers="1" cdf_model="n33" num_l=4e-07 num_w=5e-06 terminals=("B" "D" "G" "S") D="x" G="en" S="vss" B="vss" bbox=((0.2 0.1375) (1.425 0.78125))
+S3CR-MOS cell="sc1_ls_core_r2d" inst="mp_right" master="smic18mmrf"/"p33":"symbol" model="p33" raw_l="400n" raw_w="5u" raw_fw="5u" raw_m="1" raw_fingers="1" raw_simW="5e-06" cdf_l="400n" cdf_w="5u" cdf_fw="5u" cdf_m="1" cdf_fingers="1" cdf_model="p33" num_l=4e-07 num_w=5e-06 terminals=("B" "D" "G" "S") D="y" G="x" S="vdd33" B="vdd33" bbox=((1.3125 1.6375) (2.61875 2.28125))
+S3CR-MOS cell="sc1_ls_core_r2d" inst="mp_left" master="smic18mmrf"/"p33":"symbol" model="p33" raw_l="400n" raw_w="5u" raw_fw="5u" raw_m="1" raw_fingers="1" raw_simW="5e-06" cdf_l="400n" cdf_w="5u" cdf_fw="5u" cdf_m="1" cdf_fingers="1" cdf_model="p33" num_l=4e-07 num_w=5e-06 terminals=("B" "D" "G" "S") D="x" G="y" S="vdd33" B="vdd33" bbox=((0.13125 1.6375) (1.4375 2.28125))
+S3CR-MOS cell="sc1_ls_core_r2d" inst="mn_drv" master="smic18mmrf"/"n18":"symbol" model="n18" raw_l="200n" raw_w="2u" raw_fw="2u" raw_m="1" raw_fingers="1" raw_simW="2e-06" cdf_l="200n" cdf_w="2u" cdf_fw="2u" cdf_m="1" cdf_fingers="1" cdf_model="n18" num_l=2e-07 num_w=2e-06 terminals=("B" "D" "G" "S") D="enbar" G="en" S="vss" B="vss" bbox=((2.825 0.1375) (4.05 0.78125))
+S3CR-MOS cell="sc1_ls_core_r2d" inst="mp_drv" master="smic18mmrf"/"p18":"symbol" model="p18" raw_l="200n" raw_w="4u" raw_fw="4u" raw_m="1" raw_fingers="1" raw_simW="4e-06" cdf_l="200n" cdf_w="4u" cdf_fw="4u" cdf_m="1" cdf_fingers="1" cdf_model="p18" num_l=2e-07 num_w=4e-06 terminals=("B" "D" "G" "S") D="enbar" G="en" S="vdd18" B="vdd18" bbox=((2.825 1.6375) (4.05 2.28125))
+S3CR-INST cell="sc1_ls_core_r2d" inst="PIN5" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_ls_core_r2d" inst="PIN4" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_ls_core_r2d" inst="PIN3" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_ls_core_r2d" inst="PIN2" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_ls_core_r2d" inst="PIN1" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_ls_core_r2d" inst="PIN0" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-NET cell="sc1_ls_core_r2d" name="vss" pins=1 instTerms=6 termViews=0
+S3CR-PIN cell="sc1_ls_core_r2d" net="vss" dir=nil term=db:0x171ad09a objType="pin" ownerInst="-" figTerm="PIN0"
+S3CR-NET cell="sc1_ls_core_r2d" name="enbar" pins=0 instTerms=3 termViews=0
+S3CR-NET cell="sc1_ls_core_r2d" name="vdd33" pins=1 instTerms=4 termViews=0
+S3CR-PIN cell="sc1_ls_core_r2d" net="vdd33" dir=nil term=db:0x171ad09b objType="pin" ownerInst="-" figTerm="PIN1"
+S3CR-NET cell="sc1_ls_core_r2d" name="vdd18" pins=1 instTerms=2 termViews=0
+S3CR-PIN cell="sc1_ls_core_r2d" net="vdd18" dir=nil term=db:0x171ad09c objType="pin" ownerInst="-" figTerm="PIN2"
+S3CR-NET cell="sc1_ls_core_r2d" name="y" pins=1 instTerms=3 termViews=0
+S3CR-PIN cell="sc1_ls_core_r2d" net="y" dir=nil term=db:0x171ad09d objType="pin" ownerInst="-" figTerm="PIN3"
+S3CR-NET cell="sc1_ls_core_r2d" name="x" pins=1 instTerms=3 termViews=0
+S3CR-PIN cell="sc1_ls_core_r2d" net="x" dir=nil term=db:0x171ad09e objType="pin" ownerInst="-" figTerm="PIN4"
+S3CR-NET cell="sc1_ls_core_r2d" name="en" pins=1 instTerms=3 termViews=0
+S3CR-PIN cell="sc1_ls_core_r2d" net="en" dir=nil term=db:0x171ad09f objType="pin" ownerInst="-" figTerm="PIN5"
+S3CR-SYM cell="sc1_ls_core_r2d" figures=0 terms=0 terminals=6
+S3CR-SYMT cell="sc1_ls_core_r2d" name="vss" dir="inputOutput"
+S3CR-SYMT cell="sc1_ls_core_r2d" name="vdd33" dir="inputOutput"
+S3CR-SYMT cell="sc1_ls_core_r2d" name="vdd18" dir="inputOutput"
+S3CR-SYMT cell="sc1_ls_core_r2d" name="y" dir="output"
+S3CR-SYMT cell="sc1_ls_core_r2d" name="x" dir="output"
+S3CR-SYMT cell="sc1_ls_core_r2d" name="en" dir="input"
+S3CR-CELL cell="sc1_ls_c1_r2d" instances=9 nets=6 shapes=53 terms=0
+S3CR-DBCHECK cell="sc1_ls_c1_r2d" result=t
+S3CR-MOS cell="sc1_ls_c1_r2d" inst="mn_nb" master="smic18mmrf"/"n33":"symbol" model="n33" raw_l="400n" raw_w="5u" raw_fw="5u" raw_m="1" raw_fingers="1" raw_simW="5e-06" cdf_l="400n" cdf_w="5u" cdf_fw="5u" cdf_m="1" cdf_fingers="1" cdf_model="n33" num_l=4e-07 num_w=5e-06 terminals=("B" "D" "G" "S") D="ns_m" G="core_ok33" S="vss" B="vss" bbox=((1.45 0.1375) (2.675 0.78125))
+S3CR-MOS cell="sc1_ls_c1_r2d" inst="mn_nt" master="smic18mmrf"/"n33":"symbol" model="n33" raw_l="400n" raw_w="5u" raw_fw="5u" raw_m="1" raw_fingers="1" raw_simW="5e-06" cdf_l="400n" cdf_w="5u" cdf_fw="5u" cdf_m="1" cdf_fingers="1" cdf_model="n33" num_l=4e-07 num_w=5e-06 terminals=("B" "D" "G" "S") D="gate33" G="y" S="ns_m" B="vss" bbox=((1.45 1.3875) (2.675 2.03125))
+S3CR-MOS cell="sc1_ls_c1_r2d" inst="mp_nb" master="smic18mmrf"/"p33":"symbol" model="p33" raw_l="400n" raw_w="10u" raw_fw="10u" raw_m="1" raw_fingers="1" raw_simW="1e-05" cdf_l="400n" cdf_w="10u" cdf_fw="10u" cdf_m="1" cdf_fingers="1" cdf_model="p33" num_l=4e-07 num_w=1e-05 terminals=("B" "D" "G" "S") D="gate33" G="core_ok33" S="vdd33" B="vdd33" bbox=((0.00625 2.6375) (1.3125 3.28125))
+S3CR-MOS cell="sc1_ls_c1_r2d" inst="mp_na" master="smic18mmrf"/"p33":"symbol" model="p33" raw_l="400n" raw_w="10u" raw_fw="10u" raw_m="1" raw_fingers="1" raw_simW="1e-05" cdf_l="400n" cdf_w="10u" cdf_fw="10u" cdf_m="1" cdf_fingers="1" cdf_model="p33" num_l=4e-07 num_w=1e-05 terminals=("B" "D" "G" "S") D="gate33" G="y" S="vdd33" B="vdd33" bbox=((1.38125 2.6375) (2.6875 3.28125))
+S3CR-INST cell="sc1_ls_c1_r2d" inst="PIN4" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_ls_c1_r2d" inst="PIN3" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_ls_c1_r2d" inst="PIN2" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_ls_c1_r2d" inst="PIN1" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_ls_c1_r2d" inst="PIN0" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-NET cell="sc1_ls_c1_r2d" name="vss" pins=1 instTerms=3 termViews=0
+S3CR-PIN cell="sc1_ls_c1_r2d" net="vss" dir=nil term=db:0x171ac91a objType="pin" ownerInst="-" figTerm="PIN0"
+S3CR-NET cell="sc1_ls_c1_r2d" name="ns_m" pins=0 instTerms=2 termViews=0
+S3CR-NET cell="sc1_ls_c1_r2d" name="vdd33" pins=1 instTerms=4 termViews=0
+S3CR-PIN cell="sc1_ls_c1_r2d" net="vdd33" dir=nil term=db:0x171ac91b objType="pin" ownerInst="-" figTerm="PIN1"
+S3CR-NET cell="sc1_ls_c1_r2d" name="gate33" pins=1 instTerms=3 termViews=0
+S3CR-PIN cell="sc1_ls_c1_r2d" net="gate33" dir=nil term=db:0x171ac91c objType="pin" ownerInst="-" figTerm="PIN2"
+S3CR-NET cell="sc1_ls_c1_r2d" name="core_ok33" pins=1 instTerms=2 termViews=0
+S3CR-PIN cell="sc1_ls_c1_r2d" net="core_ok33" dir=nil term=db:0x171ac91d objType="pin" ownerInst="-" figTerm="PIN3"
+S3CR-NET cell="sc1_ls_c1_r2d" name="y" pins=1 instTerms=2 termViews=0
+S3CR-PIN cell="sc1_ls_c1_r2d" net="y" dir=nil term=db:0x171ac91e objType="pin" ownerInst="-" figTerm="PIN4"
+S3CR-SYM cell="sc1_ls_c1_r2d" figures=0 terms=0 terminals=5
+S3CR-SYMT cell="sc1_ls_c1_r2d" name="vss" dir="inputOutput"
+S3CR-SYMT cell="sc1_ls_c1_r2d" name="vdd33" dir="inputOutput"
+S3CR-SYMT cell="sc1_ls_c1_r2d" name="gate33" dir="output"
+S3CR-SYMT cell="sc1_ls_c1_r2d" name="core_ok33" dir="input"
+S3CR-SYMT cell="sc1_ls_c1_r2d" name="y" dir="input"
+S3CR-CELL cell="sc1_ls_c1_top_r2d" instances=8 nets=8 shapes=42 terms=0
+S3CR-DBCHECK cell="sc1_ls_c1_top_r2d" result=t
+S3CR-INST cell="sc1_ls_c1_top_r2d" inst="Xnand" master="sc1_s3c_team_pretty"/"sc1_ls_c1_r2d":"symbol" model="sc1_ls_c1_r2d" instTerms=5 bindings=(("vss" "vss") ("vdd33" "vdd33") ("gate33" "gate33") ("core_ok33" "core_ok33") ("y" "y"))
+S3CR-INST cell="sc1_ls_c1_top_r2d" inst="Xcore" master="sc1_s3c_team_pretty"/"sc1_ls_core_r2d":"symbol" model="sc1_ls_core_r2d" instTerms=6 bindings=(("vss" "vss") ("vdd33" "vdd33") ("vdd18" "vdd18") ("y" "y") ("x" "x") ("en" "en"))
+S3CR-INST cell="sc1_ls_c1_top_r2d" inst="PIN5" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_ls_c1_top_r2d" inst="PIN4" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_ls_c1_top_r2d" inst="PIN3" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_ls_c1_top_r2d" inst="PIN2" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_ls_c1_top_r2d" inst="PIN1" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_ls_c1_top_r2d" inst="PIN0" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-NET cell="sc1_ls_c1_top_r2d" name="vss" pins=1 instTerms=2 termViews=0
+S3CR-PIN cell="sc1_ls_c1_top_r2d" net="vss" dir=nil term=db:0x171ac81a objType="pin" ownerInst="-" figTerm="PIN0"
+S3CR-NET cell="sc1_ls_c1_top_r2d" name="x" pins=0 instTerms=1 termViews=0
+S3CR-NET cell="sc1_ls_c1_top_r2d" name="y" pins=0 instTerms=2 termViews=0
+S3CR-NET cell="sc1_ls_c1_top_r2d" name="vdd33" pins=1 instTerms=2 termViews=0
+S3CR-PIN cell="sc1_ls_c1_top_r2d" net="vdd33" dir=nil term=db:0x171ac81b objType="pin" ownerInst="-" figTerm="PIN1"
+S3CR-NET cell="sc1_ls_c1_top_r2d" name="vdd18" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_ls_c1_top_r2d" net="vdd18" dir=nil term=db:0x171ac81c objType="pin" ownerInst="-" figTerm="PIN2"
+S3CR-NET cell="sc1_ls_c1_top_r2d" name="gate33" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_ls_c1_top_r2d" net="gate33" dir=nil term=db:0x171ac81d objType="pin" ownerInst="-" figTerm="PIN3"
+S3CR-NET cell="sc1_ls_c1_top_r2d" name="core_ok33" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_ls_c1_top_r2d" net="core_ok33" dir=nil term=db:0x171ac81e objType="pin" ownerInst="-" figTerm="PIN4"
+S3CR-NET cell="sc1_ls_c1_top_r2d" name="en" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_ls_c1_top_r2d" net="en" dir=nil term=db:0x171ac81f objType="pin" ownerInst="-" figTerm="PIN5"
+S3CR-SYM cell="sc1_ls_c1_top_r2d" figures=0 terms=0 terminals=6
+S3CR-SYMT cell="sc1_ls_c1_top_r2d" name="vss" dir="inputOutput"
+S3CR-SYMT cell="sc1_ls_c1_top_r2d" name="vdd33" dir="inputOutput"
+S3CR-SYMT cell="sc1_ls_c1_top_r2d" name="vdd18" dir="inputOutput"
+S3CR-SYMT cell="sc1_ls_c1_top_r2d" name="gate33" dir="output"
+S3CR-SYMT cell="sc1_ls_c1_top_r2d" name="core_ok33" dir="input"
+S3CR-SYMT cell="sc1_ls_c1_top_r2d" name="en" dir="input"
+S3CR-CELL cell="sc1_r3_scan_chain_1ch" instances=11 nets=11 shapes=60 terms=0
+S3CR-DBCHECK cell="sc1_r3_scan_chain_1ch" result=t
+S3CR-INST cell="sc1_r3_scan_chain_1ch" inst="Xls" master="sc1_s3c_team_pretty"/"sc1_ls_c1_top_r2d":"symbol" model="sc1_ls_c1_top_r2d" instTerms=6 bindings=(("vss" "vss") ("vdd33" "vdd33") ("vdd18" "vdd18") ("gate33" "gate33") ("core_ok33" "core_ok33") ("en" "en"))
+S3CR-INST cell="sc1_r3_scan_chain_1ch" inst="Xgate" master="sc1_s3c_team_pretty"/"sc1_scan_gate":"symbol" model="sc1_scan_gate" instTerms=5 bindings=(("vss" "vss") ("vdd" "vdd18") ("en" "en") ("blank" "blank") ("qbar" "qbar"))
+S3CR-INST cell="sc1_r3_scan_chain_1ch" inst="Xff" master="sc1_s3c_team_pretty"/"c2mos_dff":"symbol" model="c2mos_dff" instTerms=6 bindings=(("vss" "vss") ("vdd" "vdd18") ("qbar" "qbar") ("q" "q") ("clk" "clk") ("d" "d"))
+S3CR-INST cell="sc1_r3_scan_chain_1ch" inst="PIN7" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_r3_scan_chain_1ch" inst="PIN6" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_r3_scan_chain_1ch" inst="PIN5" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_r3_scan_chain_1ch" inst="PIN4" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_r3_scan_chain_1ch" inst="PIN3" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_r3_scan_chain_1ch" inst="PIN2" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_r3_scan_chain_1ch" inst="PIN1" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_r3_scan_chain_1ch" inst="PIN0" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-NET cell="sc1_r3_scan_chain_1ch" name="vss" pins=1 instTerms=3 termViews=0
+S3CR-PIN cell="sc1_r3_scan_chain_1ch" net="vss" dir=nil term=db:0x171ac31a objType="pin" ownerInst="-" figTerm="PIN0"
+S3CR-NET cell="sc1_r3_scan_chain_1ch" name="q" pins=0 instTerms=1 termViews=0
+S3CR-NET cell="sc1_r3_scan_chain_1ch" name="qbar" pins=0 instTerms=2 termViews=0
+S3CR-NET cell="sc1_r3_scan_chain_1ch" name="en" pins=0 instTerms=2 termViews=0
+S3CR-NET cell="sc1_r3_scan_chain_1ch" name="vdd33" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_r3_scan_chain_1ch" net="vdd33" dir=nil term=db:0x171ac31b objType="pin" ownerInst="-" figTerm="PIN1"
+S3CR-NET cell="sc1_r3_scan_chain_1ch" name="vdd18" pins=1 instTerms=3 termViews=0
+S3CR-PIN cell="sc1_r3_scan_chain_1ch" net="vdd18" dir=nil term=db:0x171ac31c objType="pin" ownerInst="-" figTerm="PIN2"
+S3CR-NET cell="sc1_r3_scan_chain_1ch" name="gate33" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_r3_scan_chain_1ch" net="gate33" dir=nil term=db:0x171ac31d objType="pin" ownerInst="-" figTerm="PIN3"
+S3CR-NET cell="sc1_r3_scan_chain_1ch" name="core_ok33" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_r3_scan_chain_1ch" net="core_ok33" dir=nil term=db:0x171ac31e objType="pin" ownerInst="-" figTerm="PIN4"
+S3CR-NET cell="sc1_r3_scan_chain_1ch" name="blank" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_r3_scan_chain_1ch" net="blank" dir=nil term=db:0x171ac31f objType="pin" ownerInst="-" figTerm="PIN5"
+S3CR-NET cell="sc1_r3_scan_chain_1ch" name="clk" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_r3_scan_chain_1ch" net="clk" dir=nil term=db:0x171ac320 objType="pin" ownerInst="-" figTerm="PIN6"
+S3CR-NET cell="sc1_r3_scan_chain_1ch" name="d" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_r3_scan_chain_1ch" net="d" dir=nil term=db:0x171ac321 objType="pin" ownerInst="-" figTerm="PIN7"
+S3CR-SYM cell="sc1_r3_scan_chain_1ch" figures=0 terms=0 terminals=8
+S3CR-SYMT cell="sc1_r3_scan_chain_1ch" name="vss" dir="inputOutput"
+S3CR-SYMT cell="sc1_r3_scan_chain_1ch" name="vdd33" dir="inputOutput"
+S3CR-SYMT cell="sc1_r3_scan_chain_1ch" name="vdd18" dir="inputOutput"
+S3CR-SYMT cell="sc1_r3_scan_chain_1ch" name="gate33" dir="output"
+S3CR-SYMT cell="sc1_r3_scan_chain_1ch" name="core_ok33" dir="input"
+S3CR-SYMT cell="sc1_r3_scan_chain_1ch" name="blank" dir="input"
+S3CR-SYMT cell="sc1_r3_scan_chain_1ch" name="clk" dir="input"
+S3CR-SYMT cell="sc1_r3_scan_chain_1ch" name="d" dir="input"
+S3CR-CELL cell="sc1_s3b_p33_bank_7" instances=10 nets=3 shapes=101 terms=0
+S3CR-DBCHECK cell="sc1_s3b_p33_bank_7" result=t
+S3CR-MOS cell="sc1_s3b_p33_bank_7" inst="mp7" master="smic18mmrf"/"p33":"symbol" model="p33" raw_l="400n" raw_w="100u" raw_fw="100u" raw_m="1" raw_fingers="1" raw_simW="0.0001" cdf_l="400n" cdf_w="100u" cdf_fw="100u" cdf_m="1" cdf_fingers="1" cdf_model="p33" num_l=4e-07 num_w=0.0001 terminals=("B" "D" "G" "S") D="scan" G="bgate" S="vscan" B="vscan" bbox=((0.00625 0.1375) (1.3125 0.78125))
+S3CR-MOS cell="sc1_s3b_p33_bank_7" inst="mp6" master="smic18mmrf"/"p33":"symbol" model="p33" raw_l="400n" raw_w="100u" raw_fw="100u" raw_m="1" raw_fingers="1" raw_simW="0.0001" cdf_l="400n" cdf_w="100u" cdf_fw="100u" cdf_m="1" cdf_fingers="1" cdf_model="p33" num_l=4e-07 num_w=0.0001 terminals=("B" "D" "G" "S") D="scan" G="bgate" S="vscan" B="vscan" bbox=((1.25625 0.1375) (2.5625 0.78125))
+S3CR-MOS cell="sc1_s3b_p33_bank_7" inst="mp5" master="smic18mmrf"/"p33":"symbol" model="p33" raw_l="400n" raw_w="100u" raw_fw="100u" raw_m="1" raw_fingers="1" raw_simW="0.0001" cdf_l="400n" cdf_w="100u" cdf_fw="100u" cdf_m="1" cdf_fingers="1" cdf_model="p33" num_l=4e-07 num_w=0.0001 terminals=("B" "D" "G" "S") D="scan" G="bgate" S="vscan" B="vscan" bbox=((2.50625 0.1375) (3.8125 0.78125))
+S3CR-MOS cell="sc1_s3b_p33_bank_7" inst="mp4" master="smic18mmrf"/"p33":"symbol" model="p33" raw_l="400n" raw_w="100u" raw_fw="100u" raw_m="1" raw_fingers="1" raw_simW="0.0001" cdf_l="400n" cdf_w="100u" cdf_fw="100u" cdf_m="1" cdf_fingers="1" cdf_model="p33" num_l=4e-07 num_w=0.0001 terminals=("B" "D" "G" "S") D="scan" G="bgate" S="vscan" B="vscan" bbox=((3.75625 0.1375) (5.0625 0.78125))
+S3CR-MOS cell="sc1_s3b_p33_bank_7" inst="mp3" master="smic18mmrf"/"p33":"symbol" model="p33" raw_l="400n" raw_w="100u" raw_fw="100u" raw_m="1" raw_fingers="1" raw_simW="0.0001" cdf_l="400n" cdf_w="100u" cdf_fw="100u" cdf_m="1" cdf_fingers="1" cdf_model="p33" num_l=4e-07 num_w=0.0001 terminals=("B" "D" "G" "S") D="scan" G="bgate" S="vscan" B="vscan" bbox=((5.00625 0.1375) (6.3125 0.78125))
+S3CR-MOS cell="sc1_s3b_p33_bank_7" inst="mp2" master="smic18mmrf"/"p33":"symbol" model="p33" raw_l="400n" raw_w="100u" raw_fw="100u" raw_m="1" raw_fingers="1" raw_simW="0.0001" cdf_l="400n" cdf_w="100u" cdf_fw="100u" cdf_m="1" cdf_fingers="1" cdf_model="p33" num_l=4e-07 num_w=0.0001 terminals=("B" "D" "G" "S") D="scan" G="bgate" S="vscan" B="vscan" bbox=((6.25625 0.1375) (7.5625 0.78125))
+S3CR-MOS cell="sc1_s3b_p33_bank_7" inst="mp1" master="smic18mmrf"/"p33":"symbol" model="p33" raw_l="400n" raw_w="100u" raw_fw="100u" raw_m="1" raw_fingers="1" raw_simW="0.0001" cdf_l="400n" cdf_w="100u" cdf_fw="100u" cdf_m="1" cdf_fingers="1" cdf_model="p33" num_l=4e-07 num_w=0.0001 terminals=("B" "D" "G" "S") D="scan" G="bgate" S="vscan" B="vscan" bbox=((7.50625 0.1375) (8.8125 0.78125))
+S3CR-INST cell="sc1_s3b_p33_bank_7" inst="PIN2" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_s3b_p33_bank_7" inst="PIN1" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_s3b_p33_bank_7" inst="PIN0" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-NET cell="sc1_s3b_p33_bank_7" name="vscan" pins=1 instTerms=14 termViews=0
+S3CR-PIN cell="sc1_s3b_p33_bank_7" net="vscan" dir=nil term=db:0x171ac11a objType="pin" ownerInst="-" figTerm="PIN0"
+S3CR-NET cell="sc1_s3b_p33_bank_7" name="bgate" pins=1 instTerms=7 termViews=0
+S3CR-PIN cell="sc1_s3b_p33_bank_7" net="bgate" dir=nil term=db:0x171ac11b objType="pin" ownerInst="-" figTerm="PIN1"
+S3CR-NET cell="sc1_s3b_p33_bank_7" name="scan" pins=1 instTerms=7 termViews=0
+S3CR-PIN cell="sc1_s3b_p33_bank_7" net="scan" dir=nil term=db:0x171ac11c objType="pin" ownerInst="-" figTerm="PIN2"
+S3CR-SYM cell="sc1_s3b_p33_bank_7" figures=0 terms=0 terminals=3
+S3CR-SYMT cell="sc1_s3b_p33_bank_7" name="vscan" dir="inputOutput"
+S3CR-SYMT cell="sc1_s3b_p33_bank_7" name="bgate" dir="input"
+S3CR-SYMT cell="sc1_s3b_p33_bank_7" name="scan" dir="output"
+S3CR-CELL cell="sc1_scan_power_1ch_s3c" instances=11 nets=10 shapes=37 terms=0
+S3CR-DBCHECK cell="sc1_scan_power_1ch_s3c" result=t
+S3CR-INST cell="sc1_scan_power_1ch_s3c" inst="Xbank" master="sc1_s3c_team_pretty"/"sc1_s3b_p33_bank_7":"symbol" model="sc1_s3b_p33_bank_7" instTerms=3 bindings=(("vscan" "vscan") ("bgate" "gate33") ("scan" "scan"))
+S3CR-INST cell="sc1_scan_power_1ch_s3c" inst="Xchain" master="sc1_s3c_team_pretty"/"sc1_r3_scan_chain_1ch":"symbol" model="sc1_r3_scan_chain_1ch" instTerms=8 bindings=(("vss" "vss") ("vdd33" "vdd33") ("vdd18" "vdd18") ("gate33" "gate33") ("core_ok33" "core_ok33") ("blank" "blank") ("clk" "clk") ("d" "d"))
+S3CR-INST cell="sc1_scan_power_1ch_s3c" inst="PIN8" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_scan_power_1ch_s3c" inst="PIN7" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_scan_power_1ch_s3c" inst="PIN6" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_scan_power_1ch_s3c" inst="PIN5" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_scan_power_1ch_s3c" inst="PIN4" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_scan_power_1ch_s3c" inst="PIN3" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_scan_power_1ch_s3c" inst="PIN2" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_scan_power_1ch_s3c" inst="PIN1" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-INST cell="sc1_scan_power_1ch_s3c" inst="PIN0" master="basic"/"iopin":"symbol" model=nil instTerms=0 bindings=nil
+S3CR-NET cell="sc1_scan_power_1ch_s3c" name="vss" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_scan_power_1ch_s3c" net="vss" dir=nil term=db:0x171ac01a objType="pin" ownerInst="-" figTerm="PIN0"
+S3CR-NET cell="sc1_scan_power_1ch_s3c" name="gate33" pins=0 instTerms=2 termViews=0
+S3CR-NET cell="sc1_scan_power_1ch_s3c" name="vscan" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_scan_power_1ch_s3c" net="vscan" dir=nil term=db:0x171ac01b objType="pin" ownerInst="-" figTerm="PIN1"
+S3CR-NET cell="sc1_scan_power_1ch_s3c" name="vdd33" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_scan_power_1ch_s3c" net="vdd33" dir=nil term=db:0x171ac01c objType="pin" ownerInst="-" figTerm="PIN2"
+S3CR-NET cell="sc1_scan_power_1ch_s3c" name="vdd18" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_scan_power_1ch_s3c" net="vdd18" dir=nil term=db:0x171ac01d objType="pin" ownerInst="-" figTerm="PIN3"
+S3CR-NET cell="sc1_scan_power_1ch_s3c" name="scan" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_scan_power_1ch_s3c" net="scan" dir=nil term=db:0x171ac01e objType="pin" ownerInst="-" figTerm="PIN4"
+S3CR-NET cell="sc1_scan_power_1ch_s3c" name="core_ok33" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_scan_power_1ch_s3c" net="core_ok33" dir=nil term=db:0x171ac01f objType="pin" ownerInst="-" figTerm="PIN5"
+S3CR-NET cell="sc1_scan_power_1ch_s3c" name="blank" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_scan_power_1ch_s3c" net="blank" dir=nil term=db:0x171ac020 objType="pin" ownerInst="-" figTerm="PIN6"
+S3CR-NET cell="sc1_scan_power_1ch_s3c" name="clk" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_scan_power_1ch_s3c" net="clk" dir=nil term=db:0x171ac021 objType="pin" ownerInst="-" figTerm="PIN7"
+S3CR-NET cell="sc1_scan_power_1ch_s3c" name="d" pins=1 instTerms=1 termViews=0
+S3CR-PIN cell="sc1_scan_power_1ch_s3c" net="d" dir=nil term=db:0x171ac022 objType="pin" ownerInst="-" figTerm="PIN8"
+S3CR-SYM cell="sc1_scan_power_1ch_s3c" figures=0 terms=0 terminals=9
+S3CR-SYMT cell="sc1_scan_power_1ch_s3c" name="vss" dir="inputOutput"
+S3CR-SYMT cell="sc1_scan_power_1ch_s3c" name="vscan" dir="inputOutput"
+S3CR-SYMT cell="sc1_scan_power_1ch_s3c" name="vdd33" dir="inputOutput"
+S3CR-SYMT cell="sc1_scan_power_1ch_s3c" name="vdd18" dir="inputOutput"
+S3CR-SYMT cell="sc1_scan_power_1ch_s3c" name="scan" dir="output"
+S3CR-SYMT cell="sc1_scan_power_1ch_s3c" name="core_ok33" dir="input"
+S3CR-SYMT cell="sc1_scan_power_1ch_s3c" name="blank" dir="input"
+S3CR-SYMT cell="sc1_scan_power_1ch_s3c" name="clk" dir="input"
+S3CR-SYMT cell="sc1_scan_power_1ch_s3c" name="d" dir="input"

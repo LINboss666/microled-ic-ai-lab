@@ -1,0 +1,111 @@
+# token lines taken verbatim out of the three write sessions and the read-only read-back session,
+# then stripped of the Cadence log prefix and of any absolute path. Nothing here is retyped.
+# stamp 20261015_020747 = sizes; 20261015_020937 = directions; 20261015_021344 = readback.
+\o S3CB-BEGIN
+\o S3CB-LIB "sc1_s3c_team_pretty" TABLE "<PATH-REDACTED>" LOADED (nil ("c2mos_dff" "mn_c" "200n" "2u" "2u" "1" "1") ("c2mos_dff" "mn_k1" "200n" "500n" "500n" "1" "1") ("c2mos_dff" "mn_k2" "200n" "500n" "500n" "1" "1") ("c2mos_dff" "mn_k3" "200n" "500n" "500n" "1" "1") ("c2mos_dff" "mn_k4" "200n" "500n" "500n" "1" "1") ("c2mos_dff" "mn_m1" "200n" "2u" "2u" "1" "1") ("c2mos_dff" "mn_m2" "200n" "2u" "2u" "1" "1") ("c2mos_dff" "mn_s1" "200n" "2u" "2u" "1" "1") ("c2mos_dff" "mn_s2" "200n" "2u" "2u" "1" "1") ("c2mos_dff" "mp_c" "200n" "4u" "4u" "1" "1") ("c2mos_dff" "mp_k1" "200n" "1u" "1u" "1" "1") ("c2mos_dff" "mp_k2" "200n" "1u" "1u" "1" "1") ("c2mos_dff" "mp_k3" "200n" "1u" "1u" "1" "1") ("c2mos_dff" "mp_k4" "200n" "1u" "1u" "1" "1") ("c2mos_dff" "mp_m1" "200n" "4u" "4u" "1" "1") ("c2mos_dff" "mp_m2" "200n" "4u" "4u" "1" "1") ("c2mos_dff" "mp_s1" "200n" "4u" "4u" "1" "1") ("c2mos_dff" "mp_s2" "200n" "4u" "4u" "1" "1") ("sc1_ls_c1_r2d" "mn_nb" "400n" "5u" "5u" "1" "1") ("sc1_ls_c1_r2d" "mn_nt" "400n" "5u" "5u" "1" "1") ("sc1_ls_c1_r2d" "mp_na" "400n" "10u" "10u" "1" "1") ("sc1_ls_c1_r2d" "mp_nb" "400n" "10u" "10u" "1" "1") ("sc1_ls_core_r2d" "mn_drv" "200n" "2u" "2u" "1" "1") ("sc1_ls_core_r2d" "mn_left" "400n" "5u" "5u" "1" "1") ("sc1_ls_core_r2d" "mn_right" "400n" "5u" "5u" "1" "1") ("sc1_ls_core_r2d" "mp_drv" "200n" "4u" "4u" "1" "1") ("sc1_ls_core_r2d" "mp_left" "400n" "5u" "5u" "1" "1") ("sc1_ls_core_r2d" "mp_right" "400n" "5u" "5u" "1" "1") ("sc1_s3b_p33_bank_7" "mp1" "400n" "100u" "100u" "1" "1") ("sc1_s3b_p33_bank_7" "mp2" "400n" "100u" "100u" "1" "1") ("sc1_s3b_p33_bank_7" "mp3" "400n" "100u" "100u" "1" "1") ("sc1_s3b_p33_bank_7" "mp4" "400n" "100u" "100u" "1" "1") ("sc1_s3b_p33_bank_7" "mp5" "400n" "100u" "100u" "1" "1") ("sc1_s3b_p33_bank_7" "mp6" "400n" "100u" "100u" "1" "1") ("sc1_s3b_p33_bank_7" "mp7" "400n" "100u" "100u" "1" "1") ("sc1_scan_gate" "mn_a" "200n" "2u" "2u" "1" "1") ("sc1_scan_gate" "mn_b" "200n" "2u" "2u" "1" "1") ("sc1_scan_gate" "mp_a" "200n" "4u" "4u" "1" "1") ("sc1_scan_gate" "mp_b" "200n" "4u" "4u" "1" "1")) CELLS ("c2mos_dff" "sc1_scan_gate" "sc1_ls_core_r2d" "sc1_ls_c1_r2d" "sc1_ls_c1_top_r2d" "sc1_r3_scan_chain_1ch" "sc1_s3b_p33_bank_7" "sc1_scan_power_1ch_s3c")
+\o S3CB-API dbSave=lambda:dbSave dbCreateProp=lambda:dbCreateProp dbDeletePropByName=lambda:dbDeletePropByName cdfGetInstCDF=lambda:cdfGetInstCDF schCreate=nil
+\o S3CB-OPEN "c2mos_dff" instances=24 pdkMos=18 tableRows=18
+\o S3CB-SAVE "c2mos_dff" (t)
+\o S3CB-OPEN "sc1_scan_gate" instances=9 pdkMos=4 tableRows=4
+\o S3CB-SAVE "sc1_scan_gate" (t)
+\o S3CB-OPEN "sc1_ls_core_r2d" instances=12 pdkMos=6 tableRows=6
+\o S3CB-SAVE "sc1_ls_core_r2d" (t)
+\o S3CB-OPEN "sc1_ls_c1_r2d" instances=9 pdkMos=4 tableRows=4
+\o S3CB-SAVE "sc1_ls_c1_r2d" (t)
+\o S3CB-OPEN "sc1_ls_c1_top_r2d" instances=8 pdkMos=0 tableRows=0
+\o S3CB-SAVE "sc1_ls_c1_top_r2d" (t)
+\o S3CB-OPEN "sc1_r3_scan_chain_1ch" instances=11 pdkMos=0 tableRows=0
+\o S3CB-SAVE "sc1_r3_scan_chain_1ch" (t)
+\o S3CB-OPEN "sc1_s3b_p33_bank_7" instances=10 pdkMos=7 tableRows=7
+\o S3CB-SAVE "sc1_s3b_p33_bank_7" (t)
+\o S3CB-OPEN "sc1_scan_power_1ch_s3c" instances=11 pdkMos=0 tableRows=0
+\o S3CB-SAVE "sc1_scan_power_1ch_s3c" (t)
+\o S3C1D-BEGIN
+\o S3C1D-REFUSE the table has 0 rows, not the 48 declared ports
+\o S3C1D-SAVE "c2mos_dff" "schematic" (t)
+\o S3C1D "c2mos_dff" "symbol" port="vss" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "c2mos_dff" "symbol" port="vdd" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "c2mos_dff" "symbol" port="qbar" before="inputOutput" want="output" after="output" norm="output"
+\o S3C1D "c2mos_dff" "symbol" port="q" before="inputOutput" want="output" after="output" norm="output"
+\o S3C1D "c2mos_dff" "symbol" port="clk" before="inputOutput" want="input" after="input" norm="input"
+\o S3C1D "c2mos_dff" "symbol" port="d" before="inputOutput" want="input" after="input" norm="input"
+\o S3C1D-SAVE "c2mos_dff" "symbol" (t)
+\o S3C1D-SAVE "sc1_scan_gate" "schematic" (t)
+\o S3C1D "sc1_scan_gate" "symbol" port="vss" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "sc1_scan_gate" "symbol" port="vdd" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "sc1_scan_gate" "symbol" port="en" before="inputOutput" want="output" after="output" norm="output"
+\o S3C1D "sc1_scan_gate" "symbol" port="blank" before="inputOutput" want="input" after="input" norm="input"
+\o S3C1D "sc1_scan_gate" "symbol" port="qbar" before="inputOutput" want="input" after="input" norm="input"
+\o S3C1D-SAVE "sc1_scan_gate" "symbol" (t)
+\o S3C1D-SAVE "sc1_ls_core_r2d" "schematic" (t)
+\o S3C1D "sc1_ls_core_r2d" "symbol" port="vss" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "sc1_ls_core_r2d" "symbol" port="vdd33" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "sc1_ls_core_r2d" "symbol" port="vdd18" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "sc1_ls_core_r2d" "symbol" port="y" before="inputOutput" want="output" after="output" norm="output"
+\o S3C1D "sc1_ls_core_r2d" "symbol" port="x" before="inputOutput" want="output" after="output" norm="output"
+\o S3C1D "sc1_ls_core_r2d" "symbol" port="en" before="inputOutput" want="input" after="input" norm="input"
+\o S3C1D-SAVE "sc1_ls_core_r2d" "symbol" (t)
+\o S3C1D-SAVE "sc1_ls_c1_r2d" "schematic" (t)
+\o S3C1D "sc1_ls_c1_r2d" "symbol" port="vss" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "sc1_ls_c1_r2d" "symbol" port="vdd33" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "sc1_ls_c1_r2d" "symbol" port="gate33" before="inputOutput" want="output" after="output" norm="output"
+\o S3C1D "sc1_ls_c1_r2d" "symbol" port="core_ok33" before="inputOutput" want="input" after="input" norm="input"
+\o S3C1D "sc1_ls_c1_r2d" "symbol" port="y" before="inputOutput" want="input" after="input" norm="input"
+\o S3C1D-SAVE "sc1_ls_c1_r2d" "symbol" (t)
+\o S3C1D-SAVE "sc1_ls_c1_top_r2d" "schematic" (t)
+\o S3C1D "sc1_ls_c1_top_r2d" "symbol" port="vss" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "sc1_ls_c1_top_r2d" "symbol" port="vdd33" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "sc1_ls_c1_top_r2d" "symbol" port="vdd18" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "sc1_ls_c1_top_r2d" "symbol" port="gate33" before="inputOutput" want="output" after="output" norm="output"
+\o S3C1D "sc1_ls_c1_top_r2d" "symbol" port="core_ok33" before="inputOutput" want="input" after="input" norm="input"
+\o S3C1D "sc1_ls_c1_top_r2d" "symbol" port="en" before="inputOutput" want="input" after="input" norm="input"
+\o S3C1D-SAVE "sc1_ls_c1_top_r2d" "symbol" (t)
+\o S3C1D-SAVE "sc1_r3_scan_chain_1ch" "schematic" (t)
+\o S3C1D "sc1_r3_scan_chain_1ch" "symbol" port="vss" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "sc1_r3_scan_chain_1ch" "symbol" port="vdd33" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "sc1_r3_scan_chain_1ch" "symbol" port="vdd18" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "sc1_r3_scan_chain_1ch" "symbol" port="gate33" before="inputOutput" want="output" after="output" norm="output"
+\o S3C1D "sc1_r3_scan_chain_1ch" "symbol" port="core_ok33" before="inputOutput" want="input" after="input" norm="input"
+\o S3C1D "sc1_r3_scan_chain_1ch" "symbol" port="blank" before="inputOutput" want="input" after="input" norm="input"
+\o S3C1D "sc1_r3_scan_chain_1ch" "symbol" port="clk" before="inputOutput" want="input" after="input" norm="input"
+\o S3C1D "sc1_r3_scan_chain_1ch" "symbol" port="d" before="inputOutput" want="input" after="input" norm="input"
+\o S3C1D-SAVE "sc1_r3_scan_chain_1ch" "symbol" (t)
+\o S3C1D-SAVE "sc1_s3b_p33_bank_7" "schematic" (t)
+\o S3C1D "sc1_s3b_p33_bank_7" "symbol" port="vscan" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "sc1_s3b_p33_bank_7" "symbol" port="bgate" before="inputOutput" want="input" after="input" norm="input"
+\o S3C1D "sc1_s3b_p33_bank_7" "symbol" port="scan" before="inputOutput" want="output" after="output" norm="output"
+\o S3C1D-SAVE "sc1_s3b_p33_bank_7" "symbol" (t)
+\o S3C1D-SAVE "sc1_scan_power_1ch_s3c" "schematic" (t)
+\o S3C1D "sc1_scan_power_1ch_s3c" "symbol" port="vss" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "sc1_scan_power_1ch_s3c" "symbol" port="vscan" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "sc1_scan_power_1ch_s3c" "symbol" port="vdd33" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "sc1_scan_power_1ch_s3c" "symbol" port="vdd18" before="inputOutput" want="inputOutput" after="inputOutput" norm="inputOutput"
+\o S3C1D "sc1_scan_power_1ch_s3c" "symbol" port="scan" before="inputOutput" want="output" after="output" norm="output"
+\o S3C1D "sc1_scan_power_1ch_s3c" "symbol" port="core_ok33" before="inputOutput" want="input" after="input" norm="input"
+\o S3C1D "sc1_scan_power_1ch_s3c" "symbol" port="blank" before="inputOutput" want="input" after="input" norm="input"
+\o S3C1D "sc1_scan_power_1ch_s3c" "symbol" port="clk" before="inputOutput" want="input" after="input" norm="input"
+\o S3C1D "sc1_scan_power_1ch_s3c" "symbol" port="d" before="inputOutput" want="input" after="input" norm="input"
+\o S3C1D-SAVE "sc1_scan_power_1ch_s3c" "symbol" (t)
+\o S3C1D-VIEWS 16 MATCHED 96 WANT 96
+\o S3CR-BEGIN
+\o S3CR-LIB "sc1_s3c_team_pretty" CELLS ("c2mos_dff" "sc1_scan_gate" "sc1_ls_core_r2d" "sc1_ls_c1_r2d" "sc1_ls_c1_top_r2d" "sc1_r3_scan_chain_1ch" "sc1_s3b_p33_bank_7" "sc1_scan_power_1ch_s3c")
+\o S3CR-API dbCheck=lambda:dbCheck schCheck=nil dbCreateFig=nil ddCreateCell=nil schCreateSym=nil symCreate=nil
+\o S3CR-CELL cell="c2mos_dff" instances=24 nets=13 shapes=219 terms=0
+\o S3CR-DBCHECK cell="c2mos_dff" result=t
+\o S3CR-CELL cell="sc1_scan_gate" instances=9 nets=6 shapes=53 terms=0
+\o S3CR-DBCHECK cell="sc1_scan_gate" result=t
+\o S3CR-CELL cell="sc1_ls_core_r2d" instances=12 nets=7 shapes=78 terms=0
+\o S3CR-DBCHECK cell="sc1_ls_core_r2d" result=t
+\o S3CR-CELL cell="sc1_ls_c1_r2d" instances=9 nets=6 shapes=53 terms=0
+\o S3CR-DBCHECK cell="sc1_ls_c1_r2d" result=t
+\o S3CR-CELL cell="sc1_ls_c1_top_r2d" instances=8 nets=8 shapes=42 terms=0
+\o S3CR-DBCHECK cell="sc1_ls_c1_top_r2d" result=t
+\o S3CR-CELL cell="sc1_r3_scan_chain_1ch" instances=11 nets=11 shapes=60 terms=0
+\o S3CR-DBCHECK cell="sc1_r3_scan_chain_1ch" result=t
+\o S3CR-CELL cell="sc1_s3b_p33_bank_7" instances=10 nets=3 shapes=101 terms=0
+\o S3CR-DBCHECK cell="sc1_s3b_p33_bank_7" result=t
+\o S3CR-CELL cell="sc1_scan_power_1ch_s3c" instances=11 nets=10 shapes=37 terms=0
+\o S3CR-DBCHECK cell="sc1_scan_power_1ch_s3c" result=t
+# import (spiceIn) info codes, from the ASG log:
+        9 INFO (SPICEIN-33)
+        1 INFO (SPICEIN-54)

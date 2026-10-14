@@ -1,0 +1,76 @@
+; SCAN-1 S3-C: circuit table rebuilt from the OpenAccess readback of
+; sc1_s3c_team_pretty (this task's own OA library) -- every instance, model, size and net below is a row the database
+; reported. No line was copied from the frozen masters, and no simulator was run to
+; produce this file: it is netlist EXTRACTION from the schematic, the artifact a
+; reviewer compares against spectre/*.scs by eye.
+simulator lang=spectre insensitive=yes
+
+subckt c2mos_dff (d clk q qbar vdd vss)
+  mn_c (clkb clk vss vss) n18 l=2e-07 w=2e-06 m=1
+  mn_k1 (mb m vss vss) n18 l=2e-07 w=5e-07 m=1
+  mn_k2 (m mb vss vss) n18 l=2e-07 w=5e-07 m=1
+  mn_k3 (qbar q vss vss) n18 l=2e-07 w=5e-07 m=1
+  mn_k4 (q qbar vss vss) n18 l=2e-07 w=5e-07 m=1
+  mn_m1 (x2 clkb vss vss) n18 l=2e-07 w=2e-06 m=1
+  mn_m2 (m d x2 vss) n18 l=2e-07 w=2e-06 m=1
+  mn_s1 (y2 clk vss vss) n18 l=2e-07 w=2e-06 m=1
+  mn_s2 (q m y2 vss) n18 l=2e-07 w=2e-06 m=1
+  mp_c (clkb clk vdd vdd) p18 l=2e-07 w=4e-06 m=1
+  mp_k1 (mb m vdd vdd) p18 l=2e-07 w=1e-06 m=1
+  mp_k2 (m mb vdd vdd) p18 l=2e-07 w=1e-06 m=1
+  mp_k3 (qbar q vdd vdd) p18 l=2e-07 w=1e-06 m=1
+  mp_k4 (q qbar vdd vdd) p18 l=2e-07 w=1e-06 m=1
+  mp_m1 (x1 clk vdd vdd) p18 l=2e-07 w=4e-06 m=1
+  mp_m2 (m d x1 vdd) p18 l=2e-07 w=4e-06 m=1
+  mp_s1 (y1 clkb vdd vdd) p18 l=2e-07 w=4e-06 m=1
+  mp_s2 (q m y1 vdd) p18 l=2e-07 w=4e-06 m=1
+ends c2mos_dff
+
+subckt sc1_scan_gate (qbar blank en vdd vss)
+  mn_a (en qbar vss vss) n18 l=2e-07 w=2e-06 m=1
+  mn_b (en blank vss vss) n18 l=2e-07 w=2e-06 m=1
+  mp_a (n1 qbar vdd vdd) p18 l=2e-07 w=4e-06 m=1
+  mp_b (en blank n1 vdd) p18 l=2e-07 w=4e-06 m=1
+ends sc1_scan_gate
+
+subckt sc1_ls_core_r2d (en x y vdd18 vdd33 vss)
+  mn_drv (enbar en vss vss) n18 l=2e-07 w=2e-06 m=1
+  mn_left (x en vss vss) n33 l=4e-07 w=5e-06 m=1
+  mn_right (y enbar vss vss) n33 l=4e-07 w=5e-06 m=1
+  mp_drv (enbar en vdd18 vdd18) p18 l=2e-07 w=4e-06 m=1
+  mp_left (x y vdd33 vdd33) p33 l=4e-07 w=5e-06 m=1
+  mp_right (y x vdd33 vdd33) p33 l=4e-07 w=5e-06 m=1
+ends sc1_ls_core_r2d
+
+subckt sc1_ls_c1_r2d (y core_ok33 gate33 vdd33 vss)
+  mn_nb (ns_m core_ok33 vss vss) n33 l=4e-07 w=5e-06 m=1
+  mn_nt (gate33 y ns_m vss) n33 l=4e-07 w=5e-06 m=1
+  mp_na (gate33 y vdd33 vdd33) p33 l=4e-07 w=1e-05 m=1
+  mp_nb (gate33 core_ok33 vdd33 vdd33) p33 l=4e-07 w=1e-05 m=1
+ends sc1_ls_c1_r2d
+
+subckt sc1_ls_c1_top_r2d (en core_ok33 gate33 vdd18 vdd33 vss)
+  Xcore (en x y vdd18 vdd33 vss) sc1_ls_core_r2d
+  Xnand (y core_ok33 gate33 vdd33 vss) sc1_ls_c1_r2d
+ends sc1_ls_c1_top_r2d
+
+subckt sc1_r3_scan_chain_1ch (d clk blank core_ok33 gate33 vdd18 vdd33 vss)
+  Xff (d clk q qbar vdd18 vss) c2mos_dff
+  Xgate (qbar blank en vdd18 vss) sc1_scan_gate
+  Xls (en core_ok33 gate33 vdd18 vdd33 vss) sc1_ls_c1_top_r2d
+ends sc1_r3_scan_chain_1ch
+
+subckt sc1_s3b_p33_bank_7 (scan bgate vscan)
+  mp1 (scan bgate vscan vscan) p33 l=4e-07 w=0.0001 m=1
+  mp2 (scan bgate vscan vscan) p33 l=4e-07 w=0.0001 m=1
+  mp3 (scan bgate vscan vscan) p33 l=4e-07 w=0.0001 m=1
+  mp4 (scan bgate vscan vscan) p33 l=4e-07 w=0.0001 m=1
+  mp5 (scan bgate vscan vscan) p33 l=4e-07 w=0.0001 m=1
+  mp6 (scan bgate vscan vscan) p33 l=4e-07 w=0.0001 m=1
+  mp7 (scan bgate vscan vscan) p33 l=4e-07 w=0.0001 m=1
+ends sc1_s3b_p33_bank_7
+
+subckt sc1_scan_power_1ch_s3c (d clk blank core_ok33 scan vdd18 vdd33 vscan vss)
+  Xbank (scan gate33 vscan) sc1_s3b_p33_bank_7
+  Xchain (d clk blank core_ok33 gate33 vdd18 vdd33 vss) sc1_r3_scan_chain_1ch
+ends sc1_scan_power_1ch_s3c
