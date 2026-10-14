@@ -205,14 +205,27 @@ read-back 2 and 3, attempted later from this host to double-confirm: both failed
   push_status=REMOTE_VERIFIED; if the reviewer wants a second opinion, any later ls-remote or
   gh api call against refs/heads/gexing321/scan-unit/1ch-beautify will answer it.
 
-=== APPENDIX C. OUTBOUND CHANNEL DEGRADED AFTER THE FIRST PUSH ===
-observed_utc=2026-10-14T17:08:52Z
-  push #1 (the deliverable commit)  -> SUCCESS, * [new branch], verified by ls-remote read-back 1
-  ls-remote retry a                 -> fatal: Empty reply from server
-  ls-remote retry b/c               -> fatal: Failed to connect to github.com:443 after ~21000 ms
-  push #2 (follow-up)               -> fatal: Failed to connect to github.com:443 after ~21000 ms
-  push #3 (follow-up, retry)        -> fatal: Failed to connect to github.com:443 after ~21000 ms
-  push #4 (through 127.0.0.1:10090) -> fatal: Could not connect to server over proxy (proxy not running)
-  result: the branch on the remote is at the deliverable commit; the manifest updates that record
-          this appendix are local commits until the channel returns. No force, no --no-verify,
-          no remote/proxy config change, no retry storm: four attempts and then it is reported.
+=== APPENDIX C. OUTBOUND CHANNEL DEGRADED AFTER THE FIRST PUSH (chronological) ===
+observed_utc=2026-10-14T17:09:10Z
+  event 1  push through -c http.proxy=http://127.0.0.1:10090
+           -> Failed to connect to github.com:443 over proxy 127.0.0.1 after 2093 ms
+              (that proxy is not running on this machine right now)
+  event 2  direct push of the deliverable commit
+           -> SUCCESS: * [new branch] gexing321/scan-unit/1ch-beautify
+              (no proxy setting was changed either way)
+  event 3  git ls-remote origin  (read-back 1, APPENDIX B)  -> SUCCESS, 9 refs
+  event 4  git ls-remote origin  (read-back 2)              -> fatal: Empty reply from server
+  event 5  git ls-remote origin  (read-back 3, retry loop)  -> fatal: Failed to connect to
+              github.com:443 -- twice more inside the same loop
+  event 6  direct push of the follow-up commit              -> fatal: Failed to connect to
+              github.com:443 after 21073 ms
+  event 7  ls-remote of that one ref immediately after      -> fatal: Failed to connect to
+              github.com:443 after ~21000 ms
+  event 8  direct push retry                                -> fatal: Failed to connect to
+              github.com:443 after 21061 ms   -> stop, report
+
+  Consequence, stated as it is: refs/heads/gexing321/scan-unit/1ch-beautify on the remote is the
+  deliverable commit e307e304 (verified once, at event 3). Everything after it -- the head_sha and
+  push_status fill-in, the divergence record and this appendix -- is local on this machine until the
+  channel returns. No force, no --no-verify, no retry storm, no remote or proxy configuration was
+  touched; the commits are kept here rather than described as delivered.
