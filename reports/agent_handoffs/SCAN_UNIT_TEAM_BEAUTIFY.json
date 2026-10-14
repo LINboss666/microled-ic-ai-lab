@@ -5,8 +5,8 @@
   "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
   "branch": "gexing321/scan-unit/1ch-beautify",
   "base_sha": "9049f111d943e9b322f21e1fa059a932cac93207",
-  "head_sha": "e307e304cd7a5281d037f12a146a95929ac7d0de",
-  "head_sha_semantics": "the commit that carries the deliverables this manifest describes (script + two evidence tables + this handoff). A commit cannot contain its own SHA, so that commit recorded PUSH_PENDING and the source SHA here as a placeholder; this follow-up commit is the one that names it. The remote tip is read back with git ls-remote, not trusted from the push output, and is recorded in remote_readback below.",
+  "head_sha": "2ddf7a1ab710afe4e15d2dd6844f9c593d269c2a",
+  "head_sha_semantics": "the commit that carries this round's deliverables (OA build evidence, the verification tables, the registration and visibility tools, and the manifest describing them). A commit cannot contain its own SHA, so the manifest inside it recorded the previous tip and this follow-up commit is the one that names 2ddf7a1. The remote tip is read back with git ls-remote rather than trusted from the push output.",
   "followup_commits_note": "this file was updated by one further commit on the same branch, whose own SHA is only readable from outside it (git log or git ls-remote). It changes nothing but head_sha, push_status, the remote read-back and the source-divergence record.",
   "source": {
     "read_only_branch": "poc/scan-driver-1ch",
@@ -32,10 +32,10 @@
     "registered_in_shared_cds_lib": "one additive DEFINE, 6 original DEFINEs intact, second run ALREADY_REGISTERED (idempotent, measured)"
   },
   "push_status": "REMOTE_VERIFIED",
-  "push_status_basis": "two ordinary (non-forced) pushes of exactly one ref, refs/heads/gexing321/scan-unit/1ch-beautify, each after the pre-push hook re-ran scripts/precommit_safety_check.py --mode history (140+ commits, 1314+ objects, PDK/CREDENTIAL/PRIVATE_KEY/VENDOR_MODEL all 0, SAFETY_GATE: PASS). Read-back 1 put the deliverable commit e307e304cd7a5281d037f12a146a95929ac7d0de on the remote; read-back 2, after a transport outage of four failed attempts, put c6ffdd0caaf31d83ae86152ac685cf1c0af34bf6 there and equal to the local HEAD. Every other branch read back at its pre-round value. PASS here means parity of a git ref only.",
+  "push_status_basis": "ordinary (non-forced) pushes of exactly one ref, refs/heads/gexing321/scan-unit/1ch-beautify, each after the pre-push hook re-ran scripts/precommit_safety_check.py --mode history (PDK/CREDENTIAL/PRIVATE_KEY/VENDOR_MODEL all 0, SAFETY_GATE: PASS). Read-backs: e307e30 after the first push of the round, then c6ffdd0, then 2ddf7a1 for this round's build evidence -- each equal to the local tip at that moment. Every other branch read back unchanged. PASS here means parity of a git ref only.",
   "remote_readback": {
     "read_with": "git ls-remote origin, run after the push, through a separate connection",
-    "refs/heads/gexing321/scan-unit/1ch-beautify": "e307e304cd7a5281d037f12a146a95929ac7d0de",
+    "refs/heads/gexing321/scan-unit/1ch-beautify": "2ddf7a1ab710afe4e15d2dd6844f9c593d269c2a",
     "refs/heads/main": "23e471cb936b421ee97e1250c3be06edf96f9937 (unchanged)",
     "refs/heads/poc/c2mos-dff": "cdd8597f80f1a87d7b4f2a0a38a4adfaec3fb063 (unchanged)",
     "refs/heads/poc/data-driver-1ch": "b3d8bf4383ad9f2d898dcdec5efdbedb90e99b68 (unchanged)",
@@ -46,9 +46,9 @@
   },
   "git_handback": {
     "why_this_block_exists": "a commit cannot state its own SHA, and a file cannot state whether the commit carrying it reached the remote; both facts are only visible from outside, so they are written here as of the moment of writing and are checkable by anyone in one command",
-    "remote_tip_at_time_of_writing": "c6ffdd0caaf31d83ae86152ac685cf1c0af34bf6 (read back with git ls-remote after the channel came back; equal to the local HEAD at that moment)",
-    "this_file_is_in_a_later_commit": "true by construction -- the commit carrying this sentence is the one after c6ffdd0, and whether it landed is answered by the same ls-remote call, not by this field",
-    "later_commit_push_state": "LANDED except for this last bookkeeping commit. The route to github.com:443 dropped for four consecutive attempts after the first push (Empty reply from server, then three Failed-to-connect timeouts), was reported rather than fought, and returned on the next attempt: e307e30..c6ffdd0 pushed normally and read back. No force, no --no-verify, no remote or proxy configuration change.",
+    "remote_tip_at_time_of_writing": "2ddf7a1ab710afe4e15d2dd6844f9c593d269c2a (read back with git ls-remote immediately after the push)",
+    "this_file_is_in_a_later_commit": "true by construction: the commit carrying this sentence is the one after 2ddf7a1; whether it landed is answered by the same ls-remote call, not by this field",
+    "later_commit_push_state": "PUSH_PENDING for the commit that only fills in these fields; the deliverables it describes are already on the remote and verified",
     "how_to_check": "git -C <clone> log --oneline origin/gexing321/scan-unit/1ch-beautify..HEAD  -- empty means the follow-ups landed; non-empty means they are still local",
     "local_head_at_time_of_writing": "the last commit on gexing321/scan-unit/1ch-beautify in this clone; its SHA is printed in the chat handback, not here"
   },

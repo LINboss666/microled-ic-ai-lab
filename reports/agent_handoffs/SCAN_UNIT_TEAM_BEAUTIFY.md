@@ -13,7 +13,7 @@
 | 本轮工作树 | 新建独立 clone `D:/IC项目/scan-unit-beautify/repo`；原有 `D:/IC项目/microled-ic-ai-lab`（`gexing321/scan-driver/c2mos-schematic` @ `6d23fb7`）未被切分支、未 pull、未 reset/clean/checkout -f |
 | 目标新库 | `sc1_s3c_team_pretty`，库目录 `cadence_work/s3c_oa/sc1_s3c_team_pretty`（**已创建，8 cell × 2 view 在盘**） |
 | 本轮交付物 | 离线来源核验 **+ 真实的 OA 重建与电气等价证明**；美化仍有余量，见下 |
-| 推送 | 远端 `refs/heads/gexing321/scan-unit/1ch-beautify` = **`c6ffdd0caaf31d83ae86152ac685cf1c0af34bf6`**，`git ls-remote` 独立回读 = 本地 HEAD，普通推送、单 ref refspec、非 force、未跳 hook。途中通道断过一次（4 次失败已记在证据 APPENDIX C），恢复后全部落地。其余 ref 全部核对为未动：`main 23e471cb`、`poc/c2mos-dff cdd8597f`、`poc/data-driver-1ch b3d8bf43`、`poc/scan-driver-1ch 0038821e`、两个 `feature/* 6a8ba7dc / 51ca02a3`、`gexing321/docs 876c198`、`gexing321/scan-driver/c2mos-schematic 6d23fb7`。写这句话的提交在 `c6ffdd0` 之后，它自己是否落地请用同一条命令复查：`git ls-remote origin refs/heads/gexing321/scan-unit/1ch-beautify` |
+| 推送 | 远端 `refs/heads/gexing321/scan-unit/1ch-beautify` = **`2ddf7a1ab710afe4e15d2dd6844f9c593d269c2a`**（本轮 Cadence 侧证据所在提交，`git ls-remote` 独立回读 = 当时本地 HEAD；普通推送、单 ref refspec、非 force、未跳 hook）。其余 ref 复核未动：`main 23e471cb`、`poc/c2mos-dff cdd8597f`、`poc/data-driver-1ch b3d8bf43`、`poc/scan-driver-1ch 0038821e`、`feature/* 6a8ba7dc / 51ca02a3`、`gexing321/docs 876c198`、`gexing321/scan-driver/c2mos-schematic 6d23fb7`。**写这一行的提交在 `2ddf7a1` 之后**（提交不能包含自己的 SHA），它是否落地请用同一条命令复查：`git ls-remote origin refs/heads/gexing321/scan-unit/1ch-beautify` |
 
 ### 六个状态（完成与阻塞严格分开）
 
