@@ -1,0 +1,9 @@
+cell,direct_children,own_mos,expanded_mos,ports,master_file
+"c2mos_dff","-","18","18","6","spectre/C2MOS_DFF.scs"
+"sc1_scan_gate","-","4","4","5","spectre/sc1_scan_gate.scs"
+"sc1_ls_core_r2d","-","6","6","6","spectre/sc1_level_shifter_r2d.scs"
+"sc1_ls_c1_r2d","-","4","4","5","spectre/sc1_level_shifter_r2d.scs"
+"sc1_ls_c1_top_r2d","Xcore:sc1_ls_core_r2d Xnand:sc1_ls_c1_r2d","0","10","6","spectre/sc1_level_shifter_r2d.scs"
+"sc1_r3_scan_chain_1ch","Xff:c2mos_dff Xgate:sc1_scan_gate Xls:sc1_ls_c1_top_r2d","0","32","8","spectre/sc1_r3_scan_chain.scs"
+"sc1_s3b_p33_bank_7","-","7","7","3","spectre/sc1_s3b_p33_bank.scs"
+"sc1_scan_power_1ch_s3c","Xchain:sc1_r3_scan_chain_1ch Xbank:sc1_s3b_p33_bank_7","0","39","9","spectre/sc1_s3b_scan_power_1ch.scs"

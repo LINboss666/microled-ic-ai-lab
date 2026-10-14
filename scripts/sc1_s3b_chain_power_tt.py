@@ -669,12 +669,23 @@ def measure_edges(R, cid, data, case_def):
 
 
 def measure_branches(R, cid, data):
-    """three separate current branches, with the instant of each extreme"""
+    """three separate current branches, with the instant of each extreme
+
+    Sign convention (corrected in S3-C section 4A, wording only -- no number changes):
+    `injected = -(Vsource:i)' is a SUPPLY rule, calibrated in R2E, and it applies to VSCAN:i,
+    V33:i and V18:i. It does NOT apply to Xtop.Ip_gate:i: a zero-drop iprobe is a meter inside one
+    branch, not a source, so its own signed reading is already the branch current, positive from
+    gate33 towards the seven bank gates (charging them) and negative on the way back (discharging
+    into the driver). Re-signing that column and calling it "injected into the bank" would report
+    the same physics with the wrong arrow. The delivered batch carries the old label; its raw
+    signed values are correct and are NOT rewritten -- see
+    results/evidence/sc1_s3c_s3b_corrections.csv, which cites the original rows.
+    """
     t0, t1 = '%.9g' % (200e-9), '%.9g' % (STOP_NS * 1e-9)
     names = (('VSCAN:i', 'bank source/body rail: the switching current itself'),
              ('V33:i', 'control chain high domain'),
              ('V18:i', 'the 1.8 V domain'),
-             ('Xtop.Ip_gate:i', 'the gate33 -> bank gate branch'))
+             ('Xtop.Ip_gate:i', 'the gate33 -> bank gate branch (iprobe, not a supply)'))
     for src, why in names:
         rcn, mn = S2.read_sig(R, data, src, 'min', t0, t1, req=str(MIN_SAMPLES))
         rcx, mx = S2.read_sig(R, data, src, 'max', t0, t1, req=str(MIN_SAMPLES))
@@ -684,11 +695,22 @@ def measure_branches(R, cid, data):
                   'kept as a save/read failure; %s. Nothing is substituted and nothing is zeroed'
                   % why)
             continue
-        R.add('S3B_BRANCH_CURRENT', cid, src, 'injected = -(Vsource:i); %s' % why,
-              'min=%.6g max=%.6g A ; injected %.6g..%.6g A'
-              % (float(mn), float(mx), -float(mx), -float(mn)), 0, 'MEASURED',
-              'raw signed readings kept; no current or power budget exists for this POC, so no '
-              'limit is invented and the switching peak is never charged to gate33')
+        probe = src == 'Xtop.Ip_gate:i'
+        if probe:
+            R.add('S3B_BRANCH_CURRENT', cid, src,
+                  'raw signed branch current, positive = gate33 -> bank gates (charging), '
+                  'negative = bank gates -> gate33 (discharging into the driver); %s' % why,
+              'min=%.6g max=%.6g A ; raw signed range %.6g..%.6g A (kept as read, no re-sign)'
+              % (float(mn), float(mx), float(mn), float(mx)), 0, 'MEASURED',
+              'the integral over an edge window uses this same signed column; no current or power '
+              'budget exists for this POC, so no limit is invented and the switching peak is never '
+              'charged to gate33')
+        else:
+            R.add('S3B_BRANCH_CURRENT', cid, src, 'injected = -(Vsource:i); %s' % why,
+                  'min=%.6g max=%.6g A ; injected %.6g..%.6g A'
+                  % (float(mn), float(mx), -float(mx), -float(mn)), 0, 'MEASURED',
+                  'raw signed readings kept; no current or power budget exists for this POC, so no '
+                  'limit is invented and the switching peak is never charged to gate33')
         for mode in ('max', 'min'):
             rcd, val, txt = S2.read_diff(R, data, src, 'vss', mode, t0, t1)
             parts = (txt or '').split('\t')
@@ -696,7 +718,8 @@ def measure_branches(R, cid, data):
                   'the extreme and the sample time it happened at, from the strict tool',
                   'value=%s A at t=%s s' % (parts[0], parts[1] if len(parts) > 1 else '?'), rcd,
                   'MEASURED' if not rcd else 'NOT_MEASURED',
-                  'raw signed reading; injected = -value')
+                  'raw signed reading; %s' % ('this IS the branch current, sign as read' if probe
+                                              else 'injected = -value'))
 
 
 def gate_current_names(groups):

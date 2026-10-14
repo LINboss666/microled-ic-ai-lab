@@ -34,7 +34,12 @@ PROTECTED = ['spectre/C2MOS_DFF.scs', 'spectre/sc1_scan_gate.scs',
              'scripts/sc1_r2e1_call_contract.py', 'scripts/sc1_r2e_s2_tt.py',
              'scripts/sc1_r2e1_reread.py', 'scripts/sc1_r2e_vtx.py']
 
-ROLES = [(r'^scripts/sc1_s3b_.*\.py$', 's3b_entry_or_check'),
+ROLES = [(r'^scripts/sc1_s3c_.*\.(py|sh)$', 's3c_entry_or_check'),
+         (r'^skill/sc1_s3c_.*\.il$', 's3c_skill'),
+         (r'^spectre/generated/sc1_s3c_.*\.scs$', 's3c_extracted_netlist'),
+         (r'^results/evidence/sc1_s3c_.*\.csv$', 's3c_evidence'),
+         (r'^reports/scan_driver_s3c.*\.md$', 's3c_report'),
+         (r'^scripts/sc1_s3b_.*\.py$', 's3b_entry_or_check'),
          (r'^spectre/sc1_s3b_.*\.scs$', 's3b_circuit_new'),
          (r'^results/evidence/sc1_s3b_.*_log\.txt$', 's3b_transcript'),
          (r'^results/evidence/sc1_s3b_.*\.txt$', 's3b_transcript'),
@@ -99,7 +104,7 @@ def main():
 
     # every file the round added, found by name so a forgotten artifact still shows up as a row
     rels = []
-    for sub in ('scripts', os.path.join('results', 'evidence'), 'reports', 'spectre'):
+    for sub in ('scripts', 'skill', os.path.join('results', 'evidence'), 'reports', 'spectre'):
         root = os.path.join(PROJ, sub)
         if not os.path.isdir(root):
             continue
@@ -107,7 +112,8 @@ def main():
             for f in fs:
                 if f.startswith(('sc1_r2e', 'scan_driver_r2e', 'sc1_r3', 'scan_driver_r3',
                                  'sc1_s3a', 'scan_driver_s3a', 'sc1_s3b',
-                                 'scan_driver_s3b')) and not f.endswith('.pyc'):
+                                 'scan_driver_s3b', 'sc1_s3c', 'scan_driver_s3c')
+                                ) and not f.endswith('.pyc'):
                     rels.append(os.path.relpath(os.path.join(_d, f), PROJ).replace('\\', '/'))
     for rel in sorted(set(rels)):
         if os.path.normpath(os.path.join(PROJ, rel)) == os.path.normpath(os.path.abspath(out)):
@@ -115,7 +121,8 @@ def main():
             # before it was written, so the output file is left out of its own rows
             continue
         path = os.path.join(PROJ, rel)
-        role = 'r3_other' if 'sc1_r3' in rel or 'scan_driver_r3' in rel else 'r2e_other'
+        role = ('s3c_other' if 's3c' in rel else
+                'r3_other' if 'sc1_r3' in rel or 'scan_driver_r3' in rel else 'r2e_other')
         for pat, r in ROLES:
             if re.match(pat, rel):
                 role = r
@@ -123,6 +130,12 @@ def main():
         note = ('written this round; repository bytes, re-hashable by the reviewer')
         if role.endswith('_transcript'):
             note = 'simulator transcript with vendor paths redacted before it was written'
+        if role == 's3c_extracted_netlist':
+            note = ('circuit table rebuilt FROM the OpenAccess readback rows -- netlist '
+                    'extraction from the schematic, produced without running any simulator')
+        if role == 's3c_skill':
+            note = ('SKILL run inside this task: an isolated Virtuoso session that writes only '
+                    'into cadence_work/s3c_oa/microled_scan_s3c and reads the PDK read-only')
         if role == 'r3_circuit_new':
             note = ('new wrapper only: it instantiates the three accepted cells with the port orders '
                     'read off their files, and edits no cell body')

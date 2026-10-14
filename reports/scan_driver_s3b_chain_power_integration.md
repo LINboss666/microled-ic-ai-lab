@@ -116,9 +116,18 @@ resistor, not an electrode. One pixel of the 15 µA figure and the 768-pixel ass
 side by side (`1.5e-05 A` and `11.2097 mA` measured through the same resistor); neither is a final
 `N_ACTIVE`.
 
-Ron is computed only where the platform is settled and the current is non-zero: 8.00029 Ω on the
-light deck and 7.92883 Ω on the column decks, from `VSD/I`. Where the off windows carry ~0.2 nA the
-row reports the current and leaves Ron `NOT_DEFINED` rather than dividing by a vanishing number.
+Ron is computed only where the platform is settled and the current is non-zero, as
+`VSD/I`. The figures printed below were built from a source-drain drop that had already been
+rounded to six significant digits, so they must not be read at the precision they are written at.
+S3-C section 4B recomputed both from the shipped 17-digit samples without pre-rounding
+(`results/evidence/sc1_s3c_s3b_corrections.csv`, rows `B_VSD_RON_FULL_PRECISION`): the light deck
+gives **7.7407119837154896 Ω** where this file said `8.00029 Ω`, and the column decks give
+**7.929061698661130 Ω** where it said `7.92883 Ω` — the column figure is unchanged at the three
+digits that matter, the light figure moves by 3.2 %. The conditional drop target is unaffected:
+the largest conducting plateau drop recomputes to 0.08888283 V against the 0.10 V condition.
+Where the off windows carry ~0.2 nA the row still reports the current and leaves Ron `NOT_DEFINED`
+rather than dividing by a vanishing number. The delivered CSV keeps its original bytes: a
+correction to a record is not a rewrite of the measurement.
 
 ## 4 Real-edge delays, with the audited attribution
 
@@ -144,27 +153,58 @@ blank event at 400.000 ns is answered at 400.032 ns inside an output event that 
 only the delay number is withheld. The window was not widened and the next period's output was not
 borrowed.
 
-Where the scan node never completes a 10–90 % swing (`scan` rise/fall on the light decks, `scan`
-fall on the column decks, `gate33` rise on the two write decks that never raise the gate), the edge
-row says `NO_EDGE` with the observed range, e.g. `range=[4.18567e-05, 0.000669858]` for
-`s3b_q0_off_light`. That is the scan node's charge behaviour on a 220 kΩ proxy, not a logic failure,
-and it is not reported as a turn-off delay.
+Which edges were actually measured, read per case and per direction out of `sc1_s3b_cases.csv`
+(32 `S3B_EDGE` rows; the same table is reproduced as rows `C_EDGE_VERDICT` in
+`results/evidence/sc1_s3c_s3b_corrections.csv`):
 
-Against R3: R3's `gate33` carried a linear 0.2 pF capacitor, this round carries seven real non-linear
-p33 gates. These are two different loads, so the deltas above are reported as a measurement
-difference and **not** as an equal-condition degradation ratio.
+| deck | `scan` rise | `scan` fall | `gate33` fall | `gate33` rise |
+|---|---|---|---|---|
+| `s3b_q0_off_light` | NO_EDGE | NO_EDGE | refused (no edge declared) | refused |
+| `s3b_write_q1_light` | **PASS** | NO_EDGE | PASS | NO_EDGE |
+| `s3b_write_q1_column` | **PASS** | NO_EDGE | PASS | NO_EDGE |
+| `s3b_blank_assert_column` | **PASS** | **PASS** | PASS | PASS |
+| `s3b_blank_release_column` | **PASS** | **PASS** | PASS | PASS |
+| `s3b_write_q0_column` | **PASS** | **PASS** | PASS | PASS |
+| `s3b_repeat101_column` | **PASS** | **PASS** | PASS | PASS |
+| `s3b_guard_cycle_column` | **PASS** | **PASS** | PASS | PASS |
+| `s3b_fault_blank_to_vss_column` | **PASS** | NO_EDGE | refused | refused |
+
+So the earlier blanket sentence in this section was wrong in both directions and is replaced by the
+table: `s3b_write_q1_light` **does** produce a measured `scan` rise, and on five of the column decks
+the `scan` **fall** is measured too. What really reports `NO_EDGE` is the `scan` fall on the two
+write decks and the fault deck (the run ends before the node comes back down), the `scan`
+rise *and* fall on `s3b_q0_off_light` (the channel is never selected, so `scan` only ever sits at
+`4.18567e-05 … 6.69858e-04 V` — a charge behaviour on a 220 kΩ proxy, not a logic failure), and the
+`gate33` rise on the two write decks that never raise the gate. None of these is reported as a
+turn-off delay.
+
+Against R3: R3's `gate33` carried its declared **manual gate capacitor of 1 pF by default, 5 pF in
+the `r3_load5p` case** (`scripts/sc1_r3_chain_tt.py` line 411 builds `Cload (gate33 0) capacitor
+c=<load>e-12` from `load=1.0`, line 1066 prints `load_default=1pF`, line 266 sets `r3_load5p` to
+`load=5.0`); the 0.2 pF this section previously stated matches neither. This round carries seven
+real non-linear p33 gates instead. They are two different loads, so the deltas above are reported as
+a measurement difference and **not** as an equal-condition degradation ratio.
 
 ## 5 Three separated currents, and the charge of a real edge
 
-`S3B_BRANCH_CURRENT`/`S3B_BRANCH_PEAK` keep the three branches apart, with the sign rule calibrated
-in R2E (`injected = −(Vsource:i)`). `s3b_write_q1_column` as the representative heavy case:
+`S3B_BRANCH_CURRENT`/`S3B_BRANCH_PEAK` keep the branches apart. Two sign conventions live in that
+one table and they are not the same rule (`s3c_s3b_corrections.csv` rows `A_*`):
 
-| branch | raw min…max (A) | injected range (A) | instant of the extreme |
+* the three **supply** columns obey the rule calibrated in R2E, `injected = −(Vsource:i)`;
+* `Xtop.Ip_gate:i` is a **zero-drop meter inside one branch, not a supply**. Its own signed reading
+  already is the branch current: **positive flows gate33 → the seven bank gates (charging them),
+  negative flows back (discharging into the driver)**. The delivered rows printed that column under
+  the supply label and re-signed it, which is the defect S3-C corrects; the raw signed values in the
+  delivered CSV are right and are untouched, and the gate-charge integral keeps using them as read.
+
+`s3b_write_q1_column` as the representative heavy case:
+
+| branch | raw min…max (A) | second column (A) | instant of the extreme |
 |---|---|---|---|
-| `VSCAN:i` (bank source/body) | −0.028233 … 4.55231e-05 | −4.55231e-05 … 0.028233 | −28.233 mA at 252.541 ns |
-| `V33:i` (control high domain) | −0.000865187 … 3.34425e-05 | −3.34425e-05 … 0.000865187 | −0.865 mA at 251.088 ns |
-| `V18:i` (1.8 V domain) | −0.000474876 … 1.36852e-05 | −1.36852e-05 … 0.000474876 | −0.475 mA at 250.095 ns |
-| `Xtop.Ip_gate:i` (gate branch) | −0.00161125 … 5.46325e-05 | −5.46325e-05 … 0.00161125 | −1.611 mA at 251.541 ns |
+| `VSCAN:i` (bank source/body) | −0.028233 … 4.55231e-05 | injected = −raw: −4.55231e-05 … 0.028233 | −28.233 mA at 252.541 ns |
+| `V33:i` (control high domain) | −0.000865187 … 3.34425e-05 | injected = −raw: −3.34425e-05 … 0.000865187 | −0.865 mA at 251.088 ns |
+| `V18:i` (1.8 V domain) | −0.000474876 … 1.36852e-05 | injected = −raw: −1.36852e-05 … 0.000474876 | −0.475 mA at 250.095 ns |
+| `Xtop.Ip_gate:i` (gate branch) | −0.00161125 … 5.46325e-05 | **raw signed, no re-sign**: the same range; so at its extreme the branch is discharging −1.611 mA from the bank gates back into the driver | −1.611 mA at 251.541 ns |
 
 The light-load decks draw −7.957 mA peak from `VSCAN` instead of −28.233 mA; the 28 mA is the column
 proxy charging `scan` through 5 pF plus 11.2 mA of steady load current, and it is a **measured
@@ -248,6 +288,10 @@ relaxing a gate.
    differs; the two rows consequently disagreed by ~1 fC against a rebuilt value. Window bounds are
    now anchored on real sample instants and each source takes its own end-stretch means, so the
    verifier rebuilds every `net_Q` from the shipped block inside the printed tolerance.
+   Scope of that statement, stated narrowly: the 2 % end-stretch rule says the baseline of a charge
+   window is *within the declared window and method*, and the 0.05 ns `maxstep` sensitivity deck
+   that the S3-B brief allowed was **never run**, so nothing here certifies step-size convergence
+   and no charge figure in this report may be quoted as "mathematically stable".
 4. Two evidence-completeness defects: several cells were cut at printing limits (the sixth master
    digest truncated to 7 hex characters, 18 of 32 saved trace names lost, `earlier_opposite_event=`
    and `level_max` cut off), and 23 cells carried an unexpanded `50%%`. All limits were removed, the
@@ -327,16 +371,22 @@ Checks run before this commit, all on the delivered bytes:
   (509 files, 537 labelled lines, 0 violations), `scripts/netlist_stats.py` (PASS).
 
 **Process accounting for the whole S3-B circuit round, read from the run directories rather than
-from memory:** eight full nine-deck batches (`s3b_native`, `s3b_native2` … `s3b_native8`), each
-leaving 18 Spectre logs (9 full preflight + 9 DUT) = 144, plus two single-deck probes
-(`s3b_probe`, `s3b_probe2`) at 2 each = 4, total **148 Spectre processes**. The delivered evidence is
-`s3b_native8` alone; `native`…`native7` are debug batches kept in their own directories and were
-never overwritten into the same path, and only `native8`'s five files were promoted. The static
-supply layer (awk, no simulator) ran once per deck per batch; `--dry`, the offline re-analysis and
-the verifier ran no simulator at all. One optional `maxstep=0.05` sensitivity deck was **not** run:
-after §7-1 the nine edges integrate inside 16.5–17.2 ns windows that settle within the neighbour
-bound, so no convergence doubt remained that a single extra deck could answer — stating that as the
-reason rather than leaving the allowance silently unused.
+from memory — and split by who can check it.** *Cloud-verifiable*: `results/evidence/
+sc1_s3b_dependency_log.txt`, which is in the reviewed commit, carries **18** records for the
+delivered batch — nine full preflights and nine DUT runs, one `run accepted` line per deck, all for
+`s3b_native8`. *Local-only*: eight full nine-deck batches (`s3b_native`, `s3b_native2` …
+`s3b_native8`), each leaving 18 Spectre logs = 144, plus two single-deck probes (`s3b_probe`,
+`s3b_probe2`) at 2 each = 4, total **148 Spectre output directories**. That 148 is a count of
+directories on the machine that ran them; the raw trees and their logs are git-ignored, so a
+reviewer cannot re-count them from the repository and the number is not offered as evidence for any
+measurement. S3-C re-measured the same tree and recorded the breakdown in
+`sc1_s3c_s3b_corrections.csv` row `C_PROCESS_ACCOUNTING`. `native`…`native7` are debug batches kept
+in their own directories and were never overwritten into the same path, and only `native8`'s five
+files were promoted. The static supply layer (awk, no simulator) ran once per deck per batch;
+`--dry`, the offline re-analysis and the verifier ran no simulator at all. One optional
+`maxstep=0.05` sensitivity deck was **not** run: after §7-1 the nine edges integrate inside
+16.5–17.2 ns windows whose end stretch falls inside the neighbour bound, which is why the allowance
+went unused — that is a reason for not spending a deck, **not** a step-size convergence proof.
 
 ## 9 Not claimed, and what a reviewer should look at first
 

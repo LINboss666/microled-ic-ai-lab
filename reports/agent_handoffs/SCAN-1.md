@@ -2,24 +2,47 @@
 
 ## CURRENT_STATUS (single authoritative table; everything below this block is history)
 
-Updated 2026-10-14 during **SCAN-1S3B / §2 offline corrections**, on top of the S3-A block below. Start
-point re-read before editing: local HEAD `cf04086e99f6cb9b277c8d33b2ec279cdb1ca9f4`, remote ref read back
-through `git ls-remote` and `gh api` as the **same full SHA**, no unknown upstream commits. The cloud
-pulled those bytes, reviewed `b48a821` and decided **`R3_REVIEW: PASS / GO_S3_A_3V3_CHARACTERISATION`**,
-then reviewed `cf04086` and decided **`GO_S3_B_3V3_CHAIN_POWER_INTEGRATION`**. This block therefore keeps
-the S3-A facts **and** corrects three of them, as the reviewer's own review required: the `W_m` unit
-column, the per-case status of the four gate charges, and the physical attribution of the branch peaks,
-the extra overlap-capacitance term, the R2E/R3 citation and the 1.525 V tail. Full write-ups:
-`reports/scan_driver_s3a_p33_characterisation.md` (corrected in place) and, for the circuit work that
-follows, `reports/scan_driver_s3b_chain_power_integration.md`. S3-A artifacts:
+Updated 2026-10-14 during **SCAN-1 S3-C (schematic and Symbol delivery)**. Start point re-read before
+editing: local HEAD and the reviewed start `a26c54b6cccb503ce1283e58c39819ed1ca890de` agreed, the remote
+tip was read back twice, and the work tree was clean apart from two untracked local helpers. The cloud
+reviewed `a26c54b` and decided **`S3_B_TT_POC_ACCEPTED_WITH_OFFLINE_CORRECTIONS / GO_S3_C_SCHEMATIC_SYMBOL`**,
+so the S3-A facts are no longer current state and are moved verbatim into the history section below
+(`HISTORICAL_STATUS (SCAN-1S3A round)`); nothing in them was edited, only relocated. The S3-B record was
+corrected offline in the same commit — the corrections live in
+`results/evidence/sc1_s3c_s3b_corrections.csv`, the delivered bytes are untouched, and the wording in
+`reports/scan_driver_s3b_chain_power_integration.md` now matches them. Full S3-C write-up:
+`reports/scan_driver_s3c_schematic_symbol.md`. **Zero simulators were started by this round**: no
+Spectre, no ngspice, no full preflight, no operating-point run; the OA work used `spiceIn` (netlist →
+schematic import) and the dbAccess object API, and the netlist below is *extraction from* the schematic,
+not a simulation of it. The VM power, network, snapshots, licence, the PDK, the shared `cds.lib` and
+every pre-existing OA library — including `microled_cells`, `data_sink_1ch` and the user's hand-drawn
+C²MOS cell — were not written.
+
+| item | status | evidence |
+|---|---|---|
+| **S3_B_TT_POC** | **ACCEPTED_WITH_OFFLINE_CORRECTIONS** (cloud, on `a26c54b`) | the nine TT chain+bank decks, 644 judgement rows, 4 803 sample rows, 49 offline checks and two tamper cases; corrected afterwards without re-simulation: the iprobe sign label (§4A), the plateau `Ron` precision (§4B — light **7.7407 Ω** recomputed from 17-digit samples against the `8.00029 Ω` the report had printed from a pre-rounded drop; column **7.9291 Ω**, still inside the conditional 0.10 V figure at a maximum conducting drop of 0.08888283 V), and the per-case edge / gate-load / process-count wording (§4C, R3 default manual gate load is **1 pF**, `r3_load5p` is 5 pF) |
+| **S3_C_OA_SCHEMATIC · SYMBOL · READBACK · GRAPH_EQUIVALENCE** | **COMPLETE for the single verified channel · S3-C REVIEW GATE · NOT MERGED TO S4** | new library `microled_scan_s3c` under `cadence_work/s3c_oa/`, built on this task's own isolated `cds.lib`; the eight cells of the task book (`c2mos_dff` 18, `sc1_scan_gate` 4, `sc1_ls_core_r2d` 6, `sc1_ls_c1_r2d` 4, `sc1_ls_c1_top_r2d` 10 expanded, `sc1_r3_scan_chain_1ch` 32 expanded, `sc1_s3b_p33_bank_7` seven explicit fingers, `sc1_scan_power_1ch_s3c` 39 expanded) each exist as `schematic` **and** `symbol`; 39/39 devices read back with model, `l/w/fw/m/fingers`, and the D/G/S/B net on every terminal by **name**; `dbCheck` = t for all eight; two separate Virtuoso sessions reopened the saved views and produced identical rows; canonical circuit text rebuilt from the OA rows equals the golden text for all eight cells → `S3C_OA_GRAPH_EQUIVALENCE: PASS`, and a one-gate-net tamper of the exported table is refused |
+| **S3_C_VISUAL_REVIEW** | **PENDING, with the reason measured** | this batch build has no Schematic Editor package: `schCreate`, `schCreateWire`, `schCheck`, `schCreateSym`, `symCreate`, `schConvSch2Sym`, `dbCreateFig`, `ddCreateCell` and `hiCreateDirLib` all read back `nil` in a session started `virtuoso -nograph`, and the importer's own symbols carry terminals but **0 figures**. Placement, the symbol box graphics and a graphical direction check need one GUI session; the electrical readback above does not depend on them and was delivered anyway |
+| **NEW_SIMULATION_RUNS** | **0** | no simulator was invoked in S3-C |
+| **FINAL_VSCAN / LED_IV / N_ACTIVE / REAL_ELECTRODE_RC / BUDGETS** | **NOT_DEFINED ×5** | unchanged; the S3-B bench load is still a proxy, and a schematic view changes no assumption |
+| **S4_CHAIN / SOA / AUTONOMOUS_POWER_FAIL** | **NOT_STARTED · NO · NOT_IMPLEMENTED** | no multi-channel or shift chain, no absolute rating read, no POR/UVLO/power-fail behaviour |
+
+### Next step is the S3-C independent review gate
+
+The single verified channel now exists as schematic and Symbol views whose object graph matches the
+accepted netlists. Nothing further is authorised from here: S4 (array, multi-channel, Data chaining,
+PVT, power-fail matrix) and layout/DRC/LVS/PEX stay out, and the visual pass over the eight views needs
+a reviewer with a GUI session.
+
+## HISTORICAL_STATUS (SCAN-1S3A round and the S3-B measurement round, kept verbatim for audit; superseded by the CURRENT_STATUS above)
+
+Original S3-A header text, kept as written at the time except for one deleted sentence: the block
+below once ended with "as of this commit the device is still not connected to the R3 chain", which
+stopped being current state when the S3-B chain+bank decks ran, and S3-C section 4C required removing
+it from current-state text. Everything else is untouched. The S3-A artifacts are
 `scripts/sc1_s3a_p33_tt.py`, `scripts/sc1_s3a_verify_evidence.py`, `scripts/sc1_s3a_tail_read.py`,
 `results/evidence/sc1_s3a_*`; the S3-B correction artifact is
 `scripts/sc1_s3b_s3a_manifest_correction.py` + `results/evidence/sc1_s3b_s3a_manifest_correction.csv`.
-Spectre really ran for S3-A (guest RHEL6.5, python 2.6.6, Tools channel); **this correction commit starts
-no simulator process at all** — it is offline arithmetic on the delivered bytes. The VM's power, network,
-snapshots, licence, the PDK and the OA libraries were not touched, and no delivered S3-A CSV was
-overwritten. **No 5 V device, no stack, no LED, no electrode RC, no corner or temperature sweep, no
-power-fail matrix, and as of this commit the device is still not connected to the R3 chain.**
 
 | item | status | evidence |
 |---|---|---|
@@ -42,17 +65,18 @@ power-fail matrix, and as of this commit the device is still not connected to th
 | refusal / dry isolation | **built in from the start (AGENTS rule 27)** | unauthorised call prints `S3A_REFUSED …` and returns 5 **before** any write; `--dry` without `--out` writes only inside the scratch dir; every probe/debug output was redirected off the official paths, so no delivered file was ever truncated |
 | frozen inputs | **0 files changed** | the three accepted cells, the R3 wrapper, the audited reader/delay/vtx/preflight/supply/runner/call-contract, the S1/S2 generators and every earlier experiment CSV: `git diff b48a821 HEAD` over them is empty. New content is one entry + two offline check tools + evidence + this report |
 | **FINAL_PANEL_VOLTAGE / LED_IV** | **NOT_DEFINED · NOT_DEFINED** | unchanged and not entered: 3.3 V is a characterisation choice, no LED model was invented, and P1/P2/P3 from the pre-design stay open |
-| **S3_CHAIN_POWER_INTEGRATION** | **NATIVE TT MEASURED · S3-B REVIEW GATE · NOT MERGED TO S4** | the nine declared TT chain+bank decks ran in one delivered batch (`S3B-20261013T213017Z`, 644 judgement rows, 4 803 sample rows, static rc 7 accepted + full preflight rc 0 + spectre rc 0 + runner PASS for all nine): gate33 meets the POC window target in every judged window, the column proxy holds 3.21112 V at 11.2097 mA with **VSD 0.08888 V against the conditional 0.10 V figure**, `Ron` 7.92883 Ω on the platform, `Q_G` = 4.885–4.989 pC per edge with the terminal sum and the branch iprobe agreeing inside 2.25 fC, and the `blank`-tied-to-`vss` fault is **DETECTED** from five printed conditions plus the same-window contrast. Offline review on the delivered bytes: 49 checks 0 failures and the two tamper cases refused, identically on Windows 3.12 and the simulator host's 2.6.6; the 3 583 407-byte sample export ships as fifteen newline-cut parts plus a digest index because the history size gate refuses a blob over 512 KiB, and the whole file stays as the byte object of record with the run. Seven earlier batches are kept as debug, 148 Spectre processes in total for the round, and only the delivered batch entered `results/evidence/`. Report: `reports/scan_driver_s3b_chain_power_integration.md` |
+| **S3_CHAIN_POWER_INTEGRATION** | **MEASURED · ACCEPTED IN S3-C WITH OFFLINE CORRECTIONS · superseded by the block above** | the nine declared TT chain+bank decks ran in one delivered batch (`S3B-20261013T213017Z`, 644 judgement rows, 4 803 sample rows, static rc 7 accepted + full preflight rc 0 + spectre rc 0 + runner PASS for all nine): gate33 meets the POC window target in every judged window, the column proxy holds 3.21112 V at 11.2097 mA with **VSD 0.08888 V against the conditional 0.10 V figure**, `Ron` 7.92883 Ω on the platform, `Q_G` = 4.885–4.989 pC per edge with the terminal sum and the branch iprobe agreeing inside 2.25 fC, and the `blank`-tied-to-`vss` fault is **DETECTED** from five printed conditions plus the same-window contrast. Offline review on the delivered bytes: 49 checks 0 failures and the two tamper cases refused, identically on Windows 3.12 and the simulator host's 2.6.6; the 3 583 407-byte sample export ships as fifteen newline-cut parts plus a digest index because the history size gate refuses a blob over 512 KiB. **Three statements in this row were later corrected offline in S3-C section 4, and the delivered bytes were not touched**: the platform `Ron` is 7.9291 Ω (column) and **7.7407 Ω** (light, where this row's sibling in the report said 8.00029 Ω from a pre-rounded drop), the `Xtop.Ip_gate:i` column is a signed branch current and not `-(Vsource:i)`, and the "148 Spectre processes" figure is a local directory tally while the cloud-verifiable delivered record is 18. See `results/evidence/sc1_s3c_s3b_corrections.csv`. Report: `reports/scan_driver_s3b_chain_power_integration.md` |
 | **S4_CHAIN / SOA / AUTONOMOUS_POWER_FAIL** | **NOT_STARTED · NO · NOT_IMPLEMENTED** | no multi-channel or shift chain, no absolute rating read, no POR/UVLO/power-fail behaviour |
 
-### Next step is the declared S3-B circuit work, not a continuation of S3-A
+### The route that was in force when the S3-A block was current (history, not a next step)
 
-The device side now has numbers: a 7 × 100 µm, L=0.4 µm p33 candidate that satisfies the conditional
+The device side then had numbers: a 7 × 100 µm, L=0.4 µm p33 candidate that satisfied the conditional
 draft arithmetic at tt/27 °C, an off-state reading, and a per-edge equivalent charge of
-**1.339–1.507 pF**. Nothing about the panel is decided, and the reviewer has already chosen the route:
-**S3-B — connect the measured candidate to the accepted `gate33` and verify select / blank / guard /
-re-select with the bank present**. P1/P2/P3 (`VSCAN`/`VLED`, LED `Vf`, `N_active`) stay open and cannot be
-closed by anything S3-B measures.
+**1.339–1.507 pF**. The reviewer's chosen route at that point was **S3-B — connect the measured
+candidate to the accepted `gate33` and verify select / blank / guard / re-select with the bank
+present**, and that round has since run and been accepted. P1/P2/P3 (`VSCAN`/`VLED`, LED `Vf`,
+`N_active`) stayed open and cannot be closed by anything S3-B or S3-C measured. The live next step is
+the S3-C review gate at the top of this file.
 
 ## HISTORICAL_STATUS (SCAN-1R3A round, kept for audit; superseded by the S3-A block above)
 
