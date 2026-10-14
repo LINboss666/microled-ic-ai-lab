@@ -1,0 +1,44 @@
+GUI1: SESSION_PID=3119 DISPLAY=:0 XAUTHORITY=/var/run/gdm/auth-for-root-4QRos1/database
+GUI1: X_SERVER_OK=yes
+GUI1: LOCKS=none LIB=microled_scan_s3c
+RUN mode=gui cwd=$PROJ/cadence_work/s3c_oa home=$PROJ/cadence_work/s3c_oa/home timeout=420s il=$PROJ/cadence_work/s3c_oa/skill/sc1_s3c1_gui1.il token=S8-DONE
+RESULT rc=0
+TOKEN_FOUND yes
+S3C_RUN_OA: PASS log=$PROJ/cadence_work/s3c_oa/logs/s3c_oa_20261014_135304.log
+GUI1: RUNNER_RC=0
+GUI1: CAPTURE_DIR=$PROJ/cadence_work/s3c_oa/out
+-rw-------. 1 root root 545 Oct 14 13:53 gui1_capture_s8_bank_sch.txt
+-rw-------. 1 root root 540 Oct 14 13:53 gui1_capture_s8_ciw.txt
+-rw-------. 1 root root 544 Oct 14 13:53 gui1_capture_s8_dff_sch.txt
+-rw-------. 1 root root 544 Oct 14 13:53 gui1_capture_s8_top_sch.txt
+-rw-------. 1 root root 544 Oct 14 13:53 gui1_capture_s8_top_sym.txt
+-rw-------. 1 root root   0 Oct 14 13:53 gui1_CIW_s8_bank_sch.xwd
+-rw-------. 1 root root   0 Oct 14 13:53 gui1_CIW_s8_ciw.xwd
+-rw-------. 1 root root   0 Oct 14 13:53 gui1_CIW_s8_dff_sch.xwd
+-rw-------. 1 root root   0 Oct 14 13:53 gui1_CIW_s8_top_sch.xwd
+-rw-------. 1 root root   0 Oct 14 13:53 gui1_CIW_s8_top_sym.xwd
+--- gui1_capture_s8_bank_sch.txt ---
+GRAPHICS_WINDOW_ID=NONE
+CIW_WINDOW_ID=0x3a0000c
+GRAPHICS_CAPTURE: SKIP (no such window)
+CIW_CAPTURE: FAIL (import and xwd both failed)
+--- gui1_capture_s8_ciw.txt ---
+GRAPHICS_WINDOW_ID=NONE
+CIW_WINDOW_ID=0x3a0000c
+GRAPHICS_CAPTURE: SKIP (no such window)
+CIW_CAPTURE: FAIL (import and xwd both failed)
+--- gui1_capture_s8_dff_sch.txt ---
+GRAPHICS_WINDOW_ID=NONE
+CIW_WINDOW_ID=0x3a0000c
+GRAPHICS_CAPTURE: SKIP (no such window)
+CIW_CAPTURE: FAIL (import and xwd both failed)
+--- gui1_capture_s8_top_sch.txt ---
+GRAPHICS_WINDOW_ID=NONE
+CIW_WINDOW_ID=0x3a0000c
+GRAPHICS_CAPTURE: SKIP (no such window)
+CIW_CAPTURE: FAIL (import and xwd both failed)
+--- gui1_capture_s8_top_sym.txt ---
+GRAPHICS_WINDOW_ID=NONE
+CIW_WINDOW_ID=0x3a0000c
+GRAPHICS_CAPTURE: SKIP (no such window)
+CIW_CAPTURE: FAIL (import and xwd both failed)

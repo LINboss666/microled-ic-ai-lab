@@ -1,0 +1,16 @@
+S3C_EXTRACTED_NETLIST: .\spectre/generated/sc1_s3c_channel_from_schematic.scs lines=77
+S3C_READBACK_ROWS cell=8 device=39 inst=55 net=64 pin=48 symbol=8 symterm=48
+S3C_OA_DEVICE_COUNT: 39
+S3C_OA_SUBINSTANCES: 7
+S3C_OA_PORT_PINS: 48
+S3C_OA_SYMBOL_TERMINALS: 48
+S3C_DBCHECK_ALL_T: yes
+S3C_CONNECTIVITY_ROWS: 46
+S3C_CONNECTIVITY_MATCH: 46
+S3C_EQUIVALENCE_CELLS: 8
+S3C_EQUIVALENCE_MATCH: 8
+S3C-NOTE: sc1_r3_scan_chain_1ch.q is an internal net with 1 terminal connections and no port pin
+S3C-NOTE: sc1_r3_scan_chain_1ch.qbar is an internal net with 2 terminal connections and no port pin
+S3C-NOTE: sc1_r3_scan_chain_1ch.en is an internal net with 2 terminal connections and no port pin
+S3C_OA_GRAPH_EQUIVALENCE: PASS
+S3C_VERDICT_COUNTS failures=0 notes=3

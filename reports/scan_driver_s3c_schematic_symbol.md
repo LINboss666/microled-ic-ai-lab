@@ -57,11 +57,16 @@ decided the build, so they are recorded rather than assumed:
   `dbCreatePin`, `dbCreateProp`, `dbDeletePropByName`, `dbFindProp`, `cdfGetInstCDF`,
   `cdfFindParamByName`, `cdfParseFloatString`, `dbCopyCellView` = present. `dbCreateFig`,
   `ddCreateCell`, `schCreate`, `schCreateWire`, `schCheck`, `schCreateSym`, `symCreate`,
-  `schConvSch2Sym`, `hiCheckAndSave`, `hiCreateDirLib` = **`nil`**. That is the reason the schematics
-  come from `spiceIn` and the reason the visual pass is honestly deferred.
+  `schConvSch2Sym`, `hiCheckAndSave`, `hiCreateDirLib` = **`nil` in that session at that moment**.
+  **Retracted in S3C1**: `getd` returning `nil` at process start does not prove the capability is
+  absent — the schematic package loads later, and `schCheck` does run in the same `-nograph` mode once
+  it has. Section 10 is the corrected measurement.
 * An importer-made cell in the existing library (`microled_cells/c2mos_dff_1bit`) shows `terms=0` on
   the schematic side in batch, ports present as `basic/iopin` instances whose identity lives on the
-  net's pin, and a **symbol view with the right terminals and 0 figures**. The file-scope wrapper
+  net's pin, and a **symbol view with the right terminals and 0 figures**. **Retracted in S3C1**: both
+  readings used wrong attributes — `cv->terms` and `dbGet(sym "figures")` are supported and legitimately
+  empty, while `cv->terminals` and `cv->shapes` are not, and this library's own symbols do carry body,
+  pin and label graphics (section 10). Unaffected is that the file-scope wrapper
   cells (`sch3_top`, `sch1_import_top`) have no symbol at all — which decided the shape of the import
   (section 4).
 
@@ -210,13 +215,14 @@ After those edits the S3-B gates were re-run on the delivered bytes and still pa
 * **Every cell also carries a `data.dm` view** (Cadence's own metadata) and the shell shows a
   `netlist_tmp` step in the ASG log. Recorded, not used.
 * **Symbol graphics and schematic pin directions are not deliverable in batch on this build.**
-  Measured, not assumed: `schCreate`/`schCreateWire`/`schCheck`/`schCreateSym`/`symCreate`/
-  `schConvSch2Sym`/`dbCreateFig`/`ddCreateCell` are `nil` under `virtuoso -nograph`, and the
-  importer's own symbols carry terminals with **0 figures**. So the section-5 layout requirements —
-  five DFF regions, PMOS above / NMOS below, a visible `ns_m`, inputs left / `scan` right / supplies
-  top / `vss` bottom — are **`VISUAL_REVIEW_PENDING`**. The ASG auto-placement is what is in the file
-  (the DFF bboxes interleave PMOS rows at y≈2.8–4.7 and 9.4–10.0), and this round did not pretend
-  otherwise, did not install anything and did not touch the display or the user's launcher to chase it.
+  **Retracted in S3C1 — this was an attribution, not a measurement.** The three claims it rested on
+  ("this build's batch mode cannot draw", "the symbols have 0 figures", "batch cannot persist a
+  direction") are all replaced by measured results in section 10: directions are written on the real
+  terminal objects and read back from disk (96 of 96), the symbols have real body/pin/label graphics,
+  `schCheck` runs in batch and reports per-view counts, and figures can be re-placed by assigning
+  `bBox`/`xy`. What genuinely remains undone is the **role-based pin placement** and the wire repair it
+  forces in the parent schematics, plus real screenshots — recorded as blocked with the exact reason
+  rather than presented as finished.
 * **`dbCheck` is reported as `dbCheck`.** It returns `t` for all eight cells; it checks the OA object
   graph and is not the editor's electrical Check-And-Save, which is unavailable here.
 * **One directory mtime moved outside the new library.** `microled_cells`' own timestamp advanced
@@ -283,3 +289,95 @@ Open questions for the S3-C gate, none of which this round answered by itself:
    importer placement until layout is actually in scope (it is currently out of course scope)?
 4. Confirm the light-deck `Ron` correction (8.00029 → 7.7407 Ω) is recorded the way the reviewer
    wants: report text amended, delivered CSV untouched, correction table citing the original rows.
+
+## 10 S3C1: corrected read-back, the direction write, and what actually blocks the placement
+
+Everything below is a measurement from this task's own library, with the table that holds it named in
+each bullet. `NEW_SIMULATION_RUNS = 0` still: no Spectre, no ngspice, no preflight `full`, no
+operating point was run in this section.
+
+* **Fields corrected** (`results/evidence/sc1_s3c1_oa_readback.csv`, 16 rows). For every view,
+  `cv->terminals` and `cv->shapes` return counts; `cv->terms`, `cv->figures` and `cv->figs` return
+  `EMPTY (supported, nothing in it)`. The S3-C conclusion was therefore built on attributes that are
+  legitimately empty, not on absent graphics.
+* **Directions written on the real objects and read back from disk**
+  (`results/evidence/sc1_s3c1_ports.csv`, 96 rows = 48 schematic + 48 symbol terminals,
+  `S3C1_PORT_ROWS 96 ... MISMATCH 0`). The working write is `termObj->direction = 'output`;
+  `dbSetq(termObj->direction ...)` returns nil, and `intern("inputOutput")` raises. A separate process
+  then opened the views and compared 96 objects with `objects compared: 96 mismatched: 0` and the
+  distribution `inputOutput 40 / input 36 / output 20`. That replaces "batch cannot persist a
+  direction".
+* **Symbol graphics exist, per symbol** (`results/evidence/sc1_s3c1_graphics.csv`): every one of the
+  eight has a `device/drawing` body rectangle, and pin rectangles = connector stubs = pin labels =
+  terminal count (bank 3/3/3 with 13 shapes, `c2mos_dff` 6/6/6 with 22, top 9/9/9 with 31, ...).
+* **...but all 48 pin centres lie to the right of the body**
+  (`results/evidence/sc1_s3c1_symbol_side.csv`): 10 match their role — the ten signal outputs, which
+  belong on the right — and **38 do not** (13 signal inputs, 11 supplies, 8 `vss`, plus `bgate`). This
+  is the placement gap stated as a number.
+* **Parents are internally consistent today** (`results/evidence/sc1_s3c1_connectivity.csv`): 39
+  sub-instance pins, **39 reached by a wire figure of that same parent net**. Two things had to be
+  measured to get that honest: net names are per view (the top schematic carries the bank's `bgate`
+  pin on the net named `gate33`), and instances are not all `R0` — `S3C1_GEOM_TRANSFORMS MY,R0`, so a
+  mirrored instance's pin x is `origin − symbol x`.
+* **Editor check, with the counts kept** (`results/evidence/sc1_s3c1_editor_check.csv`): `schCheck` on
+  the eight schematics returns `((0 5))` dff, `((0 1))` gate, `((0 2))` ls_core, `((0 1))` ls_c1,
+  `((0 1))` ls_c1_top, `((0 1))` chain, `((0 0))` bank, `((0 0))` top — 0 errors everywhere, warnings
+  kept as printed. On symbol views `schCheck` returns nil, and `symCheck`/`hiCheckAndSave` are absent,
+  so the symbol side is checked by `dbCheck = (t)` (16/16 in the GUI session) and by the geometry
+  tables, not by an editor check that does not exist here. `dbCheck` is still not presented as the
+  editor's Check-And-Save.
+* **Write capability, at three measured points** (`results/evidence/sc1_s3c1_tools_locks.csv`, 232
+  rows from six sessions). Works: assign `fig->bBox` / `label->xy` (probe7: `SETBBOX rc=t changed=t`,
+  then `dbSave`, `dbClose`, reopen **from disk** shows the moved box, and the terminal still owns the
+  same pin object); assign terminal direction; `dbSave`; `dbCheck`; `schCheck` once the package has
+  loaded. Does not work here: `dbMoveFig` in three argument orders (the two error texts pin the order
+  down — `Invalid cellView` for `(fig delta)`, `Invalid figure` for `(cv fig delta)`),
+  `dbCreateRect`/`dbCreateLine`/`dbCreateLabel`/`dbCreatePin` in six forms, and `dbDeleteObj`,
+  `geMoveFig`, `schCreateWire`, `schDelete`, `symUpdateInst`, `schUpdateInst`, `schMaintainConn` are
+  absent — they stay absent in a `-nograph` process and in the GUI process that never got an editor
+  window.
+* **Safety of this round**: the 72 delivered library files are byte-identical before and after
+  (`logs/pre_scratch_lib.md5` vs `logs/post_cleanup_lib.md5`, `LIB_BACK_TO_72_IDENTICAL`). Five scratch
+  cellviews created by the probes — `dbCopyCellView` writes its target to disk even when nothing is
+  saved, which is itself a measured fact — were removed and the identity re-checked. No `.locks` entry
+  existed at any point, no other Cadence process was running, no lock was deleted, no user window was
+  touched, and the pre-S3C1 backup stays in the project
+  (`backup_microled_scan_s3c_pre_s3c1_20261014.tgz`, sha256 `dc063aa7…8dcf5`).
+* **Why the role placement is not delivered in this round, stated as a dependency rather than as a
+  capability claim**: moving a symbol pin moves that pin's connection point in every parent instance,
+  and the parent wire graphics end at the old points (Virtuoso says so itself — `SCH-2162: "… symbol"
+  has been updated since "… schematic" was last saved`). With no delete and no create-wire primitive,
+  the repair has to be an in-place re-lay of the segments that already exist, which needs a
+  collision-checked route per net against other nets' wires, other pins' rectangles and instance
+  boxes. A half-verified version of that would leave the already-accepted library visually wrong or,
+  worse, electrically shorted, and the task forbids rebuilding the library. The usable primitive is
+  proven; the router is the remaining work, tracked as S3C1-9.
+* **Screenshots**: measured again rather than remembered — the CIW window exists (`0x3a0000c`) but
+  reports `Map State: IsUnMapped`, `import -window` fails with `unable to read X window image …
+  Resource temporarily unavailable`, and the `xwd` fallback writes 0 bytes. Same conclusion as GUI-1,
+  so `VISUAL_REVIEW = PENDING`, and no externally drawn picture is presented as an OA view.
+* **Graph equivalence on today's state** (`results/evidence/sc1_s3c1_equivalence.csv`): the existing
+  comparator re-run on a fresh read-back gives `S3C_OA_DEVICE_COUNT 39`, `S3C_OA_PORT_PINS 48`,
+  `S3C_OA_SYMBOL_TERMINALS 48`, `S3C_CONNECTIVITY_MATCH 46/46`, `S3C_EQUIVALENCE_MATCH 8/8`,
+  `S3C_OA_GRAPH_EQUIVALENCE PASS`, `failures=0`.
+* **Statuses, kept apart** — read-back fields `MATCHED`; port directions `MATCHED`; symbol graphics
+  present `MATCHED`; symbol pin placement `NOT_DONE`; schematic presentation `NOT_DONE`; editor check
+  `PARTIAL` (schematics only); graph equivalence `PASS`; visual review `PENDING`.
+
+The four open questions in section 9 are now answered by data rather than by attribution: 1 — the
+symbols do carry graphics, and the placement needs a router, not a different import; 2 — yes for the
+directions, and the OA side does carry them in batch; 3 — the DFF region placement is still importer
+placement, deliberately untouched, because moving instances without re-routing breaks the drawing;
+4 — unchanged, already recorded.
+
+* **Manifests**: `sc1_s3c_round_manifest.csv` was regenerated because its hash of this report had
+  expired (the audit found exactly that); `sc1_s3c1_round_manifest.csv` is new and was generated last,
+  after the final edit of this file, by the same tool (`scripts/sc1_r2e_manifest.py`), which now also
+  carries `s3c1_*` roles. Verified against the bytes: the S3C1 manifest matches **194 of 194** rows;
+  the refreshed S3-C manifest matches 193 of 194 and the single difference is *its own row for
+  `sc1_s3c1_round_manifest.csv`*, which was written after it — two lists that index each other cannot
+  both be self-consistent, so the ordering rule (the new round's manifest is generated last) decides
+  which one carries the stale cross-reference. Neither manifest hashes itself.
+* **This round's own verifier**: `scripts/sc1_s3c1_check.py` asserts 35 claims against the repository
+  bytes, including the *unwanted* state on purpose (all 48 pin sides recorded as `right`, the role
+  match at 10 of 48), so a later regeneration cannot quietly disagree with what section 10 claims.

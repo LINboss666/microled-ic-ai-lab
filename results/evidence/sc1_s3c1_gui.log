@@ -1,0 +1,248 @@
+\# Program start time UTC 2026.10.14 05:53:05.438
+\# Local time Wednesday 14 October 2026, 1:53 pm
+\o Program:		@(#)$CDS: virtuoso version 6.1.7-64b 11/09/2015 12:45 (sjfnl165) $
+\o Hierarchy:		/opt/IC617/tools.lnx86/dfII/
+\o Sub version:		sub-version  IC6.1.7-64b.78  (64-bit addresses)
+\# Command line:	/opt/IC617/tools/dfII/bin/64bit/virtuoso -log $PROJ/cadence_work/s3c_oa/logs/s3c_oa_20261014_135304.log
+\# Host name (type):	work-eda (x86_64)
+\# Operating system:	Linux 2.6.32-431.el6.x86_64 #1 SMP Sun Nov 10 22:19:54 EST 2013
+\# Linux /etc/issue:	Red Hat Enterprise Linux Server release 6.5 (Santiago)
+\# Linux /etc/issue:	Kernel \r on an \m
+\# X display name (WxH):	:0 (1920x1153)
+\# Available geometry:			TL(0:0) BR(1919:1115)
+\# X server:			CentOS
+\# Depth of Visual (Root):	24 (24)
+\# Number of Planes Used:	24
+\# X version:		11.0 (vendor release 11704000)
+\# X resource pool:	base 0x3a00000, mask 0x1fffff (2097151), shift 0
+\# 			current id 0x0, current max 0x1ffffa (2097146)
+\# Max data seg size:	     unlimited
+\# Max process size:	     unlimited
+\# Initial sbrk value:	        381 MB
+\# Available memory:	      9,267 MB
+\# System memory:	     11,810 MB
+\# Maximum memory size:	     11,509 MB
+\# Max mem available:	      9,346 MB
+\# Initial memory used:	         80 MB
+\#        process size:	        869 MB
+\# Qt version:		4.8.5
+\# Window Manager:	gnome (metacity)
+\# User Name:		root
+\o Working Directory:	work-eda:$PROJ/cadence_work/s3c_oa
+\# Process Id:		91276
+\o 
+\o COPYRIGHT © 1992-2015  CADENCE DESIGN SYSTEMS INC.  ALL RIGHTS RESERVED.
+\o           © 1992-2015  UNIX SYSTEMS Laboratories INC.,
+\o                          Reproduced with permission.
+\o 
+\o This Cadence Design Systems program and online documentation are
+\o proprietary/confidential information and may be disclosed/used only
+\o as authorized in a license agreement controlling such use and disclosure.
+\o 
+\o           RESTRICTED RIGHTS NOTICE (SHORT FORM)
+\o Use/reproduction/disclosure is subject to restriction
+\o set forth at FAR 1252.227-19 or its equivalent.
+\o Loading geView.cxt 
+\o Loading menuBuilder.cxt 
+\o Loading schView.cxt 
+\o Loading selectSv.cxt 
+\o Loading wireEdit.cxt 
+\o Loading pte2.cxt 
+\o Loading xlUI.cxt 
+\o Loading auCore.cxt 
+\o Loading vhdl.cxt 
+\o Loading seismic.cxt 
+\o Loading ci.cxt 
+\o Loading ams.cxt 
+\o Virtuoso Framework License (111) was checked out successfully. Total checkout time was 0.02s.
+\w *WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+\w LIB microled_scan_s3c from the same file (defined earlier.)
+\o END OF SITE CUSTOMIZATION
+\o Loading $HOME/.cdsinit init file from the site init file.
+\o S8-BEGIN
+\o S8-API "START" hiOpenView nil
+\o S8-API "START" schOpen nil
+\o S8-API "START" symOpen nil
+\o S8-API "START" geOpen funobj:geOpen
+\o S8-API "START" hiDisplayCellView nil
+\o S8-API "START" schDisplayCellView nil
+\o S8-API "START" geOpenCellView nil
+\o S8-API "START" hiOpenCellView nil
+\o S8-API "START" schOpenWindow nil
+\o S8-API "START" symOpenWindow nil
+\o S8-API "START" hiCreateWindow funobj:hiCreateWindow
+\o S8-API "START" hiGetSession nil
+\o S8-API "START" hiGetEditWin nil
+\o S8-API "START" hiGetEditCellWindow nil
+\o S8-API "START" geGetEditCellView lambda:geGetEditCellView
+\o S8-API "START" hiGetWindowList funobj:hiGetWindowList
+\o S8-API "START" hiGetWindow nil
+\o S8-API "START" hiRedraw funobj:hiRedraw
+\o S8-API "START" geFitAll nil
+\o S8-API "START" hiZoomWholeWindow nil
+\o S8-API "START" schFitAll nil
+\o S8-API "START" hiCheckAndSave nil
+\o S8-API "START" schCheck nil
+\o S8-API "START" symCheck nil
+\o S8-API "START" dbCheck lambda:dbCheck
+\o S8-API "START" system lambda:system
+\o S8-API "START" hiGetMainWindow nil
+\w *WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+\w LIB microled_scan_s3c from the same file (defined earlier.)
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_s3b_p33_bank_7 symbol" has been updated since "microled_scan_s3c sc1_scan_power_1ch_s3c schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_r3_scan_chain_1ch symbol" has been updated since "microled_scan_s3c sc1_scan_power_1ch_s3c schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o S8-SEED t
+\o S8-SEED-DISPLAYED nil
+\o S8-API "AFTER-OPEN" hiOpenView nil
+\o S8-API "AFTER-OPEN" schOpen nil
+\o S8-API "AFTER-OPEN" symOpen nil
+\o S8-API "AFTER-OPEN" geOpen funobj:geOpen
+\o S8-API "AFTER-OPEN" hiDisplayCellView nil
+\o S8-API "AFTER-OPEN" schDisplayCellView nil
+\o S8-API "AFTER-OPEN" geOpenCellView nil
+\o S8-API "AFTER-OPEN" hiOpenCellView nil
+\o S8-API "AFTER-OPEN" schOpenWindow nil
+\o S8-API "AFTER-OPEN" symOpenWindow nil
+\o S8-API "AFTER-OPEN" hiCreateWindow funobj:hiCreateWindow
+\o S8-API "AFTER-OPEN" hiGetSession nil
+\o S8-API "AFTER-OPEN" hiGetEditWin nil
+\o S8-API "AFTER-OPEN" hiGetEditCellWindow nil
+\o S8-API "AFTER-OPEN" geGetEditCellView lambda:geGetEditCellView
+\o S8-API "AFTER-OPEN" hiGetWindowList funobj:hiGetWindowList
+\o S8-API "AFTER-OPEN" hiGetWindow nil
+\o S8-API "AFTER-OPEN" hiRedraw funobj:hiRedraw
+\o S8-API "AFTER-OPEN" geFitAll nil
+\o S8-API "AFTER-OPEN" hiZoomWholeWindow nil
+\o S8-API "AFTER-OPEN" schFitAll nil
+\o S8-API "AFTER-OPEN" hiCheckAndSave nil
+\o S8-API "AFTER-OPEN" schCheck nil
+\o S8-API "AFTER-OPEN" symCheck nil
+\o S8-API "AFTER-OPEN" dbCheck lambda:dbCheck
+\o S8-API "AFTER-OPEN" system lambda:system
+\o S8-API "AFTER-OPEN" hiGetMainWindow nil
+\o S8-SESSION NO_FUNC
+\o S8-EDITCELLVIEW nil
+\o S8-WINLIST ((window:1))
+\# Memory report: using         239 MB, process size 1,061 MB at UTC 2026.10.14 05:53:06.854
+\o S8-CAP-CIW t
+\o Loading smic18mmrf/libInit.il ...
+\o 	Loading smic18mmrf/loadCxt.ile ... done!
+\o 	Loading context 'smic18mmrf' from library 'smic18mmrf' ... done!
+\o 	Loading context 'pdkUtils' from library 'smic18mmrf' ... done!
+\o 	Loading smic18mmrf/display.drf ... done!
+\o 	Loading smic18mmrf/libInitCktPro.il ... done!
+\o 	Loading smic18mmrf/libInitCustomExit.il ... Loading libInitCustomExit.il for smic18mmrf
+\o Loading oasis.cxt 
+\o Loading analog.cxt 
+\o Loading asimenv.cxt 
+\o Loading spectrei.cxt 
+\o Loading devCheck.cxt 
+\o Loading relXpert.cxt 
+\o Loading hspiceD.cxt 
+\o Loading spectreinl.cxt 
+\o Loading UltraSim.cxt 
+\o Loading msgHandler.cxt 
+\o Loading AMSOSS.cxt 
+\o Loading AMS.cxt 
+\o done!
+\o Loaded smic18mmrf/libInit.il successfully!
+\o Loading smic skill utility
+\o $PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../SMIC18MMRF_skillUtility/batchSetCDF.ile
+\o $PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../SMIC18MMRF_skillUtility/libNumcheck.ile
+\o Loading emxskill
+\o file="/license.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/license.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/license.ils
+\o file="/continuum.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuum.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuum.ils
+\o file="/continuumgui.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuumgui.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuumgui.ils
+\o file="/callbacks.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/callbacks.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/callbacks.ils
+\o file="/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils
+\o file="/../models/diff_ind_rf_psub_18MTE_scalable.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_rf_psub_18MTE_scalable.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_rf_psub_18MTE_scalable.ils
+\o file="/../models/ind_rf_psub_scalable.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/ind_rf_psub_scalable.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/ind_rf_psub_scalable.ils
+\o S8-CHK-OPEN "c2mos_dff" "schematic" t
+\o S8-DBCHECK "c2mos_dff" "schematic" res=(t)
+\o S8-CHK-OPEN "c2mos_dff" "symbol" t
+\o S8-DBCHECK "c2mos_dff" "symbol" res=(t)
+\o S8-CHK-OPEN "sc1_scan_gate" "schematic" t
+\o S8-DBCHECK "sc1_scan_gate" "schematic" res=(t)
+\o S8-CHK-OPEN "sc1_scan_gate" "symbol" t
+\o S8-DBCHECK "sc1_scan_gate" "symbol" res=(t)
+\o S8-CHK-OPEN "sc1_ls_core_r2d" "schematic" t
+\o S8-DBCHECK "sc1_ls_core_r2d" "schematic" res=(t)
+\o S8-CHK-OPEN "sc1_ls_core_r2d" "symbol" t
+\o S8-DBCHECK "sc1_ls_core_r2d" "symbol" res=(t)
+\o S8-CHK-OPEN "sc1_ls_c1_r2d" "schematic" t
+\o S8-DBCHECK "sc1_ls_c1_r2d" "schematic" res=(t)
+\o S8-CHK-OPEN "sc1_ls_c1_r2d" "symbol" t
+\o S8-DBCHECK "sc1_ls_c1_r2d" "symbol" res=(t)
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_c1_r2d symbol" has been updated since "microled_scan_s3c sc1_ls_c1_top_r2d schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_core_r2d symbol" has been updated since "microled_scan_s3c sc1_ls_c1_top_r2d schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o S8-CHK-OPEN "sc1_ls_c1_top_r2d" "schematic" t
+\o S8-DBCHECK "sc1_ls_c1_top_r2d" "schematic" res=(t)
+\o S8-CHK-OPEN "sc1_ls_c1_top_r2d" "symbol" t
+\o S8-DBCHECK "sc1_ls_c1_top_r2d" "symbol" res=(t)
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_c1_top_r2d symbol" has been updated since "microled_scan_s3c sc1_r3_scan_chain_1ch schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_scan_gate symbol" has been updated since "microled_scan_s3c sc1_r3_scan_chain_1ch schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c c2mos_dff symbol" has been updated since "microled_scan_s3c sc1_r3_scan_chain_1ch schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o S8-CHK-OPEN "sc1_r3_scan_chain_1ch" "schematic" t
+\o S8-DBCHECK "sc1_r3_scan_chain_1ch" "schematic" res=(t)
+\o S8-CHK-OPEN "sc1_r3_scan_chain_1ch" "symbol" t
+\o S8-DBCHECK "sc1_r3_scan_chain_1ch" "symbol" res=(t)
+\o S8-CHK-OPEN "sc1_s3b_p33_bank_7" "schematic" t
+\o S8-DBCHECK "sc1_s3b_p33_bank_7" "schematic" res=(t)
+\o S8-CHK-OPEN "sc1_s3b_p33_bank_7" "symbol" t
+\o S8-DBCHECK "sc1_s3b_p33_bank_7" "symbol" res=(t)
+\o S8-CHK-OPEN "sc1_scan_power_1ch_s3c" "schematic" t
+\o S8-DBCHECK "sc1_scan_power_1ch_s3c" "schematic" res=(t)
+\o S8-CHK-OPEN "sc1_scan_power_1ch_s3c" "symbol" t
+\o S8-DBCHECK "sc1_scan_power_1ch_s3c" "symbol" res=(t)
+\o S8-CHECKS-DONE
+\o S8-SHOT "sc1_scan_power_1ch_s3c" "schematic" "top_sch" open=t
+\o S8-SHOT "top_sch" displayed=nil
+\o S8-SHOT "top_sch" redraw=nil
+\# Memory report: using         340 MB, process size 1,162 MB at UTC 2026.10.14 05:53:10.275
+\o S8-SHOT "top_sch" capture=t
+\o S8-SHOT "sc1_scan_power_1ch_s3c" "symbol" "top_sym" open=t
+\o S8-SHOT "top_sym" displayed=nil
+\o S8-SHOT "top_sym" redraw=nil
+\o S8-SHOT "top_sym" capture=t
+\o S8-SHOT "c2mos_dff" "schematic" "dff_sch" open=t
+\o S8-SHOT "dff_sch" displayed=nil
+\o S8-SHOT "dff_sch" redraw=nil
+\# Available memory:          9,093 MB at UTC 2026.10.14 05:53:15.923
+\# Memory report: Maximum memory size now 9,433 MB at UTC 2026.10.14 05:53:15.923
+\o S8-SHOT "dff_sch" capture=t
+\o S8-SHOT "sc1_s3b_p33_bank_7" "schematic" "bank_sch" open=t
+\o S8-SHOT "bank_sch" displayed=nil
+\o S8-SHOT "bank_sch" redraw=nil
+\o S8-SHOT "bank_sch" capture=t
+\o S8-API "END" hiOpenView nil
+\o S8-API "END" schOpen nil
+\o S8-API "END" symOpen nil
+\o S8-API "END" geOpen funobj:geOpen
+\o S8-API "END" hiDisplayCellView nil
+\o S8-API "END" schDisplayCellView nil
+\o S8-API "END" geOpenCellView nil
+\o S8-API "END" hiOpenCellView nil
+\o S8-API "END" schOpenWindow nil
+\o S8-API "END" symOpenWindow nil
+\o S8-API "END" hiCreateWindow funobj:hiCreateWindow
+\o S8-API "END" hiGetSession nil
+\o S8-API "END" hiGetEditWin nil
+\o S8-API "END" hiGetEditCellWindow nil
+\o S8-API "END" geGetEditCellView lambda:geGetEditCellView
+\o S8-API "END" hiGetWindowList funobj:hiGetWindowList
+\o S8-API "END" hiGetWindow nil
+\o S8-API "END" hiRedraw funobj:hiRedraw
+\o S8-API "END" geFitAll nil
+\o S8-API "END" hiZoomWholeWindow nil
+\o S8-API "END" schFitAll nil
+\o S8-API "END" hiCheckAndSave nil
+\o S8-API "END" schCheck nil
+\o S8-API "END" symCheck nil
+\o S8-API "END" dbCheck lambda:dbCheck
+\o S8-API "END" system lambda:system
+\o S8-API "END" hiGetMainWindow nil
+\o S8-DONE
+\o 
+\o Loading lce.cxt 
+\# Memory report: on exit            340 MB, process size 1,162 MB at UTC 2026.10.14 05:53:18.749
+\# Memory report: peak usage         340 MB, process size 1,162 MB

@@ -1,0 +1,357 @@
+\# Program start time UTC 2026.10.14 06:05:23.375
+\# Local time Wednesday 14 October 2026, 2:05 pm
+\o Program:		@(#)$CDS: virtuoso version 6.1.7-64b 11/09/2015 12:45 (sjfnl165) $
+\o Hierarchy:		/opt/IC617/tools.lnx86/dfII/
+\o Sub version:		sub-version  IC6.1.7-64b.78  (64-bit addresses)
+\# Command line:	/opt/IC617/tools/dfII/bin/64bit/virtuoso -nograph -log $PROJ/cadence_work/s3c_oa/logs/s3c_oa_20261014_140519.log
+\# Host name (type):	work-eda (x86_64)
+\# Operating system:	Linux 2.6.32-431.el6.x86_64 #1 SMP Sun Nov 10 22:19:54 EST 2013
+\# Linux /etc/issue:	Red Hat Enterprise Linux Server release 6.5 (Santiago)
+\# Linux /etc/issue:	Kernel \r on an \m
+\# X display name (WxH):	work-eda:80 (1024x868)
+\# Available geometry:			TL(0:0) BR(1023:867)
+\# X server:			RealVNC Ltd (VNC nograph server, PID 94234)
+\# Depth of Visual (Root):	16 (16)
+\# Number of Planes Used:	16
+\# X version:		11.0 (vendor release 3370)
+\# X resource pool:	base 0x800000, mask 0x3fffff (4194303), shift 0
+\# 			current id 0x0, current max 0x3ffffa (4194298)
+\# Max data seg size:	     unlimited
+\# Max process size:	     unlimited
+\# Initial sbrk value:	        374 MB
+\# Available memory:	      9,261 MB
+\# System memory:	     11,810 MB
+\# Maximum memory size:	     11,516 MB
+\# Max mem available:	      9,340 MB
+\# Initial memory used:	         80 MB
+\#        process size:	        869 MB
+\# Qt version:		4.8.5
+\# Window Manager:	other
+\# User Name:		root
+\o Working Directory:	work-eda:$PROJ/cadence_work/s3c_oa
+\# Process Id:		94113
+\o 
+\o COPYRIGHT © 1992-2015  CADENCE DESIGN SYSTEMS INC.  ALL RIGHTS RESERVED.
+\o           © 1992-2015  UNIX SYSTEMS Laboratories INC.,
+\o                          Reproduced with permission.
+\o 
+\o This Cadence Design Systems program and online documentation are
+\o proprietary/confidential information and may be disclosed/used only
+\o as authorized in a license agreement controlling such use and disclosure.
+\o 
+\o           RESTRICTED RIGHTS NOTICE (SHORT FORM)
+\o Use/reproduction/disclosure is subject to restriction
+\o set forth at FAR 1252.227-19 or its equivalent.
+\o Loading geView.cxt 
+\o Loading menuBuilder.cxt 
+\o Loading schView.cxt 
+\o Loading selectSv.cxt 
+\o Loading wireEdit.cxt 
+\o Loading pte2.cxt 
+\o Loading xlUI.cxt 
+\o Loading auCore.cxt 
+\o Loading vhdl.cxt 
+\o Loading seismic.cxt 
+\o Loading ci.cxt 
+\o Loading ams.cxt 
+\o Virtuoso Framework License (111) was checked out successfully. Total checkout time was 0.02s.
+\w *WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+\w LIB microled_scan_s3c from the same file (defined earlier.)
+\o END OF SITE CUSTOMIZATION
+\o Loading $HOME/.cdsinit init file from the site init file.
+\o S10-BEGIN
+\w *WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+\w LIB microled_scan_s3c from the same file (defined earlier.)
+\o Loading smic18mmrf/libInit.il ...
+\o 	Loading smic18mmrf/loadCxt.ile ... done!
+\o 	Loading context 'smic18mmrf' from library 'smic18mmrf' ... done!
+\o 	Loading context 'pdkUtils' from library 'smic18mmrf' ... done!
+\o 	Loading smic18mmrf/display.drf ... done!
+\o 	Loading smic18mmrf/libInitCktPro.il ... done!
+\o 	Loading smic18mmrf/libInitCustomExit.il ... Loading libInitCustomExit.il for smic18mmrf
+\o Loading oasis.cxt 
+\o Loading analog.cxt 
+\o Loading asimenv.cxt 
+\o Loading spectrei.cxt 
+\# Memory report: using         291 MB, process size 1,109 MB at UTC 2026.10.14 06:05:24.093
+\o Loading devCheck.cxt 
+\o Loading relXpert.cxt 
+\o Loading hspiceD.cxt 
+\o Loading spectreinl.cxt 
+\o Loading UltraSim.cxt 
+\o Loading msgHandler.cxt 
+\o Loading AMSOSS.cxt 
+\o Loading AMS.cxt 
+\o done!
+\o Loaded smic18mmrf/libInit.il successfully!
+\o Loading smic skill utility
+\o $PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../SMIC18MMRF_skillUtility/batchSetCDF.ile
+\o $PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../SMIC18MMRF_skillUtility/libNumcheck.ile
+\o Loading emxskill
+\o file="/license.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/license.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/license.ils
+\o file="/continuum.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuum.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuum.ils
+\o file="/continuumgui.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuumgui.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuumgui.ils
+\o file="/callbacks.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/callbacks.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/callbacks.ils
+\o file="/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils
+\o file="/../models/diff_ind_rf_psub_18MTE_scalable.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_rf_psub_18MTE_scalable.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_rf_psub_18MTE_scalable.ils
+\o file="/../models/ind_rf_psub_scalable.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/ind_rf_psub_scalable.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/ind_rf_psub_scalable.ils
+\o S10|K|"c2mos_dff"|"mp_k4"|"D"|"q"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_k4"|"B"|"vdd"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_k4"|"G"|"qbar"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_k4"|"S"|"vdd"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_k3"|"D"|"qbar"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_k3"|"B"|"vdd"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_k3"|"G"|"q"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_k3"|"S"|"vdd"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_s2"|"D"|"q"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_s2"|"B"|"vdd"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_s2"|"G"|"m"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_s2"|"S"|"y1"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_s1"|"D"|"y1"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_s1"|"B"|"vdd"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_s1"|"G"|"clkb"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_s1"|"S"|"vdd"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_k2"|"D"|"m"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_k2"|"B"|"vdd"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_k2"|"G"|"mb"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_k2"|"S"|"vdd"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_k1"|"D"|"mb"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_k1"|"B"|"vdd"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_k1"|"G"|"m"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_k1"|"S"|"vdd"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_m2"|"D"|"m"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_m2"|"B"|"vdd"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_m2"|"G"|"d"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_m2"|"S"|"x1"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_m1"|"D"|"x1"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_m1"|"B"|"vdd"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_m1"|"G"|"clk"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_m1"|"S"|"vdd"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_c"|"D"|"clkb"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_c"|"B"|"vdd"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_c"|"G"|"clk"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mp_c"|"S"|"vdd"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_k4"|"D"|"q"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_k4"|"B"|"vss"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_k4"|"G"|"qbar"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_k4"|"S"|"vss"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_k3"|"D"|"qbar"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_k3"|"B"|"vss"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_k3"|"G"|"q"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_k3"|"S"|"vss"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_s2"|"D"|"q"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_s2"|"B"|"vss"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_s2"|"G"|"m"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_s2"|"S"|"y2"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_s1"|"D"|"y2"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_s1"|"B"|"vss"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_s1"|"G"|"clk"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_s1"|"S"|"vss"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_k2"|"D"|"m"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_k2"|"B"|"vss"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_k2"|"G"|"mb"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_k2"|"S"|"vss"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_k1"|"D"|"mb"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_k1"|"B"|"vss"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_k1"|"G"|"m"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_k1"|"S"|"vss"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_m2"|"D"|"m"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_m2"|"B"|"vss"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_m2"|"G"|"d"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_m2"|"S"|"x2"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_m1"|"D"|"x2"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_m1"|"B"|"vss"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_m1"|"G"|"clkb"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_m1"|"S"|"vss"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_c"|"D"|"clkb"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_c"|"B"|"vss"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_c"|"G"|"clk"|"inputOutput"
+\o S10|K|"c2mos_dff"|"mn_c"|"S"|"vss"|"inputOutput"
+\o S10|K|"sc1_scan_gate"|"mn_b"|"D"|"en"|"inputOutput"
+\o S10|K|"sc1_scan_gate"|"mn_b"|"B"|"vss"|"inputOutput"
+\o S10|K|"sc1_scan_gate"|"mn_b"|"G"|"blank"|"inputOutput"
+\o S10|K|"sc1_scan_gate"|"mn_b"|"S"|"vss"|"inputOutput"
+\o S10|K|"sc1_scan_gate"|"mn_a"|"D"|"en"|"inputOutput"
+\o S10|K|"sc1_scan_gate"|"mn_a"|"B"|"vss"|"inputOutput"
+\o S10|K|"sc1_scan_gate"|"mn_a"|"G"|"qbar"|"inputOutput"
+\o S10|K|"sc1_scan_gate"|"mn_a"|"S"|"vss"|"inputOutput"
+\o S10|K|"sc1_scan_gate"|"mp_b"|"D"|"en"|"inputOutput"
+\o S10|K|"sc1_scan_gate"|"mp_b"|"B"|"vdd"|"inputOutput"
+\o S10|K|"sc1_scan_gate"|"mp_b"|"G"|"blank"|"inputOutput"
+\o S10|K|"sc1_scan_gate"|"mp_b"|"S"|"n1"|"inputOutput"
+\o S10|K|"sc1_scan_gate"|"mp_a"|"D"|"n1"|"inputOutput"
+\o S10|K|"sc1_scan_gate"|"mp_a"|"B"|"vdd"|"inputOutput"
+\o S10|K|"sc1_scan_gate"|"mp_a"|"G"|"qbar"|"inputOutput"
+\o S10|K|"sc1_scan_gate"|"mp_a"|"S"|"vdd"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mn_right"|"S"|"vss"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mn_right"|"B"|"vss"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mn_right"|"G"|"enbar"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mn_right"|"D"|"y"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mn_left"|"S"|"vss"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mn_left"|"B"|"vss"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mn_left"|"G"|"en"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mn_left"|"D"|"x"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mp_right"|"S"|"vdd33"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mp_right"|"G"|"x"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mp_right"|"D"|"y"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mp_right"|"B"|"vdd33"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mp_left"|"S"|"vdd33"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mp_left"|"G"|"y"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mp_left"|"D"|"x"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mp_left"|"B"|"vdd33"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mn_drv"|"D"|"enbar"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mn_drv"|"B"|"vss"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mn_drv"|"G"|"en"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mn_drv"|"S"|"vss"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mp_drv"|"D"|"enbar"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mp_drv"|"B"|"vdd18"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mp_drv"|"G"|"en"|"inputOutput"
+\o S10|K|"sc1_ls_core_r2d"|"mp_drv"|"S"|"vdd18"|"inputOutput"
+\o S10|K|"sc1_ls_c1_r2d"|"mn_nb"|"S"|"vss"|"inputOutput"
+\o S10|K|"sc1_ls_c1_r2d"|"mn_nb"|"B"|"vss"|"inputOutput"
+\o S10|K|"sc1_ls_c1_r2d"|"mn_nb"|"G"|"core_ok33"|"inputOutput"
+\o S10|K|"sc1_ls_c1_r2d"|"mn_nb"|"D"|"ns_m"|"inputOutput"
+\o S10|K|"sc1_ls_c1_r2d"|"mn_nt"|"S"|"ns_m"|"inputOutput"
+\o S10|K|"sc1_ls_c1_r2d"|"mn_nt"|"B"|"vss"|"inputOutput"
+\o S10|K|"sc1_ls_c1_r2d"|"mn_nt"|"G"|"y"|"inputOutput"
+\o S10|K|"sc1_ls_c1_r2d"|"mn_nt"|"D"|"gate33"|"inputOutput"
+\o S10|K|"sc1_ls_c1_r2d"|"mp_nb"|"S"|"vdd33"|"inputOutput"
+\o S10|K|"sc1_ls_c1_r2d"|"mp_nb"|"G"|"core_ok33"|"inputOutput"
+\o S10|K|"sc1_ls_c1_r2d"|"mp_nb"|"D"|"gate33"|"inputOutput"
+\o S10|K|"sc1_ls_c1_r2d"|"mp_nb"|"B"|"vdd33"|"inputOutput"
+\o S10|K|"sc1_ls_c1_r2d"|"mp_na"|"S"|"vdd33"|"inputOutput"
+\o S10|K|"sc1_ls_c1_r2d"|"mp_na"|"G"|"y"|"inputOutput"
+\o S10|K|"sc1_ls_c1_r2d"|"mp_na"|"D"|"gate33"|"inputOutput"
+\o S10|K|"sc1_ls_c1_r2d"|"mp_na"|"B"|"vdd33"|"inputOutput"
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_c1_r2d symbol" has been updated since "microled_scan_s3c sc1_ls_c1_top_r2d schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_core_r2d symbol" has been updated since "microled_scan_s3c sc1_ls_c1_top_r2d schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o S10|K|"sc1_ls_c1_top_r2d"|"Xnand"|"y"|"y"|"input"
+\o S10|K|"sc1_ls_c1_top_r2d"|"Xnand"|"core_ok33"|"core_ok33"|"input"
+\o S10|K|"sc1_ls_c1_top_r2d"|"Xnand"|"gate33"|"gate33"|"output"
+\o S10|K|"sc1_ls_c1_top_r2d"|"Xnand"|"vdd33"|"vdd33"|"inputOutput"
+\o S10|K|"sc1_ls_c1_top_r2d"|"Xnand"|"vss"|"vss"|"inputOutput"
+\o S10|K|"sc1_ls_c1_top_r2d"|"Xcore"|"en"|"en"|"input"
+\o S10|K|"sc1_ls_c1_top_r2d"|"Xcore"|"x"|"x"|"output"
+\o S10|K|"sc1_ls_c1_top_r2d"|"Xcore"|"y"|"y"|"output"
+\o S10|K|"sc1_ls_c1_top_r2d"|"Xcore"|"vdd18"|"vdd18"|"inputOutput"
+\o S10|K|"sc1_ls_c1_top_r2d"|"Xcore"|"vdd33"|"vdd33"|"inputOutput"
+\o S10|K|"sc1_ls_c1_top_r2d"|"Xcore"|"vss"|"vss"|"inputOutput"
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_c1_top_r2d symbol" has been updated since "microled_scan_s3c sc1_r3_scan_chain_1ch schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_scan_gate symbol" has been updated since "microled_scan_s3c sc1_r3_scan_chain_1ch schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c c2mos_dff symbol" has been updated since "microled_scan_s3c sc1_r3_scan_chain_1ch schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o S10|K|"sc1_r3_scan_chain_1ch"|"Xls"|"en"|"en"|"input"
+\o S10|K|"sc1_r3_scan_chain_1ch"|"Xls"|"core_ok33"|"core_ok33"|"input"
+\o S10|K|"sc1_r3_scan_chain_1ch"|"Xls"|"gate33"|"gate33"|"output"
+\o S10|K|"sc1_r3_scan_chain_1ch"|"Xls"|"vdd18"|"vdd18"|"inputOutput"
+\o S10|K|"sc1_r3_scan_chain_1ch"|"Xls"|"vdd33"|"vdd33"|"inputOutput"
+\o S10|K|"sc1_r3_scan_chain_1ch"|"Xls"|"vss"|"vss"|"inputOutput"
+\o S10|K|"sc1_r3_scan_chain_1ch"|"Xgate"|"qbar"|"qbar"|"input"
+\o S10|K|"sc1_r3_scan_chain_1ch"|"Xgate"|"blank"|"blank"|"input"
+\o S10|K|"sc1_r3_scan_chain_1ch"|"Xgate"|"en"|"en"|"output"
+\o S10|K|"sc1_r3_scan_chain_1ch"|"Xgate"|"vdd"|"vdd18"|"inputOutput"
+\o S10|K|"sc1_r3_scan_chain_1ch"|"Xgate"|"vss"|"vss"|"inputOutput"
+\o S10|K|"sc1_r3_scan_chain_1ch"|"Xff"|"d"|"d"|"input"
+\o S10|K|"sc1_r3_scan_chain_1ch"|"Xff"|"clk"|"clk"|"input"
+\o S10|K|"sc1_r3_scan_chain_1ch"|"Xff"|"q"|"q"|"output"
+\o S10|K|"sc1_r3_scan_chain_1ch"|"Xff"|"qbar"|"qbar"|"output"
+\o S10|K|"sc1_r3_scan_chain_1ch"|"Xff"|"vdd"|"vdd18"|"inputOutput"
+\o S10|K|"sc1_r3_scan_chain_1ch"|"Xff"|"vss"|"vss"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp7"|"S"|"vscan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp7"|"G"|"bgate"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp7"|"D"|"scan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp7"|"B"|"vscan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp6"|"S"|"vscan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp6"|"G"|"bgate"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp6"|"D"|"scan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp6"|"B"|"vscan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp5"|"S"|"vscan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp5"|"G"|"bgate"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp5"|"D"|"scan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp5"|"B"|"vscan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp4"|"S"|"vscan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp4"|"G"|"bgate"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp4"|"D"|"scan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp4"|"B"|"vscan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp3"|"S"|"vscan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp3"|"G"|"bgate"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp3"|"D"|"scan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp3"|"B"|"vscan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp2"|"S"|"vscan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp2"|"G"|"bgate"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp2"|"D"|"scan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp2"|"B"|"vscan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp1"|"S"|"vscan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp1"|"G"|"bgate"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp1"|"D"|"scan"|"inputOutput"
+\o S10|K|"sc1_s3b_p33_bank_7"|"mp1"|"B"|"vscan"|"inputOutput"
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_s3b_p33_bank_7 symbol" has been updated since "microled_scan_s3c sc1_scan_power_1ch_s3c schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_r3_scan_chain_1ch symbol" has been updated since "microled_scan_s3c sc1_scan_power_1ch_s3c schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o S10|K|"sc1_scan_power_1ch_s3c"|"Xbank"|"scan"|"scan"|"output"
+\o S10|K|"sc1_scan_power_1ch_s3c"|"Xbank"|"bgate"|"gate33"|"input"
+\o S10|K|"sc1_scan_power_1ch_s3c"|"Xbank"|"vscan"|"vscan"|"inputOutput"
+\o S10|K|"sc1_scan_power_1ch_s3c"|"Xchain"|"d"|"d"|"input"
+\o S10|K|"sc1_scan_power_1ch_s3c"|"Xchain"|"clk"|"clk"|"input"
+\o S10|K|"sc1_scan_power_1ch_s3c"|"Xchain"|"blank"|"blank"|"input"
+\o S10|K|"sc1_scan_power_1ch_s3c"|"Xchain"|"core_ok33"|"core_ok33"|"input"
+\o S10|K|"sc1_scan_power_1ch_s3c"|"Xchain"|"gate33"|"gate33"|"output"
+\o S10|K|"sc1_scan_power_1ch_s3c"|"Xchain"|"vdd18"|"vdd18"|"inputOutput"
+\o S10|K|"sc1_scan_power_1ch_s3c"|"Xchain"|"vdd33"|"vdd33"|"inputOutput"
+\o S10|K|"sc1_scan_power_1ch_s3c"|"Xchain"|"vss"|"vss"|"inputOutput"
+\o S10-NETS-DONE
+\o S10-SEED t
+\o S10-TOUCH nil
+\o S10-SCHCHECK-FUN nil
+\o S10-SYMCHECK-FUN nil
+\o S10-HICHECK-FUN nil
+\o Loading schematic.cxt 
+\o INFO (SCH-1170): Extracting "c2mos_dff schematic"
+\o Warning: Solder dot on cross over at ( 2.1250, 9.2500 ).
+\o Warning: Solder dot on cross over at ( 4.1250, 7.6250 ).
+\o Warning: Solder dot on cross over at ( 4.8750, 7.5000 ).
+\o Warning: Solder dot on cross over at ( 6.8750, 4.3750 ).
+\o Warning: Solder dot on cross over at ( 8.6250, 7.6250 ).
+\o S10|C|"c2mos_dff"|"schematic"|schCheck=((0 5))
+\o S10|C|"c2mos_dff"|"symbol"|schCheck=nil
+\o INFO (SCH-1170): Extracting "sc1_scan_gate schematic"
+\o Warning: Solder dot on cross over at ( 2.1250, 1.2500 ).
+\o S10|C|"sc1_scan_gate"|"schematic"|schCheck=((0 1))
+\o S10|C|"sc1_scan_gate"|"symbol"|schCheck=nil
+\o INFO (SCH-1170): Extracting "sc1_ls_core_r2d schematic"
+\o Warning: Solder dot on cross over at ( 1.8750, 1.2500 ).
+\o Warning: Solder dot on cross over at ( 2.7500, 1.5000 ).
+\o S10|C|"sc1_ls_core_r2d"|"schematic"|schCheck=((0 2))
+\o S10|C|"sc1_ls_core_r2d"|"symbol"|schCheck=nil
+\o INFO (SCH-1170): Extracting "sc1_ls_c1_r2d schematic"
+\o Warning: Solder dot on cross over at ( 2.1250, 2.3750 ).
+\o S10|C|"sc1_ls_c1_r2d"|"schematic"|schCheck=((0 1))
+\o S10|C|"sc1_ls_c1_r2d"|"symbol"|schCheck=nil
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_c1_r2d symbol" has been updated since "microled_scan_s3c sc1_ls_c1_top_r2d schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_core_r2d symbol" has been updated since "microled_scan_s3c sc1_ls_c1_top_r2d schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o INFO (SCH-1170): Extracting "sc1_ls_c1_top_r2d schematic"
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_c1_r2d symbol" has been updated since "microled_scan_s3c sc1_ls_c1_top_r2d schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o Warning: Pin "x" on instance "Xcore": floating output.
+\o S10|C|"sc1_ls_c1_top_r2d"|"schematic"|schCheck=((0 1))
+\o S10|C|"sc1_ls_c1_top_r2d"|"symbol"|schCheck=nil
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_c1_top_r2d symbol" has been updated since "microled_scan_s3c sc1_r3_scan_chain_1ch schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_scan_gate symbol" has been updated since "microled_scan_s3c sc1_r3_scan_chain_1ch schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c c2mos_dff symbol" has been updated since "microled_scan_s3c sc1_r3_scan_chain_1ch schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o INFO (SCH-1170): Extracting "sc1_r3_scan_chain_1ch schematic"
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_c1_top_r2d symbol" has been updated since "microled_scan_s3c sc1_r3_scan_chain_1ch schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_scan_gate symbol" has been updated since "microled_scan_s3c sc1_r3_scan_chain_1ch schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o Warning: Pin "q" on instance "Xff": floating output.
+\o S10|C|"sc1_r3_scan_chain_1ch"|"schematic"|schCheck=((0 1))
+\o S10|C|"sc1_r3_scan_chain_1ch"|"symbol"|schCheck=nil
+\o INFO (SCH-1170): Extracting "sc1_s3b_p33_bank_7 schematic"
+\o S10|C|"sc1_s3b_p33_bank_7"|"schematic"|schCheck=((0 0))
+\o S10|C|"sc1_s3b_p33_bank_7"|"symbol"|schCheck=nil
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_s3b_p33_bank_7 symbol" has been updated since "microled_scan_s3c sc1_scan_power_1ch_s3c schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_r3_scan_chain_1ch symbol" has been updated since "microled_scan_s3c sc1_scan_power_1ch_s3c schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o INFO (SCH-1170): Extracting "sc1_scan_power_1ch_s3c schematic"
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_s3b_p33_bank_7 symbol" has been updated since "microled_scan_s3c sc1_scan_power_1ch_s3c schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o S10|C|"sc1_scan_power_1ch_s3c"|"schematic"|schCheck=((0 0))
+\o S10|C|"sc1_scan_power_1ch_s3c"|"symbol"|schCheck=nil
+\o S10-DONE
+\o 
+\o Loading lce.cxt 
+\# Memory report: on exit            344 MB, process size 1,166 MB at UTC 2026.10.14 06:05:24.581
+\# Memory report: peak usage         344 MB, process size 1,166 MB

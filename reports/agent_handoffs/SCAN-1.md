@@ -2,9 +2,10 @@
 
 ## CURRENT_STATUS (single authoritative table; everything below this block is history)
 
-Updated 2026-10-14 during **SCAN-1 S3-C (schematic and Symbol delivery)**. Start point re-read before
-editing: local HEAD and the reviewed start `a26c54b6cccb503ce1283e58c39819ed1ca890de` agreed, the remote
-tip was read back twice, and the work tree was clean apart from two untracked local helpers. The cloud
+Updated 2026-10-14 during **SCAN-1 S3-C1 (corrected read-back, port directions, graphics and
+placement)**, on top of the S3-C delivery it audits. Start point re-read before editing: local HEAD
+`2a0f48a30772a59e40332090c7bdc6e64f78b982` equals the reviewed commit, the remote tip was read back
+twice, and the work tree was clean apart from this task's own helpers. The cloud
 reviewed `a26c54b` and decided **`S3_B_TT_POC_ACCEPTED_WITH_OFFLINE_CORRECTIONS / GO_S3_C_SCHEMATIC_SYMBOL`**,
 so the S3-A facts are no longer current state and are moved verbatim into the history section below
 (`HISTORICAL_STATUS (SCAN-1S3A round)`); nothing in them was edited, only relocated. The S3-B record was
@@ -22,17 +23,29 @@ C²MOS cell — were not written.
 |---|---|---|
 | **S3_B_TT_POC** | **ACCEPTED_WITH_OFFLINE_CORRECTIONS** (cloud, on `a26c54b`) | the nine TT chain+bank decks, 644 judgement rows, 4 803 sample rows, 49 offline checks and two tamper cases; corrected afterwards without re-simulation: the iprobe sign label (§4A), the plateau `Ron` precision (§4B — light **7.7407 Ω** recomputed from 17-digit samples against the `8.00029 Ω` the report had printed from a pre-rounded drop; column **7.9291 Ω**, still inside the conditional 0.10 V figure at a maximum conducting drop of 0.08888283 V), and the per-case edge / gate-load / process-count wording (§4C, R3 default manual gate load is **1 pF**, `r3_load5p` is 5 pF) |
 | **S3_C_OA_SCHEMATIC · SYMBOL · READBACK · GRAPH_EQUIVALENCE** | **COMPLETE for the single verified channel · S3-C REVIEW GATE · NOT MERGED TO S4** | new library `microled_scan_s3c` under `cadence_work/s3c_oa/`, built on this task's own isolated `cds.lib`; the eight cells of the task book (`c2mos_dff` 18, `sc1_scan_gate` 4, `sc1_ls_core_r2d` 6, `sc1_ls_c1_r2d` 4, `sc1_ls_c1_top_r2d` 10 expanded, `sc1_r3_scan_chain_1ch` 32 expanded, `sc1_s3b_p33_bank_7` seven explicit fingers, `sc1_scan_power_1ch_s3c` 39 expanded) each exist as `schematic` **and** `symbol`; 39/39 devices read back with model, `l/w/fw/m/fingers`, and the D/G/S/B net on every terminal by **name**; `dbCheck` = t for all eight; two separate Virtuoso sessions reopened the saved views and produced identical rows; canonical circuit text rebuilt from the OA rows equals the golden text for all eight cells → `S3C_OA_GRAPH_EQUIVALENCE: PASS`, and a one-gate-net tamper of the exported table is refused |
-| **S3_C_VISUAL_REVIEW** | **PENDING, with the reason measured** | this batch build has no Schematic Editor package: `schCreate`, `schCreateWire`, `schCheck`, `schCreateSym`, `symCreate`, `schConvSch2Sym`, `dbCreateFig`, `ddCreateCell` and `hiCreateDirLib` all read back `nil` in a session started `virtuoso -nograph`, and the importer's own symbols carry terminals but **0 figures**. Placement, the symbol box graphics and a graphical direction check need one GUI session; the electrical readback above does not depend on them and was delivered anyway |
-| **NEW_SIMULATION_RUNS** | **0** | no simulator was invoked in S3-C |
+| **S3C1_READBACK_FIELDS** | **MATCHED — the S3-C reading was wrong and is retracted** | `cv->terminals` and `cv->shapes` carry the data; `cv->terms`, `cv->figures`, `cv->figs` are supported-but-empty, which is what the S3-C reader used. 16/16 views re-read in a fresh process: `results/evidence/sc1_s3c1_oa_readback.csv`, raw log `sc1_s3c1_readback_final.log` |
+| **S3C1_PORT_DIRECTIONS** | **MATCHED (96 of 96, written on the real objects)** | 48 schematic + 48 symbol terminals carry the golden direction; the write is `termObj->direction = '…` (`dbSetq` returns nil), read back after `dbSave` + `dbClose` + reopen from disk: `objects compared: 96 mismatched: 0`, distribution `inputOutput 40 / input 36 / output 20` → `results/evidence/sc1_s3c1_ports.csv` |
+| **S3C1_SYMBOL_GRAPHICS** | **EXIST · MATCHED for content, NOT_DONE for placement** | every symbol has a `device/drawing` body rect and pin-rect = stub = label = terminal count (`sc1_s3c1_graphics.csv`); the S3-C "0 figures" claim is retracted. But **all 48 pin centres sit right of the body, so only the 10 signal outputs match their role and 38 do not** (`sc1_s3c1_symbol_side.csv`) |
+| **S3C1_SCHEMATIC_PRESENTATION** | **NOT_DONE, with the dependency measured** | the five DFF regions / bank-finger grouping / port-side arrangement need instances and symbol pins re-placed, and every such move detaches the parent wire graphics that end at the old point — Virtuoso says it itself: `SCH-2162 … symbol has been updated since … schematic was last saved`. Usable primitive proven: assigning `fig->bBox` / `label->xy` persists (`sc1_s3c1_probe7.log`: `SETBBOX rc=t changed=t`, `SAVE t`, `REOPEN t` with the moved box). Not usable here: `dbMoveFig` (three argument orders), `dbCreateRect/Line/Label/Pin` (six forms), `dbDeleteObj`, `geMoveFig`, `schCreateWire`, `schDelete`, `symUpdateInst`, `schMaintainConn` (`sc1_s3c1_tools_locks.csv`, 232 rows). Rebuilding the library is forbidden, so this needs a collision-checked re-lay, tracked as S3C1-9 |
+| **S3C1_EDITOR_CHECK** | **PARTIAL, counts kept as printed** | `schCheck` after the package loads: dff `((0 5))`, gate `((0 1))`, ls_core `((0 2))`, ls_c1 `((0 1))`, ls_c1_top `((0 1))`, chain `((0 1))`, bank `((0 0))`, top `((0 0))` — zero errors on all eight schematics; nil on symbol views, where `symCheck`/`hiCheckAndSave` are absent. `dbCheck = (t)` for 16/16 in the GUI session. `dbCheck` is still not passed off as Check-And-Save → `sc1_s3c1_editor_check.csv` |
+| **S3C1_CONNECTIVITY_AND_GRAPH** | **39/39 pin-wire attachments · GRAPH_EQUIVALENCE PASS** | every sub-instance pin is reached by a wire of the same **parent-view** net (`gate33` in the top, not the child's `bgate`), with the two `MY` mirrored instances handled; the existing comparator re-run on today's state: 39 devices, 46/46 connectivity rows, 8/8 canonical graphs, `S3C_OA_GRAPH_EQUIVALENCE PASS`, `failures=0` → `sc1_s3c1_connectivity.csv`, `sc1_s3c1_equivalence.csv` |
+| **S3C1_VISUAL_REVIEW** | **PENDING — measured twice, not assumed** | the GUI session did start and paint: CIW window `0x3a0000c` exists but `Map State: IsUnMapped`, `import -window` fails `unable to read X window image … Resource temporarily unavailable`, `xwd` writes 0 bytes — the same limitation GUI-1 recorded. No external rendering is offered as an OA view → `sc1_s3c1_gui.log`, `sc1_s3c1_cap_ciw.txt` |
+| **S3C1_LIBRARY_UNTOUCHED_BY_THE_PROBES** | **72 of 72 files byte-identical** | `logs/pre_scratch_lib.md5` vs `logs/post_cleanup_lib.md5` → `LIB_BACK_TO_72_IDENTICAL`; the five scratch cellviews the probes created (`dbCopyCellView` does write to disk without `dbSave`) were removed and re-checked; no `.locks` existed and none was deleted; no other Cadence process ran; backup `backup_microled_scan_s3c_pre_s3c1_20261014.tgz` sha256 `dc063aa7…8dcf5` stays in the project |
+| **NEW_SIMULATION_RUNS** | **0** | no simulator was invoked in S3-C or S3C1 |
 | **FINAL_VSCAN / LED_IV / N_ACTIVE / REAL_ELECTRODE_RC / BUDGETS** | **NOT_DEFINED ×5** | unchanged; the S3-B bench load is still a proxy, and a schematic view changes no assumption |
 | **S4_CHAIN / SOA / AUTONOMOUS_POWER_FAIL** | **NOT_STARTED · NO · NOT_IMPLEMENTED** | no multi-channel or shift chain, no absolute rating read, no POR/UVLO/power-fail behaviour |
 
-### Next step is the S3-C independent review gate
+### Next step is the S3-C1 visual-and-placement review gate
 
 The single verified channel now exists as schematic and Symbol views whose object graph matches the
-accepted netlists. Nothing further is authorised from here: S4 (array, multi-channel, Data chaining,
-PVT, power-fail matrix) and layout/DRC/LVS/PEX stay out, and the visual pass over the eight views needs
-a reviewer with a GUI session.
+accepted netlists, with the port directions carried by the OA objects themselves (96/96 read back from
+disk) and with real body/pin/label graphics in every Symbol. What is deliberately **not** claimed: the
+role-based pin placement (38 of 48 pins still sit on the wrong side of their own body), the schematic
+presentation pass, and any screenshot — all three need an in-place re-lay of parent wiring that this
+build cannot do with the primitives available in batch, and the task forbids rebuilding the library.
+The reviewer's decision is therefore narrow: either accept a collision-checked re-lay written against
+the proven `bBox`/`xy` assignment path, or do the placement by hand in one editor session. S4 (array,
+multi-channel, Data chaining, PVT, power-fail matrix) and layout/DRC/LVS/PEX stay out either way.
 
 ## HISTORICAL_STATUS (SCAN-1S3A round and the S3-B measurement round, kept verbatim for audit; superseded by the CURRENT_STATUS above)
 

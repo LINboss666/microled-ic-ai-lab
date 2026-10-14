@@ -1,0 +1,9 @@
+cell,shapes,body_rect,pin_rects,connector_stubs,pin_labels,terminals,complete_set
+c2mos_dff,22,yes,6,6,6,6,yes
+sc1_ls_c1_r2d,19,yes,5,5,5,5,yes
+sc1_ls_c1_top_r2d,22,yes,6,6,6,6,yes
+sc1_ls_core_r2d,22,yes,6,6,6,6,yes
+sc1_r3_scan_chain_1ch,28,yes,8,8,8,8,yes
+sc1_s3b_p33_bank_7,13,yes,3,3,3,3,yes
+sc1_scan_gate,19,yes,5,5,5,5,yes
+sc1_scan_power_1ch_s3c,31,yes,9,9,9,9,yes

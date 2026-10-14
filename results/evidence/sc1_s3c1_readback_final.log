@@ -1,0 +1,551 @@
+\# Program start time UTC 2026.10.14 06:10:09.531
+\# Local time Wednesday 14 October 2026, 2:10 pm
+\o Program:		@(#)$CDS: virtuoso version 6.1.7-64b 11/09/2015 12:45 (sjfnl165) $
+\o Hierarchy:		/opt/IC617/tools.lnx86/dfII/
+\o Sub version:		sub-version  IC6.1.7-64b.78  (64-bit addresses)
+\# Command line:	/opt/IC617/tools/dfII/bin/64bit/virtuoso -nograph -log $PROJ/cadence_work/s3c_oa/logs/s3c_oa_20261014_141006.log
+\# Host name (type):	work-eda (x86_64)
+\# Operating system:	Linux 2.6.32-431.el6.x86_64 #1 SMP Sun Nov 10 22:19:54 EST 2013
+\# Linux /etc/issue:	Red Hat Enterprise Linux Server release 6.5 (Santiago)
+\# Linux /etc/issue:	Kernel \r on an \m
+\# X display name (WxH):	work-eda:80 (1024x868)
+\# Available geometry:			TL(0:0) BR(1023:867)
+\# X server:			RealVNC Ltd (VNC nograph server, PID 94778)
+\# Depth of Visual (Root):	16 (16)
+\# Number of Planes Used:	16
+\# X version:		11.0 (vendor release 3370)
+\# X resource pool:	base 0x800000, mask 0x3fffff (4194303), shift 0
+\# 			current id 0x0, current max 0x3ffffa (4194298)
+\# Max data seg size:	     unlimited
+\# Max process size:	     unlimited
+\# Initial sbrk value:	        352 MB
+\# Available memory:	      9,261 MB
+\# System memory:	     11,810 MB
+\# Maximum memory size:	     11,537 MB
+\# Max mem available:	      9,341 MB
+\# Initial memory used:	         80 MB
+\#        process size:	        869 MB
+\# Qt version:		4.8.5
+\# Window Manager:	other
+\# User Name:		root
+\o Working Directory:	work-eda:$PROJ/cadence_work/s3c_oa
+\# Process Id:		94657
+\o 
+\o COPYRIGHT © 1992-2015  CADENCE DESIGN SYSTEMS INC.  ALL RIGHTS RESERVED.
+\o           © 1992-2015  UNIX SYSTEMS Laboratories INC.,
+\o                          Reproduced with permission.
+\o 
+\o This Cadence Design Systems program and online documentation are
+\o proprietary/confidential information and may be disclosed/used only
+\o as authorized in a license agreement controlling such use and disclosure.
+\o 
+\o           RESTRICTED RIGHTS NOTICE (SHORT FORM)
+\o Use/reproduction/disclosure is subject to restriction
+\o set forth at FAR 1252.227-19 or its equivalent.
+\o Loading geView.cxt 
+\o Loading menuBuilder.cxt 
+\o Loading schView.cxt 
+\o Loading selectSv.cxt 
+\o Loading wireEdit.cxt 
+\o Loading pte2.cxt 
+\o Loading xlUI.cxt 
+\o Loading auCore.cxt 
+\o Loading vhdl.cxt 
+\o Loading seismic.cxt 
+\o Loading ci.cxt 
+\o Loading ams.cxt 
+\o Virtuoso Framework License (111) was checked out successfully. Total checkout time was 0.02s.
+\# Memory report: using         228 MB, process size 1,046 MB at UTC 2026.10.14 06:10:10.017
+\w *WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+\w LIB microled_scan_s3c from the same file (defined earlier.)
+\o END OF SITE CUSTOMIZATION
+\o Loading $HOME/.cdsinit init file from the site init file.
+\o S3C1R-BEGIN
+\o S3C1-API "BEFORE-VIEWS" dbCreateRect=lambda:dbCreateRect
+\o S3C1-API "BEFORE-VIEWS" dbCreateLine=lambda:dbCreateLine
+\o S3C1-API "BEFORE-VIEWS" dbCreateLabel=lambda:dbCreateLabel
+\o S3C1-API "BEFORE-VIEWS" dbCreatePolygon=lambda:dbCreatePolygon
+\o S3C1-API "BEFORE-VIEWS" dbCreateEllipse=lambda:dbCreateEllipse
+\o S3C1-API "BEFORE-VIEWS" dbCreatePath=lambda:dbCreatePath
+\o S3C1-API "BEFORE-VIEWS" dbCreateFig=nil
+\o S3C1-API "BEFORE-VIEWS" dbMoveFig=lambda:dbMoveFig
+\o S3C1-API "BEFORE-VIEWS" dbCopyFig=lambda:dbCopyFig
+\o S3C1-API "BEFORE-VIEWS" dbCreateInst=lambda:dbCreateInst
+\o S3C1-API "BEFORE-VIEWS" dbCreateTerm=lambda:dbCreateTerm
+\o S3C1-API "BEFORE-VIEWS" dbCreatePin=lambda:dbCreatePin
+\o S3C1-API "BEFORE-VIEWS" dbCreateProp=lambda:dbCreateProp
+\o S3C1-API "BEFORE-VIEWS" dbSetq=nlambda:dbSetq
+\o S3C1-API "BEFORE-VIEWS" dbSetBoundingFig=nil
+\o S3C1-API "BEFORE-VIEWS" schCheck=nil
+\o S3C1-API "BEFORE-VIEWS" schCreate=nil
+\o S3C1-API "BEFORE-VIEWS" schCreateSym=nil
+\o S3C1-API "BEFORE-VIEWS" symCreate=nil
+\o S3C1-API "BEFORE-VIEWS" schConvSch2Sym=nil
+\o S3C1-API "BEFORE-VIEWS" schMakeConvSym=nil
+\o S3C1-API "BEFORE-VIEWS" hiCreateWindow=funobj:hiCreateWindow
+\o S3C1-API "BEFORE-VIEWS" hiOpenView=nil
+\o S3C1-API "BEFORE-VIEWS" hiCheckAndSave=nil
+\o S3C1-API "BEFORE-VIEWS" synCheck=nil
+\o S3C1-API "BEFORE-VIEWS" schUseCheck=nil
+\w *WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+\w LIB microled_scan_s3c from the same file (defined earlier.)
+\o Loading smic18mmrf/libInit.il ...
+\o 	Loading smic18mmrf/loadCxt.ile ... done!
+\o 	Loading context 'smic18mmrf' from library 'smic18mmrf' ... done!
+\o 	Loading context 'pdkUtils' from library 'smic18mmrf' ... done!
+\o 	Loading smic18mmrf/display.drf ... done!
+\o 	Loading smic18mmrf/libInitCktPro.il ... done!
+\o 	Loading smic18mmrf/libInitCustomExit.il ... Loading libInitCustomExit.il for smic18mmrf
+\o Loading oasis.cxt 
+\o Loading analog.cxt 
+\o Loading asimenv.cxt 
+\o Loading spectrei.cxt 
+\o Loading devCheck.cxt 
+\o Loading relXpert.cxt 
+\o Loading hspiceD.cxt 
+\o Loading spectreinl.cxt 
+\o Loading UltraSim.cxt 
+\o Loading msgHandler.cxt 
+\o Loading AMSOSS.cxt 
+\o Loading AMS.cxt 
+\o done!
+\o Loaded smic18mmrf/libInit.il successfully!
+\o Loading smic skill utility
+\o $PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../SMIC18MMRF_skillUtility/batchSetCDF.ile
+\o $PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../SMIC18MMRF_skillUtility/libNumcheck.ile
+\o Loading emxskill
+\o file="/license.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/license.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/license.ils
+\o file="/continuum.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuum.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuum.ils
+\o file="/continuumgui.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuumgui.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/continuumgui.ils
+\o file="/callbacks.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/callbacks.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/callbacks.ils
+\o file="/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_3t_rf_psub_18MTE_scalable.ils
+\o file="/../models/diff_ind_rf_psub_18MTE_scalable.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_rf_psub_18MTE_scalable.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/diff_ind_rf_psub_18MTE_scalable.ils
+\o file="/../models/ind_rf_psub_scalable.ils"loadfile="$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/ind_rf_psub_scalable.ils"$PROJ/pdk/smic18mmrf_teacher/smic18mmrf/../emxkit/emxskill/../models/ind_rf_psub_scalable.ils
+\o S3C1-VIEW "c2mos_dff" "schematic" objType="cellView" viewType=nil
+\o S3C1-ATTR "c2mos_dff":"schematic" "terminals" => COUNT=6
+\o S3C1-ATTR "c2mos_dff":"schematic" "terms" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "c2mos_dff":"schematic" "figures" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "c2mos_dff":"schematic" "figs" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "c2mos_dff":"schematic" "shapes" => COUNT=219
+\o S3C1-ATTR "c2mos_dff":"schematic" "instances" => COUNT=24
+\o S3C1-ATTR "c2mos_dff":"schematic" "nets" => COUNT=13
+\o S3C1-ATTR "c2mos_dff":"schematic" "labels" => EMPTY (supported, nothing in it)
+\o S3C1-TERMS "c2mos_dff":"schematic" terminals=6
+\o S3C1-TERM "c2mos_dff":"schematic" name="vss" dir="inputOutput" net="vss" objType="term"
+\o S3C1-TERMPIN "c2mos_dff":"schematic" term="vss" objType="pin" direction=nil figs=1
+\o S3C1-TERM "c2mos_dff":"schematic" name="vdd" dir="inputOutput" net="vdd" objType="term"
+\o S3C1-TERMPIN "c2mos_dff":"schematic" term="vdd" objType="pin" direction=nil figs=1
+\o S3C1-TERM "c2mos_dff":"schematic" name="qbar" dir="output" net="qbar" objType="term"
+\o S3C1-TERMPIN "c2mos_dff":"schematic" term="qbar" objType="pin" direction=nil figs=1
+\o S3C1-TERM "c2mos_dff":"schematic" name="q" dir="output" net="q" objType="term"
+\o S3C1-TERMPIN "c2mos_dff":"schematic" term="q" objType="pin" direction=nil figs=1
+\o S3C1-TERM "c2mos_dff":"schematic" name="clk" dir="input" net="clk" objType="term"
+\o S3C1-TERMPIN "c2mos_dff":"schematic" term="clk" objType="pin" direction=nil figs=1
+\o S3C1-TERM "c2mos_dff":"schematic" name="d" dir="input" net="d" objType="term"
+\o S3C1-TERMPIN "c2mos_dff":"schematic" term="d" objType="pin" direction=nil figs=1
+\o S3C1-VIEW "c2mos_dff" "symbol" objType="cellView" viewType=nil
+\o S3C1-ATTR "c2mos_dff":"symbol" "terminals" => COUNT=6
+\o S3C1-ATTR "c2mos_dff":"symbol" "terms" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "c2mos_dff":"symbol" "figures" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "c2mos_dff":"symbol" "figs" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "c2mos_dff":"symbol" "shapes" => COUNT=22
+\o S3C1-ATTR "c2mos_dff":"symbol" "instances" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "c2mos_dff":"symbol" "nets" => COUNT=6
+\o S3C1-ATTR "c2mos_dff":"symbol" "labels" => EMPTY (supported, nothing in it)
+\o S3C1-TERMS "c2mos_dff":"symbol" terminals=6
+\o S3C1-TERM "c2mos_dff":"symbol" name="vss" dir="inputOutput" net="vss" objType="term"
+\o S3C1-TERMPIN "c2mos_dff":"symbol" term="vss" objType="pin" direction=nil figs=1
+\o S3C1-TERM "c2mos_dff":"symbol" name="vdd" dir="inputOutput" net="vdd" objType="term"
+\o S3C1-TERMPIN "c2mos_dff":"symbol" term="vdd" objType="pin" direction=nil figs=1
+\o S3C1-TERM "c2mos_dff":"symbol" name="qbar" dir="output" net="qbar" objType="term"
+\o S3C1-TERMPIN "c2mos_dff":"symbol" term="qbar" objType="pin" direction=nil figs=1
+\o S3C1-TERM "c2mos_dff":"symbol" name="q" dir="output" net="q" objType="term"
+\o S3C1-TERMPIN "c2mos_dff":"symbol" term="q" objType="pin" direction=nil figs=1
+\o S3C1-TERM "c2mos_dff":"symbol" name="clk" dir="input" net="clk" objType="term"
+\o S3C1-TERMPIN "c2mos_dff":"symbol" term="clk" objType="pin" direction=nil figs=1
+\o S3C1-TERM "c2mos_dff":"symbol" name="d" dir="input" net="d" objType="term"
+\o S3C1-TERMPIN "c2mos_dff":"symbol" term="d" objType="pin" direction=nil figs=1
+\o S3C1-VIEW "sc1_scan_gate" "schematic" objType="cellView" viewType=nil
+\o S3C1-ATTR "sc1_scan_gate":"schematic" "terminals" => COUNT=5
+\o S3C1-ATTR "sc1_scan_gate":"schematic" "terms" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_scan_gate":"schematic" "figures" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_scan_gate":"schematic" "figs" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_scan_gate":"schematic" "shapes" => COUNT=53
+\o S3C1-ATTR "sc1_scan_gate":"schematic" "instances" => COUNT=9
+\o S3C1-ATTR "sc1_scan_gate":"schematic" "nets" => COUNT=6
+\o S3C1-ATTR "sc1_scan_gate":"schematic" "labels" => EMPTY (supported, nothing in it)
+\o S3C1-TERMS "sc1_scan_gate":"schematic" terminals=5
+\o S3C1-TERM "sc1_scan_gate":"schematic" name="vss" dir="inputOutput" net="vss" objType="term"
+\o S3C1-TERMPIN "sc1_scan_gate":"schematic" term="vss" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_gate":"schematic" name="vdd" dir="inputOutput" net="vdd" objType="term"
+\o S3C1-TERMPIN "sc1_scan_gate":"schematic" term="vdd" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_gate":"schematic" name="en" dir="output" net="en" objType="term"
+\o S3C1-TERMPIN "sc1_scan_gate":"schematic" term="en" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_gate":"schematic" name="blank" dir="input" net="blank" objType="term"
+\o S3C1-TERMPIN "sc1_scan_gate":"schematic" term="blank" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_gate":"schematic" name="qbar" dir="input" net="qbar" objType="term"
+\o S3C1-TERMPIN "sc1_scan_gate":"schematic" term="qbar" objType="pin" direction=nil figs=1
+\o S3C1-VIEW "sc1_scan_gate" "symbol" objType="cellView" viewType=nil
+\o S3C1-ATTR "sc1_scan_gate":"symbol" "terminals" => COUNT=5
+\o S3C1-ATTR "sc1_scan_gate":"symbol" "terms" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_scan_gate":"symbol" "figures" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_scan_gate":"symbol" "figs" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_scan_gate":"symbol" "shapes" => COUNT=19
+\o S3C1-ATTR "sc1_scan_gate":"symbol" "instances" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_scan_gate":"symbol" "nets" => COUNT=5
+\o S3C1-ATTR "sc1_scan_gate":"symbol" "labels" => EMPTY (supported, nothing in it)
+\o S3C1-TERMS "sc1_scan_gate":"symbol" terminals=5
+\o S3C1-TERM "sc1_scan_gate":"symbol" name="vss" dir="inputOutput" net="vss" objType="term"
+\o S3C1-TERMPIN "sc1_scan_gate":"symbol" term="vss" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_gate":"symbol" name="vdd" dir="inputOutput" net="vdd" objType="term"
+\o S3C1-TERMPIN "sc1_scan_gate":"symbol" term="vdd" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_gate":"symbol" name="en" dir="output" net="en" objType="term"
+\o S3C1-TERMPIN "sc1_scan_gate":"symbol" term="en" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_gate":"symbol" name="blank" dir="input" net="blank" objType="term"
+\o S3C1-TERMPIN "sc1_scan_gate":"symbol" term="blank" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_gate":"symbol" name="qbar" dir="input" net="qbar" objType="term"
+\o S3C1-TERMPIN "sc1_scan_gate":"symbol" term="qbar" objType="pin" direction=nil figs=1
+\o S3C1-VIEW "sc1_ls_core_r2d" "schematic" objType="cellView" viewType=nil
+\o S3C1-ATTR "sc1_ls_core_r2d":"schematic" "terminals" => COUNT=6
+\o S3C1-ATTR "sc1_ls_core_r2d":"schematic" "terms" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_core_r2d":"schematic" "figures" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_core_r2d":"schematic" "figs" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_core_r2d":"schematic" "shapes" => COUNT=78
+\o S3C1-ATTR "sc1_ls_core_r2d":"schematic" "instances" => COUNT=12
+\o S3C1-ATTR "sc1_ls_core_r2d":"schematic" "nets" => COUNT=7
+\o S3C1-ATTR "sc1_ls_core_r2d":"schematic" "labels" => EMPTY (supported, nothing in it)
+\o S3C1-TERMS "sc1_ls_core_r2d":"schematic" terminals=6
+\o S3C1-TERM "sc1_ls_core_r2d":"schematic" name="vss" dir="inputOutput" net="vss" objType="term"
+\o S3C1-TERMPIN "sc1_ls_core_r2d":"schematic" term="vss" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_core_r2d":"schematic" name="vdd33" dir="inputOutput" net="vdd33" objType="term"
+\o S3C1-TERMPIN "sc1_ls_core_r2d":"schematic" term="vdd33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_core_r2d":"schematic" name="vdd18" dir="inputOutput" net="vdd18" objType="term"
+\o S3C1-TERMPIN "sc1_ls_core_r2d":"schematic" term="vdd18" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_core_r2d":"schematic" name="y" dir="output" net="y" objType="term"
+\o S3C1-TERMPIN "sc1_ls_core_r2d":"schematic" term="y" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_core_r2d":"schematic" name="x" dir="output" net="x" objType="term"
+\o S3C1-TERMPIN "sc1_ls_core_r2d":"schematic" term="x" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_core_r2d":"schematic" name="en" dir="input" net="en" objType="term"
+\o S3C1-TERMPIN "sc1_ls_core_r2d":"schematic" term="en" objType="pin" direction=nil figs=1
+\o S3C1-VIEW "sc1_ls_core_r2d" "symbol" objType="cellView" viewType=nil
+\o S3C1-ATTR "sc1_ls_core_r2d":"symbol" "terminals" => COUNT=6
+\o S3C1-ATTR "sc1_ls_core_r2d":"symbol" "terms" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_core_r2d":"symbol" "figures" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_core_r2d":"symbol" "figs" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_core_r2d":"symbol" "shapes" => COUNT=22
+\o S3C1-ATTR "sc1_ls_core_r2d":"symbol" "instances" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_core_r2d":"symbol" "nets" => COUNT=6
+\o S3C1-ATTR "sc1_ls_core_r2d":"symbol" "labels" => EMPTY (supported, nothing in it)
+\o S3C1-TERMS "sc1_ls_core_r2d":"symbol" terminals=6
+\o S3C1-TERM "sc1_ls_core_r2d":"symbol" name="vss" dir="inputOutput" net="vss" objType="term"
+\o S3C1-TERMPIN "sc1_ls_core_r2d":"symbol" term="vss" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_core_r2d":"symbol" name="vdd33" dir="inputOutput" net="vdd33" objType="term"
+\o S3C1-TERMPIN "sc1_ls_core_r2d":"symbol" term="vdd33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_core_r2d":"symbol" name="vdd18" dir="inputOutput" net="vdd18" objType="term"
+\o S3C1-TERMPIN "sc1_ls_core_r2d":"symbol" term="vdd18" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_core_r2d":"symbol" name="y" dir="output" net="y" objType="term"
+\o S3C1-TERMPIN "sc1_ls_core_r2d":"symbol" term="y" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_core_r2d":"symbol" name="x" dir="output" net="x" objType="term"
+\o S3C1-TERMPIN "sc1_ls_core_r2d":"symbol" term="x" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_core_r2d":"symbol" name="en" dir="input" net="en" objType="term"
+\o S3C1-TERMPIN "sc1_ls_core_r2d":"symbol" term="en" objType="pin" direction=nil figs=1
+\o S3C1-VIEW "sc1_ls_c1_r2d" "schematic" objType="cellView" viewType=nil
+\o S3C1-ATTR "sc1_ls_c1_r2d":"schematic" "terminals" => COUNT=5
+\o S3C1-ATTR "sc1_ls_c1_r2d":"schematic" "terms" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_c1_r2d":"schematic" "figures" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_c1_r2d":"schematic" "figs" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_c1_r2d":"schematic" "shapes" => COUNT=53
+\o S3C1-ATTR "sc1_ls_c1_r2d":"schematic" "instances" => COUNT=9
+\o S3C1-ATTR "sc1_ls_c1_r2d":"schematic" "nets" => COUNT=6
+\o S3C1-ATTR "sc1_ls_c1_r2d":"schematic" "labels" => EMPTY (supported, nothing in it)
+\o S3C1-TERMS "sc1_ls_c1_r2d":"schematic" terminals=5
+\o S3C1-TERM "sc1_ls_c1_r2d":"schematic" name="vss" dir="inputOutput" net="vss" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_r2d":"schematic" term="vss" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_c1_r2d":"schematic" name="vdd33" dir="inputOutput" net="vdd33" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_r2d":"schematic" term="vdd33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_c1_r2d":"schematic" name="gate33" dir="output" net="gate33" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_r2d":"schematic" term="gate33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_c1_r2d":"schematic" name="core_ok33" dir="input" net="core_ok33" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_r2d":"schematic" term="core_ok33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_c1_r2d":"schematic" name="y" dir="input" net="y" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_r2d":"schematic" term="y" objType="pin" direction=nil figs=1
+\o S3C1-VIEW "sc1_ls_c1_r2d" "symbol" objType="cellView" viewType=nil
+\o S3C1-ATTR "sc1_ls_c1_r2d":"symbol" "terminals" => COUNT=5
+\o S3C1-ATTR "sc1_ls_c1_r2d":"symbol" "terms" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_c1_r2d":"symbol" "figures" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_c1_r2d":"symbol" "figs" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_c1_r2d":"symbol" "shapes" => COUNT=19
+\o S3C1-ATTR "sc1_ls_c1_r2d":"symbol" "instances" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_c1_r2d":"symbol" "nets" => COUNT=5
+\o S3C1-ATTR "sc1_ls_c1_r2d":"symbol" "labels" => EMPTY (supported, nothing in it)
+\o S3C1-TERMS "sc1_ls_c1_r2d":"symbol" terminals=5
+\o S3C1-TERM "sc1_ls_c1_r2d":"symbol" name="vss" dir="inputOutput" net="vss" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_r2d":"symbol" term="vss" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_c1_r2d":"symbol" name="vdd33" dir="inputOutput" net="vdd33" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_r2d":"symbol" term="vdd33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_c1_r2d":"symbol" name="gate33" dir="output" net="gate33" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_r2d":"symbol" term="gate33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_c1_r2d":"symbol" name="core_ok33" dir="input" net="core_ok33" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_r2d":"symbol" term="core_ok33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_c1_r2d":"symbol" name="y" dir="input" net="y" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_r2d":"symbol" term="y" objType="pin" direction=nil figs=1
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_c1_r2d symbol" has been updated since "microled_scan_s3c sc1_ls_c1_top_r2d schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_core_r2d symbol" has been updated since "microled_scan_s3c sc1_ls_c1_top_r2d schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o S3C1-VIEW "sc1_ls_c1_top_r2d" "schematic" objType="cellView" viewType=nil
+\o S3C1-ATTR "sc1_ls_c1_top_r2d":"schematic" "terminals" => COUNT=6
+\o S3C1-ATTR "sc1_ls_c1_top_r2d":"schematic" "terms" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_c1_top_r2d":"schematic" "figures" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_c1_top_r2d":"schematic" "figs" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_c1_top_r2d":"schematic" "shapes" => COUNT=42
+\o S3C1-ATTR "sc1_ls_c1_top_r2d":"schematic" "instances" => COUNT=8
+\o S3C1-ATTR "sc1_ls_c1_top_r2d":"schematic" "nets" => COUNT=8
+\o S3C1-ATTR "sc1_ls_c1_top_r2d":"schematic" "labels" => EMPTY (supported, nothing in it)
+\o S3C1-TERMS "sc1_ls_c1_top_r2d":"schematic" terminals=6
+\o S3C1-TERM "sc1_ls_c1_top_r2d":"schematic" name="vss" dir="inputOutput" net="vss" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_top_r2d":"schematic" term="vss" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_c1_top_r2d":"schematic" name="vdd33" dir="inputOutput" net="vdd33" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_top_r2d":"schematic" term="vdd33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_c1_top_r2d":"schematic" name="vdd18" dir="inputOutput" net="vdd18" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_top_r2d":"schematic" term="vdd18" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_c1_top_r2d":"schematic" name="gate33" dir="output" net="gate33" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_top_r2d":"schematic" term="gate33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_c1_top_r2d":"schematic" name="core_ok33" dir="input" net="core_ok33" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_top_r2d":"schematic" term="core_ok33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_c1_top_r2d":"schematic" name="en" dir="input" net="en" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_top_r2d":"schematic" term="en" objType="pin" direction=nil figs=1
+\o S3C1-VIEW "sc1_ls_c1_top_r2d" "symbol" objType="cellView" viewType=nil
+\o S3C1-ATTR "sc1_ls_c1_top_r2d":"symbol" "terminals" => COUNT=6
+\o S3C1-ATTR "sc1_ls_c1_top_r2d":"symbol" "terms" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_c1_top_r2d":"symbol" "figures" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_c1_top_r2d":"symbol" "figs" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_c1_top_r2d":"symbol" "shapes" => COUNT=22
+\o S3C1-ATTR "sc1_ls_c1_top_r2d":"symbol" "instances" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_ls_c1_top_r2d":"symbol" "nets" => COUNT=6
+\o S3C1-ATTR "sc1_ls_c1_top_r2d":"symbol" "labels" => EMPTY (supported, nothing in it)
+\o S3C1-TERMS "sc1_ls_c1_top_r2d":"symbol" terminals=6
+\o S3C1-TERM "sc1_ls_c1_top_r2d":"symbol" name="vss" dir="inputOutput" net="vss" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_top_r2d":"symbol" term="vss" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_c1_top_r2d":"symbol" name="vdd33" dir="inputOutput" net="vdd33" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_top_r2d":"symbol" term="vdd33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_c1_top_r2d":"symbol" name="vdd18" dir="inputOutput" net="vdd18" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_top_r2d":"symbol" term="vdd18" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_c1_top_r2d":"symbol" name="gate33" dir="output" net="gate33" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_top_r2d":"symbol" term="gate33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_c1_top_r2d":"symbol" name="core_ok33" dir="input" net="core_ok33" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_top_r2d":"symbol" term="core_ok33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_ls_c1_top_r2d":"symbol" name="en" dir="input" net="en" objType="term"
+\o S3C1-TERMPIN "sc1_ls_c1_top_r2d":"symbol" term="en" objType="pin" direction=nil figs=1
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_c1_top_r2d symbol" has been updated since "microled_scan_s3c sc1_r3_scan_chain_1ch schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_scan_gate symbol" has been updated since "microled_scan_s3c sc1_r3_scan_chain_1ch schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c c2mos_dff symbol" has been updated since "microled_scan_s3c sc1_r3_scan_chain_1ch schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o S3C1-VIEW "sc1_r3_scan_chain_1ch" "schematic" objType="cellView" viewType=nil
+\o S3C1-ATTR "sc1_r3_scan_chain_1ch":"schematic" "terminals" => COUNT=8
+\o S3C1-ATTR "sc1_r3_scan_chain_1ch":"schematic" "terms" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_r3_scan_chain_1ch":"schematic" "figures" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_r3_scan_chain_1ch":"schematic" "figs" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_r3_scan_chain_1ch":"schematic" "shapes" => COUNT=60
+\o S3C1-ATTR "sc1_r3_scan_chain_1ch":"schematic" "instances" => COUNT=11
+\o S3C1-ATTR "sc1_r3_scan_chain_1ch":"schematic" "nets" => COUNT=11
+\o S3C1-ATTR "sc1_r3_scan_chain_1ch":"schematic" "labels" => EMPTY (supported, nothing in it)
+\o S3C1-TERMS "sc1_r3_scan_chain_1ch":"schematic" terminals=8
+\o S3C1-TERM "sc1_r3_scan_chain_1ch":"schematic" name="vss" dir="inputOutput" net="vss" objType="term"
+\o S3C1-TERMPIN "sc1_r3_scan_chain_1ch":"schematic" term="vss" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_r3_scan_chain_1ch":"schematic" name="vdd33" dir="inputOutput" net="vdd33" objType="term"
+\o S3C1-TERMPIN "sc1_r3_scan_chain_1ch":"schematic" term="vdd33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_r3_scan_chain_1ch":"schematic" name="vdd18" dir="inputOutput" net="vdd18" objType="term"
+\o S3C1-TERMPIN "sc1_r3_scan_chain_1ch":"schematic" term="vdd18" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_r3_scan_chain_1ch":"schematic" name="gate33" dir="output" net="gate33" objType="term"
+\o S3C1-TERMPIN "sc1_r3_scan_chain_1ch":"schematic" term="gate33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_r3_scan_chain_1ch":"schematic" name="core_ok33" dir="input" net="core_ok33" objType="term"
+\o S3C1-TERMPIN "sc1_r3_scan_chain_1ch":"schematic" term="core_ok33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_r3_scan_chain_1ch":"schematic" name="blank" dir="input" net="blank" objType="term"
+\o S3C1-TERMPIN "sc1_r3_scan_chain_1ch":"schematic" term="blank" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_r3_scan_chain_1ch":"schematic" name="clk" dir="input" net="clk" objType="term"
+\o S3C1-TERMPIN "sc1_r3_scan_chain_1ch":"schematic" term="clk" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_r3_scan_chain_1ch":"schematic" name="d" dir="input" net="d" objType="term"
+\o S3C1-TERMPIN "sc1_r3_scan_chain_1ch":"schematic" term="d" objType="pin" direction=nil figs=1
+\o S3C1-VIEW "sc1_r3_scan_chain_1ch" "symbol" objType="cellView" viewType=nil
+\o S3C1-ATTR "sc1_r3_scan_chain_1ch":"symbol" "terminals" => COUNT=8
+\o S3C1-ATTR "sc1_r3_scan_chain_1ch":"symbol" "terms" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_r3_scan_chain_1ch":"symbol" "figures" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_r3_scan_chain_1ch":"symbol" "figs" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_r3_scan_chain_1ch":"symbol" "shapes" => COUNT=28
+\o S3C1-ATTR "sc1_r3_scan_chain_1ch":"symbol" "instances" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_r3_scan_chain_1ch":"symbol" "nets" => COUNT=8
+\o S3C1-ATTR "sc1_r3_scan_chain_1ch":"symbol" "labels" => EMPTY (supported, nothing in it)
+\o S3C1-TERMS "sc1_r3_scan_chain_1ch":"symbol" terminals=8
+\o S3C1-TERM "sc1_r3_scan_chain_1ch":"symbol" name="vss" dir="inputOutput" net="vss" objType="term"
+\o S3C1-TERMPIN "sc1_r3_scan_chain_1ch":"symbol" term="vss" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_r3_scan_chain_1ch":"symbol" name="vdd33" dir="inputOutput" net="vdd33" objType="term"
+\o S3C1-TERMPIN "sc1_r3_scan_chain_1ch":"symbol" term="vdd33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_r3_scan_chain_1ch":"symbol" name="vdd18" dir="inputOutput" net="vdd18" objType="term"
+\o S3C1-TERMPIN "sc1_r3_scan_chain_1ch":"symbol" term="vdd18" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_r3_scan_chain_1ch":"symbol" name="gate33" dir="output" net="gate33" objType="term"
+\o S3C1-TERMPIN "sc1_r3_scan_chain_1ch":"symbol" term="gate33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_r3_scan_chain_1ch":"symbol" name="core_ok33" dir="input" net="core_ok33" objType="term"
+\o S3C1-TERMPIN "sc1_r3_scan_chain_1ch":"symbol" term="core_ok33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_r3_scan_chain_1ch":"symbol" name="blank" dir="input" net="blank" objType="term"
+\o S3C1-TERMPIN "sc1_r3_scan_chain_1ch":"symbol" term="blank" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_r3_scan_chain_1ch":"symbol" name="clk" dir="input" net="clk" objType="term"
+\o S3C1-TERMPIN "sc1_r3_scan_chain_1ch":"symbol" term="clk" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_r3_scan_chain_1ch":"symbol" name="d" dir="input" net="d" objType="term"
+\o S3C1-TERMPIN "sc1_r3_scan_chain_1ch":"symbol" term="d" objType="pin" direction=nil figs=1
+\o S3C1-VIEW "sc1_s3b_p33_bank_7" "schematic" objType="cellView" viewType=nil
+\o S3C1-ATTR "sc1_s3b_p33_bank_7":"schematic" "terminals" => COUNT=3
+\o S3C1-ATTR "sc1_s3b_p33_bank_7":"schematic" "terms" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_s3b_p33_bank_7":"schematic" "figures" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_s3b_p33_bank_7":"schematic" "figs" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_s3b_p33_bank_7":"schematic" "shapes" => COUNT=101
+\o S3C1-ATTR "sc1_s3b_p33_bank_7":"schematic" "instances" => COUNT=10
+\o S3C1-ATTR "sc1_s3b_p33_bank_7":"schematic" "nets" => COUNT=3
+\o S3C1-ATTR "sc1_s3b_p33_bank_7":"schematic" "labels" => EMPTY (supported, nothing in it)
+\o S3C1-TERMS "sc1_s3b_p33_bank_7":"schematic" terminals=3
+\o S3C1-TERM "sc1_s3b_p33_bank_7":"schematic" name="vscan" dir="inputOutput" net="vscan" objType="term"
+\o S3C1-TERMPIN "sc1_s3b_p33_bank_7":"schematic" term="vscan" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_s3b_p33_bank_7":"schematic" name="bgate" dir="input" net="bgate" objType="term"
+\o S3C1-TERMPIN "sc1_s3b_p33_bank_7":"schematic" term="bgate" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_s3b_p33_bank_7":"schematic" name="scan" dir="output" net="scan" objType="term"
+\o S3C1-TERMPIN "sc1_s3b_p33_bank_7":"schematic" term="scan" objType="pin" direction=nil figs=1
+\o S3C1-VIEW "sc1_s3b_p33_bank_7" "symbol" objType="cellView" viewType=nil
+\o S3C1-ATTR "sc1_s3b_p33_bank_7":"symbol" "terminals" => COUNT=3
+\o S3C1-ATTR "sc1_s3b_p33_bank_7":"symbol" "terms" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_s3b_p33_bank_7":"symbol" "figures" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_s3b_p33_bank_7":"symbol" "figs" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_s3b_p33_bank_7":"symbol" "shapes" => COUNT=13
+\o S3C1-ATTR "sc1_s3b_p33_bank_7":"symbol" "instances" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_s3b_p33_bank_7":"symbol" "nets" => COUNT=3
+\o S3C1-ATTR "sc1_s3b_p33_bank_7":"symbol" "labels" => EMPTY (supported, nothing in it)
+\o S3C1-TERMS "sc1_s3b_p33_bank_7":"symbol" terminals=3
+\o S3C1-TERM "sc1_s3b_p33_bank_7":"symbol" name="vscan" dir="inputOutput" net="vscan" objType="term"
+\o S3C1-TERMPIN "sc1_s3b_p33_bank_7":"symbol" term="vscan" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_s3b_p33_bank_7":"symbol" name="bgate" dir="input" net="bgate" objType="term"
+\o S3C1-TERMPIN "sc1_s3b_p33_bank_7":"symbol" term="bgate" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_s3b_p33_bank_7":"symbol" name="scan" dir="output" net="scan" objType="term"
+\o S3C1-TERMPIN "sc1_s3b_p33_bank_7":"symbol" term="scan" objType="pin" direction=nil figs=1
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_s3b_p33_bank_7 symbol" has been updated since "microled_scan_s3c sc1_scan_power_1ch_s3c schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_r3_scan_chain_1ch symbol" has been updated since "microled_scan_s3c sc1_scan_power_1ch_s3c schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o S3C1-VIEW "sc1_scan_power_1ch_s3c" "schematic" objType="cellView" viewType=nil
+\o S3C1-ATTR "sc1_scan_power_1ch_s3c":"schematic" "terminals" => COUNT=9
+\o S3C1-ATTR "sc1_scan_power_1ch_s3c":"schematic" "terms" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_scan_power_1ch_s3c":"schematic" "figures" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_scan_power_1ch_s3c":"schematic" "figs" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_scan_power_1ch_s3c":"schematic" "shapes" => COUNT=37
+\o S3C1-ATTR "sc1_scan_power_1ch_s3c":"schematic" "instances" => COUNT=11
+\o S3C1-ATTR "sc1_scan_power_1ch_s3c":"schematic" "nets" => COUNT=10
+\o S3C1-ATTR "sc1_scan_power_1ch_s3c":"schematic" "labels" => EMPTY (supported, nothing in it)
+\o S3C1-TERMS "sc1_scan_power_1ch_s3c":"schematic" terminals=9
+\o S3C1-TERM "sc1_scan_power_1ch_s3c":"schematic" name="vss" dir="inputOutput" net="vss" objType="term"
+\o S3C1-TERMPIN "sc1_scan_power_1ch_s3c":"schematic" term="vss" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_power_1ch_s3c":"schematic" name="vscan" dir="inputOutput" net="vscan" objType="term"
+\o S3C1-TERMPIN "sc1_scan_power_1ch_s3c":"schematic" term="vscan" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_power_1ch_s3c":"schematic" name="vdd33" dir="inputOutput" net="vdd33" objType="term"
+\o S3C1-TERMPIN "sc1_scan_power_1ch_s3c":"schematic" term="vdd33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_power_1ch_s3c":"schematic" name="vdd18" dir="inputOutput" net="vdd18" objType="term"
+\o S3C1-TERMPIN "sc1_scan_power_1ch_s3c":"schematic" term="vdd18" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_power_1ch_s3c":"schematic" name="scan" dir="output" net="scan" objType="term"
+\o S3C1-TERMPIN "sc1_scan_power_1ch_s3c":"schematic" term="scan" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_power_1ch_s3c":"schematic" name="core_ok33" dir="input" net="core_ok33" objType="term"
+\o S3C1-TERMPIN "sc1_scan_power_1ch_s3c":"schematic" term="core_ok33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_power_1ch_s3c":"schematic" name="blank" dir="input" net="blank" objType="term"
+\o S3C1-TERMPIN "sc1_scan_power_1ch_s3c":"schematic" term="blank" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_power_1ch_s3c":"schematic" name="clk" dir="input" net="clk" objType="term"
+\o S3C1-TERMPIN "sc1_scan_power_1ch_s3c":"schematic" term="clk" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_power_1ch_s3c":"schematic" name="d" dir="input" net="d" objType="term"
+\o S3C1-TERMPIN "sc1_scan_power_1ch_s3c":"schematic" term="d" objType="pin" direction=nil figs=1
+\o S3C1-VIEW "sc1_scan_power_1ch_s3c" "symbol" objType="cellView" viewType=nil
+\o S3C1-ATTR "sc1_scan_power_1ch_s3c":"symbol" "terminals" => COUNT=9
+\o S3C1-ATTR "sc1_scan_power_1ch_s3c":"symbol" "terms" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_scan_power_1ch_s3c":"symbol" "figures" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_scan_power_1ch_s3c":"symbol" "figs" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_scan_power_1ch_s3c":"symbol" "shapes" => COUNT=31
+\o S3C1-ATTR "sc1_scan_power_1ch_s3c":"symbol" "instances" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "sc1_scan_power_1ch_s3c":"symbol" "nets" => COUNT=9
+\o S3C1-ATTR "sc1_scan_power_1ch_s3c":"symbol" "labels" => EMPTY (supported, nothing in it)
+\o S3C1-TERMS "sc1_scan_power_1ch_s3c":"symbol" terminals=9
+\o S3C1-TERM "sc1_scan_power_1ch_s3c":"symbol" name="vss" dir="inputOutput" net="vss" objType="term"
+\o S3C1-TERMPIN "sc1_scan_power_1ch_s3c":"symbol" term="vss" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_power_1ch_s3c":"symbol" name="vscan" dir="inputOutput" net="vscan" objType="term"
+\o S3C1-TERMPIN "sc1_scan_power_1ch_s3c":"symbol" term="vscan" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_power_1ch_s3c":"symbol" name="vdd33" dir="inputOutput" net="vdd33" objType="term"
+\o S3C1-TERMPIN "sc1_scan_power_1ch_s3c":"symbol" term="vdd33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_power_1ch_s3c":"symbol" name="vdd18" dir="inputOutput" net="vdd18" objType="term"
+\o S3C1-TERMPIN "sc1_scan_power_1ch_s3c":"symbol" term="vdd18" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_power_1ch_s3c":"symbol" name="scan" dir="output" net="scan" objType="term"
+\o S3C1-TERMPIN "sc1_scan_power_1ch_s3c":"symbol" term="scan" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_power_1ch_s3c":"symbol" name="core_ok33" dir="input" net="core_ok33" objType="term"
+\o S3C1-TERMPIN "sc1_scan_power_1ch_s3c":"symbol" term="core_ok33" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_power_1ch_s3c":"symbol" name="blank" dir="input" net="blank" objType="term"
+\o S3C1-TERMPIN "sc1_scan_power_1ch_s3c":"symbol" term="blank" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_power_1ch_s3c":"symbol" name="clk" dir="input" net="clk" objType="term"
+\o S3C1-TERMPIN "sc1_scan_power_1ch_s3c":"symbol" term="clk" objType="pin" direction=nil figs=1
+\o S3C1-TERM "sc1_scan_power_1ch_s3c":"symbol" name="d" dir="input" net="d" objType="term"
+\o S3C1-TERMPIN "sc1_scan_power_1ch_s3c":"symbol" term="d" objType="pin" direction=nil figs=1
+\o S3C1-API "AFTER-VIEWS" dbCreateRect=lambda:dbCreateRect
+\o S3C1-API "AFTER-VIEWS" dbCreateLine=lambda:dbCreateLine
+\o S3C1-API "AFTER-VIEWS" dbCreateLabel=lambda:dbCreateLabel
+\o S3C1-API "AFTER-VIEWS" dbCreatePolygon=lambda:dbCreatePolygon
+\o S3C1-API "AFTER-VIEWS" dbCreateEllipse=lambda:dbCreateEllipse
+\o S3C1-API "AFTER-VIEWS" dbCreatePath=lambda:dbCreatePath
+\o S3C1-API "AFTER-VIEWS" dbCreateFig=nil
+\o S3C1-API "AFTER-VIEWS" dbMoveFig=lambda:dbMoveFig
+\o S3C1-API "AFTER-VIEWS" dbCopyFig=lambda:dbCopyFig
+\o S3C1-API "AFTER-VIEWS" dbCreateInst=lambda:dbCreateInst
+\o S3C1-API "AFTER-VIEWS" dbCreateTerm=lambda:dbCreateTerm
+\o S3C1-API "AFTER-VIEWS" dbCreatePin=lambda:dbCreatePin
+\o S3C1-API "AFTER-VIEWS" dbCreateProp=lambda:dbCreateProp
+\o S3C1-API "AFTER-VIEWS" dbSetq=nlambda:dbSetq
+\o S3C1-API "AFTER-VIEWS" dbSetBoundingFig=nil
+\o S3C1-API "AFTER-VIEWS" schCheck=nil
+\o S3C1-API "AFTER-VIEWS" schCreate=nil
+\o S3C1-API "AFTER-VIEWS" schCreateSym=nil
+\o S3C1-API "AFTER-VIEWS" symCreate=nil
+\o S3C1-API "AFTER-VIEWS" schConvSch2Sym=nil
+\o S3C1-API "AFTER-VIEWS" schMakeConvSym=nil
+\o S3C1-API "AFTER-VIEWS" hiCreateWindow=funobj:hiCreateWindow
+\o S3C1-API "AFTER-VIEWS" hiOpenView=nil
+\o S3C1-API "AFTER-VIEWS" hiCheckAndSave=nil
+\o S3C1-API "AFTER-VIEWS" synCheck=nil
+\o S3C1-API "AFTER-VIEWS" schUseCheck=nil
+\o S3C1-PDKREF p33:symbol objType="cellView"
+\o S3C1-ATTR "p33":"symbol" "terminals" => COUNT=4
+\o S3C1-ATTR "p33":"symbol" "figures" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "p33":"symbol" "figs" => EMPTY (supported, nothing in it)
+\o S3C1-ATTR "p33":"symbol" "shapes" => COUNT=24
+\o S3C1-TERMS "p33":"symbol" terminals=4
+\o S3C1-TERM "p33":"symbol" name="B" dir="inputOutput" net="B" objType="term"
+\o S3C1-TERMPIN "p33":"symbol" term="B" objType="pin" direction=nil figs=1
+\o S3C1-TERM "p33":"symbol" name="D" dir="inputOutput" net="D" objType="term"
+\o S3C1-TERMPIN "p33":"symbol" term="D" objType="pin" direction=nil figs=1
+\o S3C1-TERM "p33":"symbol" name="G" dir="inputOutput" net="G" objType="term"
+\o S3C1-TERMPIN "p33":"symbol" term="G" objType="pin" direction=nil figs=1
+\o S3C1-TERM "p33":"symbol" name="S" dir="inputOutput" net="S" objType="term"
+\o S3C1-TERMPIN "p33":"symbol" term="S" objType="pin" direction=nil figs=1
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="label" lpp=("annotate" "drawing7") layer=nil purpose=nil bbox=((0.3125 0.2) (0.725 0.28125)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="label" lpp=("device" "annotate") layer=nil purpose=nil bbox=((-0.26875 0.2125) (0.1875 0.26875)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="label" lpp=("annotate" "drawing") layer=nil purpose=nil bbox=((0.28125 -0.3625) (0.775 -0.28125)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="label" lpp=("annotate" "drawing") layer=nil purpose=nil bbox=((0.28125 0.10625) (0.76875 0.1875)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="label" lpp=("annotate" "drawing") layer=nil purpose=nil bbox=((0.28125 -0.26875) (0.775 -0.1875)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="label" lpp=("annotate" "drawing") layer=nil purpose=nil bbox=((0.28125 -0.175) (0.775 -0.09375)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="label" lpp=("annotate" "drawing") layer=nil purpose=nil bbox=((0.28125 0.0125) (0.775 0.09375)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="rect" lpp=("instance" "drawing") layer=nil purpose=nil bbox=((0.0 -0.1875) (0.25 0.1875)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="line" lpp=("device" "drawing") layer=nil purpose=nil bbox=((0.09375 -0.09375) (0.09375 0.09375)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="line" lpp=("device" "drawing") layer=nil purpose=nil bbox=((0.125 -0.1875) (0.25 -0.09375)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="line" lpp=("device" "drawing") layer=nil purpose=nil bbox=((0.125 0.09375) (0.25 0.1875)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="line" lpp=("device" "drawing") layer=nil purpose=nil bbox=((0.0 0.0) (0.09375 0.0)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="line" lpp=("device" "drawing") layer=nil purpose=nil bbox=((0.1875 0.0625) (0.25 0.125)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="line" lpp=("device" "drawing") layer=nil purpose=nil bbox=((0.125 0.0) (0.25 0.0)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="line" lpp=("device" "drawing") layer=nil purpose=nil bbox=((0.125 -0.09375) (0.125 0.09375)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="label" lpp=("annotate" "drawing8") layer=nil purpose=nil bbox=((-0.49375 0.01875) (0.025 0.1)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="label" lpp=("annotate" "drawing8") layer=nil purpose=nil bbox=((0.29375 -0.075) (0.8125 0.00625)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="label" lpp=("annotate" "drawing8") layer=nil purpose=nil bbox=((-0.3 0.10625) (0.21875 0.1875)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="label" lpp=("annotate" "drawing8") layer=nil purpose=nil bbox=((-0.3 -0.2) (0.21875 -0.11875)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="rect" lpp=("pin" "drawing") layer=nil purpose=nil bbox=((-0.025 -0.025) (0.025 0.025)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="rect" lpp=("pin" "drawing") layer=nil purpose=nil bbox=((0.225 0.1625) (0.275 0.2125)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="rect" lpp=("pin" "drawing") layer=nil purpose=nil bbox=((0.225 -0.2125) (0.275 -0.1625)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="rect" lpp=("pin" "drawing") layer=nil purpose=nil bbox=((0.225 -0.025) (0.275 0.025)) name=nil
+\o S3C1-FIG "p33":"symbol" attr="shapes" objType="rect" lpp=("device" "drawing1") layer=nil purpose=nil bbox=((0.125 -0.09375) (0.15625 0.09375)) name=nil
+\o S3C1R_DONE
+\o 
+\o Loading lce.cxt 
+\# Memory report: on exit            330 MB, process size 1,148 MB at UTC 2026.10.14 06:10:10.636
+\# Memory report: peak usage         330 MB, process size 1,148 MB

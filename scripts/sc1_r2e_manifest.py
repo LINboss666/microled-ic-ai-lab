@@ -34,7 +34,12 @@ PROTECTED = ['spectre/C2MOS_DFF.scs', 'spectre/sc1_scan_gate.scs',
              'scripts/sc1_r2e1_call_contract.py', 'scripts/sc1_r2e_s2_tt.py',
              'scripts/sc1_r2e1_reread.py', 'scripts/sc1_r2e_vtx.py']
 
-ROLES = [(r'^scripts/sc1_s3c_.*\.(py|sh)$', 's3c_entry_or_check'),
+ROLES = [(r'^scripts/sc1_s3c1_.*\.(py|sh)$', 's3c1_entry_or_check'),
+         (r'^skill/sc1_s3c1_.*\.il$', 's3c1_skill'),
+         (r'^results/evidence/sc1_s3c1_.*\.csv$', 's3c1_evidence'),
+         (r'^results/evidence/sc1_s3c1_.*\.log$', 's3c1_readback_log'),
+         (r'^results/evidence/sc1_s3c1_.*\.txt$', 's3c1_transcript'),
+         (r'^scripts/sc1_s3c_.*\.(py|sh)$', 's3c_entry_or_check'),
          (r'^skill/sc1_s3c_.*\.il$', 's3c_skill'),
          (r'^spectre/generated/sc1_s3c_.*\.scs$', 's3c_extracted_netlist'),
          (r'^results/evidence/sc1_s3c_.*\.csv$', 's3c_evidence'),
@@ -136,6 +141,16 @@ def main():
         if role == 's3c_skill':
             note = ('SKILL run inside this task: an isolated Virtuoso session that writes only '
                     'into cadence_work/s3c_oa/microled_scan_s3c and reads the PDK read-only')
+        if role == 's3c1_skill':
+            note = ('S3C1 SKILL: corrected read-only readback, write-form probes on this task\'s own '
+                    'helper/scratch cellviews, and the GUI session. No delivered cell is written by '
+                    'it; the library md5 list proves that')
+        if role == 's3c1_readback_log':
+            note = ('raw session log with $PROJ redacted; re-runnable against the same library so a '
+                    'reviewer can reproduce every S3C1 number')
+        if role in ('s3c1_evidence', 's3c1_transcript'):
+            note = ('computed from the readback logs by scripts/sc1_s3c1_evidence.py / '
+                    'sc1_s3c1_summary.py -- tables, not prose')
         if role == 'r3_circuit_new':
             note = ('new wrapper only: it instantiates the three accepted cells with the port orders '
                     'read off their files, and edits no cell body')

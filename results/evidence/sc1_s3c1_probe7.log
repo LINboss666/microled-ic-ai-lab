@@ -1,0 +1,137 @@
+\# Program start time UTC 2026.10.14 05:44:13.845
+\# Local time Wednesday 14 October 2026, 1:44 pm
+\o Program:		@(#)$CDS: virtuoso version 6.1.7-64b 11/09/2015 12:45 (sjfnl165) $
+\o Hierarchy:		/opt/IC617/tools.lnx86/dfII/
+\o Sub version:		sub-version  IC6.1.7-64b.78  (64-bit addresses)
+\# Command line:	/opt/IC617/tools/dfII/bin/64bit/virtuoso -nograph -log $PROJ/cadence_work/s3c_oa/logs/s3c_oa_20261014_134410.log
+\# Host name (type):	work-eda (x86_64)
+\# Operating system:	Linux 2.6.32-431.el6.x86_64 #1 SMP Sun Nov 10 22:19:54 EST 2013
+\# Linux /etc/issue:	Red Hat Enterprise Linux Server release 6.5 (Santiago)
+\# Linux /etc/issue:	Kernel \r on an \m
+\# X display name (WxH):	work-eda:80 (1024x868)
+\# Available geometry:			TL(0:0) BR(1023:867)
+\# X server:			RealVNC Ltd (VNC nograph server, PID 90035)
+\# Depth of Visual (Root):	16 (16)
+\# Number of Planes Used:	16
+\# X version:		11.0 (vendor release 3370)
+\# X resource pool:	base 0x800000, mask 0x3fffff (4194303), shift 0
+\# 			current id 0x0, current max 0x3ffffa (4194298)
+\# Max data seg size:	     unlimited
+\# Max process size:	     unlimited
+\# Initial sbrk value:	        359 MB
+\# Available memory:	      9,265 MB
+\# System memory:	     11,810 MB
+\# Maximum memory size:	     11,531 MB
+\# Max mem available:	      9,345 MB
+\# Initial memory used:	         80 MB
+\#        process size:	        869 MB
+\# Qt version:		4.8.5
+\# Window Manager:	other
+\# User Name:		root
+\o Working Directory:	work-eda:$PROJ/cadence_work/s3c_oa
+\# Process Id:		89914
+\o 
+\o COPYRIGHT © 1992-2015  CADENCE DESIGN SYSTEMS INC.  ALL RIGHTS RESERVED.
+\o           © 1992-2015  UNIX SYSTEMS Laboratories INC.,
+\o                          Reproduced with permission.
+\o 
+\o This Cadence Design Systems program and online documentation are
+\o proprietary/confidential information and may be disclosed/used only
+\o as authorized in a license agreement controlling such use and disclosure.
+\o 
+\o           RESTRICTED RIGHTS NOTICE (SHORT FORM)
+\o Use/reproduction/disclosure is subject to restriction
+\o set forth at FAR 1252.227-19 or its equivalent.
+\o Loading geView.cxt 
+\o Loading menuBuilder.cxt 
+\o Loading schView.cxt 
+\o Loading selectSv.cxt 
+\o Loading wireEdit.cxt 
+\o Loading pte2.cxt 
+\o Loading xlUI.cxt 
+\o Loading auCore.cxt 
+\o Loading vhdl.cxt 
+\o Loading seismic.cxt 
+\o Loading ci.cxt 
+\o Loading ams.cxt 
+\o Virtuoso Framework License (111) was checked out successfully. Total checkout time was 0.02s.
+\w *WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+\w LIB microled_scan_s3c from the same file (defined earlier.)
+\o END OF SITE CUSTOMIZATION
+\o Loading $HOME/.cdsinit init file from the site init file.
+\o S7-BEGIN
+\o S7-API "START" dbMoveFig lambda:dbMoveFig
+\o S7-API "START" dbCreateRect lambda:dbCreateRect
+\o S7-API "START" dbCreateLine lambda:dbCreateLine
+\o S7-API "START" dbCreateLabel lambda:dbCreateLabel
+\o S7-API "START" dbCreatePin lambda:dbCreatePin
+\o S7-API "START" dbDeleteObj nil
+\o S7-API "START" schCheck nil
+\o S7-API "START" schCreateWire nil
+\o S7-API "START" schDelete nil
+\o S7-API "START" schMaintainConn nil
+\o S7-API "START" symUpdateInst nil
+\o S7-API "START" schUpdateInst nil
+\o S7-API "START" hiCheckAndSave nil
+\o S7-API "START" hiGetSession nil
+\o S7-API "START" hiGetEditWin nil
+\o S7-API "START" hiCreateWindow funobj:hiCreateWindow
+\o S7-API "START" geGetEditCellView lambda:geGetEditCellView
+\o S7-API "START" dbSave lambda:dbSave
+\o S7-API "START" hiIssueMethod nil
+\o S7-API "START" hiGetMenu nil
+\o S7-API "START" symCheck nil
+\w *WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+\w LIB microled_scan_s3c from the same file (defined earlier.)
+\o S7-SRC t shapes=13 terms=3
+\o Loading lx.cxt 
+\o Loading lce.cxt 
+\o Loading le.cxt 
+\o Loading rte.cxt 
+\o S7-SCRATCH t shapes=13 terms=3
+\o S7-GROUP rect=t stub=nil name=nil
+\o S7-FIG "rect-before" objType="rect" layer="pin"/"drawing" bbox=((1.0375 0.1) (1.2125 0.15)) xy=nil
+\o S7-FIG "stub-before" objType=nil layer=nil/nil bbox=nil xy=nil
+\o S7-FIG "name-before" objType=nil layer=nil/nil bbox=nil xy=nil
+\o S7-SETBBOX rc=t before=((1.0375 0.1) (1.2125 0.15)) got=((2.0375 0.1) (2.2125 0.15)) changed=t
+\o S7-TERM-AFTER "vscan" "inputOutput" pins=1
+\o S7-FIG "term-fig" objType="rect" layer="pin"/"drawing" bbox=((2.0375 0.1) (2.2125 0.15)) xy=nil
+\o S7-TERM-AFTER "bgate" "input" pins=1
+\o S7-FIG "term-fig" objType="rect" layer="pin"/"drawing" bbox=((1.0375 -0.025) (1.2125 0.025)) xy=nil
+\o S7-TERM-AFTER "scan" "output" pins=1
+\o S7-FIG "term-fig" objType="rect" layer="pin"/"drawing" bbox=((1.0375 -0.15) (1.2125 -0.1)) xy=nil
+\o S7-SAVE t
+\o S7-CLOSE t
+\o S7-REOPEN t shapes=13 terms=3
+\o S7-FIG "reopened" objType="rect" layer="pin"/"drawing" bbox=((2.0375 0.1) (2.2125 0.15)) xy=nil
+\o S7-FIG "reopened" objType="label" layer="pin"/"label" bbox=((0.56875 0.10625) (0.8125 0.14375)) xy=(0.8125 0.125)
+\o S7-FIG "reopened" objType="rect" layer="pin"/"drawing" bbox=((1.0375 -0.025) (1.2125 0.025)) xy=nil
+\o S7-FIG "reopened" objType="label" layer="pin"/"label" bbox=((0.575 -0.05) (0.8125 0.03125)) xy=(0.8125 0.0)
+\o S7-FIG "reopened" objType="rect" layer="pin"/"drawing" bbox=((1.0375 -0.15) (1.2125 -0.1)) xy=nil
+\o S7-FIG "reopened" objType="label" layer="pin"/"label" bbox=((0.6125 -0.14375) (0.8125 -0.10625)) xy=(0.8125 -0.125)
+\o S7-TRIGGER nil
+\o S7-API "AFTER-TRIGGER" dbMoveFig lambda:dbMoveFig
+\o S7-API "AFTER-TRIGGER" dbCreateRect lambda:dbCreateRect
+\o S7-API "AFTER-TRIGGER" dbCreateLine lambda:dbCreateLine
+\o S7-API "AFTER-TRIGGER" dbCreateLabel lambda:dbCreateLabel
+\o S7-API "AFTER-TRIGGER" dbCreatePin lambda:dbCreatePin
+\o S7-API "AFTER-TRIGGER" dbDeleteObj nil
+\o S7-API "AFTER-TRIGGER" schCheck nil
+\o S7-API "AFTER-TRIGGER" schCreateWire nil
+\o S7-API "AFTER-TRIGGER" schDelete nil
+\o S7-API "AFTER-TRIGGER" schMaintainConn nil
+\o S7-API "AFTER-TRIGGER" symUpdateInst nil
+\o S7-API "AFTER-TRIGGER" schUpdateInst nil
+\o S7-API "AFTER-TRIGGER" hiCheckAndSave nil
+\o S7-API "AFTER-TRIGGER" hiGetSession nil
+\o S7-API "AFTER-TRIGGER" hiGetEditWin nil
+\o S7-API "AFTER-TRIGGER" hiCreateWindow funobj:hiCreateWindow
+\o S7-API "AFTER-TRIGGER" geGetEditCellView lambda:geGetEditCellView
+\o S7-API "AFTER-TRIGGER" dbSave lambda:dbSave
+\o S7-API "AFTER-TRIGGER" hiIssueMethod nil
+\o S7-API "AFTER-TRIGGER" hiGetMenu nil
+\o S7-API "AFTER-TRIGGER" symCheck nil
+\o S7-DONE
+\o 
+\# Memory report: on exit            244 MB, process size 1,062 MB at UTC 2026.10.14 05:44:14.418
+\# Memory report: peak usage         244 MB, process size 1,062 MB

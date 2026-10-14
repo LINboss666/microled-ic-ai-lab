@@ -1,0 +1,264 @@
+\# Program start time UTC 2026.10.14 05:29:06.796
+\# Local time Wednesday 14 October 2026, 1:29 pm
+\o Program:		@(#)$CDS: virtuoso version 6.1.7-64b 11/09/2015 12:45 (sjfnl165) $
+\o Hierarchy:		/opt/IC617/tools.lnx86/dfII/
+\o Sub version:		sub-version  IC6.1.7-64b.78  (64-bit addresses)
+\# Command line:	/opt/IC617/tools/dfII/bin/64bit/virtuoso -nograph -log $PROJ/cadence_work/s3c_oa/logs/s3c_oa_20261014_132903.log
+\# Host name (type):	work-eda (x86_64)
+\# Operating system:	Linux 2.6.32-431.el6.x86_64 #1 SMP Sun Nov 10 22:19:54 EST 2013
+\# Linux /etc/issue:	Red Hat Enterprise Linux Server release 6.5 (Santiago)
+\# Linux /etc/issue:	Kernel \r on an \m
+\# X display name (WxH):	work-eda:80 (1024x868)
+\# Available geometry:			TL(0:0) BR(1023:867)
+\# X server:			RealVNC Ltd (VNC nograph server, PID 87560)
+\# Depth of Visual (Root):	16 (16)
+\# Number of Planes Used:	16
+\# X version:		11.0 (vendor release 3370)
+\# X resource pool:	base 0x800000, mask 0x3fffff (4194303), shift 0
+\# 			current id 0x0, current max 0x3ffffa (4194298)
+\# Max data seg size:	     unlimited
+\# Max process size:	     unlimited
+\# Initial sbrk value:	        362 MB
+\# Available memory:	      9,265 MB
+\# System memory:	     11,810 MB
+\# Maximum memory size:	     11,528 MB
+\# Max mem available:	      9,344 MB
+\# Initial memory used:	         80 MB
+\#        process size:	        869 MB
+\# Qt version:		4.8.5
+\# Window Manager:	other
+\# User Name:		root
+\o Working Directory:	work-eda:$PROJ/cadence_work/s3c_oa
+\# Process Id:		87439
+\o 
+\o COPYRIGHT © 1992-2015  CADENCE DESIGN SYSTEMS INC.  ALL RIGHTS RESERVED.
+\o           © 1992-2015  UNIX SYSTEMS Laboratories INC.,
+\o                          Reproduced with permission.
+\o 
+\o This Cadence Design Systems program and online documentation are
+\o proprietary/confidential information and may be disclosed/used only
+\o as authorized in a license agreement controlling such use and disclosure.
+\o 
+\o           RESTRICTED RIGHTS NOTICE (SHORT FORM)
+\o Use/reproduction/disclosure is subject to restriction
+\o set forth at FAR 1252.227-19 or its equivalent.
+\o Loading geView.cxt 
+\o Loading menuBuilder.cxt 
+\# Memory report: using         193 MB, process size 1,006 MB at UTC 2026.10.14 05:29:07.098
+\o Loading schView.cxt 
+\o Loading selectSv.cxt 
+\o Loading wireEdit.cxt 
+\o Loading pte2.cxt 
+\o Loading xlUI.cxt 
+\o Loading auCore.cxt 
+\o Loading vhdl.cxt 
+\o Loading seismic.cxt 
+\o Loading ci.cxt 
+\o Loading ams.cxt 
+\o Virtuoso Framework License (111) was checked out successfully. Total checkout time was 0.02s.
+\w *WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+\w LIB microled_scan_s3c from the same file (defined earlier.)
+\o END OF SITE CUSTOMIZATION
+\o Loading $HOME/.cdsinit init file from the site init file.
+\o S3C1P-BEGIN
+\o S3C1P-API "BEFORE-VIEWS" dbMoveFig lambda:dbMoveFig
+\o S3C1P-API "BEFORE-VIEWS" dbRotateFig nil
+\o S3C1P-API "BEFORE-VIEWS" dbMirrorFig nil
+\o S3C1P-API "BEFORE-VIEWS" dbCopyFig lambda:dbCopyFig
+\o S3C1P-API "BEFORE-VIEWS" dbCreateRect lambda:dbCreateRect
+\o S3C1P-API "BEFORE-VIEWS" dbCreateLine lambda:dbCreateLine
+\o S3C1P-API "BEFORE-VIEWS" dbCreateLabel lambda:dbCreateLabel
+\o S3C1P-API "BEFORE-VIEWS" dbCreatePin lambda:dbCreatePin
+\o S3C1P-API "BEFORE-VIEWS" dbCreateTerm lambda:dbCreateTerm
+\o S3C1P-API "BEFORE-VIEWS" dbDeleteObj nil
+\o S3C1P-API "BEFORE-VIEWS" dbCreateProp lambda:dbCreateProp
+\o S3C1P-API "BEFORE-VIEWS" dbSave lambda:dbSave
+\o S3C1P-API "BEFORE-VIEWS" dbClose lambda:dbClose
+\o S3C1P-API "BEFORE-VIEWS" ddCreateRect nil
+\o S3C1P-API "BEFORE-VIEWS" schCheck nil
+\o S3C1P-API "BEFORE-VIEWS" schCreateWire nil
+\o S3C1P-API "BEFORE-VIEWS" schDelete nil
+\o S3C1P-API "BEFORE-VIEWS" schMaintainConn nil
+\o S3C1P-API "BEFORE-VIEWS" symUpdateInst nil
+\o S3C1P-API "BEFORE-VIEWS" schUpdateInst nil
+\o S3C1P-API "BEFORE-VIEWS" schChangeCellView nil
+\o S3C1P-API "BEFORE-VIEWS" schMoveInst nil
+\o S3C1P-API "BEFORE-VIEWS" geMoveSel nil
+\o S3C1P-API "BEFORE-VIEWS" geMoveFig nil
+\o S3C1P-API "BEFORE-VIEWS" hiCheckAndSave nil
+\o S3C1P-API "BEFORE-VIEWS" hiOpenView nil
+\o S3C1P-API "BEFORE-VIEWS" hiGetSession nil
+\o S3C1P-API "BEFORE-VIEWS" hiGetEditWin nil
+\o S3C1P-API "BEFORE-VIEWS" hiGetWindow nil
+\o S3C1P-API "BEFORE-VIEWS" hiCreateWindow funobj:hiCreateWindow
+\o S3C1P-API "BEFORE-VIEWS" hiRedraw funobj:hiRedraw
+\o S3C1P-API "BEFORE-VIEWS" geGetEditCellView lambda:geGetEditCellView
+\o S3C1P-API "BEFORE-VIEWS" schGetEditCellView nil
+\o S3C1P-API "BEFORE-VIEWS" hiGetWinEditCellView nil
+\o S3C1P-API "BEFORE-VIEWS" schSelectObj nil
+\o S3C1P-API "BEFORE-VIEWS" geSelectAllObjs nil
+\o S3C1P-API "BEFORE-VIEWS" dbGetNetWires nil
+\o S3C1P-API "BEFORE-VIEWS" dbCheck lambda:dbCheck
+\o S3C1P-API "BEFORE-VIEWS" dbCopyCellView lambda:dbCopyCellView
+\w *WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+\w LIB microled_scan_s3c from the same file (defined earlier.)
+\o S3C1P-SRC-OPEN t
+\o S3C1P-SRC-COUNTS shapes=13 terms=3
+\o S3C1P-SHAPE "src-symbol" 1 "rect" "device" "drawing" ((-0.9375 -0.25) (0.9375 0.25)) nil nil
+\o S3C1P-SHAPE "src-symbol" 2 "rect" "pin" "drawing" ((1.0375 0.1) (1.2125 0.15)) nil nil
+\o S3C1P-SHAPE "src-symbol" 3 "line" "device" "drawing" ((0.9375 0.125) (1.0625 0.125)) nil nil
+\o S3C1P-SHAPE "src-symbol" 4 "label" "pin" "label" ((0.56875 0.10625) (0.8125 0.14375)) nil nil
+\o S3C1P-SHAPE "src-symbol" 5 "rect" "pin" "drawing" ((1.0375 -0.025) (1.2125 0.025)) nil nil
+\o S3C1P-SHAPE "src-symbol" 6 "line" "device" "drawing" ((0.9375 0.0) (1.0625 0.0)) nil nil
+\o S3C1P-SHAPE "src-symbol" 7 "label" "pin" "label" ((0.575 -0.05) (0.8125 0.03125)) nil nil
+\o S3C1P-SHAPE "src-symbol" 8 "rect" "pin" "drawing" ((1.0375 -0.15) (1.2125 -0.1)) nil nil
+\o S3C1P-SHAPE "src-symbol" 9 "line" "device" "drawing" ((0.9375 -0.125) (1.0625 -0.125)) nil nil
+\o S3C1P-SHAPE "src-symbol" 10 "label" "pin" "label" ((0.6125 -0.14375) (0.8125 -0.10625)) nil nil
+\o S3C1P-SHAPE "src-symbol" 11 "rect" "instance" "drawing" ((-0.9375 -0.25) (1.0625 0.25)) nil nil
+\o S3C1P-SHAPE "src-symbol" 12 "label" "device" "label" ((-0.4875 -0.1875) (0.7375 -0.0875)) nil nil
+\o S3C1P-SHAPE "src-symbol" 13 "label" "instance" "label" ((-0.35625 0.08125) (0.60625 0.16875)) nil nil
+\o S3C1P-TERM "src" "vscan" "inputOutput" "vscan" pins=1
+\o S3C1P-PIN "src" "vscan" figs=1 net="vscan"
+\o S3C1P-FIG "pinfig" "rect" "pin" "drawing" ((1.0375 0.1) (1.2125 0.15))
+\o S3C1P-TERM "src" "bgate" "input" "bgate" pins=1
+\o S3C1P-PIN "src" "bgate" figs=1 net="bgate"
+\o S3C1P-FIG "pinfig" "rect" "pin" "drawing" ((1.0375 -0.025) (1.2125 0.025))
+\o S3C1P-TERM "src" "scan" "output" "scan" pins=1
+\o S3C1P-PIN "src" "scan" figs=1 net="scan"
+\o S3C1P-FIG "pinfig" "rect" "pin" "drawing" ((1.0375 -0.15) (1.2125 -0.1))
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_s3b_p33_bank_7 symbol" has been updated since "microled_scan_s3c sc1_scan_power_1ch_s3c schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_r3_scan_chain_1ch symbol" has been updated since "microled_scan_s3c sc1_scan_power_1ch_s3c schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o S3C1P-PARENT-OPEN t
+\o S3C1P-PARENT-COUNTS shapes=37 insts=11 terms=9
+\o S3C1P-SHAPE "parent-schematic" 1 "textDisplay" "pin" "label" ((6.59375 0.84375) (6.65625 0.90625)) nil "name"
+\o S3C1P-SHAPE "parent-schematic" 2 "line" "wire" "drawing" ((5.625 0.75) (6.625 0.75)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 3 "label" "wire" "label" ((6.375 0.8125) (6.45 0.8875)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 4 "textDisplay" "pin" "label" ((6.54375 1.84375) (6.70625 1.8875)) nil "name"
+\o S3C1P-SHAPE "parent-schematic" 5 "line" "wire" "drawing" ((5.625 0.875) (6.625 0.875)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 6 "label" "wire" "label" ((6.375 0.9375) (6.5375 1.0125)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 7 "textDisplay" "pin" "label" ((6.4875 1.59375) (6.7625 1.65625)) nil "name"
+\o S3C1P-SHAPE "parent-schematic" 8 "line" "wire" "drawing" ((5.625 1.0) (6.625 1.0)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 9 "label" "wire" "label" ((6.375 1.0625) (6.675 1.1375)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 10 "textDisplay" "pin" "label" ((6.5125 0.21875) (6.7375 0.2625)) nil "name"
+\o S3C1P-SHAPE "parent-schematic" 11 "line" "wire" "drawing" ((5.625 1.125) (6.625 1.125)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 12 "label" "wire" "label" ((6.375 1.175) (6.96875 1.2625)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 13 "textDisplay" "pin" "label" ((6.375 1.2125) (6.875 1.28125)) nil "name"
+\o S3C1P-SHAPE "parent-schematic" 14 "line" "wire" "drawing" ((2.75 0.125) (2.75 1.125)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 15 "line" "wire" "drawing" ((2.0 1.125) (2.75 1.125)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 16 "line" "wire" "drawing" ((2.75 0.125) (6.625 0.125)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 17 "label" "wire" "label" ((6.375 0.1875) (6.64375 0.2375)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 18 "textDisplay" "pin" "label" ((6.5 1.09375) (6.75 1.15625)) nil "name"
+\o S3C1P-SHAPE "parent-schematic" 19 "line" "wire" "drawing" ((5.625 1.5) (6.625 1.5)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 20 "label" "wire" "label" ((6.375 1.5625) (6.70625 1.6375)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 21 "textDisplay" "pin" "label" ((6.55625 0.96875) (6.69375 1.03125)) nil "name"
+\o S3C1P-SHAPE "parent-schematic" 22 "line" "wire" "drawing" ((5.625 1.625) (6.625 1.625)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 23 "label" "wire" "label" ((6.375 1.6875) (6.71875 1.7625)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 24 "textDisplay" "pin" "label" ((6.4875 2.34375) (6.7625 2.3875)) nil "name"
+\o S3C1P-SHAPE "parent-schematic" 25 "line" "wire" "drawing" ((2.625 1.375) (2.625 2.25)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 26 "line" "wire" "drawing" ((2.0 1.375) (2.625 1.375)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 27 "line" "wire" "drawing" ((2.625 2.25) (6.625 2.25)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 28 "label" "wire" "label" ((6.375 2.3125) (6.7 2.3625)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 29 "textDisplay" "pin" "label" ((6.48125 1.71875) (6.76875 1.78125)) nil "name"
+\o S3C1P-SHAPE "parent-schematic" 30 "line" "wire" "drawing" ((5.625 1.75) (6.625 1.75)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 31 "label" "wire" "label" ((6.375 1.8125) (6.5625 1.8625)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 32 "line" "wire" "drawing" ((2.0 1.25) (2.5 1.25)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 33 "line" "wire" "drawing" ((2.5 0.0) (2.5 1.25)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 34 "line" "wire" "drawing" ((2.5 0.0) (6.125 0.0)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 35 "line" "wire" "drawing" ((6.125 0.0) (6.125 1.375)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 36 "line" "wire" "drawing" ((5.625 1.375) (6.125 1.375)) nil nil
+\o S3C1P-SHAPE "parent-schematic" 37 "label" "wire" "label" ((2.3625 0.3375) (2.4625 0.73125)) nil nil
+\o S3C1P-TERM "parent" "vss" "inputOutput" "vss" pins=1
+\o S3C1P-PIN "parent" "vss" figs=1 net="vss"
+\o S3C1P-FIG "pinfig" "inst" nil "pin" ((6.5125 1.6875) (6.7375 2.00625))
+\o S3C1P-TERM "parent" "vscan" "inputOutput" "vscan" pins=1
+\o S3C1P-PIN "parent" "vscan" figs=1 net="vscan"
+\o S3C1P-FIG "pinfig" "inst" nil "pin" ((6.5125 2.1875) (6.7375 2.50625))
+\o S3C1P-TERM "parent" "vdd33" "inputOutput" "vdd33" pins=1
+\o S3C1P-PIN "parent" "vdd33" figs=1 net="vdd33"
+\o S3C1P-FIG "pinfig" "inst" nil "pin" ((6.5125 1.5625) (6.7375 1.88125))
+\o S3C1P-TERM "parent" "vdd18" "inputOutput" "vdd18" pins=1
+\o S3C1P-PIN "parent" "vdd18" figs=1 net="vdd18"
+\o S3C1P-FIG "pinfig" "inst" nil "pin" ((6.5125 1.4375) (6.7375 1.75625))
+\o S3C1P-TERM "parent" "scan" "output" "scan" pins=1
+\o S3C1P-PIN "parent" "scan" figs=1 net="scan"
+\o S3C1P-FIG "pinfig" "inst" nil "pin" ((6.5125 0.0625) (6.7375 0.38125))
+\o S3C1P-TERM "parent" "core_ok33" "input" "core_ok33" pins=1
+\o S3C1P-PIN "parent" "core_ok33" figs=1 net="core_ok33"
+\o S3C1P-FIG "pinfig" "inst" nil "pin" ((6.5125 1.0625) (6.7375 1.38125))
+\o S3C1P-TERM "parent" "blank" "input" "blank" pins=1
+\o S3C1P-PIN "parent" "blank" figs=1 net="blank"
+\o S3C1P-FIG "pinfig" "inst" nil "pin" ((6.5125 0.9375) (6.7375 1.25625))
+\o S3C1P-TERM "parent" "clk" "input" "clk" pins=1
+\o S3C1P-PIN "parent" "clk" figs=1 net="clk"
+\o S3C1P-FIG "pinfig" "inst" nil "pin" ((6.5125 0.8125) (6.7375 1.13125))
+\o S3C1P-TERM "parent" "d" "input" "d" pins=1
+\o S3C1P-PIN "parent" "d" figs=1 net="d"
+\o S3C1P-FIG "pinfig" "inst" nil "pin" ((6.5125 0.6875) (6.7375 1.00625))
+\o S3C1P-INST 1 "sc1_s3b_p33_bank_7" "Xbank" bbox=((-0.0625 1.0) (2.0875 1.5)) instTerms=3
+\o S3C1P-INST 2 "sc1_r3_scan_chain_1ch" "Xchain" bbox=((3.0625 0.625) (5.7125 1.875)) instTerms=8
+\o S3C1P-INST 3 "iopin" "PIN8" bbox=((6.5125 0.6875) (6.7375 1.00625)) instTerms=0
+\o S3C1P-INST 4 "iopin" "PIN7" bbox=((6.5125 0.8125) (6.7375 1.13125)) instTerms=0
+\o S3C1P-INST 5 "iopin" "PIN6" bbox=((6.5125 0.9375) (6.7375 1.25625)) instTerms=0
+\o S3C1P-INST 6 "iopin" "PIN5" bbox=((6.5125 1.0625) (6.7375 1.38125)) instTerms=0
+\o S3C1P-INST 7 "iopin" "PIN4" bbox=((6.5125 0.0625) (6.7375 0.38125)) instTerms=0
+\o S3C1P-INST 8 "iopin" "PIN3" bbox=((6.5125 1.4375) (6.7375 1.75625)) instTerms=0
+\o S3C1P-INST 9 "iopin" "PIN2" bbox=((6.5125 1.5625) (6.7375 1.88125)) instTerms=0
+\o S3C1P-INST 10 "iopin" "PIN1" bbox=((6.5125 2.1875) (6.7375 2.50625)) instTerms=0
+\o S3C1P-INST 11 "iopin" "PIN0" bbox=((6.5125 1.6875) (6.7375 2.00625)) instTerms=0
+\o Loading lx.cxt 
+\o Loading lce.cxt 
+\o Loading le.cxt 
+\o Loading rte.cxt 
+\o S3C1P-SCRATCH t
+\o S3C1P-PINRECTS 0
+\o S3C1P-RECT a(cv,lpp,flat) rc=nil obj=nil shapes=13
+\o S3C1P-RECT b(cv,lpp,ptlist) rc=nil obj=nil shapes=13
+\o S3C1P-RECT c(cv,sym,flat) rc=nil shapes=13
+\o S3C1P-NEWLINE a(cv,lpp,flat) rc=nil obj=nil shapes=13
+\o S3C1P-NEWLABEL a(cv,lpp,pt,text,just) rc=nil obj=nil shapes=13
+\o S3C1P-NEWPIN a(cv,lpp,flat) rc=nil obj=nil shapes=13
+\o S3C1P-DRAW-DONE start=13 now=13
+\o S3C1P-SCRATCH-SAVED no
+\o S3C1P-API "AFTER-CALLS" dbMoveFig lambda:dbMoveFig
+\o S3C1P-API "AFTER-CALLS" dbRotateFig nil
+\o S3C1P-API "AFTER-CALLS" dbMirrorFig nil
+\o S3C1P-API "AFTER-CALLS" dbCopyFig lambda:dbCopyFig
+\o S3C1P-API "AFTER-CALLS" dbCreateRect lambda:dbCreateRect
+\o S3C1P-API "AFTER-CALLS" dbCreateLine lambda:dbCreateLine
+\o S3C1P-API "AFTER-CALLS" dbCreateLabel lambda:dbCreateLabel
+\o S3C1P-API "AFTER-CALLS" dbCreatePin lambda:dbCreatePin
+\o S3C1P-API "AFTER-CALLS" dbCreateTerm lambda:dbCreateTerm
+\o S3C1P-API "AFTER-CALLS" dbDeleteObj nil
+\o S3C1P-API "AFTER-CALLS" dbCreateProp lambda:dbCreateProp
+\o S3C1P-API "AFTER-CALLS" dbSave lambda:dbSave
+\o S3C1P-API "AFTER-CALLS" dbClose lambda:dbClose
+\o S3C1P-API "AFTER-CALLS" ddCreateRect nil
+\o S3C1P-API "AFTER-CALLS" schCheck nil
+\o S3C1P-API "AFTER-CALLS" schCreateWire nil
+\o S3C1P-API "AFTER-CALLS" schDelete nil
+\o S3C1P-API "AFTER-CALLS" schMaintainConn nil
+\o S3C1P-API "AFTER-CALLS" symUpdateInst nil
+\o S3C1P-API "AFTER-CALLS" schUpdateInst nil
+\o S3C1P-API "AFTER-CALLS" schChangeCellView nil
+\o S3C1P-API "AFTER-CALLS" schMoveInst nil
+\o S3C1P-API "AFTER-CALLS" geMoveSel nil
+\o S3C1P-API "AFTER-CALLS" geMoveFig nil
+\o S3C1P-API "AFTER-CALLS" hiCheckAndSave nil
+\o S3C1P-API "AFTER-CALLS" hiOpenView nil
+\o S3C1P-API "AFTER-CALLS" hiGetSession nil
+\o S3C1P-API "AFTER-CALLS" hiGetEditWin nil
+\o S3C1P-API "AFTER-CALLS" hiGetWindow nil
+\o S3C1P-API "AFTER-CALLS" hiCreateWindow funobj:hiCreateWindow
+\o S3C1P-API "AFTER-CALLS" hiRedraw funobj:hiRedraw
+\o S3C1P-API "AFTER-CALLS" geGetEditCellView lambda:geGetEditCellView
+\o S3C1P-API "AFTER-CALLS" schGetEditCellView nil
+\o S3C1P-API "AFTER-CALLS" hiGetWinEditCellView nil
+\o S3C1P-API "AFTER-CALLS" schSelectObj nil
+\o S3C1P-API "AFTER-CALLS" geSelectAllObjs nil
+\o S3C1P-API "AFTER-CALLS" dbGetNetWires nil
+\o S3C1P-API "AFTER-CALLS" dbCheck lambda:dbCheck
+\o S3C1P-API "AFTER-CALLS" dbCopyCellView lambda:dbCopyCellView
+\o S3C1P-DONE
+\o 
+\# Memory report: on exit            245 MB, process size 1,062 MB at UTC 2026.10.14 05:29:07.372
+\# Memory report: peak usage         245 MB, process size 1,062 MB
