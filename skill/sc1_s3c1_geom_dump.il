@@ -51,6 +51,26 @@ procedure(s9Point(p)
   )
 )
 
+;; section 6 asks for the real vertices of a wire, not its bounding box: a polyline whose bBox
+;; covers a point is not evidence that a segment passes through it. f~>points is the figure's own
+;; vertex list, so this line type carries exactly that.
+procedure(s9Wire(f cell view idx)
+  let((p)
+    p = s9Get(f 'points)
+    when(p != nil
+      printf("S9|W|%L|%L|%L|%L" cell view idx s9Val(if(f~>net f~>net~>name nil)))
+      foreach(q p
+        printf(" %L %L" car(q) cadr(q))
+      )
+      printf("\n")
+    )
+    when(p == nil
+      printf("S9|W|%L|%L|%L|%L NO-POINTS\n" cell view idx
+             s9Val(if(f~>net f~>net~>name nil)))
+    )
+  )
+)
+
 procedure(s9FigLine(f cell view idx)
   printf("S9|S|%L|%L|%L|%L|%L|%L", cell view idx f~>objType f~>layerName f~>purpose)
   s9BBox(f)
@@ -74,6 +94,9 @@ procedure(s9DumpView(cell view)
       foreach(f cv~>shapes
         n = n + 1
         s9FigLine(f cell view n)
+        when(equal(f~>layerName "wire")
+          when(equal(f~>purpose "drawing") s9Wire(f cell view n))
+        )
       )
       foreach(i cv~>instances
         printf("S9|I|%L|%L|%L|%L", cell view i~>cellName i~>name)
@@ -101,6 +124,7 @@ procedure(s9DumpView(cell view)
   )
 )
 
+;; ---- DRIVER ----
 printf("S9-BEGIN\n")
 foreach(cell s9Cells
   s9DumpView(cell "schematic")

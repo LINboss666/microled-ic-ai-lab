@@ -1,0 +1,112 @@
+S3C2_PORT_ROWS=96 matched=96 mismatched=0
+S3C2_ATTACH rows=39 reached=14 unreached=25
+  UNREACHED sc1_ls_c1_top_r2d/Xcore sc1_ls_core_r2d.vss net=vss tip=4.2500 0.5375
+  UNREACHED sc1_ls_c1_top_r2d/Xcore sc1_ls_core_r2d.vdd33 net=vdd33 tip=4.0500 1.9625
+  UNREACHED sc1_ls_c1_top_r2d/Xcore sc1_ls_core_r2d.vdd18 net=vdd18 tip=4.4500 1.9625
+  UNREACHED sc1_ls_c1_top_r2d/Xcore sc1_ls_core_r2d.x net=x tip=5.3375 1.3750
+  UNREACHED sc1_ls_c1_top_r2d/Xcore sc1_ls_core_r2d.en net=en tip=3.1625 1.2500
+  UNREACHED sc1_ls_c1_top_r2d/Xnand sc1_ls_c1_r2d.vss net=vss tip=0.8750 0.6625
+  UNREACHED sc1_ls_c1_top_r2d/Xnand sc1_ls_c1_r2d.vdd33 net=vdd33 tip=0.8750 1.8375
+  UNREACHED sc1_ls_c1_top_r2d/Xnand sc1_ls_c1_r2d.core_ok33 net=core_ok33 tip=-0.2125 1.3750
+  UNREACHED sc1_ls_c1_top_r2d/Xnand sc1_ls_c1_r2d.y net=y tip=-0.2125 1.1250
+  UNREACHED sc1_r3_scan_chain_1ch/Xff c2mos_dff.vss net=vss tip=4.5000 -0.2125
+  UNREACHED sc1_r3_scan_chain_1ch/Xff c2mos_dff.vdd net=vdd18 tip=4.5000 1.2125
+  UNREACHED sc1_r3_scan_chain_1ch/Xff c2mos_dff.qbar net=qbar tip=5.2750 0.3750
+  UNREACHED sc1_r3_scan_chain_1ch/Xff c2mos_dff.q net=q tip=5.2750 0.6250
+  UNREACHED sc1_r3_scan_chain_1ch/Xff c2mos_dff.clk net=clk tip=3.7250 0.6250
+  UNREACHED sc1_r3_scan_chain_1ch/Xff c2mos_dff.d net=d tip=3.7250 0.3750
+  UNREACHED sc1_r3_scan_chain_1ch/Xgate sc1_scan_gate.vss net=vss tip=4.6250 2.0375
+  UNREACHED sc1_r3_scan_chain_1ch/Xgate sc1_scan_gate.vdd net=vdd18 tip=4.6250 3.2125
+  UNREACHED sc1_r3_scan_chain_1ch/Xgate sc1_scan_gate.blank net=blank tip=3.6625 2.7500
+  UNREACHED sc1_r3_scan_chain_1ch/Xgate sc1_scan_gate.qbar net=qbar tip=3.6625 2.5000
+  UNREACHED sc1_r3_scan_chain_1ch/Xls sc1_ls_c1_top_r2d.vss net=vss tip=1.0000 1.9125
+  UNREACHED sc1_r3_scan_chain_1ch/Xls sc1_ls_c1_top_r2d.vdd33 net=vdd33 tip=0.8000 3.3375
+  UNREACHED sc1_r3_scan_chain_1ch/Xls sc1_ls_c1_top_r2d.vdd18 net=vdd18 tip=1.2000 3.3375
+  UNREACHED sc1_r3_scan_chain_1ch/Xls sc1_ls_c1_top_r2d.gate33 net=gate33 tip=2.2750 2.6250
+  UNREACHED sc1_r3_scan_chain_1ch/Xls sc1_ls_c1_top_r2d.core_ok33 net=core_ok33 tip=-0.2750 2.7500
+  UNREACHED sc1_r3_scan_chain_1ch/Xls sc1_ls_c1_top_r2d.en net=en tip=-0.2750 2.5000
+S3C2_CROSSNET contacts=273
+  CROSS-KIND c2mos_dff wire-wire 152
+  CROSS-KIND sc1_ls_c1_r2d wire-wire 14
+  CROSS-KIND sc1_ls_c1_top_r2d wire-foreign-pin 1
+  CROSS-KIND sc1_ls_c1_top_r2d wire-wire 12
+  CROSS-KIND sc1_ls_core_r2d wire-wire 28
+  CROSS-KIND sc1_r3_scan_chain_1ch wire-foreign-pin 2
+  CROSS-KIND sc1_r3_scan_chain_1ch wire-wire 42
+  CROSS-KIND sc1_s3b_p33_bank_7 wire-wire 12
+  CROSS-KIND sc1_scan_gate wire-wire 10
+  CROSS c2mos_dff wire-wire d m 5 149
+  CROSS c2mos_dff wire-wire d vss 6 124
+  CROSS c2mos_dff wire-wire d x2 6 159
+  CROSS c2mos_dff wire-wire clk vdd 10 82
+  CROSS c2mos_dff wire-wire clk vss 10 125
+  CROSS c2mos_dff wire-wire clk vdd 11 82
+  CROSS c2mos_dff wire-wire clk vss 11 125
+  CROSS c2mos_dff wire-wire clk vdd 13 82
+  CROSS c2mos_dff wire-wire clk vss 13 87
+  CROSS c2mos_dff wire-wire clk vss 13 127
+S3C2_EDITOR views_with_check=8 of 8 schematics with 0 errors
+Traceback (most recent call last):
+  File "D:\ic617_agent_bridge\scripts\sc1_s3c2_evidence.py", line 271, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "D:\ic617_agent_bridge\scripts\sc1_s3c2_evidence.py", line 241, in main
+    write_csv(os.path.join(outdir, 'sc1_s3c2_ports.csv'),
+  File "D:\ic617_agent_bridge\scripts\sc1_s3c2_evidence.py", line 64, in write_csv
+    fh.write((u','.join([unicode(v).replace(',', ';') for v in r]) + u'\n').encode('utf-8'))
+                         ^^^^^^^
+NameError: name 'unicode' is not defined
+S3C2_PORT_ROWS=96 matched=96 mismatched=0
+S3C2_ATTACH rows=39 reached=14 unreached=25
+  UNREACHED sc1_ls_c1_top_r2d/Xcore sc1_ls_core_r2d.vss net=vss tip=4.2500 0.5375
+  UNREACHED sc1_ls_c1_top_r2d/Xcore sc1_ls_core_r2d.vdd33 net=vdd33 tip=4.0500 1.9625
+  UNREACHED sc1_ls_c1_top_r2d/Xcore sc1_ls_core_r2d.vdd18 net=vdd18 tip=4.4500 1.9625
+  UNREACHED sc1_ls_c1_top_r2d/Xcore sc1_ls_core_r2d.x net=x tip=5.3375 1.3750
+  UNREACHED sc1_ls_c1_top_r2d/Xcore sc1_ls_core_r2d.en net=en tip=3.1625 1.2500
+  UNREACHED sc1_ls_c1_top_r2d/Xnand sc1_ls_c1_r2d.vss net=vss tip=0.8750 0.6625
+  UNREACHED sc1_ls_c1_top_r2d/Xnand sc1_ls_c1_r2d.vdd33 net=vdd33 tip=0.8750 1.8375
+  UNREACHED sc1_ls_c1_top_r2d/Xnand sc1_ls_c1_r2d.core_ok33 net=core_ok33 tip=-0.2125 1.3750
+  UNREACHED sc1_ls_c1_top_r2d/Xnand sc1_ls_c1_r2d.y net=y tip=-0.2125 1.1250
+  UNREACHED sc1_r3_scan_chain_1ch/Xff c2mos_dff.vss net=vss tip=4.5000 -0.2125
+  UNREACHED sc1_r3_scan_chain_1ch/Xff c2mos_dff.vdd net=vdd18 tip=4.5000 1.2125
+  UNREACHED sc1_r3_scan_chain_1ch/Xff c2mos_dff.qbar net=qbar tip=5.2750 0.3750
+  UNREACHED sc1_r3_scan_chain_1ch/Xff c2mos_dff.q net=q tip=5.2750 0.6250
+  UNREACHED sc1_r3_scan_chain_1ch/Xff c2mos_dff.clk net=clk tip=3.7250 0.6250
+  UNREACHED sc1_r3_scan_chain_1ch/Xff c2mos_dff.d net=d tip=3.7250 0.3750
+  UNREACHED sc1_r3_scan_chain_1ch/Xgate sc1_scan_gate.vss net=vss tip=4.6250 2.0375
+  UNREACHED sc1_r3_scan_chain_1ch/Xgate sc1_scan_gate.vdd net=vdd18 tip=4.6250 3.2125
+  UNREACHED sc1_r3_scan_chain_1ch/Xgate sc1_scan_gate.blank net=blank tip=3.6625 2.7500
+  UNREACHED sc1_r3_scan_chain_1ch/Xgate sc1_scan_gate.qbar net=qbar tip=3.6625 2.5000
+  UNREACHED sc1_r3_scan_chain_1ch/Xls sc1_ls_c1_top_r2d.vss net=vss tip=1.0000 1.9125
+  UNREACHED sc1_r3_scan_chain_1ch/Xls sc1_ls_c1_top_r2d.vdd33 net=vdd33 tip=0.8000 3.3375
+  UNREACHED sc1_r3_scan_chain_1ch/Xls sc1_ls_c1_top_r2d.vdd18 net=vdd18 tip=1.2000 3.3375
+  UNREACHED sc1_r3_scan_chain_1ch/Xls sc1_ls_c1_top_r2d.gate33 net=gate33 tip=2.2750 2.6250
+  UNREACHED sc1_r3_scan_chain_1ch/Xls sc1_ls_c1_top_r2d.core_ok33 net=core_ok33 tip=-0.2750 2.7500
+  UNREACHED sc1_r3_scan_chain_1ch/Xls sc1_ls_c1_top_r2d.en net=en tip=-0.2750 2.5000
+S3C2_CROSSNET contacts=273
+  CROSS-KIND c2mos_dff wire-wire 152
+  CROSS-KIND sc1_ls_c1_r2d wire-wire 14
+  CROSS-KIND sc1_ls_c1_top_r2d wire-foreign-pin 1
+  CROSS-KIND sc1_ls_c1_top_r2d wire-wire 12
+  CROSS-KIND sc1_ls_core_r2d wire-wire 28
+  CROSS-KIND sc1_r3_scan_chain_1ch wire-foreign-pin 2
+  CROSS-KIND sc1_r3_scan_chain_1ch wire-wire 42
+  CROSS-KIND sc1_s3b_p33_bank_7 wire-wire 12
+  CROSS-KIND sc1_scan_gate wire-wire 10
+  CROSS c2mos_dff wire-wire d m 5 149
+  CROSS c2mos_dff wire-wire d vss 6 124
+  CROSS c2mos_dff wire-wire d x2 6 159
+  CROSS c2mos_dff wire-wire clk vdd 10 82
+  CROSS c2mos_dff wire-wire clk vss 10 125
+  CROSS c2mos_dff wire-wire clk vdd 11 82
+  CROSS c2mos_dff wire-wire clk vss 11 125
+  CROSS c2mos_dff wire-wire clk vdd 13 82
+  CROSS c2mos_dff wire-wire clk vss 13 87
+  CROSS c2mos_dff wire-wire clk vss 13 127
+S3C2_EDITOR views_with_check=8 of 8 schematics with 0 errors
+S3C2_EVIDENCE wrote sc1_s3c2_ports.csv rows=96
+S3C2_EVIDENCE wrote sc1_s3c2_attach.csv rows=39
+S3C2_EVIDENCE wrote sc1_s3c2_crossnet.csv rows=273
+S3C2_EVIDENCE wrote sc1_s3c2_editor_check.csv rows=16
+S3C2_EVIDENCE wrote sc1_s3c2_wire_labels.csv rows=64
+S3C2_EVIDENCE ports=96 attach=39 crossnet=273 labels=64

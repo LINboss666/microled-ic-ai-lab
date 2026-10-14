@@ -1,0 +1,41 @@
+S3C1_GEOM views=16 shapes=811 insts=94 terms=96
+S3C1_PARSE_FAILURES geom=0 conn=0 ports=0
+S3C1_VIEWS_OPENED 16 of 16
+S3C1_INST_NET_ROWS 195  S3C1_CHECK_ROWS 16
+S3C1_SYM c2mos_dff                shapes=22  body=YES  pinrects=6   stubs=6   labels=6   terms=6  
+S3C1_SYM sc1_ls_c1_r2d            shapes=19  body=YES  pinrects=5   stubs=5   labels=5   terms=5  
+S3C1_SYM sc1_ls_c1_top_r2d        shapes=22  body=YES  pinrects=6   stubs=6   labels=6   terms=6  
+S3C1_SYM sc1_ls_core_r2d          shapes=22  body=YES  pinrects=6   stubs=6   labels=6   terms=6  
+S3C1_SYM sc1_r3_scan_chain_1ch    shapes=28  body=YES  pinrects=8   stubs=8   labels=8   terms=8  
+S3C1_SYM sc1_s3b_p33_bank_7       shapes=13  body=YES  pinrects=3   stubs=3   labels=3   terms=3  
+S3C1_SYM sc1_scan_gate            shapes=19  body=YES  pinrects=5   stubs=5   labels=5   terms=5  
+S3C1_SYM sc1_scan_power_1ch_s3c   shapes=31  body=YES  pinrects=9   stubs=9   labels=9   terms=9  
+S3C1_SIDE_MATCHED 48 of 48
+S3C1_ATTACH rows=39 attached=14 not_attached=25
+  NOT-ATTACHED sc1_ls_c1_top_r2d/Xcore (sc1_ls_core_r2d R0) term=vss net=vss tip=NONE
+  NOT-ATTACHED sc1_ls_c1_top_r2d/Xcore (sc1_ls_core_r2d R0) term=vdd33 net=vdd33 tip=NONE
+  NOT-ATTACHED sc1_ls_c1_top_r2d/Xcore (sc1_ls_core_r2d R0) term=vdd18 net=vdd18 tip=NONE
+  NOT-ATTACHED sc1_ls_c1_top_r2d/Xcore (sc1_ls_core_r2d R0) term=x net=x tip=NONE
+  NOT-ATTACHED sc1_ls_c1_top_r2d/Xcore (sc1_ls_core_r2d R0) term=en net=en tip=NONE
+  NOT-ATTACHED sc1_ls_c1_top_r2d/Xnand (sc1_ls_c1_r2d R0) term=vss net=vss tip=NONE
+  NOT-ATTACHED sc1_ls_c1_top_r2d/Xnand (sc1_ls_c1_r2d R0) term=vdd33 net=vdd33 tip=NONE
+  NOT-ATTACHED sc1_ls_c1_top_r2d/Xnand (sc1_ls_c1_r2d R0) term=core_ok33 net=core_ok33 tip=NONE
+  NOT-ATTACHED sc1_ls_c1_top_r2d/Xnand (sc1_ls_c1_r2d R0) term=y net=y tip=NONE
+  NOT-ATTACHED sc1_r3_scan_chain_1ch/Xff (c2mos_dff R0) term=vss net=vss tip=NONE
+  NOT-ATTACHED sc1_r3_scan_chain_1ch/Xff (c2mos_dff R0) term=vdd net=vdd18 tip=NONE
+  NOT-ATTACHED sc1_r3_scan_chain_1ch/Xff (c2mos_dff R0) term=qbar net=qbar tip=NONE
+  NOT-ATTACHED sc1_r3_scan_chain_1ch/Xff (c2mos_dff R0) term=q net=q tip=NONE
+  NOT-ATTACHED sc1_r3_scan_chain_1ch/Xff (c2mos_dff R0) term=clk net=clk tip=NONE
+  NOT-ATTACHED sc1_r3_scan_chain_1ch/Xff (c2mos_dff R0) term=d net=d tip=NONE
+  NOT-ATTACHED sc1_r3_scan_chain_1ch/Xgate (sc1_scan_gate R0) term=vss net=vss tip=NONE
+  NOT-ATTACHED sc1_r3_scan_chain_1ch/Xgate (sc1_scan_gate R0) term=vdd net=vdd18 tip=NONE
+  NOT-ATTACHED sc1_r3_scan_chain_1ch/Xgate (sc1_scan_gate R0) term=blank net=blank tip=NONE
+  NOT-ATTACHED sc1_r3_scan_chain_1ch/Xgate (sc1_scan_gate R0) term=qbar net=qbar tip=NONE
+  NOT-ATTACHED sc1_r3_scan_chain_1ch/Xls (sc1_ls_c1_top_r2d R0) term=vss net=vss tip=NONE
+  NOT-ATTACHED sc1_r3_scan_chain_1ch/Xls (sc1_ls_c1_top_r2d R0) term=vdd33 net=vdd33 tip=NONE
+  NOT-ATTACHED sc1_r3_scan_chain_1ch/Xls (sc1_ls_c1_top_r2d R0) term=vdd18 net=vdd18 tip=NONE
+  NOT-ATTACHED sc1_r3_scan_chain_1ch/Xls (sc1_ls_c1_top_r2d R0) term=gate33 net=gate33 tip=NONE
+  NOT-ATTACHED sc1_r3_scan_chain_1ch/Xls (sc1_ls_c1_top_r2d R0) term=core_ok33 net=core_ok33 tip=NONE
+  NOT-ATTACHED sc1_r3_scan_chain_1ch/Xls (sc1_ls_c1_top_r2d R0) term=en net=en tip=NONE
+S3C1_PORT_ROWS 96 schematic=48 symbol=48 MISMATCH 0
+S3C1_EVIDENCE wrote 5 tables into results/evidence/_incoming

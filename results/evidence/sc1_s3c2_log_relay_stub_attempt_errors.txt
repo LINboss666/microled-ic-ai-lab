@@ -1,0 +1,174 @@
+\# Program start time UTC 2026.10.14 09:29:49.539
+\# Local time Wednesday 14 October 2026, 5:29 pm
+\o Program:		@(#)$CDS: virtuoso version 6.1.7-64b 11/09/2015 12:45 (sjfnl165) $
+\o Hierarchy:		/opt/IC617/tools.lnx86/dfII/
+\o Sub version:		sub-version  IC6.1.7-64b.78  (64-bit addresses)
+\# Command line:	/opt/IC617/tools/dfII/bin/64bit/virtuoso -nograph -log $PROJ/cadence_work/s3c_oa/logs/s3c_oa_20261014_172946.log
+\# Host name (type):	work-eda (x86_64)
+\# Operating system:	Linux 2.6.32-431.el6.x86_64 #1 SMP Sun Nov 10 22:19:54 EST 2013
+\# Linux /etc/issue:	Red Hat Enterprise Linux Server release 6.5 (Santiago)
+\# Linux /etc/issue:	Kernel \r on an \m
+\# X display name (WxH):	work-eda:80 (1024x868)
+\# Available geometry:			TL(0:0) BR(1023:867)
+\# X server:			RealVNC Ltd (VNC nograph server, PID 121507)
+\# Depth of Visual (Root):	16 (16)
+\# Number of Planes Used:	16
+\# X version:		11.0 (vendor release 3370)
+\# X resource pool:	base 0x800000, mask 0x3fffff (4194303), shift 0
+\# 			current id 0x0, current max 0x3ffffa (4194298)
+\# Max data seg size:	     unlimited
+\# Max process size:	     unlimited
+\# Initial sbrk value:	        381 MB
+\# Available memory:	      9,244 MB
+\# System memory:	     11,810 MB
+\# Maximum memory size:	     11,508 MB
+\# Max mem available:	      9,324 MB
+\# Initial memory used:	         80 MB
+\#        process size:	        869 MB
+\# Qt version:		4.8.5
+\# Window Manager:	other
+\# User Name:		root
+\o Working Directory:	work-eda:$PROJ/cadence_work/s3c_oa
+\# Process Id:		121386
+\o 
+\o COPYRIGHT � 1992-2015  CADENCE DESIGN SYSTEMS INC.  ALL RIGHTS RESERVED.
+\o           � 1992-2015  UNIX SYSTEMS Laboratories INC.,
+\o                          Reproduced with permission.
+\o 
+\o This Cadence Design Systems program and online documentation are
+\o proprietary/confidential information and may be disclosed/used only
+\o as authorized in a license agreement controlling such use and disclosure.
+\o 
+\o           RESTRICTED RIGHTS NOTICE (SHORT FORM)
+\o Use/reproduction/disclosure is subject to restriction
+\o set forth at FAR 1252.227-19 or its equivalent.
+\o Loading geView.cxt 
+\o Loading menuBuilder.cxt 
+\o Loading schView.cxt 
+\o Loading selectSv.cxt 
+\o Loading wireEdit.cxt 
+\o Loading pte2.cxt 
+\o Loading xlUI.cxt 
+\o Loading auCore.cxt 
+\o Loading vhdl.cxt 
+\o Loading seismic.cxt 
+\o Loading ci.cxt 
+\o Loading ams.cxt 
+\o Virtuoso Framework License (111) was checked out successfully. Total checkout time was 0.02s.
+\w *WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+\w LIB microled_scan_s3c from the same file (defined earlier.)
+\o END OF SITE CUSTOMIZATION
+\o Loading $HOME/.cdsinit init file from the site init file.
+\o S2W-BEGIN
+\o S2W-API dbCreateLine=lambda:dbCreateLine dbDeleteObject=lambda:dbDeleteObject dbCreateLabel=lambda:dbCreateLabel dbMoveFig=lambda:dbMoveFig schCheck=nil
+\o S2W-CELLS ("sc1_ls_c1_top_r2d") rows=26 labels=11 moves=8
+\w *WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+\w LIB microled_scan_s3c from the same file (defined earlier.)
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_c1_r2d symbol" has been updated since "microled_scan_s3c sc1_ls_c1_top_r2d schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_core_r2d symbol" has been updated since "microled_scan_s3c sc1_ls_c1_top_r2d schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 1 objType="ellipse" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 2 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 3 objType="label" lpp="wire"/"label" xy=(6.25 0.9375) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 4 objType="textDisplay" lpp="pin"/"label" xy=(6.5 0.21875) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 5 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 6 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 7 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 8 objType="label" lpp="wire"/"label" xy=(6.25 0.3125) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 9 objType="textDisplay" lpp="pin"/"label" xy=(6.5 2.21875) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 10 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 11 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 12 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 13 objType="label" lpp="wire"/"label" xy=(6.25 0.1875) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 14 objType="textDisplay" lpp="pin"/"label" xy=(6.5 2.34375) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 15 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 16 objType="label" lpp="wire"/"label" xy=(6.25 1.4375) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 17 objType="textDisplay" lpp="pin"/"label" xy=(6.5 1.46875) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 18 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 19 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 20 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 21 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 22 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 23 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 24 objType="label" lpp="wire"/"label" xy=(6.25 2.3125) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 25 objType="ellipse" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 26 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 27 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 28 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 29 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 30 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 31 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 32 objType="label" lpp="wire"/"label" xy=(6.25 2.1875) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 33 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 34 objType="label" lpp="wire"/"label" xy=(5.3125 1.0625) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 35 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 36 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 37 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 38 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 39 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 40 objType="label" lpp="wire"/"label" xy=(2.3125 0.4625) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 41 objType="textDisplay" lpp="pin"/"label" xy=(6.5 0.34375) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 42 objType="textDisplay" lpp="pin"/"label" xy=(6.5 0.96875) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPES "sc1_ls_c1_top_r2d" count=42
+\o S2W-MOVE-INST "PIN5" want=(-0.75 1.25) xy=(-0.75 1.25) rc=t bbox-was=((6.3875 0.8125) (6.6125 1.13125)) bbox-now=((-0.8625 1.1875) (-0.6375 1.50625))
+\o S2W-MOVE-INST "PIN4" want=(-0.75 1.4) xy=(-0.75 1.4) rc=t bbox-was=((6.3875 0.1875) (6.6125 0.50625)) bbox-now=((-0.8625 1.3375) (-0.6375 1.65625))
+\o S2W-MOVE-INST "PIN3" want=(6.2 1.25) xy=(6.2 1.25) rc=t bbox-was=((6.3875 0.0625) (6.6125 0.38125)) bbox-now=((6.0875 1.1875) (6.3125 1.50625))
+\o S2W-MOVE-INST "PIN2" want=(1.375 2.8) xy=(1.375 2.8) rc=t bbox-was=((6.3875 1.3125) (6.6125 1.63125)) bbox-now=((1.2625 2.7375) (1.4875 3.05625))
+\o S2W-MOVE-INST "PIN1" want=(0.975 2.8) xy=(0.975 2.8) rc=t bbox-was=((6.3875 2.1875) (6.6125 2.50625)) bbox-now=((0.8625 2.7375) (1.0875 3.05625))
+\o S2W-MOVE-INST "PIN0" want=(1.175 -0.3) xy=(1.175 -0.3) rc=t bbox-was=((6.3875 2.0625) (6.6125 2.38125)) bbox-now=((1.0625 -0.3625) (1.2875 -0.04375))
+\o S2W-MOVE-INST "Xnand" want=(4.275 1.25) xy=(4.275 1.25) rc=t bbox-was=((-0.3 0.575) (2.05 1.925)) bbox-now=((3.1 0.575) (5.45 1.925))
+\o S2W-MOVE-INST "Xcore" want=(1.175 1.25) xy=(1.175 1.25) rc=t bbox-was=((3.075 0.45) (5.425 2.05)) bbox-now=((0.0 0.45) (2.35 2.05))
+\o S2W-MOVES "sc1_ls_c1_top_r2d" applied=8 refused=0 shapes=42
+\o S2W-SEG "sc1_ls_c1_top_r2d" "x" (2.2625 1.375)->(2.5125 1.375) objType="line" net="x"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "gate33" (5.3625 1.25)->(6.2 1.25) objType="line" net="gate33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "vdd18" (1.375 1.9625)->(1.375 2.8) objType="line" net="vdd18"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "en" (-0.75 1.25)->(0.0875 1.25) objType="line" net="en"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "y" (2.2625 1.125)->(3.1875 1.125) objType="line" net="y"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (-0.75 1.985)->(0.1475 1.985) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (0.1475 2.11)->(0.975 2.11) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (2.2625 2.325)->(3.1875 2.325) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (0.975 2.65)->(1.1 2.65) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (1.1 2.74)->(1.175 2.74) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (2.2025 2.8)->(2.2625 2.8) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (1.175 2.86)->(2.2025 2.86) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (-0.75 1.4)->(-0.75 1.985) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (0.1475 1.985)->(0.1475 2.11) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (0.975 2.11)->(0.975 2.65) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (1.1 2.65)->(1.1 2.74) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (1.175 2.74)->(1.175 2.86) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (2.2025 2.8)->(2.2025 2.86) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (2.2625 2.325)->(2.2625 2.8) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (3.1875 1.375)->(3.1875 2.325) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "vss" (1.175 0.5975)->(4.275 0.5975) objType="line" net="vss"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "vss" (1.175 -0.3)->(1.175 0.5975) objType="line" net="vss"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "vss" (4.275 0.5975)->(4.275 0.6625) objType="line" net="vss"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "vdd33" (4.275 1.8375)->(4.275 2.0875) objType="line" net="vdd33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "vdd33" (0.975 1.9625)->(0.975 2.2125) objType="line" net="vdd33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "vdd33" (0.975 2.8)->(0.975 3.05) objType="line" net="vdd33"
+\o S2W-DELETE "sc1_ls_c1_top_r2d" wire-figures-deleted=36 shapes=42->32
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "x" at (2.5125 1.375) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "gate33" at (5.78125 1.25) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "vdd18" at (1.375 2.38125) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "en" at (-0.33125 1.25) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "y" at (2.725 1.125) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "core_ok33" at (-0.30125 1.985) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "vss" at (2.725 0.5975) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "vdd33" at (4.275 2.0875) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "vdd33" at (4.275 2.0875) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "vdd33" at (0.975 2.2125) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "vdd33" at (0.975 3.05) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o Loading schematic.cxt 
+\o INFO (SCH-1170): Extracting "sc1_ls_c1_top_r2d schematic"
+\# Memory report: using         255 MB, process size 1,073 MB at UTC 2026.10.14 09:29:50.089
+\o Error: (DB-270004): Illegal bus reference - Can't tap "<vdd33>" from net "core_ok33".
+\o S2W-SCHCHECK "sc1_ls_c1_top_r2d" raw=((1 0))
+\o S2W-DRAW "sc1_ls_c1_top_r2d" segments=26 labels=11 shapes=42->44 errors=1 warnings=0
+\o Loading lx.cxt 
+\o Loading lce.cxt 
+\o Loading le.cxt 
+\o Loading rte.cxt 
+\o S2W-SAVE "sc1_ls_c1_top_r2d" rc=t
+\o S2W-CLOSE "sc1_ls_c1_top_r2d" rc=t
+\o S2W-DONE
+\o 
+\# Memory report: on exit            268 MB, process size 1,086 MB at UTC 2026.10.14 09:29:50.167
+\# Memory report: peak usage         268 MB, process size 1,086 MB

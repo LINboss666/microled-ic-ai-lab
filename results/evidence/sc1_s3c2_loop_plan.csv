@@ -1,0 +1,11 @@
+parent,net,kind,x1,y1,x2,y2
+sc1_scan_power_1ch_s3c,vscan,grid,4.9625,1.7125,4.9625,2.925
+sc1_scan_power_1ch_s3c,gate33,grid,2.8875,1.25,3.8125,1.25
+sc1_scan_power_1ch_s3c,blank,grid,-0.75,1.625,0.0875,1.625
+sc1_scan_power_1ch_s3c,clk,grid,-0.75,1.375,0.0875,1.375
+sc1_scan_power_1ch_s3c,core_ok33,grid,-0.75,1.125,0.0875,1.125
+sc1_scan_power_1ch_s3c,d,grid,-0.75,0.875,0.0875,0.875
+sc1_scan_power_1ch_s3c,vss,grid,1.4875,-0.425,1.4875,0.4125
+sc1_scan_power_1ch_s3c,vdd18,grid,1.6875,2.0875,1.6875,2.925
+sc1_scan_power_1ch_s3c,vdd33,grid,1.2875,2.0875,1.2875,2.925
+sc1_scan_power_1ch_s3c,scan,grid,6.1125,1.25,6.95,1.25

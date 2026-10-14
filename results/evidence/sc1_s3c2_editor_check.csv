@@ -1,0 +1,17 @@
+cell,view,check_available,errors,warnings
+c2mos_dff,schematic,yes,0,5
+c2mos_dff,symbol,no_schCheck_returns_nil_for_this_view_type,-1,-1
+sc1_scan_gate,schematic,yes,0,1
+sc1_scan_gate,symbol,no_schCheck_returns_nil_for_this_view_type,-1,-1
+sc1_ls_core_r2d,schematic,yes,0,2
+sc1_ls_core_r2d,symbol,no_schCheck_returns_nil_for_this_view_type,-1,-1
+sc1_ls_c1_r2d,schematic,yes,0,1
+sc1_ls_c1_r2d,symbol,no_schCheck_returns_nil_for_this_view_type,-1,-1
+sc1_ls_c1_top_r2d,schematic,yes,0,22
+sc1_ls_c1_top_r2d,symbol,no_schCheck_returns_nil_for_this_view_type,-1,-1
+sc1_r3_scan_chain_1ch,schematic,yes,0,39
+sc1_r3_scan_chain_1ch,symbol,no_schCheck_returns_nil_for_this_view_type,-1,-1
+sc1_s3b_p33_bank_7,schematic,yes,0,0
+sc1_s3b_p33_bank_7,symbol,no_schCheck_returns_nil_for_this_view_type,-1,-1
+sc1_scan_power_1ch_s3c,schematic,yes,0,0
+sc1_scan_power_1ch_s3c,symbol,no_schCheck_returns_nil_for_this_view_type,-1,-1

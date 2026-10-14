@@ -1,0 +1,407 @@
+\# Program start time UTC 2026.10.14 09:12:49.776
+\# Local time Wednesday 14 October 2026, 5:12 pm
+\o Program:		@(#)$CDS: virtuoso version 6.1.7-64b 11/09/2015 12:45 (sjfnl165) $
+\o Hierarchy:		/opt/IC617/tools.lnx86/dfII/
+\o Sub version:		sub-version  IC6.1.7-64b.78  (64-bit addresses)
+\# Command line:	/opt/IC617/tools/dfII/bin/64bit/virtuoso -nograph -log $PROJ/cadence_work/s3c_oa/logs/s3c_oa_20261014_171246.log
+\# Host name (type):	work-eda (x86_64)
+\# Operating system:	Linux 2.6.32-431.el6.x86_64 #1 SMP Sun Nov 10 22:19:54 EST 2013
+\# Linux /etc/issue:	Red Hat Enterprise Linux Server release 6.5 (Santiago)
+\# Linux /etc/issue:	Kernel \r on an \m
+\# X display name (WxH):	work-eda:80 (1024x868)
+\# Available geometry:			TL(0:0) BR(1023:867)
+\# X server:			RealVNC Ltd (VNC nograph server, PID 116348)
+\# Depth of Visual (Root):	16 (16)
+\# Number of Planes Used:	16
+\# X version:		11.0 (vendor release 3370)
+\# X resource pool:	base 0x800000, mask 0x3fffff (4194303), shift 0
+\# 			current id 0x0, current max 0x3ffffa (4194298)
+\# Max data seg size:	     unlimited
+\# Max process size:	     unlimited
+\# Initial sbrk value:	        379 MB
+\# Available memory:	      9,246 MB
+\# System memory:	     11,810 MB
+\# Maximum memory size:	     11,510 MB
+\# Max mem available:	      9,325 MB
+\# Initial memory used:	         80 MB
+\#        process size:	        869 MB
+\# Qt version:		4.8.5
+\# Window Manager:	other
+\# User Name:		root
+\o Working Directory:	work-eda:$PROJ/cadence_work/s3c_oa
+\# Process Id:		116227
+\o 
+\o COPYRIGHT � 1992-2015  CADENCE DESIGN SYSTEMS INC.  ALL RIGHTS RESERVED.
+\o           � 1992-2015  UNIX SYSTEMS Laboratories INC.,
+\o                          Reproduced with permission.
+\o 
+\o This Cadence Design Systems program and online documentation are
+\o proprietary/confidential information and may be disclosed/used only
+\o as authorized in a license agreement controlling such use and disclosure.
+\o 
+\o           RESTRICTED RIGHTS NOTICE (SHORT FORM)
+\o Use/reproduction/disclosure is subject to restriction
+\o set forth at FAR 1252.227-19 or its equivalent.
+\o Loading geView.cxt 
+\# Memory report: using         193 MB, process size 1,006 MB at UTC 2026.10.14 09:12:50.065
+\o Loading menuBuilder.cxt 
+\o Loading schView.cxt 
+\o Loading selectSv.cxt 
+\o Loading wireEdit.cxt 
+\o Loading pte2.cxt 
+\o Loading xlUI.cxt 
+\o Loading auCore.cxt 
+\o Loading vhdl.cxt 
+\o Loading seismic.cxt 
+\o Loading ci.cxt 
+\o Loading ams.cxt 
+\o Virtuoso Framework License (111) was checked out successfully. Total checkout time was 0.02s.
+\w *WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+\w LIB microled_scan_s3c from the same file (defined earlier.)
+\o END OF SITE CUSTOMIZATION
+\o Loading $HOME/.cdsinit init file from the site init file.
+\o S2W-BEGIN
+\o S2W-API dbCreateLine=lambda:dbCreateLine dbDeleteObject=lambda:dbDeleteObject dbCreateLabel=lambda:dbCreateLabel dbMoveFig=lambda:dbMoveFig schCheck=nil
+\o S2W-CELLS ("sc1_ls_c1_top_r2d" "sc1_r3_scan_chain_1ch" "sc1_scan_power_1ch_s3c") rows=69 labels=36 moves=30
+\w *WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+\w LIB microled_scan_s3c from the same file (defined earlier.)
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 1 objType="label" lpp="wire"/"label" xy=(3.2375 1.8375) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 2 objType="label" lpp="wire"/"label" xy=(1.24375 0.5375) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 3 objType="label" lpp="wire"/"label" xy=(2.9375 1.375) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 4 objType="textDisplay" lpp="pin"/"label" xy=(6.2 1.34375) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 5 objType="label" lpp="wire"/"label" xy=(-1.0 1.4) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 6 objType="label" lpp="wire"/"label" xy=(2.725 1.125) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 7 objType="label" lpp="wire"/"label" xy=(-0.33125 1.25) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 8 objType="label" lpp="wire"/"label" xy=(1.375 2.2125) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 9 objType="textDisplay" lpp="pin"/"label" xy=(1.175 -0.20625) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 10 objType="label" lpp="wire"/"label" xy=(1.125 2.8) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 11 objType="label" lpp="wire"/"label" xy=(5.78125 1.25) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 12 objType="label" lpp="wire"/"label" xy=(2.5625 1.375) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 13 objType="label" lpp="wire"/"label" xy=(2.5125 1.375) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 14 objType="textDisplay" lpp="pin"/"label" xy=(0.975 2.89375) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 15 objType="textDisplay" lpp="pin"/"label" xy=(1.375 2.89375) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 16 objType="textDisplay" lpp="pin"/"label" xy=(-0.75 1.49375) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 17 objType="textDisplay" lpp="pin"/"label" xy=(-0.75 1.34375) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 18 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 19 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 20 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 21 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 22 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 23 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 24 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 25 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 26 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 27 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 28 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 29 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 30 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 31 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 32 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 33 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 34 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 35 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_ls_c1_top_r2d" 36 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPES "sc1_ls_c1_top_r2d" count=36
+\o S2W-MOVE-INST "PIN5" want=(-0.75 1.25) xy=(-0.75 1.25) rc=t bbox-was=((-0.8625 1.1875) (-0.6375 1.50625)) bbox-now=((-0.8625 1.1875) (-0.6375 1.50625))
+\o S2W-MOVE-INST "PIN4" want=(-0.75 1.4) xy=(-0.75 1.4) rc=t bbox-was=((-0.8625 1.3375) (-0.6375 1.65625)) bbox-now=((-0.8625 1.3375) (-0.6375 1.65625))
+\o S2W-MOVE-INST "PIN3" want=(6.2 1.25) xy=(6.2 1.25) rc=t bbox-was=((6.0875 1.1875) (6.3125 1.50625)) bbox-now=((6.0875 1.1875) (6.3125 1.50625))
+\o S2W-MOVE-INST "PIN2" want=(1.375 2.8) xy=(1.375 2.8) rc=t bbox-was=((1.2625 2.7375) (1.4875 3.05625)) bbox-now=((1.2625 2.7375) (1.4875 3.05625))
+\o S2W-MOVE-INST "PIN1" want=(0.975 2.8) xy=(0.975 2.8) rc=t bbox-was=((0.8625 2.7375) (1.0875 3.05625)) bbox-now=((0.8625 2.7375) (1.0875 3.05625))
+\o S2W-MOVE-INST "PIN0" want=(1.175 -0.3) xy=(1.175 -0.3) rc=t bbox-was=((1.0625 -0.3625) (1.2875 -0.04375)) bbox-now=((1.0625 -0.3625) (1.2875 -0.04375))
+\o S2W-MOVE-INST "Xnand" want=(4.275 1.25) xy=(4.275 1.25) rc=t bbox-was=((3.1 0.575) (5.45 1.925)) bbox-now=((3.1 0.575) (5.45 1.925))
+\o S2W-MOVE-INST "Xcore" want=(1.175 1.25) xy=(1.175 1.25) rc=t bbox-was=((0.0 0.45) (2.35 2.05)) bbox-now=((0.0 0.45) (2.35 2.05))
+\o S2W-MOVES "sc1_ls_c1_top_r2d" applied=8 refused=0 shapes=36
+\o S2W-SEG "sc1_ls_c1_top_r2d" "x" (2.2625 1.375)->(2.5125 1.375) objType="line" net="x"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "gate33" (5.3625 1.25)->(6.2 1.25) objType="line" net="gate33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "vdd18" (1.375 1.9625)->(1.375 2.8) objType="line" net="vdd18"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "en" (-0.75 1.25)->(0.0875 1.25) objType="line" net="en"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "y" (2.2625 1.125)->(3.1875 1.125) objType="line" net="y"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (-0.75 1.985)->(0.0275 1.985) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (0.0275 2.11)->(0.0875 2.11) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (2.2625 2.325)->(3.1875 2.325) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (0.0875 2.8)->(0.1475 2.8) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (2.2025 2.8)->(2.2625 2.8) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (0.1475 2.86)->(2.2025 2.86) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (-0.75 1.4)->(-0.75 1.985) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (0.0275 1.985)->(0.0275 2.11) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (0.0875 2.11)->(0.0875 2.8) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (0.1475 2.8)->(0.1475 2.86) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (2.2025 2.8)->(2.2025 2.86) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (2.2625 2.325)->(2.2625 2.8) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "core_ok33" (3.1875 1.375)->(3.1875 2.325) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "vss" (1.175 0.5975)->(4.275 0.5975) objType="line" net="vss"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "vss" (1.175 -0.3)->(1.175 0.5975) objType="line" net="vss"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "vss" (4.275 0.5975)->(4.275 0.6625) objType="line" net="vss"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "vdd33" (4.275 1.8375)->(4.275 2.0875) objType="line" net="vdd33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "vdd33" (0.975 1.9625)->(0.975 2.2125) objType="line" net="vdd33"
+\o S2W-SEG "sc1_ls_c1_top_r2d" "vdd33" (0.975 2.8)->(0.975 3.05) objType="line" net="vdd33"
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\o S2W-DELETE "sc1_ls_c1_top_r2d" wire-figures-deleted=20 shapes=36->30
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "x" at (2.5625 1.375) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "x" at (2.5125 1.375) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "gate33" at (5.78125 1.25) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "vdd18" at (1.375 2.38125) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "en" at (-0.33125 1.25) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "y" at (2.725 1.125) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "core_ok33" at (-0.36125 1.985) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "vss" at (2.725 0.5975) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "vdd33" at (4.275 2.0875) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "vdd33" at (0.975 2.2125) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_ls_c1_top_r2d" "vdd33" at (0.975 3.05) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o Loading schematic.cxt 
+\o INFO (SCH-1170): Extracting "sc1_ls_c1_top_r2d schematic"
+\o Warning: Name "x" is not glued to any wire.
+\o Warning: Pin "x" on instance "Xcore": floating output.
+\o Warning: Floating net "x" at (2.5125, 1.3750).
+\o S2W-SCHCHECK "sc1_ls_c1_top_r2d" raw=((0 3))
+\o S2W-DRAW "sc1_ls_c1_top_r2d" segments=24 labels=11 shapes=36->41 errors=0 warnings=3
+\o Loading lx.cxt 
+\o Loading lce.cxt 
+\o Loading le.cxt 
+\o Loading rte.cxt 
+\o S2W-SAVE "sc1_ls_c1_top_r2d" rc=t
+\o S2W-CLOSE "sc1_ls_c1_top_r2d" rc=t
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_ls_c1_top_r2d symbol" has been updated since "microled_scan_s3c sc1_r3_scan_chain_1ch schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_scan_gate symbol" has been updated since "microled_scan_s3c sc1_r3_scan_chain_1ch schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c c2mos_dff symbol" has been updated since "microled_scan_s3c sc1_r3_scan_chain_1ch schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 1 objType="label" lpp="wire"/"label" xy=(1.9375 1.375) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 2 objType="label" lpp="wire"/"label" xy=(1.8875 1.375) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 3 objType="label" lpp="wire"/"label" xy=(-0.33125 1.375) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 4 objType="textDisplay" lpp="pin"/"label" xy=(8.8 1.34375) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 5 objType="label" lpp="wire"/"label" xy=(-0.33125 1.125) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 6 objType="label" lpp="wire"/"label" xy=(8.38125 1.25) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 7 objType="label" lpp="wire"/"label" xy=(6.4875 2.38125) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 8 objType="label" lpp="wire"/"label" xy=(2.1 1.125) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 9 objType="label" lpp="wire"/"label" xy=(4.95 1.125) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 10 objType="label" lpp="wire"/"label" xy=(-0.3 1.9875) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 11 objType="label" lpp="wire"/"label" xy=(-0.78125 1.525) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 12 objType="label" lpp="wire"/"label" xy=(1.21875 0.5375) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 13 objType="label" lpp="wire"/"label" xy=(6.8875 2.2125) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 14 objType="label" lpp="wire"/"label" xy=(3.525 2.0875) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 15 objType="textDisplay" lpp="pin"/"label" xy=(6.4875 2.89375) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 16 objType="label" lpp="wire"/"label" xy=(0.8625 2.2125) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 17 objType="label" lpp="wire"/"label" xy=(6.6375 2.8) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 18 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 19 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 20 objType="textDisplay" lpp="pin"/"label" xy=(6.8875 2.89375) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 21 objType="ellipse" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 22 objType="textDisplay" lpp="pin"/"label" xy=(6.6875 -0.20625) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 23 objType="textDisplay" lpp="pin"/"label" xy=(-0.75 1.61875) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 24 objType="textDisplay" lpp="pin"/"label" xy=(-0.75 1.76875) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 25 objType="textDisplay" lpp="pin"/"label" xy=(-0.75 1.46875) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 26 objType="textDisplay" lpp="pin"/"label" xy=(-0.75 1.21875) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 27 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 28 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 29 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 30 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 31 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 32 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 33 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 34 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 35 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 36 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 37 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 38 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 39 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 40 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 41 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 42 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 43 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 44 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 45 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 46 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 47 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 48 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 49 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 50 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 51 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 52 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 53 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 54 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 55 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 56 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 57 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 58 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 59 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 60 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_r3_scan_chain_1ch" 61 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPES "sc1_r3_scan_chain_1ch" count=61
+\o S2W-MOVE-INST "PIN7" want=(-0.75 1.125) xy=(-0.75 1.125) rc=t bbox-was=((-0.8625 1.0625) (-0.6375 1.38125)) bbox-now=((-0.8625 1.0625) (-0.6375 1.38125))
+\o S2W-MOVE-INST "PIN6" want=(-0.75 1.375) xy=(-0.75 1.375) rc=t bbox-was=((-0.8625 1.3125) (-0.6375 1.63125)) bbox-now=((-0.8625 1.3125) (-0.6375 1.63125))
+\o S2W-MOVE-INST "PIN5" want=(-0.75 1.675) xy=(-0.75 1.675) rc=t bbox-was=((-0.8625 1.6125) (-0.6375 1.93125)) bbox-now=((-0.8625 1.6125) (-0.6375 1.93125))
+\o S2W-MOVE-INST "PIN4" want=(-0.75 1.525) xy=(-0.75 1.525) rc=t bbox-was=((-0.8625 1.4625) (-0.6375 1.78125)) bbox-now=((-0.8625 1.4625) (-0.6375 1.78125))
+\o S2W-MOVE-INST "PIN3" want=(8.8 1.25) xy=(8.8 1.25) rc=t bbox-was=((8.6875 1.1875) (8.9125 1.50625)) bbox-now=((8.6875 1.1875) (8.9125 1.50625))
+\o S2W-MOVE-INST "PIN2" want=(6.8875 2.8) xy=(6.8875 2.8) rc=t bbox-was=((6.775 2.7375) (7.0 3.05625)) bbox-now=((6.775 2.7375) (7.0 3.05625))
+\o S2W-MOVE-INST "PIN1" want=(6.4875 2.8) xy=(6.4875 2.8) rc=t bbox-was=((6.375 2.7375) (6.6 3.05625)) bbox-now=((6.375 2.7375) (6.6 3.05625))
+\o S2W-MOVE-INST "PIN0" want=(6.6875 -0.3) xy=(6.6875 -0.3) rc=t bbox-was=((6.575 -0.3625) (6.8 -0.04375)) bbox-now=((6.575 -0.3625) (6.8 -0.04375))
+\o S2W-MOVE-INST "Xls" want=(6.6875 1.25) xy=(6.6875 1.25) rc=t bbox-was=((5.325 0.45) (8.05 2.05)) bbox-now=((5.325 0.45) (8.05 2.05))
+\o S2W-MOVE-INST "Xgate" want=(3.525 1.25) xy=(3.525 1.25) rc=t bbox-was=((2.475 0.575) (4.575 1.925)) bbox-now=((2.475 0.575) (4.575 1.925))
+\o S2W-MOVE-INST "Xff" want=(0.8625 1.25) xy=(0.8625 1.25) rc=t bbox-was=((0.0 0.45) (1.725 2.05)) bbox-now=((0.0 0.45) (1.725 2.05))
+\o S2W-MOVES "sc1_r3_scan_chain_1ch" applied=11 refused=0 shapes=61
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "q" (1.6375 1.375)->(1.8875 1.375) objType="line" net="q"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "clk" (-0.75 1.375)->(0.0875 1.375) objType="line" net="clk"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "d" (-0.75 1.125)->(0.0875 1.125) objType="line" net="d"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "gate33" (7.9625 1.25)->(8.8 1.25) objType="line" net="gate33"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "vdd33" (6.4875 1.9625)->(6.4875 2.8) objType="line" net="vdd33"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "qbar" (1.6375 1.125)->(2.5625 1.125) objType="line" net="qbar"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "en" (4.4875 1.125)->(5.4125 1.125) objType="line" net="en"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "en" (4.4875 1.125)->(4.4875 1.25) objType="line" net="en"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "blank" (-0.75 1.985)->(0.1475 1.985) objType="line" net="blank"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "blank" (2.075 2.0225)->(2.5625 2.0225) objType="line" net="blank"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "blank" (0.1475 2.075)->(2.075 2.075) objType="line" net="blank"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "blank" (-0.75 1.675)->(-0.75 1.985) objType="line" net="blank"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "blank" (0.1475 1.985)->(0.1475 2.075) objType="line" net="blank"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "blank" (2.075 2.0225)->(2.075 2.075) objType="line" net="blank"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "blank" (2.5625 1.375)->(2.5625 2.0225) objType="line" net="blank"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "core_ok33" (-0.81 1.525)->(-0.75 1.525) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "core_ok33" (3.525 1.985)->(5.4125 1.985) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "core_ok33" (-0.81 2.0225)->(0.0875 2.0225) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "core_ok33" (0.0875 2.11)->(3.525 2.11) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "core_ok33" (-0.81 1.525)->(-0.81 2.0225) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "core_ok33" (0.0875 2.0225)->(0.0875 2.11) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "core_ok33" (3.525 1.985)->(3.525 2.11) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "core_ok33" (5.4125 1.375)->(5.4125 1.985) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "vss" (0.8625 0.5375)->(1.5775 0.5375) objType="line" net="vss"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "vss" (1.5775 0.5975)->(1.785 0.5975) objType="line" net="vss"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "vss" (4.4275 0.6025)->(6.6875 0.6025) objType="line" net="vss"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "vss" (1.785 0.6625)->(4.4275 0.6625) objType="line" net="vss"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "vss" (1.5775 0.5375)->(1.5775 0.5975) objType="line" net="vss"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "vss" (1.785 0.5975)->(1.785 0.6625) objType="line" net="vss"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "vss" (4.4275 0.6025)->(4.4275 0.6625) objType="line" net="vss"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "vss" (6.6875 -0.3)->(6.6875 0.6025) objType="line" net="vss"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "vdd18" (6.8875 1.9625)->(6.8875 2.2125) objType="line" net="vdd18"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "vdd18" (3.525 1.8375)->(3.525 2.0875) objType="line" net="vdd18"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "vdd18" (0.8625 1.9625)->(0.8625 2.2125) objType="line" net="vdd18"
+\o S2W-SEG "sc1_r3_scan_chain_1ch" "vdd18" (6.8875 2.8)->(6.8875 3.05) objType="line" net="vdd18"
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\o S2W-DELETE "sc1_r3_scan_chain_1ch" wire-figures-deleted=39 shapes=61->43
+\o S2W-LABEL "sc1_r3_scan_chain_1ch" "q" at (1.9375 1.375) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_r3_scan_chain_1ch" "q" at (1.8875 1.375) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_r3_scan_chain_1ch" "clk" at (-0.33125 1.375) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_r3_scan_chain_1ch" "d" at (-0.33125 1.125) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_r3_scan_chain_1ch" "gate33" at (8.38125 1.25) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_r3_scan_chain_1ch" "vdd33" at (6.4875 2.38125) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_r3_scan_chain_1ch" "qbar" at (2.1 1.125) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_r3_scan_chain_1ch" "en" at (4.95 1.125) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_r3_scan_chain_1ch" "blank" at (-0.30125 1.985) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_r3_scan_chain_1ch" "core_ok33" at (-0.78 1.525) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_r3_scan_chain_1ch" "vss" at (1.22 0.5375) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_r3_scan_chain_1ch" "vdd18" at (6.8875 2.2125) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_r3_scan_chain_1ch" "vdd18" at (3.525 2.0875) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_r3_scan_chain_1ch" "vdd18" at (0.8625 2.2125) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_r3_scan_chain_1ch" "vdd18" at (6.8875 3.05) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o INFO (SCH-1170): Extracting "sc1_r3_scan_chain_1ch schematic"
+\o Error: Terminal "vdd18" shorted to terminal "blank".
+\o 
+\o Error: Terminal "vdd18" shorted to terminal "core_ok33".
+\o 
+\o Error: (DB-270004): Illegal bus reference - Can't tap "<vdd18>" from net "core_ok33".
+\o Warning: Name "q" is not glued to any wire.
+\o S2W-SCHCHECK "sc1_r3_scan_chain_1ch" raw=((3 1))
+\o S2W-DRAW "sc1_r3_scan_chain_1ch" segments=35 labels=15 shapes=61->61 errors=3 warnings=1
+\o S2W-SAVE "sc1_r3_scan_chain_1ch" rc=t
+\o S2W-CLOSE "sc1_r3_scan_chain_1ch" rc=t
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 1 objType="textDisplay" lpp="pin"/"label" xy=(-0.75 0.96875) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 2 objType="label" lpp="wire"/"label" xy=(4.9625 2.31875) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 3 objType="label" lpp="wire"/"label" xy=(3.35 1.25) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 4 objType="textDisplay" lpp="pin"/"label" xy=(1.4875 -0.33125) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 5 objType="label" lpp="wire"/"label" xy=(-0.33125 1.625) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 6 objType="label" lpp="wire"/"label" xy=(-0.33125 1.375) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 7 objType="textDisplay" lpp="pin"/"label" xy=(1.6875 3.01875) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 8 objType="label" lpp="wire"/"label" xy=(-0.33125 1.125) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 9 objType="label" lpp="wire"/"label" xy=(-0.33125 0.875) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 10 objType="textDisplay" lpp="pin"/"label" xy=(6.95 1.34375) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 11 objType="label" lpp="wire"/"label" xy=(1.4875 -0.00625) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 12 objType="label" lpp="wire"/"label" xy=(1.6875 2.50625) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 13 objType="textDisplay" lpp="pin"/"label" xy=(-0.75 1.21875) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 14 objType="label" lpp="wire"/"label" xy=(1.2875 2.50625) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 15 objType="label" lpp="wire"/"label" xy=(6.53125 1.25) text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 16 objType="textDisplay" lpp="pin"/"label" xy=(-0.75 1.71875) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 17 objType="textDisplay" lpp="pin"/"label" xy=(-0.75 1.46875) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 18 objType="textDisplay" lpp="pin"/"label" xy=(4.9625 3.01875) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 19 objType="textDisplay" lpp="pin"/"label" xy=(1.2875 3.01875) text="name" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 20 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 21 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 22 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 23 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 24 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 25 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 26 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 27 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 28 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPE "sc1_scan_power_1ch_s3c" 29 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE" strings="NONE" val="NONE"
+\o S2W-SHAPES "sc1_scan_power_1ch_s3c" count=29
+\o S2W-MOVE-INST "PIN8" want=(-0.75 0.875) xy=(-0.75 0.875) rc=t bbox-was=((-0.8625 0.8125) (-0.6375 1.13125)) bbox-now=((-0.8625 0.8125) (-0.6375 1.13125))
+\o S2W-MOVE-INST "PIN7" want=(-0.75 1.375) xy=(-0.75 1.375) rc=t bbox-was=((-0.8625 1.3125) (-0.6375 1.63125)) bbox-now=((-0.8625 1.3125) (-0.6375 1.63125))
+\o S2W-MOVE-INST "PIN6" want=(-0.75 1.625) xy=(-0.75 1.625) rc=t bbox-was=((-0.8625 1.5625) (-0.6375 1.88125)) bbox-now=((-0.8625 1.5625) (-0.6375 1.88125))
+\o S2W-MOVE-INST "PIN5" want=(-0.75 1.125) xy=(-0.75 1.125) rc=t bbox-was=((-0.8625 1.0625) (-0.6375 1.38125)) bbox-now=((-0.8625 1.0625) (-0.6375 1.38125))
+\o S2W-MOVE-INST "PIN4" want=(6.95 1.25) xy=(6.95 1.25) rc=t bbox-was=((6.8375 1.1875) (7.0625 1.50625)) bbox-now=((6.8375 1.1875) (7.0625 1.50625))
+\o S2W-MOVE-INST "PIN3" want=(1.6875 2.925) xy=(1.6875 2.925) rc=t bbox-was=((1.575 2.8625) (1.8 3.18125)) bbox-now=((1.575 2.8625) (1.8 3.18125))
+\o S2W-MOVE-INST "PIN2" want=(1.2875 2.925) xy=(1.2875 2.925) rc=t bbox-was=((1.175 2.8625) (1.4 3.18125)) bbox-now=((1.175 2.8625) (1.4 3.18125))
+\o S2W-MOVE-INST "PIN1" want=(4.9625 2.925) xy=(4.9625 2.925) rc=t bbox-was=((4.85 2.8625) (5.075 3.18125)) bbox-now=((4.85 2.8625) (5.075 3.18125))
+\o S2W-MOVE-INST "PIN0" want=(1.4875 -0.425) xy=(1.4875 -0.425) rc=t bbox-was=((1.375 -0.4875) (1.6 -0.16875)) bbox-now=((1.375 -0.4875) (1.6 -0.16875))
+\o S2W-MOVE-INST "Xbank" want=(4.9625 1.25) xy=(4.9625 1.25) rc=t bbox-was=((3.725 0.875) (6.2 1.8)) bbox-now=((3.725 0.875) (6.2 1.8))
+\o S2W-MOVE-INST "Xchain" want=(1.4875 1.25) xy=(1.4875 1.25) rc=t bbox-was=((-0.01875 0.325) (2.975 2.175)) bbox-now=((-0.01875 0.325) (2.975 2.175))
+\o S2W-MOVES "sc1_scan_power_1ch_s3c" applied=11 refused=0 shapes=29
+\o S2W-SEG "sc1_scan_power_1ch_s3c" "vscan" (4.9625 1.7125)->(4.9625 2.925) objType="line" net="vscan"
+\o S2W-SEG "sc1_scan_power_1ch_s3c" "gate33" (2.8875 1.25)->(3.8125 1.25) objType="line" net="gate33"
+\o S2W-SEG "sc1_scan_power_1ch_s3c" "blank" (-0.75 1.625)->(0.0875 1.625) objType="line" net="blank"
+\o S2W-SEG "sc1_scan_power_1ch_s3c" "clk" (-0.75 1.375)->(0.0875 1.375) objType="line" net="clk"
+\o S2W-SEG "sc1_scan_power_1ch_s3c" "core_ok33" (-0.75 1.125)->(0.0875 1.125) objType="line" net="core_ok33"
+\o S2W-SEG "sc1_scan_power_1ch_s3c" "d" (-0.75 0.875)->(0.0875 0.875) objType="line" net="d"
+\o S2W-SEG "sc1_scan_power_1ch_s3c" "vss" (1.4875 -0.425)->(1.4875 0.4125) objType="line" net="vss"
+\o S2W-SEG "sc1_scan_power_1ch_s3c" "vdd18" (1.6875 2.0875)->(1.6875 2.925) objType="line" net="vdd18"
+\o S2W-SEG "sc1_scan_power_1ch_s3c" "vdd33" (1.2875 2.0875)->(1.2875 2.925) objType="line" net="vdd33"
+\o S2W-SEG "sc1_scan_power_1ch_s3c" "scan" (6.1125 1.25)->(6.95 1.25) objType="line" net="scan"
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\w *WARNING* (DB-270063): dbDeleteObject: Invalid database object 0
+\o S2W-DELETE "sc1_scan_power_1ch_s3c" wire-figures-deleted=10 shapes=29->19
+\o S2W-LABEL "sc1_scan_power_1ch_s3c" "vscan" at (4.9625 2.31875) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_scan_power_1ch_s3c" "gate33" at (3.35 1.25) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_scan_power_1ch_s3c" "blank" at (-0.33125 1.625) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_scan_power_1ch_s3c" "clk" at (-0.33125 1.375) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_scan_power_1ch_s3c" "core_ok33" at (-0.33125 1.125) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_scan_power_1ch_s3c" "d" at (-0.33125 0.875) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_scan_power_1ch_s3c" "vss" at (1.4875 -0.00625) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_scan_power_1ch_s3c" "vdd18" at (1.6875 2.50625) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_scan_power_1ch_s3c" "vdd33" at (1.2875 2.50625) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o S2W-LABEL "sc1_scan_power_1ch_s3c" "scan" at (6.53125 1.25) text="NONE" strings="NONE" val="NONE" just="NONE" objType="label"
+\o INFO (SCH-1170): Extracting "sc1_scan_power_1ch_s3c schematic"
+\o S2W-SCHCHECK "sc1_scan_power_1ch_s3c" raw=((0 0))
+\o S2W-DRAW "sc1_scan_power_1ch_s3c" segments=10 labels=10 shapes=29->29 errors=0 warnings=0
+\o S2W-SAVE "sc1_scan_power_1ch_s3c" rc=t
+\o S2W-CLOSE "sc1_scan_power_1ch_s3c" rc=t
+\o S2W-DONE
+\o 
+\# Memory report: on exit            311 MB, process size 1,129 MB at UTC 2026.10.14 09:12:50.474
+\# Memory report: peak usage         311 MB, process size 1,129 MB

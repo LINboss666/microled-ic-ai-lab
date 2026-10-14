@@ -31,23 +31,32 @@ C²MOS cell — were not written.
 | **S3C1_CONNECTIVITY_AND_GRAPH** | **39/39 pin-wire attachments · GRAPH_EQUIVALENCE PASS** | every sub-instance pin is reached by a wire of the same **parent-view** net (`gate33` in the top, not the child's `bgate`), with the two `MY` mirrored instances handled; the existing comparator re-run on today's state: 39 devices, 46/46 connectivity rows, 8/8 canonical graphs, `S3C_OA_GRAPH_EQUIVALENCE PASS`, `failures=0` → `sc1_s3c1_connectivity.csv`, `sc1_s3c1_equivalence.csv` |
 | **S3C1_VISUAL_REVIEW** | **PENDING — measured twice, not assumed** | the GUI session did start and paint: CIW window `0x3a0000c` exists but `Map State: IsUnMapped`, `import -window` fails `unable to read X window image … Resource temporarily unavailable`, `xwd` writes 0 bytes — the same limitation GUI-1 recorded. No external rendering is offered as an OA view → `sc1_s3c1_gui.log`, `sc1_s3c1_cap_ciw.txt` |
 | **S3C1_LIBRARY_UNTOUCHED_BY_THE_PROBES** | **72 of 72 files byte-identical** | `logs/pre_scratch_lib.md5` vs `logs/post_cleanup_lib.md5` → `LIB_BACK_TO_72_IDENTICAL`; the five scratch cellviews the probes created (`dbCopyCellView` does write to disk without `dbSave`) were removed and re-checked; no `.locks` existed and none was deleted; no other Cadence process ran; backup `backup_microled_scan_s3c_pre_s3c1_20261014.tgz` sha256 `dc063aa7…8dcf5` stays in the project |
-| **NEW_SIMULATION_RUNS** | **0** | no simulator was invoked in S3-C or S3C1 |
-| **FINAL_VSCAN / LED_IV / N_ACTIVE / REAL_ELECTRODE_RC / BUDGETS** | **NOT_DEFINED ×5** | unchanged; the S3-B bench load is still a proxy, and a schematic view changes no assumption |
+| **S3C2_PIN_PLACEMENT** | **DONE — 48 of 48 on the role side** | every Symbol pin rect, its stub and its label moved as one group and saved (`S2A-PIN … stub=t label=t`, `SAVES=8 REFUSES=0`), re-read from disk: `S3C1_SIDE_MATCHED 48 of 48`, `S3C2_PORT_ROWS=96 matched=96 mismatched=0` → `results/evidence/sc1_s3c2_ports.csv`, `sc1_s3c2_log_apply_sym_placement_pass.txt` |
+| **S3C2_WRITE_INTERFACES** | **ALL DOCUMENTED FORMS WORK — the S3C1 capability claim is retracted** | `dbMoveFig(fig cv list(list(dx dy) "R0" 1.0))`, `dbCreateRect/Line/Label`, `dbMakeNet`, `dbCreatePin`, `dbDeleteObject`, `fig~>net = netObj`, `i~>xy` on an instance (the bBox follows and the port's name display moves with it) — measured on this task's own copies, `results/evidence/s3c2_api_probe.log`, `sc1_s3c2_log_attribute_types.txt` |
+| **S3C2_PARENT_RELAY** | **PARTIAL — bank's parent done, two views blocked and restored** | `sc1_scan_power_1ch_s3c`: 11 moves, 28 wire figures deleted, 10 drawn from the connection the database reports, `schCheck ((0 0))`, and `gate33` kept its name by a wire label on the wire. `sc1_ls_c1_top_r2d` (1 error) and `sc1_r3_scan_chain_1ch` (3 errors, `Terminal "vdd18" shorted to terminal "blank"`) failed in all three strategies and were **md5-verified restored** from `backup_microled_scan_s3c_pre_s3c2_20261014.tgz` |
+| **S3C2_ATTACH** | **14 of 39 sub-instance pins on a real same-net segment** | tip computed from `i~>transform`, tested against the figure's own vertices (`S9|W|`), never a bBox cover → `sc1_s3c2_attach.csv`; the 25 unreached are exactly the two rolled-back views. 0 cross-net contacts inside the re-laid view |
+| **S3C2_GRAPH_AND_EDITOR** | **PASS · 0 errors in 8/8 schematics** | disk reopen: 39 devices, 7 sub-instances, 46/46 connectivity, 8/8 canonical graphs, `dbCheck` all t, `SCH-2162` warnings itemised per view → `sc1_s3c2_comparator_final.txt`, `sc1_s3c2_editor_check.csv`, `sc1_s3c2_log_final_verify_disk_reopen.txt` |
+| **S3C2_MANIFEST_AUDIT** | **192 of 194 (S3C1) / 191 of 194 (S3-C), not 194 of 194 — retracted** | re-hashed against committed bytes with `git cat-file`; root causes are classified per row: `NOT_IN_GIT` (one `_incoming` scratch CSV never tracked), `EOL_NORMALISED` (`sc1_s3c1_comparator_final.txt` recorded its CRLF working copy, `.gitattributes eol=lf` serves the LF blob — content never wrong), `STALE_ROW` (S3-C's own row for the S3C1 manifest) → `sc1_s3c2_manifest_corrections.csv`, `sc1_s3c2_manifest_audit_output.txt`; role breakdown corrected to 18 inputs / 10 outputs / 13 supplies / 7 grounds |
+| **S3C2_VISUAL_REVIEW** | **PENDING — still no screenshot** | the S3C1 X measurements (`IsUnMapped`, `import` "Resource temporarily unavailable", `xwd` 0 bytes) were not re-probed, as section 4 forbids another probe round; `skill/sc1_s3c2_ciw_parents.il` is the CIW hand-off for the two blocked views |
+| **FINAL_VSCAN / LED_IV / N_ACTIVE / REAL_ELECTRODE_RC / BUDGETS** | **NOT_DEFINED ×5** | unchanged; the S3-B bench load is still a proxy, and rearranging a drawing changes no assumption |
 | **S4_CHAIN / SOA / AUTONOMOUS_POWER_FAIL** | **NOT_STARTED · NO · NOT_IMPLEMENTED** | no multi-channel or shift chain, no absolute rating read, no POR/UVLO/power-fail behaviour |
+| **NEW_SIMULATION_RUNS** | **0** | no simulator was invoked in S3-C, S3C1 or S3C2 |
 
-### Next step is the S3-C1 visual-and-placement review gate
+### Next step is the S3-C2 visual review gate
 
-The single verified channel now exists as schematic and Symbol views whose object graph matches the
-accepted netlists, with the port directions carried by the OA objects themselves (96/96 read back from
-disk) and with real body/pin/label graphics in every Symbol. What is deliberately **not** claimed: the
-role-based pin placement (38 of 48 pins still sit on the wrong side of their own body), the schematic
-presentation pass, and any screenshot — all three need an in-place re-lay of parent wiring that this
-build cannot do with the primitives available in batch, and the task forbids rebuilding the library.
-The reviewer's decision is therefore narrow: either accept a collision-checked re-lay written against
-the proven `bBox`/`xy` assignment path, or do the placement by hand in one editor session. S4 (array,
-multi-channel, Data chaining, PVT, power-fail matrix) and layout/DRC/LVS/PEX stay out either way.
+`reports/scan_driver_s3c2_symbol_placement_parent_relay.md` is this round's report. The library now
+has all 48 Symbol pins on their role sides, 96 port directions unchanged, and the bank's parent
+redrawn from its own connectivity with `schCheck` at zero errors and zero warnings and the graph
+still equivalent after a disk reopen. What is **not** done: the other two hierarchy parents
+(`sc1_ls_c1_top_r2d`, `sc1_r3_scan_chain_1ch`), where every automatic re-lay strategy tried produced
+schCheck shorts around the supply rails, and any screenshot. The reviewer's decision is narrow —
+route those two views by hand in one editor session (the plans are in
+`results/evidence/sc1_s3c2_{lsc1,chain}_plan.csv`), or accept a different port placement, and read
+the screenshots once a mapped X window exists. S4 (array, multi-channel, Data chaining, PVT,
+power-fail matrix) and layout/DRC/LVS/PEX stay out either way.
 
 ## HISTORICAL_STATUS (SCAN-1S3A round and the S3-B measurement round, kept verbatim for audit; superseded by the CURRENT_STATUS above)
+
 
 Original S3-A header text, kept as written at the time except for one deleted sentence: the block
 below once ended with "as of this commit the device is still not connected to the R3 chain", which

@@ -1,0 +1,10 @@
+MANIFEST_AUDIT file=sc1_s3c1_round_manifest.csv ref=HEAD rows=194 bytes_wrong=0 eol_normalised=1 missing=0 not_in_git=1 ok=192 sha_wrong=0 stale_row=0
+  NOT_IN_GIT results/evidence/_incoming/sc1_s3c1_symbol_side.csv
+  EOL_NORMALISED results/evidence/sc1_s3c1_comparator_final.txt recorded=8cd9229a8398/766 actual=145142988e32/750 crlf_lines=16
+CLOUD_VERIFIABLE_ROWS 192 of 194
+
+MANIFEST_AUDIT file=sc1_s3c_round_manifest.csv ref=HEAD rows=194 bytes_wrong=0 eol_normalised=1 missing=0 not_in_git=1 ok=191 sha_wrong=0 stale_row=1
+  NOT_IN_GIT results/evidence/_incoming/sc1_s3c1_symbol_side.csv
+  EOL_NORMALISED results/evidence/sc1_s3c1_comparator_final.txt recorded=8cd9229a8398/766 actual=145142988e32/750 crlf_lines=16
+  STALE_ROW results/evidence/sc1_s3c1_round_manifest.csv recorded=93343c3ba7f0/48524 actual=8a3aa6961ec6/48524 working_matches_commit=yes
+CLOUD_VERIFIABLE_ROWS 191 of 194

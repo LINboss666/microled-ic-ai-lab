@@ -1,0 +1,232 @@
+\# Program start time UTC 2026.10.14 08:54:32.877
+\# Local time Wednesday 14 October 2026, 4:54 pm
+\o Program:		@(#)$CDS: virtuoso version 6.1.7-64b 11/09/2015 12:45 (sjfnl165) $
+\o Hierarchy:		/opt/IC617/tools.lnx86/dfII/
+\o Sub version:		sub-version  IC6.1.7-64b.78  (64-bit addresses)
+\# Command line:	/opt/IC617/tools/dfII/bin/64bit/virtuoso -nograph -log $PROJ/cadence_work/s3c_oa/logs/s3c_oa_20261014_165429.log
+\# Host name (type):	work-eda (x86_64)
+\# Operating system:	Linux 2.6.32-431.el6.x86_64 #1 SMP Sun Nov 10 22:19:54 EST 2013
+\# Linux /etc/issue:	Red Hat Enterprise Linux Server release 6.5 (Santiago)
+\# Linux /etc/issue:	Kernel \r on an \m
+\# X display name (WxH):	work-eda:80 (1024x868)
+\# Available geometry:			TL(0:0) BR(1023:867)
+\# X server:			RealVNC Ltd (VNC nograph server, PID 108777)
+\# Depth of Visual (Root):	16 (16)
+\# Number of Planes Used:	16
+\# X version:		11.0 (vendor release 3370)
+\# X resource pool:	base 0x800000, mask 0x3fffff (4194303), shift 0
+\# 			current id 0x0, current max 0x3ffffa (4194298)
+\# Max data seg size:	     unlimited
+\# Max process size:	     unlimited
+\# Initial sbrk value:	        356 MB
+\# Available memory:	      9,250 MB
+\# System memory:	     11,810 MB
+\# Maximum memory size:	     11,534 MB
+\# Max mem available:	      9,330 MB
+\# Initial memory used:	         80 MB
+\#        process size:	        869 MB
+\# Qt version:		4.8.5
+\# Window Manager:	other
+\# User Name:		root
+\o Working Directory:	work-eda:$PROJ/cadence_work/s3c_oa
+\# Process Id:		108656
+\o 
+\o COPYRIGHT � 1992-2015  CADENCE DESIGN SYSTEMS INC.  ALL RIGHTS RESERVED.
+\o           � 1992-2015  UNIX SYSTEMS Laboratories INC.,
+\o                          Reproduced with permission.
+\o 
+\o This Cadence Design Systems program and online documentation are
+\o proprietary/confidential information and may be disclosed/used only
+\o as authorized in a license agreement controlling such use and disclosure.
+\o 
+\o           RESTRICTED RIGHTS NOTICE (SHORT FORM)
+\o Use/reproduction/disclosure is subject to restriction
+\o set forth at FAR 1252.227-19 or its equivalent.
+\o Loading geView.cxt 
+\o Loading menuBuilder.cxt 
+\o Loading schView.cxt 
+\o Loading selectSv.cxt 
+\o Loading wireEdit.cxt 
+\o Loading pte2.cxt 
+\o Loading xlUI.cxt 
+\o Loading auCore.cxt 
+\o Loading vhdl.cxt 
+\o Loading seismic.cxt 
+\o Loading ci.cxt 
+\o Loading ams.cxt 
+\o Virtuoso Framework License (111) was checked out successfully. Total checkout time was 0.02s.
+\w *WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+\w LIB microled_scan_s3c from the same file (defined earlier.)
+\o END OF SITE CUSTOMIZATION
+\o Loading $HOME/.cdsinit init file from the site init file.
+\w *WARNING* LIB microled_scan_s3c from File $PROJ/cadence_work/s3c_oa/cds.lib Line 14 redefines
+\w LIB microled_scan_s3c from the same file (defined earlier.)
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_s3b_p33_bank_7 symbol" has been updated since "microled_scan_s3c sc1_scan_power_1ch_s3c schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_r3_scan_chain_1ch symbol" has been updated since "microled_scan_s3c sc1_scan_power_1ch_s3c schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o S2W-COPY-SRC "sc1_scan_power_1ch_s3c" open=t shapes=37 insts=11 nets=10
+\w *WARNING* (DB-270240): dbCopyCellView: version: schematic is ignored
+\o Loading schematic.cxt 
+\o Loading lx.cxt 
+\o Loading lce.cxt 
+\o Loading le.cxt 
+\o Loading rte.cxt 
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_s3b_p33_bank_7 symbol" has been updated since "microled_scan_s3c s3c2_loop_top schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_r3_scan_chain_1ch symbol" has been updated since "microled_scan_s3c s3c2_loop_top schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_s3b_p33_bank_7 symbol" has been updated since "microled_scan_s3c s3c2_loop_top schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_r3_scan_chain_1ch symbol" has been updated since "microled_scan_s3c s3c2_loop_top schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o S2W-COPY "s3c2_loop_top" made=t
+\o S2W-COPY-SAVE t
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_s3b_p33_bank_7 symbol" has been updated since "microled_scan_s3c s3c2_loop_top schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_r3_scan_chain_1ch symbol" has been updated since "microled_scan_s3c s3c2_loop_top schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o S2W-COPY-REOPEN t shapes=37 insts=11 terms=9 nets=10
+\o S2W-BEGIN
+\o S2W-API dbCreateLine=lambda:dbCreateLine dbDeleteObject=lambda:dbDeleteObject dbCreateLabel=lambda:dbCreateLabel dbMoveFig=lambda:dbMoveFig schCheck=funobj:schCheck
+\o S2W-CELLS ("s3c2_loop_top") rows=10 labels=10 moves=11
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_s3b_p33_bank_7 symbol" has been updated since "microled_scan_s3c s3c2_loop_top schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\w *WARNING* (SCH-2162): "microled_scan_s3c sc1_r3_scan_chain_1ch symbol" has been updated since "microled_scan_s3c s3c2_loop_top schematic" was last saved. Validate that the schematic is correct and run Check and Save to suppress this warning.
+\o S2W-SHAPE "s3c2_loop_top" 1 objType="textDisplay" lpp="pin"/"label" xy=(6.625 0.84375) text="name"
+\o S2W-SHAPE "s3c2_loop_top" 2 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 3 objType="label" lpp="wire"/"label" xy=(6.375 0.8125) text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 4 objType="textDisplay" lpp="pin"/"label" xy=(6.625 1.84375) text="name"
+\o S2W-SHAPE "s3c2_loop_top" 5 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 6 objType="label" lpp="wire"/"label" xy=(6.375 0.9375) text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 7 objType="textDisplay" lpp="pin"/"label" xy=(6.625 1.59375) text="name"
+\o S2W-SHAPE "s3c2_loop_top" 8 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 9 objType="label" lpp="wire"/"label" xy=(6.375 1.0625) text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 10 objType="textDisplay" lpp="pin"/"label" xy=(6.625 0.21875) text="name"
+\o S2W-SHAPE "s3c2_loop_top" 11 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 12 objType="label" lpp="wire"/"label" xy=(6.375 1.1875) text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 13 objType="textDisplay" lpp="pin"/"label" xy=(6.625 1.21875) text="name"
+\o S2W-SHAPE "s3c2_loop_top" 14 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 15 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 16 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 17 objType="label" lpp="wire"/"label" xy=(6.375 0.1875) text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 18 objType="textDisplay" lpp="pin"/"label" xy=(6.625 1.09375) text="name"
+\o S2W-SHAPE "s3c2_loop_top" 19 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 20 objType="label" lpp="wire"/"label" xy=(6.375 1.5625) text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 21 objType="textDisplay" lpp="pin"/"label" xy=(6.625 0.96875) text="name"
+\o S2W-SHAPE "s3c2_loop_top" 22 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 23 objType="label" lpp="wire"/"label" xy=(6.375 1.6875) text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 24 objType="textDisplay" lpp="pin"/"label" xy=(6.625 2.34375) text="name"
+\o S2W-SHAPE "s3c2_loop_top" 25 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 26 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 27 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 28 objType="label" lpp="wire"/"label" xy=(6.375 2.3125) text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 29 objType="textDisplay" lpp="pin"/"label" xy=(6.625 1.71875) text="name"
+\o S2W-SHAPE "s3c2_loop_top" 30 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 31 objType="label" lpp="wire"/"label" xy=(6.375 1.8125) text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 32 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 33 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 34 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 35 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 36 objType="line" lpp="wire"/"drawing" xy="NONE" text="NONE"
+\o S2W-SHAPE "s3c2_loop_top" 37 objType="label" lpp="wire"/"label" xy=(2.4375 0.3375) text="NONE"
+\o S2W-SHAPES "s3c2_loop_top" count=37
+\o S2W-MOVE-INST "PIN8" want=(-0.75 0.875) xy=(-0.75 0.875) rc=t bbox-was=((6.5125 0.6875) (6.7375 1.00625)) bbox-now=((-0.8625 0.8125) (-0.6375 1.13125))
+\o S2W-MOVE-INST "PIN7" want=(-0.75 1.375) xy=(-0.75 1.375) rc=t bbox-was=((6.5125 0.8125) (6.7375 1.13125)) bbox-now=((-0.8625 1.3125) (-0.6375 1.63125))
+\o S2W-MOVE-INST "PIN6" want=(-0.75 1.625) xy=(-0.75 1.625) rc=t bbox-was=((6.5125 0.9375) (6.7375 1.25625)) bbox-now=((-0.8625 1.5625) (-0.6375 1.88125))
+\o S2W-MOVE-INST "PIN5" want=(-0.75 1.125) xy=(-0.75 1.125) rc=t bbox-was=((6.5125 1.0625) (6.7375 1.38125)) bbox-now=((-0.8625 1.0625) (-0.6375 1.38125))
+\o S2W-MOVE-INST "PIN4" want=(6.95 1.25) xy=(6.95 1.25) rc=t bbox-was=((6.5125 0.0625) (6.7375 0.38125)) bbox-now=((6.8375 1.1875) (7.0625 1.50625))
+\o S2W-MOVE-INST "PIN3" want=(1.6875 2.925) xy=(1.6875 2.925) rc=t bbox-was=((6.5125 1.4375) (6.7375 1.75625)) bbox-now=((1.575 2.8625) (1.8 3.18125))
+\o S2W-MOVE-INST "PIN2" want=(1.2875 2.925) xy=(1.2875 2.925) rc=t bbox-was=((6.5125 1.5625) (6.7375 1.88125)) bbox-now=((1.175 2.8625) (1.4 3.18125))
+\o S2W-MOVE-INST "PIN1" want=(4.9625 2.925) xy=(4.9625 2.925) rc=t bbox-was=((6.5125 2.1875) (6.7375 2.50625)) bbox-now=((4.85 2.8625) (5.075 3.18125))
+\o S2W-MOVE-INST "PIN0" want=(1.4875 -0.425) xy=(1.4875 -0.425) rc=t bbox-was=((6.5125 1.6875) (6.7375 2.00625)) bbox-now=((1.375 -0.4875) (1.6 -0.16875))
+\o S2W-MOVE-INST "Xbank" want=(4.9625 1.25) xy=(4.9625 1.25) rc=t bbox-was=((-0.3625 0.875) (2.1125 1.8)) bbox-now=((3.725 0.875) (6.2 1.8))
+\o S2W-MOVE-INST "Xchain" want=(1.4875 1.25) xy=(1.4875 1.25) rc=t bbox-was=((2.74375 0.325) (5.7375 2.175)) bbox-now=((-0.01875 0.325) (2.975 2.175))
+\o S2W-MOVES "s3c2_loop_top" applied=11 refused=0 shapes=37
+\o S2W-DELETE "s3c2_loop_top" wire-figures-deleted=28 shapes=37->9
+\o S2W-SEG "s3c2_loop_top" "vscan" (4.9625 1.7125)->(4.9625 2.925) objType="line" net="vscan"
+\o S2W-SEG "s3c2_loop_top" "gate33" (2.8875 1.25)->(3.8125 1.25) objType="line" net="gate33"
+\o S2W-SEG "s3c2_loop_top" "blank" (-0.75 1.625)->(0.0875 1.625) objType="line" net="blank"
+\o S2W-SEG "s3c2_loop_top" "clk" (-0.75 1.375)->(0.0875 1.375) objType="line" net="clk"
+\o S2W-SEG "s3c2_loop_top" "core_ok33" (-0.75 1.125)->(0.0875 1.125) objType="line" net="core_ok33"
+\o S2W-SEG "s3c2_loop_top" "d" (-0.75 0.875)->(0.0875 0.875) objType="line" net="d"
+\o S2W-SEG "s3c2_loop_top" "vss" (1.4875 -0.425)->(1.4875 0.4125) objType="line" net="vss"
+\o S2W-SEG "s3c2_loop_top" "vdd18" (1.6875 2.0875)->(1.6875 2.925) objType="line" net="vdd18"
+\o S2W-SEG "s3c2_loop_top" "vdd33" (1.2875 2.0875)->(1.2875 2.925) objType="line" net="vdd33"
+\o S2W-SEG "s3c2_loop_top" "scan" (6.1125 1.25)->(6.95 1.25) objType="line" net="scan"
+\o S2W-LABEL-FAILED "s3c2_loop_top" "vscan" "vscan"
+\o S2W-LABEL "s3c2_loop_top" "gate33" at (3.7125 1.3) text=nil just="NONE"
+\o S2W-LABEL "s3c2_loop_top" "blank" at (-0.0125 1.675) text=nil just="NONE"
+\o S2W-LABEL "s3c2_loop_top" "clk" at (-0.0125 1.425) text=nil just="NONE"
+\o S2W-LABEL "s3c2_loop_top" "core_ok33" at (-0.0125 1.175) text=nil just="NONE"
+\o S2W-LABEL "s3c2_loop_top" "d" at (-0.0125 0.925) text=nil just="NONE"
+\o S2W-LABEL-FAILED "s3c2_loop_top" "vss" "vss"
+\o S2W-LABEL-FAILED "s3c2_loop_top" "vdd18" "vdd18"
+\o S2W-LABEL-FAILED "s3c2_loop_top" "vdd33" "vdd33"
+\o S2W-LABEL "s3c2_loop_top" "scan" at (6.2125 1.3) text=nil just="NONE"
+\o INFO (SCH-1170): Extracting "s3c2_loop_top schematic"
+\o Warning: Name "scan" is not glued to any wire.
+\o Warning: Name "d" is not glued to any wire.
+\o Warning: Name "core_ok33" is not glued to any wire.
+\o Warning: Name "clk" is not glued to any wire.
+\o Warning: Name "blank" is not glued to any wire.
+\o Warning: Name "gate33" is not glued to any wire.
+\o S2W-SCHCHECK "s3c2_loop_top" raw=((0 6))
+\o S2W-DRAW "s3c2_loop_top" segments=10 labels=6 shapes=37->25 errors=0 warnings=6
+\o S2W-SAVE "s3c2_loop_top" rc=t
+\o S2W-CLOSE "s3c2_loop_top" rc=t
+\o S2W-DONE
+\o S2D-BEGIN
+\o S9|V|"s3c2_loop_top"|"schematic"|t|25|11|9
+\o S9|S|"s3c2_loop_top"|"schematic"|1|"textDisplay"|"pin"|"label"-0.78125 0.96875 -0.71875 1.03125|"NONE"|"NONE"|"NONE"-0.75 0.96875|"name"
+\o S9|S|"s3c2_loop_top"|"schematic"|2|"line"|"wire"|"drawing"4.9625 1.7125 4.9625 2.925|"NONE"|"vscan"|"NONE"NONE NONE|"NONE"
+\o S9|W|"s3c2_loop_top"|"schematic"|2|"vscan" 4.9625 1.7125 4.9625 2.925
+\o S9|S|"s3c2_loop_top"|"schematic"|3|"line"|"wire"|"drawing"2.8875 1.25 3.8125 1.25|"NONE"|"net11"|"NONE"NONE NONE|"NONE"
+\o S9|W|"s3c2_loop_top"|"schematic"|3|"net11" 2.8875 1.25 3.8125 1.25
+\o S9|S|"s3c2_loop_top"|"schematic"|4|"textDisplay"|"pin"|"label"1.40625 -0.33125 1.56875 -0.2875|"NONE"|"NONE"|"NONE"1.4875 -0.33125|"name"
+\o S9|S|"s3c2_loop_top"|"schematic"|5|"line"|"wire"|"drawing"-0.75 1.625 0.0875 1.625|"NONE"|"blank"|"NONE"NONE NONE|"NONE"
+\o S9|W|"s3c2_loop_top"|"schematic"|5|"blank" -0.75 1.625 0.0875 1.625
+\o S9|S|"s3c2_loop_top"|"schematic"|6|"line"|"wire"|"drawing"-0.75 1.375 0.0875 1.375|"NONE"|"clk"|"NONE"NONE NONE|"NONE"
+\o S9|W|"s3c2_loop_top"|"schematic"|6|"clk" -0.75 1.375 0.0875 1.375
+\o S9|S|"s3c2_loop_top"|"schematic"|7|"textDisplay"|"pin"|"label"1.55 3.01875 1.825 3.08125|"NONE"|"NONE"|"NONE"1.6875 3.01875|"name"
+\o S9|S|"s3c2_loop_top"|"schematic"|8|"line"|"wire"|"drawing"-0.75 1.125 0.0875 1.125|"NONE"|"core_ok33"|"NONE"NONE NONE|"NONE"
+\o S9|W|"s3c2_loop_top"|"schematic"|8|"core_ok33" -0.75 1.125 0.0875 1.125
+\o S9|S|"s3c2_loop_top"|"schematic"|9|"line"|"wire"|"drawing"-0.75 0.875 0.0875 0.875|"NONE"|"d"|"NONE"NONE NONE|"NONE"
+\o S9|W|"s3c2_loop_top"|"schematic"|9|"d" -0.75 0.875 0.0875 0.875
+\o S9|S|"s3c2_loop_top"|"schematic"|10|"textDisplay"|"pin"|"label"6.8375 1.34375 7.0625 1.3875|"NONE"|"NONE"|"NONE"6.95 1.34375|"name"
+\o S9|S|"s3c2_loop_top"|"schematic"|11|"line"|"wire"|"drawing"1.4875 -0.425 1.4875 0.4125|"NONE"|"vss"|"NONE"NONE NONE|"NONE"
+\o S9|W|"s3c2_loop_top"|"schematic"|11|"vss" 1.4875 -0.425 1.4875 0.4125
+\o S9|S|"s3c2_loop_top"|"schematic"|12|"line"|"wire"|"drawing"1.6875 2.0875 1.6875 2.925|"NONE"|"vdd18"|"NONE"NONE NONE|"NONE"
+\o S9|W|"s3c2_loop_top"|"schematic"|12|"vdd18" 1.6875 2.0875 1.6875 2.925
+\o S9|S|"s3c2_loop_top"|"schematic"|13|"textDisplay"|"pin"|"label"-1.0 1.2125 -0.5 1.28125|"NONE"|"NONE"|"NONE"-0.75 1.21875|"name"
+\o S9|S|"s3c2_loop_top"|"schematic"|14|"line"|"wire"|"drawing"1.2875 2.0875 1.2875 2.925|"NONE"|"vdd33"|"NONE"NONE NONE|"NONE"
+\o S9|W|"s3c2_loop_top"|"schematic"|14|"vdd33" 1.2875 2.0875 1.2875 2.925
+\o S9|S|"s3c2_loop_top"|"schematic"|15|"line"|"wire"|"drawing"6.1125 1.25 6.95 1.25|"NONE"|"scan"|"NONE"NONE NONE|"NONE"
+\o S9|W|"s3c2_loop_top"|"schematic"|15|"scan" 6.1125 1.25 6.95 1.25
+\o S9|S|"s3c2_loop_top"|"schematic"|16|"label"|"wire"|"label"3.3875 1.275 3.7125 1.3625|"NONE"|"gate33"|"NONE"3.7125 1.3|"NONE"
+\o S9|S|"s3c2_loop_top"|"schematic"|17|"label"|"wire"|"label"-0.2625 1.675 -0.0125 1.7375|"NONE"|"blank"|"NONE"-0.0125 1.675|"NONE"
+\o S9|S|"s3c2_loop_top"|"schematic"|18|"textDisplay"|"pin"|"label"-0.875 1.71875 -0.625 1.78125|"NONE"|"NONE"|"NONE"-0.75 1.71875|"name"
+\o S9|S|"s3c2_loop_top"|"schematic"|19|"label"|"wire"|"label"-0.14375 1.425 -0.0125 1.4875|"NONE"|"clk"|"NONE"-0.0125 1.425|"NONE"
+\o S9|S|"s3c2_loop_top"|"schematic"|20|"label"|"wire"|"label"-0.50625 1.16875 -0.0125 1.2375|"NONE"|"core_ok33"|"NONE"-0.0125 1.175|"NONE"
+\o S9|S|"s3c2_loop_top"|"schematic"|21|"textDisplay"|"pin"|"label"-0.81875 1.46875 -0.68125 1.53125|"NONE"|"NONE"|"NONE"-0.75 1.46875|"name"
+\o S9|S|"s3c2_loop_top"|"schematic"|22|"label"|"wire"|"label"-0.075 0.925 -0.0125 0.9875|"NONE"|"d"|"NONE"-0.0125 0.925|"NONE"
+\o S9|S|"s3c2_loop_top"|"schematic"|23|"label"|"wire"|"label"6.2125 1.3 6.4375 1.34375|"NONE"|"scan"|"NONE"6.2125 1.3|"NONE"
+\o S9|S|"s3c2_loop_top"|"schematic"|24|"textDisplay"|"pin"|"label"4.825 3.01875 5.1 3.0625|"NONE"|"NONE"|"NONE"4.9625 3.01875|"name"
+\o S9|S|"s3c2_loop_top"|"schematic"|25|"textDisplay"|"pin"|"label"1.14375 3.01875 1.43125 3.08125|"NONE"|"NONE"|"NONE"1.2875 3.01875|"name"
+\o S9|I|"s3c2_loop_top"|"schematic"|"sc1_s3b_p33_bank_7"|"Xbank"4.9625 1.25|((4.9625 1.25) "R0" 1.0)|"NONE"|3.725 0.875 6.2 1.8|3
+\o S9|I|"s3c2_loop_top"|"schematic"|"sc1_r3_scan_chain_1ch"|"Xchain"1.4875 1.25|((1.4875 1.25) "R0" 1.0)|"NONE"|-0.01875 0.325 2.975 2.175|8
+\o S9|I|"s3c2_loop_top"|"schematic"|"iopin"|"PIN8"-0.75 0.875|((-0.75 0.875) "R0" 1.0)|"NONE"|-0.8625 0.8125 -0.6375 1.13125|0
+\o S9|I|"s3c2_loop_top"|"schematic"|"iopin"|"PIN7"-0.75 1.375|((-0.75 1.375) "R0" 1.0)|"NONE"|-0.8625 1.3125 -0.6375 1.63125|0
+\o S9|I|"s3c2_loop_top"|"schematic"|"iopin"|"PIN6"-0.75 1.625|((-0.75 1.625) "R0" 1.0)|"NONE"|-0.8625 1.5625 -0.6375 1.88125|0
+\o S9|I|"s3c2_loop_top"|"schematic"|"iopin"|"PIN5"-0.75 1.125|((-0.75 1.125) "R0" 1.0)|"NONE"|-0.8625 1.0625 -0.6375 1.38125|0
+\o S9|I|"s3c2_loop_top"|"schematic"|"iopin"|"PIN4"6.95 1.25|((6.95 1.25) "R0" 1.0)|"NONE"|6.8375 1.1875 7.0625 1.50625|0
+\o S9|I|"s3c2_loop_top"|"schematic"|"iopin"|"PIN3"1.6875 2.925|((1.6875 2.925) "R0" 1.0)|"NONE"|1.575 2.8625 1.8 3.18125|0
+\o S9|I|"s3c2_loop_top"|"schematic"|"iopin"|"PIN2"1.2875 2.925|((1.2875 2.925) "R0" 1.0)|"NONE"|1.175 2.8625 1.4 3.18125|0
+\o S9|I|"s3c2_loop_top"|"schematic"|"iopin"|"PIN1"4.9625 2.925|((4.9625 2.925) "R0" 1.0)|"NONE"|4.85 2.8625 5.075 3.18125|0
+\o S9|I|"s3c2_loop_top"|"schematic"|"iopin"|"PIN0"1.4875 -0.425|((1.4875 -0.425) "R0" 1.0)|"NONE"|1.375 -0.4875 1.6 -0.16875|0
+\o S9|T|"s3c2_loop_top"|"schematic"|"vss"|"inputOutput"|"vss"|1|nil/"pin"/"inst"@1.375 -0.4875 1.6 -0.16875
+\o S9|T|"s3c2_loop_top"|"schematic"|"vscan"|"inputOutput"|"vscan"|1|nil/"pin"/"inst"@4.85 2.8625 5.075 3.18125
+\o S9|T|"s3c2_loop_top"|"schematic"|"vdd33"|"inputOutput"|"vdd33"|1|nil/"pin"/"inst"@1.175 2.8625 1.4 3.18125
+\o S9|T|"s3c2_loop_top"|"schematic"|"vdd18"|"inputOutput"|"vdd18"|1|nil/"pin"/"inst"@1.575 2.8625 1.8 3.18125
+\o S9|T|"s3c2_loop_top"|"schematic"|"scan"|"output"|"scan"|1|nil/"pin"/"inst"@6.8375 1.1875 7.0625 1.50625
+\o S9|T|"s3c2_loop_top"|"schematic"|"core_ok33"|"input"|"core_ok33"|1|nil/"pin"/"inst"@-0.8625 1.0625 -0.6375 1.38125
+\o S9|T|"s3c2_loop_top"|"schematic"|"blank"|"input"|"blank"|1|nil/"pin"/"inst"@-0.8625 1.5625 -0.6375 1.88125
+\o S9|T|"s3c2_loop_top"|"schematic"|"clk"|"input"|"clk"|1|nil/"pin"/"inst"@-0.8625 1.3125 -0.6375 1.63125
+\o S9|T|"s3c2_loop_top"|"schematic"|"d"|"input"|"d"|1|nil/"pin"/"inst"@-0.8625 0.8125 -0.6375 1.13125
+\w *WARNING* (DB-270211): dbOpenCellViewByType: Failed to open cellview (s3c2_loop_top symbol) from lib (microled_scan_s3c) in 'r' mode because cellview does not exist, or cellview type is not recognized by dbOpenCellViewByType.
+\o S9|V|"s3c2_loop_top"|"symbol"|nil|0|0|0
+\o S2D-END
+\o 
+\# Memory report: on exit            270 MB, process size 1,088 MB at UTC 2026.10.14 08:54:33.515
+\# Memory report: peak usage         270 MB, process size 1,088 MB
