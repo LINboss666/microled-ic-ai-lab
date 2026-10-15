@@ -1,0 +1,191 @@
+# SCAN-UNIT-VIS-REGISTER-R1 -- Gate 0 read-only inventory, redacted
+#
+# Every line is measured output from 2026-10-15, not a restatement of the task book or of the
+# previous round's handoff. Guest absolute paths are replaced by <PATH-REDACTED>; library names,
+# cell names, view names, sizes, mtimes and hashes are kept because they are the findings.
+# Grades: DIRECTLY_VERIFIED = read out of a live process, a file, or git on this machine.
+#         REPRODUCED       = a command re-run here produced the same verdict as the stored evidence.
+# Nothing in this file was inferred from a report.
+
+===============================================================================
+A. Git identity of the reviewed input                          DIRECTLY_VERIFIED
+===============================================================================
+clone         : D:/IC.../scan-unit-beautify/repo        (isolated; the other clone was not switched)
+branch        : gexing321/scan-unit/1ch-beautify
+HEAD          : 5b9b7f6a32edf483a428e48fa244b346e64544a0
+worktree      : `git status --porcelain=v1` printed nothing -> clean
+remote origin : https://github.com/LINboss666/microled-ic-ai-lab  (read-only url, unchanged)
+push guardrail: remote.origin.push = refs/heads/gexing321/*:refs/heads/gexing321/*
+reviewed SHA  : 5b9b7f6a... resolves, i.e. the task book's short "5b9b7f6" is this commit
+parent        : 5b9b7f6^ = 2ddf7a1ab710afe4e15d2dd6844f9c593d269c2a   (matches the task book)
+frozen source : 9049f111d943e9b322f21e1fa059a932cac93207
+                `git merge-base --is-ancestor 9049f11 HEAD` -> YES
+                subject "s3c4: open the four AFTER views as a live read-only session ...", LMX, 2026-10-14 23:36 +0800
+git log 5b9b7f6..HEAD : 5b9b7f6 is a docs-only commit ("name the commit that carries the build evidence");
+                the commit that carries the round's deliverables is 2ddf7a1 ("feat: rebuild the eight
+                S3-C cells into sc1_s3c_team_pretty and prove them against the goldens").
+                head_sha=2ddf7a1 inside the JSON is therefore the *deliverable* commit, not a mismatch
+                against the branch tip -- the branch tip is 5b9b7f6 and ls-remote agrees.
+
+`git diff --stat 9049f11..HEAD`  ->  19 files changed, 2011 insertions(+), 2 deletions(-)
+`git diff --name-only 9049f11..HEAD` :
+  reports/agent_handoffs/SCAN_UNIT_TEAM_BEAUTIFY.json
+  reports/agent_handoffs/SCAN_UNIT_TEAM_BEAUTIFY.md
+  results/evidence/sc1_s3c_c2mos_reuse_compare.csv
+  results/evidence/sc1_s3c_connectivity_beautify.csv
+  results/evidence/sc1_s3c_equivalence_beautify.csv
+  results/evidence/sc1_s3c_handoff_validation.txt
+  results/evidence/sc1_s3c_libvis_check.txt
+  results/evidence/sc1_s3c_oa_readback_beautify.csv
+  results/evidence/sc1_s3c_oa_readback_pass1.txt
+  results/evidence/sc1_s3c_oa_session_verdicts.txt
+  results/evidence/sc1_s3c_offline_verify.txt
+  results/evidence/sc1_s3c_parent_geometry_dump.txt
+  results/evidence/sc1_s3c_ports_beautify.csv
+  scripts/sc1_libreg_team.sh
+  scripts/sc1_s3c_offline_verify.py
+  scripts/sc1_s3c_verify_oa.py
+  skill/sc1_libvis_check.il
+  skill/sc1_s3cb_geom_dump.il
+  spectre/generated/sc1_s3c_team_pretty_from_schematic.scs
+Verdict: no file outside reports/, results/evidence/, scripts/, skill/ and one generated netlist.
+No frozen circuit, golden table, PDK reference or another agent's namespace appears. Nothing
+unfamiliar was silently adopted.
+
+===============================================================================
+B. Guest identity and the ONE live GUI session                 DIRECTLY_VERIFIED
+===============================================================================
+channel       : `bash scripts/guest.sh ssh` (repo wrapper; it resolves credentials itself) -> rc 0
+hostname      : work-eda          whoami : root        date : Thu Oct 15 21:14 CST 2026 (matches host)
+PROJ          : <PATH-REDACTED>/microled_ai_project                 inode 2712952
+WORK          : <PATH-REDACTED>/microled_ai_project/cadence_work    inode 2712965
+PROJ/.git     : absent -> the guest tree is not a clone; this round's tooling was *pushed*, to
+                $PROJ/scan_unit_beautify/{scripts,skill,golden} and $WORK/s3c_oa/{skill,asg_in,out}
+
+desktop item  : /root/Desktop/MicroLED-IC-Project.desktop
+  Exec   = <PATH-REDACTED>/cadence_work/launch_virtuoso.sh
+  TryExec= the same
+launcher tail : `cd "$WORK"`, then `exec virtuoso -log "$LOG" >> "$LOG.stdout" 2>&1`
+                -> no -cdslib argument anywhere; DISPLAY inherited; existing session left untouched
+
+editor processes (ps + /proc), sorted:
+  PID 15224  started Thu Oct 15 11:34:09 2026
+     exe     -> <PATH-REDACTED>/IC617/tools.lnx86/dfII/bin/64bit/virtuoso
+     cmdline -> virtuoso -log <PATH-REDACTED>/cadence_work/logs/virtuoso_gui_20261015_113409.log
+     /proc/15224/cwd -> <PATH-REDACTED>/microled_ai_project/cadence_work     <-- decisive
+     /proc/15224/environ (selected keys): HOME=/root  DISPLAY=:0.0  USER=root
+                PWD=<PATH-REDACTED>/microled_ai_project/cadence_work  OA_HOME=<PATH-REDACTED>/oa_v22.50.036/
+                CDS_LIB_PATH : NOT PRESENT
+     child 15865 cdsServIpc, sibling 15862 cdsMsgServer -mpssession virtuoso15224
+  support daemons: 4205 clsbd, 4208 oaFSLockD, 7764 cdsNameServer
+  -> exactly ONE editor session on this guest. No second HOME, no -cdslib, no CDS_LIB_PATH,
+     so the library map that GUI reads is $WORK/cds.lib and nothing else.
+
+why three sibling logs exist: virtuoso_gui_20261015_113414/_113421/_113422 .stdout end with
+  "File is already locked by some other process / Failed to lock log file / *ERROR* Log file
+   Initialization failure" and `Display :0.0 Error "BadAtom"`. Those are the user's own repeated
+  shortcut clicks in the same minute; they never became sessions. Not a second working environment.
+
+live session state (read, never touched):
+  log size 156160 B, last written 20:52 -> the user is actively working in it now
+  X windows on :0.0 owned by PID 15224 = 23, distinct titles:
+    Choosing Analyses -- ADE L (4) / Setting Outputs -- ADE L (4) / Saving State -- ADE L (4)
+    spectre3: Save Results / spectre3: Select Results / Transient Options
+    Open File / Descend / Edit Object Properties / Qt-subapplication
+  -> no Library Manager window is currently open, and ADE modal dialogs are up.
+  notable lines in that log: INFO (ADE-3069) Errors encountered during simulation (x2),
+    INFO (SCH-1426) Schematic check completed with no errors,
+    WARNING (TECH-2000152) "The attached technology library 'tsmc18' for design library
+      'microled_cells' was not found"  <- the user's own library, pre-existing, NOT this round's
+  `grep -c sc1_s3c_team_pretty` over that log  =  0
+    -> in this session the delivered library has never once been opened, named or queried.
+
+===============================================================================
+C. The library map the GUI actually reads                      DIRECTLY_VERIFIED
+===============================================================================
+file        : <PATH-REDACTED>/cadence_work/cds.lib   (the body is NOT reproduced here; it is
+              gitignored and the task book forbids committing it. Structure + hashes only.)
+size 636 B   inode 2697508
+mtime 2026-10-15 02:31:59.287977077 +0800
+md5    00c2168be45d07c8a2ba8dec67b55713
+sha256 b3712feb0b877bbd61a9c03fd244225d627148ec7edb5848bbe062aee133c5a8
+pre-registration backup beside it: cds.lib.bak.20261015_023159_libreg, 364 B, same dir
+
+shape: 7 DEFINE lines, 0 INCLUDE, 0 SOFTINCLUDE, no duplicated library name.
+  line 1  DEFINE cdsDefTechLib  <PATH-REDACTED>
+  line 2  DEFINE basic          <PATH-REDACTED>
+  line 3  DEFINE analogLib      <PATH-REDACTED>
+  line 4  DEFINE smic18mmrf     <PATH-REDACTED>/tech/teacher_pdk/smic18mmrf
+  line 5  DEFINE microled_dirver0 <PATH-REDACTED>/Desktop/microled_dirver0
+  line 7  DEFINE microled_cells     <PATH-REDACTED>/cadence_work/microled_cells
+  lines 9-10 two comment lines naming scripts/sc1_libreg_team.sh and the stamp 20261015_023159
+  line 11 DEFINE sc1_s3c_team_pretty <PATH-REDACTED>/cadence_work/s3c_oa/sc1_s3c_team_pretty
+  -> the task book's candidate shape "6 originals + 1 new" is what the machine actually holds.
+  -> the one added line is an absolute path to a directory that exists and is readable (section D).
+
+DECISIVE TIMING: the DEFINE was written 02:31:59; the user's GUI started 11:34:09 the same day.
+  A running session never re-reads the map, but this session started AFTER the write, so it read
+  the line at launch. "Stale cache" is therefore ruled out by measurement, not by argument.
+
+no competing map in that session's search path:
+  /root/cds.lib      : does not exist
+  /root/.cds.lib     : does not exist
+  CDS_LIB_PATH       : not in /proc/15224/environ
+  -cdslib            : not in /proc/15224/cmdline
+  /root/work/microled_teacher/cds.lib -> symlink to the SAME project file (not an independent map)
+  /root/Desktop/cds.lib               : a SEPARATE 6-line map dated Oct 3, SOFTINCLUDE of the IC617
+        share plus only LDO_P, opamp_60dB, mile_two_stage, microled_dirver, microled_dirver0.
+        It is read only if a session is started with cwd=/root/Desktop. It is NOT what PID 15224 uses,
+        but /root/Desktop still holds libManager.log, libManager.log.1, libManager.log{,.1}.cdslck
+        from the pre-migration workflow -> a real trap for a human who launches from there.
+
+===============================================================================
+D. OA on disk, per library                                     DIRECTLY_VERIFIED
+===============================================================================
+                    | in Git | OA on disk | DEFINE in GUI's map | resolves at run time
+  microled_cells    | no .oa | YES        | YES (line 7)        | YES (user's own session works on it)
+  microled_scan_s3c | no .oa | **NO**     | NO                  | n/a -- the name does not exist here
+  sc1_s3c_team_pretty| no .oa| YES        | YES (line 11)       | YES headless in the GUI's cwd; the
+                      |      |            |                     | GUI itself has never opened it (B)
+
+`find /root -maxdepth 5 -type d -name microled_scan_s3c` -> empty. The source machine's library name
+was never migrated to this guest, and it is not in Git either, so a user who searches for it finds
+nothing no matter how the registration is configured.
+
+`ls $WORK/microled_cells | grep -iE "sc1|scan|bank|level|r3"` -> **NONE**. The single-channel scan
+hierarchy is not inside the user's own library. Its cells are c2mos_dff_1bit{,_pretty,_tb},
+c2mos_dff_tb, data_bias_ref, data_sink_1ch, sch1_top, sch3_top.
+
+sc1_s3c_team_pretty on disk: <PATH-REDACTED>/cadence_work/s3c_oa/sc1_s3c_team_pretty
+  .oalib (DMSystem oaDMFileSys, libReadOnly="No"), tech.db, cdsinfo.tag
+    active directives in cdsinfo.tag: CDSLIBRARY, NAMESPACE LibraryUnix (rest commented)
+  9 cell directories: the 8 deliverables + `s3c_asg_shell` (build shell, schematic only, no symbol)
+  17 *.oa in total = 8 x (schematic + symbol) + 1; every deliverable also carries data.dm
+  mode 755 root:root on the library, on the top cell's schematic and on its symbol
+  `find ... -name '*.cdslck'` inside the library -> 0 matches: **nobody has it open, no lock**
+  PDK target <PATH-REDACTED>/tech/teacher_pdk/smic18mmrf exists with tech.db + cdsinfo.tag
+
+locks that DO exist (the user's work, left exactly as found, newer than 2026-10-15 00:00):
+  $WORK/microled_cells/c2mos_dff_1bit_pretty/schematic/sch.oa.cdslck     mtime 20:51:40
+  $WORK/microled_cells/c2mos_dff_1bit_pretty/symbol/symbol.oa.cdslck
+  $WORK/microled_cells/c2mos_dff_1bit_pretty_tb/schematic/sch.oa.cdslck
+  -> the user's manual DFF is open RIGHT NOW. Any "beautify in place" idea is impossible by fact,
+     not by rule, and Gate 2 was planned against a fresh copy for that reason.
+
+===============================================================================
+E. Defects found while reading (reported, deliberately not repaired)
+===============================================================================
+1. <PATH-REDACTED>/cadence_work/s3c_oa/cds.lib -- the ISOLATED map written by
+   scripts/sc1_s3c_setup.sh -- defines `sc1_s3c_team_pretty` TWICE at the same path. It is not read
+   by the desktop shortcut, so it does not affect visibility, but a generated file should not carry
+   a duplicate DEFINE. Producer defect, left alone.
+2. The GUI's map has no SOFTINCLUDE of <PATH-REDACTED>/IC617/share/cdssetup/cds.lib, unlike the old
+   /root/Desktop map. Not a fault for this round (all four Cadence base libs are DEFINEd explicitly
+   on lines 1-3), recorded so the difference from the Desktop map is not mistaken for a missing lib.
+3. skill/sc1_s3c1_apply_dirs.il line 31 row-count guard is decorative in this build. Re-confirmed in
+   the committed session verdicts: `S3C1D-REFUSE the table has 0 rows, not the 48 declared ports`
+   is immediately followed by eight successful S3C1D-SAVE lines, because `cdr` is unbound here and
+   `when()` only prints. Not used by this round; must be fixed (empty-table refusal plus a real
+   non-zero exit) before any future run may cite its "normal exit" as direction evidence.
+4. /root/Desktop leftovers (cds.lib + libManager.log{,.1} + two .cdslck, Oct 3) present a 5-library
+   world to anyone who starts Virtuoso from that directory. See C.

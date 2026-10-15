@@ -1,0 +1,64 @@
+# SCAN-UNIT-VIS-REGISTER-R1 -- visibility re-measured on 2026-10-15, redacted
+#
+# Same SKILL the previous round committed (skill/sc1_libvis_check.il), same runner
+# (scripts/sch_virtuoso.sh, default MODE=nograph), run again today. Purpose: prove that the
+# delivered library still resolves from the library map the desktop shortcut reads, and prove that
+# nothing has been edited since the round was accepted. Grade REPRODUCED.
+#
+# Session shape equals the shortcut's shape on the one thing that decides visibility -- the working
+# directory -- and differs on HOME. Both facts are stated; see reports/agent_handoffs/
+# gui_vs_headless_visibility.md for why that difference does not move the answer.
+
+command : bash scripts/sch_virtuoso.sh <PATH-REDACTED>/scan_unit_beautify/skill/sc1_libvis_check.il 300 LIBVIS_DONE
+runner  : RUN mode=nograph cwd=<PATH-REDACTED>/microled_ai_project/cadence_work
+          home=<PATH-REDACTED>/cadence_work/home timeout=300s il=<PATH-REDACTED>/scan_unit_beautify/skill/sc1_libvis_check.il token=LIBVIS_DONE
+          RESULT rc=0
+          TOKEN_FOUND yes
+          SCH_VIRTUOSO: PASS  log=<PATH-REDACTED>/cadence_work/logs/sch_nograph_20261015_211939.log
+idempotency of the read-only run:
+          CDSLIB_SHA_BEFORE=b3712feb0b877bbd61a9c03fd244225d627148ec7edb5848bbe062aee133c5a8
+          CDSLIB_SHA_AFTER =b3712feb0b877bbd61a9c03fd244225d627148ec7edb5848bbe062aee133c5a8
+          CDSLIB_UNCHANGED=yes
+          (no lock file appeared inside sc1_s3c_team_pretty either: find -name '*.cdslck' -> 0)
+
+----- verbatim LIBVIS block, Cadence log prefix stripped, path redacted -----
+LIBVIS-BEGIN
+LIBVIS-ENV cwd="<PATH-REDACTED>/cadence_work"
+LIBVIS-LIBHANDLE dd:0x179e1f90
+LIBVIS-CELL "c2mos_dff" schematic="OPEN" shapes=219 symbol="OPEN" symTerms=6 dbCheck=t schCheck=(0 5)
+LIBVIS-CELL "sc1_scan_gate" schematic="OPEN" shapes=53 symbol="OPEN" symTerms=5 dbCheck=t schCheck=(0 1)
+LIBVIS-CELL "sc1_ls_core_r2d" schematic="OPEN" shapes=78 symbol="OPEN" symTerms=6 dbCheck=t schCheck=(0 2)
+LIBVIS-CELL "sc1_ls_c1_r2d" schematic="OPEN" shapes=53 symbol="OPEN" symTerms=5 dbCheck=t schCheck=(0 1)
+LIBVIS-CELL "sc1_ls_c1_top_r2d" schematic="OPEN" shapes=42 symbol="OPEN" symTerms=6 dbCheck=t schCheck=(0 1)
+LIBVIS-CELL "sc1_r3_scan_chain_1ch" schematic="OPEN" shapes=60 symbol="OPEN" symTerms=8 dbCheck=t schCheck=(0 1)
+LIBVIS-CELL "sc1_s3b_p33_bank_7" schematic="OPEN" shapes=101 symbol="OPEN" symTerms=3 dbCheck=t schCheck=(0 0)
+LIBVIS-CELL "sc1_scan_power_1ch_s3c" schematic="OPEN" shapes=37 symbol="OPEN" symTerms=9 dbCheck=t schCheck=(0 0)
+LIBVIS-SUMMARY views_opened=16 of 16
+LIBVIS: PASS every delivered view resolves from the shortcut's library map
+LIBVIS_DONE
+----------------------------------------------------------------------------
+
+ddGetObj("sc1_s3c_team_pretty") returned a live dd handle (dd:0x179e1f90), i.e. the name resolves
+in the DD library list of a session whose cwd is the project work dir. It was NOT nil, so this is
+not the "nil dd object = no setup db" shape recorded for ADE.
+
+Comparison against the accepted evidence results/evidence/sc1_s3c_libvis_check.txt
+(session sch_nograph_20261015_024208, i.e. 02:42 today, the run that closed the beautify round):
+
+  cell                     shapes 02:42 -> 21:19   symTerms 02:42 -> 21:19
+  c2mos_dff                    219     -> 219           6      -> 6
+  sc1_scan_gate                 53     -> 53            5      -> 5
+  sc1_ls_core_r2d               78     -> 78            6      -> 6
+  sc1_ls_c1_r2d                 53     -> 53            5      -> 5
+  sc1_ls_c1_top_r2d             42     -> 42            6      -> 6
+  sc1_r3_scan_chain_1ch         60     -> 60            8      -> 8
+  sc1_s3b_p33_bank_7           101     -> 101           3      -> 3
+  sc1_scan_power_1ch_s3c        37     -> 37            9      -> 9
+
+All sixteen numbers identical, dbCheck=t and schCheck error slot 0 on all eight cells in both runs.
+Reading: the verified build has not been touched between acceptance and this re-measurement, and no
+geometry edit happened behind the previous handoff. Only the dd handle address differs, which is a
+per-process allocation and carries no meaning.
+
+What this run does NOT prove: it is a batch session, not the user's window. It proves
+GATE1_HEADLESS_VISIBLE. USER_GUI_VISIBILITY needs one read-only action inside PID 15224.

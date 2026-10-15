@@ -1,0 +1,261 @@
+{
+  "schema_version": "1.0",
+  "project_id": "microled-ic-ai-lab",
+  "task_id": "SCAN-UNIT-VIS-REGISTER-R1",
+  "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
+  "branch": "gexing321/scan-unit/vis-register-r1",
+  "base_sha": "5b9b7f6a32edf483a428e48fa244b346e64544a0",
+  "head_sha": "5b9b7f6a32edf483a428e48fa244b346e64544a0",
+  "head_sha_semantics": "head_sha means 'the tip this file was written against', and a commit cannot contain its own SHA. Inside THIS commit the only truthful value is the branch it was cut from, 5b9b7f6, which is the reviewed input of the round. The commit that carries this round's deliverables is this one, and its SHA becomes readable only from outside it; a follow-up commit on the same branch replaces head_sha with that value and re-reads the remote tip with git ls-remote rather than trusting the push output.",
+  "followup_commits_note": "one further commit is expected on this branch. It changes nothing but head_sha, push_status, the remote read-back block, the security-gate outputs and the HANDOFF_STRUCTURE test.",
+  "task_book": {
+    "title": "SCAN-UNIT-TEAM-REGISTER-PRESENTATION-R1",
+    "authorised_scope": "diagnose the real GUI entry point read-only; idempotently register an EXISTING standalone OA library in the one real project library map; limited layout repair on an isolated working copy",
+    "gate_reached": "Gate 1 (registration verification). Gate 2 presentation was NOT started, by the gate's own rule and by the user's choice to review first.",
+    "user_decision_this_round": "the user runs the two read-only CIW queries in their own session, and asked for the registration-verification report to go to cloud review before any layout work"
+  },
+  "source": {
+    "reviewed_commit": "5b9b7f6a32edf483a428e48fa244b346e64544a0",
+    "reviewed_commit_parent": "2ddf7a1ab710afe4e15d2dd6844f9c593d269c2a",
+    "frozen_circuit_source": "9049f111d943e9b322f21e1fa059a932cac93207",
+    "frozen_source_is_ancestor": "yes, measured with git merge-base --is-ancestor 9049f11 HEAD",
+    "reviewed_commit_is_docs_only": "yes -- 'docs: name the commit that carries the build evidence'; the content commit is 2ddf7a1",
+    "branch_had_not_advanced": "git ls-remote read refs/heads/gexing321/scan-unit/1ch-beautify = 5b9b7f6a32edf483a428e48fa244b346e64544a0, identical to the local HEAD",
+    "diff_from_frozen_source": "19 files, 2011 insertions, 2 deletions, all under reports/, results/evidence/, scripts/, skill/ and one generated netlist; no frozen circuit, golden table or other agent's namespace",
+    "worktree_policy": "new isolated clone D:/IC.../scan-unit-beautify/repo; the pre-existing clone at D:/IC.../microled-ic-ai-lab was not switched, pulled, reset, cleaned or force-checked-out; the working tree was clean at Gate 0 and stayed clean apart from this round's own new files"
+  },
+  "statuses": {
+    "GUI_LIBRARY_REGISTRATION": "PASS",
+    "OA_IMPORT": "PREEXISTING_CONFIRMED",
+    "ELECTRICAL_EQUIVALENCE": "PREVIOUS_EVIDENCE",
+    "PRESENTATION": "NOT_DONE",
+    "USER_GUI_VISIBILITY": "WAITING_USER",
+    "GATE1_HEADLESS_VISIBLE": "PASS",
+    "VISUAL_REVIEW": "WAITING_USER"
+  },
+  "diagnosis": {
+    "user_report": "circuits pulled from the repository are not registered in Virtuoso",
+    "answer": "the OA was never obtainable through Git (*.oa, cds.lib, cdsinfo.*, data.dm are gitignored), but on this guest the library is on disk and IS registered in the one map the user's GUI reads; what does not exist here under ANY name is the source-side library microled_scan_s3c, and the user's own microled_cells contains no scan cell at all",
+    "leading_cause": "library-name mismatch: the delivered library is sc1_s3c_team_pretty, not microled_scan_s3c and not inside microled_cells",
+    "cause_grade": "the absence facts are DIRECTLY_VERIFIED; which name the user searched for is inferred",
+    "ruled_out_by_measurement": [
+      "OA absent from disk -- 8 cells x 2 views present, 17 .oa, zero locks inside the library",
+      "OA on a different guest or workspace -- one editor process on one guest, its cwd read from /proc",
+      "wrong or duplicated path in the live map -- exactly one DEFINE, TARGET_DEFINE_COUNT=1, path exists and is readable",
+      "same name at a different path -- the script's CONFLICT branch never fired; it printed ALREADY_REGISTERED",
+      "PDK dependency missing -- the smic18mmrf directory with tech.db and cdsinfo.tag is present",
+      "stale cache in the open session -- the DEFINE was written 02:31:59, the session launched 11:34:09 the same day, so it read the line at start",
+      "another competing map -- /root/cds.lib and /root/.cds.lib do not exist, CDS_LIB_PATH is unset, no -cdslib in the cmdline",
+      "'pushed to the remote' as an answer -- never used as evidence for visibility anywhere in this round"
+    ],
+    "second_candidate": "a session started with cwd=/root/Desktop would read that directory's Oct-3 map, which defines only five unrelated libraries and still carries libManager.log plus two stale .cdslck files. Verified to exist; NOT verified to be what the user looked at.",
+    "third_candidate": "the library was simply never opened in the running session: grep -c sc1_s3c_team_pretty over that session's log is 0, and no Library Manager window is among its 23 X windows."
+  },
+  "target_library": {
+    "name": "sc1_s3c_team_pretty",
+    "path": "cadence_work/s3c_oa/sc1_s3c_team_pretty (absolute path kept local; redacted in committed evidence)",
+    "registered_in_shared_cds_lib": "yes -- one additive DEFINE, line 11, absolute path, 6 original DEFINEs intact, repeat run prints ALREADY_REGISTERED and leaves the hash alone",
+    "cells_on_disk": 9,
+    "cells_delivered": 8,
+    "extra_cell_directory": "s3c_asg_shell -- the build shell, schematic only, never a deliverable",
+    "oa_files_on_disk": 17,
+    "delivered_views": "8 x (schematic + symbol) = 16, all opened read-only in a session whose cwd is the project work dir",
+    "write_locks_inside_library": 0,
+    "opened_for_write_by_this_round": "no -- every dbOpenCellViewByType in this round used mode \"r\""
+  },
+  "guest_session": {
+    "hostname": "work-eda",
+    "editor_process": "PID 15224, /opt/IC617/tools/dfII/bin/64bit/virtuoso -log <work>/logs/virtuoso_gui_20261015_113409.log",
+    "started": "Thu Oct 15 11:34:09 2026, still running, log last written 20:52 -> the user is active in it",
+    "cwd_from_proc": "the project cadence_work directory -- identical to what the desktop shortcut produces",
+    "cdslib_flag": "absent",
+    "cds_lib_path_env": "absent",
+    "home": "/root (the batch session uses the project home instead; the library map is the same either way because cds.lib resolves from the cwd)",
+    "sibling_failed_launches": "11:34:14 / 11:34:21 / 11:34:22 all died on 'log file already locked' plus BadAtom -- repeated shortcut clicks, not a second environment",
+    "never_touched_by_this_round": "no command was injected into PID 15224, no window was closed, nothing was refreshed by restart, and its ADE modal dialogs and unsaved state were left exactly as found"
+  },
+  "user_handoff_todo": {
+    "why": "GATE1_HEADLESS_VISIBLE and USER_GUI_VISIBILITY are different claims and only the second one settles the user's report; a batch session cannot stand in for the user's window",
+    "read_only_ciw_queries": [
+      "ddGetObj(\"sc1_s3c_team_pretty\")",
+      "member(\"sc1_s3c_team_pretty\" ddGetLibList()~>name)"
+    ],
+    "fallback_if_property_operator_throws": "member(\"sc1_s3c_team_pretty\" setof(n ddGetLibList() n->name))",
+    "then": "in Library Manager search for sc1_s3c_team_pretty (not microled_scan_s3c, which exists nowhere on this guest) and open sc1_scan_power_1ch_s3c in both schematic and symbol; the eight-cell checklist is section 4 of the markdown handoff",
+    "if_the_two_queries_disagree": "report both verbatim; do not reconcile them locally",
+    "known_presentation_defect_left_for_gate_2": "every symbol pin sits on the symbol's right edge (x 1.1625-1.3375), there is no body outline and text=nil, i.e. no pin name; leaf schematics keep spiceIn's default placement. The parents are NOT degenerate."
+  },
+  "push_status": "PUSH_PENDING",
+  "push_status_basis": "ordinary (non-forced) push of exactly one ref, refs/heads/gexing321/scan-unit/vis-register-r1, cut from the reviewed commit 5b9b7f6, after the pre-commit and pre-push hooks re-run scripts/precommit_safety_check.py. The remote tip is read back with git ls-remote over a separate connection rather than trusted from the push output.",
+  "remote_readback": {
+    "read_with": "git ls-remote origin, before and after the push",
+    "refs/heads/gexing321/scan-unit/vis-register-r1": "to be filled by the follow-up commit from the actual read-back; it is empty (branch does not exist yet) at the time of writing",
+    "refs/heads/main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+    "refs/heads/poc/scan-driver-1ch": "0038821e6a93861848ac922ccca35c41a4de9bbb",
+    "refs/heads/gexing321/scan-unit/1ch-beautify": "5b9b7f6a32edf483a428e48fa244b346e64544a0",
+    "refs/heads/gexing321/docs/collaborator-rules": "876c198ab894796b7ff91b290654882ad5b782f8",
+    "refs/heads/gexing321/scan-driver/c2mos-schematic": "6d23fb77ab7248a13d95dc6e82a215eb13bdc064",
+    "protected_refs_policy": "none of the above may move; the follow-up commit lists each one again after the push so a reviewer can compare two readings rather than take a word"
+  },
+  "git_handback": {
+    "why_this_block_exists": "a commit cannot state its own SHA, and a file cannot state whether the commit carrying it reached the remote; both facts are only visible from outside, so they are written as of the moment of writing and are checkable in one command",
+    "new_branch_created_from": "5b9b7f6a32edf483a428e48fa244b346e64544a0 (the reviewed commit, not the captain's ref and not the previous task branch)",
+    "how_to_check": "git -C <clone> log --oneline origin/gexing321/scan-unit/vis-register-r1..HEAD -- empty means the follow-ups landed",
+    "later_commit_push_state": "PUSH_PENDING for the commit that fills in these fields"
+  },
+  "scope_status": "PARTIAL",
+  "security_gate": "PASS",
+  "security_gate_basis": "scripts/precommit_safety_check.py --mode staged run through the installed pre-commit hook on this round's six new files, and scripts/precommit_safety_check.py --mode history re-run by the pre-push hook; scripts/provenance_check.py run separately. Exact counts, violation numbers and exit codes are recorded in results/evidence/sc1_unit_r1_handoff_validation.txt, written by the follow-up commit that has the real output rather than a description of it.",
+  "tests": [
+    {
+      "name": "SOURCE_IDENTITY",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_unit_r1_gate0_inventory.txt",
+      "detail": "local HEAD 5b9b7f6a32edf483a428e48fa244b346e64544a0 equals the remote read-back of gexing321/scan-unit/1ch-beautify, so the reviewed branch had not advanced; its parent is 2ddf7a1ab710afe4e15d2dd6844f9c593d269c2a; 9049f11 is an ancestor of HEAD; the 19-file diff from the frozen source contains only reports, evidence, scripts, skill and one generated netlist"
+    },
+    {
+      "name": "GUEST_IDENTITY",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_unit_r1_gate0_inventory.txt",
+      "detail": "one editor process on one guest (hostname work-eda); its cwd, cmdline and environ were read out of /proc, not inferred; the desktop shortcut's Exec line and the launcher's cd+exec tail agree with that cwd; no -cdslib and no CDS_LIB_PATH anywhere in the path"
+    },
+    {
+      "name": "OA_ON_DISK",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_unit_r1_gate0_inventory.txt",
+      "detail": "8 deliverable cells with both schematic and symbol directories plus data.dm, 17 .oa files in total, mode 755 root:root on the library and on the top cell's two views, zero .cdslck anywhere inside the library, and the smic18mmrf PDK directory present with tech.db. File counts, not Git file counts, were the basis."
+    },
+    {
+      "name": "CDS_LIB_REGISTRATION",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_unit_r1_registration_idempotency.txt",
+      "detail": "the map the GUI reads holds exactly one DEFINE for this library at a valid absolute path (TARGET_DEFINE_COUNT=1), 7 DEFINE lines with 0 INCLUDE/SOFTINCLUDE, no duplicate library name, OTHER_DEFS_INTACT=6/6, and a repeat run of scripts/sc1_libreg_team.sh printed ALREADY_REGISTERED with DEFINE_LINES 7 -> 7, SHA256 unchanged and no new backup file"
+    },
+    {
+      "name": "REGISTRATION_TIMING_RULES_OUT_STALE_CACHE",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_unit_r1_gate0_inventory.txt",
+      "detail": "cds.lib mtime 2026-10-15 02:31:59.287977077 is earlier than the GUI session start 11:34:09 the same day, so the running session read the DEFINE at launch; a session never re-reads the map, which is why the order of these two timestamps is the whole question"
+    },
+    {
+      "name": "GATE1_HEADLESS_VISIBLE",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_unit_r1_libvis_remeasure.txt",
+      "detail": "re-run today in the shortcut's cwd: ddGetObj returned a live dd handle, all 8 cells opened both views, LIBVIS-SUMMARY views_opened=16 of 16, LIBVIS: PASS, dbCheck=t x8 and schCheck error slot 0 x8. All 16 shape/terminal counts are byte-identical to the accepted 02:42 run, so the verified build was not edited behind the previous handoff. cds.lib sha identical before and after."
+    },
+    {
+      "name": "USER_GUI_VISIBILITY",
+      "status": "BLOCKED",
+      "evidence_path": "reports/agent_handoffs/gui_vs_headless_visibility.md",
+      "detail": "needs one read-only action inside the user's live session and cannot be produced by this agent: that session holds modal ADE dialogs and unsaved work, and the project rule is never to inject commands into or restart somebody else's open session. Supporting facts measured read-only: grep -c sc1_s3c_team_pretty over that session's log = 0, and no Library Manager window is among its 23 X windows. Recorded as WAITING_USER rather than PASS."
+    },
+    {
+      "name": "SOURCE_SIDE_LIBRARY_NAME_ABSENT",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_unit_r1_gate0_inventory.txt",
+      "detail": "find over /root to depth 5 for a microled_scan_s3c directory returns nothing, and ls of microled_cells filtered on sc1|scan|bank|level|r3 returns NONE -- the two places a user would look when told 'the circuits from the repo' are both genuinely empty of these cells, under any spelling"
+    },
+    {
+      "name": "ELECTRICAL_EQUIVALENCE_BEFORE",
+      "status": "NOT_RUN",
+      "detail": "this round did not re-run sc1_s3c_readback.il plus scripts/sc1_s3c_verify_oa.py. The PASS for 39 devices / 7 sub-instances / 48+48 ports / 46 connectivity rows / 8 cells with a firing negative control belongs to commit 2ddf7a1's evidence and is reported as PREVIOUS_EVIDENCE, not re-claimed. A future Gate 2 must re-establish it as its own step 1, passing S3C_LIB explicitly."
+    },
+    {
+      "name": "PRESENTATION",
+      "status": "UNVERIFIED",
+      "detail": "not started and not claimed: no copy library was created, no symbol terminal was moved, no parent wire endpoint was changed, no leaf sheet was rearranged. The user chose to review the registration report before any layout work."
+    },
+    {
+      "name": "ELECTRICAL_EQUIVALENCE_AFTER",
+      "status": "NOT_RUN",
+      "detail": "no geometry was written, so there is no after state. 'Nothing changed' is not the same statement as 'equivalence re-verified'."
+    },
+    {
+      "name": "VISUAL_REVIEW",
+      "status": "BLOCKED",
+      "evidence_path": "reports/agent_handoffs/SCAN-UNIT-VIS-REGISTER-R1.md",
+      "detail": "no pixel path from this host into the guest, and it is not a gate. Section 4 of the handoff is the human open-and-look checklist for the eight cells; no placeholder screenshot was produced or faked."
+    },
+    {
+      "name": "NO_WRITE_TO_ANY_EXISTING_LIBRARY",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_unit_r1_libvis_remeasure.txt",
+      "detail": "every view opened by this round was opened with mode r; the library gained no .cdslck and the user's three write-locks under microled_cells (c2mos_dff_1bit_pretty schematic and symbol, c2mos_dff_1bit_pretty_tb schematic, newest mtime 20:51:40) were found, reported and left alone; cds.lib sha b3712feb...c5a8 identical across both read-only runs and the idempotent registration re-run"
+    },
+    {
+      "name": "HANDOFF_STRUCTURE",
+      "status": "NOT_RUN",
+      "detail": "the official validator (sha256 3c150d54...e1e5, kept outside the repository and never edited) is run by the follow-up commit, because a file cannot record its own verdict before it exists. Its stdout is archived as results/evidence/sc1_unit_r1_handoff_validation.txt. Structure PASS is not evidence that any technical verdict above is correct."
+    }
+  ],
+  "defects_found_not_repaired": [
+    {
+      "file": "cadence_work/s3c_oa/cds.lib on the guest (isolated map, not read by the GUI)",
+      "finding": "defines sc1_s3c_team_pretty TWICE at the same path",
+      "producer": "scripts/sc1_s3c_setup.sh",
+      "action": "reported only; the shared map the user reads has exactly one DEFINE for this library"
+    },
+    {
+      "file": "skill/sc1_s3c1_apply_dirs.il",
+      "line": "31",
+      "finding": "the row-count guard is still decorative: cdr is unbound in this build, so S3C1D-REFUSE ... 0 rows prints and the script carries on, because when() only prints. Re-confirmed against the committed session verdicts.",
+      "action": "not used by this round and not repaired. Before any future round may cite its normal exit as direction evidence, it needs an empty-table refusal with a real non-zero exit plus a 48-row positive case, fixed in a task-private copy first."
+    },
+    {
+      "file": "user GUI session log, line 95",
+      "finding": "WARNING (TECH-2000152): attached technology library 'tsmc18' for design library 'microled_cells' not found",
+      "action": "pre-existing and belongs to the user's own library, not to this round's delivery. Recorded so nobody attributes it to sc1_s3c_team_pretty."
+    },
+    {
+      "file": "/root/Desktop leftovers",
+      "finding": "a 6-line Oct-3 cds.lib defining five unrelated libraries, plus libManager.log, libManager.log.1 and two .cdslck",
+      "action": "left untouched. A real trap: a session started with that cwd sees none of the project libraries."
+    }
+  ],
+  "evidence_paths": [
+    "reports/agent_handoffs/SCAN-UNIT-VIS-REGISTER-R1.md",
+    "reports/agent_handoffs/SCAN-UNIT-VIS-REGISTER-R1.json",
+    "reports/agent_handoffs/gui_vs_headless_visibility.md",
+    "results/evidence/sc1_unit_r1_gate0_inventory.txt",
+    "results/evidence/sc1_unit_r1_libvis_remeasure.txt",
+    "results/evidence/sc1_unit_r1_registration_idempotency.txt",
+    "results/evidence/sc1_unit_r1_handoff_validation.txt",
+    "results/evidence/sc1_s3c_libvis_check.txt",
+    "results/evidence/sc1_s3c_oa_session_verdicts.txt",
+    "reports/agent_handoffs/SCAN_UNIT_TEAM_BEAUTIFY.md"
+  ],
+  "known_limitations": [
+    "USER_GUI_VISIBILITY is WAITING_USER, not PASS. Everything proven about visibility was proven in a batch session with the same working directory; that is a strong but not equivalent substitute for the user's own window, and the report keeps the two cells separate on purpose.",
+    "the OA library exists only on this guest. *.oa, cadence_work/, cds.lib and cdsinfo.* are gitignored, so nothing about the views travelled through Git and no claim of upload is made; the committed evidence is a redacted structural description, never the library map's body.",
+    "the leading explanation 'the user searched for microled_scan_s3c or looked inside microled_cells' is an inference about intent. The two absences it rests on are directly measured; the intent is not.",
+    "this round did not re-run the graph-equivalence check, so the electrical verdict it reports is inherited from commit 2ddf7a1's evidence and is labelled PREVIOUS_EVIDENCE.",
+    "no screenshot exists or was fabricated; the guest has no pixel path to this host.",
+    "the batch session's HOME differs from the GUI's HOME (/root). The library map is identical because Cadence resolves cds.lib from the cwd, and /root/cds.lib does not exist, but the two sessions are still not the same session.",
+    "no Spectre, ngspice, ADE or operating-point run was started; no layout, DRC, LVS, PEX or post-layout work; no array, multi-channel, POR/UVLO or 5 V change; git gc and git prune were not run."
+  ],
+  "forbidden_actions_confirmed_not_taken": [
+    "no reset --hard, clean -fd or checkout -f on any working tree",
+    "no force push, tag push, --all, --mirror, --delete, merge or cherry-pick",
+    "no write to any captain-owned ref, and no advance of gexing321/scan-unit/1ch-beautify or gexing321/docs/collaborator-rules",
+    "no hook skipping",
+    "no commit of PDK, model cards, cds.lib body, *.oa, raw PSF, credentials, machine library maps or vendor absolute paths",
+    "no VM power, snapshot or .vmx change; no global ssh, proxy or license change; no dhclient action",
+    "no kill of user processes, no deletion of lock files, no restart or refresh of the user's open session",
+    "no edit of the user's c2mos_dff_1bit_pretty cells or their testbench",
+    "no change to golden tables, comparator thresholds or verification defaults"
+  ],
+  "next_action_required": {
+    "who": "the user, in their own Virtuoso session (PID 15224)",
+    "what": "close or save the open ADE dialogs, run the two read-only CIW queries listed in user_handoff_todo, then search Library Manager for sc1_s3c_team_pretty and open sc1_scan_power_1ch_s3c in schematic and symbol; send back the two return values verbatim",
+    "then": "if the answers agree with the headless result, USER_GUI_VISIBILITY becomes PASS and Gate 2 may be planned against a fresh copy library with its own baseline equivalence run; if they disagree, the contradiction is the finding and it is reported, not repaired locally",
+    "boundary": "nothing in this round may be read as approval to start Scan S4, task #28 content, or a new Spectre run"
+  },
+  "stop_reason": "PARTIAL: the first gate is answered on the machine side -- the library is on disk, registered once at a valid path in the exact map the user's GUI reads, registered before that session started, and re-proven visible 16/16 today from that same working directory. What is NOT answered is whether the library is in front of the user's own window, and only a read-only action in their live session can answer it, so per the task book the round stops at Gate 1 and no layout writing was attempted.",
+  "evidence_grades_used": [
+    "DIRECTLY_VERIFIED",
+    "REPRODUCED",
+    "REPORTED_ONLY",
+    "NOT_VERIFIED",
+    "BLOCKED"
+  ]
+}

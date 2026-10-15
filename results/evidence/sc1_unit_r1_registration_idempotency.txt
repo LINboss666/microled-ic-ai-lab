@@ -1,0 +1,47 @@
+# SCAN-UNIT-VIS-REGISTER-R1 -- repeat-run idempotency of the library registration
+#
+# The task book asks, for a library that is already registered, that a second run of
+# scripts/sc1_libreg_team.sh prints ALREADY_REGISTERED and leaves the hash alone. Run today against
+# the map the desktop shortcut reads. Grade DIRECTLY_VERIFIED. No file was written by this run.
+#
+# The script's own preconditions also had to pass before it reaches the branch: the library dir
+# exists, and the delivered top cell sc1_scan_power_1ch_s3c has BOTH a schematic and a symbol view
+# on disk. Reaching "ALREADY_REGISTERED" therefore doubles as a disk-shape assertion.
+
+state before : BAK_COUNT_BEFORE=1        (one cds.lib.bak.20261015_023159_libreg already on disk)
+               SHA_BEFORE=b3712feb0b877bbd61a9c03fd244225d627148ec7edb5848bbe062aee133c5a8
+
+command      : PROJ=<PATH-REDACTED>/microled_ai_project LIB=sc1_s3c_team_pretty \
+               bash scan_unit_beautify/scripts/sc1_libreg_team.sh
+
+verdict lines returned:
+  ALREADY_REGISTERED: sc1_s3c_team_pretty points at <PATH-REDACTED>/cadence_work/s3c_oa/sc1_s3c_team_pretty -- no change made
+    11:DEFINE sc1_s3c_team_pretty <PATH-REDACTED>/cadence_work/s3c_oa/sc1_s3c_team_pretty
+  DEFINE_LINES 7 -> 7
+  SHA256_BEFORE=b3712feb0b877bbd61a9c03fd244225d627148ec7edb5848bbe062aee133c5a8
+  SHA256_AFTER =b3712feb0b877bbd61a9c03fd244225d627148ec7edb5848bbe062aee133c5a8
+  SHARED_CDS_LIB_UNCHANGED: yes
+  OTHER_DEFS_INTACT=6/6
+  S3C_LIBREG_TEAM: done lib=sc1_s3c_team_pretty
+
+state after  : BAK_COUNT_AFTER=1         (no new backup was taken -> the APPENDED branch was not entered)
+               SHA_AFTER =b3712feb0b877bbd61a9c03fd244225d627148ec7edb5848bbe062aee133c5a8
+               IDEMPOTENT_SHA_UNCHANGED=yes
+               DEFINE_COUNT=7
+               TARGET_DEFINE_COUNT=1     (exactly one DEFINE for this library, no second one added)
+
+Read of these numbers:
+  * 6/6 OTHER_DEFS_INTACT means cdsDefTechLib, basic, analogLib, smic18mmrf, microled_cells and
+    microled_dirver0 are all still defined -- the additive edit never ate an original line.
+  * TARGET_DEFINE_COUNT=1 is the anti-duplication check. The task book's STOP list includes "same
+    name at a different path"; that case is not present, and the script's own CONFLICT branch
+    (exit 9, no write) would have fired instead of ALREADY_REGISTERED if it were.
+  * The isolated map <PATH-REDACTED>/cadence_work/s3c_oa/cds.lib is a DIFFERENT file and does still
+    carry the library twice; that defect is recorded in the inventory section E and was not touched,
+    because nothing the user sees reads it.
+
+Rollback method, if it is ever wanted, and only with the user's confirmation: the single line 11 plus
+the two comment lines above it (9 and 10) are the entire diff of the 2026-10-15 02:31:59 write, and
+`cds.lib.bak.20261015_023159_libreg` in the same directory is the byte-exact pre-write copy. Removing
+them restores sha256 to the value the previous round recorded before the append. Nothing else in that
+file would change. This round did not perform the rollback.
