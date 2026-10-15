@@ -72,7 +72,8 @@
     "cds_lib_path_env": "absent",
     "home": "/root (the batch session uses the project home instead; the library map is the same either way because cds.lib resolves from the cwd)",
     "sibling_failed_launches": "11:34:14 / 11:34:21 / 11:34:22 all died on 'log file already locked' plus BadAtom -- repeated shortcut clicks, not a second environment",
-    "never_touched_by_this_round": "no command was injected into PID 15224, no window was closed, nothing was refreshed by restart, and its ADE modal dialogs and unsaved state were left exactly as found"
+    "never_touched_by_this_round": "no command was injected into PID 15224, no window was closed, nothing was refreshed by restart, and its ADE modal dialogs and unsaved state were left exactly as found",
+    "session_state_later_same_evening": "the user closed it themselves at 21:30:55 -- the log ends with hiQuit() then hiDBoxOK(hiQuitDBox) then a Memory report on exit, no editor process and no Virtuoso X window remain, and cds.lib sha256 is still b3712feb...c5a8 with zero locks inside the delivered library. Not caused by this round and recorded verbatim in results/evidence/sc1_unit_r1_addendum_session_closed.txt. One stale write-lock survives on the user's own cell microled_cells/c2mos_dff_1bit_pretty/schematic (mtime 20:51:40, no holder); it was left in place."
   },
   "user_handoff_todo": {
     "why": "GATE1_HEADLESS_VISIBLE and USER_GUI_VISIBILITY are different claims and only the second one settles the user's report; a batch session cannot stand in for the user's window",
@@ -160,7 +161,7 @@
       "name": "USER_GUI_VISIBILITY",
       "status": "BLOCKED",
       "evidence_path": "reports/agent_handoffs/gui_vs_headless_visibility.md",
-      "detail": "needs one read-only action inside the user's live session and cannot be produced by this agent: that session holds modal ADE dialogs and unsaved work, and the project rule is never to inject commands into or restart somebody else's open session. Supporting facts measured read-only: grep -c sc1_s3c_team_pretty over that session's log = 0, and no Library Manager window is among its 23 X windows. Recorded as WAITING_USER rather than PASS."
+      "detail": "needs one read-only action in the user's own GUI and cannot be produced by this agent. At the time of measurement that was because their session (PID 15224) held modal ADE dialogs and unsaved work, and the project rule is never to inject SKILL into or restart somebody else's open session. The user then closed that session cleanly at 21:30:55, so the check now runs in a freshly launched shortcut session -- easier, and the constraint that blocked it no longer applies; the reason for WAITING_USER is unchanged in substance, only the place to type it. Supporting facts measured read-only while it was live: grep -c sc1_s3c_team_pretty over that session's log = 0, and no Library Manager window was among its 23 X windows."
     },
     {
       "name": "SOURCE_SIDE_LIBRARY_NAME_ABSENT",
@@ -211,7 +212,13 @@
       "name": "HANDOFF_STRUCTURE",
       "status": "PASS",
       "evidence_path": "results/evidence/sc1_unit_r1_handoff_validation.txt",
-      "detail": "the official validator, sha256 3c150d543465a5d17a9d63c700f6b895c82fb868cae9408b2afd47643603e1e5, was re-hash-verified before and after the run and lives outside the repository, never committed and never edited. It printed HANDOFF_STRUCTURE: PASS with rc 0 on this manifest. PASS covers field names and enums only -- it did not contact GitHub, did not execute a project test and did not read the contents of any evidence file, so it is not evidence that USER_GUI_VISIBILITY, the equivalence inheritance or any other verdict above is correct."
+      "detail": "the official validator, sha256 3c150d543465a5d17a9d63c700f6b895c82fb868cae9408b2afd47643603e1e5, was re-hash-verified before and after the run and lives outside the repository, never committed and never edited. It printed HANDOFF_STRUCTURE: PASS with rc 0 on this manifest, and five mutated copies of it (missing evidence_paths, push_status := PUSHED, a 7-character head_sha, a PASS test stripped of evidence_path, tests := []) were each refused with rc 1. Structure PASS covers field names and enums only -- it did not contact GitHub, did not execute a project test, and did not read the contents of any evidence file, so it is not evidence that USER_GUI_VISIBILITY or any other verdict above is correct. A sixth mutation was then tried and did NOT get refused, which is a hole in the gate rather than in this manifest: see defects_found_not_repaired, validator_rel_path."
+    },
+    {
+      "name": "EVIDENCE_PATHS_RESOLVE_ON_DISK",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_unit_r1_addendum_session_closed.txt",
+      "detail": "because the validator cannot catch a POSIX-style rooted path on a Windows host, the relative-path claim was checked the other way: all 12 evidence_paths entries and the evidence file of every one of the 11 PASS tests were resolved with os.path.isfile inside the clone -- MISSING=[] in both cases. The addendum file carries the enumeration."
     }
   ],
   "defects_found_not_repaired": [
@@ -236,6 +243,12 @@
       "file": "/root/Desktop leftovers",
       "finding": "a 6-line Oct-3 cds.lib defining five unrelated libraries, plus libManager.log, libManager.log.1 and two .cdslck",
       "action": "left untouched. A real trap: a session started with that cwd sees none of the project libraries."
+    },
+    {
+      "item": "validator_rel_path",
+      "file": "the official review-workflow validator (outside this repository)",
+      "finding": "its relative-path test is not strict on a Windows host. It decides with not Path(value).is_absolute(), and on win32 Path(\"/tmp/x.txt\").is_absolute() is False because a Windows absolute path needs a drive letter, so a POSIX-style rooted evidence path is accepted: the sixth negative mutation, abs_evidence_path, was NOT refused while the other five were. Drive-ful absolute paths (C:/..., C:\\...) and every .. traversal are still caught, and the same file would refuse /tmp/x.txt on Linux -- so a reviewer running this workflow on Linux is looking through a stricter gate than the one this manifest passed.",
+      "action": "NOT repaired. The tool is kept outside the repo, unmodified, hash 3c150d543465a5d17a9d63c700f6b895c82fb868cae9408b2afd47643603e1e5 re-read before and after the run; reporting a hole in a gate and changing it are different decisions and the change is not this agent's to make. The consequence for this manifest was removed by checking the claim the other way: all 12 evidence_paths and the evidence file of all 11 PASS tests were resolved on disk with os.path.isfile, MISSING=[] in both cases (see EVIDENCE_PATHS_RESOLVE_ON_DISK)."
     }
   ],
   "evidence_paths": [
@@ -247,6 +260,7 @@
     "results/evidence/sc1_unit_r1_registration_idempotency.txt",
     "results/evidence/sc1_unit_r1_handoff_validation.txt",
     "results/evidence/sc1_unit_r1_push_transport.txt",
+    "results/evidence/sc1_unit_r1_addendum_session_closed.txt",
     "results/evidence/sc1_s3c_libvis_check.txt",
     "results/evidence/sc1_s3c_oa_session_verdicts.txt",
     "reports/agent_handoffs/SCAN_UNIT_TEAM_BEAUTIFY.md"
@@ -272,8 +286,8 @@
     "no change to golden tables, comparator thresholds or verification defaults"
   ],
   "next_action_required": {
-    "who": "the user, in their own Virtuoso session (PID 15224)",
-    "what": "close or save the open ADE dialogs, run the two read-only CIW queries listed in user_handoff_todo, then search Library Manager for sc1_s3c_team_pretty and open sc1_scan_power_1ch_s3c in schematic and symbol; send back the two return values verbatim",
+    "who": "the user, in a Virtuoso session they start from the desktop shortcut",
+    "what": "launch Virtuoso from the desktop shortcut (the 11:34 session was closed by the user at 21:30:55, so there is nothing left to intrude on), run the two read-only CIW queries listed in user_handoff_todo, then search Library Manager for sc1_s3c_team_pretty and open sc1_scan_power_1ch_s3c in schematic and symbol; send back the two return values verbatim",
     "then": "if the answers agree with the headless result, USER_GUI_VISIBILITY becomes PASS and Gate 2 may be planned against a fresh copy library with its own baseline equivalence run; if they disagree, the contradiction is the finding and it is reported, not repaired locally",
     "boundary": "nothing in this round may be read as approval to start Scan S4, task #28 content, or a new Spectre run"
   },

@@ -1,0 +1,119 @@
+# SCAN-UNIT-VIS-REGISTER-R1 -- addendum: the user closed their GUI session at 21:30:55
+#
+# Written because two statements in the main report are time-bound and this file is the moment they
+# stop being true. It changes no verdict and no measurement; it records what happened afterwards and
+# what that does to the one open question.
+
+-------------------------------------------------------------------------------
+What was observed, read-only
+-------------------------------------------------------------------------------
+`ps` at ~21:4x: no editor process remains. Only `cdsNameServer` (PID 7764, up since 02:08:07) survives;
+`virtuoso` 15224, `cdsMsgServer` 15862 and `cdsServIpc` 15865 are gone.
+`DISPLAY=:0.0 xwininfo -root -children | grep -c Virtuoso` -> 0 windows.
+
+The tail of `logs/virtuoso_gui_20261015_113409.log` is a normal, deliberate exit performed by the user:
+
+    hiCloseWindow(swindow(1))                       -> t
+    _hiSetCurrentWinNum(56)                         -> t
+    hiQuit()                                        -> t
+    hiDBoxOK(hiQuitDBox)                            -> t      <-- the quit dialog was confirmed
+    # Memory report: on exit  1,093 MB, process size 2,026 MB at UTC 2026.10.15 13:30:55.387
+    # Memory report: peak usage 1,103 MB, process size 2,036 MB
+
+log file mtime 2026-10-15 21:30:55.386756853 +0800 (= 13:30:55 UTC, the same instant), size 158707 B
+(it had been 156160 B at 20:52 while the session was in use).
+
+This was a user action through the GUI. Nothing in this round could produce it: the two guest commands
+this round ran after 21:00 were a read-only batch session (`sch_nograph_20261015_211939.log`, opened
+every view with mode "r", exited itself) and a repeat of `scripts/sc1_libreg_team.sh` that printed
+`ALREADY_REGISTERED` and wrote nothing. No window was closed, no `hiQuit`/`ddUpdateLibList` was ever sent
+into PID 15224, and the state of that session before and after those runs is described in
+sc1_unit_r1_gate0_inventory.txt section B as it then was.
+
+Re-verified after the exit:
+    sha256(cadence_work/cds.lib) still b3712feb0b877bbd...   (unchanged all evening)
+    find sc1_s3c_team_pretty -name '*.cdslck' -> 0            (the delivered library was never opened
+                                                               for writing by anybody)
+
+-------------------------------------------------------------------------------
+One new fact the user should know before their next session
+-------------------------------------------------------------------------------
+Under `cadence_work`, exactly one `.cdslck` newer than 2026-10-15 00:00 survives the clean exit:
+
+    2026-10-15 20:51:40.479764444 +0800
+    microled_cells/c2mos_dff_1bit_pretty/schematic/sch.oa.cdslck
+
+At Gate 0 there were four (the session log's, this one, `c2mos_dff_1bit_pretty/symbol/symbol.oa.cdslck`
+and `c2mos_dff_1bit_pretty_tb/schematic/sch.oa.cdslck`). The three others were removed as part of the
+normal exit; this one was not, and no Virtuoso process is running that could hold it. It sits on the
+**user's own hand-made DFF**, not on anything this round delivered.
+
+It was left exactly where it is. Deleting another person's lock file is not this agent's call, and a
+stale write-lock typically shows up as a read-only open or a lock warning rather than as data loss. If
+the next session complains about that cell, this is the reason, and removing it is the user's decision
+to make after they have confirmed no Cadence process is alive (`ps -eo pid,args | grep '/opt/IC617.*virtuoso'`).
+
+-------------------------------------------------------------------------------
+What changes for the open question
+-------------------------------------------------------------------------------
+`USER_GUI_VISIBILITY` remains WAITING_USER -- but the reason has changed, and the check got easier.
+The constraint that produced the original answer was "their session is live, mid-ADE, with modal dialogs
+and unsaved work, so this agent must not intrude on it or restart it". There is now no live session to
+intrude on. The user's daily environment is a session started by the desktop shortcut
+`MicroLED-IC-Project.desktop` -> `cadence_work/launch_virtuoso.sh` -> `cd $WORK` + `exec virtuoso -log ...`,
+and a fresh one reads `cadence_work/cds.lib` at its own start, so it will read the current map including
+the DEFINE that has been there since 02:31:59.
+
+Practical consequence: the two CIW queries and the eight-cell checklist in
+reports/agent_handoffs/SCAN-UNIT-VIS-REGISTER-R1.md section 4 should now be run in a **newly launched**
+session rather than in the one that was closed. Everything else in this round stands as measured:
+
+  * the timing argument does not weaken -- a new session reading a map that has held one correct DEFINE
+    since before it started is the simplest case of it;
+  * the leading cause is unchanged, and it is still a name: the library is `sc1_s3c_team_pretty`, while
+    `microled_scan_s3c` exists nowhere on this guest and `microled_cells` contains no scan cell;
+  * `PRESENTATION = NOT_DONE` and `ELECTRICAL_EQUIVALENCE = PREVIOUS_EVIDENCE` are untouched -- this
+    addendum records a window closing, not a figure moving.
+
+-------------------------------------------------------------------------------
+Correction to a claim in sc1_unit_r1_handoff_validation.txt, found by a sixth negative case
+-------------------------------------------------------------------------------
+That file runs five mutated manifests through the official validator and reports all five refused. That
+is true and still stands. It then concluded the PASS discriminates -- which was written before a sixth
+case was tried, and the sixth one does NOT get refused:
+
+  NEG drop_evidence_paths    refused=True
+  NEG bad_push_status        refused=True
+  NEG short_head_sha         refused=True
+  NEG pass_test_no_evidence  refused=True
+  NEG empty_tests            refused=True
+  NEG abs_evidence_path      refused=False     <-- /tmp/x.txt placed in evidence_paths was ACCEPTED
+
+The cause is the host, not the manifest. The validator decides "relative" with
+`not Path(value).is_absolute()`, and on Windows `Path("/tmp/x.txt").is_absolute()` is **False** because a
+Windows absolute path needs a drive letter. Measured with the same pathlib, on this machine
+(`sys.platform = win32`):
+
+  /tmp/x.txt        is_absolute=False  parts=('\\', 'tmp', 'x.txt')      -> rel_path() = True   (accepted)
+  C:/tmp/x.txt      is_absolute=True   parts=('C:\\', 'tmp', 'x.txt')    -> rel_path() = False  (refused)
+  C:\tmp\x.txt      is_absolute=True   + backslash guard                -> rel_path() = False  (refused)
+  ../x.txt          parts contain '..'                                  -> rel_path() = False  (refused)
+  a/../../x.txt     parts contain '..'                                  -> rel_path() = False  (refused)
+  results/a.txt     genuinely relative                                  -> rel_path() = True   (accepted)
+
+So the guard is only incomplete for **POSIX-style rooted paths, and only while the validator runs on
+Windows**; drive-ful absolute paths and every `..` traversal are still caught, and on Linux
+`Path("/tmp/x.txt").is_absolute()` is True, so the same file would refuse it there. The reviewer running
+this workflow on Linux sees a stricter check than the one that produced this manifest -- which is worth
+knowing rather than not saying.
+
+The validator was NOT edited. It is kept outside the repository, unmodified, and its hash re-read the
+same way as before: 3c150d543465a5d17a9d63c700f6b895c82fb868cae9408b2afd47643603e1e5. Reporting a hole
+in a gate and changing it are different decisions, and the change is not this agent's to make.
+
+For this manifest the hole has no effect -- all 12 `evidence_paths` entries are genuinely repository-
+relative, written forward-slash and drive-free by hand, and each was resolved on disk rather than taken
+on trust: `MISSING=[]` over the 12, and the 11 tests carrying status PASS all point at a file that exists
+(the same check run before writing this line). The validator's own complaint about an absolute path would
+have had to catch something it is currently unable to catch on this host.
+

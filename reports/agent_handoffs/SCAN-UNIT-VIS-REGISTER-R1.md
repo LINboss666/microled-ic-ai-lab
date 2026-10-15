@@ -74,6 +74,15 @@ Git 里；用户自己日常用的 `microled_cells` 里也**一个 scan cell 都
 
 ## 4. 需要用户执行的最少量动作（十秒，只读）
 
+> **时序更新（必须先读）**：写这一节时用户的会话 PID 15224 还开着、正卡在 ADE 模态框里，所以上面那句
+> "不要去动一个活会话"是当时的约束。**21:30:55 用户自己正常退出了那个会话**（日志末尾 `hiQuit()` +
+> `hiDBoxOK(hiQuitDBox)` + `Memory report: on exit`，实测 `ps` 已无编辑器进程、X 窗口 0 个），
+> 逐字记录在 `results/evidence/sc1_unit_r1_addendum_session_closed.txt`。
+> 所以下面的查询请**在重新用桌面快捷方式启动的新会话里**跑 —— 新会话在启动时才读库表，
+> 而那一行 DEFINE 从 02:31:59 起就在那里。另外：`microled_cells/c2mos_dff_1bit_pretty/schematic`
+> 还留着一个**无人持有的陈旧写锁**（20:51:40），本 Agent 没有删它，也不建议顺手删；下次打开那个
+> cell 若报只读/锁警告，原因就在这。
+
 先处理掉 ADE 的模态框（`Saving State -- ADE L (4)`、`spectre3: Save Results`），然后在 CIW 输入：
 
 ```skill
@@ -158,3 +167,29 @@ member("sc1_s3c_team_pretty" ddGetLibList()~>name)
 
 交回顺序：① §0 + §4（用户 GUI 里到底可不可见、要他做的最小动作）；② 当前到 Gate 几 + §1 矩阵逐项；
 ③ 分支/base/head 全 SHA 与 `ls-remote` 独立回读 + 安全闸；④ 云端审核链接，**在 ChatGPT 审过并由用户 GO 之前不启动下一阶段**。
+
+## 9. 审核流程本身发现的一处缺陷（报告，未修改）
+
+第 6 个反向用例**没有被拒**，因此修正 `sc1_unit_r1_handoff_validation.txt` 里"变异全被拒 → 该 PASS 有判别力"
+这句话的适用范围（那五条被拒是事实，仍然成立）。
+
+官方 `validate_handoff.py` 判"相对路径"用 `not Path(value).is_absolute()`。在 **Windows 主机**上
+`Path("/tmp/x.txt").is_absolute()` 是 **False**（Windows 绝对路径需要盘符），于是 `evidence_paths` 里放一条
+POSIX 风格根路径**能通过检查**。同一份 pathlib 在本机实测：
+
+| 输入 | `is_absolute()` | 校验器 `rel_path()` | 结果 |
+| --- | --- | --- | --- |
+| `/tmp/x.txt` | False | True | **接受（漏洞）** |
+| `C:/tmp/x.txt` | True | False | 拒绝 |
+| `C:\tmp\x.txt` | True，另有反斜杠规则 | False | 拒绝 |
+| `../x.txt`、`a/../../x.txt` | — | False（含 `..`） | 拒绝 |
+| `results/a.txt` | False | True | 接受（本就该接受） |
+
+影响范围说清楚：只在**校验器跑在 Windows 上**、只对 **POSIX 风格根路径**这一种形状失效；带盘符的绝对路径与
+一切 `..` 越界仍被拦；同一份文件在 Linux 上会拒绝 `/tmp/x.txt`。**所以在 Linux 上审这套流程的人，看到的闸门
+比产出本 manifest 的这个更严**——这一点宁可说出来，不能默认对方知道。
+
+处置：**不改**。该工具按规则存放在仓库之外，hash 运行前后复验为 `3c150d54…e1e5`；报告一个闸门的洞和擅自修改
+它是两个决定。本 manifest 的对应风险改由另一侧消除：12 条 `evidence_paths` 与 11 个 PASS 测试各自的证据文件
+都逐条 `os.path.isfile` 实解过，两次 `MISSING=[]`，并据此新增 `EVIDENCE_PATHS_RESOLVE_ON_DISK` 一项。
+

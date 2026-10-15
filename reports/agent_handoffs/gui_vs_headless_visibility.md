@@ -15,7 +15,7 @@ locked", which is what repeated shortcut clicks produce.
 | | the session the user sees | the batch session this round ran |
 | --- | --- | --- |
 | launched by | `/root/Desktop/MicroLED-IC-Project.desktop` -> `cadence_work/launch_virtuoso.sh` | `scripts/sch_virtuoso.sh` (same launcher family, MODE=nograph) |
-| process | PID 15224, start **11:34:09**, still alive, log last written 20:52 | PID varied, ran 21:19, exited by itself |
+| process | PID 15224, start **11:34:09** (state as measured that evening; the user closed it cleanly at 21:30:55 — see the addendum note in §4), log last written 20:52 | PID varied, ran 21:19, exited by itself |
 | binary | `<IC617>/tools/dfII/bin/64bit/virtuoso` | same, with `-nograph` |
 | cwd | `<PROJ>/cadence_work` (read from `/proc/15224/cwd`) | `<PROJ>/cadence_work` (runner forces it) |
 | `-cdslib` | absent from `/proc/15224/cmdline` | absent |
@@ -108,6 +108,19 @@ Then, in Library Manager: type or filter the name `sc1_s3c_team_pretty` -- **not
 
 If the user prefers not to touch a session that is mid-simulation, the agreed fallback is to record
 `USER_GUI_VISIBILITY = WAITING_USER_GUI` and stop at Gate 1, which is what this round does.
+
+> **Addendum, same evening.** The user closed PID 15224 themselves at **21:30:55** -- the log ends with
+> `hiQuit()` then `hiDBoxOK(hiQuitDBox)` then `# Memory report: on exit … 13:30:55.387` (UTC), and
+> afterwards `ps` shows no editor process and `xwininfo` shows 0 Virtuoso windows. This was not caused by
+> this round: the only two guest actions after 21:00 were the read-only batch session that opened every
+> view with mode `"r"` and exited itself, and a repeat of the registration script that printed
+> `ALREADY_REGISTERED` and wrote nothing. `cds.lib` sha256 is still `b3712feb…c5a8` and the delivered
+> library still holds zero locks. What changes is the method: there is no live session to intrude on now,
+> so the two queries above are run in a **freshly launched shortcut session** -- which reads the map at its
+> own start, and therefore reads the DEFINE that has been in place since 02:31:59. One stale write-lock
+> survives on the user's own `microled_cells/c2mos_dff_1bit_pretty/schematic` (mtime 20:51:40, no holder);
+> it was left in place deliberately, and removing it is the user's decision. Verbatim record:
+> `results/evidence/sc1_unit_r1_addendum_session_closed.txt`.
 
 ## 5. The most likely cause of the reported sentence
 
