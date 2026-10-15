@@ -6,8 +6,8 @@
   "branch": "gexing321/scan-unit/vis-register-r1",
   "base_sha": "5b9b7f6a32edf483a428e48fa244b346e64544a0",
   "head_sha": "64c6b5e05646fae796e1399480436d669fa7a0af",
-  "head_sha_semantics": "head_sha is the commit that carries this round's technical deliverables -- the three redacted evidence files and the two prose documents -- which is 64c6b5e. THIS file was amended by a follow-up commit on the same branch, because a commit cannot contain its own SHA; the value here was read from outside it with git rev-parse and re-read from the remote with git ls-remote. Reading head_sha as 'the branch tip' would be wrong: the tip is one commit later and changes nothing but these fields.",
-  "followup_commits_note": "exactly one follow-up commit exists on this branch. It edits only head_sha, push_status, push_status_basis, the remote_readback and git_handback blocks, security_gate_basis and the HANDOFF_STRUCTURE test, and adds results/evidence/sc1_unit_r1_handoff_validation.txt. No technical claim was changed in it.",
+  "head_sha_semantics": "head_sha is the commit that carries this round's technical deliverables -- the three redacted evidence files and the two prose documents -- which is 64c6b5e. THIS file was amended by a follow-up commit on the same branch, because a commit cannot contain its own SHA; the value here was read from outside it with git rev-parse and re-read from the remote with git ls-remote. Reading head_sha as 'the branch tip' would be wrong: the tip is one or more bookkeeping commits later and changes nothing but these fields.",
+  "followup_commits_note": "bookkeeping commits follow the deliverables commit on this branch and carry nothing but these fields plus the gate and transport logs -- they change no technical claim. This file deliberately does not count them or name its own successor: the branch tip is answered by git ls-remote, never from inside a commit.",
   "task_book": {
     "title": "SCAN-UNIT-TEAM-REGISTER-PRESENTATION-R1",
     "authorised_scope": "diagnose the real GUI entry point read-only; idempotently register an EXISTING standalone OA library in the one real project library map; limited layout repair on an isolated working copy",
@@ -109,9 +109,11 @@
     "new_branch_created_from": "5b9b7f6a32edf483a428e48fa244b346e64544a0 (the reviewed commit -- not the captain's ref, and not the previous task's branch, which stayed at the same SHA)",
     "deliverables_commit": "64c6b5e05646fae796e1399480436d669fa7a0af, 6 files, 853 insertions, no existing file modified",
     "remote_tip_at_time_of_writing": "64c6b5e05646fae796e1399480436d669fa7a0af (read back with git ls-remote --heads origin immediately after the push)",
-    "this_file_is_in_a_later_commit": "true by construction: the commit carrying this sentence is the one after 64c6b5e; whether IT landed is answered by the same ls-remote call, not by this field",
-    "later_commit_push_state": "PUSH_PENDING at the time of writing for this follow-up commit; the deliverables it describes are already on the remote and verified",
-    "how_to_check": "git -C <clone> log --oneline origin/gexing321/scan-unit/vis-register-r1..HEAD -- empty means the follow-up landed; non-empty means it is still local. Or: git ls-remote --heads origin refs/heads/gexing321/scan-unit/vis-register-r1 and compare with git rev-parse HEAD.",
+    "this_file_is_in_a_later_commit": "true by construction: the commit carrying this sentence is one after 64c6b5e; whether IT landed is answered by the same ls-remote call, not by this field",
+    "later_commit_push_state": "the bookkeeping commits were pushed after two direct-route failures and one proxy success; the whole sequence, including the misleading 'Everything up-to-date' line, is archived rather than summarised -- see push_transport_log",
+    "push_transport_log": "results/evidence/sc1_unit_r1_push_transport.txt",
+    "remote_tip_after_the_last_read": "1ec505eee7cd6f0eb60fd9fc45a6ce713be96b96, equal to git rev-parse HEAD at the time, read over the proxy route because github.com:443 direct was down",
+    "how_to_check": "git -C <clone> log --oneline origin/gexing321/scan-unit/vis-register-r1..HEAD -- empty means the follow-ups landed; non-empty means they are still local and the answer is one retry, not a re-push. Or: git ls-remote --heads origin refs/heads/gexing321/scan-unit/vis-register-r1 versus git rev-parse HEAD.",
     "network_note": "the route to github.com:443 flickers on this machine, so a later verification of the follow-up commit is a re-run of one read-only command, not a re-push"
   },
   "scope_status": "PARTIAL",
@@ -203,7 +205,7 @@
       "name": "REMOTE_REF_VERIFIED",
       "status": "PASS",
       "evidence_path": "results/evidence/sc1_unit_r1_handoff_validation.txt",
-      "detail": "git ls-remote --heads origin over a separate connection returned refs/heads/gexing321/scan-unit/vis-register-r1 = 64c6b5e05646fae796e1399480436d669fa7a0af, equal to the local deliverables commit, with the five refs read at Gate 0 (main, poc/scan-driver-1ch, gexing321/scan-unit/1ch-beautify, gexing321/docs/collaborator-rules, gexing321/scan-driver/c2mos-schematic) all byte-identical afterwards. The single-ref refspec and the force/tag/all/mirror/delete prohibition are recorded; the five refs that were only read after the push are listed with that limitation stated instead of being claimed identical."
+      "detail": "git ls-remote --heads origin over a separate connection returned refs/heads/gexing321/scan-unit/vis-register-r1 = 64c6b5e05646fae796e1399480436d669fa7a0af for the deliverables commit, and 1ec505eee7cd6f0eb60fd9fc45a6ce713be96b96 after the bookkeeping commit -- equal to git rev-parse HEAD at that moment -- with the five refs read at Gate 0 (main, poc/scan-driver-1ch, gexing321/scan-unit/1ch-beautify, gexing321/docs/collaborator-rules, gexing321/scan-driver/c2mos-schematic) byte-identical in both readings. Two direct-route attempts for the second push failed (Connection was reset, then a 443 connect timeout whose output misleadingly ended in 'Everything up-to-date'); the push that succeeded used a per-command proxy and the claim rests on the read-back after it, not on the push line. The single-ref refspec and the force/tag/all/mirror/delete prohibition are recorded; the five refs that were only read after the push are listed with that limitation stated instead of being claimed identical."
     },
     {
       "name": "HANDOFF_STRUCTURE",
@@ -244,6 +246,7 @@
     "results/evidence/sc1_unit_r1_libvis_remeasure.txt",
     "results/evidence/sc1_unit_r1_registration_idempotency.txt",
     "results/evidence/sc1_unit_r1_handoff_validation.txt",
+    "results/evidence/sc1_unit_r1_push_transport.txt",
     "results/evidence/sc1_s3c_libvis_check.txt",
     "results/evidence/sc1_s3c_oa_session_verdicts.txt",
     "reports/agent_handoffs/SCAN_UNIT_TEAM_BEAUTIFY.md"

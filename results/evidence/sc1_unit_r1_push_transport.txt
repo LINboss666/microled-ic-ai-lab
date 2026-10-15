@@ -1,0 +1,86 @@
+# SCAN-UNIT-VIS-REGISTER-R1 -- the push transport, including the two attempts that failed
+#
+# Recorded because the last line of a push log is not the truth of the remote, and because "it
+# eventually worked" would hide the part a reviewer needs: this route is intermittent, so every
+# remote claim in this round is backed by a separate read-back rather than by a push's own output.
+# All commands ran in the isolated clone on branch gexing321/scan-unit/vis-register-r1.
+
+-------------------------------------------------------------------------------
+Push 1 -- the deliverables commit 64c6b5e05646fae796e1399480436d669fa7a0af
+-------------------------------------------------------------------------------
+  GIT_TERMINAL_PROMPT=0 GCM_INTERACTIVE=never git push origin \
+    refs/heads/gexing321/scan-unit/vis-register-r1:refs/heads/gexing321/scan-unit/vis-register-r1
+  pre-push hook ran first: history: 148 commits scanned, objects_checked=1332,
+  PDK/CREDENTIAL/PRIVATE_KEY/VENDOR_MODEL all 0, SAFETY_GATE: PASS
+  To https://github.com/LINboss666/microled-ic-ai-lab.git
+   * [new branch]      gexing321/scan-unit/vis-register-r1 -> gexing321/scan-unit/vis-register-r1
+  push_rc=0                                     (direct route, succeeded first try)
+  read-back: git ls-remote --heads origin  -> this branch = 64c6b5e0...   (see sc1_unit_r1_handoff_validation.txt section 5)
+
+-------------------------------------------------------------------------------
+Push 2 -- the bookkeeping commit 1ec505eee7cd6f0eb60fd9fc45a6ce713be96b96
+-------------------------------------------------------------------------------
+attempt A, direct:
+  push_rc=128
+  fatal: unable to access '.../microled-ic-ai-lab.git/': Recv failure: Connection was reset
+
+attempt B, direct with -c http.version=HTTP/1.1 (per-command only, never global):
+  the pre-push hook still ran and still passed: history: 149 commits scanned, objects_checked=1333,
+  all four counters 0, SAFETY_GATE: PASS
+  error: RPC failed; curl 28 Failed to connect to github.com:443 after 21098 ms: Could not connect to server
+  send-pack: unexpected disconnect while reading sideband packet
+  fatal: the remote end hung up unexpectedly
+  Everything up-to-date          <-- MISLEADING, and this is the reason this file exists
+  push_rc=1
+
+  "Everything up-to-date" is a sideband line emitted after the transport had already died. It is NOT
+  a statement that the commit landed. Read back over a direct connection at that moment:
+  fatal: unable to access '...': Failed to connect to github.com:443 after 21074 ms
+  i.e. the route itself was down, so neither the push nor a verification could get through.
+  The branch was still at 64c6b5e at this point; 1ec505e was local only.
+
+proxy check (a TCP probe of the loopback listener, not a credential test):
+  PROXY_10090=open
+
+attempt C, per-command proxy only:
+  GIT_TERMINAL_PROMPT=0 GCM_INTERACTIVE=never git \
+    -c http.proxy=http://127.0.0.1:10090 -c https.proxy=http://127.0.0.1:10090 \
+    push origin refs/heads/gexing321/scan-unit/vis-register-r1:refs/heads/gexing321/scan-unit/vis-register-r1
+  To https://github.com/LINboss666/microled-ic-ai-lab.git
+     64c6b5e..1ec505e  gexing321/scan-unit/vis-register-r1 -> gexing321/scan-unit/vis-register-r1
+  push_rc=0                                     (fast-forward inside the personal namespace only)
+
+read-back, over the same proxy, independent of the push output:
+  git ls-remote --heads origin
+  6a8ba7dc48471329d09a2dcc4701b198da7623e6  refs/heads/feature/c2mos-virtuoso-schematic
+  51ca02a3604c565dd4efce27625c93349ce617f7  refs/heads/feature/data-driver-virtuoso-schematic
+  876c198ab894796b7ff91b290654882ad5b782f8  refs/heads/gexing321/docs/collaborator-rules
+  6d23fb77ab7248a13d95dc6e82a215eb13bdc064  refs/heads/gexing321/scan-driver/c2mos-schematic
+  5b9b7f6a32edf483a428e48fa244b346e64544a0  refs/heads/gexing321/scan-unit/1ch-beautify
+  1ec505eee7cd6f0eb60fd9fc45a6ce713be96b96  refs/heads/gexing321/scan-unit/vis-register-r1
+  23e471cb936b421ee97e1250c3be06edf96f9937  refs/heads/main
+  cdd8597f80f1a87d7b4f2a0a38a4adfaec3fb063  refs/heads/poc/c2mos-dff
+  b3d8bf4383ad9f2d898dcdec5efdbedb90e99b68  refs/heads/poc/data-driver-1ch
+  731767519d1a51287eb5b7f4a6e4f9b8e613e990  refs/heads/poc/data-unit-1ch
+  0038821e6a93861848ac922ccca35c41a4de9bbb  refs/heads/poc/scan-driver-1ch
+  local git rev-parse HEAD -> 1ec505eee7cd6f0eb60fd9fc45a6ce713be96b96   (equal)
+
+Every ref other than this branch is byte-identical to the reading taken before push 1. The previous
+task's branch gexing321/scan-unit/1ch-beautify is still at 5b9b7f6: this round never advanced it, and
+`refs/heads/gexing321/*` was never sent as a group -- one explicit refspec, three times.
+
+-------------------------------------------------------------------------------
+What was NOT done
+-------------------------------------------------------------------------------
+no --force, no --force-with-lease, no --mirror, no --all, no --tags, no --delete
+no hook skipping (--no-verify was never used; both failures died in the transport, after the hook passed)
+no change to global git config, and no change to any global SSH or proxy setting -- the proxy flags
+  were given per command line and are not recorded in .git/config
+no retry loop: direct, direct-once-more with HTTP/1.1, then the proxy, then a read-back
+
+Correction to keep, because the repository's own AGENTS.md 25 states it differently: on 2026-10-11 a
+push that kept failing with `Recv failure: Connection was reset` succeeded through the 10090 proxy, not
+through `-c http.version=HTTP/1.1`, and today reproduces that -- HTTP/1.1 failed here too, with a
+connect timeout instead of a reset. So HTTP/1.1 is worth one try, and the proxy is the thing that has
+worked twice on two different days. The proxy is only useful while the user's proxy app is running;
+this machine had it listening, and that was checked with a TCP probe before the route was tried.

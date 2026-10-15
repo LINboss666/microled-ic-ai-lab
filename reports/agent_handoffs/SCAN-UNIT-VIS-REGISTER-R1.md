@@ -136,7 +136,11 @@ member("sc1_s3c_team_pretty" ddGetLibList()~>name)
   - 回填提交：只改 `head_sha` / `push_status` / 远端回读 / 安全闸实参 / `HANDOFF_STRUCTURE` 一项，并新增
     `results/evidence/sc1_unit_r1_handoff_validation.txt`。**不预设其 SHA**，由
     `git ls-remote --heads origin refs/heads/gexing321/scan-unit/vis-register-r1` 与 `git rev-parse HEAD` 对照确认。
-  - 交付提交已 `REMOTE_VERIFIED`（`ls-remote` 回读 = `64c6b5e0…`）；远端审核入口
+  - 交付提交已 `REMOTE_VERIFIED`（`ls-remote` 回读 = `64c6b5e0…`，回填提交回读 = `1ec505ee…` = 本地 HEAD）；
+    第二次推送**先两次直连失败**（`Recv failure: Connection was reset`，随后 443 连接超时——其输出里那句
+    `Everything up-to-date` 是传输已断之后的 sideband 残句，**不代表推送成功**），第三次用当次命令行代理才成功；
+    全过程逐字存 `results/evidence/sc1_unit_r1_push_transport.txt`，结论只建立在推送之后的独立 `ls-remote` 回读上。
+  - 远端审核入口
     `https://github.com/LINboss666/microled-ic-ai-lab/pull/new/gexing321/scan-unit/vis-register-r1`
     —— **PR 不由本 Agent 创建**，是否并入队长的分支是队长的决定。
 
