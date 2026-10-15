@@ -5,9 +5,9 @@
   "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
   "branch": "gexing321/scan-unit/vis-register-r1",
   "base_sha": "5b9b7f6a32edf483a428e48fa244b346e64544a0",
-  "head_sha": "5b9b7f6a32edf483a428e48fa244b346e64544a0",
-  "head_sha_semantics": "head_sha means 'the tip this file was written against', and a commit cannot contain its own SHA. Inside THIS commit the only truthful value is the branch it was cut from, 5b9b7f6, which is the reviewed input of the round. The commit that carries this round's deliverables is this one, and its SHA becomes readable only from outside it; a follow-up commit on the same branch replaces head_sha with that value and re-reads the remote tip with git ls-remote rather than trusting the push output.",
-  "followup_commits_note": "one further commit is expected on this branch. It changes nothing but head_sha, push_status, the remote read-back block, the security-gate outputs and the HANDOFF_STRUCTURE test.",
+  "head_sha": "64c6b5e05646fae796e1399480436d669fa7a0af",
+  "head_sha_semantics": "head_sha is the commit that carries this round's technical deliverables -- the three redacted evidence files and the two prose documents -- which is 64c6b5e. THIS file was amended by a follow-up commit on the same branch, because a commit cannot contain its own SHA; the value here was read from outside it with git rev-parse and re-read from the remote with git ls-remote. Reading head_sha as 'the branch tip' would be wrong: the tip is one commit later and changes nothing but these fields.",
+  "followup_commits_note": "exactly one follow-up commit exists on this branch. It edits only head_sha, push_status, push_status_basis, the remote_readback and git_handback blocks, security_gate_basis and the HANDOFF_STRUCTURE test, and adds results/evidence/sc1_unit_r1_handoff_validation.txt. No technical claim was changed in it.",
   "task_book": {
     "title": "SCAN-UNIT-TEAM-REGISTER-PRESENTATION-R1",
     "authorised_scope": "diagnose the real GUI entry point read-only; idempotently register an EXISTING standalone OA library in the one real project library map; limited layout repair on an isolated working copy",
@@ -85,27 +85,38 @@
     "if_the_two_queries_disagree": "report both verbatim; do not reconcile them locally",
     "known_presentation_defect_left_for_gate_2": "every symbol pin sits on the symbol's right edge (x 1.1625-1.3375), there is no body outline and text=nil, i.e. no pin name; leaf schematics keep spiceIn's default placement. The parents are NOT degenerate."
   },
-  "push_status": "PUSH_PENDING",
-  "push_status_basis": "ordinary (non-forced) push of exactly one ref, refs/heads/gexing321/scan-unit/vis-register-r1, cut from the reviewed commit 5b9b7f6, after the pre-commit and pre-push hooks re-run scripts/precommit_safety_check.py. The remote tip is read back with git ls-remote over a separate connection rather than trusted from the push output.",
+  "push_status": "REMOTE_VERIFIED",
+  "push_status_basis": "one ordinary (non-forced) push of exactly one ref: git push origin refs/heads/gexing321/scan-unit/vis-register-r1:refs/heads/gexing321/scan-unit/vis-register-r1, which created the branch ([new branch], rc 0). Before it the pre-push hook re-ran scripts/precommit_safety_check.py --mode history over 148 commits and 1332 blobs with PDK/CREDENTIAL/PRIVATE_KEY/VENDOR_MODEL all 0 and SAFETY_GATE: PASS. REMOTE_VERIFIED here means parity of the deliverables commit 64c6b5e with the remote ref, read back by a separate ls-remote call -- not proof that any technical verdict above is correct, and not a claim about this follow-up commit's own landing, which is answered the same way (see git_handback).",
   "remote_readback": {
-    "read_with": "git ls-remote origin, before and after the push",
-    "refs/heads/gexing321/scan-unit/vis-register-r1": "to be filled by the follow-up commit from the actual read-back; it is empty (branch does not exist yet) at the time of writing",
-    "refs/heads/main": "23e471cb936b421ee97e1250c3be06edf96f9937",
-    "refs/heads/poc/scan-driver-1ch": "0038821e6a93861848ac922ccca35c41a4de9bbb",
-    "refs/heads/gexing321/scan-unit/1ch-beautify": "5b9b7f6a32edf483a428e48fa244b346e64544a0",
-    "refs/heads/gexing321/docs/collaborator-rules": "876c198ab894796b7ff91b290654882ad5b782f8",
-    "refs/heads/gexing321/scan-driver/c2mos-schematic": "6d23fb77ab7248a13d95dc6e82a215eb13bdc064",
-    "protected_refs_policy": "none of the above may move; the follow-up commit lists each one again after the push so a reviewer can compare two readings rather than take a word"
+    "read_with": "git ls-remote --heads origin, run after the push over its own connection",
+    "refs/heads/gexing321/scan-unit/vis-register-r1": "64c6b5e05646fae796e1399480436d669fa7a0af -- equals the local deliverables commit",
+    "refs/heads/main": "23e471cb936b421ee97e1250c3be06edf96f9937 (identical to the pre-push reading at Gate 0)",
+    "refs/heads/poc/scan-driver-1ch": "0038821e6a93861848ac922ccca35c41a4de9bbb (identical to Gate 0)",
+    "refs/heads/gexing321/scan-unit/1ch-beautify": "5b9b7f6a32edf483a428e48fa244b346e64544a0 (identical to Gate 0 -- the previous task's branch was NOT advanced)",
+    "refs/heads/gexing321/docs/collaborator-rules": "876c198ab894796b7ff91b290654882ad5b782f8 (identical to Gate 0)",
+    "refs/heads/gexing321/scan-driver/c2mos-schematic": "6d23fb77ab7248a13d95dc6e82a215eb13bdc064 (identical to Gate 0)",
+    "refs/heads/feature/c2mos-virtuoso-schematic": "6a8ba7dc48471329d09a2dcc4701b198da7623e6",
+    "refs/heads/feature/data-driver-virtuoso-schematic": "51ca02a3604c565dd4efce27625c93349ce617f7",
+    "refs/heads/poc/c2mos-dff": "cdd8597f80f1a87d7b4f2a0a38a4adfaec3fb063",
+    "refs/heads/poc/data-driver-1ch": "b3d8bf4383ad9f2d898dcdec5efdbedb90e99b68",
+    "refs/heads/poc/data-unit-1ch": "731767519d1a51287eb5b7f4a6e4f9b8e613e990",
+    "read_before_the_push": "five refs were read at Gate 0 before any write: main, poc/scan-driver-1ch and the three gexing321 refs. Those five carry the word identical above.",
+    "read_only_after": "feature/c2mos-virtuoso-schematic, feature/data-driver-virtuoso-schematic, poc/c2mos-dff, poc/data-driver-1ch and poc/data-unit-1ch were read only after the push. The last one had never appeared in this task's earlier listings at all. For those five the claim is weaker and is stated as such: the push command carried a single explicit refspec inside refs/heads/gexing321/scan-unit/vis-register-r1 and no force, tag, --all, --mirror or --delete flag, so no other ref was addressed by it; the four values that also appear in commit 2ddf7a1's remote_readback block are additionally equal to what that round recorded.",
+    "protected_refs_policy": "none of these may move because of this task; a reviewer can re-run the same command and compare"
   },
   "git_handback": {
     "why_this_block_exists": "a commit cannot state its own SHA, and a file cannot state whether the commit carrying it reached the remote; both facts are only visible from outside, so they are written as of the moment of writing and are checkable in one command",
-    "new_branch_created_from": "5b9b7f6a32edf483a428e48fa244b346e64544a0 (the reviewed commit, not the captain's ref and not the previous task branch)",
-    "how_to_check": "git -C <clone> log --oneline origin/gexing321/scan-unit/vis-register-r1..HEAD -- empty means the follow-ups landed",
-    "later_commit_push_state": "PUSH_PENDING for the commit that fills in these fields"
+    "new_branch_created_from": "5b9b7f6a32edf483a428e48fa244b346e64544a0 (the reviewed commit -- not the captain's ref, and not the previous task's branch, which stayed at the same SHA)",
+    "deliverables_commit": "64c6b5e05646fae796e1399480436d669fa7a0af, 6 files, 853 insertions, no existing file modified",
+    "remote_tip_at_time_of_writing": "64c6b5e05646fae796e1399480436d669fa7a0af (read back with git ls-remote --heads origin immediately after the push)",
+    "this_file_is_in_a_later_commit": "true by construction: the commit carrying this sentence is the one after 64c6b5e; whether IT landed is answered by the same ls-remote call, not by this field",
+    "later_commit_push_state": "PUSH_PENDING at the time of writing for this follow-up commit; the deliverables it describes are already on the remote and verified",
+    "how_to_check": "git -C <clone> log --oneline origin/gexing321/scan-unit/vis-register-r1..HEAD -- empty means the follow-up landed; non-empty means it is still local. Or: git ls-remote --heads origin refs/heads/gexing321/scan-unit/vis-register-r1 and compare with git rev-parse HEAD.",
+    "network_note": "the route to github.com:443 flickers on this machine, so a later verification of the follow-up commit is a re-run of one read-only command, not a re-push"
   },
   "scope_status": "PARTIAL",
   "security_gate": "PASS",
-  "security_gate_basis": "scripts/precommit_safety_check.py --mode staged run through the installed pre-commit hook on this round's six new files, and scripts/precommit_safety_check.py --mode history re-run by the pre-push hook; scripts/provenance_check.py run separately. Exact counts, violation numbers and exit codes are recorded in results/evidence/sc1_unit_r1_handoff_validation.txt, written by the follow-up commit that has the real output rather than a description of it.",
+  "security_gate_basis": "measured, this branch. pre-commit hook (scripts/precommit_safety_check.py --mode staged) on the six staged deliverables: objects_checked=6, PDK_TRACKED_FILES=0, CREDENTIAL_TRACKED_FILES=0, PRIVATE_KEYS_TRACKED_FILES=0, VENDOR_MODEL_TRACKED_FILES=0, SAFETY_GATE: PASS, rc 0. pre-push hook re-ran it independently as --mode history: 148 commits scanned, objects_checked=1332, the same four counts all 0, SAFETY_GATE: PASS. scripts/provenance_check.py: files=378 labelled_lines=506 violations=0, SOURCE_PROVENANCE_CHECK: PASS, rc 0. Full stdout archived in results/evidence/sc1_unit_r1_handoff_validation.txt together with the official validator's output and the negative check that the cds.lib body and every *.oa stayed untracked. PASS means the rules found nothing forbidden in these blobs -- it is not a technical verdict.",
   "tests": [
     {
       "name": "SOURCE_IDENTITY",
@@ -183,9 +194,22 @@
       "detail": "every view opened by this round was opened with mode r; the library gained no .cdslck and the user's three write-locks under microled_cells (c2mos_dff_1bit_pretty schematic and symbol, c2mos_dff_1bit_pretty_tb schematic, newest mtime 20:51:40) were found, reported and left alone; cds.lib sha b3712feb...c5a8 identical across both read-only runs and the idempotent registration re-run"
     },
     {
+      "name": "SECURITY_GATE",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_unit_r1_handoff_validation.txt",
+      "detail": "pre-commit --mode staged on the six deliverables: objects_checked=6 with PDK/CREDENTIAL/PRIVATE_KEY/VENDOR_MODEL all 0 and SAFETY_GATE: PASS; pre-push --mode history scanned 148 commits and 1332 blobs with the same four counts all 0; provenance_check files=378 labelled_lines=506 violations=0. Neither cds.lib nor any *.oa is tracked, verified by git ls-files queries in the same archive."
+    },
+    {
+      "name": "REMOTE_REF_VERIFIED",
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_unit_r1_handoff_validation.txt",
+      "detail": "git ls-remote --heads origin over a separate connection returned refs/heads/gexing321/scan-unit/vis-register-r1 = 64c6b5e05646fae796e1399480436d669fa7a0af, equal to the local deliverables commit, with the five refs read at Gate 0 (main, poc/scan-driver-1ch, gexing321/scan-unit/1ch-beautify, gexing321/docs/collaborator-rules, gexing321/scan-driver/c2mos-schematic) all byte-identical afterwards. The single-ref refspec and the force/tag/all/mirror/delete prohibition are recorded; the five refs that were only read after the push are listed with that limitation stated instead of being claimed identical."
+    },
+    {
       "name": "HANDOFF_STRUCTURE",
-      "status": "NOT_RUN",
-      "detail": "the official validator (sha256 3c150d54...e1e5, kept outside the repository and never edited) is run by the follow-up commit, because a file cannot record its own verdict before it exists. Its stdout is archived as results/evidence/sc1_unit_r1_handoff_validation.txt. Structure PASS is not evidence that any technical verdict above is correct."
+      "status": "PASS",
+      "evidence_path": "results/evidence/sc1_unit_r1_handoff_validation.txt",
+      "detail": "the official validator, sha256 3c150d543465a5d17a9d63c700f6b895c82fb868cae9408b2afd47643603e1e5, was re-hash-verified before and after the run and lives outside the repository, never committed and never edited. It printed HANDOFF_STRUCTURE: PASS with rc 0 on this manifest. PASS covers field names and enums only -- it did not contact GitHub, did not execute a project test and did not read the contents of any evidence file, so it is not evidence that USER_GUI_VISIBILITY, the equivalence inheritance or any other verdict above is correct."
     }
   ],
   "defects_found_not_repaired": [

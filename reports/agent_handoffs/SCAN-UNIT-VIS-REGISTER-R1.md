@@ -39,8 +39,8 @@ Git 里；用户自己日常用的 `microled_cells` 里也**一个 scan cell 都
 | PRESENTATION | **NOT_STARTED** | 未创建副本库，未移动任何 pin/figure；本轮明确不进入 Gate 2 |
 | ELECTRICAL_EQUIVALENCE_AFTER | **NOT_RUN** | 无写入，故无 after；不许用"未改动"冒充"等价已复核" |
 | VISUAL_REVIEW | **WAITING_USER** | 本机无像素通路；§4 给人工 8 cell 查看清单 |
-| SECURITY_GATE | 见 §6（提交后回填实际输出） | `scripts/precommit_safety_check.py --mode staged` / `--mode history`、`scripts/provenance_check.py` |
-| REMOTE_REF_VERIFIED | 见 §6（推送后 `git ls-remote` 独立回读） | 单 ref 普通 push，保护 ref 逐条比对 |
+| SECURITY_GATE | **PASS** | `sc1_unit_r1_handoff_validation.txt` §2/§3/§4：staged `objects_checked=6` 四类计数全 0；history `148 commits / 1332 blobs` 四类全 0；`provenance_check files=378 labelled_lines=506 violations=0`；反向用例（5 份变异 manifest + 12 条禁用路径 + 合成 model/license/password 内容块）全部被拒 |
+| REMOTE_REF_VERIFIED | **PASS** | 同上 §5：`git ls-remote --heads origin` 回读 `gexing321/scan-unit/vis-register-r1` = `64c6b5e05646fae796e1399480436d669fa7a0af`；Gate 0 写前读过的 5 个 ref 逐字未变（另 5 个仅写后读到，按弱证据陈述） |
 
 按任务书 §5 末段要求的分开写法：`GUI_LIBRARY_REGISTRATION=PASS`、`OA_IMPORT=PREEXISTING_CONFIRMED`、
 `ELECTRICAL_EQUIVALENCE=PREVIOUS_EVIDENCE`、`PRESENTATION=NOT_DONE`。**不写整体 PASS。**
@@ -130,7 +130,15 @@ member("sc1_s3c_team_pretty" ddGetLibList()~>name)
 - 无 force、无 tag push、无 `--all/--mirror/--delete`、无 amend/rebase 已推送历史、无 `--no-verify`。
 - 本轮**只新增**：两份 handoff（`.md`/`.json`）、一份 `gui_vs_headless_visibility.md`、三份脱敏证据。
   不提交 `cds.lib` 本体、不提交 `.oa`/PDK/模型卡/许可证/私钥/raw PSF/机器库路径；`cds.lib` 由 `.gitignore` 兜住。
-- 实际 SHA、闸门输出与远端回读：见同目录 `.json` 的 `git_handback` 与 `remote_readback` 块（提交后由真实输出填写，不预设值）。
+- 本轮 commit 链（全部在 `gexing321/scan-unit/vis-register-r1` 这一条新分支上）：
+  - base（分支切出点，= 受审输入）`5b9b7f6a32edf483a428e48fa244b346e64544a0`
+  - 交付提交 `64c6b5e05646fae796e1399480436d669fa7a0af`：6 files, 853 insertions，未修改任何既有文件
+  - 回填提交：只改 `head_sha` / `push_status` / 远端回读 / 安全闸实参 / `HANDOFF_STRUCTURE` 一项，并新增
+    `results/evidence/sc1_unit_r1_handoff_validation.txt`。**不预设其 SHA**，由
+    `git ls-remote --heads origin refs/heads/gexing321/scan-unit/vis-register-r1` 与 `git rev-parse HEAD` 对照确认。
+  - 交付提交已 `REMOTE_VERIFIED`（`ls-remote` 回读 = `64c6b5e0…`）；远端审核入口
+    `https://github.com/LINboss666/microled-ic-ai-lab/pull/new/gexing321/scan-unit/vis-register-r1`
+    —— **PR 不由本 Agent 创建**，是否并入队长的分支是队长的决定。
 
 ## 7. 本轮明确没做的事
 

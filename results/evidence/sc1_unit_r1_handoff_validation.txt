@@ -1,0 +1,177 @@
+# SCAN-UNIT-VIS-REGISTER-R1 -- gate runs, with both a positive and a negative case
+#
+# Every block below is the literal stdout of the command printed above it, run on 2026-10-15 in the
+# isolated clone at branch gexing321/scan-unit/vis-register-r1. Nothing is paraphrased.
+# A gate whose refusal was never demonstrated is not a gate, so each check is run in both directions.
+
+===============================================================================
+1. Official handoff validator -- identity of the tool
+===============================================================================
+kept outside the repository, never committed, never edited. Hashed before and after the run:
+
+  sha256sum D:/IC.../.tools/validate_handoff.py
+  3c150d543465a5d17a9d63c700f6b895c82fb868cae9408b2afd47643603e1e5   (BEFORE)
+  3c150d543465a5d17a9d63c700f6b895c82fb868cae9408b2afd47643603e1e5   (AFTER, unchanged)
+
+  python -c "import json;json.load(open('reports/agent_handoffs/SCAN-UNIT-VIS-REGISTER-R1.json'...))"
+  JSON_PARSE: ok
+  (parseability is NOT the structure verdict; the validator's own line below is.)
+
+POSITIVE:
+  python validate_handoff.py reports/agent_handoffs/SCAN-UNIT-VIS-REGISTER-R1.json
+  HANDOFF_STRUCTURE: PASS (fields only; evidence/remote truth NOT verified)
+  rc=0
+
+NEGATIVE (five mutated copies of this manifest, each in the gitignored review/ directory, each
+expected to be refused -- the mutations are the exact mistakes the schema exists to catch):
+  NEG drop_evidence_paths   rc=1  HANDOFF_STRUCTURE: FAIL
+  NEG bad_push_status       rc=1  HANDOFF_STRUCTURE: FAIL     (push_status := "PUSHED", not an enum member)
+  NEG short_head_sha        rc=1  HANDOFF_STRUCTURE: FAIL     (head_sha := "64c6b5e", a 7-char abbreviation)
+  NEG pass_test_no_evidence rc=1  HANDOFF_STRUCTURE: FAIL     (a PASS test row stripped of evidence_path)
+  NEG empty_tests           rc=1  HANDOFF_STRUCTURE: FAIL     (tests := [])
+All five refused, so the PASS above discriminates. Structure PASS says the field names and enums are
+legal. It did not contact GitHub, did not execute a project test, and did not read the contents of
+any evidence file -- least of all whether USER_GUI_VISIBILITY should still read WAITING_USER.
+
+===============================================================================
+2. Safety gate -- the run that guarded the commit
+===============================================================================
+pre-commit hook (scripts/install_hooks.sh writes .git/hooks/pre-commit as `--mode staged`):
+
+  mode=staged objects_checked=6
+  PDK_TRACKED_FILES = 0
+  CREDENTIAL_TRACKED_FILES = 0
+  PRIVATE_KEYS_TRACKED_FILES = 0
+  VENDOR_MODEL_TRACKED_FILES = 0
+  SAFETY_GATE: PASS
+
+pre-push hook, independently, on the same push (the value that matters before a push, because a
+secret deleted in a later commit is still in history):
+
+  history: 148 commits scanned
+  mode=history objects_checked=1332
+  PDK_TRACKED_FILES = 0
+  CREDENTIAL_TRACKED_FILES = 0
+  PRIVATE_KEYS_TRACKED_FILES = 0
+  VENDOR_MODEL_TRACKED_FILES = 0
+  SAFETY_GATE: PASS
+  rc=0
+
+re-run after the push with nothing staged, as a control on the empty index:
+
+  mode=staged objects_checked=0
+  ... all four counters 0 ... SAFETY_GATE: PASS   rc=0
+
+===============================================================================
+3. Is the OA really staying out of Git? (the report's central factual claim)
+===============================================================================
+Counted over `git ls-files --cached`, 1065 tracked files in total:
+
+  cds.lib         tracked_hits=0
+  *.oa            tracked_hits=0
+  cdsinfo.*       tracked_hits=0
+  *credentials*   tracked_hits=0
+  *_token*        tracked_hits=0
+  *.lib           tracked_hits=0
+  models/         tracked_hits=0
+  raw/ psf/       tracked_hits=0
+  *.cdslck        tracked_hits=0
+  tech.db         tracked_hits=0
+  data.dm         tracked_hits=0
+
+So the statement "the circuits cannot arrive by pulling the repository" is a property of this
+repository, not of the guest. It also means no copy of the shared library map -- body included --
+was committed anywhere in this round; the map is described structurally in
+results/evidence/sc1_unit_r1_gate0_inventory.txt (line count, hashes, mtime, which names are DEFINEd)
+and the target paths are written as <PATH-REDACTED>.
+
+NEGATIVE, at the rule layer the gate itself uses (repo_safety_rules.py, the module the hook imports),
+so the zeros above are shown to be enforced rather than merely lucky:
+
+  NEG path cds.lib                                 denied=True
+  NEG path any/dir/cds.lib                         denied=True
+  NEG path x/smic18mmrf/models/spectre.scs         denied=True
+  NEG path foo.oa                                  denied=True
+  NEG path foo.oax                                 denied=True
+  NEG path cdsinfo.tag                             denied=True
+  NEG path .ic617_agent_bridge_credentials         denied=True
+  NEG path id_rsa                                  denied=True
+  NEG path run_token.txt                           denied=True
+  NEG path secret.json                             denied=True
+  NEG path lib.defs                                denied=True
+  NEG path data.tech                               denied=True
+  POS path reports/agent_handoffs/gui_vs_headless_visibility.md   denied=False
+  POS path results/evidence/sc1_unit_r1_gate0_inventory.txt       denied=False
+  POS path scripts/sc1_libreg_team.sh                             denied=False
+
+  content/secret rules fired on a synthetic forbidden block
+  (.model line + LMD_LICENSE_FILE=NNNN@host + a password assignment):
+      ['bsim_vth0_parameter', 'license_server_value', 'password_assignment', 'spice_model_card']
+  the same rules run over this round's own evidence text:
+      []      <- no forbidden content in what is being committed
+
+  No file was ever staged with `git add -f`, and nothing was ever forced past a rule.
+
+===============================================================================
+4. Provenance gate
+===============================================================================
+  python scripts/provenance_check.py
+  provenance_check: files=378 labelled_lines=506 violations=0
+  SOURCE_PROVENANCE_CHECK: PASS
+  rc=0
+
+===============================================================================
+5. Push, and the independent remote read-back
+===============================================================================
+  GIT_TERMINAL_PROMPT=0 GCM_INTERACTIVE=never git push origin \
+    refs/heads/gexing321/scan-unit/vis-register-r1:refs/heads/gexing321/scan-unit/vis-register-r1
+  (the history-mode output of section 2 is this command's own pre-push hook)
+  To https://github.com/LINboss666/microled-ic-ai-lab.git
+   * [new branch]      gexing321/scan-unit/vis-register-r1 -> gexing321/scan-unit/vis-register-r1
+  push_rc=0
+
+Exactly one refspec was sent, no --force / --force-with-lease / --tags / --all / --mirror / --delete,
+and no hook was skipped. The branch is new, so nothing was overwritten: the push cannot have displaced
+any existing object.
+
+  git ls-remote --heads origin      (separate connection, run after the push)
+  6a8ba7dc48471329d09a2dcc4701b198da7623e6  refs/heads/feature/c2mos-virtuoso-schematic
+  51ca02a3604c565dd4efce27625c93349ce617f7  refs/heads/feature/data-driver-virtuoso-schematic
+  876c198ab894796b7ff91b290654882ad5b782f8  refs/heads/gexing321/docs/collaborator-rules
+  6d23fb77ab7248a13d95dc6e82a215eb13bdc064  refs/heads/gexing321/scan-driver/c2mos-schematic
+  5b9b7f6a32edf483a428e48fa244b346e64544a0  refs/heads/gexing321/scan-unit/1ch-beautify
+  64c6b5e05646fae796e1399480436d669fa7a0af  refs/heads/gexing321/scan-unit/vis-register-r1
+  23e471cb936b421ee97e1250c3be06edf96f9937  refs/heads/main
+  cdd8597f80f1a87d7b4f2a0a38a4adfaec3fb063  refs/heads/poc/c2mos-dff
+  b3d8bf4383ad9f2d898dcdec5efdbedb90e99b68  refs/heads/poc/data-driver-1ch
+  731767519d1a51287eb5b7f4a6e4f9b8e613e990  refs/heads/poc/data-unit-1ch
+  0038821e6a93861848ac922ccca35c41a4de9bbb  refs/heads/poc/scan-driver-1ch
+
+Two readings of the truth, kept apart on purpose:
+
+  read at Gate 0 BEFORE any write, and identical after -- main, poc/scan-driver-1ch,
+  gexing321/scan-unit/1ch-beautify, gexing321/docs/collaborator-rules, gexing321/scan-driver/c2mos-schematic.
+  "identical" is a measured comparison for these five.
+
+  read only AFTER the push -- both feature refs, poc/c2mos-dff, poc/data-driver-1ch, poc/data-unit-1ch.
+  For these the claim is weaker and is stated weakly: no refspec addressed them, and four of the five
+  equal the values already recorded in commit 2ddf7a1's remote_readback block; poc/data-unit-1ch had
+  never appeared in this task's listings before, so it is reported as observed and untouched-by-construction,
+  not as "verified unchanged".
+
+The deliverables commit 64c6b5e05646fae796e1399480436d669fa7a0af equals the remote value for this
+branch, so REMOTE_REF_VERIFIED refers to that commit. Whether the commit that adds THIS line landed is
+answered by the same command re-run by anyone -- see the git_handback block, which stays honest about
+being written from inside a commit that cannot yet name itself.
+
+===============================================================================
+6. What this file proves and what it does not
+===============================================================================
+Proves: the tooling gates ran, ran with the expected refusal behaviour, and found nothing forbidden in
+what this round committed; the branch exists on the remote at the SHA claimed; five protected refs are
+provably unmoved.
+
+Does not prove: anything about the circuit, the library, or what the user sees in their own Virtuoso
+window. Those verdicts live in the other three evidence files and in
+reports/agent_handoffs/gui_vs_headless_visibility.md, and USER_GUI_VISIBILITY is still WAITING_USER
+while this file is being written.
