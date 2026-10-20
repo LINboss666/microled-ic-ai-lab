@@ -1,10 +1,29 @@
-DATA-7A write guard record
-The official evidence path is only written by --export, atomically, and only after every
-gate in the run summary passed. Three refusals are demonstrated below by digest.
-file=results/evidence/dd1_d7a_write_guard.txt
-seed_sha256=33337667120449290f54a63638596aa5c897f7bb8acc2079865608e8318faa63
-empty_row_set=REFUSED(refusing to write 0 rows over D:\ic617_d7a\results\evidence\)
-missing_run_dir=REFUSED(FileNotFoundError)
-digest_after_attempts=33337667120449290f54a63638596aa5c897f7bb8acc2079865608e8318faa63
-digest_unchanged=True
+DATA-7A write guard matrix
+
+Every failure mode below is exercised against a fixture copy of the real evidence
+set -- all 8 target files pre-seeded with non-empty content -- and the whole file set
+is compared by name and sha256 afterwards. The official evidence path is never the
+target of these attempts.
+
+mode                     outcome                         changed  added  untouched
+empty_row_set            refused: Refuse                -        -      PASS
+missing_run_dir          refused: Refuse                -        -      PASS
+gates_not_met            refused: Refuse                -        -      PASS
+missing_trace            refused: Refuse                -        -      PASS
+compile_failure          refused: Refuse                -        -      PASS
+corrupt_trace            refused: Refuse                -        -      PASS
+stale_cached_source      refused: Refuse                -        -      PASS
+row_count_mismatch       refused: Refuse                -        -      PASS
+trace_digest_mismatch    refused: Refuse                -        -      PASS
+
+per-file sha256 of the fixture evidence set after all attempts:
+  dd1_d7a_cases.csv                  2d89ea91f78a99e5792af1e4956d849ca6db6f4bbfe31020f24d9fac13bb7fc7
+  dd1_d7a_checker_selftest.txt       192f300542c155fff17e22248174325643f8a354ab80e8dea13ecacbb291a5a2
+  dd1_d7a_control_cases.csv          f6785596885366b88c751c709b42ee36ad6dfef5480d05f9ae3ce3f7f91b1388
+  dd1_d7a_edge_samples.csv           a6951c9f717fa5b4c5a7d41110dc9a076f96bc1a65452ede40c89d8e60de0ec3
+  dd1_d7a_environment.json           f5d4bd0ae742533c119a5c93460a4fb1adeb171bf54309dab50da815f481e361
+  dd1_d7a_manifest.json              62153d4befdee1aae2f7ed30ec272cd66986f9f2fd4b35030cc0d77e112328a3
+  dd1_d7a_negative.csv               70046203ed151e5755a547ce263820f9bf542e82f0db60d7c20e6eab70894bed
+  dd1_d7a_write_guard.txt            09ad61b6987c95341e389fd8cdc7cd945dd2cf9136e4d5e7e70feab324ee35cb
+
 WRITE_GUARD: PASS

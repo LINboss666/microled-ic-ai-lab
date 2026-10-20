@@ -41,11 +41,11 @@ module tb_dd1_d7a_gray;
     wire        data_en_a, data_en_ba, obs_tick_a;
     wire [2:0]  pam_sel_a, win_state_a;
     wire [7:0]  cfg_version_a;
-    wire [5:0]  proto_err_a;
+    wire [7:0]  proto_err_a;
     wire        data_en_bb, data_en_b_b, obs_tick_b;
     wire [2:0]  pam_sel_b, win_state_b;
     wire [7:0]  cfg_version_b;
-    wire [5:0]  proto_err_b;
+    wire [7:0]  proto_err_b;
 
     dd1_d7a_gray_ctrl u_a (
         .clk(clk), .reset_n(reset_n), .system_en(system_en), .tick(tick), .mode(mode),
@@ -236,6 +236,8 @@ module tb_dd1_d7a_gray;
         input integer tdiv;
         input integer q1;
         input integer q2;
+        input integer q3;
+        input integer q4;
         integer intervals;
         begin
             drive_begin;
@@ -483,7 +485,7 @@ module tb_dd1_d7a_gray;
                     load_and_latch(pure_a, pure_b, ht_a, ht_b, pam_a, pam_b);
                     arm_start(40);
                     run_window(intervals, tdiv);
-                    load_and_latch(q1, q1, q1, q1, pam_a, pam_a);
+                    load_and_latch(q3, q3, q3, q3, pam_a, pam_a);
                     arm_start(40);
                     run_window(intervals, tdiv);
                 end
@@ -570,6 +572,204 @@ module tb_dd1_d7a_gray;
                     arm_start(40);
                     run_window(intervals, tdiv);
                 end
+                20: begin                                  // one load, two LATCH requests
+                    load_and_latch(pure_a, pure_b, ht_a, ht_b, pam_a, pam_b);
+                    drive_begin;
+                    latch_stb = 1'b1;                      // no new load behind this request
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b0;
+                    edges(2);
+                end
+                21: begin                                  // abort, then a bare START again
+                    load_and_latch(pure_a, pure_b, ht_a, ht_b, pam_a, pam_b);
+                    arm_start(40);
+                    tick_div = tdiv;
+                    drive_begin;
+                    blank = 1'b0;
+                    tick_run = 1'b1;
+                    edges(q1 * tdiv);
+                    drive_begin;
+                    blank = 1'b1;
+                    tick_run = 1'b0;
+                    edges(6);
+                    arm_start(40);                         // START while blank is still asserted, so the
+                                                           // refusal can only come from the withdrawn
+                                                           // authorisation: no new load, no new LATCH
+                    drive_begin;
+                    blank = 1'b0;                          // released after the start, as in a normal arm
+                    tick_div = tdiv;
+                    tick_run = 1'b1;
+                    edges(40 * tdiv);
+                    tick_run = 1'b0;
+                    edges(2);
+                    drive_begin;
+                    blank = 1'b1;
+                    edges(2);
+                end
+                22: begin                                  // abort, new load, no LATCH, then START
+                    load_and_latch(pure_a, pure_b, ht_a, ht_b, pam_a, pam_b);
+                    arm_start(40);
+                    tick_div = tdiv;
+                    drive_begin;
+                    blank = 1'b0;
+                    tick_run = 1'b1;
+                    edges(q1 * tdiv);
+                    drive_begin;
+                    blank = 1'b1;
+                    tick_run = 1'b0;
+                    edges(6);
+                    drive_begin;
+                    cfg_pure_a = q3; cfg_pure_b = q3;      // a new complete load, never latched
+                    cfg_ht_a = q3[5:0]; cfg_ht_b = q3[5:0];
+                    cfg_valid = 1'b1;
+                    edges(2);
+                    drive_begin;
+                    cfg_valid = 1'b0;
+                    arm_start(40);                         // START before the blank release
+                    tick_div = tdiv;
+                    drive_begin;
+                    blank = 1'b0;
+                    tick_run = 1'b1;
+                    edges(40 * tdiv);
+                    tick_run = 1'b0;
+                    edges(2);
+                    drive_begin;
+                    blank = 1'b1;
+                    edges(2);
+                end
+                23: begin                                  // a LATCH must not adopt a refused mode
+                    load_and_latch(pure_a, pure_b, ht_a, ht_b, pam_a, pam_b);
+                    drive_begin;
+                    mode = 2'd1;                           // system_en is still high: unsafe change
+                    cfg_ht_a = ht_b[5:0]; cfg_ht_b = ht_b[5:0];
+                    cfg_pam_a = pam_b[2:0]; cfg_pam_b = pam_b[2:0];
+                    cfg_valid = 1'b1;
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b1;                      // asks for the mode that was just refused
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b0;
+                    cfg_valid = 1'b0;
+                    edges(2);
+                    arm_start(40);                         // and the start has nothing authorised
+                    drive_begin;
+                    blank = 1'b0;
+                    tick_div = tdiv;
+                    tick_run = 1'b1;
+                    edges(40 * tdiv);
+                    tick_run = 1'b0;
+                    edges(2);
+                    drive_begin;
+                    blank = 1'b1;
+                    edges(2);
+                end
+                24: begin                                  // abort, then the complete recovery
+                    load_and_latch(pure_a, pure_b, ht_a, ht_b, pam_a, pam_b);
+                    arm_start(40);
+                    tick_div = tdiv;
+                    drive_begin;
+                    blank = 1'b0;
+                    tick_run = 1'b1;
+                    edges(q1 * tdiv);
+                    drive_begin;
+                    blank = 1'b1;
+                    tick_run = 1'b0;
+                    edges(6);
+                    load_and_latch(q3, q3, q3, q3, q4, q4);
+                    arm_start(40);
+                    run_window(intervals, tdiv);
+                end
+                25: begin                                  // short off-clock-edge blank/fault pulses
+                    load_and_latch(pure_a, pure_b, ht_a, ht_b, pam_a, pam_b);
+                    arm_start(40);
+                    tick_div = tdiv;
+                    drive_begin;
+                    blank = 1'b0;
+                    tick_run = 1'b1;
+                    edges(q1 * tdiv);                      // to the middle of the q1-th interval
+                    #(q3);                                 // plus an off-edge phase
+                    if (q2 == 1) begin
+                        fault = 1'b1;
+                    end else begin
+                        blank = 1'b1;
+                    end
+                    #(q4);                                 // the declared minimum pulse width
+                    if (q2 == 1) begin
+                        fault = 1'b0;
+                    end else begin
+                        blank = 1'b0;                      // withdrawn
+                    end
+                    edges((intervals + 9) * tdiv);
+                    tick_run = 1'b0;
+                    edges(2);
+                    drive_begin;
+                    blank = 1'b1;
+                    edges(2);
+                end
+                26: begin                                  // clock stalls in the middle of a window
+                    load_and_latch(pure_a, pure_b, ht_a, ht_b, pam_a, pam_b);
+                    arm_start(40);
+                    tick_div = tdiv;
+                    drive_begin;
+                    blank = 1'b0;
+                    tick_run = 1'b1;
+                    edges(q1 * tdiv);
+                    drive_begin;
+                    clk_stall = 1'b1;
+                    #(q2);
+                    clk_stall = 1'b0;
+                    edges((intervals + 9) * tdiv);
+                    tick_run = 1'b0;
+                    edges(2);
+                    drive_begin;
+                    blank = 1'b1;
+                    edges(2);
+                end
+                27: begin                                  // LATCH while armed is refused
+                    load_and_latch(pure_a, pure_b, ht_a, ht_b, pam_a, pam_b);
+                    arm_start(40);
+                    drive_begin;
+                    cfg_pure_a = q3; cfg_pure_b = q3;      // a real new load...
+                    cfg_valid = 1'b1;
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b1;                      // ...latched while the window is armed
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b0;
+                    cfg_valid = 1'b0;
+                    edges(1);
+                    run_window(intervals, tdiv);
+                end
+                28: begin                                  // LATCH and START on the same edge
+                    drive_begin;
+                    cfg_pure_a = pure_a[7:0]; cfg_pure_b = pure_a[7:0];
+                    cfg_ht_a = ht_a[5:0];     cfg_ht_b = ht_a[5:0];
+                    cfg_pam_a = pam_a[2:0];   cfg_pam_b = pam_a[2:0];
+                    cfg_valid = 1'b1;                      // the load is presented first, on its own
+                    edges(3);
+                    drive_begin;
+                    latch_stb = 1'b1;
+                    pwm_start = 1'b1;                      // both requests sampled by the same edge
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b0;
+                    pwm_start = 1'b0;
+                    cfg_valid = 1'b0;
+                    edges(2);
+                    drive_begin;
+                    blank = 1'b0;
+                    tick_div = tdiv;
+                    tick_run = 1'b1;
+                    edges(40 * tdiv);
+                    tick_run = 1'b0;
+                    edges(2);
+                    drive_begin;
+                    blank = 1'b1;
+                    edges(2);
+                end
                 default: begin
                     $display("TB-ERROR unknown profile %0d", profile);
                     $fatal(1);
@@ -594,11 +794,11 @@ module tb_dd1_d7a_gray;
         end
         $display("TB-DATA7A vectors=%s", vfile);
         ncases = 0;
-        forever begin
+        replay: forever begin
             rc = $fscanf(fd, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d",
                          cid, prof, md, pa, pb, ha, hb, pama, pamb, tdiv, p1, p2, p3, p4);
-            if (rc != 14) break;
-            run_case(cid, prof, md, pa, pb, ha, hb, pama, pamb, tdiv, p1, p2);
+            if (rc != 14) disable replay;
+            run_case(cid, prof, md, pa, pb, ha, hb, pama, pamb, tdiv, p1, p2, p3, p4);
             ncases = ncases + 1;
             $display("TB-CASE %0d profile %0d done at %0t", cid, prof, $time);
         end

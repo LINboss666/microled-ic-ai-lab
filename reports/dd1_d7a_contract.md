@@ -49,8 +49,13 @@ independent.
 | out | `pam_sel` | 3 | the amplitude-select request held for the whole window |
 | out | `win_state` | 3 | `IDLE / ARMED / RUNNING / DONE / ABORT`, observable |
 | out | `cfg_version` | 8 | increments on every accepted LATCH (auditable config identity) |
-| out | `proto_err` | 4 | `LATCH_REJECTED / INCOMPLETE_CFG / ILLEGAL_MODE / MODE_WHILE_RUNNING / START_REJECTED` (bit map; ≥1 non-zero = refusal happened and was recorded) |
+| out | `proto_err` | 8 | refusal bitmap, see section 5.1; one accepted LATCH clears it, a refused request never clears anything |
 | out | `obs_tick` | 1 | pulses at the ticks the controller actually accepts inside the running window; an audit node for tick consumption, never a ruler the checker measures with |
+
+`proto_err` grew from 6 to 8 bits in the review revision, because the review required a *separate*
+observable refusal reason for "LATCH with no new load" and for "LATCH asks for a mode that was never
+adopted"; folding those into `LATCH_REJECTED` would have made the two failures indistinguishable in
+the trace.
 
 Configuration interface is an **abstract parallel single-channel load**, and the encoding choice is
 explicit: the three fields are separate buses plus `cfg_valid` (not a packed union). For Pure, a valid
@@ -80,10 +85,10 @@ it is not a claim that 15 µA exists anywhere.
 ## 3. Start, tick and time endpoints
 
 * `pwm_start` is accepted once inside the preparation sequence where `blank=1`, `reset_n=0` has been
-  released, `fault=0`, the config is valid, `win_state` is `IDLE`/`DONE`/`ABORT` and `system_en`
-  permits it. Accepting clears the interval counter and moves to `ARMED`. It may be held for 40 ns;
-  **holding it high must not re-clear on every tick.** `pwm_start` opens no current and consumes no
-  interval 0.
+  released, `fault=0`, the config is valid **and authorised** (section 5), `win_state` is
+  `IDLE`/`DONE`/`ABORT` and `system_en` permits it. Accepting clears the interval counter and moves to
+  `ARMED`. It may be held for 40 ns; **holding it high must not re-clear on every tick.** `pwm_start`
+  opens no current and consumes no interval 0.
 * `t0` = the first valid tick after `blank` is released. Interval *k* is `[t0+k·T, t0+(k+1)·T)`; for
   M conducting intervals the output turns on at `t0` and off at `t0+M·T`; M=0 never turns on.
 * Window end is `t0+256·T` (Pure) / `t0+64·T` (Hybrid). Expressed on one tick stream that is **257 /
@@ -117,17 +122,58 @@ it is not a claim that 15 µA exists anywhere.
 * Abort/armed state is written with a single driver per register (one `always_ff` per state
   variable), so no signal is driven from two processes.
 
-## 5. Configuration atomicity
+## 5. Configuration freshness, authorisation and mode adoption
 
-* Two copies exist: load/next and display. Loading a next grey code during a running window is allowed
-  and must not change the running waveform; the displayed code, mode and PAM select stay frozen until
-  the next accepted LATCH.
-* LATCH is accepted only while `blank=1`, no window is running, and a complete new configuration is
-  present; it updates all related fields atomically and increments `cfg_version`.
-* Refused with an explicit recorded `proto_err` (never silently using an old code): LATCH with nothing
-  new, LATCH outside the safe phase, LATCH and the new-config presentation on the same reference edge
-  (version-ambiguous), illegal `mode`, and an incomplete configuration for the current mode.
-* Illegal `mode`, refused LATCH and mid-window mode change must never produce a moment of light.
+Two copies exist: load/next and display. Loading a next grey code during a running window is allowed
+and must not change the running waveform; the displayed code, mode and PAM select stay frozen until
+the next accepted LATCH.
+
+* A **load is a transaction, not a level.** `cfg_valid` rising (0 to 1) with the mode-relevant fields
+  present arms one `load_pending` token. An accepted LATCH consumes it. Holding `cfg_valid` high,
+  leaving the bus unchanged and pulsing LATCH again is a replay of a consumed load: it must be refused
+  with `STALE_CONFIG` and must not step `cfg_version`. Re-presenting the same grey code is legal only
+  through a new load transaction.
+* A **LATCH is accepted** only while `blank=1`, no window is running or armed, reset released,
+  `fault=0`, `system_en=1`, `mode` legal, `cfg_valid` high, an unconsumed load exists, and the
+  presented mode equals the already-accepted mode. It then updates every displayed field atomically,
+  authorises the display, consumes the load token and steps `cfg_version` by exactly one.
+* `win_state` encodings are `3'd0 IDLE, 3'd1 ARMED, 3'd2 RUNNING, 3'd3 DONE, 3'd4 ABORT`.
+* **Arming needs an authorised display.** `pwm_start` is accepted once, in the same safe preparation
+  phase as a LATCH (`blank=1`, no window running or armed, `fault=0`, `system_en=1`, reset released),
+  and only if the current display is authorised; a start presented after blank has already been
+  released is refused, so a test that wants to prove an authorisation refusal must present the start
+  first and release blank afterwards. Holding it high re-arms nothing. Because a LATCH and a
+  start arriving on the same sampling edge would order the two by process accident, the LATCH wins and
+  the start is refused with `START_REJECTED`: a start is always a later event.
+* **A mode is adopted only in the safe phase**: `system_en=0`, `blank=1`, no window running or armed.
+  A change of `mode` sampled at any other time is refused with `MODE_WHILE_RUNNING` and the accepted
+  mode stays as it is; a LATCH can never adopt a mode (`MODE_NOT_ADOPTED`), and neither a refused LATCH
+  nor a refused mode change clears a recorded error. Adoption invalidates the previous display
+  authorisation and the pending load, so the new mode needs its own load and LATCH. When a mode change
+  and a LATCH arrive on the same edge, adoption (if legal) happens first and the LATCH is refused.
+* **An abort withdraws the authorisation.** After a `blank` or `fault` abort, releasing the condition,
+  issuing a bare `pwm_start`, loading a new code without latching it, or latching without a new load,
+  must each leave the output dark; only a complete new load / LATCH / start sequence displays again.
+  The held `pam_sel` value is not cleared by an abort, because contract section 2 requires it to hold
+  until the next legal LATCH.
+* Refused, with an explicit recorded reason and never silently reusing an old code: LATCH with nothing
+  new, LATCH outside the safe phase or while a window runs or is armed, LATCH and the new load on the
+  same reference edge, an illegal `mode`, an incomplete configuration for the presented mode, a LATCH
+  presenting a mode that was not adopted, and a start with no authorised display.
+* Illegal `mode`, refused LATCH and a mid-window mode change must never produce a moment of light.
+
+### 5.1 Refusal bitmap
+
+| bit | name | set when |
+|---|---|---|
+| 0 | `LATCH_REJECTED` | a LATCH request is sampled outside the safe preparation phase |
+| 1 | `INCOMPLETE_CFG` | a LATCH request arrives with `cfg_valid` low for the presented mode |
+| 2 | `ILLEGAL_MODE` | the presented `mode` is neither Pure nor Hybrid |
+| 3 | `MODE_WHILE_RUNNING` | `mode` changes outside the safe phase, or is adopted while a window runs |
+| 4 | `START_REJECTED` | a `pwm_start` edge arrives with no authorised display, or on the same edge as a LATCH |
+| 5 | `LATCH_AMBIGUOUS` | `latch_stb` and a newly raised `cfg_valid` arrive on the same sampling edge |
+| 6 | `STALE_CONFIG` | a LATCH request arrives with no unconsumed load to commit |
+| 7 | `MODE_NOT_ADOPTED` | a LATCH presents a mode other than the accepted one |
 
 ## 6. Interface limit against the existing Data-6 cell
 

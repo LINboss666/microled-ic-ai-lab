@@ -32,8 +32,23 @@ if HERE not in sys.path:
 import repo_safety_rules as R                                    # noqa: E402
 
 D7A_PREFIXES = ('rtl/dd1_d7a_', 'tests/dd1_d7a/', 'scripts/dd1_d7a_',
-                'reports/dd1_d7a_', 'reports/agent_handoffs/DATA-7A.',
+                'reports/dd1_d7a_', 'reports/agent_handoffs/DATA-7A.', 'reports/tasks/DATA-7A',
                 'results/evidence/dd1_d7a_')
+# the review found that the first version of this packer silently left the task book out, so the
+# required set is now checked mechanically instead of relying on the prefix list alone
+REQUIRED = ('rtl/dd1_d7a_gray_ctrl.sv', 'tests/dd1_d7a/tb_dd1_d7a_gray.sv',
+            'scripts/dd1_d7a_check.py', 'scripts/dd1_d7a_trace.py', 'scripts/dd1_d7a_run.py',
+            'scripts/dd1_d7a_evidence_check.py', 'scripts/dd1_d7a_validate_handoff.py',
+            'reports/dd1_d7a_contract.md', 'reports/dd1_d7a_rtl.md',
+            'reports/dd1_d7a_review_fix.md', 'reports/tasks/DATA-7A.md',
+            'reports/tasks/DATA-7A-R1.md', 'reports/agent_handoffs/DATA-7A.md',
+            'reports/agent_handoffs/DATA-7A.json',
+            'results/evidence/dd1_d7a_cases.csv', 'results/evidence/dd1_d7a_control_cases.csv',
+            'results/evidence/dd1_d7a_negative.csv', 'results/evidence/dd1_d7a_edge_samples.csv',
+            'results/evidence/dd1_d7a_environment.json',
+            'results/evidence/dd1_d7a_checker_selftest.txt',
+            'results/evidence/dd1_d7a_write_guard.txt',
+            'results/evidence/dd1_d7a_freeze_security.txt')
 # the two shared files this round was explicitly allowed to touch, plus the constraints a reviewer
 # needs next to the new code
 ALSO = ('scripts/repo_safety_rules.py', 'scripts/test_safety_rules.py', 'AGENTS.md',
@@ -79,6 +94,15 @@ def main():
         subprocess.check_call(['git', '-C', PROJ, 'rev-parse', '--verify', rev + '^{commit}'])
     head_files = names(a.head)
     pick = [p for p in head_files if p.startswith(D7A_PREFIXES) or p in ALSO]
+    missing = [r for r in REQUIRED if r not in head_files]
+    absent = [r for r in REQUIRED if r not in pick]
+    if missing or absent:
+        print('BUNDLE: FAIL — required file set incomplete')
+        for m in missing:
+            print('  not tracked at head: %s' % m)
+        for m in absent:
+            print('  not selected by the prefix rules: %s' % m)
+        return 1
     if not any(p.startswith('rtl/dd1_d7a_') for p in pick):
         print('BUNDLE: FAIL — no RTL selected, the prefix list is wrong')
         return 1
@@ -118,6 +142,7 @@ def main():
                 'base=%s' % a.base,
                 'head=%s' % a.head,
                 'files=%d' % len(rows),
+                'required_files=%d all present and selected' % len(REQUIRED),
                 'changed_since_base=%d' % len(changed),
                 'safety_rules=%s' % hashlib.sha256(git('%s:scripts/repo_safety_rules.py'
                                                        % a.head)).hexdigest(),

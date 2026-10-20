@@ -1,30 +1,114 @@
-DATA-7A freeze and security check transcript
-generated: 2026-10-20T13:38:06Z by running, in the worktree at branch poc/data-gray-d7a:
+DATA-7A-R1 freeze and security check transcript
+generated: 2026-10-20T17:25:32Z by running, in the worktree at branch poc/data-gray-d7a-r1 fixed on reviewed base 6a1f5a192f3f1618499335c4365d717bfcadef39
+the repair round re-ran every gate below after the RTL, testbench, checker and runner were
+changed; the shared safety rules and the copied handoff validator were not.
 
 == 1. checker self-certification (synthetic traces, no EDA)
-synthetic traces written under D:\ic617_d7a\review
+$ python scripts/dd1_d7a_run.py --selftest
+PASS table PURE code 0                      hand-typed 0, function says 0
+PASS table PURE code 1                      hand-typed 1, function says 1
+PASS table PURE code 2                      hand-typed 2, function says 2
+PASS table PURE code 7                      hand-typed 7, function says 7
+PASS table PURE code 128                    hand-typed 128, function says 128
+PASS table PURE code 254                    hand-typed 254, function says 254
+PASS table PURE code 255                    hand-typed 256, function says 256
+PASS table HYBRID code 0                    hand-typed 0, function says 0
+PASS table HYBRID code 1                    hand-typed 1, function says 1
+PASS table HYBRID code 2                    hand-typed 2, function says 2
+PASS table HYBRID code 32                   hand-typed 32, function says 32
+PASS table HYBRID code 62                   hand-typed 62, function says 62
+   ... 46 lines omitted ...
+PASS write guard still writes when rows are complete official write path not blocked
+
+synthetic traces written under <repo>\review
 CHECKER_SELFTEST: PASS
+rc=0
 
 == 2. dry run (environment, frozen digests, plan; no writes outside review/)
+$ python scripts/dd1_d7a_run.py --dry-run --out review\dd1_d7a\r1_20261021
+{
+ "frozen_digests": {
+  "spectre/dd1_d6_bias_core.scs": "4115e2d17a86fb92e7c222df085f1d1a82da14cb7640654d90f4e2589e9b31e7",
+  "spectre/dd1_d6_sink_core.scs": "6cfe2338014a4b152833ef1974f197b0e4c65e963947f57f0cc8b79b73ee91db"
+ },
  "frozen_verified": {
   "spectre/dd1_d6_bias_core.scs": "MATCH",
   "spectre/dd1_d6_sink_core.scs": "MATCH"
+ },
  "oa_writes": 0,
- "planned_control": 24,
+ "planned_control": 36,
  "planned_main_groups": {
- "planned_main_total": 1536,
- "planned_mixed": 6,
- "spectre_runs": 0,
+   ... 21 lines omitted ...
+ },
+ "would_write": "review/dd1_d7a/<run_id> only; results/evidence needs --export"
+}
 DRY_RUN: PASS
+rc=0
 
 == 3. safety rule two-direction tests
+$ python scripts/test_safety_rules.py
 safety_rules cases: secret=7/7 vendor=4/4 path=10/10 ext=2/2 reject=6/6
 SAFETY_RULES_TEST: PASS
+rc=0
 
-== 4. evidence identity recomputed from the bytes to be committed
+== 4. source provenance over the whole tree
+$ python scripts/provenance_check.py
+provenance_check: files=401 labelled_lines=528 violations=0
+SOURCE_PROVENANCE_CHECK: PASS
+rc=0
+
+== 5. frozen Spectre device-count check
+$ python scripts/netlist_stats.py
+cell = spectre/C2MOS_DFF.scs
+subckt ports = d clk q qbar vdd vss
+local parameters = ln=2e-7, wc=2e-6, wcp=4e-6, wk=5e-7, wkp=1e-6
+TOTAL MOS = 18   (NMOS=9 PMOS=9)   models={'n18': 9, 'p18': 9}
+
+grouped by the cell's own instance-name convention:
+  internal clock inverter     2  mn_c(n18 d=clkb g=clk s=vss b=vss w=2e-6 l=2e-7), mp_c(p18 d=clkb g=clk s=vdd b=vdd w=4e-6 l=2e-7)
+  master clocked stage        4  mp_m1(p18 d=x1 g=clk s=vdd b=vdd w=4e-6 l=2e-7), mp_m2(p18 d=m g=d s=x1 b=vdd w=4e-6 l=2e-7), mn_m1(n18 d=x2 g=clkb s=vss b=vss w=2e-6 l=2e-7), mn_m2(n18 d=m g=d s=x2 b=vss w=2e-6 l=2e-7)
+  master keeper               4  mn_k1(n18 d=mb g=m s=vss b=vss w=5e-7 l=2e-7), mp_k1(p18 d=mb g=m s=vdd b=vdd w=1e-6 l=2e-7), mn_k2(n18 d=m g=mb s=vss b=vss w=5e-7 l=2e-7), mp_k2(p18 d=m g=mb s=vdd b=vdd w=1e-6 l=2e-7)
+  slave clocked stage         4  mp_s1(p18 d=y1 g=clkb s=vdd b=vdd w=4e-6 l=2e-7), mp_s2(p18 d=q g=m s=y1 b=vdd w=4e-6 l=2e-7), mn_s1(n18 d=y2 g=clk s=vss b=vss w=2e-6 l=2e-7), mn_s2(n18 d=q g=m s=y2 b=vss w=2e-6 l=2e-7)
+  slave keeper                4  mn_k3(n18 d=qbar g=q s=vss b=vss w=5e-7 l=2e-7), mp_k3(p18 d=qbar g=q s=vdd b=vdd w=1e-6 l=2e-7), mn_k4(n18 d=q g=qbar s=vss b=vss w=5e-7 l=2e-7), mp_k4(p18 d=q g=qbar s=vdd b=vdd w=1e-6 l=2e-7)
+
+report claims checked against the parser:
+  ok       c2mos_dff_result.md:22   '18 MOS' (source says 18)
+  ok       c2mos_dff_result.md:157  '18 MOS' (source says 18)
+  ok       c2mos_review_notes.md:78   '18 MOS' (source says 18)
+
+DEVICE_COUNT_CHECK: PASS
+rc=0
+
+== 6. evidence identity recomputed from the published bytes
+$ python scripts/dd1_d7a_evidence_check.py
+PASS   MISSING_EVIDENCE: dd1_d7a_cases.csv exists and is non-empty
+PASS   MISSING_EVIDENCE: dd1_d7a_control_cases.csv exists and is non-empty
+PASS   MISSING_EVIDENCE: dd1_d7a_negative.csv exists and is non-empty
+PASS   MISSING_EVIDENCE: dd1_d7a_edge_samples.csv exists and is non-empty
+PASS   MISSING_EVIDENCE: dd1_d7a_manifest.json exists and is non-empty
+PASS   MISSING_EVIDENCE: dd1_d7a_environment.json exists and is non-empty
+PASS   MISSING_EVIDENCE: dd1_d7a_checker_selftest.txt exists and is non-empty
+PASS   MISSING_EVIDENCE: dd1_d7a_write_guard.txt exists and is non-empty
+PASS   SOURCE_DIGEST: 6 source files hash-match the manifest
+PASS   EVIDENCE_DIGEST: 7/7 evidence files hash-match the manifest ; manifest is not self-hashed and the freeze transcript is hashed by the handoff
+PASS   ROW_COUNT: main matrix rows=1536 (want 1536)
+PASS   UNIQUE_CASES: unique case ids=1536
+   ... 26 lines omitted ...
+PASS   FOUR_STATE: the simulator is declared four-state
 PASS   TOOL_PROVENANCE: toolchain digest recorded matches the pinned asset digest
 
 EVIDENCE_IDENTITY: PASS (0 checks failed)
+rc=0
 
-== 5. precommit gate over staged content (run again by the git hook at commit time)
-see reports/agent_handoffs/DATA-7A.md for the staged/history/objects results
+== 7. precommit gate over staged content
+the git pre-commit hook runs scripts/precommit_safety_check.py at commit time; the
+staged, history, object and unreachable-blob results for this round are recorded
+in reports/dd1_d7a_review_fix.md and reports/agent_handoffs/DATA-7A.md.
+The unreachable blob 955497fb18ac reported by the previous round stays reported as
+it was found: no garbage collection, no content printed, no gate relaxed.
+
+The handoff structure validator (scripts/dd1_d7a_validate_handoff.py, an unchanged
+byte-for-byte copy) is run over the delivery JSON in the metadata commit and its
+command and exit code are quoted next to the file it judged.
+
+NEW_SPECTRE_RUNS=0  NEW_OA_WRITES=0  no VM, Cadence or OA access in this round

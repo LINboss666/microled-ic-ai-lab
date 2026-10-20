@@ -32,6 +32,9 @@ REQUIRED_EVIDENCE = ['dd1_d7a_cases.csv', 'dd1_d7a_control_cases.csv', 'dd1_d7a_
                      'dd1_d7a_environment.json', 'dd1_d7a_checker_selftest.txt',
                      'dd1_d7a_write_guard.txt']
 NUMERIC = re.compile(r'^-?\d+(\.\d+)?$')
+MUTATION_CLASSES = ['pure255_only255', 'counter_rollover_reopens', 'blank_gate_removed',
+                    'start_level_rearm', 'instance_b_one_tick_late', 'auto_resume_after_abort',
+                    'stale_latch_accepted', 'abort_reauthorises_display', 'latch_adopts_mode']
 RESERVED = ['PWM_MOS_IMPLEMENTATION', 'PAM_8LEVEL_ANALOG_IMPLEMENTATION',
             'HYBRID_CURRENT_INTEGRATION', 'GRAY_LUT_IMPLEMENTATION', 'OPTICAL_EFFECTIVE_BITS',
             'PHYSICAL_CDC_AND_SKEW', 'NEW_SPECTRE_RUNS', 'NEW_OA_WRITES', 'LAYOUT_DRC_LVS_PEX',
@@ -102,14 +105,15 @@ def main():
     note(not bad, 'SOURCE_DIGEST', '%d source files hash-match the manifest' % len(man['sources'])
          + ('' if not bad else ' ; mismatched: %s' % bad))
     bad = []
-    for name, d in sorted(man['evidence'].items()):
+    checked = [n for n in man['evidence'] if n != 'dd1_d7a_manifest.json']
+    for name in sorted(checked):
+        d = man['evidence'][name]
         p = os.path.join(EV, name)
-        if name == 'dd1_d7a_manifest.json':
-            continue                        # a manifest cannot hash itself
         if not os.path.exists(p) or R.sha256(p) != d['sha256']:
             bad.append(name)
-    note(not bad, 'EVIDENCE_DIGEST', '%d evidence files hash-match the manifest'
-         % (len(man['evidence']) - 1) + ('' if not bad else ' ; mismatched: %s' % bad))
+    note(not bad, 'EVIDENCE_DIGEST', '%d/%d evidence files hash-match the manifest'
+         % (len(checked) - len(bad), len(checked)) + ('' if not bad else ' ; mismatched: %s' % bad)
+         + ' ; manifest is not self-hashed and the freeze transcript is hashed by the handoff')
 
     # 2. the main matrix: row count, uniqueness, finiteness, verdicts, both instances
     rows = rows_of(os.path.join(EV, 'dd1_d7a_cases.csv'))
@@ -175,18 +179,29 @@ def main():
     # 4. control and negative tables
     ctl = rows_of(os.path.join(EV, 'dd1_d7a_control_cases.csv'))
     kinds = sorted(set(r['kind'] for r in ctl if r['kind']))
-    note(len(ctl) >= 24, 'CONTROL_ROWS', 'control/mixed rows=%d over %d scenario kinds'
+    note(len(ctl) >= 42, 'CONTROL_ROWS', 'control/mixed rows=%d over %d scenario kinds (want >= 42)'
          % (len(ctl), len(kinds)))
     unexpected = [r for r in ctl if r['verdict'] not in ('PASS',) and r['expect'] != 'refusal']
     note(not unexpected, 'CONTROL_VERDICTS',
          'control rows that failed without being declared as a required refusal: %d'
          % len(unexpected))
     ran = set(r['case_id'] for r in ctl)
-    note(len(ran) >= 24, 'CONTROL_COVERAGE', '%d distinct control case ids actually executed'
+    note(len(ran) >= 42, 'CONTROL_COVERAGE', '%d distinct control case ids actually executed'
          % len(ran))
+    attested = [r for r in ctl if r.get('stimulus', '').strip()]
+    note(len(attested) == len(ctl), 'STIMULUS_DECLARED',
+         '%d/%d control rows carry their declared stimulus alongside what was observed'
+         % (len(attested), len(ctl)))
+    unattested = [r['case_id'] for r in ctl
+                  if 'STIMULUS_UNATTESTED' in r['failures'] or 'STIMULUS_MISMATCH' in r['failures']]
+    note(not unattested, 'STIMULUS_MATCHES', 'rows whose declared stimulus the trace contradicts: %s'
+         % (unattested or 'none'))
     neg = rows_of(os.path.join(EV, 'dd1_d7a_negative.csv'))
     det = [r for r in neg if r['status'] == 'DETECTED' and r['class'] != 'checker_selftest']
-    note(len(det) == 6, 'MUTATION_CLASSES', '%d of six mutation classes DETECTED' % len(det))
+    note(len(det) == len(MUTATION_CLASSES), 'MUTATION_CLASSES',
+         '%d of %d mutation classes DETECTED' % (len(det), len(MUTATION_CLASSES)))
+    note(sorted(r['class'] for r in det) == sorted(MUTATION_CLASSES), 'MUTATION_SET',
+         'the six original plus three new failure models are all represented')
     notdet = [r['class'] for r in neg if r['status'] not in ('DETECTED',)]
     note(not notdet, 'MUTATION_ALL_DETECTED', 'not detected: %s' % (notdet or 'none'))
     nodigest = [r['class'] for r in neg if r['class'] != 'checker_selftest'

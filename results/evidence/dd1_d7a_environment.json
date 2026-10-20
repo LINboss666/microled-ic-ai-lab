@@ -7,8 +7,8 @@
   "synthesis": "yosys -s <run>/structure.ys"
  },
  "counts": {
-  "control_pass": 23,
-  "control_rows": 24,
+  "control_pass": 35,
+  "control_rows": 36,
   "main_pass": 1536,
   "main_rows": 1536,
   "mixed_pass": 6,
@@ -16,82 +16,92 @@
   "xprobe_expected": 1,
   "xprobe_refused": 1
  },
+ "export_gates": {
+  "CONTROL_AND_ABORT": true,
+  "MIXED": true,
+  "MUTATION_DETECTION": true,
+  "PURE_MATRIX": true,
+  "STIMULUS_ATTESTED": true,
+  "SYNTHESIS_STRUCTURE": true,
+  "XPROBE_REFUSED": true
+ },
  "four_state": true,
  "groups": [
   {
    "aliased_ids": 24,
    "name": "pure_t30",
    "same_time_edges": 0,
-   "seconds": 24.68,
-   "signals": 216,
+   "seconds": 26.08,
+   "signals": 228,
    "tb_cases": 256,
    "vcd": "trace_pure_t30.vcd",
-   "vcd_bytes": 16286320,
-   "vcd_sha256": "cdbe40512cabf261c552652afdd5ef97b70a65296b2306572130b2e88dc2755d",
+   "vcd_bytes": 16301363,
+   "vcd_sha256": "1793c74f45f7c3102ba474e41e78a492d85b85861c2e07ddd6a040b34f5392cb",
    "vvp_rc": 0
   },
   {
    "aliased_ids": 24,
    "name": "pure_t50",
    "same_time_edges": 0,
-   "seconds": 40.05,
-   "signals": 216,
+   "seconds": 42.32,
+   "signals": 228,
    "tb_cases": 256,
    "vcd": "trace_pure_t50.vcd",
-   "vcd_bytes": 21929630,
-   "vcd_sha256": "211f32705d521b52ce62277812175bfb1c666436fdbda41b214d5f13d51161c7",
+   "vcd_bytes": 21944673,
+   "vcd_sha256": "035ff9725aa3a30e8e700e8c5e175d3596e3ff69a66e7dbdd43d42962fbf68cf",
    "vvp_rc": 0
   },
   {
    "aliased_ids": 24,
    "name": "hyb_t120",
    "same_time_edges": 0,
-   "seconds": 82.28,
-   "signals": 216,
+   "seconds": 83.06,
+   "signals": 228,
    "tb_cases": 512,
    "vcd": "trace_hyb_t120.vcd",
-   "vcd_bytes": 25134665,
-   "vcd_sha256": "76257b00177a5099f80fcc9c1ba0e7c8382fd33a98588643643afca017a5ac15",
+   "vcd_bytes": 25173260,
+   "vcd_sha256": "d7d2bafa6b3e44da5fc5cc923ed1c10de7c169e27fb0282455357b6e8dd481fe",
    "vvp_rc": 0
   },
   {
    "aliased_ids": 24,
    "name": "hyb_t200",
    "same_time_edges": 0,
-   "seconds": 112.94,
-   "signals": 216,
+   "seconds": 111.0,
+   "signals": 228,
    "tb_cases": 512,
    "vcd": "trace_hyb_t200.vcd",
-   "vcd_bytes": 38145761,
-   "vcd_sha256": "43570dc2e3e4e5294e90afee65ad3db2e487de9ed09234df81609db56e09d1fc",
+   "vcd_bytes": 38184356,
+   "vcd_sha256": "7376cfddaed1c97caf7d8ff59caf3ac1af49824c0bc63a912e611f2ac12c5a5b",
    "vvp_rc": 0
   },
   {
    "aliased_ids": 24,
    "name": "control",
    "same_time_edges": 0,
-   "signals": 216,
-   "tb_cases": 24,
+   "signals": 228,
+   "tb_cases": 36,
    "vcd": "trace_control.vcd",
-   "vcd_bytes": 1386597,
-   "vcd_sha256": "d2f564e5c67b8e191b5885de41b30247ac0b3214c5091c2557ab21c3e76eacd7",
+   "vcd_bytes": 2058317,
+   "vcd_sha256": "6aa5c483a9367cb5b83bf58254ad353de01e0aa3c2955cfb1f4d035e4f32ff24",
    "vvp_rc": 0
   },
   {
    "aliased_ids": 24,
    "name": "mixed",
    "same_time_edges": 0,
-   "signals": 216,
+   "signals": 228,
    "tb_cases": 6,
    "vcd": "trace_mixed.vcd",
-   "vcd_bytes": 360358,
-   "vcd_sha256": "ca09c55eb2207b8e4f101c4fbcf9b75dfc8bae667c726e3044aa6e47eb9a7c28",
+   "vcd_bytes": 361534,
+   "vcd_sha256": "760b1bf9cfd9d2fd113772e0a7c049dc115bbe8660b08fdd0cc53092737fbf76",
    "vvp_rc": 0
   }
  ],
+ "identity_verified": true,
  "mutation": {
-  "detected": 6,
-  "total": 6
+  "detected": 9,
+  "total": 9
  },
  "no_credentials_no_host_identity_no_private_paths": true,
  "oa_writes": 0,
@@ -113,6 +123,7 @@
   "PWM_MOS_IMPLEMENTATION": "NOT_RUN",
   "SOA_SIGNOFF": "NO"
  },
+ "run_id": "r1_20261021",
  "simulator": {
   "iverilog": "Icarus Verilog version 14.0 (devel) (s20260301-626-g7e3d0c6bd-dirty)",
   "vvp": "Icarus Verilog runtime version 14.0 (devel) (s20260301-626-g7e3d0c6bd-dirty)",
@@ -123,15 +134,27 @@
   "vvp": "937563fccac9722ec59344ee6cb3035ff749c0bf32dba77e41ae77fb363d7af4",
   "yosys": "5ea05b55ee5e7f193b0d9960460c2fcf12fc520aa1e494e972ad394795c1b431"
  },
+ "source_digests_checked": [
+  "checker_sha256",
+  "reader_sha256",
+  "rtl_sha256",
+  "tb_sha256"
+ ],
  "sources": {
-  "checker_sha256": "a77de155191433128ec243c86de8a8139ca9ee2ea9fce2206d34c1a1389f0a2c",
-  "reader_sha256": "df98705ec594954872b0b27e39a0afd1458676602823a94b6ad0d520a1862c4b",
-  "rtl_sha256": "04e5aadf80dcfe0654a65a9b718b6402479101e70f7b8606ed5ffee0955a6b48",
-  "tb_sha256": "2f5abe0275751944c631a5ed6b793fec7101b7b833ce3889e64bf4b044be374f"
+  "checker_sha256": "86b1659cb155e2b5c17ec1409ac2c5994d5bc7d84da0b061015e7233eebed680",
+  "reader_sha256": "708c37027fb11d250b48d9ada55616c6591525e4dad339f00a33d1a63382696a",
+  "rtl_sha256": "fff22f96c15beefd800b199b2f12a9a69bd192d3603448ad6c0ea1e188ad65ee",
+  "tb_sha256": "3e5074f7129116793588d59916880972969db4b3c2792724ba2a0d27d2e574a0"
  },
  "spectre_runs": 0,
+ "supersedes": {
+  "baseline_delivery": "6a1f5a192f3f1618499335c4365d717bfcadef39",
+  "previous_run_id": "FINAL",
+  "reason": "R1 review fixes: abort re-authorisation, configuration freshness, safe-phase mode adoption, export failure guard, stimulus coverage"
+ },
  "synthesis": "clean",
  "task": "DATA-7A",
+ "task_revision": "DATA-7A-R1",
  "toolchain_provenance": {
   "asset_bytes": 603893871,
   "installed_outside_repo": true,

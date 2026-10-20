@@ -149,6 +149,10 @@ class Trace(object):
                     raise VcdError('timestamp %d goes backwards' % t_ps)
                 if t_ps == last_ps:
                     self.rezeroed += 1
+                    raise VcdError('duplicate timestamp %d: the dump states the same time twice, and the '
+                                   'contract requires such a trace to be refused rather than guessed at '
+                                   '(many signal changes inside ONE time block are normal, two blocks '
+                                   'with the same value are not)' % t_ps)
                 last_ps = t_ps
                 continue
             if line.startswith('$'):

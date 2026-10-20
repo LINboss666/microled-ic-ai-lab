@@ -20,6 +20,20 @@ Three concurrent domains of behaviour, deliberately separated:
 | `tick_accept`, `abort_now`, `latch_ok`, `start_ok`, refusal set | `wire` expressions | decisions sampled on the reference edge |
 | `data_en`, `data_en_b`, `obs_tick`, `pam_sel`, `win_state`, `cfg_version`, `proto_err` | `assign` from one register each, or the register directly | output-off priority is combinational |
 
+Two registers exist only because of the independent review, each with exactly one driver:
+
+* `auth_q` — the display authorisation. Set only by an accepted LATCH; cleared by reset, by safe-phase
+  mode adoption and by an abort. `start_ok` requires it, so a bare `pwm_start` after an abort cannot
+  re-light the old configuration, while a window that completed normally keeps its authorisation for
+  the next frame.
+* `load_pending_q` — the consumable load token. Set by the rising edge of `cfg_valid`, cleared by the
+  accepted LATCH that commits it, and dropped without committing by a reset or a safe-phase mode
+  change. "One load feeds one LATCH" is therefore a property of the circuit, not of testbench
+  discipline.
+
+`pam_q` is written only at an accepted LATCH and is never cleared by an abort, a window end or PWM
+off; `disp_mode_q` is written only by the safe-phase adoption path, never by a LATCH.
+
 No signal is driven from two processes. There is no `initial` value, no `#delay`, no `force`, and no
 hierarchy below the module, which is what the yosys pass re-checks independently (section 5).
 
@@ -59,7 +73,9 @@ clears `run_q`; withdrawing blank or clearing fault cannot resume, because tick 
 
 ## 4. Refusals
 
-`proto_err` is a sticky six-bit map cleared only by an accepted LATCH:
+`proto_err` is a sticky eight-bit map. An accepted LATCH clears the six LATCH-family bits; a start
+refusal or an unsafe mode change sampled on that same edge survives, so a successful action cannot
+erase the evidence of a concurrent protocol violation:
 
 | bit | name | set when |
 |---|---|---|
@@ -67,7 +83,9 @@ clears `run_q`; withdrawing blank or clearing fault cannot resume, because tick 
 | 1 | `INCOMPLETE_CFG` | a LATCH request arrives with `cfg_valid` low for the presented mode |
 | 2 | `ILLEGAL_MODE` | a LATCH request arrives with a `mode` code that is neither Pure nor Hybrid |
 | 3 | `MODE_WHILE_RUNNING` | `mode` changes while the display is enabled or a window is armed/running |
-| 4 | `START_REJECTED` | a `pwm_start` edge arrives when arming is not allowed |
+| 4 | `START_REJECTED` | a `pwm_start` edge arrives with no authorised display, or on the same edge as a LATCH |
+| 6 | `STALE_CONFIG` | a LATCH request arrives with no unconsumed load behind it |
+| 7 | `MODE_NOT_ADOPTED` | a LATCH presents a mode other than the one adopted in the safe phase |
 | 5 | `LATCH_AMBIGUOUS` | `latch_stb` and a newly presented `cfg_valid` arrive on the same sampling edge |
 
 A refused request never changes the displayed code, mode or PAM select, and never lights: LATCH is the
@@ -81,7 +99,7 @@ no cell library): `read_verilog -sv`, `hierarchy -check -top`, `proc`, `opt_expr
 `select -assert-none` for `$dlatch`, `$sr`, `$dffe`, `$memory`, `$anyseq`, `$anyconst`. This is a
 front-end expansion and structural statement only: no technology mapping, no timing, no area.
 
-The inferred storage is 18 async-reset flip-flop cells (6 `$adff`, 12 `$adffe`) covering the window
+The inferred storage is 21 async-reset flip-flop cells (6 `$adff`, 15 `$adffe`) covering the window
 state, the interval index, the target count, the run flag, the display copies, the version counter,
 the held PAM code, the request-edge memories (`latch_prev_q`, `start_prev_q`, `cfgv_prev_q`,
 `mode_prev_q`) and the six refusal bits. Every one of them is intentional sequencer state; there is no

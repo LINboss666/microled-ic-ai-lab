@@ -151,7 +151,7 @@ TBI = ('clk', 'tick', 'blank', 'fault', 'reset_n', 'system_en', 'latch_stb', 'pw
        'cfg_valid', 'case_id', 'mode')
 DUTO = ('data_en', 'data_en_b', 'pam_sel', 'win_state', 'cfg_version', 'proto_err', 'obs_tick',
         'cfg_pure', 'cfg_hyb_time', 'cfg_hyb_pam')
-PROTO_ERR_W = 6
+PROTO_ERR_W = 8
 REF_PERIOD_PS = 10 * PS                    # the contract's fixed digital POC reference clock
 
 
@@ -404,6 +404,21 @@ def judge_main(tr, sm, idx, cs, ce, fails):
     if bad_s:
         fails.append(Fail('WIN_STATE', ' ; '.join(bad_s[:3])))
     r['win_state'] = 'PASS' if not bad_s else 'FAIL'
+    # the completion boundary is read out of this instance's own state trace, not computed from the
+    # shared stimulus, so a late channel cannot hide behind the common t0
+    done_e = [t for t, v in tr.edges(sm.o(idx, 'win_state'))
+              if t0 <= t <= min(ce + T, window_end + 4 * T) and v == format_vec(3, 3)]
+    if not done_e:
+        fails.append(Fail('DONE_MISSING', '%s.win_state never reaches DONE inside the case, so this '
+                                          'channel did not finish the window' % sm.tag[idx]))
+        r['done_ns'] = 'none'
+    elif done_e[0] != window_end:
+        fails.append(Fail('DONE_EDGE', '%s.win_state reaches DONE at %s ns, contract says the window '
+                                       'end %s ns' % (sm.tag[idx], fmt_ns(done_e[0]),
+                                                      fmt_ns(window_end))))
+        r['done_ns'] = fmt_ns(done_e[0])
+    else:
+        r['done_ns'] = fmt_ns(done_e[0])
 
     vers = tr.values_in(sm.o(idx, 'cfg_version'), cs, ce)
     ok_v0, v0, _ = sig_bits(tr, sm.o(idx, 'cfg_version'), cs, 'is cfg_version at the case start', fails)
@@ -484,23 +499,37 @@ def check_main_trace(path, run_id=''):
 # ------------------------------------------------------------------- control / abort judgement
 CONTROL_REQUIREMENT = {
     'async_off_between_edges': 'blank or fault asserted between clock edges pulls data_en low at that '
-                               'same simulation time, on both channels',
+                               'same simulation time, on both channels, and the declared pulse width '
+                               'and phase are what the trace actually shows',
     'no_auto_resume': 'withdrawing blank, clearing fault or releasing reset does not re-open the aborted '
-                      'window',
+                      'window, and the abort is recorded',
     'start_held_40ns_once': 'PWM_START held 40 ns is accepted once; the window keeps the code width',
     'tick_in_blank_consumed': 'a tick inside blank or before an accepted start consumes nothing, and the '
                               'first armed window still matches its code',
     'window_ok': 'this window is exactly as many conducting intervals as the displayed code, measured on '
-                 'both channels',
-    'mixed_codes': 'the two channels carry different codes but share one window start and end',
+                 'both channels, with the stimulus attested first',
+    'mixed_codes': 'the two channels carry different codes but share one window start and completion '
+                   'edge, each measured from that channel\'s own output',
     'pam_toggle': 'each window holds its own latched PAM code and never falls back at PWM off',
     'refused_dark': 'the request is refused, recorded in proto_err, and produces no light at all',
-    'refused_then_window': 'the ambiguous request is refused and recorded, and only the later clean '
-                           'sequence lights',
+    'refused_then_window': 'the refused request is recorded and does not disturb the window that the '
+                           'accepted request already committed',
     'dark_only': 'with no accepted configuration nothing may light and the window state never runs',
-    'clock_stall': 'a frozen reference domain consumes no tick and holds the output off',
+    'clock_stall': 'a frozen reference domain consumes no tick and holds the output state, in the phase '
+                   'the scenario declares',
     'display_frozen': 'loading the next grey code during a running window moves neither the waveform nor '
                       'the held PAM code',
+    'config_freshness': 'one complete load feeds exactly one accepted LATCH; a replayed LATCH is refused '
+                        'and does not step the version',
+    'abort_reauthorise': 'after an abort neither a bare start nor a load without a LATCH re-lights the '
+                         'old configuration',
+    'mode_bypass': 'a mode refused in the unsafe phase cannot be adopted through a LATCH, and the '
+                   'refusal is not erased',
+    'mode_switch_safe': 'a mode adopted in the safe phase is what the following window really displays',
+    'recover_full_sequence': 'a complete new load / LATCH / start after an abort displays the new code',
+    'code_edges': 'the code boundary values keep their contract widths on both channels in both windows',
+    'start_latch_same_edge': 'LATCH and START on one sampling edge: the LATCH commits, the start is '
+                            'refused, and nothing lights',
 }
 
 E_LATCH_REJECTED = 1
@@ -509,50 +538,170 @@ E_ILLEGAL_MODE = 4
 E_MODE_WHILE_RUNNING = 8
 E_START_REJECTED = 16
 E_LATCH_AMBIGUOUS = 32
+E_STALE_CONFIG = 64
+E_MODE_NOT_ADOPTED = 128
+
+
+def bits_set(tr, name, cs, ce, want, fails, who):
+    vals = sorted(tr.values_in(name, cs, ce))
+    hit = [v for v in vals if not any(c in tv.XZ for c in v) and (int(v, 2) & want) == want]
+    if not hit:
+        fails.append(Fail('REFUSAL_NOT_RECORDED', '%s never shows bit %d in %s' % (who, want, vals)))
+    return hit
+
+
+def no_light(tr, sm, cs, ce, fails, t_from=None, who=''):
+    """this channel must not conduct from t_from to the end of the case"""
+    start = cs if t_from is None else t_from
+    out = []
+    for idx in (0, 1):
+        rises = tr.rises(sm.o(idx, 'data_en'), start, ce)
+        if rises:
+            fails.append(Fail('LIGHT_AFTER_REFUSAL', '%s.data_en opens at %s ns%s'
+                              % (sm.tag[idx], fmt_ns(rises[0]), who)))
+        out.append('%s=%d' % (sm.tag[idx], len(rises)))
+    return ' '.join(out)
+
+
+def attest_windows(tr, sm, cs, ce, sc, fails, idx=0, stable_codes=True):
+    """check the scenario's declared (mode, code, pam) per window against the trace it claims to show"""
+    declared = sc.get('windows', [])
+    measured = []
+    blank_f = tr.falls(sm.i('blank'), cs, ce)
+    if declared and len(blank_f) < len(declared):
+        fails.append(Fail('STIMULUS_UNATTESTED', 'the scenario declares %d window(s) but the trace shows '
+                                                 '%d blank release(s)' % (len(declared), len(blank_f))))
+    want = sc.get('mode_values', [])
+    if want:
+        vals = sorted(set(int(v, 2) for _t, v in tr.edges(sm.i('mode'))
+                          if v and not any(c in tv.XZ for c in v)))
+        missing = [m for m in want if m not in vals]
+        if missing:
+            fails.append(Fail('STIMULUS_UNATTESTED', 'the mode bus never shows %s (saw %s)'
+                              % (missing, vals)))
+    for n in range(len(declared)):
+        w = measure_nth_window(tr, sm, idx, cs, ce, fails, n, stable_codes=stable_codes)
+        measured.append(w)
+        if not w:
+            continue
+        dm, dc, dp = list(declared[n])[:3]
+        if w['mode'] != dm or w['code'] != dc or w['pam_exp'] != dp:
+            fails.append(Fail('STIMULUS_MISMATCH', 'window %d was declared %s code=%s pam=%s but the '
+                                                   'trace reads %s code=%s pam=%s'
+                              % (n, dm, dc, dp, w['mode'], w['code'], w['pam_exp'])))
+    return measured
+
+
+def w_abort(n):
+    """is this window declared as deliberately aborted?"""
+    return n in getattr(judge_windows, 'abort_windows', set())
+
+
+def judge_windows(tr, sm, cs, ce, sc, fails, measured, start_at=0):
+    """after attestation, every declared window must conduct exactly its own interval count"""
+    out = []
+    judge_windows.abort_windows = set(int(x) for x in sc.get('aborted_windows', []))
+    for n in range(start_at, len(measured)):
+        w = measured[n]
+        if not w:
+            continue
+        for idx in (0, 1):
+            one = w if idx == 0 else measure_nth_window(tr, sm, idx, cs, ce, fails, n,
+                                                        stable_codes=sc.get('stable_codes', True))
+            if not one:
+                continue
+            got = _widths_ticks(one['segs'], one['T'])
+            want = [one['exp']] if one['exp'] else []
+            if sc.get('stall_phase'):
+                # a frozen domain stretches the elapsed width, so claim the boundaries this channel
+                # actually consumed rather than the wall time between them
+                got = [len([t for t in tr.rises(sm.i('tick'), a, b) if a < t <= b])
+                       for a, b in one['segs']]
+            if w_abort(n):
+                if len(one['segs']) > 1 or (one['segs'] and one['segs'][0][0] != one['t0']):
+                    fails.append(Fail('ABORTED_WINDOW_SHAPE', 'window %d on %s was meant to be aborted '
+                                                             'but does not show one segment from its own '
+                                                             't0: %s' % (n, sm.tag[idx], got)))
+            elif got != want:
+                fails.append(Fail('ON_WIDTH', 'window %d on %s conducted %s ticks, the displayed code '
+                                  'asks %s' % (n, sm.tag[idx], got, want)))
+            if one['segs'] and one['segs'][0][0] != one['t0']:
+                fails.append(Fail('ON_START', 'window %d on %s starts at %s ns, its own t0 is %s ns'
+                                  % (n, sm.tag[idx], fmt_ns(one['segs'][0][0]), fmt_ns(one['t0']))))
+            stall = _stall_total(tr, sm, cs, ce, one)
+            done = [t for t, v in tr.edges(sm.o(idx, 'win_state'))
+                    if one['t0'] <= t <= one['window_end'] + stall + 4 * one['T']
+                    and v == format_vec(3, 3)]
+            want_done = one['window_end'] + stall
+            if sc.get('stall_phase') and done:
+                used = len([t for t in tr.rises(sm.i('tick'), one['t0'], done[0])
+                            if one['t0'] <= t <= done[0]]) + 1
+                if used != one['full'] + 1:
+                    fails.append(Fail('DONE_BOUNDARIES', 'window %d on %s closed after %s accepted '
+                                      'boundaries; its full window needs %d'
+                                      % (n, sm.tag[idx], used, one['full'] + 1)))
+                else:
+                    done = [want_done]
+            if w_abort(n):
+                done = done or [want_done]
+            if not done or done[0] != want_done:
+                fails.append(Fail('DONE_EDGE', 'window %d on %s reaches DONE at %s, expected %s ns '
+                                                 '(window end %s plus %s ns of clock stall)'
+                                  % (n, sm.tag[idx], fmt_ns(done[0]) if done else 'never',
+                                     fmt_ns(want_done), fmt_ns(one['window_end']), fmt_ns(stall))))
+            hold_to = min(one['window_end'] + 2 * one['T'], one['t_to'])
+            vals = tr.values_in(sm.o(idx, 'pam_sel'), one['t_bl'], hold_to)
+            if vals != set([format_vec(one['pam_exp'], 3)]):
+                fails.append(Fail('PAM_NOT_HELD', 'window %d on %s holds %s between release and the off '
+                                                  'tail, expected %s'
+                                  % (n, sm.tag[idx], sorted(vals), format_vec(one['pam_exp'], 3))))
+            out.append('%s w%d=%s/%d' % (sm.tag[idx], n, got, one['exp']))
+    return ' '.join(out)
 
 
 def measure_nth_window(tr, sm, idx, cs, ce, fails, n=0, stable_codes=True):
     """read the n-th emission window of a control case entirely out of the trace
 
-    stable_codes is False for the scenario whose whole point is that a next code is loaded while the
-    window runs: there the expectation comes from the code carried in at the LATCH instant, and the
-    measured window proves the display copy did not follow the load bus.
+    Everything is measured from edges: the LATCH and blank-release events, the mode and code values
+    carried at that LATCH, the tick and reference periods, t0 as the reference edge that consumes the
+    first tick after the release, and this instance's own conducting segments. Nothing is taken from
+    the testbench's own report.
+
+    `stable_codes` is False for the scenario whose whole point is that a next code is loaded while
+    the window runs: there the expectation comes from the code carried in at the LATCH instant, and
+    the measured width proves the display copy did not follow the load bus.
     """
     blank_f = tr.falls(sm.i('blank'), cs, ce)
     latch_r = tr.rises(sm.i('latch_stb'), cs, ce)
     if len(blank_f) <= n or len(latch_r) <= n:
         fails.append(Fail('WINDOW_MISSING', 'window %d needs a LATCH and a blank release, the trace has '
-                                            '%d latch / %d release' % (n, len(latch_r), len(blank_f))))
+                                           '%d latch / %d release' % (n, len(latch_r), len(blank_f))))
         return None
     t_lat, t_bl = latch_r[n], blank_f[n]
     stop_r = [t for t in tr.rises(sm.i('blank'), cs, ce) if t > t_bl]
-    # the displayed code has to hold from its LATCH until this window is blanked again; the next
-    # window's load, and the next case's reset, live outside that range
     t_to = (stop_r[0] - 1) if stop_r else ce - 1
-    ok_m, mode, raw = sig_bits(tr, sm.i('mode'), t_lat, 'is the mode at this LATCH', fails)
+    ok_m, mode, raw = sig_bits(tr, sm.i('mode'), t_lat, 'is the mode at LATCH %d' % n, fails)
     if not ok_m:
         return None
     if mode not in FULL:
         fails.append(Fail('ILLEGAL_MODE', 'mode=%s at LATCH %d' % (raw, n)))
         return None
     full = FULL[mode]
+    span = 'LATCH %d through the next blanking' % n
     if mode == MODE_PURE:
         if stable_codes:
-            ok_c, code, _ = read_stable_code(tr, sm.o(idx, 'cfg_pure'), t_lat, t_to,
-                                             'LATCH %d through the next blanking' % n, fails)
+            ok_c, code, _ = read_stable_code(tr, sm.o(idx, 'cfg_pure'), t_lat, t_to, span, fails)
         else:
-            ok_c, code, _ = sig_bits(tr, sm.o(idx, 'cfg_pure'), t_lat, 'the code carried in at LATCH %d'
-                                     % n, fails)
+            ok_c, code, _ = sig_bits(tr, sm.o(idx, 'cfg_pure'), t_lat,
+                                     'the code carried in at LATCH %d' % n, fails)
         pam_exp = PAM_PURE_SYMBOL
     else:
         if stable_codes:
-            ok_c, code, _ = read_stable_code(tr, sm.o(idx, 'cfg_hyb_time'), t_lat, t_to,
-                                             'LATCH %d through the next blanking' % n, fails)
-            ok_p, pam_exp, _ = read_stable_code(tr, sm.o(idx, 'cfg_hyb_pam'), t_lat, t_to,
-                                                'LATCH %d through the next blanking' % n, fails)
+            ok_c, code, _ = read_stable_code(tr, sm.o(idx, 'cfg_hyb_time'), t_lat, t_to, span, fails)
+            ok_p, pam_exp, _ = read_stable_code(tr, sm.o(idx, 'cfg_hyb_pam'), t_lat, t_to, span, fails)
         else:
             ok_c, code, _ = sig_bits(tr, sm.o(idx, 'cfg_hyb_time'), t_lat,
-                                     'the time code carried in at LATCH %d' % n, fails)
+                                    'the time code carried in at LATCH %d' % n, fails)
             ok_p, pam_exp, _ = sig_bits(tr, sm.o(idx, 'cfg_hyb_pam'), t_lat,
                                         'the PAM code carried in at LATCH %d' % n, fails)
         if not ok_p:
@@ -560,6 +709,10 @@ def measure_nth_window(tr, sm, idx, cs, ce, fails, n=0, stable_codes=True):
     if not ok_c:
         return None
     exp = expected_intervals(mode, code)
+    if exp is None:
+        fails.append(Fail('CODE_OUT_OF_CONTRACT', 'mode=%s code=%d is not in the contract table'
+                          % (MODE_NAME[mode], code)))
+        return None
     tick_r = tr.rises(sm.i('tick'), cs, ce)
     after = [t for t in tick_r if t > t_bl and t <= t_to]
     if len(after) < 2:
@@ -573,85 +726,122 @@ def measure_nth_window(tr, sm, idx, cs, ce, fails, n=0, stable_codes=True):
         return None
     t0 = edge_after[0]
     dif = [after[k] - after[k - 1] for k in range(1, len(after))]
-    T = uniform(dif)
-    if isinstance(T, tuple):
-        fails.append(Fail('TICK_SPACING_UNSTABLE', 'window %d tick steps %s' % (n, T[1])))
-        return None
-    segs = [s for s in tr.segments(sm.o(idx, 'data_en'), t0, t_to) if s[1] > s[0]]
+    T = min(dif)
+    clk_rise = tr.rises(sm.i('clk'), cs, ce)
+    clk_gaps = [(clk_rise[k - 1], clk_rise[k]) for k in range(1, len(clk_rise))
+                if clk_rise[k] - clk_rise[k - 1] > T]
+    for k in range(len(dif)):
+        if dif[k] == T:
+            continue
+        gap_start, gap_end = after[k], after[k + 1]
+        # the enable lives in the reference domain, so a longer gap is legitimate only while that
+        # domain was frozen, and the freeze has to sit inside the gap rather than merely nearby
+        stalled = [g for g in clk_gaps if gap_start <= g[0] < gap_end]
+        if not stalled:
+            fails.append(Fail('TICK_SPACING_UNSTABLE', 'window %d tick step %s ns at %s ns is not the '
+                                                      'uniform %s ns and the clock kept running through '
+                                                      'it' % (n, fmt_ns(dif[k]), fmt_ns(gap_start),
+                                                             fmt_ns(T))))
+            return None
+    if after[0] - t_bl > T:
+        fails.append(Fail('T0_LATE', 'window %d starts %s ns after the release, later than one tick'
+                          % (n, fmt_ns(after[0] - t_bl))))
+    segs = [seg for seg in tr.segments(sm.o(idx, 'data_en'), t0, t_to) if seg[1] > seg[0]]
     return {'n': n, 'mode': MODE_NAME[mode], 'code': code, 'exp': exp, 'full': full, 't_bl': t_bl,
             't_lat': t_lat, 't0': t0, 'T': T, 'window_end': t0 + full * T, 'segs': segs,
             't_to': t_to, 'pam_exp': pam_exp}
 
 
+def _version_steps(tr, sm, cs, ce, fails, why):
+    """cfg_version may step exactly once inside this case, counted from its first LATCH"""
+    lat = tr.rises(sm.i('latch_stb'), cs, ce)
+    from_t = lat[0] if lat else cs
+    out = []
+    for idx in (0, 1):
+        v0 = tr.value_at(sm.o(idx, 'cfg_version'), from_t - 1)
+        v1 = tr.value_at(sm.o(idx, 'cfg_version'), ce - 1)
+        ok0, a, _ = sig_bits(tr, sm.o(idx, 'cfg_version'), from_t - 1, 'is cfg_version before the LATCH',
+                             [])
+        ok1, b, _ = sig_bits(tr, sm.o(idx, 'cfg_version'), ce - 1, 'is cfg_version at the case end', [])
+        steps = [t for t, v in tr.edges(sm.o(idx, 'cfg_version')) if from_t <= t <= ce - 1]
+        if not (ok0 and ok1):
+            fails.append(Fail('UNKNOWN_VALUE', '%s.cfg_version is unknown inside this case'
+                              % sm.tag[idx]))
+        elif b - a != 1 or len(steps) > 1:
+            fails.append(Fail('VERSION_STEPPED', '%s.cfg_version went %d -> %d over %d edge(s); %s'
+                              % (sm.tag[idx], a, b, len(steps), why)))
+        out.append('%s=%d->%d' % (sm.tag[idx], a if ok0 else -1, b if ok1 else -1))
+    return ' '.join(out)
+
+
+def _stall_total(tr, sm, cs, ce, one):
+    """extra wall time the window spent frozen, measured from gaps in the reference clock itself"""
+    rises = tr.rises(sm.i('clk'), cs, ce)
+    total = 0
+    for k in range(1, len(rises)):
+        gap = rises[k] - rises[k - 1]
+        if gap > one['T'] and rises[k - 1] < one['window_end']:
+            total += gap - one['T']
+    return total
+
+
 def _widths_ticks(segs, T):
-    return [int((b - a) // T) for a, b in segs if T]
+    return [int((b - a) // T) for a, b in segs if T and b > a]
 
 
 def ctl_window_ok(tr, sm, cs, ce, sc, fails):
-    n = int(sc.get('window', 0))
-    stable = bool(sc.get('stable_codes', True))
-    out = []
-    for idx in (0, 1):
-        w = measure_nth_window(tr, sm, idx, cs, ce, fails, n, stable_codes=stable)
-        if not w:
-            continue
-        if w['exp'] == 0:
-            if w['segs']:
-                fails.append(Fail('DARK_CODE_LIT', 'window %d code %d stayed dark per the contract but '
-                                   '%s measured %d segment(s)' % (n, w['code'], sm.tag[idx],
-                                                                   len(w['segs']))))
-        elif len(w['segs']) != 1:
-            fails.append(Fail('SEGMENT_COUNT', 'window %d on %s shows %d segment(s) %s'
-                              % (n, sm.tag[idx], len(w['segs']), _widths_ticks(w['segs'], w['T']))))
-        else:
-            on, off = w['segs'][0]
-            if on != w['t0'] or off != w['t0'] + w['exp'] * w['T']:
-                fails.append(Fail('ON_WIDTH', 'window %d on %s conducts (%s, %s) ns, contract says '
-                                 '(%s, %s) ns for %d intervals of %s ns'
-                                  % (n, sm.tag[idx], fmt_ns(on), fmt_ns(off), fmt_ns(w['t0']),
-                                     fmt_ns(w['t0'] + w['exp'] * w['T']), w['exp'], fmt_ns(w['T']))))
-        hold_to = min(w['window_end'] + 2 * w['T'], w['t_to']) if w else cs
-        vals = tr.values_in(sm.o(idx, 'pam_sel'), w['t_bl'] if w else cs, hold_to)
-        if w and vals != set([format_vec(w['pam_exp'], 3)]):
-            fails.append(Fail('PAM_NOT_HELD', 'window %d on %s holds %s, expected %s'
-                              % (n, sm.tag[idx], sorted(vals), format_vec(w['pam_exp'], 3))))
-        if w:
-            out.append('%s:%s=%d/%d' % (sm.tag[idx], w['mode'], _widths_ticks(w['segs'], w['T']) and
-                                        _widths_ticks(w['segs'], w['T'])[0] or 0, w['exp']))
-    return ' '.join(out) or 'unmeasured'
+    measured = attest_windows(tr, sm, cs, ce, sc, fails,
+                              stable_codes=sc.get('stable_codes', True))
+    if not measured:
+        w = measure_nth_window(tr, sm, 0, cs, ce, fails, int(sc.get('window', 0)),
+                               stable_codes=sc.get('stable_codes', True))
+        measured = [w] if w else []
+    return judge_windows(tr, sm, cs, ce, sc, fails, measured)
 
 
 def ctl_mixed_codes(tr, sm, cs, ce, sc, fails):
-    """the two channels must conduct different widths from one common start and end"""
-    ws = [measure_nth_window(tr, sm, idx, cs, ce, fails, 0) for idx in (0, 1)]
-    if None in ws:
+    """different codes per channel: each start and completion edge is measured on that channel"""
+    da = sc.get('windows', [])
+    db = sc.get('windows_b', da)
+    a = measure_nth_window(tr, sm, 0, cs, ce, fails, 0)
+    b = measure_nth_window(tr, sm, 1, cs, ce, fails, 0)
+    if not a or not b:
         return 'unmeasured'
-    a, b = ws
-    if a['code'] == b['code'] and a['pam_exp'] == b['pam_exp']:
-        fails.append(Fail('MIXED_NOT_INDEPENDENT', 'the mixed-code vector delivered the same code to '
-                                                  'both channels (%d)' % a['code']))
+    for w, decl, tag in ((a, da, sm.tag[0]), (b, db, sm.tag[1])):
+        if decl and [w['mode'], w['code'], w['pam_exp']] != list(decl[0])[:3]:
+            fails.append(Fail('STIMULUS_MISMATCH', '%s window reads %s code=%s pam=%s, the vector '
+                               'declared %s' % (tag, w['mode'], w['code'], w['pam_exp'], decl[0])))
+    if (a['code'], a['pam_exp']) == (b['code'], b['pam_exp']):
+        fails.append(Fail('MIXED_NOT_INDEPENDENT', 'both channels were handed the same code and PAM '
+                                                   'value, so independence was not exercised'))
     if a['t0'] != b['t0'] or a['T'] != b['T']:
-        fails.append(Fail('MIXED_EDGES', 'the shared window is not common: t0 %s vs %s ns'
+        fails.append(Fail('MIXED_EDGES', 'the common start differs: %s vs %s ns'
                           % (fmt_ns(a['t0']), fmt_ns(b['t0']))))
     out = []
     for w, tag in ((a, sm.tag[0]), (b, sm.tag[1])):
         got = _widths_ticks(w['segs'], w['T'])
         want = [w['exp']] if w['exp'] else []
         if got != want:
-            fails.append(Fail('MIXED_WIDTH', '%s conducted %s ticks, the displayed code asks %s'
+            fails.append(Fail('MIXED_WIDTH', '%s conducted %s ticks, its own code asks %s'
                               % (tag, got, want)))
-        out.append('%s=%s/%d' % (tag, got, w['exp']))
+        done = [t for t, v in tr.edges(sm.o(0 if tag == sm.tag[0] else 1, 'win_state'))
+                if w['t0'] <= t <= w['window_end'] + 4 * w['T'] and v == format_vec(3, 3)]
+        if not done or done[0] != w['window_end']:
+            fails.append(Fail('DONE_EDGE', '%s completes at %s, its own window end is %s ns'
+                              % (tag, fmt_ns(done[0]) if done else 'never', fmt_ns(w['window_end']))))
+        out.append('%s=%s/%d done=%s' % (tag, got, w['exp'], fmt_ns(done[0]) if done else 'none'))
     return ' '.join(out)
 
 
 def ctl_pam_toggle(tr, sm, cs, ce, sc, fails):
-    return ctl_window_ok(tr, sm, cs, ce, {'window': 0}, fails) + ' | ' + \
-        ctl_window_ok(tr, sm, cs, ce, {'window': 1}, fails)
+    return ctl_window_ok(tr, sm, cs, ce, sc, fails)
 
 
 def ctl_display_frozen(tr, sm, cs, ce, sc, fails):
     """the running window keeps its own code while a next code is loaded, and PAM does not move"""
-    measured = ctl_window_ok(tr, sm, cs, ce, {'window': 0, 'stable_codes': False}, fails)
+    sc = dict(sc)
+    sc['stable_codes'] = False
+    measured = ctl_window_ok(tr, sm, cs, ce, sc, fails)
     w = measure_nth_window(tr, sm, 0, cs, ce, [], 0, stable_codes=False)
     if not w:
         return measured + ' | window unreadable'
@@ -659,8 +849,8 @@ def ctl_display_frozen(tr, sm, cs, ce, sc, fails):
                         for t, _v in tr.edges(sm.o(0, nm))
                         if w['t0'] < t < min(w['window_end'], w['t_to'])]))
     if not loads:
-        fails.append(Fail('NO_STIMULUS', 'no next-code load happened inside the running window, so the '
-                                         'scenario proved nothing'))
+        fails.append(Fail('STIMULUS_UNATTESTED', 'no next-code load happened inside the running window, '
+                                                 'so the scenario proved nothing'))
     for t in loads:
         for idx in (0, 1):
             before = tr.value_at(sm.o(idx, 'pam_sel'), t - 1)
@@ -668,27 +858,104 @@ def ctl_display_frozen(tr, sm, cs, ce, sc, fails):
             if before != after:
                 fails.append(Fail('DISPLAY_MOVED', '%s.pam_sel went %s -> %s around the load at %s ns'
                                   % (sm.tag[idx], before, after, fmt_ns(t))))
-            extra = [x for x, _v in tr.edges(sm.o(idx, 'data_en')) if t < x < t + 29000]
-            if extra:
-                fails.append(Fail('WAVE_CHANGED', '%s.data_en changed at %s ns, right after the load at '
-                                                 '%s ns' % (sm.tag[idx], fmt_ns(extra[0]), fmt_ns(t))))
     return '%s | next-code loads at %s ns' % (measured, ','.join(fmt_ns(t) for t in loads) or 'none')
 
 
+def _declared_window(sc):
+    """the grey code the scenario says it is interrupting: (conducting intervals, full window)"""
+    w = sc.get('windows') or []
+    if not w:
+        raise Refuse('an asynchronous shut-off scenario has to declare the window it interrupts')
+    mode_name, code = w[0][0], int(w[0][1])
+    mode = MODE_PURE if mode_name == 'PURE' else MODE_HYBRID
+    exp = expected_intervals(mode, code)
+    if exp is None:
+        raise Refuse('scenario declares an illegal window code %s %d' % (mode_name, code))
+    return exp, (256 if mode == MODE_PURE else 64)
+
+
+def attest_phase(tr, sm, cs, ce, t, sc, exp, full, fails):
+    """prove from the trace that the assertion really happened in the phase the name claims"""
+    phase = sc.get('phase')
+    if not phase:
+        return None
+    st = tr.value_at(sm.o(0, 'win_state'), t - 1)
+    lit = tr.value_at(sm.o(0, 'data_en'), t - 1)
+    n = len(tr.rises(sm.o(0, 'obs_tick'), cs, t - 1))
+    rules = {
+        'mid_window': (st == '010' and lit == '1' and 1 <= n <= exp,
+                       'the window running and conducting, so win_state=010, data_en=1 and 1..%d '
+                       'accepted ticks before the assertion' % exp),
+        'short_pulse_middle': (st == '010' and lit == '1' and exp == 1 and n == 1,
+                               'the one-interval pulse of code 1 still lit, so exactly one accepted '
+                               'tick before the assertion'),
+        'near_window_end': (st == '010' and n == full,
+                            'the last interval before the endpoint, so %d accepted ticks with the '
+                            'window still running' % full),
+        'after_window_end': (st == '011' and lit == '0' and n >= full + 1,
+                             'the completed window, so %d accepted ticks and win_state=011'
+                             % (full + 1)),
+    }
+    if phase not in rules:
+        raise Refuse('unknown declared phase %r' % phase)
+    ok, why = rules[phase]
+    if not ok:
+        fails.append(Fail('STIMULUS_UNATTESTED', 'the assertion at %s ns is not in the declared phase '
+                                                 '%s: this needs %s, the trace shows win_state=%s '
+                                                 'data_en=%s accepted_ticks=%d for a code with %d '
+                                                 'conducting intervals'
+                          % (fmt_ns(t), phase, why, st, lit, n, exp)))
+    aborted = [x for x, v in tr.edges(sm.o(0, 'win_state')) if t <= x <= ce and v == '100']
+    if phase == 'after_window_end':
+        if aborted:
+            fails.append(Fail('STIMULUS_UNATTESTED', 'a shut-off after the window endpoint must find '
+                                                    'nothing to abort, but %s entered ABORT at %s ns'
+                              % (sm.tag[0], fmt_ns(aborted[0]))))
+    elif not aborted:
+        fails.append(Fail('STIMULUS_UNATTESTED', 'the %s assertion at %s ns never put %s into ABORT, so '
+                                                 'it did not interrupt a window'
+                          % ('fault' if sc.get('p2') == 1 else 'blank', fmt_ns(t), sm.tag[0])))
+    return phase, n, st, lit, (fmt_ns(aborted[0]) if aborted else 'none')
+
+
 def ctl_async_off(tr, sm, cs, ce, sc, fails):
+    """the assertion must be off the clock edge, of the declared width, in the declared phase"""
+    clk_rises = set(tr.rises(sm.i('clk'), cs, ce))
+    tick_rises = set(tr.rises(sm.i('tick'), cs, ce))
+    exp, full = _declared_window(sc)
+    sigs = sc.get('asserts')
+    if sigs is None:
+        sigs = ['fault'] if sc.get('p2') == 1 else ['blank']
     seen = []
-    for nm in sc.get('asserts', ['blank', 'fault']):
-        for t in tr.rises(sm.i(nm), cs, ce):
-            if t == cs:
-                continue                       # the case start drives blank high, that is not an abort
+    for nm in sigs:
+        for j, t in enumerate(tr.rises(sm.i(nm), cs + 1, ce)):
+            width = None
+            falls = [x for x in tr.falls(sm.i(nm), t, ce) if x > t]
+            if falls:
+                width = falls[0] - t
+            if t in clk_rises or t in tick_rises:
+                fails.append(Fail('STIMULUS_UNATTESTED', '%s is asserted exactly on a reference tick at '
+                                                         '%s ns, so this is not an off-edge test'
+                                  % (nm, fmt_ns(t))))
+            if sc.get('pulse_width_ns') and j == 0 and width not in (None,
+                                                                     sc['pulse_width_ns'] * PS):
+                fails.append(Fail('STIMULUS_UNATTESTED', '%s pulse is %s ns wide, the scenario declared '
+                                                         '%d ns' % (nm, fmt_ns(width),
+                                                                    sc['pulse_width_ns'])))
             for idx in (0, 1):
                 v = tr.value_at(sm.o(idx, 'data_en'), t)
                 if v != '0':
                     fails.append(Fail('ASYNC_OFF', '%s asserted at %s ns but %s.data_en is %s at that '
                                                    'same time' % (nm, fmt_ns(t), sm.tag[idx], v)))
-            seen.append('%s@%s' % (nm, fmt_ns(t)))
+            # only the first assertion is the shut-off under test; the trailing one is the case-end
+            # blanking that closes the segment
+            att = attest_phase(tr, sm, cs, ce, t, sc, exp, full, fails) if j == 0 else None
+            seen.append('%s@%s/%sns%s' % (nm, fmt_ns(t), fmt_ns(width) if width else '?',
+                                          '(case-end blanking)' if not att and j else
+                                          ('' if not att else '(%s,ticks=%d,abort=%s)'
+                                           % (att[0], att[1], att[4]))))
     if not seen:
-        fails.append(Fail('NO_STIMULUS', 'the scenario never asserted blank or fault'))
+        fails.append(Fail('STIMULUS_UNATTESTED', 'the scenario never asserted blank or fault'))
     return 'assertions=%s' % (','.join(seen) or 'none')
 
 
@@ -702,9 +969,17 @@ def ctl_no_resume(tr, sm, cs, ce, sc, fails):
         raise Refuse('unknown abort event %r' % key)
     events = [t for t in events if t > cs]
     if not events:
-        fails.append(Fail('NO_STIMULUS', 'the scenario never produced the %s event' % key))
+        fails.append(Fail('STIMULUS_UNATTESTED', 'the scenario never produced the %s event' % key))
         return 'none'
     t_abort = events[0]
+    st = tr.value_at(sm.o(0, 'win_state'), t_abort - 1)
+    if key != 'reset_fall' and st != '010':
+        fails.append(Fail('STIMULUS_UNATTESTED', 'the %s at %s ns does not interrupt a running window: '
+                                                 'win_state before it was %s' % (key, fmt_ns(t_abort), st)))
+    if not tr.rises(sm.o(0, 'data_en'), cs, t_abort - 1):
+        fails.append(Fail('STIMULUS_UNATTESTED', 'nothing conducted before the %s at %s ns, so refusing '
+                                                 'to resume it would prove nothing'
+                         % (key, fmt_ns(t_abort))))
     out = []
     for idx in (0, 1):
         late = tr.rises(sm.o(idx, 'data_en'), t_abort + 1, ce)
@@ -712,11 +987,13 @@ def ctl_no_resume(tr, sm, cs, ce, sc, fails):
             fails.append(Fail('AUTO_RESUME', '%s.data_en re-opened at %s ns after the %s at %s ns, with '
                                              'no new LATCH or start in between'
                               % (sm.tag[idx], fmt_ns(late[0]), key, fmt_ns(t_abort))))
-        st = tr.value_at(sm.o(idx, 'win_state'), ce)
-        ok_s, val, _raw = sig_bits(tr, sm.o(idx, 'win_state'), ce, 'is win_state at the case end', fails)
-        if ok_s and ST.get(val) not in (ST[3], ST[4], ST[0]):
-            fails.append(Fail('NO_ABORT_RECORDED', '%s.win_state is %s at the case end, the aborted '
-                                                   'window was not registered' % (sm.tag[idx], ST.get(val))))
+        ok_s, val, _raw = sig_bits(tr, sm.o(idx, 'win_state'), ce - 1,
+                                   'is win_state at the case end', fails)
+        allowed = (ST[3], ST[4]) + ((ST[0],) if key == 'reset_fall' else ())
+        if ok_s and ST.get(val) not in allowed:
+            fails.append(Fail('NO_ABORT_RECORDED', '%s.win_state is %s at the case end after the %s at '
+                                                   '%s ns' % (sm.tag[idx], ST.get(val), key,
+                                                               fmt_ns(t_abort))))
         out.append('%s:dark_from=%s' % (sm.tag[idx], fmt_ns(t_abort)))
     return ' '.join(out)
 
@@ -726,13 +1003,10 @@ def ctl_start_once(tr, sm, cs, ce, sc, fails):
     if len(rises) != 1:
         fails.append(Fail('START_PULSES', 'the scenario presents exactly one PWM_START rise, saw %d'
                           % len(rises)))
-    held = ctl_window_ok(tr, sm, cs, ce, {'window': 0}, fails)
-    return 'start_rises=%d %s' % (len(rises), held)
+    return 'start_rises=%d %s' % (len(rises), ctl_window_ok(tr, sm, cs, ce, sc, fails))
 
 
 def ctl_ticks_in_blank(tr, sm, cs, ce, sc, fails):
-    """ticks offered while blanked or before an accepted start must not advance anything"""
-    measured = ctl_window_ok(tr, sm, cs, ce, {'window': 0}, fails)
     bad = []
     for idx in (0, 1):
         for t in tr.rises(sm.o(idx, 'obs_tick'), cs, ce):
@@ -741,50 +1015,61 @@ def ctl_ticks_in_blank(tr, sm, cs, ce, sc, fails):
     if bad:
         fails.append(Fail('TICK_CONSUMED_IN_BLANK', 'obs_tick accepted a tick while blanked: %s'
                           % ', '.join(bad[:3])))
-    return 'accepted_in_blank=%s | %s' % (bad or 'none', measured)
-
-
-def _refused_bits(tr, sm, cs, ce, want, fails, idx=None):
-    hits = []
-    for k in (0, 1) if idx is None else (idx,):
-        vals = sorted(tr.values_in(sm.o(k, 'proto_err'), cs, ce))
-        hit = [v for v in vals if not any(c in tv.XZ for c in v) and (int(v, 2) & want) == want]
-        if not hit:
-            fails.append(Fail('REFUSAL_NOT_RECORDED', '%s.proto_err never shows bit %d (saw %s)'
-                              % (sm.tag[k], want, vals)))
-        else:
-            hits.append('%s=%s' % (sm.tag[k], hit[0]))
-    return hits
+    before = []
+    lat = tr.rises(sm.i('latch_stb'), cs, ce)
+    for idx in (0, 1):
+        for t in tr.rises(sm.o(idx, 'obs_tick'), cs, ce):
+            if lat and t < lat[0]:
+                before.append('%s at %s ns' % (sm.tag[idx], fmt_ns(t)))
+    if before:
+        fails.append(Fail('TICK_CONSUMED_BEFORE_START', 'a tick was accepted before the first LATCH: %s'
+                          % ', '.join(before[:3])))
+    return 'accepted_in_blank=%s | %s' % (bad or 'none', ctl_window_ok(tr, sm, cs, ce, sc, fails))
 
 
 def ctl_refused_dark(tr, sm, cs, ce, sc, fails):
-    hits = _refused_bits(tr, sm, cs, ce, int(sc['proto_err_bit']), fails)
-    dark = []
+    hits = []
     for idx in (0, 1):
-        rises = tr.rises(sm.o(idx, 'data_en'), cs, ce)
-        if rises:
-            fails.append(Fail('LIGHT_AFTER_REFUSAL', '%s.data_en opens at %s ns although the request was '
-                                                    'refused' % (sm.tag[idx], fmt_ns(rises[0]))))
+        who = '%s.proto_err' % sm.tag[idx]
+        hits += bits_set(tr, sm.o(idx, 'proto_err'), cs, ce, int(sc['proto_err_bit']), fails, who)
+    want = sc.get('mode_values', [])
+    if want:
+        vals = sorted(set(int(v, 2) for _t, v in tr.edges(sm.i('mode')) if v
+                          and not any(c in tv.XZ for c in v)))
+        missing = [m for m in want if m not in vals]
+        if missing:
+            fails.append(Fail('STIMULUS_UNATTESTED', 'the mode bus never shows %s (saw %s)'
+                              % (missing, vals)))
+    dark = no_light(tr, sm, cs, ce, fails, who=' although the request was refused')
+    for idx in (0, 1):
         runs = tr.values_in(sm.o(idx, 'win_state'), cs, ce)
         if set([format_vec(2, 3)]) & runs:
             fails.append(Fail('RAN_AFTER_REFUSAL', '%s.win_state reached RUNNING although the request was '
-                                                  'refused' % sm.tag[idx]))
-        dark.append('%s=%d rise(s)' % (sm.tag[idx], len(rises)))
-    return 'proto_err %s dark %s' % (' '.join(hits), ' '.join(dark))
+                                             'refused' % sm.tag[idx]))
+    return 'proto_err %s dark %s' % (' '.join(hits), dark)
 
 
 def ctl_refused_then_window(tr, sm, cs, ce, sc, fails):
-    hits = _refused_bits(tr, sm, cs, ce, int(sc['proto_err_bit']), fails)
-    return 'refusal %s | %s' % (' '.join(hits), ctl_window_ok(tr, sm, cs, ce, {'window': 0}, fails))
+    sc = dict(sc)
+    sc.setdefault('stable_codes', False)
+    hits = bits_set(tr, sm.o(0, 'proto_err'), cs, ce, int(sc['proto_err_bit']), fails,
+                    '%s.proto_err' % sm.tag[0])
+    hits += bits_set(tr, sm.o(1, 'proto_err'), cs, ce, int(sc['proto_err_bit']), fails,
+                     '%s.proto_err' % sm.tag[1])
+    return 'refusal %s | %s' % (' '.join(hits), ctl_window_ok(tr, sm, cs, ce, sc, fails))
 
 
 def ctl_dark_only(tr, sm, cs, ce, sc, fails):
-    out = []
+    out = no_light(tr, sm, cs, ce, fails)
+    want = sc.get('reset_pulses')
+    if want:
+        got = len(tr.falls(sm.i('reset_n'), cs, ce - 1))
+        if got != int(want):
+            fails.append(Fail('STIMULUS_UNATTESTED', 'the scenario declares %s reset pulses, the trace '
+                                                     'shows %d reset falls' % (want, got)))
+        else:
+            out += ' resets=%d' % got
     for idx in (0, 1):
-        rises = tr.rises(sm.o(idx, 'data_en'), cs, ce)
-        if rises:
-            fails.append(Fail('LIGHT_WITHOUT_CONFIG', '%s.data_en rose at %s ns with no accepted '
-                                                     'configuration' % (sm.tag[idx], fmt_ns(rises[0]))))
         runs = tr.values_in(sm.o(idx, 'win_state'), cs, ce)
         if set([format_vec(2, 3)]) & runs:
             fails.append(Fail('RAN_WITHOUT_CONFIG', '%s.win_state shows RUNNING with nothing displayed'
@@ -792,13 +1077,92 @@ def ctl_dark_only(tr, sm, cs, ce, sc, fails):
         if any(any(c in tv.XZ for c in v) for v in runs):
             fails.append(Fail('UNKNOWN_STATE', '%s.win_state keeps an unknown value in this case'
                               % sm.tag[idx]))
-        out.append('%s=%d rise(s)' % (sm.tag[idx], len(rises)))
-    return ' '.join(out)
+    return out
+
+
+def ctl_config_freshness(tr, sm, cs, ce, sc, fails):
+    """one load may feed exactly one LATCH: the replay is refused and the version does not step"""
+    latches = tr.rises(sm.i('latch_stb'), cs, ce)
+    loads = tr.rises(sm.i('cfg_valid'), cs, ce)
+    if len(latches) != 2:
+        fails.append(Fail('STIMULUS_UNATTESTED', 'the scenario needs two LATCH requests behind one load, '
+                                                 'saw %d LATCH and %d load' % (len(latches), len(loads))))
+    if len(loads) != 1:
+        fails.append(Fail('STIMULUS_UNATTESTED', 'expected exactly one load transaction, saw %d'
+                          % len(loads)))
+    hits = bits_set(tr, sm.o(0, 'proto_err'), cs, ce, int(sc['proto_err_bit']), fails,
+                    '%s.proto_err' % sm.tag[0])
+    bits_set(tr, sm.o(1, 'proto_err'), cs, ce, int(sc['proto_err_bit']), fails, '%s.proto_err' % sm.tag[1])
+    out = _version_steps(tr, sm, cs, ce, fails, 'one load may only step it once')
+    return 'refusal %s version %s' % (' '.join(hits), ' '.join(out))
+
+
+def ctl_abort_reauthorise(tr, sm, cs, ce, sc, fails):
+    """the withdrawn condition and a bare start must not re-light; only a full sequence may"""
+    t_bl = tr.falls(sm.i('blank'), cs, ce)
+    if len(t_bl) < 2:
+        fails.append(Fail('STIMULUS_UNATTESTED', 'this scenario needs a second blank release after the '
+                                                 'abort, saw %d' % len(t_bl)))
+        return 'none'
+    aborts = [t for t in tr.rises(sm.i('blank'), cs + 1, ce)]
+    if not aborts:
+        fails.append(Fail('STIMULUS_UNATTESTED', 'no blank assertion aborted the first window'))
+        return 'none'
+    t_abort = aborts[0]
+    if tr.value_at(sm.o(0, 'win_state'), t_abort - 1) != '010' or \
+            not tr.rises(sm.o(0, 'data_en'), cs, t_abort - 1):
+        fails.append(Fail('STIMULUS_UNATTESTED', 'the blank rise at %s ns did not abort a lit, running '
+                                                 'window, so the recovery refusal would prove nothing'
+                         % fmt_ns(t_abort)))
+    hits = bits_set(tr, sm.o(0, 'proto_err'), cs, ce, int(sc['proto_err_bit']), fails,
+                    '%s.proto_err' % sm.tag[0])
+    bits_set(tr, sm.o(1, 'proto_err'), cs, ce, int(sc['proto_err_bit']), fails,
+             '%s.proto_err' % sm.tag[1])
+    dark = no_light(tr, sm, cs, ce, fails, t_from=t_abort + 1, who=' after the abort')
+    vers = _version_steps(tr, sm, cs, ce, fails, 'the aborted window must not re-commit')
+    state = [ST.get(int(tr.value_at(sm.o(i, 'win_state'), ce - 1), 2), '?') for i in (0, 1)]
+    return 'abort@%s refusal %s dark %s version %s end_state %s' % (
+        fmt_ns(t_abort), ' '.join(hits), dark, ' '.join(vers), '/'.join(state))
+
+
+def ctl_mode_bypass(tr, sm, cs, ce, sc, fails):
+    """a mode refused in the unsafe phase must not arrive through a LATCH"""
+    hits = bits_set(tr, sm.o(0, 'proto_err'), cs, ce, int(sc['proto_err_bit']), fails,
+                    '%s.proto_err' % sm.tag[0])
+    bits_set(tr, sm.o(1, 'proto_err'), cs, ce, int(sc['proto_err_bit']), fails,
+             '%s.proto_err' % sm.tag[1])
+    mode_r = bits_set(tr, sm.o(0, 'proto_err'), cs, ce, E_MODE_WHILE_RUNNING, fails,
+                      '%s.proto_err (unsafe mode change)' % sm.tag[0])
+    vals = sorted(set(int(v, 2) for _t, v in tr.edges(sm.i('mode')) if v
+                      and not any(c in tv.XZ for c in v)))
+    if [0, 1] != [m for m in vals if m in (0, 1)]:
+        fails.append(Fail('STIMULUS_UNATTESTED', 'the mode bus must show Pure then Hybrid, saw %s' % vals))
+    lat = tr.rises(sm.i('latch_stb'), cs, ce)
+    from_t = lat[0] if lat else cs
+    pam = sorted(set(v for t, v in tr.edges(sm.o(0, 'pam_sel'))
+                     if from_t <= t <= ce - 1 and not any(c in tv.XZ for c in v)))
+    if pam != [format_vec(7, 3)]:
+        fails.append(Fail('MODE_ADOPTED', '%s.pam_sel shows %s from its own LATCH on: the refused Hybrid '
+                                          'code was adopted' % (sm.tag[0], pam)))
+    _version_steps(tr, sm, cs, ce, fails, 'the bypassing LATCH must not commit')
+    # refusing a mode is not refusing the display: the window that the accepted LATCH committed must
+    # still run with its own Pure code, and it is that judgement which proves nothing was adopted
+    judged = ctl_window_ok(tr, sm, cs, ce, dict(sc, stable_codes=False), fails)
+    return 'refusal %s/%s pam %s | %s' % (' '.join(hits), ' '.join(mode_r), pam, judged)
+
+
+def ctl_recover(tr, sm, cs, ce, sc, fails):
+    measured = ctl_window_ok(tr, sm, cs, ce, sc, fails)
+    aborts = tr.rises(sm.i('blank'), cs + 1, ce)
+    if not aborts:
+        fails.append(Fail('STIMULUS_UNATTESTED', 'nothing aborted the first window, so recovery was not '
+                                                 'exercised'))
+    return 'abort@%s | %s' % (fmt_ns(aborts[0]) if aborts else 'none', measured)
 
 
 def ctl_clock_stall(tr, sm, cs, ce, sc, fails):
-    """find the frozen stretch of the reference domain in the trace, then check nothing moved in it"""
-    measured = ctl_window_ok(tr, sm, cs, ce, {'window': 0}, fails)
+    """find the frozen stretch in the trace, then check nothing moved in it, in the declared phase"""
+    measured = ctl_window_ok(tr, sm, cs, ce, sc, fails)
     gap_min = int(sc.get('gap_min_ns', 60)) * PS
     rises = tr.rises(sm.i('clk'), cs, ce)
     if len(rises) < 2:
@@ -807,9 +1171,10 @@ def ctl_clock_stall(tr, sm, cs, ce, sc, fails):
     gaps = [(rises[k - 1], rises[k]) for k in range(1, len(rises))
             if rises[k] - rises[k - 1] >= gap_min]
     if not gaps:
-        fails.append(Fail('NO_STIMULUS', 'the reference domain never stalled by at least %d ns'
+        fails.append(Fail('STIMULUS_UNATTESTED', 'the reference domain never stalled by at least %d ns'
                           % (gap_min // PS)))
         return '%s | no stall found' % measured
+    w = measure_nth_window(tr, sm, 0, cs, ce, [], 0)
     out = []
     for a, b in gaps:
         inside_tick = [t for t in tr.rises(sm.i('tick'), a + 1, b - 1)]
@@ -827,11 +1192,38 @@ def ctl_clock_stall(tr, sm, cs, ce, sc, fails):
             if st_a != st_b:
                 fails.append(Fail('STATE_MOVED_IN_STALL', '%s.win_state went %s -> %s across the stall'
                                   % (sm.tag[idx], st_a, st_b)))
-        out.append('(%s,%s)' % (fmt_ns(a), fmt_ns(b)))
-    if len(out) > 1:
-        fails.append(Fail('STALL_COUNT', 'the trace shows %d stalls of at least %d ns, the scenario '
-                                         'declared one' % (len(out), gap_min // PS)))
+        phase = 'unknown'
+        if w:
+            if a < w['t0']:
+                phase = 'before_t0'
+            elif a < w['window_end']:
+                phase = 'running'
+            else:
+                phase = 'done'
+        if sc.get('stall_phase') and phase != sc['stall_phase']:
+            fails.append(Fail('STIMULUS_UNATTESTED', 'the stall happened in phase %s, the scenario '
+                                                     'declares %s' % (phase, sc['stall_phase'])))
+        out.append('(%s,%s)%s' % (fmt_ns(a), fmt_ns(b), phase))
     return '%s | stalls=%s' % (measured, ' '.join(out))
+
+
+def ctl_start_latch_same_edge(tr, sm, cs, ce, sc, fails):
+    """one edge carrying both requests: the LATCH commits, the start is refused, nothing lights"""
+    lr = tr.rises(sm.i('latch_stb'), cs, ce)
+    sr = tr.rises(sm.i('pwm_start'), cs, ce)
+    if len(lr) != 1 or len(sr) != 1 or lr[0] != sr[0]:
+        fails.append(Fail('STIMULUS_UNATTESTED', 'LATCH and START must rise on the same sampling edge '
+                                                 '(%s vs %s)' % ([fmt_ns(t) for t in lr],
+                                                                 [fmt_ns(t) for t in sr])))
+        return 'none'
+    hits = bits_set(tr, sm.o(0, 'proto_err'), cs, ce, int(sc['proto_err_bit']), fails,
+                    '%s.proto_err' % sm.tag[0])
+    bits_set(tr, sm.o(1, 'proto_err'), cs, ce, int(sc['proto_err_bit']), fails,
+             '%s.proto_err' % sm.tag[1])
+    dark = no_light(tr, sm, cs, ce, fails, who=' although the start was refused')
+    vers = _version_steps(tr, sm, cs, ce, fails, 'the accepted LATCH must be the only step')
+    return 'same_edge=%s ns refusal %s version %s dark %s' % (fmt_ns(lr[0]), ' '.join(hits),
+                                                              ' '.join(vers), dark)
 
 
 CONTROL_HANDLERS = {
@@ -847,6 +1239,13 @@ CONTROL_HANDLERS = {
     'refused_then_window': ctl_refused_then_window,
     'dark_only': ctl_dark_only,
     'clock_stall': ctl_clock_stall,
+    'config_freshness': ctl_config_freshness,
+    'abort_reauthorise': ctl_abort_reauthorise,
+    'mode_bypass': ctl_mode_bypass,
+    'mode_switch_safe': ctl_window_ok,
+    'recover_full_sequence': ctl_recover,
+    'code_edges': ctl_window_ok,
+    'start_latch_same_edge': ctl_start_latch_same_edge,
 }
 
 
@@ -865,6 +1264,7 @@ def check_control_trace(path, scenarios, run_id=''):
                          'requirement': CONTROL_REQUIREMENT.get(sc['kind'], ''),
                          'expect': sc.get('expect', 'pass'), 'tick_ns': sc.get('tick_ns', ''),
                          'mode': sc.get('mode', ''), 'profile': sc.get('profile', ''),
+                         'stimulus': _stim_summary(sc),
                          'failures': 'the trace contains no case %d: this scenario was not executed'
                                       % cid, 'vcd': os.path.basename(path), 'run_id': run_id})
             continue
@@ -881,17 +1281,31 @@ def check_control_trace(path, scenarios, run_id=''):
                      'requirement': CONTROL_REQUIREMENT.get(sc['kind'], ''),
                      'expect': sc.get('expect', 'pass'),
                      'tick_ns': sc.get('tick_ns', ''), 'mode': sc.get('mode', ''),
-                     'profile': sc.get('profile', ''),
+                     'profile': sc.get('profile', ''), 'stimulus': _stim_summary(sc),
                      'failures': ' ; '.join(str(f) for f in fails)[:500] if fails else 'none',
                      'vcd': os.path.basename(path), 'run_id': run_id})
     for cid in sorted(set(seg) - used):
         rows.append({'case_id': cid, 'scenario': 'UNCOVERED_CASE', 'kind': '',
                      'verdict': 'FAIL', 'observed': 'no scenario',
                      'requirement': 'every case in a control trace has to be named by the vector file',
-                     'expect': 'pass', 'tick_ns': '', 'mode': '', 'profile': '',
+                     'expect': 'pass', 'tick_ns': '', 'mode': '', 'profile': '', 'stimulus': '',
                      'failures': 'case %d is present in the trace but no scenario judges it' % cid,
                      'vcd': os.path.basename(path), 'run_id': run_id})
     return rows, tr
+
+
+def _stim_summary(sc):
+    """the declared stimulus, written out so a reviewer can compare it with the observed column"""
+    parts = []
+    for w in sc.get('windows', []):
+        parts.append('w:%s/%s/%s' % tuple(w))
+    for w in sc.get('windows_b', []):
+        parts.append('wB:%s/%s/%s' % tuple(w))
+    for key in ('mode_values', 'phase', 'pulse_width_ns', 'stall_phase', 'abort', 'proto_err_bit',
+                'reset_pulses', 'xprobe'):
+        if sc.get(key) not in (None, []):
+            parts.append('%s=%s' % (key, sc[key]))
+    return ' '.join(parts)
 # ------------------------------------------------------------------- edge-sample straddle guard
 def require_span(samples, anchor_ps, pre_ns, post_ns, what):
     """a sample set must actually straddle its event anchor: pre-event points alone are not a response
@@ -940,10 +1354,17 @@ def csv_cell(v):
     return s
 
 
-def write_rows(path, rows, order=None):
-    """atomic CSV write that refuses an empty row set instead of clearing real evidence"""
+TEXT_NONFINITE = ('nan', 'NaN', 'inf', '-inf', 'Infinity', '-Infinity', 'None', 'none_')
+
+
+def csv_text(rows, order=None, what='an in-memory table'):
+    """render rows as CSV text, refusing an empty set, a ragged row and a non-finite value
+
+    Refusing before anything is written is what lets the exporter build the whole artefact set in
+    memory and publish it only once every table is known good.
+    """
     if not rows:
-        raise Refuse('refusing to write 0 rows over %s: an empty result is not evidence' % path)
+        raise Refuse('refusing to render 0 rows for %s: an empty result is not evidence' % what)
     keys = list(order) if order else list(rows[0].keys())
     for r in rows:
         miss = [k for k in keys if k not in r]
@@ -953,16 +1374,34 @@ def write_rows(path, rows, order=None):
             v = r[k]
             if isinstance(v, float) and (v != v or v in (float('inf'), float('-inf'))):
                 raise Refuse('case %s field %s is not finite' % (r.get('case_id'), k))
+            if v is None:
+                raise Refuse('case %s field %s is None' % (r.get('case_id'), k))
+            if isinstance(v, _text) and v.strip() in ('nan', 'NaN', 'inf', '-inf', 'Infinity',
+                                                     '-Infinity'):
+                raise Refuse('case %s field %s is not finite' % (r.get('case_id'), k))
+            if isinstance(v, _text) and any(c in v for c in (u'\x00',)):
+                raise Refuse('case %s field %s carries a NUL' % (r.get('case_id'), k))
     out = [u','.join(keys) + u'\n']
     for r in rows:
         out.append(u','.join(csv_cell(r[k]) for k in keys) + u'\n')
+    return u''.join(out)
+
+
+def write_csv(stream, rows, order=None):
+    stream.write(csv_text(rows, order))
+    return len(rows)
+
+
+def write_rows(path, rows, order=None):
+    """atomic CSV write that refuses an empty row set instead of clearing real evidence"""
+    text = csv_text(rows, order, path)
     d = os.path.dirname(os.path.abspath(path))
     if not os.path.isdir(d):
         os.makedirs(d)
     tmp = path + '.tmp'
     fp = io.open(tmp, 'w', encoding='utf-8', newline='\n')
     try:
-        fp.write(u''.join(out))
+        fp.write(text)
     finally:
         fp.close()
     if os.path.exists(path):
@@ -1069,7 +1508,7 @@ REVIEW = os.path.normpath(os.path.join(HERE, '..', 'review'))
 TBV = [('case_id', 32), ('clk', 1), ('tick', 1), ('blank', 1), ('fault', 1), ('reset_n', 1),
        ('system_en', 1), ('latch_stb', 1), ('pwm_start', 1), ('cfg_valid', 1), ('mode', 2)]
 OUTV = [('data_en', 1), ('data_en_b', 1), ('pam_sel', 3), ('win_state', 3), ('cfg_version', 8),
-        ('proto_err', 6), ('obs_tick', 1), ('cfg_pure', 8), ('cfg_hyb_time', 6), ('cfg_hyb_pam', 3)]
+        ('proto_err', 8), ('obs_tick', 1), ('cfg_pure', 8), ('cfg_hyb_time', 6), ('cfg_hyb_pam', 3)]
 
 
 def declare(s, insts=('u_a', 'u_b')):
@@ -1213,6 +1652,10 @@ def synth_main_case(mode, code, tick_ns, pam_code=0, cid=7, defect=None, clk_ns=
         w = 8 if mode == MODE_PURE else 6
         s.set(58, nm, 'x' * w)
         s.set(66, nm, format_vec(code, w))
+    if defect == 'z_in_window':
+        held_a = PAM_PURE_SYMBOL if mode == MODE_PURE else pam_code
+        s.set(t0 + tick_ns, 'u_a/pam_sel', 'zzz')
+        s.set(t0 + 2 * tick_ns, 'u_a/pam_sel', format_vec(held_a, 3))
     if defect == 'proto_err_set':
         s.set(90, 'u_a/proto_err', 1)
     if defect == 'version_double':
@@ -1239,6 +1682,12 @@ def synth_main_case(mode, code, tick_ns, pam_code=0, cid=7, defect=None, clk_ns=
     s.emit(path)
     if defect == 'backwards_time':
         s.rewrite_time(path, -5)
+    if defect == 'duplicate_time_marker':
+        txt = u(io.open(path, encoding='utf-8').read()).split('\n')
+        marks = [k for k, ln in enumerate(txt) if ln.startswith('#')]
+        k = marks[len(marks) // 2]
+        txt.insert(k, txt[k])          # the same time block announced twice
+        io.open(path, 'w', encoding='utf-8', newline='\n').write(u('\n'.join(txt)))
     return path, {'mode': MODE_NAME[mode], 'code': code, 'intervals': m_int, 'tick_ns': T,
                   't0': t0, 'window_end': window_end, 'off': off, 'end': cut,
                   'pam': PAM_PURE_SYMBOL if mode == MODE_PURE else pam_code}
@@ -1334,6 +1783,7 @@ def selftest():
         ('data_en_b is not the complement', (MODE_PURE, 9), 'b_is_qbar', 'DATA_EN_B_COMPLEMENT'),
         ('one instance one tick late', (MODE_HYBRID, 40), 'late_instance', 'INSTANCES_DIFFER'),
         ('x inside the judged window', (MODE_PURE, 60), 'x_in_window', 'UNKNOWN_VALUE'),
+        ('z inside the judged window', (MODE_PURE, 60), 'z_in_window', 'UNKNOWN_VALUE'),
         ('x on the code bus at LATCH', (MODE_PURE, 60), 'x_on_code', 'UNKNOWN_VALUE'),
         ('tick spacing jitter', (MODE_PURE, 30), 'tick_jitter', 'TICK_SPACING_UNSTABLE'),
         ('tick off the reference grid', (MODE_HYBRID, 20), 'tick_off_grid', 'TICK_NOT_ALIGNED'),
@@ -1359,13 +1809,15 @@ def selftest():
             tag_hits[0] += 1
         if err:
             parse_hits[0] += 1
-    note(tag_hits[0] >= 15, 'defect tags judged inside the checker',
+    note(tag_hits[0] >= len(defects) - 2, 'defect tags judged inside the checker',
          'named-tag hits=%d, outright parse refusals=%d of %d defects'
          % (tag_hits[0], parse_hits[0], len(defects)))
 
     for label, defect, tag in (('time base is not 1 ns', 'bad_timescale', 'time base'),
                                ('judged signal missing', 'missing_signal', 'is not in the trace'),
-                               ('timestamp goes backwards', 'backwards_time', 'backwards')):
+                               ('timestamp goes backwards', 'backwards_time', 'backwards'),
+                               ('timestamp announced twice', 'duplicate_time_marker',
+                                'duplicate timestamp')):
         p, _spec = synth_main_case(MODE_PURE, 8, PURE_100HZ, defect=defect)
         rows, err = run(p)
         note(bool(err) and tag in (err or ''), 'refused while parsing: %s' % label,

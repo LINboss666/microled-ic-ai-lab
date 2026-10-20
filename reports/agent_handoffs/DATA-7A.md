@@ -263,10 +263,15 @@ P remote read-back  git ls-remote (direct) : ef6737d40912b91197df4c0954eee6edcff
                     gh api (api.github.com) : ef6737d40912b91197df4c0954eee6edcff55ee0
                     LOCAL_REMOTE_PARITY    = PASS, push transport = proxy, attempts = 1,
                     no force, no --no-verify, main and the teammate branches untouched
-DELIVERY_SHA (D)  = the commit that adds this JSON and this section; it is reported in the agent's
-                    final receipt together with its own two-path read-back, because a commit cannot
-                    contain its own SHA. D - P must contain only reports/agent_handoffs/DATA-7A.json
-                    and this file.
+DELIVERY_SHA (D)  = aa1f981a7522f78b372f2dd0d0bc69eaeb7ac334, the commit that added this JSON and
+                    this section, and the commit the independent review read.
+ACTUAL TIP AT REVIEW TIME = 6a1f5a192f3f1618499335c4365d717bfcadef39. The review was right to point
+                    this out: P..D was the two metadata files, but the branch then received a third
+                    commit, a one-line functional fix to scripts/dd1_d7a_bundle.py whose bytes-literal
+                    bug produced the filename `dd1_d7a_bundle_b'aa1f981'.zip`. So the range the
+                    reviewer actually had to read was P..6a1f5a1 = three files, not two, and calling
+                    D the delivery commit while a functional fix followed it was sloppy. The
+                    correction is stated here rather than rewritten into history.
 ```
 
 `reports/agent_handoffs/DATA-7A.json` follows schema 1.0 and was run through the copied validator
@@ -298,3 +303,81 @@ COMPLETION_LEVEL=RTL_LOGIC_VERIFIED
 The old Data-6 reservations (first-in-band settle wording, non-recomputable 210-row excerpts, the
 92-vs-96 terminal-object correction) keep their original records; this round did not re-run or rewrite
 them. DATA-7A stops here and waits for independent review of the delivery commit.
+
+
+---
+
+# DATA-7A-R1 — repair round after the independent review
+
+Sources for this section: the review package quoted in `reports/dd1_d7a_review_fix.md` (zip sha256
+`312c19dc…`, task book copy `326226…`), the reviewed commit `6a1f5a192f3f1618499335c4365d717bfcadef39`,
+and this worktree. No chat history was available or assumed.
+
+Everything above this heading describes the reviewed round as it was delivered, and is kept
+byte-for-byte as that round's record. The numbers it quotes are no longer the current suite: this
+revision runs 36 control scenarios plus 6 mixed-code rows, 9 mutation classes, 146 cells with 21
+async-reset registers, and the evidence set re-exported under run_id `r1_20261021`.
+
+## Remote read-back before touching anything
+
+```text
+poc/data-gray-d7a tip  git ls-remote via proxy : 6a1f5a192f3f1618499335c4365d717bfcadef39
+                       gh api                  : 6a1f5a192f3f1618499335c4365d717bfcadef39
+                       git ls-remote direct    : fatal: Recv failure: Connection was reset
+```
+
+Direct git transport failed as it has before on this host; the proxy path and the API agree, so the
+reviewed tip is confirmed by two independent reads and no unreviewed commit was found on it. New
+branch `poc/data-gray-d7a-r1` created from that commit in `D:/ic617_d7a_r1`; the reviewed worktree
+`D:/ic617_d7a` was left untouched.
+
+## Reproduced against the reviewed bytes, before changing anything
+
+The reviewer's three-protocol probe, compiled with D's unmodified RTL (`04e5aadf…`) on Windows /
+Icarus 14.0, printed the same counterexamples at the same timestamps as the Linux run
+(`A_START_ONLY … en=1` at 1366 ns, `B_REPEAT_LATCH … version=2` at 2566 ns, `C_UNSAFE_MODE …
+disp_mode=1 pam=5` at 3776 ns, `PROTOCOL_COUNTEREXAMPLES=3/3`). The export probe changed three
+pre-seeded fixture CSVs to digests identical to the reviewer's record (`f984b638…`, `57efa533…`,
+`8c483eaf…`), and the duplicate-`#` probe still came back `verdict: PASS`. All five findings are real
+and local, not a transcription of the review.
+
+## What changed
+
+R1 a separate `auth_q` authorisation is cleared by an abort, so a bare start cannot re-light;
+R2 `load_pending_q` makes one load consumable by exactly one LATCH and a replayed LATCH is refused as
+`STALE_CONFIG` without stepping the version; R3 `disp_mode_q` is written only by safe-phase adoption,
+a LATCH asking for another mode is refused as `MODE_NOT_ADOPTED`, and an accepted LATCH no longer
+erases a concurrent start or mode refusal; R4 the exporter builds and validates the whole artefact
+set in memory (identity of cached run against current sources, trace digests, full re-judgement,
+row-for-row equality, matrix completeness by content key, scenario coverage, gates) before staging
+`<name>.new` files and swapping them, and the new write-guard matrix exercises nine failure modes
+against a pre-seeded fixture of every real evidence file and compares the whole set by digest;
+R5 vector columns now carry the per-instance codes, every scenario declares the stimulus it must show
+and the checker verifies that declaration from the trace before judging the design, window
+completion is measured from each instance's own state edge, duplicate time markers are refused, an
+explicit Z negative joins the X negative, and abort coverage gained the shortest-pulse middle, both
+sides of the window endpoint, a 20 ns minimum pulse at an off-edge phase, a stall during a running
+window, four incomplete recovery sequences and three new mutation classes.
+
+## Gate status, final (run_id `r1_20261021`, whole chain re-run from the current bytes)
+
+| check | result |
+|---|---|
+| checker self-certification | PASS, 20 named-tag defects plus 4 parse refusals including duplicate timestamp and Z in window |
+| main matrix on the revised RTL | 1536/1536 PASS, 3072 instance observations, 1536 unique `(mode, frame, tick, code, pam)` keys |
+| control matrix on the revised RTL | 36 scenarios, 35 PASS, plus the one required refusal (unknown code bus) |
+| stimulus attestation | 42/42 control and mixed rows declare their stimulus and none contradicts it; the shut-off phase, pulse width, tick count and ABORT transition are read back from the trace |
+| mixed-code rows | 6/6 PASS, each channel measured on its own start and completion |
+| RTL mutations | 9/9 DETECTED, each mutant recompiled and re-simulated, judged by the unchanged checker |
+| write guard | 9 failure modes, each refused with the pre-seeded fixture unchanged by digest and by file set |
+| yosys structure on the revised RTL | rc=0, 2 check passes with 0 problems, 146 cells, 21 async-reset FFs, no latch/memory, statistics parsed |
+| evidence re-check | `EVIDENCE_IDENTITY: PASS (0 checks failed)` over 40 checks, 7/7 evidence digests, 6/6 source digests |
+| `SOURCE_PROVENANCE_CHECK` | PASS (401 files, 528 labelled lines, 0 violations) |
+| `DEVICE_COUNT_CHECK` | PASS |
+| `SAFETY_RULES_TEST` | PASS (unchanged shared rules, no new exception this round) |
+| history scan | PASS, 1359 objects, 0 tracked PDK/credential/key/vendor files |
+| objects scan | the pre-existing unreachable blob `955497fb18ac` (3,583,407 bytes) is still reported and that gate still says FAIL: no GC, no content printed, no rule relaxed |
+
+The chain that produced these numbers, and every exit code, is written out in
+`reports/dd1_d7a_review_fix.md` section 6 and echoed by the command transcript in
+`results/evidence/dd1_d7a_freeze_security.txt`.

@@ -32,20 +32,22 @@ PASS PAM code falls back at PWM off         PAM_NOT_HELD -> PAM_NOT_HELD(pam_sel
 PASS data_en_b is not the complement        DATA_EN_B_COMPLEMENT -> DATA_EN_B_COMPLEMENT(1 of 3 sampled edges are not complementary, first 150 ns data_en=0 data_en_b=0)
 PASS one instance one tick late             INSTANCES_DIFFER -> ON_START(conduction starts at 280 ns, contract says t0 = 160 ns) ; ON_WIDTH(conduction ends at 5080 
 PASS x inside the judged window             UNKNOWN_VALUE -> UNKNOWN_VALUE(pam_sel holds ['xxx'] inside the judged window) ; UNKNOWN_IN_WINDOW(u_a/pam_sel is x/z
+PASS z inside the judged window             UNKNOWN_VALUE -> UNKNOWN_VALUE(pam_sel holds ['zzz'] inside the judged window) ; UNKNOWN_IN_WINDOW(u_a/pam_sel is x/z
 PASS x on the code bus at LATCH             UNKNOWN_VALUE -> UNKNOWN_VALUE(u_a/cfg_pure holds ['xxxxxxxx'] inside LATCH through the window tail)
 PASS tick spacing jitter                    TICK_SPACING_UNSTABLE -> TICK_SPACING_UNSTABLE(tick steps inside the window ['30', '32']) ; TICK_SPACING_UNSTABLE(tick steps 
 PASS tick off the reference grid            TICK_NOT_ALIGNED -> TICK_NOT_ALIGNED(measured tick spacing 121 ns is not an integer multiple of the measured reference p
 PASS re-open after the window end           REOPEN_AFTER_WINDOW -> SEGMENT_COUNT(expected exactly one conducting segment, measured 2: ['(160,520)', '(7870,7900)']) ; R
-PASS proto_err recorded in a legal case     PROTO_ERR_IN_MAIN -> PROTO_ERR_IN_MAIN(a legal main case recorded ['000001'])
+PASS proto_err recorded in a legal case     PROTO_ERR_IN_MAIN -> PROTO_ERR_IN_MAIN(a legal main case recorded ['00000001'])
 PASS cfg_version moved twice                CFG_VERSION -> CFG_VERSION(one accepted LATCH must move cfg_version by exactly one, saw ['00000000', '00000001', '0
 PASS abort state inside a main case         WIN_STATE -> WIN_STATE(ABORT reached inside a legal main case) ; INSTANCES_DIFFER(behind identical control and co
 PASS light while blank is asserted          LIGHT_BEFORE_T0 -> LIGHT_BEFORE_T0(1 data_en rise(s) before t0, first at 100 ns)
 PASS obs_tick pulses inside blank           OBS_TICK_MISMATCH -> OBS_TICK_MISMATCH(1 obs_tick edge(s) are not accepted window ticks, first 100 ns is not a tick edge)
 PASS excerpt stops before the tail          TRUNCATED_TRACE -> TRUNCATED_TRACE(the case stops at 7870 ns, before the window end 7840 ns plus two idle ticks) ; TRUN
-PASS defect tags judged inside the checker  named-tag hits=19, outright parse refusals=0 of 19 defects
+PASS defect tags judged inside the checker  named-tag hits=20, outright parse refusals=0 of 20 defects
 PASS refused while parsing: time base is not 1 ns time base -> time base 1e-08 s is not one of the accepted 1 ps / 1 ns dump units; the checker
 PASS refused while parsing: judged signal missing is not in the trace -> signal u_a/data_en_b is not in the trace: refusing to assume a value
 PASS refused while parsing: timestamp goes backwards backwards -> timestamp 8060000 goes backwards
+PASS refused while parsing: timestamp announced twice duplicate timestamp -> duplicate timestamp 4035000: the dump states the same time twice, and the contra
 PASS refused: empty case set, marker never resolves every case marker value is unknown or unresolved: no case can be identified
 PASS legal: two cases segmented by the marker rows=2 
 PASS sample guard accepts a straddling excerpt pre=3 post=3
@@ -56,4 +58,4 @@ PASS write guard refuses empty row set      digest unchanged=True
 PASS write guard refuses ragged row         digest unchanged=True
 PASS write guard still writes when rows are complete official write path not blocked
 
-synthetic traces written under D:\ic617_d7a\review
+synthetic traces written under D:\ic617_d7a_r1\review
