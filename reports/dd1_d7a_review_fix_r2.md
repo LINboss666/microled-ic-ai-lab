@@ -234,7 +234,9 @@ T1..P2  20 tracked files = rtl 1, testbench 1, scripts 4 (runner, checker, evide
                            supersession note, this report, the R2 task-book copy), handoff MD 1,
                            evidence 8 (the seventh published table plus the freeze transcript, which
                            the manifest deliberately does not self-hash).
-T1..D2  22 tracked files = the 20 above plus the delivery JSON and this section.
+T1..D2  21 tracked files = the 20 of P2 plus reports/agent_handoffs/DATA-7A.json; this section
+                          lives in the already-counted handoff MD. Measured with
+                          `git diff --name-only 0b64d1d6..HEAD | wc -l` after the handoff commit.
 B..D2   28 tracked files = everything DATA-7A has ever touched across the three rounds: the 26 of
                            the first two rounds plus this report and the R2 task-book copy. Nothing
                            outside the DATA-7A prefix appears in any of the three ranges, and the
