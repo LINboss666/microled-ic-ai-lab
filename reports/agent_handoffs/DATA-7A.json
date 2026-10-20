@@ -1,0 +1,182 @@
+{
+ "base_sha": "731767519d1a51287eb5b7f4a6e4f9b8e613e990",
+ "branch": "poc/data-gray-d7a",
+ "completion_level": "RTL_LOGIC_VERIFIED",
+ "counts": {
+  "control_scenarios": 24,
+  "edge_sample_rows": 3224,
+  "instance_observations": 3072,
+  "main_cases": 1536,
+  "mixed_code_cases": 6,
+  "mutation_classes": 6
+ },
+ "evidence_paths": [
+  "reports/dd1_d7a_contract.md",
+  "reports/dd1_d7a_rtl.md",
+  "reports/tasks/DATA-7A.md",
+  "reports/agent_handoffs/DATA-7A.md",
+  "rtl/dd1_d7a_gray_ctrl.sv",
+  "tests/dd1_d7a/tb_dd1_d7a_gray.sv",
+  "scripts/dd1_d7a_trace.py",
+  "scripts/dd1_d7a_check.py",
+  "scripts/dd1_d7a_run.py",
+  "scripts/dd1_d7a_bundle.py",
+  "scripts/dd1_d7a_evidence_check.py",
+  "scripts/dd1_d7a_validate_handoff.py",
+  "results/evidence/dd1_d7a_cases.csv",
+  "results/evidence/dd1_d7a_control_cases.csv",
+  "results/evidence/dd1_d7a_negative.csv",
+  "results/evidence/dd1_d7a_edge_samples.csv",
+  "results/evidence/dd1_d7a_manifest.json",
+  "results/evidence/dd1_d7a_environment.json",
+  "results/evidence/dd1_d7a_checker_selftest.txt",
+  "results/evidence/dd1_d7a_write_guard.txt",
+  "results/evidence/dd1_d7a_freeze_security.txt"
+ ],
+ "head_sha": "ef6737d40912b91197df4c0954eee6edcff55ee0",
+ "head_sha_semantics": "payload_commit: the commit that carries the RTL, testbench, checker, vectors generator and evidence. The commit containing this JSON is the delivery commit D; D's own full SHA and its two-path remote read-back are stated in reports/agent_handoffs/DATA-7A.md section 9 and in the agent's final receipt.",
+ "known_limitations": [
+  "The full VCD traces stay local (16 MB to 38 MB each, .vcd is not whitelisted); only their sha256 and the small derived tables are committed, so a reviewer re-runs the sources instead of replaying a dump.",
+  "The tick clock-enable is supplied by the testbench reference domain; its divider, the TCON 976/977 column schedule and the 50 MHz DCLK-to-PWM crossing are NOT_IMPLEMENTED here.",
+  "Asynchronous shut-off is proven as zero-delay logic priority only: MOS propagation, metastability, safe reset release and real device glitches are unmeasured, and the two-reference-cycle minimum width for blank/fault is a POC assumption, not a chip input specification.",
+  "pam_sel is a code. In Pure mode it is the symbol value 7, which is not 15 uA; the eight current levels, trimming and reference relationship remain NOT DEFINED.",
+  "Nothing is connected to the frozen Data-6 netlist; whether a grey-scale top reuses that analogue core or needs a timed latch interface is a later, separately reviewed MOS decision.",
+  "Optical effective grey bits, LED I-V, array RC, final VLED/VSCAN and SOA are NOT_VERIFIED; an RTL pass proves none of them.",
+  "One pre-existing unreachable large blob <blob:955497fb18ac>, 3,583,407 bytes, dated 2026-10-14 and not created by this round, makes --mode objects FAIL. It is left untouched: no GC, no history rewrite, no content printed.",
+  "This validator and this JSON prove field structure only; they do not verify remote truth, circuit behaviour or that any number is physically correct."
+ ],
+ "project_id": "microled-ic-ai-lab",
+ "push_status": "REMOTE_VERIFIED",
+ "push_status_scope": "read-back of the payload commit above, obtained before these bytes were written; never a claim about the commit that stores this file",
+ "remote_readback": {
+  "forced": false,
+  "method_1": "git ls-remote origin refs/heads/poc/data-gray-d7a (direct transport)",
+  "method_2": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/poc/data-gray-d7a",
+  "parity": "PASS",
+  "protected_branch_touched": false,
+  "sha_1": "ef6737d40912b91197df4c0954eee6edcff55ee0",
+  "sha_2": "ef6737d40912b91197df4c0954eee6edcff55ee0",
+  "transport_used_for_push": "proxy (WinINET 127.0.0.1:7892), chosen after measuring both paths"
+ },
+ "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
+ "reserved_statuses": {
+  "GRAY_LUT_IMPLEMENTATION": "NOT_RUN",
+  "HYBRID_CURRENT_INTEGRATION": "NOT_RUN",
+  "LAYOUT_DRC_LVS_PEX": "NOT_RUN",
+  "NEW_OA_WRITES": 0,
+  "NEW_SPECTRE_RUNS": 0,
+  "OPTICAL_EFFECTIVE_BITS": "NOT_VERIFIED",
+  "PAM_8LEVEL_ANALOG_IMPLEMENTATION": "NOT_RUN",
+  "PHYSICAL_CDC_AND_SKEW": "NOT_VERIFIED",
+  "PWM_MOS_IMPLEMENTATION": "NOT_RUN",
+  "SOA_SIGNOFF": "NO"
+ },
+ "schema_version": "1.0",
+ "scope_status": "COMPLETE",
+ "scope_status_meaning": "the DATA-7A digital-logic stage only. COMPLETE does not mean the PWM MOS circuit, the eight PAM current levels, the LUT, the array or the optics are done or verified.",
+ "security_gate": "PASS",
+ "stop_reason": "AWAITING_INDEPENDENT_REVIEW",
+ "task_id": "DATA-7A",
+ "tests": [
+  {
+   "evidence_path": "results/evidence/dd1_d7a_checker_selftest.txt",
+   "name": "checker_selftest",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_cases.csv",
+   "name": "pure_matrix_512",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_cases.csv",
+   "name": "hybrid_timing_matrix_1024",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_cases.csv",
+   "name": "instance_observations_3072",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_control_cases.csv",
+   "name": "control_and_abort_matrix",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_control_cases.csv",
+   "name": "mixed_codes_two_channels",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_negative.csv",
+   "name": "mutation_detection_six_classes",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_environment.json",
+   "name": "synthesis_structure_yosys",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_write_guard.txt",
+   "name": "write_guard",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_edge_samples.csv",
+   "name": "edge_samples_straddle_anchors",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_manifest.json",
+   "name": "evidence_identity_recomputed",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_freeze_security.txt",
+   "name": "freeze_and_security",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "reports/agent_handoffs/DATA-7A.md",
+   "name": "pwm_mos_implementation",
+   "status": "NOT_RUN"
+  },
+  {
+   "evidence_path": "reports/agent_handoffs/DATA-7A.md",
+   "name": "pam_8level_analog_implementation",
+   "status": "NOT_RUN"
+  },
+  {
+   "evidence_path": "reports/agent_handoffs/DATA-7A.md",
+   "name": "hybrid_current_integration",
+   "status": "NOT_RUN"
+  },
+  {
+   "evidence_path": "reports/agent_handoffs/DATA-7A.md",
+   "name": "gray_lut_implementation",
+   "status": "NOT_RUN"
+  },
+  {
+   "evidence_path": "reports/agent_handoffs/DATA-7A.md",
+   "name": "layout_drc_lvs_pex",
+   "status": "NOT_RUN"
+  },
+  {
+   "evidence_path": "reports/agent_handoffs/DATA-7A.md",
+   "name": "optical_effective_bits",
+   "status": "UNVERIFIED"
+  },
+  {
+   "evidence_path": "reports/agent_handoffs/DATA-7A.md",
+   "name": "physical_cdc_and_skew",
+   "status": "UNVERIFIED"
+  },
+  {
+   "evidence_path": "reports/agent_handoffs/DATA-7A.md",
+   "name": "soa_signoff",
+   "status": "NOT_RUN"
+  }
+ ]
+}

@@ -247,3 +247,54 @@ start and window end.
 Edge samples: 3,224 rows over 248 (case, anchor, signal) sets, each with points both before and after
 its anchor, covering black, shortest, last step, full window and an asynchronous blank shut-off; no
 sampled value is x/z.
+
+## 9. Commit structure and remote read-back
+
+Two commits are used so no tracked file has to contain its own commit SHA.
+
+```text
+BASE_SHA          = 731767519d1a51287eb5b7f4a6e4f9b8e613e990   (poc/data-unit-1ch, read back twice)
+BRANCH            = poc/data-gray-d7a                          (new, own branch, ordinary push)
+PAYLOAD_SHA (P)   = ef6737d40912b91197df4c0954eee6edcff55ee0
+P contents        = RTL, testbench, reader, checker, runner, bundle/evidence checkers, contract,
+                    implementation note, task-book copy, 9 evidence files, the two safety-rule
+                    files section 2.3 allows to change
+P remote read-back  git ls-remote (direct) : ef6737d40912b91197df4c0954eee6edcff55ee0
+                    gh api (api.github.com) : ef6737d40912b91197df4c0954eee6edcff55ee0
+                    LOCAL_REMOTE_PARITY    = PASS, push transport = proxy, attempts = 1,
+                    no force, no --no-verify, main and the teammate branches untouched
+DELIVERY_SHA (D)  = the commit that adds this JSON and this section; it is reported in the agent's
+                    final receipt together with its own two-path read-back, because a commit cannot
+                    contain its own SHA. D - P must contain only reports/agent_handoffs/DATA-7A.json
+                    and this file.
+```
+
+`reports/agent_handoffs/DATA-7A.json` follows schema 1.0 and was run through the copied validator
+byte-for-byte (`scripts/dd1_d7a_validate_handoff.py`, sha256 `3c150d54…`, semantics unmodified):
+
+```text
+HANDOFF_STRUCTURE: PASS (fields only; evidence/remote truth NOT verified)
+```
+
+Its `head_sha` points at P with `head_sha_semantics = payload_commit`, and its `push_status` is
+scoped in the same file: the read-back it records is P's, taken before those bytes were written.
+
+## 10. Reserved statuses (unchanged by any result above)
+
+```text
+PWM_MOS_IMPLEMENTATION=NOT_RUN
+PAM_8LEVEL_ANALOG_IMPLEMENTATION=NOT_RUN
+HYBRID_CURRENT_INTEGRATION=NOT_RUN
+GRAY_LUT_IMPLEMENTATION=NOT_RUN
+OPTICAL_EFFECTIVE_BITS=NOT_VERIFIED
+PHYSICAL_CDC_AND_SKEW=NOT_VERIFIED
+NEW_SPECTRE_RUNS=0
+NEW_OA_WRITES=0
+LAYOUT_DRC_LVS_PEX=NOT_RUN
+SOA_SIGNOFF=NO
+COMPLETION_LEVEL=RTL_LOGIC_VERIFIED
+```
+
+The old Data-6 reservations (first-in-band settle wording, non-recomputable 210-row excerpts, the
+92-vs-96 terminal-object correction) keep their original records; this round did not re-run or rewrite
+them. DATA-7A stops here and waits for independent review of the delivery commit.
