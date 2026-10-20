@@ -381,3 +381,42 @@ window, four incomplete recovery sequences and three new mutation classes.
 The chain that produced these numbers, and every exit code, is written out in
 `reports/dd1_d7a_review_fix.md` section 6 and echoed by the command transcript in
 `results/evidence/dd1_d7a_freeze_security.txt`.
+
+## R1 commit structure and remote read-back
+
+Two commits again, so no file has to contain its own SHA, and this time the metadata commit really is
+metadata: every functional change is inside the payload commit.
+
+```text
+BRANCH            = poc/data-gray-d7a-r1                          (new, own branch, ordinary push)
+BASE (reviewed D) = 6a1f5a192f3f1618499335c4365d717bfcadef39      (not moved, not merged, not rewritten)
+PAYLOAD_SHA (P1)  = b0196f995962e8098e218aabf86e5864792b7f8c
+P1 contents       = 21 files: rtl, testbench, runner, checker, reader, evidence checker, bundle
+                    packer, contract, implementation note, this handoff MD, the R1 report, the R1
+                    task-book copy, and the nine published evidence files. No shared safety tool, no
+                    old Spectre/Data-6/Scan/PDK/OA file.
+P1 remote read-back  git ls-remote (direct)  : b0196f995962e8098e218aabf86e5864792b7f8c
+                     gh api (api.github.com) : b0196f995962e8098e218aabf86e5864792b7f8c
+                     LOCAL_REMOTE_PARITY     = PASS
+                     push transport = proxy, attempts = 1, dry-run first, no force, no --no-verify,
+                     main and the teammate branches untouched, no visibility change, no merge
+pre-push hook        scripts/precommit_safety_check.py --mode history : SAFETY_GATE: PASS
+DELIVERY_SHA (D1)  = the commit that adds this JSON and this paragraph and changes nothing else.
+                     It is deliberately not written into any tracked file: a commit cannot carry its
+                     own SHA. Read it as the branch tip (`git rev-parse origin/poc/data-gray-d7a-r1`)
+                     or from the remote ref; it is also quoted in the chat receipt and in the review
+                     bundle manifest, which are outside the repository.
+```
+
+`reports/agent_handoffs/DATA-7A.json` (12,431 bytes, sha256
+`d65c0d2227d87f9f95bdf5d8ab537be690429282c715c9bba04eda03c7a90cef`) was produced from the published
+evidence tables rather than typed, and run through the unchanged byte-for-byte validator:
+
+```text
+$ python scripts/dd1_d7a_validate_handoff.py reports/agent_handoffs/DATA-7A.json
+HANDOFF_STRUCTURE: PASS (fields only; evidence/remote truth NOT verified)   rc=0
+```
+
+Its `head_sha` names P1 with `head_sha_semantics = payload_commit`; `objects_scan` is written as FAIL
+with the pre-existing blob named, and `scope_status = COMPLETE` is scoped in the same file to the
+digital-logic repair only. A schema PASS is a statement about fields, not about the silicon.
