@@ -542,10 +542,17 @@ P2 remote read-back   git ls-remote (proxy)  : e151ebca59bc60df5e6e4d16fd6907e97
                       no force, no --no-verify, main / poc/data-gray-d7a / poc/data-gray-d7a-r1 and
                       every teammate branch untouched, no merge, no visibility change
 pre-push hook         scripts/precommit_safety_check.py --mode history : SAFETY_GATE: PASS
-DELIVERY_SHA (D2)   = this commit: the JSON, this section and the report ranges. It changes no
-                      source, script, RTL, testbench or evidence table, and it does not name its own
-                      SHA. Read the tip with `git rev-parse origin/poc/data-gray-d7a-r2`; it is also
-                      quoted in the chat receipt and in the review bundle, outside the repository.
+DELIVERY_SHA (D2)   = ff477ae7996a6efe74bdd60d971443810daf485d, this JSON plus this section and the
+                      report's commit ranges. No source, script, RTL, testbench or evidence table
+                      changed in it.
+FOLLOW-UP COMMITS    = e1650e2ac2e6e786f4a4edef14793da7f840c49b corrects the handoff range to the
+                       measured 21 files, and the commit that records these two SHAs is the branch
+                       tip. Every one of them is metadata: the whole functional change, the regression
+                       suite and the evidence are in P2, and writing a commit's own SHA into a file
+                       it contains is impossible, so the tip is stated here as "the commit that lists
+                       these", not as a number. Read the delivered tip with
+                       `git rev-parse origin/poc/data-gray-d7a-r2`; it is also quoted in the chat
+                       receipt and in the review bundle, outside the repository.
 ```
 
 `reports/agent_handoffs/DATA-7A.json` is regenerated from the published tables and machine records
