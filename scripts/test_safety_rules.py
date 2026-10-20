@@ -71,6 +71,22 @@ MUST_NOT_PATH = [
     "spectre/" + "pdk_local.env.example",
 ]
 
+# DATA-7A widens the whitelist by exactly one extension, its own SystemVerilog sources. Pin both
+# directions: that extension is accepted, and everything still unknown is refused -- a wave dump,
+# a compiler binary or a plain .v file must not become acceptable by accident.
+MUST_ACCEPT_EXT = [
+    "rtl/dd1_d7a_" + "gray_ctrl.sv",
+    "tests/dd1_d7a/tb_dd1_d7a_" + "gray.sv",
+]
+MUST_REJECT_EXT = [
+    "review/dd1_d7a/trace_" + "main.vcd",
+    "build/obj/iverilog" + ".exe",
+    "rtl/top" + ".v",
+    "results/plot" + ".png",
+    "tool/libyosys" + ".so",
+    "sim/raw" + ".raw",
+]
+
 fails = []
 
 
@@ -95,10 +111,22 @@ for path, why in MUST_PATH:
     check(R.path_denied(path) is not None, "MUST block path %s (%s)" % (path, why))
 for path in MUST_NOT_PATH:
     check(R.path_denied(path) is None, "MUST NOT block path %s -> %s" % (path, R.path_denied(path)))
+for path in MUST_ACCEPT_EXT:
+    r = R.classify_file(path, path, exists_check=False)
+    bad = [x for x in r["reasons"] if x.startswith("unknown_extension")]
+    check(not bad, "MUST accept the one whitelisted RTL extension %s -> %s" % (path, r["reasons"]))
+    check(".sv" in R.EXTENSIONS_ALLOWED, "the .sv entry is missing from EXTENSIONS_ALLOWED")
+for path in MUST_REJECT_EXT:
+    r = R.classify_file(path, path, exists_check=False)
+    check(any(x.startswith("unknown_extension") for x in r["reasons"]),
+          "MUST still refuse an unknown extension %s -> %s" % (path, r["reasons"]))
+for ext in (".v", ".vcd", ".exe", ".raw", ".lib", ".db"):
+    check(ext not in R.EXTENSIONS_ALLOWED, "extension %s must stay outside the whitelist" % ext)
 
-print("safety_rules cases: secret=%d/%d vendor=%d/%d path=%d/%d" % (
+print("safety_rules cases: secret=%d/%d vendor=%d/%d path=%d/%d ext=%d/%d reject=%d/%d" % (
     len(MUST_SECRET), len(MUST_SECRET), len(MUST_VENDOR), len(MUST_VENDOR),
-    len(MUST_PATH), len(MUST_PATH)))
+    len(MUST_PATH), len(MUST_PATH), len(MUST_ACCEPT_EXT), len(MUST_ACCEPT_EXT),
+    len(MUST_REJECT_EXT), len(MUST_REJECT_EXT)))
 if fails:
     for f in fails:
         print("FAIL " + f)

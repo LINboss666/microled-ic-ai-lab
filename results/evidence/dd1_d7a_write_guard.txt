@@ -1,0 +1,10 @@
+DATA-7A write guard record
+The official evidence path is only written by --export, atomically, and only after every
+gate in the run summary passed. Three refusals are demonstrated below by digest.
+file=results/evidence/dd1_d7a_write_guard.txt
+seed_sha256=33337667120449290f54a63638596aa5c897f7bb8acc2079865608e8318faa63
+empty_row_set=REFUSED(refusing to write 0 rows over D:\ic617_d7a\results\evidence\)
+missing_run_dir=REFUSED(FileNotFoundError)
+digest_after_attempts=33337667120449290f54a63638596aa5c897f7bb8acc2079865608e8318faa63
+digest_unchanged=True
+WRITE_GUARD: PASS

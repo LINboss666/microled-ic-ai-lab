@@ -1,0 +1,59 @@
+PASS table PURE code 0                      hand-typed 0, function says 0
+PASS table PURE code 1                      hand-typed 1, function says 1
+PASS table PURE code 2                      hand-typed 2, function says 2
+PASS table PURE code 7                      hand-typed 7, function says 7
+PASS table PURE code 128                    hand-typed 128, function says 128
+PASS table PURE code 254                    hand-typed 254, function says 254
+PASS table PURE code 255                    hand-typed 256, function says 256
+PASS table HYBRID code 0                    hand-typed 0, function says 0
+PASS table HYBRID code 1                    hand-typed 1, function says 1
+PASS table HYBRID code 2                    hand-typed 2, function says 2
+PASS table HYBRID code 32                   hand-typed 32, function says 32
+PASS table HYBRID code 62                   hand-typed 62, function says 62
+PASS table HYBRID code 63                   hand-typed 64, function says 64
+PASS table covers all PURE codes            gaps=none
+PASS table rejects codes above 255          accepted=none
+PASS table covers all HYBRID codes          gaps=none
+PASS table rejects codes above 63           accepted=none
+PASS table rejects illegal modes            mode 2 and 3 have no interval count
+PASS legal: exactly one interval            width=30 ns want=30 segments=1 pam=7 match=PASS verdict=PASS none
+PASS legal: full window at code 255         width=12800 ns want=12800 segments=1 pam=7 match=PASS verdict=PASS none
+PASS legal: black code 0 stays dark         width=0 ns want=0 segments=0 pam=7 match=PASS verdict=PASS none
+PASS legal: full window at code 63          width=7680 ns want=7680 segments=1 pam=7 match=PASS verdict=PASS none
+PASS legal: hybrid black with a PAM code    width=0 ns want=0 segments=0 pam=0 match=PASS verdict=PASS none
+PASS legal: short hybrid interval count     width=1000 ns want=1000 segments=1 pam=5 match=PASS verdict=PASS none
+PASS legal: one interval short of full      width=7620 ns want=7620 segments=1 pam=7 match=PASS verdict=PASS none
+PASS off-by-one wide                        ON_WIDTH -> ON_WIDTH(conduction ends at 400 ns, 240 ticks after t0; contract wants 7 intervals -> 370 ns) ; INST
+PASS full window one tick short             ON_WIDTH -> ON_WIDTH(conduction ends at 7870 ns, 7710 ticks after t0; contract wants 256 intervals -> 7840 ns) ;
+PASS missing window end point               NO_DEASSERTION -> NO_DEASSERTION(data_en is still high at the end of the case: the window endpoint is missing) ; UNJUD
+PASS narrow pulse after PWM off             SEGMENT_COUNT -> SEGMENT_COUNT(expected exactly one conducting segment, measured 2: ['(160,3760)', '(3820,3821)']) ; 
+PASS zero-width glitch at one timestamp     SEGMENT_COUNT -> SEGMENT_COUNT(expected exactly one conducting segment, measured 2: ['(160,1120)', '(1240,1240)']) ; 
+PASS PAM code falls back at PWM off         PAM_NOT_HELD -> PAM_NOT_HELD(pam_sel is ['000', '100'] between the blank release and two ticks past the window end; 
+PASS data_en_b is not the complement        DATA_EN_B_COMPLEMENT -> DATA_EN_B_COMPLEMENT(1 of 3 sampled edges are not complementary, first 150 ns data_en=0 data_en_b=0)
+PASS one instance one tick late             INSTANCES_DIFFER -> ON_START(conduction starts at 280 ns, contract says t0 = 160 ns) ; ON_WIDTH(conduction ends at 5080 
+PASS x inside the judged window             UNKNOWN_VALUE -> UNKNOWN_VALUE(pam_sel holds ['xxx'] inside the judged window) ; UNKNOWN_IN_WINDOW(u_a/pam_sel is x/z
+PASS x on the code bus at LATCH             UNKNOWN_VALUE -> UNKNOWN_VALUE(u_a/cfg_pure holds ['xxxxxxxx'] inside LATCH through the window tail)
+PASS tick spacing jitter                    TICK_SPACING_UNSTABLE -> TICK_SPACING_UNSTABLE(tick steps inside the window ['30', '32']) ; TICK_SPACING_UNSTABLE(tick steps 
+PASS tick off the reference grid            TICK_NOT_ALIGNED -> TICK_NOT_ALIGNED(measured tick spacing 121 ns is not an integer multiple of the measured reference p
+PASS re-open after the window end           REOPEN_AFTER_WINDOW -> SEGMENT_COUNT(expected exactly one conducting segment, measured 2: ['(160,520)', '(7870,7900)']) ; R
+PASS proto_err recorded in a legal case     PROTO_ERR_IN_MAIN -> PROTO_ERR_IN_MAIN(a legal main case recorded ['000001'])
+PASS cfg_version moved twice                CFG_VERSION -> CFG_VERSION(one accepted LATCH must move cfg_version by exactly one, saw ['00000000', '00000001', '0
+PASS abort state inside a main case         WIN_STATE -> WIN_STATE(ABORT reached inside a legal main case) ; INSTANCES_DIFFER(behind identical control and co
+PASS light while blank is asserted          LIGHT_BEFORE_T0 -> LIGHT_BEFORE_T0(1 data_en rise(s) before t0, first at 100 ns)
+PASS obs_tick pulses inside blank           OBS_TICK_MISMATCH -> OBS_TICK_MISMATCH(1 obs_tick edge(s) are not accepted window ticks, first 100 ns is not a tick edge)
+PASS excerpt stops before the tail          TRUNCATED_TRACE -> TRUNCATED_TRACE(the case stops at 7870 ns, before the window end 7840 ns plus two idle ticks) ; TRUN
+PASS defect tags judged inside the checker  named-tag hits=19, outright parse refusals=0 of 19 defects
+PASS refused while parsing: time base is not 1 ns time base -> time base 1e-08 s is not one of the accepted 1 ps / 1 ns dump units; the checker
+PASS refused while parsing: judged signal missing is not in the trace -> signal u_a/data_en_b is not in the trace: refusing to assume a value
+PASS refused while parsing: timestamp goes backwards backwards -> timestamp 8060000 goes backwards
+PASS refused: empty case set, marker never resolves every case marker value is unknown or unresolved: no case can be identified
+PASS legal: two cases segmented by the marker rows=2 
+PASS sample guard accepts a straddling excerpt pre=3 post=3
+PASS sample guard refuses pre-event-only points pre-event only: every point is taken before the anchor at 5000 ns; a pre-event sample is n
+PASS sample guard refuses an empty sample set nothing: no samples at all
+PASS sample guard refuses an unknown sampled value x sample: a sample value is x/z
+PASS write guard refuses empty row set      digest unchanged=True
+PASS write guard refuses ragged row         digest unchanged=True
+PASS write guard still writes when rows are complete official write path not blocked
+
+synthetic traces written under D:\ic617_d7a\review

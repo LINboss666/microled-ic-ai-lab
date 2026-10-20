@@ -1,0 +1,30 @@
+DATA-7A freeze and security check transcript
+generated: 2026-10-20T13:38:06Z by running, in the worktree at branch poc/data-gray-d7a:
+
+== 1. checker self-certification (synthetic traces, no EDA)
+synthetic traces written under D:\ic617_d7a\review
+CHECKER_SELFTEST: PASS
+
+== 2. dry run (environment, frozen digests, plan; no writes outside review/)
+ "frozen_verified": {
+  "spectre/dd1_d6_bias_core.scs": "MATCH",
+  "spectre/dd1_d6_sink_core.scs": "MATCH"
+ "oa_writes": 0,
+ "planned_control": 24,
+ "planned_main_groups": {
+ "planned_main_total": 1536,
+ "planned_mixed": 6,
+ "spectre_runs": 0,
+DRY_RUN: PASS
+
+== 3. safety rule two-direction tests
+safety_rules cases: secret=7/7 vendor=4/4 path=10/10 ext=2/2 reject=6/6
+SAFETY_RULES_TEST: PASS
+
+== 4. evidence identity recomputed from the bytes to be committed
+PASS   TOOL_PROVENANCE: toolchain digest recorded matches the pinned asset digest
+
+EVIDENCE_IDENTITY: PASS (0 checks failed)
+
+== 5. precommit gate over staged content (run again by the git hook at commit time)
+see reports/agent_handoffs/DATA-7A.md for the staged/history/objects results

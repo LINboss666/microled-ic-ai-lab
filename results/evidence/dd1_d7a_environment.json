@@ -1,0 +1,142 @@
+{
+ "commands": {
+  "check": "python scripts/dd1_d7a_check.py --main <vcd> --out <rows.csv> --run-id <run>",
+  "compile": "iverilog -g2012 -Wall -o <run>/d7a.vvp rtl/dd1_d7a_gray_ctrl.sv tests/dd1_d7a/tb_dd1_d7a_gray.sv",
+  "mutants": "python scripts/dd1_d7a_run.py --mutants --out <run>",
+  "simulate": "vvp <run>/d7a.vvp +VEC=<run>/vectors_<group>.txt +VCD=<run>/trace_<group>.vcd",
+  "synthesis": "yosys -s <run>/structure.ys"
+ },
+ "counts": {
+  "control_pass": 23,
+  "control_rows": 24,
+  "main_pass": 1536,
+  "main_rows": 1536,
+  "mixed_pass": 6,
+  "mixed_rows": 6,
+  "xprobe_expected": 1,
+  "xprobe_refused": 1
+ },
+ "four_state": true,
+ "groups": [
+  {
+   "aliased_ids": 24,
+   "name": "pure_t30",
+   "same_time_edges": 0,
+   "seconds": 24.68,
+   "signals": 216,
+   "tb_cases": 256,
+   "vcd": "trace_pure_t30.vcd",
+   "vcd_bytes": 16286320,
+   "vcd_sha256": "cdbe40512cabf261c552652afdd5ef97b70a65296b2306572130b2e88dc2755d",
+   "vvp_rc": 0
+  },
+  {
+   "aliased_ids": 24,
+   "name": "pure_t50",
+   "same_time_edges": 0,
+   "seconds": 40.05,
+   "signals": 216,
+   "tb_cases": 256,
+   "vcd": "trace_pure_t50.vcd",
+   "vcd_bytes": 21929630,
+   "vcd_sha256": "211f32705d521b52ce62277812175bfb1c666436fdbda41b214d5f13d51161c7",
+   "vvp_rc": 0
+  },
+  {
+   "aliased_ids": 24,
+   "name": "hyb_t120",
+   "same_time_edges": 0,
+   "seconds": 82.28,
+   "signals": 216,
+   "tb_cases": 512,
+   "vcd": "trace_hyb_t120.vcd",
+   "vcd_bytes": 25134665,
+   "vcd_sha256": "76257b00177a5099f80fcc9c1ba0e7c8382fd33a98588643643afca017a5ac15",
+   "vvp_rc": 0
+  },
+  {
+   "aliased_ids": 24,
+   "name": "hyb_t200",
+   "same_time_edges": 0,
+   "seconds": 112.94,
+   "signals": 216,
+   "tb_cases": 512,
+   "vcd": "trace_hyb_t200.vcd",
+   "vcd_bytes": 38145761,
+   "vcd_sha256": "43570dc2e3e4e5294e90afee65ad3db2e487de9ed09234df81609db56e09d1fc",
+   "vvp_rc": 0
+  },
+  {
+   "aliased_ids": 24,
+   "name": "control",
+   "same_time_edges": 0,
+   "signals": 216,
+   "tb_cases": 24,
+   "vcd": "trace_control.vcd",
+   "vcd_bytes": 1386597,
+   "vcd_sha256": "d2f564e5c67b8e191b5885de41b30247ac0b3214c5091c2557ab21c3e76eacd7",
+   "vvp_rc": 0
+  },
+  {
+   "aliased_ids": 24,
+   "name": "mixed",
+   "same_time_edges": 0,
+   "signals": 216,
+   "tb_cases": 6,
+   "vcd": "trace_mixed.vcd",
+   "vcd_bytes": 360358,
+   "vcd_sha256": "ca09c55eb2207b8e4f101c4fbcf9b75dfc8bae667c726e3044aa6e47eb9a7c28",
+   "vvp_rc": 0
+  }
+ ],
+ "mutation": {
+  "detected": 6,
+  "total": 6
+ },
+ "no_credentials_no_host_identity_no_private_paths": true,
+ "oa_writes": 0,
+ "os": {
+  "name": "Windows",
+  "version": "11"
+ },
+ "python": "3.12.5",
+ "reserved_statuses": {
+  "COMPLETION_LEVEL": "RTL_LOGIC_VERIFIED",
+  "GRAY_LUT_IMPLEMENTATION": "NOT_RUN",
+  "HYBRID_CURRENT_INTEGRATION": "NOT_RUN",
+  "LAYOUT_DRC_LVS_PEX": "NOT_RUN",
+  "NEW_OA_WRITES": 0,
+  "NEW_SPECTRE_RUNS": 0,
+  "OPTICAL_EFFECTIVE_BITS": "NOT_VERIFIED",
+  "PAM_8LEVEL_ANALOG_IMPLEMENTATION": "NOT_RUN",
+  "PHYSICAL_CDC_AND_SKEW": "NOT_VERIFIED",
+  "PWM_MOS_IMPLEMENTATION": "NOT_RUN",
+  "SOA_SIGNOFF": "NO"
+ },
+ "simulator": {
+  "iverilog": "Icarus Verilog version 14.0 (devel) (s20260301-626-g7e3d0c6bd-dirty)",
+  "vvp": "Icarus Verilog runtime version 14.0 (devel) (s20260301-626-g7e3d0c6bd-dirty)",
+  "yosys": "Yosys 0.70+176 (git sha1 365bb887b, Release, GNU /usr/bin/x86_64-w64-mingw32-g++ 15.2.1)"
+ },
+ "simulator_sha256": {
+  "iverilog": "ed783633fe5ff079955fb35835d300ec825af932329f2f33a7937a896b0ed2b3",
+  "vvp": "937563fccac9722ec59344ee6cb3035ff749c0bf32dba77e41ae77fb363d7af4",
+  "yosys": "5ea05b55ee5e7f193b0d9960460c2fcf12fc520aa1e494e972ad394795c1b431"
+ },
+ "sources": {
+  "checker_sha256": "a77de155191433128ec243c86de8a8139ca9ee2ea9fce2206d34c1a1389f0a2c",
+  "reader_sha256": "df98705ec594954872b0b27e39a0afd1458676602823a94b6ad0d520a1862c4b",
+  "rtl_sha256": "04e5aadf80dcfe0654a65a9b718b6402479101e70f7b8606ed5ffee0955a6b48",
+  "tb_sha256": "2f5abe0275751944c631a5ed6b793fec7101b7b833ce3889e64bf4b044be374f"
+ },
+ "spectre_runs": 0,
+ "synthesis": "clean",
+ "task": "DATA-7A",
+ "toolchain_provenance": {
+  "asset_bytes": 603893871,
+  "installed_outside_repo": true,
+  "path_label": "<tool-root>/bin (from D7A_TOOL_ROOT)",
+  "sha256": "b141f2523e265d8ca742f96760cb3c9260422194e28f6851741cf2ffce9bc943",
+  "url": "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-10-20/oss-cad-suite-windows-x64-20261020.tgz"
+ }
+}
