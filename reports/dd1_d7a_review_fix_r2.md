@@ -195,7 +195,7 @@ manifest). Two intermediate batches were discarded on the way and are described 
 | failure models | 16/16 DETECTED: 14 functional (each with its wrong behaviour observed in its own trace first) + 2 diagnostic; `not_exercised = []` | 0 |
 | write and publish guard | 18 modes, each from a fresh copy of an exportable run with one injected fault, all refusing for the reason they claim; 9 target files derived from a real build, not typed | 0 |
 | yosys structure | rc=0, two `check -assert` passes with 0 problems, 151 cells, 21 async-reset registers (6 `$adff` + 15 `$adffe`), no latch or memory, statistics parsed | 0 |
-| evidence re-check | 55 checks, `EVIDENCE_IDENTITY: PASS (0 checks failed)` | 0 |
+| evidence re-check | 53 checks, `EVIDENCE_IDENTITY: PASS (0 checks failed)` | 0 |
 | evidence semantic self-test (new) | 7 cases: clean copy passes, and duplicate combination, contradicting `exp_intervals`, missing scenario kind, flipped expected refusal, functional model without an observed fault and a foreign run id are each refused by the named check, with the manifest digest recomputed so hashes stay consistent | 0 |
 | safety rules, provenance, device count | all PASS; shared rules unchanged, no new exception this round | 0 |
 | staged and history scans | PASS (the pre-push history scan runs on every push) | 0 |
@@ -214,7 +214,40 @@ library, no timing and no area meaning.
 
 ## 7. Commit ranges for this round
 
-_TO_BE_FILLED_
+```text
+B   (DATA-6 baseline)        = 731767519d1a51287eb5b7f4a6e4f9b8e613e990
+D   (first reviewed delivery) = 6a1f5a192f3f1618499335c4365d717bfcadef39
+P1  (R1 payload)              = b0196f995962e8098e218aabf86e5864792b7f8c
+D1  (R1 handoff)              = 202f11c63d7163487af3e5f33843e4a742c9115a
+T1  (reviewed R1 tip, this base) = 0b64d1d62b851ac46e03a4d0250c8014984f2ef5
+P2  (this round's payload)    = e151ebca59bc60df5e6e4d16fd6907e9787ded0a   (20 files)
+D2  (this round's handoff)    = the commit that adds reports/agent_handoffs/DATA-7A.json and this
+                                section; it carries no source, script, RTL, testbench or evidence-table
+                                change, and its own SHA is not written into any tracked file because a
+                                commit cannot contain its own SHA. Read it as the branch tip:
+                                git rev-parse origin/poc/data-gray-d7a-r2
+branch / push                 = poc/data-gray-d7a-r2, ordinary push (proxy transport, dry-run first,
+                                attempt 1), no force, no --no-verify, no merge, no visibility change
+
+T1..P2  20 tracked files = rtl 1, testbench 1, scripts 4 (runner, checker, evidence re-checker,
+                           bundle packer), reports 5 (contract, implementation note, R1 report's
+                           supersession note, this report, the R2 task-book copy), handoff MD 1,
+                           evidence 8 (the seventh published table plus the freeze transcript, which
+                           the manifest deliberately does not self-hash).
+T1..D2  22 tracked files = the 20 above plus the delivery JSON and this section.
+B..D2   28 tracked files = everything DATA-7A has ever touched across the three rounds: the 26 of
+                           the first two rounds plus this report and the R2 task-book copy. Nothing
+                           outside the DATA-7A prefix appears in any of the three ranges, and the
+                           frozen originals (both earlier task books, the copied handoff validator,
+                           the two shared safety-rule files, all Spectre / Scan / Data-6 evidence)
+                           are byte-identical to T1 and B respectively.
+```
+
+`P2` is the payload in the strict sense used since the first review: every functional change, the
+regression suite, the new evidence and this report are inside it. `D2` adds only the machine handoff
+and the commit table, and one measured number in section 6 and the handoff table (the evidence
+re-checker's check count, 53, which had been written as 55 by counting log lines instead of checks) —
+a correction of report text, not of code, recorded here rather than smuggled into an earlier commit.
 
 ## 8. Honest scope and carried-forward items
 

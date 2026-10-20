@@ -515,7 +515,7 @@ F5  the evidence re-checker rebuilds the exact 1536-element contract combination
 | failure models | 16/16 refused: 14 functional with the fault observed first, 2 diagnostic; none unexercised |
 | write and publish guard | 18 modes from independent clean copies, 9 derived target files, all pass |
 | yosys structure | rc=0, 0 problems twice, 151 cells, 21 async-reset registers, statistics parsed |
-| evidence re-check | `EVIDENCE_IDENTITY: PASS (0 checks failed)` over 55 checks |
+| evidence re-check | `EVIDENCE_IDENTITY: PASS (0 checks failed)` over 53 checks |
 | evidence semantic self-test | `EVIDENCE_SELFTEST: PASS (7 cases)` |
 | safety rules / provenance / device count | PASS, shared tools byte-identical to T1 |
 | staged + history scans | PASS (history scan also runs in the pre-push hook) |
@@ -525,3 +525,42 @@ Full root causes, the T1 negatives, and every command with its exit code are in
 `reports/dd1_d7a_review_fix_r2.md`; the command transcript is
 `results/evidence/dd1_d7a_freeze_security.txt` (sha256
 `36c8c5e58bc7d46a14bd584ae8ab97afc7eb2406f8052b04c114d9b216b873ba`).
+
+## R2 commit structure and remote read-back
+
+```text
+BRANCH              = poc/data-gray-d7a-r2                       (new, own branch, ordinary push)
+BASE (reviewed T1)  = 0b64d1d62b851ac46e03a4d0250c8014984f2ef5   (read back twice, not moved)
+PAYLOAD_SHA (P2)    = e151ebca59bc60df5e6e4d16fd6907e9787ded0a
+P2 contents         = 20 files: RTL, testbench, runner, checker, evidence re-checker, bundle packer,
+                      contract, implementation note, R1 report supersession note, R2 report, R2 task
+                      book copy, this handoff MD, and eight evidence files. No shared safety tool, no
+                      Spectre / Scan / Data-6 / PDK / OA file.
+P2 remote read-back   git ls-remote (proxy)  : e151ebca59bc60df5e6e4d16fd6907e9787ded0a
+                      gh api                : e151ebca59bc60df5e6e4d16fd6907e9787ded0a
+                      LOCAL_REMOTE_PARITY   = PASS, transport = proxy, attempts = 1, dry-run first,
+                      no force, no --no-verify, main / poc/data-gray-d7a / poc/data-gray-d7a-r1 and
+                      every teammate branch untouched, no merge, no visibility change
+pre-push hook         scripts/precommit_safety_check.py --mode history : SAFETY_GATE: PASS
+DELIVERY_SHA (D2)   = this commit: the JSON, this section and the report ranges. It changes no
+                      source, script, RTL, testbench or evidence table, and it does not name its own
+                      SHA. Read the tip with `git rev-parse origin/poc/data-gray-d7a-r2`; it is also
+                      quoted in the chat receipt and in the review bundle, outside the repository.
+```
+
+`reports/agent_handoffs/DATA-7A.json` is regenerated from the published tables and machine records
+(14,069 bytes, sha256
+`1d8c4c5e18d317feec890d1676ff451686e52c9e9d9a739061b07d3f8f1a0023`, recomputable from the commit), with
+`base_sha = T1`, `head_sha = P2`,
+`run_id = r2_20261021`, the 14-functional / 2-diagnostic model split, 18 guard modes over 9 derived
+target files, 53 evidence checks with 0 failures and the 7-case semantic self-test, and it was run
+through the unchanged validator:
+
+```text
+$ python scripts/dd1_d7a_validate_handoff.py reports/agent_handoffs/DATA-7A.json
+HANDOFF_STRUCTURE: PASS (fields only; evidence/remote truth NOT verified)   rc=0
+```
+
+`objects_scan.result = FAIL` with the pre-existing blob named, and `scope_status = COMPLETE` is
+scoped in the same file to the digital-logic and verification-tool repair only. A schema PASS is a
+statement about fields, not about the silicon.
