@@ -406,6 +406,13 @@ DELIVERY_SHA (D1)  = the commit that adds this JSON and this paragraph and chang
                      own SHA. Read it as the branch tip (`git rev-parse origin/poc/data-gray-d7a-r1`)
                      or from the remote ref; it is also quoted in the chat receipt and in the review
                      bundle manifest, which are outside the repository.
+D1 AS PUSHED       = 202f11c63d7163487af3e5f33843e4a742c9115a (this JSON plus this section; the
+                     read-back pair above was taken at this commit)
+FOLLOW-UP COMMIT   = 07ae78c0b03f7bbf58e6f2534587404db8e0e40c, one file, reports/dd1_d7a_review_fix.md
+                     section 8, the B..D1 and D..D1 range table. The ranges could only be written once
+                     the SHAs existed, so this is a second metadata commit; no functional file was
+                     touched after P1, which is the point the previous round got wrong and this
+                     paragraph is here to keep honest.
 ```
 
 `reports/agent_handoffs/DATA-7A.json` (12,431 bytes, sha256
