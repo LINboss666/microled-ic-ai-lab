@@ -155,7 +155,15 @@ reader never refused duplicate time markers although the contract said it would.
   new commit" (2019, 2020), and refusals while armed or on a shared edge are covered (2006, 2007).
 * Mutation classes grew from six to nine: `stale_latch_accepted`, `abort_reauthorises_display` and
   `latch_adopts_mode`, each built by patching the current RTL text, recompiled and re-simulated, and
-  refused by the same unchanged checker. Two anchors had drifted out of the rewritten RTL (`pure_iv`
+  refused by the same unchanged checker.
+
+  **Superseded by the round after this one, and kept here as measured:** the second review showed
+  that `stale_latch_accepted` and `latch_adopts_mode` removed only the *recording* of a refusal — the
+  freshness gate and the mode gate were still in place, so neither model produced the functional
+  failure its name claims. Both are real mutations of the diagnostic path and nothing more, and the
+  `9/9` line above means "nine models were compiled, run and refused", not "nine functional failures
+  were reproduced". The functional versions, each with a fault that must be observed in the mutant's
+  own trace before its refusal counts, are in `reports/dd1_d7a_review_fix_r2.md` section 3. Two anchors had drifted out of the rewritten RTL (`pure_iv`
   spacing and the `data_en` assign) and the blank-gate mutant was re-targeted from 2008, which never
   conducts, to 2011, which does; all nine now compile, run and are refused (`MUTATION_DETECTED=9/9`).
 

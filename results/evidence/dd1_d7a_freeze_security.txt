@@ -1,5 +1,5 @@
-DATA-7A-R1 freeze and security check transcript
-generated: 2026-10-20T17:25:32Z by running, in the worktree at branch poc/data-gray-d7a-r1 fixed on reviewed base 6a1f5a192f3f1618499335c4365d717bfcadef39
+DATA-7A-R2 freeze and security check transcript
+generated: 2026-10-20T19:58:08Z by running, in the worktree at branch poc/data-gray-d7a-r2 fixed on reviewed base 0b64d1d62b851ac46e03a4d0250c8014984f2ef5
 the repair round re-ran every gate below after the RTL, testbench, checker and runner were
 changed; the shared safety rules and the copied handoff validator were not.
 
@@ -17,15 +17,15 @@ PASS table HYBRID code 1                    hand-typed 1, function says 1
 PASS table HYBRID code 2                    hand-typed 2, function says 2
 PASS table HYBRID code 32                   hand-typed 32, function says 32
 PASS table HYBRID code 62                   hand-typed 62, function says 62
-   ... 46 lines omitted ...
-PASS write guard still writes when rows are complete official write path not blocked
+   ... 59 lines omitted ...
+PASS entry a clean publish leaves no pending transaction behind checked
 
-synthetic traces written under <repo>\review
 CHECKER_SELFTEST: PASS
+ENTRY_SELFTEST: PASS
 rc=0
 
 == 2. dry run (environment, frozen digests, plan; no writes outside review/)
-$ python scripts/dd1_d7a_run.py --dry-run --out review\dd1_d7a\r1_20261021
+$ python scripts/dd1_d7a_run.py --dry-run --out review\dd1_d7a\r2_20261021
 {
  "frozen_digests": {
   "spectre/dd1_d6_bias_core.scs": "4115e2d17a86fb92e7c222df085f1d1a82da14cb7640654d90f4e2589e9b31e7",
@@ -36,7 +36,7 @@ $ python scripts/dd1_d7a_run.py --dry-run --out review\dd1_d7a\r1_20261021
   "spectre/dd1_d6_sink_core.scs": "MATCH"
  },
  "oa_writes": 0,
- "planned_control": 36,
+ "planned_control": 43,
  "planned_main_groups": {
    ... 21 lines omitted ...
  },
@@ -53,7 +53,7 @@ rc=0
 
 == 4. source provenance over the whole tree
 $ python scripts/provenance_check.py
-provenance_check: files=401 labelled_lines=528 violations=0
+provenance_check: files=403 labelled_lines=528 violations=0
 SOURCE_PROVENANCE_CHECK: PASS
 rc=0
 
@@ -93,17 +93,29 @@ PASS   SOURCE_DIGEST: 6 source files hash-match the manifest
 PASS   EVIDENCE_DIGEST: 7/7 evidence files hash-match the manifest ; manifest is not self-hashed and the freeze transcript is hashed by the handoff
 PASS   ROW_COUNT: main matrix rows=1536 (want 1536)
 PASS   UNIQUE_CASES: unique case ids=1536
-   ... 26 lines omitted ...
+   ... 39 lines omitted ...
 PASS   FOUR_STATE: the simulator is declared four-state
 PASS   TOOL_PROVENANCE: toolchain digest recorded matches the pinned asset digest
 
 EVIDENCE_IDENTITY: PASS (0 checks failed)
 rc=0
 
-== 7. precommit gate over staged content
+== 6b. evidence re-checker semantic selftest (hash-consistent but wrong must fail)
+$ python scripts/dd1_d7a_evidence_check.py --selftest
+PASS EVIDENCE_SELFTEST clean_evidence_passes                  rc=0 fails=[]
+PASS EVIDENCE_SELFTEST duplicate_tuple_refused                fails=['COMBINATION_UNIQUE', 'COMBINATION_COMPLETE']
+PASS EVIDENCE_SELFTEST wrong_exp_intervals_refused            fails=['CONTRACT_RECOMPUTED']
+PASS EVIDENCE_SELFTEST missing_required_scenario_refused      fails=['SCENARIOS_REQUIRED', 'SCENARIO_PRESENT']
+PASS EVIDENCE_SELFTEST refusal_reason_enforced                fails=['REFUSAL_REASON']
+PASS EVIDENCE_SELFTEST functional_model_without_fault_refused fails=['MUTATION_FAULT_OBSERVED']
+PASS EVIDENCE_SELFTEST run_id_chain_enforced                  fails=['RUN_ID_CHAIN']
+EVIDENCE_SELFTEST: PASS (7 cases)
+rc=0
+
+== 8. precommit gate over staged content
 the git pre-commit hook runs scripts/precommit_safety_check.py at commit time; the
 staged, history, object and unreachable-blob results for this round are recorded
-in reports/dd1_d7a_review_fix.md and reports/agent_handoffs/DATA-7A.md.
+in reports/dd1_d7a_review_fix_r2.md and reports/agent_handoffs/DATA-7A.md.
 The unreachable blob 955497fb18ac reported by the previous round stays reported as
 it was found: no garbage collection, no content printed, no gate relaxed.
 

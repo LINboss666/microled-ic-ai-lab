@@ -67,9 +67,13 @@ combinational, so an assertion between clock edges removes the enable at that sa
 `data_en_b` is the complement of the final enable, not the old C²MOS `qbar`.
 
 `abort_now = reset_n & (fault | (blank & state_q == S_RUN))`: blank aborts a running window only,
-because arming legitimately happens while `blank` is still asserted. An abort records `S_ABORT` and
-clears `run_q`; withdrawing blank or clearing fault cannot resume, because tick acceptance requires
-`S_ARMED`/`S_RUN`. Recovery needs a new LATCH and a new start event.
+because arming legitimately happens while `blank` is still asserted. An abort is the highest-priority
+sampled branch: it records `S_ABORT`, clears `run_q`, withdraws `auth_q` **and** clears
+`load_pending_q`, so a load that was prepared before the abort and never consumed cannot be committed
+after it. Withdrawing blank or clearing fault cannot resume, because tick acceptance requires
+`S_ARMED`/`S_RUN`. Recovery needs a load edge that arrives after the abort, then a LATCH, then a start.
+The load, mode-adoption, LATCH and start branches are evaluated in the `else` arm of the same edge, so
+none of them can act while the abort is taking the display away.
 
 ## 4. Refusals
 

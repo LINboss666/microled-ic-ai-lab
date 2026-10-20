@@ -427,3 +427,101 @@ HANDOFF_STRUCTURE: PASS (fields only; evidence/remote truth NOT verified)   rc=0
 Its `head_sha` names P1 with `head_sha_semantics = payload_commit`; `objects_scan` is written as FAIL
 with the pre-existing blob named, and `scope_status = COMPLETE` is scoped in the same file to the
 digital-logic repair only. A schema PASS is a statement about fields, not about the silicon.
+
+
+---
+
+# DATA-7A-R2 — limited repair round after the second independent review
+
+Task package: `MicroLED_DATA7A_R1_Review_and_R2_Task_20261021.zip`, sha256
+`fa0080b488d25191a3f0413f6d0e2b70a4248f2e6192ffbf103e5c910673ab48`; the review record inside it is
+`REVIEW_DATA7A_R1.md`, the task book is kept byte-for-byte as `reports/tasks/DATA-7A-R2.md`
+(sha256 `3a73977d60355b23a0c12ea11f88d1c9b2f7dff7f19fb62f3a52de108184fdac`). As before, no chat
+history was available or assumed.
+
+## Remote read-back and branch
+
+```text
+poc/data-gray-d7a-r1 tip  git ls-remote (proxy) : 0b64d1d62b851ac46e03a4d0250c8014984f2ef5
+                          gh api                : 0b64d1d62b851ac46e03a4d0250c8014984f2ef5
+                          -> matches the reviewed T1 exactly; no unreviewed commit was merged
+new worktree              D:\ic617_d7a_r2, branch poc/data-gray-d7a-r2, created from T1
+                          the R1 worktree and branch were not moved, reset, merged or rewritten
+```
+
+## Reproduced against the reviewed bytes before changing anything
+
+| finding | local reproduction on this machine |
+|---|---|
+| F1 pending load survives an abort | `probe_abort_pending` on T1's own RTL: after the abort `pending=1`, the post-abort LATCH takes `version 1→2` with `auth=1`, the first tick lights (`REVIEW_DIAGNOSTIC_REPRODUCED=2/2`, blank and fault paths) |
+| F2 publish is not a set transaction | `probe_publish_failure.py`: first file replaced, second deleted, manifest untouched, two `.new` left (`contract_violation_reproduced: true`) |
+| F2 guard modes contaminate each other | T1 guard code over a full T1 run: `corrupt_trace` refused with *the missing-trace message*, `row_count_mismatch` and `trace_digest_mismatch` with *the stale-source message*; also the fixture really seeds 8 targets while the report said nine |
+| F2 synthesis status ordering | `do_synth` writes `synth_summary.json` before appending the parse failure to `problems`, so the persisted record says `rc=0, problems=[]` while the entry returns 1; `probe_synth_gate.py` shows the export gate passing that record and reaching the re-judge |
+| F3 two "functional" mutants were bit-mask only | T1 mutant chain: `stale_latch_accepted` shows one `cfg_version` edge and `proto_err=…0010` (incomplete), `latch_adopts_mode` shows one edge and `proto_err=…1000` (mode-while-running) — neither committed anything wrong |
+| F4 mixed checker misses a late channel | `probe_mixed_start.py`: contract t0 1435 ns, A opens 1435, B opens 1445, same width, and the delivered mixed checker still reports 6/6 PASS |
+| F5 re-checker accepts a duplicate combination | `probe_evidence_duplicate.py`: 1536 unique ids, 1535 unique combinations, main CSV digest refreshed, checker still `PASS (0 checks failed)` |
+
+Every one of the five findings is real here as well, not only in the reviewer's environment.
+
+## What R2 changed, per finding
+
+```text
+F1  the abort branch is now the highest-priority sampled event: it records S_ABORT, clears run_q,
+    withdraws auth_q AND clears load_pending_q, and the load / mode-adoption / LATCH / start branches
+    moved into the else arm of the same edge, so nothing sampled with the abort can re-authorise.
+    pam_q is still untouched, as the hold rule requires. Contract section 5 states the revocation and
+    the same-edge priority. Seven new scenarios: 2040/2041 (blank and fault abort over a pending load
+    must stay dark and record STALE_CONFIG + START_REJECTED), 2042/2043 (invalid request then real
+    recovery, and fault-abort recovery), 2037-2039 (a next load prepared inside window A, committed
+    only after A's own completion, used by window B with its own code and PAM, consumed exactly once).
+    measure_nth_window gained commit_latches because a refused LATCH is still a rising edge.
+F2  publish() now backs up, writes a d7a_publish.pending marker, promotes with os.replace, verifies
+    each published digest, and on any catchable failure restores the whole previous set and removes
+    the staging and marker files; pending_publish()/recover_publish() expose an outstanding
+    transaction and --export refuses to call such a directory delivered. The guarantee is stated as
+    per-file atomicity plus caught-failure rollback, explicitly not SIGKILL/power-loss atomicity.
+    write_guard_matrix gives every mode its own fresh copy of an exportable run (one injected fault
+    each), derives the target list from a real build, requires the refusal text it claims, and now
+    covers 18 modes including dry-run, sample-extraction, three synthesis-status modes and
+    publish-first/middle/last failures plus a publish-success path. synth_status() decides the entry
+    verdict before synth_summary.json is written, and synth_gate_ok() is the one predicate shared by
+    the persisted record, the export gate and the new entry selftest.
+F3  the mutation table is split into functional and diagnostic categories and every model declares a
+    fault that must be observed in the mutant's own VCD before its refusal counts; FAULT_NOT_EXERCISED
+    fails the gate. The two bit-mask models are kept and renamed as diagnostic, and the R1 report
+    carries a supersession note instead of being rewritten.
+F4  _own_t0() derives each channel's t0 from that channel's own obs_tick audit, and ctl_mixed_codes
+    now checks own-t0 vs the shared edge, the exact on-edge, the exact off-edge, the summed conduction
+    span in picoseconds and the completion edge per channel, with code 0 treated as no conduction.
+    Three mixed-path models (10 ns late, 30 ns late, one interval short) and two main-matrix channel
+    delay models are refused. Logic edges only: no physical skew claim.
+F5  the evidence re-checker rebuilds the exact 1536-element contract combination set, recomputes
+    intervals, full window, endpoints, accepted-tick counts and PAM legality from mode+code+tick,
+    demands every required scenario kind, demands that a declared expected refusal fails for that
+    reason, checks the run-id chain and trace digests, separates functional from diagnostic models,
+    and gained --selftest over isolated hash-consistent-but-wrong fixtures (7 cases).
+```
+
+## R2 gate status, final (run_id `r2_20261021`)
+
+| check | result |
+|---|---|
+| checker self-certification | PASS, 20 defects + 4 parse refusals refused |
+| entry self-certification | PASS, 11 assertions about statistics status and publish rollback |
+| main matrix | 1536/1536 PASS, 3072 instance observations, contract-recomputed intervals and endpoints |
+| control matrix | 43 scenarios: 42 PASS + the one required refusal (unknown code bus) |
+| mixed-code rows | 6/6 PASS with per-channel own-edge measurement |
+| stimulus attestation | 49/49 rows declare their stimulus, none contradicted |
+| failure models | 16/16 refused: 14 functional with the fault observed first, 2 diagnostic; none unexercised |
+| write and publish guard | 18 modes from independent clean copies, 9 derived target files, all pass |
+| yosys structure | rc=0, 0 problems twice, 151 cells, 21 async-reset registers, statistics parsed |
+| evidence re-check | `EVIDENCE_IDENTITY: PASS (0 checks failed)` over 55 checks |
+| evidence semantic self-test | `EVIDENCE_SELFTEST: PASS (7 cases)` |
+| safety rules / provenance / device count | PASS, shared tools byte-identical to T1 |
+| staged + history scans | PASS (history scan also runs in the pre-push hook) |
+| objects scan | FAIL on the pre-existing unreachable blob `955497fb18ac`, unchanged and not worked around |
+
+Full root causes, the T1 negatives, and every command with its exit code are in
+`reports/dd1_d7a_review_fix_r2.md`; the command transcript is
+`results/evidence/dd1_d7a_freeze_security.txt` (sha256
+`36c8c5e58bc7d46a14bd584ae8ab97afc7eb2406f8052b04c114d9b216b873ba`).

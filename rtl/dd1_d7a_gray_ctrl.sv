@@ -1,10 +1,11 @@
 // DATA-7A single-channel dual-mode grey-scale timing controller, logic only.
 //
-// Observable behaviour is fixed by reports/dd1_d7a_contract.md. This revision closes the three
-// protocol defects an independent review reproduced against the previous version: an abort let a bare
-// PWM_START re-light the old configuration, a repeated LATCH with no new load was accepted, and a
-// LATCH could adopt a mode outside the safe phase. Still a digital model of a future on-chip
-// controller: no MOS, no PAM current ladder, no LUT, no optical claim.
+// Observable behaviour is fixed by reports/dd1_d7a_contract.md. This revision closes the four
+// protocol defects an independent review reproduced against the previous versions: an abort let a bare
+// PWM_START re-light the old configuration, a repeated LATCH with no new load was accepted, a
+// LATCH could adopt a mode outside the safe phase, and a pending load prepared *before* an abort still
+// authorised a display *after* it. Still a digital model of a future on-chip controller: no MOS, no
+// PAM current ladder, no LUT, no optical claim.
 `timescale 1ns / 1ps
 
 module dd1_d7a_gray_ctrl (
@@ -165,48 +166,51 @@ module dd1_d7a_gray_ctrl (
             cfgv_prev_q  <= cfg_valid;
             mode_prev_q  <= mode;
 
-            // one complete load becomes one consumable pending config
-            if (load_arrived) begin
-                load_pending_q <= 1'b1;
-            end
-
-            // a mode adopted in the safe phase invalidates the prepared display: the old code must
-            // not stay armed under the new mode, so a fresh load and LATCH are required
-            if (mode_change_ok) begin
-                disp_mode_q    <= mode;
+            // An abort is the highest-priority sampled event. It withdraws the display
+            // authorisation AND the unconsumed pending load that was prepared before it, so a LATCH
+            // arriving after the abort cannot commit a configuration the aborted window never
+            // consumed; load, mode adoption, LATCH and start sampled on this same edge are all
+            // suppressed, and recovery needs a load, a LATCH and a start that come after the abort.
+            if (abort_now) begin
+                state_q        <= S_ABORT;
+                run_q          <= 1'b0;
                 auth_q         <= 1'b0;
                 load_pending_q <= 1'b0;
-                run_q          <= 1'b0;
-                index_q        <= 9'd0;
-                state_q        <= S_IDLE;
-            end
+            end else begin
+                // one complete load becomes one consumable pending config
+                if (load_arrived) begin
+                    load_pending_q <= 1'b1;
+                end
 
-            // accepted LATCH: the display copies move together and the load is consumed
-            if (latch_ok) begin
-                disp_pure_q    <= cfg_pure;
-                disp_ht_q      <= cfg_hyb_time;
-                target_q       <= target_w;
-                pam_q          <= (mode == M_HYB) ? cfg_hyb_pam : PAM_TOP_SYMBOL;
-                auth_q         <= 1'b1;
-                load_pending_q <= 1'b0;
-                version_q      <= version_q + 8'd1;
-            end
+                // a mode adopted in the safe phase invalidates the prepared display: the old code must
+                // not stay armed under the new mode, so a fresh load and LATCH are required
+                if (mode_change_ok) begin
+                    disp_mode_q    <= mode;
+                    auth_q         <= 1'b0;
+                    load_pending_q <= 1'b0;
+                    run_q          <= 1'b0;
+                    index_q        <= 9'd0;
+                    state_q        <= S_IDLE;
+                end
 
-            // one rising PWM_START event arms the window, and only for an authorised display;
-            // holding it high re-arms nothing because this keys on the request edge, not the level
-            if (start_ok) begin
-                index_q <= 9'd0;
-                run_q   <= 1'b0;
-                state_q <= S_ARMED;
-            end
+                // accepted LATCH: the display copies move together and the load is consumed
+                if (latch_ok) begin
+                    disp_pure_q    <= cfg_pure;
+                    disp_ht_q      <= cfg_hyb_time;
+                    target_q       <= target_w;
+                    pam_q          <= (mode == M_HYB) ? cfg_hyb_pam : PAM_TOP_SYMBOL;
+                    auth_q         <= 1'b1;
+                    load_pending_q <= 1'b0;
+                    version_q      <= version_q + 8'd1;
+                end
 
-            // blank or fault during a window aborts it and withdraws the display authorisation, so
-            // recovery needs a new load, a new LATCH and a new start; withdrawing the condition
-            // alone cannot resume, and a bare start is refused
-            if (abort_now) begin
-                state_q <= S_ABORT;
-                run_q   <= 1'b0;
-                auth_q  <= 1'b0;
+                // one rising PWM_START event arms the window, and only for an authorised display;
+                // holding it high re-arms nothing because this keys on the request edge, not the level
+                if (start_ok) begin
+                    index_q <= 9'd0;
+                    run_q   <= 1'b0;
+                    state_q <= S_ARMED;
+                end
             end
 
             // tick consumption: interval k starts at the edge that consumes the k-th accepted tick

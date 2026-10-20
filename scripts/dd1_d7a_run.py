@@ -59,6 +59,8 @@ TOOL_URL = ('https://github.com/YosysHQ/oss-cad-suite-build/releases/download/20
 TOOL_SHA = 'b141f2523e265d8ca742f96760cb3c9260422194e28f6851741cf2ffce9bc943'
 TOOL_BYTES = 603893871
 
+TASK_REVISION = 'DATA-7A-R2'
+
 MODE_PURE, MODE_HYBRID = ck.MODE_PURE, ck.MODE_HYBRID
 GROUPS = (('pure_t30', MODE_PURE, 3, 30), ('pure_t50', MODE_PURE, 5, 50),
           ('hyb_t120', MODE_HYBRID, 12, 120), ('hyb_t200', MODE_HYBRID, 20, 200))
@@ -355,6 +357,31 @@ def control_scenarios():
     add(2036, 19, MODE_PURE, 3, 'window_ok',
         'an unknown code bus must be refused, never converted to a number',
         xprobe='cfg_pure held X through the LATCH', expect='refusal')
+    # --- 8. the next/display copies, and an abort that also revokes a prepared load
+    add(2037, 29, MODE_PURE, 3, 'next_window_commit',
+        'next loaded inside window A, committed only after A completes, and B really uses it',
+        pure=120, p3=200, p4=7, windows=[('PURE', 120, 7), ('PURE', 200, 7)])
+    add(2038, 29, MODE_PURE, 5, 'next_window_commit',
+        'the same grey code re-presented as a new load still commits and still steps the version',
+        pure=100, p3=100, p4=7, windows=[('PURE', 100, 7), ('PURE', 100, 7)])
+    add(2039, 29, MODE_HYBRID, 12, 'next_window_commit',
+        'a Hybrid next changes both the time code and the PAM select in the second window',
+        ht=20, pam=2, p3=45, p4=6, mode_values=[1],
+        windows=[('HYBRID', 20, 2), ('HYBRID', 45, 6)])
+    add(2040, 30, MODE_PURE, 3, 'abort_pending',
+        'a blank abort withdraws the load that was prepared but never consumed before it',
+        pure=150, p1=60, p2=0, p3=5, p4=7, windows=[('PURE', 150, 7)])
+    add(2041, 30, MODE_PURE, 3, 'abort_pending',
+        'a fault abort withdraws the load that was prepared but never consumed before it',
+        pure=150, p1=60, p2=1, p3=5, p4=7, windows=[('PURE', 150, 7)])
+    add(2042, 32, MODE_PURE, 3, 'abort_pending_recover',
+        'after the revocation an invalid request stays dark and a new load / LATCH / start recovers',
+        pure=150, p1=60, p2=0, p3=5, p4=9, commit_latches=[0, 2],
+        windows=[('PURE', 150, 7), ('PURE', 9, 7)], aborted_windows=[0])
+    add(2043, 31, MODE_HYBRID, 12, 'abort_pending_recover',
+        'a fault abort then a genuinely new Hybrid load restores the display on the new code',
+        ht=40, pam=3, p1=20, p2=1, p3=5, p4=30, mode_values=[1],
+        windows=[('HYBRID', 40, 3), ('HYBRID', 30, 3)], aborted_windows=[0])
     return s
 
 
@@ -466,6 +493,11 @@ def do_run(args):
     vecs = write_vectors(run_dir)
     versions = tool_versions(tools, env)
     exe, crc, cout = compile_sim(tools, env, run_dir)
+    # the bytes that were actually compiled, so a source edited while the simulations were in flight
+    # cannot be recorded as if it had produced them
+    at_compile = {'rtl_sha256': sha256(RTL), 'tb_sha256': sha256(TB),
+                  'checker_sha256': sha256(os.path.join(HERE, 'dd1_d7a_check.py')),
+                  'reader_sha256': sha256(os.path.join(HERE, 'dd1_d7a_trace.py'))}
     all_rows, groups, fails = [], [], []
     timeout = int(args.get('timeout', '1800'))
     for name in [g[0] for g in GROUPS]:
@@ -513,10 +545,16 @@ def do_run(args):
                                and r['verdict'] == 'FAIL']),
         'failures': fails[:40],
         'tool_versions': versions,
-        'rtl_sha256': sha256(RTL), 'tb_sha256': sha256(TB),
-        'checker_sha256': sha256(os.path.join(HERE, 'dd1_d7a_check.py')),
-        'reader_sha256': sha256(os.path.join(HERE, 'dd1_d7a_trace.py')),
     }
+    now_src = {'rtl_sha256': sha256(RTL), 'tb_sha256': sha256(TB),
+               'checker_sha256': sha256(os.path.join(HERE, 'dd1_d7a_check.py')),
+               'reader_sha256': sha256(os.path.join(HERE, 'dd1_d7a_trace.py'))}
+    drift = sorted(k for k in at_compile if at_compile[k] != now_src[k])
+    if drift:
+        raise ck.Refuse('the sources changed while this run was in flight: %s. The traces belong to '
+                        'the bytes that were compiled, so nothing is recorded under the new digests'
+                        % ', '.join(drift))
+    summary.update(at_compile)
     write_atomic(os.path.join(run_dir, 'run_summary.json'),
                  json.dumps(summary, indent=1, sort_keys=True) + '\n')
     write_atomic(os.path.join(run_dir, 'raw_main_rows.json'),
@@ -536,16 +574,30 @@ def do_run(args):
     return 0
 
 
-# --------------------------------------------------------------------- mutants
+"""failure models, split into what they actually break
+
+The previous table called two entries "functional" while they only masked an error bit: the design
+still behaved correctly, so the entry proved the diagnostic path and nothing else. Every model here
+declares a category and a fault that must be *seen in the mutant's own trace* before the unchanged
+checker's refusal counts. A model whose fault cannot be observed is reported as FAULT_NOT_EXERCISED
+and the gate fails; that is a real bug in the model, not a pass.
+"""
+
+# category: 'functional'  the described wrong behaviour happens on the outputs
+#           'diagnostic'  only a refusal bit disappears; the behaviour stays correct
 MUTANTS = {
+    # ------------------------------------------------------------------ original six, unchanged
     'pure255_only255': {
+        'category': 'functional',
         'find': 'wire [8:0] pure_iv  = (cfg_pure == 8\'d255)    ? FULL_PURE : {1\'b0, cfg_pure};',
         'sub':  'wire [8:0] pure_iv  = {1\'b0, cfg_pure};',
         'trigger': ('main', MODE_PURE, 255, 3),
         'expect': ['ON_WIDTH', 'WIDTH_NOT_MULTIPLE'],
+        'fault': {'kind': 'width_ticks_short_by', 'idx': 0, 'ticks': 1},
         'note': 'code 255 conducts 255 of 256 intervals, so the full window is one interval short',
     },
     'counter_rollover_reopens': {
+        'category': 'functional',
         'find': '''                end else begin
                     run_q   <= 1'b0;          // explicit window end, never a counter rollover
                     state_q <= S_DONE;
@@ -557,62 +609,301 @@ MUTANTS = {
                 end''',
         'trigger': ('main', MODE_PURE, 200, 3),
         'expect': ['REOPEN_AFTER_WINDOW', 'SEGMENT_COUNT'],
+        'fault': {'kind': 'segments_at_least', 'idx': 0, 'n': 2},
         'note': 'the interval counter rolls over and opens the output again after the window end',
     },
     'blank_gate_removed': {
+        'category': 'functional',
         'find': "assign data_en     = run_q & ~blank & ~fault & reset_n;",
         'sub':  "assign data_en     = run_q & ~fault & reset_n;",
         'trigger': ('control', 2011),
         'expect': ['ASYNC_OFF'],
+        'fault': {'kind': 'data_en_high_at_assert', 'sig': 'blank', 'idx': 0},
         'note': 'the blank assertion no longer pulls the enable down between clock edges',
     },
     'start_level_rearm': {
+        'category': 'functional',
         'find': '            if (start_ok) begin',
         'sub':  '            if (pwm_start & ~fault & reset_n) begin',
         'trigger': ('control', 2004),
         'expect': ['SEGMENT_COUNT', 'ON_WIDTH', 'NO_DEASSERTION'],
+        'fault': {'kind': 'segments_at_least', 'idx': 0, 'n': 2},
         'note': 'a held PWM_START re-clears the counter on every reference edge',
     },
-    'instance_b_one_tick_late': {
+    'instance_b_late_one_reference_cycle': {
+        'category': 'functional',
         'find': 'wire tick_accept = tick & window_active & ~async_block;',
         'sub':  'reg tick_dly;\n    always_ff @(posedge clk or negedge reset_n) tick_dly <= reset_n ? tick : 1\'b0;\n'
                 '    wire tick_accept = tick_dly & window_active & ~async_block;',
         'trigger': ('main', MODE_PURE, 12, 3),
         'expect': ['INSTANCES_DIFFER', 'ON_START'],
-        'note': 'the module instance used for channel B starts one reference edge later',
+        'fault': {'kind': 'on_minus_own_t0_ps', 'idx': 1, 'ps': 10000},
+        'b_module': True,
+        'note': 'channel B samples the tick one reference cycle (10 ns) later, so its own first '
+                'accepted tick lands one clock after channel A\'s',
     },
-    'stale_latch_accepted': {
-        'find': "            if (latched & ~load_pending_q)               err_stale_q      <= 1'b1;",
-        'sub':  "            if (1'b0)                                  err_stale_q      <= 1'b1;",
-        'trigger': ('control', 2021),
-        'expect': ['VERSION_STEPPED', 'REFUSAL_NOT_RECORDED'],
-        'note': 'a second LATCH behind one load is accepted, stepping cfg_version without new data',
-    },
-    'abort_reauthorises_display': {
-        'find': "                state_q <= S_ABORT;\n                run_q   <= 1'b0;\n"
-                "                auth_q  <= 1'b0;",
-        'sub':  "                state_q <= S_ABORT;\n                run_q   <= 1'b0;\n"
-                "                auth_q  <= auth_q;",
-        'trigger': ('control', 2019),
-        'expect': ['LIGHT_AFTER_REFUSAL', 'REFUSAL_NOT_RECORDED', 'VERSION_STEPPED'],
-        'note': 'an abort leaves the old display authorised, so a bare start re-lights it',
-    },
-    'latch_adopts_mode': {
-        'find': "            if (latched & ~mode_matches_accepted)        err_mode_unset_q <= 1'b1;",
-        'sub':  "            if (1'b0)                                  err_mode_unset_q <= 1'b1;",
-        'trigger': ('control', 2022),
-        'expect': ['MODE_ADOPTED', 'VERSION_STEPPED', 'REFUSAL_NOT_RECORDED'],
-        'note': 'the LATCH path takes over mode adoption that only the safe phase may do',
+    'instance_b_tick_late_two_cycles': {
+        'category': 'functional',
+        'find': 'wire tick_accept = tick & window_active & ~async_block;',
+        'sub':  'reg [2:0] tick_sr;\n    always_ff @(posedge clk or negedge reset_n) begin\n'
+                '        if (!reset_n) tick_sr <= 3\'b000;\n'
+                '        else tick_sr <= {tick_sr[1:0], tick};\n'
+                '    end\n'
+                '    wire tick_accept = tick_sr[2] & window_active & ~async_block;',
+        'trigger': ('main', MODE_PURE, 12, 3),
+        'expect': ['INSTANCES_DIFFER', 'ON_START'],
+        'fault': {'kind': 'own_t0_late_by_ps', 'ps': 20000},
+        'b_module': True,
+        'note': 'the tick channel B sees is stretched over three registers, so the first tick B '
+                'actually accepts is consumed two reference cycles after the one A accepts: B starts '
+                'its whole window late. This is the wording the previous round used loosely as '
+                '"one tick late"; the measured skew is what this row states.',
     },
     'auto_resume_after_abort': {
+        'category': 'functional',
         'find': 'wire window_active = (state_q == S_ARMED) || (state_q == S_RUN);',
         'sub':  'wire window_active = (state_q == S_ARMED) || (state_q == S_RUN) ||\n'
                 '                       ((state_q == S_ABORT) && !blank && !fault);',
         'trigger': ('control', 2012),
         'expect': ['AUTO_RESUME', 'NO_ABORT_RECORDED'],
+        'fault': {'kind': 'light_after_abort_no_new_load', 'idx': 0},
         'note': 'withdrawing blank resumes the aborted window instead of requiring a new start',
     },
+    # ------------------------------------------------------------------ new functional models
+    'abort_reauthorises_display': {
+        'category': 'functional',
+        'find': "                state_q        <= S_ABORT;\n                run_q          <= 1'b0;\n"
+                "                auth_q         <= 1'b0;\n                load_pending_q <= 1'b0;",
+        'sub':  "                state_q        <= S_ABORT;\n                run_q          <= 1'b0;\n"
+                "                auth_q         <= auth_q;\n                load_pending_q <= 1'b0;",
+        'trigger': ('control', 2019),
+        'expect': ['LIGHT_AFTER_REFUSAL', 'REFUSAL_NOT_RECORDED', 'VERSION_STEPPED'],
+        'fault': {'kind': 'light_after_abort_no_new_load', 'idx': 0},
+        'note': 'an abort leaves the old display authorised, so a bare start re-lights it',
+    },
+    'abort_keeps_pending_config': {
+        'category': 'functional',
+        'find': "                state_q        <= S_ABORT;\n                run_q          <= 1'b0;\n"
+                "                auth_q         <= 1'b0;\n                load_pending_q <= 1'b0;",
+        'sub':  "                state_q        <= S_ABORT;\n                run_q          <= 1'b0;\n"
+                "                auth_q         <= 1'b0;",
+        'trigger': ('control', 2040),
+        'expect': ['LIGHT_AFTER_REFUSAL', 'REFUSAL_NOT_RECORDED', 'VERSION_STEPPED'],
+        'fault': {'kind': 'version_and_light_after_abort', 'idx': 0},
+        'note': 'the reviewed T1 behaviour: a load prepared before the abort still authorises the '
+                'display afterwards, with no new load transaction anywhere after the abort',
+    },
+    'stale_latch_really_accepted': {
+        'category': 'functional',
+        'find': 'wire latch_ok  = latched & phase_ok & mode_legal & cfg_valid & load_pending_q',
+        'sub':  'wire latch_ok  = latched & phase_ok & mode_legal & cfg_valid',
+        'trigger': ('control', 2021),
+        'expect': ['VERSION_STEPPED', 'REFUSAL_NOT_RECORDED'],
+        'fault': {'kind': 'version_steps_at_least', 'idx': 0, 'n': 2},
+        'note': 'a second LATCH behind one load commits again and steps the version; cfg_valid stays '
+                'high in this scenario so nothing else refuses it first',
+    },
+    'latch_really_adopts_mode': {
+        'category': 'functional',
+        'find': '                   & mode_matches_accepted & ~ambiguous;',
+        'sub':  '                   & ~ambiguous;\n'
+                '    wire mode_via_latch = latched & ~mode_matches_accepted;',
+        'trigger': ('control', 2022),
+        'expect': ['MODE_ADOPTED', 'VERSION_STEPPED', 'REFUSAL_NOT_RECORDED'],
+        'sub2': {'find': "                pam_q          <= (mode == M_HYB) ? cfg_hyb_pam : PAM_TOP_SYMBOL;",
+                 'sub': "                pam_q          <= (mode == M_HYB) ? cfg_hyb_pam : PAM_TOP_SYMBOL;\n"
+                        "                disp_mode_q    <= mode;"},
+        'fault': {'kind': 'pam_shows', 'idx': 0, 'value': '110'},
+        'note': 'the LATCH path takes over mode adoption that only the safe phase may do, and the '
+                'adopted Hybrid PAM select appears on pam_sel',
+    },
+    'mixed_b_output_late_three_cycles': {
+        'category': 'functional',
+        'find': "    assign data_en     = run_q & ~blank & ~fault & reset_n;",
+        'sub': "    logic delayed_run_q_1, delayed_run_q_2, delayed_run_q_3;\n"
+               "    always_ff @(posedge clk or negedge reset_n) begin\n"
+               "        if (!reset_n) begin\n"
+               "            delayed_run_q_1 <= 1'b0; delayed_run_q_2 <= 1'b0; delayed_run_q_3 <= 1'b0;\n"
+               "        end else begin\n"
+               "            delayed_run_q_1 <= run_q; delayed_run_q_2 <= delayed_run_q_1;\n"
+               "            delayed_run_q_3 <= delayed_run_q_2;\n"
+               "        end\n"
+               "    end\n"
+               "    assign data_en     = delayed_run_q_3 & ~blank & ~fault & reset_n;",
+        'trigger': ('mixed', 3001),
+        'expect': ['ON_START', 'ON_WIDTH', 'MIXED_WIDTH'],
+        'fault': {'kind': 'on_minus_own_t0_ps', 'idx': 1, 'ps': 30000},
+        'b_module': True,
+        'note': 'channel B opens three reference edges after its own t0, same width, same state path',
+    },
+    'mixed_b_output_late_one_cycle': {
+        'category': 'functional',
+        'find': "    assign data_en     = run_q & ~blank & ~fault & reset_n;",
+        'sub': "    logic delayed_run_q_c;\n"
+               "    always_ff @(posedge clk or negedge reset_n) delayed_run_q_c <= reset_n ? run_q : 1'b0;\n"
+               "    assign data_en     = delayed_run_q_c & ~blank & ~fault & reset_n;",
+        'trigger': ('mixed', 3001),
+        'expect': ['ON_START', 'ON_WIDTH', 'MIXED_WIDTH'],
+        'fault': {'kind': 'on_minus_own_t0_ps', 'idx': 1, 'ps': 10000},
+        'b_module': True,
+        'note': "the reviewer's own probe: B lights 10 ns late, which is smaller than any tick and "
+                "was invisible while t0 was derived from the shared stimulus",
+    },
+    'mixed_b_one_interval_short': {
+        'category': 'functional',
+        'find': '                    run_q   <= (index_q < target_q);',
+        'sub':  "                    run_q   <= (index_q + 9'd1 < target_q);",
+        'trigger': ('mixed', 3001),
+        'expect': ['MIXED_WIDTH', 'ON_WIDTH', 'ON_SPAN'],
+        'fault': {'kind': 'width_ticks_short_by', 'idx': 1, 'ticks': 1},
+        'b_module': True,
+        'note': 'channel B closes one interval early, so its own width no longer matches its code',
+    },
+    # ------------------------------------------------------------- diagnostic-bit models, not fake
+    'stale_latch_error_bit_masked': {
+        'category': 'diagnostic',
+        'find': "            if (latched & ~load_pending_q)               err_stale_q      <= 1'b1;",
+        'sub':  "            if (1'b0)                                  err_stale_q      <= 1'b1;",
+        'trigger': ('control', 2021),
+        'expect': ['REFUSAL_NOT_RECORDED'],
+        'fault': {'kind': 'bit_absent', 'idx': 0, 'bit': 64, 'request': 'latch_stb'},
+        'note': 'only the STALE_CONFIG record disappears: the design still refuses the replay, so '
+                'this model covers the diagnostic path and is not counted as a functional failure',
+    },
+    'mode_unset_error_bit_masked': {
+        'category': 'diagnostic',
+        'find': "            if (latched & ~mode_matches_accepted)        err_mode_unset_q <= 1'b1;",
+        'sub':  "            if (1'b0)                                  err_mode_unset_q <= 1'b1;",
+        'trigger': ('control', 2022),
+        'expect': ['REFUSAL_NOT_RECORDED'],
+        'fault': {'kind': 'bit_absent', 'idx': 0, 'bit': 128, 'request': 'latch_stb'},
+        'note': 'only the MODE_NOT_ADOPTED record disappears; the LATCH is still refused, so this is '
+                'a diagnostic-coverage model, not the functional bypass',
+    },
 }
+
+
+def _mutant_case_id(spec):
+    kind = spec['trigger'][0]
+    return 501 if kind == 'main' else spec['trigger'][1]
+
+
+def _scenario_rows(spec, run_id):
+    """the scenario list the mutant trace has to be judged against, plus its trace file name"""
+    kind = spec['trigger'][0]
+    if kind == 'control':
+        cid = spec['trigger'][1]
+        scen = [d for c, v, d in control_scenarios() if c == cid]
+        return scen, 'control'
+    if kind == 'mixed':
+        cid = spec['trigger'][1]
+        scen = [d for c, v, d in mixed_vectors() if c == cid]
+        return scen, 'mixed'
+    return None, 'main'
+
+
+def attest_fault(vcd, spec, case_id):
+    """prove from the mutant's own trace that the failure this model claims really happened"""
+    kind = spec['kind']
+    idx = int(spec.get('idx', 0))
+    tr = tv.Trace(vcd)
+    sm = ck.SigMap(tr)
+    seg = dict((cid, (cs, ce)) for cid, cs, ce in ck.cases(tr, sm))
+    if case_id not in seg:
+        return False, 'case %s is not in the mutant trace' % case_id
+    cs, ce = seg[case_id]
+    if kind == 'data_en_high_at_assert':
+        rises = tr.rises(sm.i(spec['sig']), cs + 1, ce)
+        if not rises:
+            return False, 'no %s assertion in the case' % spec['sig']
+        t = rises[0]
+        v = tr.value_at(sm.o(idx, 'data_en'), t)
+        return (v == '1'), '%s.data_en is %s at the %s rise (%s ns)' % (sm.tag[idx], v, spec['sig'],
+                                                                        ck.fmt_ns(t))
+    if kind == 'light_after_abort_no_new_load':
+        aborts = tr.rises(sm.i('blank'), cs + 1, ce) + tr.rises(sm.i('fault'), cs + 1, ce)
+        if not aborts:
+            return False, 'no abort event in the case'
+        t_abort = min(aborts)
+        late = tr.rises(sm.o(idx, 'data_en'), t_abort + 1, ce)
+        loads = [t for t in tr.rises(sm.i('cfg_valid'), t_abort + 1, late[0] if late else ce)]
+        if not late:
+            return False, 'the output never re-opened after the abort'
+        return (not loads), 'output re-opened at %s ns with %d new load edge(s) before it' % (
+            ck.fmt_ns(late[0]), len(loads))
+    if kind == 'version_and_light_after_abort':
+        aborts = tr.rises(sm.i('blank'), cs + 1, ce) + tr.rises(sm.i('fault'), cs + 1, ce)
+        if not aborts:
+            return False, 'no abort event in the case'
+        t_abort = min(aborts)
+        steps = [t for t, _v in tr.edges(sm.o(idx, 'cfg_version')) if t > t_abort]
+        late = tr.rises(sm.o(idx, 'data_en'), t_abort + 1, ce)
+        loads = [t for t in tr.rises(sm.i('cfg_valid'), t_abort + 1, ce)]
+        ok = bool(steps) and bool(late) and not loads
+        return ok, 'version edges after abort=%d, later light=%s, new load edges=%d' % (
+            len(steps), bool(late), len(loads))
+    if kind == 'version_steps_at_least':
+        steps = [t for t, _v in tr.edges(sm.o(idx, 'cfg_version')) if cs <= t <= ce - 1]
+        return (len(steps) >= int(spec['n'])), '%d cfg_version edge(s), model claims >= %d' % (
+            len(steps), spec['n'])
+    if kind == 'pam_shows':
+        vals = set(v for _t, v in tr.edges(sm.o(idx, 'pam_sel')) if cs <= _t <= ce - 1)
+        return (spec['value'] in vals), 'pam_sel values=%s, model claims %s' % (
+            sorted(vals), spec['value'])
+    if kind == 'on_minus_own_t0_ps':
+        t_bl = tr.falls(sm.i('blank'), cs, ce)
+        if not t_bl:
+            return False, 'no blank release in the case'
+        own_rise, own_t0 = ck._own_t0(tr, sm, idx, cs, t_bl[0], ce - 1)
+        rises = tr.rises(sm.o(idx, 'data_en'), cs, ce)
+        if own_t0 is None or not rises:
+            return False, 'own t0=%s, first light=%s' % (own_t0, rises[:1])
+        delta = rises[0] - own_t0
+        return (delta == int(spec['ps'])), '%s opens %d ps after its own t0 (%s ns), model says %d' % (
+            sm.tag[idx], delta, ck.fmt_ns(own_t0), spec['ps'])
+    if kind == 'own_t0_late_by_ps':
+        # each channel's own t0 comes from the tick THAT channel accepted: a channel whose tick
+        # acceptance is late starts its whole window late, and no shared-stimulus derivation can see
+        # it, so the comparison is channel B's own t0 against channel A's own t0
+        t_bl = tr.falls(sm.i('blank'), cs, ce)
+        if not t_bl:
+            return False, 'no blank release in the case'
+        _r0, t0a = ck._own_t0(tr, sm, 0, cs, t_bl[0], ce - 1)
+        _r1, t0b = ck._own_t0(tr, sm, 1, cs, t_bl[0], ce - 1)
+        if t0a is None or t0b is None:
+            return False, 'own t0 missing (a=%s b=%s)' % (t0a, t0b)
+        delta = t0b - t0a
+        return (delta == int(spec['ps'])), 'u_b consumes its first tick %d ps after u_a (%s vs %s ns)' \
+            % (delta, ck.fmt_ns(t0b), ck.fmt_ns(t0a))
+    if kind == 'width_ticks_short_by':
+        w = ck.measure_nth_window(tr, sm, idx, cs, ce, [], 0)
+        if not w:
+            return False, 'window unreadable'
+        got = sum(1 for _a, _b in w['segs'])
+        widths = ck._widths_ticks(w['segs'], w['T'])
+        short = w['exp'] - (widths[0] if widths else 0)
+        return (short >= int(spec['ticks']) and widths or []), 'width=%s ticks, code asks %d' % (
+            widths, w['exp'])
+    if kind == 'segments_at_least':
+        w = ck.measure_nth_window(tr, sm, idx, cs, ce, [], 0)
+        n = len(w['segs']) if w else 0
+        return (n >= int(spec['n'])), '%d conducting segment(s), model claims >= %d' % (n, spec['n'])
+    if kind == 'bit_absent':
+        vals = set(v for _t, v in tr.edges(sm.o(idx, 'proto_err')) if cs <= _t <= ce - 1)
+        shown = any((int(v, 2) >> (8 - 1 - _bit_index(spec['bit']))) & 1 for v in vals
+                    if all(c not in tv.XZ for c in v))
+        req = tr.rises(sm.i(spec['request']), cs, ce)
+        return ((not shown) and bool(req)), 'bit %d seen=%s, %d request edge(s)' % (
+            spec['bit'], shown, len(req))
+    raise SystemExit('unknown fault model %r' % kind)
+
+
+def _bit_index(bit):
+    """the proto_err vector is MSB-first, so translate a bit value into a position"""
+    for i in range(8):
+        if bit == (1 << i):
+            return i
+    raise SystemExit('not a single proto_err bit: %r' % bit)
 
 
 def do_mutants(args):
@@ -628,26 +919,33 @@ def do_mutants(args):
     for cls in sorted(MUTANTS):
         spec = MUTANTS[cls]
         if spec['find'] not in base_rtl:
-            rows.append({'class': cls, 'status': 'PATCH_NOT_APPLIED', 'detail':
-                         'the mutation anchor is not present in the current RTL'})
+            rows.append({'class': cls, 'category': spec['category'], 'status': 'PATCH_NOT_APPLIED',
+                         'detail': 'the mutation anchor is not present in the current RTL'})
             continue
         mdir = os.path.join(run_dir, 'mutant_%s' % cls)
         os.path.isdir(mdir) or os.makedirs(mdir)
         mutated = base_rtl.replace(spec['find'], spec['sub'], 1)
+        if spec.get('sub2') and spec['sub2']['find'] not in mutated:
+            rows.append({'class': cls, 'category': spec['category'], 'status': 'PATCH_NOT_APPLIED',
+                         'detail': 'the mutation anchor for the second patch is not present'})
+            continue
+        if spec.get('sub2'):
+            mutated = mutated.replace(spec['sub2']['find'], spec['sub2']['sub'], 1)
         tb_src = base_tb
-        if cls == 'instance_b_one_tick_late':
-            mutated = mutated.replace('module dd1_d7a_gray_ctrl (', 'module dd1_d7a_gray_ctrl_late (', 1)
+        extra = []
+        if spec.get('b_module'):
+            mutated = mutated.replace('module dd1_d7a_gray_ctrl (',
+                                       'module dd1_d7a_gray_ctrl_mut (', 1)
             io.open(os.path.join(mdir, 'dd1_d7a_gray_ctrl.sv'), 'w', encoding='utf-8',
                     newline='\n').write(u(base_rtl))
-            tb_src = base_tb.replace(
-                '    dd1_d7a_gray_ctrl u_b (', '    dd1_d7a_gray_ctrl_late u_b (')
+            tb_src = base_tb.replace('    dd1_d7a_gray_ctrl u_b (', '    dd1_d7a_gray_ctrl_mut u_b (')
+            extra = [os.path.join(mdir, 'dd1_d7a_gray_ctrl.sv')]
         rtl_path = write_atomic(os.path.join(mdir, 'mutant.sv'), mutated)
         tb_path = write_atomic(os.path.join(mdir, 'tb.sv'), tb_src)
-        extra = [os.path.join(mdir, 'dd1_d7a_gray_ctrl.sv')] if cls == \
-            'instance_b_one_tick_late' else []
         exe, crc, cout = compile_sim(tools, env, mdir, rtl_path, tb_path, tag='mut', extra=extra)
         if crc != 0:
-            rows.append({'class': cls, 'status': 'COMPILE_FAILED', 'detail': cout[-300:]})
+            rows.append({'class': cls, 'category': spec['category'], 'status': 'COMPILE_FAILED',
+                         'detail': cout[-300:]})
             continue
         kind = spec['trigger'][0]
         vec_path = os.path.join(mdir, 'vec.txt')
@@ -656,51 +954,64 @@ def do_mutants(args):
             write_atomic(vec_path, vector_line(501, 0, mode, code, code, 0, 0, 0, 0, tdiv) + '\n')
         else:
             cid = spec['trigger'][1]
-            line = [v for c, v, d in control_scenarios() if c == cid][0]
+            src = control_scenarios() if kind == 'control' else mixed_vectors()
+            line = [v for c, v, d in src if c == cid][0]
             write_atomic(vec_path, line + '\n')
         vcd = os.path.join(mdir, 'trace.vcd')
+        case_id = _mutant_case_id(spec)
         try:
             run_vvp(exe, env, vec_path, vcd, int(args.get('timeout', '900')),
                     os.path.join(mdir, 'vvp.log'))
         except ck.Refuse as exc:
-            rows.append({'class': cls, 'status': 'RUN_FAILED', 'detail': str(exc)})
+            rows.append({'class': cls, 'category': spec['category'], 'status': 'RUN_FAILED',
+                         'detail': str(exc)})
             continue
         try:
             if kind == 'main':
                 got = ck.check_main_trace(vcd, run_id)[0]
             else:
-                scen = [d for c, v, d in control_scenarios() if c == cid_of(spec)][0]
-                got = ck.check_control_trace(vcd, [scen], run_id)[0]
+                scen, _g = _scenario_rows(spec, run_id)
+                got = ck.check_control_trace(vcd, scen, run_id)[0]
         except (tv.VcdError, ck.Refuse) as exc:
-            rows.append({'class': cls, 'status': 'DETECTED', 'trigger_case': got_case(spec),
-                         'refused_at_parse': True, 'detail': str(exc)[:200],
+            rows.append({'class': cls, 'category': spec['category'], 'status': 'DETECTED',
+                         'trigger_case': case_id, 'refused_at_parse': True,
+                         'fault_confirmed': True, 'fault_observed': 'the reader itself refused',
+                         'detail': str(exc)[:200],
                          'mutant_rtl_sha256': sha256(rtl_path), 'checker': 'same checker'})
             continue
-        tags = spec['expect'] if isinstance(spec['expect'], list) else [spec['expect']]
+        tags = spec['expect']
         hit = [r for r in got if any(t in r['failures'] for t in tags)]
-        rows.append({'class': cls,
-                     'status': 'DETECTED' if hit else 'NOT_DETECTED',
-                     'trigger_case': got_case(spec),
+        confirmed, observed = attest_fault(vcd, spec['fault'], case_id)
+        if not confirmed:
+            status, detail = 'FAULT_NOT_EXERCISED', observed
+        elif hit:
+            status, detail = 'DETECTED', hit[0]['failures'][:200]
+        else:
+            status, detail = 'NOT_DETECTED', 'the original checker accepted the mutated design'
+        rows.append({'class': cls, 'category': spec['category'], 'status': status,
+                     'trigger_case': case_id, 'fault_confirmed': bool(confirmed),
+                     'fault_kind': spec['fault']['kind'], 'fault_observed': observed,
                      'mutant_rtl_sha256': sha256(rtl_path),
-                     'checker': 'same checker, unchanged judgement code',
-                     'detail': (hit[0]['failures'][:200] if hit else
-                                'the original checker accepted the mutated design')})
+                     'checker': 'same checker, unchanged judgement code', 'detail': detail})
+    func = [r for r in rows if r['category'] == 'functional']
+    diag = [r for r in rows if r['category'] == 'diagnostic']
     ok = len([r for r in rows if r['status'] == 'DETECTED'])
-    write_atomic(os.path.join(run_dir, 'mutants.json'),
-                 json.dumps({'run_id': run_id, 'detected': ok, 'total': len(MUTANTS),
-                             'rows': rows}, indent=1, sort_keys=True) + '\n')
+    write_atomic(os.path.join(run_dir, 'mutants.json'), json.dumps(
+        {'run_id': run_id, 'detected': ok, 'total': len(MUTANTS),
+         'functional_total': len(func),
+         'functional_detected': len([r for r in func if r['status'] == 'DETECTED']),
+         'diagnostic_total': len(diag),
+         'diagnostic_detected': len([r for r in diag if r['status'] == 'DETECTED']),
+         'not_exercised': [r['class'] for r in rows if r['status'] == 'FAULT_NOT_EXERCISED'],
+         'rows': rows}, indent=1, sort_keys=True) + '\n')
     for r in rows:
-        print('%-28s %-16s %s' % (r['class'], r['status'], r['detail'][:70]))
-    print('MUTATION_DETECTED=%d/%d' % (ok, len(MUTANTS)))
+        print('%-34s %-11s %-20s %s' % (r['class'], r['category'], r['status'],
+                                        str(r.get('fault_observed') or r['detail'])[:64]))
+    print('MUTATION_DETECTED=%d/%d (functional %d/%d, diagnostic %d/%d)'
+          % (ok, len(MUTANTS), len([r for r in func if r['status'] == 'DETECTED']), len(func),
+             len([r for r in diag if r['status'] == 'DETECTED']), len(diag)))
     return 0 if ok == len(MUTANTS) else 1
 
-
-def cid_of(spec):
-    return spec['trigger'][1] if spec['trigger'][0] == 'control' else 501
-
-
-def got_case(spec):
-    return spec['trigger'][1] if spec['trigger'][0] == 'control' else 501
 
 
 # --------------------------------------------------------------------- synthesis structure
@@ -735,42 +1046,69 @@ def do_synth(args):
     rc, txt = call([tools['yosys'], '-s', script], env, 600, cwd=PROJ)
     io.open(out_path, 'w', encoding='utf-8', newline='\n').write(
         u('$ %s -s %s\nrc=%d\n%s' % (tools['yosys'], script, rc, u(txt))))
-    problems = []
-    if rc != 0:
-        problems.append('yosys rc=%d' % rc)
-    for pat, why in ((r'\bERROR\b', 'an ERROR line'), (r'multiple drivers', 'multiple drivers'),
-                     (r'Wire .* is uninitialized', 'an uninitialised wire'),
-                     (r'\$dlatch', 'an inferred latch')):
-        if re.search(pat, txt or '', re.I):
-            problems.append(why)
-    cells = dict((m.group(2), int(m.group(1))) for m in
-                 re.finditer(r'^\s+(\d+)\s+(\$\w+)\s*$', txt or '', re.M))
-    total = None
-    m = re.search(r'^\s{6}(\d+) cells\s*$', txt or '', re.M)
-    if m:
-        total = int(m.group(1))
-    stat_parse = 'parsed' if (cells or total is not None) else (
-        'UNPARSED_FORMAT: yosys printed a statistics table this parser does not recognise, so the '
-        'cell counts are unknown rather than zero' if 'Printing statistics' in (txt or '') else
-        'NO_STATISTICS_SECTION')
-    summary = {'rc': rc, 'problems': problems, 'stat_parse': stat_parse,
-               'cells': cells, 'cells_total': total,
-               'storage': dict((k, v) for k, v in cells.items() if 'ff' in k or 'latch' in k or
+    st = synth_status(rc, txt)
+    summary = {'rc': st['entry_rc'], 'yosys_rc': st['yosys_rc'], 'problems': st['problems'],
+               'stat_parse': st['stat_parse'],
+               'cells': st['cells'], 'cells_total': st['cells_total'],
+               'storage': dict((k, v) for k, v in st['cells'].items() if 'ff' in k or 'latch' in k or
                                'mem' in k),
-               'check_passes': len(re.findall(r'Found and reported 0 problems', txt or '')),
+               'check_passes': st['check_passes'],
                'unresolved_modules': len(re.findall(r'module .* is not used|ERROR: Module .* not found',
                                                     txt or '')),
-               'selected': {'errors': len(re.findall(r'\bERROR\b', txt or '', re.I)),
-                            'warnings': len(re.findall(r'\bWarning\b', txt or '', re.I))},
+               'selected': st['selected'],
                'log': os.path.basename(out_path), 'rtl_sha256': sha256(RTL),
                'scope': 'front-end expansion and structure only: no cell library, no technology '
                         'mapping, no timing, no area claim, testbench not read'}
     write_atomic(os.path.join(run_dir, 'synth_summary.json'),
                  json.dumps(summary, indent=1, sort_keys=True) + '\n')
     print(json.dumps(summary, indent=1, sort_keys=True)[:1200])
-    if stat_parse.startswith('UNPARSED') or stat_parse == 'NO_STATISTICS_SECTION':
+    return summary['rc']
+
+
+def synth_status(rc, txt):
+    """this entry's verdict, formed completely BEFORE anything is written to disk
+
+    Two different things stay separate here on purpose. What the Yosys front end itself reported is
+    `yosys_rc` plus the parsed numbers; whether THIS entry is entitled to state those numbers is
+    `entry_rc`. A statistics table this parser does not recognise is a failure of the entry, so it
+    lands in `problems` and in `entry_rc` before the summary exists -- writing rc=0 and an empty
+    problem list and only then noticing the parse failure is exactly how a broken statistics reader
+    used to slip through the export gate.
+    """
+    txt = txt or ''
+    problems = []
+    if rc != 0:
+        problems.append('yosys rc=%d' % rc)
+    for pat, why in ((r'\bERROR\b', 'an ERROR line'), (r'multiple drivers', 'multiple drivers'),
+                     (r'Wire .* is uninitialized', 'an uninitialised wire'),
+                     (r'\$dlatch', 'an inferred latch')):
+        if re.search(pat, txt, re.I):
+            problems.append(why)
+    cells = dict((m.group(2), int(m.group(1))) for m in
+                 re.finditer(r'^\s+(\d+)\s+(\$\w+)\s*$', txt, re.M))
+    total = None
+    m = re.search(r'^\s{6}(\d+) cells\s*$', txt, re.M)
+    if m:
+        total = int(m.group(1))
+    stat_parse = 'parsed' if (cells or total is not None) else (
+        'UNPARSED_FORMAT: yosys printed a statistics table this parser does not recognise, so the '
+        'cell counts are unknown rather than zero' if 'Printing statistics' in txt else
+        'NO_STATISTICS_SECTION')
+    if stat_parse != 'parsed':
         problems.append(stat_parse)
-    return 0 if not problems else 1
+    elif not cells:
+        problems.append('the statistics section parsed but named no cell types at all')
+    return {'entry_rc': 0 if not problems else 1, 'yosys_rc': rc, 'problems': problems,
+            'stat_parse': stat_parse, 'cells': cells, 'cells_total': total,
+            'check_passes': len(re.findall(r'Found and reported 0 problems', txt)),
+            'selected': {'errors': len(re.findall(r'\bERROR\b', txt, re.I)),
+                         'warnings': len(re.findall(r'\bWarning\b', txt, re.I))}}
+
+
+def synth_gate_ok(synth):
+    """the export gate reads the same fields the persisted summary carries, parse status included"""
+    return (not synth.get('problems') and int(synth.get('rc', 1)) == 0
+            and synth.get('stat_parse') == 'parsed' and bool(synth.get('cells')))
 
 
 # --------------------------------------------------------------------- export evidence
@@ -926,7 +1264,7 @@ def build_artefacts(run_dir):
         'MIXED': bool(cached_mix) and all(_as_expected(r) for r in cached_mix),
         'XPROBE_REFUSED': summary['xprobe_refused'] == summary['xprobe_expected'],
         'MUTATION_DETECTION': mut['detected'] == mut['total'] and len(mut['rows']) == mut['total'],
-        'SYNTHESIS_STRUCTURE': not synth['problems'] and synth.get('rc') == 0,
+        'SYNTHESIS_STRUCTURE': synth_gate_ok(synth),
         'STIMULUS_ATTESTED': not unattested,
     }
     if not all(gates.values()):
@@ -954,9 +1292,7 @@ def build_artefacts(run_dir):
     buf = io.StringIO()
     ck.write_csv(buf, neg)
     art['dd1_d7a_negative.csv'] = buf.getvalue()
-    srows = sample_rows(run_dir, main_order)
-    if not srows:
-        raise ck.Refuse('no edge samples could be extracted from these traces')
+    srows = _samples_or_refuse(run_dir, main_order)
     buf = io.StringIO()
     ck.write_csv(buf, srows)
     art['dd1_d7a_edge_samples.csv'] = buf.getvalue()
@@ -975,29 +1311,146 @@ def build_artefacts(run_dir):
     return art
 
 
-def publish(art):
-    """write every file as a side copy first, then swap, so a crash cannot leave half a set"""
+PENDING_MARKER = 'd7a_publish.pending'
+PUBLISH_BACKUP = os.path.join(PROJ, 'review', 'dd1_d7a', 'publish_backup')
+
+
+def _fsync_write(path, data):
+    fp = io.open(path, 'wb')
+    try:
+        fp.write(data)
+        fp.flush()
+        os.fsync(fp.fileno())
+    finally:
+        fp.close()
+
+
+def pending_publish():
+    """the marker a promotion loop left behind, or None when no transaction is outstanding"""
+    p = os.path.join(EVIDENCE, PENDING_MARKER)
+    if not os.path.exists(p):
+        return None
+    try:
+        return json.load(io.open(p, encoding='utf-8'))
+    except (ValueError, OSError, IOError):
+        return {'unreadable_marker': True}
+
+
+def publish(art, backup_dir=None, promote=None):
+    """stage every artefact, promote it atomically, and roll the whole set back on any caught failure
+
+    Per-file replacement is atomic (`os.replace`), and that is the only atomicity a flat directory can
+    offer. The SET is kept consistent for every failure this process can catch: the bytes that were in
+    place before the first promotion are copied to `backup_dir` first, anything already promoted is
+    restored from that copy when a later step raises, no `.new` file and no marker survive, and the
+    caller still gets a non-zero exit. A SIGKILL or power loss between two promotions is NOT covered by
+    that rollback: the pending marker then stays on disk, `pending_publish()` reports the generation as
+    outstanding, and the same backup directory is what a later run restores from. Nothing here claims a
+    hardware transaction.
+
+    `promote` exists for the fault-injection regression: it replaces the promotion primitive.
+    """
+    backup_dir = backup_dir or PUBLISH_BACKUP
+    names = sorted(art)
     if not os.path.isdir(EVIDENCE):
         os.makedirs(EVIDENCE)
-    staged = {}
-    for name, text in sorted(art.items()):
-        tmp = os.path.join(EVIDENCE, name + '.new')
-        fp = io.open(tmp, 'w', encoding='utf-8', newline='\n')
-        try:
-            fp.write(u(text))
-        finally:
-            fp.close()
-        staged[name] = tmp
-    for name, tmp in sorted(staged.items()):
+    if not os.path.isdir(backup_dir):
+        os.makedirs(backup_dir)
+    previous = {}
+    for name in names:
         final = os.path.join(EVIDENCE, name)
         if os.path.exists(final):
-            os.remove(final)
-        os.rename(tmp, final)
-    return sorted(art)
+            shutil.copyfile(final, os.path.join(backup_dir, name))
+            previous[name] = sha256(final)
+    _fsync_write(os.path.join(EVIDENCE, PENDING_MARKER),
+                 u(json.dumps({'phase': 'promoting', 'files': names,
+                               'backup': os.path.relpath(backup_dir, PROJ).replace('\\', '/'),
+                               'previous': previous}, sort_keys=True)).encode('utf-8'))
+    staged = {}
+    for name in names:
+        tmp = os.path.join(EVIDENCE, name + '.new')
+        _fsync_write(tmp, u(art[name]).encode('utf-8'))
+        staged[name] = tmp
+    moved = []
+    promote = promote or os.replace
+
+    def _rollback():
+        for name in names:
+            final = os.path.join(EVIDENCE, name)
+            bak = os.path.join(backup_dir, name)
+            if name in previous and os.path.exists(bak):
+                _fsync_write(final + '.restore', open(bak, 'rb').read())
+                os.replace(final + '.restore', final)
+            elif os.path.exists(final):
+                os.remove(final)
+            try:
+                if sha256(final) != previous.get(name):
+                    raise ck.Refuse('the rollback of %s did not restore the previous bytes' % name)
+            except (OSError, IOError):
+                raise ck.Refuse('the rollback could not put %s back' % name)
+        for name in names:
+            for junk in (os.path.join(EVIDENCE, name + '.new'),
+                         os.path.join(EVIDENCE, name + '.restore')):
+                if os.path.exists(junk):
+                    os.remove(junk)
+
+    try:
+        for name in names:
+            promote(staged[name], os.path.join(EVIDENCE, name))
+            moved.append(name)
+        for name in names:
+            want = hashlib.sha256(u(art[name]).encode('utf-8')).hexdigest()
+            got = sha256(os.path.join(EVIDENCE, name))
+            if got != want:
+                raise ck.Refuse('%s on disk does not match the bytes that were staged (%s vs %s)'
+                                % (name, got[:12], want[:12]))
+    except Exception as exc:
+        detail = '%s: %s' % (type(exc).__name__, exc)
+        _rollback()
+        marker = os.path.join(EVIDENCE, PENDING_MARKER)
+        if os.path.exists(marker):
+            os.remove(marker)
+        raise ck.Refuse('publish aborted after %d/%d promotion(s), the previous set is restored; '
+                        'cause %s' % (len(moved), len(names), detail))
+    marker = os.path.join(EVIDENCE, PENDING_MARKER)
+    if os.path.exists(marker):
+        os.remove(marker)
+    return names
+
+
+def recover_publish(backup_dir=None):
+    """restore the last complete generation when a marker shows an unfinished transaction"""
+    state = pending_publish()
+    if state is None:
+        return {'needed': False}
+    backup_dir = backup_dir or PUBLISH_BACKUP
+    restored = []
+    for name, digest in sorted((state.get('previous') or {}).items()):
+        bak = os.path.join(backup_dir, name)
+        if os.path.exists(bak) and sha256(bak) == digest:
+            _fsync_write(os.path.join(EVIDENCE, name) + '.restore', open(bak, 'rb').read())
+            os.replace(os.path.join(EVIDENCE, name) + '.restore', os.path.join(EVIDENCE, name))
+            restored.append(name)
+    marker = os.path.join(EVIDENCE, PENDING_MARKER)
+    if os.path.exists(marker):
+        os.remove(marker)
+    for name in os.listdir(EVIDENCE):
+        if name.endswith('.new') or name.endswith('.restore'):
+            os.remove(os.path.join(EVIDENCE, name))
+    return {'needed': True, 'restored': restored, 'phase': state.get('phase'),
+            'complete': len(restored) == len(state.get('previous') or {})}
 
 
 def do_export(args):
     run_dir = os.path.abspath(args['out'])
+    stale = pending_publish()
+    if stale is not None:
+        rec = recover_publish()
+        print('PENDING_PUBLISH_RECOVERED: %s' % json.dumps(rec, sort_keys=True))
+        if rec.get('needed') and not rec.get('complete'):
+            print('EXPORT_REFUSED: an earlier publish is still outstanding and its backup cannot '
+                  'restore the whole set; the evidence directory is not treated as delivered')
+            return 1
     try:
         art = build_artefacts(run_dir)
     except (ck.Refuse, tv.VcdError, OSError, IOError, KeyError, ValueError) as exc:
@@ -1006,17 +1459,30 @@ def do_export(args):
         if left:
             print('STAGED_FILES_LEFT: %s (official files untouched)' % left)
         return 1
-    names = publish(art)
+    try:
+        names = publish(art, backup_dir=os.path.join(run_dir, 'publish_backup'))
+    except ck.Refuse as exc:
+        print('PUBLISH_FAILED_ROLLED_BACK: %s' % exc)
+        return 1
     print('exported %d files: %s' % (len(names), ', '.join(names)))
+    print('PUBLISH_TRANSACTION: target_files=%d backup=%s marker=cleared guarantee=caught-failure '
+          'rollback (not kill/power-loss atomic)'
+          % (len(names), os.path.relpath(os.path.join(run_dir, 'publish_backup'), PROJ)
+             .replace('\\', '/')))
     return 0
 
 def negative_rows(run_dir, mut):
     rows = []
     path = os.path.join(run_dir, 'checker_selftest.txt')
     for d in mut['rows']:
-        rows.append({'class': d['class'], 'mutant_rtl_sha256': d.get('mutant_rtl_sha256', ''),
+        rows.append({'class': d['class'],
+                     'category': d.get('category', MUTANTS.get(d['class'], {}).get('category', '')),
+                     'mutant_rtl_sha256': d.get('mutant_rtl_sha256', ''),
                      'trigger_case': d.get('trigger_case', ''), 'simulator_rc': '0',
                      'checker_rc': '1' if d['status'] == 'DETECTED' else '0',
+                     'fault_kind': d.get('fault_kind', ''),
+                     'fault_confirmed': 'yes' if d.get('fault_confirmed') else 'no',
+                     'fault_observed': str(d.get('fault_observed', ''))[:160],
                      'failing_assertion': d.get('detail', '')[:200],
                      'status': d['status'], 'note': MUTANTS.get(d['class'], {}).get('note', ''),
                      'run_id': mut['run_id']})
@@ -1024,13 +1490,25 @@ def negative_rows(run_dir, mut):
         txt = u(io.open(path, encoding='utf-8').read())
         for line in txt.split('\n'):
             if line.startswith('FAIL') or 'refused while parsing' in line:
-                rows.append({'class': 'checker_selftest', 'mutant_rtl_sha256': 'synthetic trace',
+                rows.append({'class': 'checker_selftest', 'category': 'selftest',
+                             'mutant_rtl_sha256': 'synthetic trace',
                              'trigger_case': 'synthetic', 'simulator_rc': 'not_run',
                              'checker_rc': '1', 'failing_assertion': line[:200],
+                             'fault_kind': 'synthetic_trace', 'fault_confirmed': 'n/a',
+                             'fault_observed': 'a waveform this file writes, not a run of the design',
                              'status': 'DETECTED', 'note': 'the checker proves its own refusals',
                              'run_id': os.path.basename(run_dir)})
                 break
     return rows
+
+
+def _samples_or_refuse(run_dir, main_order):
+    """the sampling stage on its own, so its refusal is reachable without a full re-judge"""
+    srows = sample_rows(run_dir, main_order)
+    if not srows:
+        raise ck.Refuse('no edge samples could be extracted from these traces')
+    return srows
+
 
 
 def sample_rows(run_dir, main_order):
@@ -1101,7 +1579,7 @@ def environment_json(run_dir, summary, mut, synth, identity=None, gates=None):
     versions = summary.get('tool_versions', {})
     return {
         'task': 'DATA-7A',
-        'task_revision': 'DATA-7A-R1',
+        'task_revision': TASK_REVISION,
         'run_id': os.path.basename(run_dir),
         'os': {'name': platform.system(), 'version': platform.release()},
         'python': platform.python_version(),
@@ -1189,7 +1667,8 @@ def manifest_json(run_dir, env_json, main_n, ctl_n, sample_n, art=None, gates=No
             if os.path.isfile(p):
                 ev[name] = {'bytes': os.path.getsize(p), 'sha256': sha256(p),
                             'origin': 'already in the evidence directory, not rewritten here'}
-    return {'task': 'DATA-7A', 'run_id': os.path.basename(run_dir), 'sources': src,
+    return {'task': 'DATA-7A', 'task_revision': TASK_REVISION,
+            'run_id': os.path.basename(run_dir), 'sources': src,
             'run_artifacts': files, 'evidence': ev,
             'evidence_hashed_elsewhere': {
                 'files': loose,
@@ -1207,25 +1686,36 @@ def manifest_json(run_dir, env_json, main_n, ctl_n, sample_n, art=None, gates=No
             'traces_rejudged_before_publish': True}
 
 
-GUARD_TARGETS = ['dd1_d7a_cases.csv', 'dd1_d7a_control_cases.csv', 'dd1_d7a_negative.csv',
-                'dd1_d7a_edge_samples.csv', 'dd1_d7a_environment.json', 'dd1_d7a_manifest.json',
-                'dd1_d7a_checker_selftest.txt', 'dd1_d7a_write_guard.txt']
+"""the guard regression: one clean baseline copy per mode, one injected fault per mode
 
+The previous version copied the run once and let every later mode inherit the damage the earlier
+modes had done, so three of its "PASS" rows were really refusing for somebody else's reason. Each
+mode now starts from an intact, exportable copy and has to refuse for the reason its name claims,
+with the whole evidence set and the leftover-file state checked afterwards.
+"""
 
-def _seed_fixture(fixture, run_dir):
-    """pre-seed every real evidence target with non-empty content inside the isolated fixture"""
-    ev = os.path.join(fixture, 'evidence')
-    if not os.path.isdir(ev):
-        os.makedirs(ev)
-    for name in GUARD_TARGETS:
-        src = os.path.join(EVIDENCE, name)
-        text = u(io.open(src, encoding='utf-8').read()) if os.path.exists(src) else \
-            u('seed,%s\n1,PASS\n' % name)
-        io.open(os.path.join(ev, name), 'w', encoding='utf-8', newline='\n').write(text)
-    cache = os.path.join(fixture, 'run')
-    if not os.path.isdir(cache):
-        shutil.copytree(run_dir, cache)
-    return ev, cache
+def _fresh_run_copy(fixture, src, name, private=()):
+    """a per-mode copy of the baseline run: small files copied, big traces hard-linked
+
+    Files a mode is going to modify are copied, so that editing them cannot reach the shared baseline
+    through the hard link.
+    """
+    d = os.path.join(fixture, 'run_' + name)
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    os.makedirs(d)
+    for fn in sorted(os.listdir(src)):
+        s, t = os.path.join(src, fn), os.path.join(d, fn)
+        if not os.path.isfile(s):
+            continue
+        if fn in private or not fn.endswith('.vcd'):
+            shutil.copyfile(s, t)
+        else:
+            try:
+                os.link(s, t)
+            except OSError:
+                shutil.copyfile(s, t)
+    return d
 
 
 def _digest_set(ev):
@@ -1233,129 +1723,335 @@ def _digest_set(ev):
                 if os.path.isfile(os.path.join(ev, n)))
 
 
-def write_guard_matrix(run_dir, keep=None):
-    """each failure mode must leave the whole pre-seeded evidence set untouched, file by file
+def _leftovers(ev_dir):
+    return sorted(n for n in os.listdir(ev_dir)
+                  if n.endswith('.new') or n.endswith('.restore') or n == PENDING_MARKER)
 
-    This is the regression the review asked for: it protects the actual CSV and JSON objects, not a
-    note file about them. A fixture directory is used; the official evidence path is never the target.
-    """
+
+def _seed_evidence(ev_dir, old_bytes):
+    """pre-seed every target file with the non-empty bytes a previous export really published"""
+    if os.path.isdir(ev_dir):
+        shutil.rmtree(ev_dir)
+    os.makedirs(ev_dir)
+    for name, text in sorted(old_bytes.items()):
+        with io.open(os.path.join(ev_dir, name), 'w', encoding='utf-8', newline='\n') as fp:
+            fp.write(u(text))
+
+
+def _promote_failing_at(k):
+    """a promotion primitive that throws on the k-th file and behaves normally otherwise"""
+    seen = []
+
+    def _p(src, dst):
+        seen.append(os.path.basename(dst))
+        if len(seen) == k + 1:
+            raise OSError('INJECTED promotion failure on %s' % os.path.basename(dst))
+        os.replace(src, dst)
+    return _p, seen
+
+
+def guard_modes(fixture, cache_src, art, old_bytes):
+    """the mode table: (name, expected refusal text, what proves that stage was reached, injector)"""
+    ev = os.path.join(fixture, 'evidence')
+
+    def cache_for(name, private=()):
+        return _fresh_run_copy(fixture, cache_src, name, private=private)
+
+    def m_empty():
+        ck.write_rows(os.path.join(ev, 'dd1_d7a_cases.csv'), [])
+    def m_missing_dir():
+        build_artefacts(os.path.join(fixture, 'absent_run'))
+    def m_dry():
+        do_dry_run({'out': cache_for('dry_run')})
+    def m_gates():
+        d = cache_for('gates_not_met')
+        p = os.path.join(d, 'mutants.json')
+        m = json.load(io.open(p, encoding='utf-8'))
+        m['detected'] = 1
+        io.open(p, 'w', encoding='utf-8', newline='\n').write(u(json.dumps(m)))
+        return build_artefacts(d)
+    def m_compile():
+        d = cache_for('compile_failure')
+        root, tools, env = find_tools()
+        bad = os.path.join(d, 'broken.sv')
+        io.open(bad, 'w', encoding='utf-8', newline='\n').write(u('module x( input a ; // unterminated\n'))
+        try:
+            exe, crc, cout = compile_sim(tools, env, d, rtl=bad, tag='broken')
+        except SystemExit as exc:                       # the entry refuses a broken source this way
+            raise ck.Refuse('compile refused: %s' % str(exc)[:120])
+        raise ck.Refuse('the compile entry accepted a broken source file, rc=%s' % crc)
+    def m_missing_trace():
+        d = cache_for('missing_trace')
+        os.remove(os.path.join(d, 'trace_pure_t30.vcd'))
+        return build_artefacts(d)
+    def m_corrupt_trace():
+        # the recorded digest is refreshed first, otherwise this mode would only ever re-run the
+        # digest gate and never reach the parser, which is exactly what the old table pretended
+        d = cache_for('corrupt_trace', private=('trace_pure_t50.vcd', 'run_summary.json'))
+        p = os.path.join(d, 'trace_pure_t50.vcd')
+        io.open(p, 'w', encoding='utf-8', newline='\n').write(
+            u'$version garbage $end\n$timescale 1ps $end\n#100 1\nno such variable here\n')
+        sp = os.path.join(d, 'run_summary.json')
+        s = json.load(io.open(sp, encoding='utf-8'))
+        for g in s['groups']:
+            if g['vcd'] == 'trace_pure_t50.vcd':
+                g['vcd_sha256'] = sha256(p)
+        io.open(sp, 'w', encoding='utf-8', newline='\n').write(u(json.dumps(s)))
+        return build_artefacts(d)
+    def m_sample_extract():
+        # the sampling stage sits behind a full re-judge, so it is exercised by calling the same
+        # function the export calls, on a run copy whose main rows name a trace the sampler does not
+        # use and whose control trace is absent: that is the state in which it has nothing to sample
+        d = cache_for('sample_extract_failure', private=()) 
+        if os.path.exists(os.path.join(d, 'trace_control.vcd')):
+            os.remove(os.path.join(d, 'trace_control.vcd'))
+        rows = json.load(io.open(os.path.join(d, 'raw_main_rows.json'), encoding='utf-8'))
+        for r in rows:
+            r['vcd'] = 'trace_unsampled.vcd'
+        return _samples_or_refuse(d, rows)
+    def m_stale_source():
+        d = cache_for('stale_cached_source')
+        p = os.path.join(d, 'run_summary.json')
+        s = json.load(io.open(p, encoding='utf-8'))
+        s['checker_sha256'] = 'e' * 64
+        io.open(p, 'w', encoding='utf-8', newline='\n').write(u(json.dumps(s)))
+        return build_artefacts(d)
+    def m_row_count():
+        d = cache_for('row_count_mismatch')
+        p = os.path.join(d, 'raw_main_rows.json')
+        rows = json.load(io.open(p, encoding='utf-8'))
+        io.open(p, 'w', encoding='utf-8', newline='\n').write(u(json.dumps(rows[:1500])))
+        return build_artefacts(d)
+    def m_trace_digest():
+        d = cache_for('trace_digest_mismatch', private=('trace_hyb_t120.vcd',))
+        io.open(os.path.join(d, 'trace_hyb_t120.vcd'), 'a', encoding='utf-8',
+                newline='\n').write(u('#999999999999\n'))
+        return build_artefacts(d)
+
+    def _publish_mode(at):
+        def _run():
+            art2 = dict((k, v + 'X\n') for k, v in sorted(art.items()))
+            backup = os.path.join(fixture, 'backup_%d' % at)
+            _seed_evidence(ev, old_bytes)
+            before = _digest_set(ev)
+            names = sorted(art2)
+            promote, seen = _promote_failing_at(min(at, len(names) - 1))
+            publish(art2, backup_dir=backup, promote=promote)
+        return _run
+
+    def m_publish_ok():
+        art2 = dict((k, v + 'NEWBYTES\n') for k, v in sorted(art.items()))
+        backup = os.path.join(fixture, 'backup_ok')
+        _seed_evidence(ev, old_bytes)
+        publish(art2, backup_dir=backup)
+        for name in sorted(art2):
+            got = sha256(os.path.join(ev, name))
+            want = hashlib.sha256(u(art2[name]).encode('utf-8')).hexdigest()
+            if got != want:
+                raise ck.Refuse('%s was not published as staged' % name)
+            old = old_bytes.get(name)
+            if old is not None and sha256(os.path.join(backup, name)) != \
+                    hashlib.sha256(u(old).encode('utf-8')).hexdigest():
+                raise ck.Refuse('the backup of %s does not hold the previous bytes' % name)
+        if pending_publish() is not None:
+            raise ck.Refuse('a successful publish left a pending marker behind')
+        if _leftovers(ev):
+            raise ck.Refuse('a successful publish left %s behind' % _leftovers(ev))
+
+    def _synth_mode(tag, mutate):
+        def _run():
+            d = cache_for(tag)
+            p = os.path.join(d, 'synth_summary.json')
+            s = json.load(io.open(p, encoding='utf-8'))
+            mutate(s)
+            io.open(p, 'w', encoding='utf-8', newline='\n').write(u(json.dumps(s)))
+            return build_artefacts(d)
+        return _run
+
+    def _unparsed_claimed_ok(s):
+        s['stat_parse'] = ('UNPARSED_FORMAT: yosys printed a statistics table this parser does not '
+                           'recognise, so the cell counts are unknown rather than zero')
+        s['problems'] = []
+        s['rc'] = 0
+        s['cells'] = {}
+        s['cells_total'] = None
+
+    def _unparsed_declared(s):
+        s['stat_parse'] = 'UNPARSED_FORMAT: injected'
+        s['problems'] = ['UNPARSED_FORMAT: injected']
+        s['rc'] = 1
+
+    def _structure_broken(s):
+        s['problems'] = ['an inferred latch']
+        s['rc'] = 1
+
+    return [
+        {'mode': 'dry_run_plan_only', 'expect': None, 'inject': m_dry,
+         'stage': 'the dry run must plan without touching the evidence set at all'},
+        {'mode': 'empty_row_set', 'expect': 'refusing to render 0 rows', 'inject': m_empty,
+         'stage': 'the CSV writer refuses an empty table'},
+        {'mode': 'missing_run_dir', 'expect': 'is missing run_summary.json', 'inject': m_missing_dir,
+         'stage': 'the first input check'},
+        {'mode': 'compile_failure', 'expect': 'IVERILOG_FAILED', 'inject': m_compile,
+         'stage': 'the simulator entry stops on a broken source'},
+        {'mode': 'gates_not_met', 'expect': 'export gates failed', 'inject': m_gates,
+         'stage': 'the gate block'},
+        {'mode': 'missing_trace', 'expect': 'has no trace_pure_t30.vcd', 'inject': m_missing_trace,
+         'stage': 'the trace-presence check inside re-judging'},
+        {'mode': 'corrupt_trace', 'expect': 'REVIEW', 'inject': m_corrupt_trace,
+         'stage': 'the VCD parser, reached by refreshing the recorded digest first',
+         'expect_any': ('VcdError', 'Refuse')},
+        {'mode': 'sample_extract_failure', 'expect': 'no edge samples could be extracted',
+         'inject': m_sample_extract,
+         'stage': 'the sampling stage itself, called directly because it sits behind a full re-judge'},
+        {'mode': 'stale_cached_source', 'expect': 'produced by different sources',
+         'inject': m_stale_source, 'stage': 'the source-identity gate'},
+        {'mode': 'row_count_mismatch', 'expect': 'main rows are', 'inject': m_row_count,
+         'stage': 'the row-count and unique-key block'},
+        {'mode': 'trace_digest_mismatch', 'expect': 'hashes to', 'inject': m_trace_digest,
+         'stage': 'the per-trace digest gate'},
+        {'mode': 'synth_stats_unparsed_but_claimed_ok',
+         'expect': '"SYNTHESIS_STRUCTURE": false',
+         'inject': _synth_mode('synth_stats_unparsed_but_claimed_ok', _unparsed_claimed_ok),
+         'stage': 'a summary that reports rc=0 and an empty problem list although the statistics were '
+                  'never parsed: the gate must still refuse it'},
+        {'mode': 'synth_stats_unparsed_as_written',
+         'expect': '"SYNTHESIS_STRUCTURE": false',
+         'inject': _synth_mode('synth_stats_unparsed_as_written', _unparsed_declared),
+         'stage': 'the record do_synth now produces itself: parse failure carried in rc and problems'},
+        {'mode': 'synth_structure_problem', 'expect': '"SYNTHESIS_STRUCTURE": false',
+         'inject': _synth_mode('synth_structure_problem', _structure_broken),
+         'stage': 'a real structural problem in the persisted summary'},
+        {'mode': 'publish_first_file_fails', 'expect': 'publish aborted after 0/',
+         'inject': _publish_mode(0), 'stage': 'the very first promotion', 'rollback': True},
+        {'mode': 'publish_middle_file_fails', 'expect': 'promotion(s), the previous set is restored',
+         'inject': _publish_mode(3), 'stage': 'a promotion in the middle of the set',
+         'rollback': True},
+        {'mode': 'publish_last_file_fails', 'expect': 'promotion(s), the previous set is restored',
+         'inject': _publish_mode(10 ** 6), 'stage': 'the last promotion of the set',
+         'rollback': True},
+        {'mode': 'publish_success', 'expect': None, 'inject': m_publish_ok,
+         'stage': 'the normal publish path still works end to end', 'writes': True},
+    ]
+
+
+def write_guard_matrix(run_dir, keep=None):
+    """run every mode against its own clean copy and demand the refusal it claims to test"""
     global EVIDENCE
     fixture = keep or os.path.join(PROJ, 'review', 'dd1_d7a', 'write_guard_fixture')
     if os.path.isdir(fixture):
         shutil.rmtree(fixture)
     os.makedirs(fixture)
+    ev = os.path.join(fixture, 'evidence')
     real = EVIDENCE
-    ev, cache = _seed_fixture(fixture, run_dir)
-    results = []
+    old_bytes = {}
+    for name in sorted(os.listdir(real)) if os.path.isdir(real) else []:
+        p = os.path.join(real, name)
+        if os.path.isfile(p) and name.startswith('dd1_d7a_'):
+            old_bytes[name] = u(io.open(p, encoding='utf-8').read())
+    _IN_GUARD[0] = True
     try:
         EVIDENCE = ev
-        _IN_GUARD[0] = True
-        modes = []
-        modes.append(('empty_row_set', lambda: ck.write_rows(os.path.join(ev, 'dd1_d7a_cases.csv'),
-                                                             [])))
-        modes.append(('missing_run_dir', lambda: build_artefacts(os.path.join(fixture, 'absent'))))
-        modes.append(('gates_not_met', lambda: _mode_gates(fixture, cache)))
-
-        def _delete_trace():
-            os.remove(os.path.join(cache, 'trace_pure_t30.vcd'))
-            return build_artefacts(cache)
-        modes.append(('missing_trace', _delete_trace))
-        modes.append(('compile_failure', lambda: _mode_compile(cache)))
-
-        def _corrupt_trace():
-            p = os.path.join(cache, 'trace_pure_t50.vcd')
-            io.open(p, 'w', encoding='utf-8', newline='\n').write(
-                u'$timescale 1ps $end\n#0 garbage\n')
-            return build_artefacts(cache)
-        modes.append(('corrupt_trace', _corrupt_trace))
-
-        def _stale_source():
-            p = os.path.join(cache, 'run_summary.json')
-            d = json.load(io.open(p, encoding='utf-8'))
-            d['checker_sha256'] = 'e' * 64
-            io.open(p, 'w', encoding='utf-8', newline='\n').write(u(json.dumps(d)))
-            return build_artefacts(cache)
-        modes.append(('stale_cached_source', _stale_source))
-
-        def _count_mismatch():
-            p = os.path.join(cache, 'raw_main_rows.json')
-            d = json.load(io.open(p, encoding='utf-8'))
-            io.open(p, 'w', encoding='utf-8', newline='\n').write(u(json.dumps(d[:1500])))
-            return build_artefacts(cache)
-        modes.append(('row_count_mismatch', _count_mismatch))
-
-        def _identity_break():
-            p = os.path.join(cache, 'trace_hyb_t120.vcd')
-            io.open(p, 'a', encoding='utf-8', newline='\n').write(u('#99999999999\n'))
-            return build_artefacts(cache)
-        modes.append(('trace_digest_mismatch', _identity_break))
-
-        for name, fn in modes:
+        _seed_evidence(ev, old_bytes)
+        art = build_artefacts(run_dir)          # what a real export would publish, names and bytes
+        for name, text in sorted(art.items()):
+            old_bytes.setdefault(name, text)
+        _seed_evidence(ev, old_bytes)           # every target pre-seeded, including the new names
+        targets = sorted(old_bytes)
+        modes = guard_modes(fixture, run_dir, art, old_bytes)
+        results = []
+        for spec in modes:
+            _seed_evidence(ev, old_bytes)
             before = _digest_set(ev)
-            err = ''
+            raised, outcome, detail = False, 'RETURNED_WITHOUT_REFUSAL', ''
             try:
-                fn()
-                outcome = 'RETURNED_WITHOUT_REFUSAL'
-            except Exception as exc:                              # noqa: BLE001
+                spec['inject']()
+                if spec['expect'] is not None:
+                    outcome = 'RETURNED_WITHOUT_REFUSAL'
+                else:
+                    outcome = 'completed_without_refusal_expected'
+            except (Exception, SystemExit) as exc:                          # noqa: BLE001
+                raised = True
                 outcome = 'refused: %s' % type(exc).__name__
-                err = str(exc)[:90]
+                detail = str(exc)[:220]
             after = _digest_set(ev)
-            changed = sorted(k for k in before if before.get(k) != after.get(k))
+            changed = sorted(k for k in set(before) | set(after) if before.get(k) != after.get(k))
             extra = sorted(set(after) - set(before))
-            ok = (not changed) and (not extra) and 'refused' in outcome
-            results.append({'mode': name, 'outcome': outcome, 'detail': err,
-                            'files_changed': changed, 'files_added': extra,
-                            'evidence_untouched': ok})
+            missing = sorted(set(before) - set(after))
+            left = _leftovers(ev)
+            want = spec['expect']
+            hay = outcome + ' ' + detail
+            if want is None:
+                phrase_ok = True
+            elif want == 'REVIEW':                # a real parse failure, message not fixed in advance
+                phrase_ok = bool(detail) and 'has no trace' not in detail
+            else:
+                cands = (want,) + tuple(spec.get('expect_any') or ())
+                phrase_ok = any(c in hay for c in cands)
+            refused_ok = (raised if want is not None else not raised)
+            if spec.get('writes'):
+                # this mode publishes on purpose, and the injector itself asserts that every file
+                # holds the staged bytes, that the marker is gone and that no staging file remains;
+                # what the table adds is that nothing disappeared and nothing was left behind
+                untouched_ok = (not missing) and (not left)
+            else:
+                untouched_ok = (not changed) and (not extra) and (not missing) and (not left)
+            results.append({'mode': spec['mode'], 'stage': spec['stage'], 'outcome': outcome,
+                            'expected_refusal': want, 'detail': detail,
+                            'refusal_reason_matched': bool(phrase_ok),
+                            'files_changed': changed, 'files_added': extra, 'files_missing': missing,
+                            'leftover_temp_files': left, 'evidence_untouched': untouched_ok,
+                            'rollback_expected': bool(spec.get('rollback')),
+                            'mode_pass': bool(refused_ok and phrase_ok and untouched_ok)})
+        return results, targets
     finally:
         EVIDENCE = real
         _IN_GUARD[0] = False
-    return results
-
-
-def _mode_gates(fixture, cache):
-    d = os.path.join(fixture, 'gates_bad')
-    shutil.copytree(cache, d) if not os.path.isdir(d) else None
-    p = os.path.join(d, 'mutants.json')
-    m = json.load(io.open(p, encoding='utf-8'))
-    m['detected'] = 1
-    io.open(p, 'w', encoding='utf-8', newline='\n').write(u(json.dumps(m)))
-    return build_artefacts(d)
-
-
-def _mode_compile(cache):
-    """a broken source must stop the run before it can publish anything"""
-    root, tools, env = find_tools()
-    bad = os.path.join(cache, 'broken.sv')
-    io.open(bad, 'w', encoding='utf-8', newline='\n').write(u('module x( input a ; // unterminated\n'))
-    try:
-        compile_sim(tools, env, cache, rtl=bad, tag='broken')
-        return 'compiled a broken file'
-    except SystemExit as exc:
-        raise ck.Refuse('compile refused: %s' % str(exc)[:80])
 
 
 def write_guard_report(run_dir):
-    res = write_guard_matrix(run_dir)
-    ok = all(r['evidence_untouched'] for r in res)
+    res, targets = write_guard_matrix(run_dir)
+    ok = all(r['mode_pass'] for r in res)
     lines = [u'DATA-7A write guard matrix',
              u'',
-             u'Every failure mode below is exercised against a fixture copy of the real evidence',
-             u'set -- all %d target files pre-seeded with non-empty content -- and the whole file set'
-             % len(GUARD_TARGETS),
-             u'is compared by name and sha256 afterwards. The official evidence path is never the',
-             u'target of these attempts.',
+             u'Every mode below gets its own clean copy of an exportable run and its own pre-seeded',
+             u'copy of the real evidence set -- %d target files, the set derived from a clean build'
+             % len(targets),
+             u'rather than typed -- so no mode can be stopped by the damage a previous mode did.',
+             u'A mode passes only when the refusal it claims is the refusal that happened, the whole',
+             u'file set is unchanged by name, content and absence, and no staging or marker file is',
+             u'left behind. The official evidence path is never the target of an attempt.',
              u'',
-             u'mode                     outcome                         changed  added  untouched']
+             u'target files seeded: %s' % ', '.join(targets),
+             u'',
+             u'mode                     outcome              reason-hit changed/added/missing  verdict']
     for r in res:
-        lines.append(u'%-24s %-30s %-8s %-6s %s'
-                     % (r['mode'], r['outcome'][:30], ','.join(r['files_changed']) or '-',
-                        ','.join(r['files_added']) or '-',
-                        'PASS' if r['evidence_untouched'] else 'FAIL'))
+        lines.append(u'%-26s %-20s %-10s %-24s %s'
+                     % (r['mode'], r['outcome'][:20],
+                        'yes' if r['refusal_reason_matched'] else 'NO',
+                        '%s/%s/%s' % (','.join(r['files_changed']) or '-',
+                                      ','.join(r['files_added']) or '-',
+                                      ','.join(r['files_missing']) or '-')[:24],
+                        'PASS' if r['mode_pass'] else 'FAIL'))
     lines.append(u'')
-    lines.append(u'per-file sha256 of the fixture evidence set after all attempts:')
+    lines.append(u'per-mode detail (the refusal text that was actually produced):')
+    for r in res:
+        lines.append(u'  %-26s expect=%-34s got=%s'
+                     % (r['mode'], str(r['expected_refusal'])[:34], r['detail'][:120]))
+    lines.append(u'')
     ev = os.path.join(PROJ, 'review', 'dd1_d7a', 'write_guard_fixture', 'evidence')
-    for name in sorted(_digest_set(ev)):
-        lines.append(u'  %-34s %s' % (name, _digest_set(ev)[name]))
+    lines.append(u'per-file sha256 of the fixture evidence set after the last attempt:')
+    dig = _digest_set(ev)
+    for name in sorted(dig):
+        lines.append(u'  %-34s %s' % (name, dig[name]))
+    lines.append(u'')
+    lines.append(u'state after the matrix: leftover staging/marker files = %s'
+                 % (_leftovers(ev) or 'none'))
+    lines.append(u'publish atomicity boundary: each file is replaced by os.replace (atomic per file);')
+    lines.append(u'the SET is kept consistent for any failure the process can catch, by restoring the')
+    lines.append(u'bytes backed up before the first promotion. A SIGKILL or power loss between two')
+    lines.append(u'promotions is not covered by that rollback: the pending marker then survives, is')
+    lines.append(u'reported by pending_publish(), and the same backup restores it.')
     lines.append(u'')
     lines.append(u'WRITE_GUARD: %s' % ('PASS' if ok else 'FAIL'))
     return u'\n'.join(lines) + u'\n'
@@ -1367,16 +2063,20 @@ def do_write_guard(args):
     if not os.path.exists(os.path.join(run_dir, 'run_summary.json')):
         print('write guard needs a completed run directory with run_summary.json')
         return 1
-    res = write_guard_matrix(run_dir)
+    res, targets = write_guard_matrix(run_dir)
     for r in res:
-        print('%-24s %-40s changed=%s added=%s untouched=%s'
-              % (r['mode'], r['outcome'][:40], r['files_changed'] or '-',
-                 r['files_added'] or '-', r['evidence_untouched']))
-    ok = all(r['evidence_untouched'] for r in res)
-    print('WRITE_GUARD: %s (%d modes)' % ('PASS' if ok else 'FAIL', len(res)))
+        print('%-26s %-20s reason=%-5s changed=%s added=%s missing=%s left=%s pass=%s'
+              % (r['mode'], r['outcome'][:20], 'yes' if r['refusal_reason_matched'] else 'NO',
+                 r['files_changed'] or '-', r['files_added'] or '-', r['files_missing'] or '-',
+                 r['leftover_temp_files'] or '-', r['mode_pass']))
+    ok = all(r['mode_pass'] for r in res)
+    print('WRITE_GUARD: %s (%d modes, %d target files)' % ('PASS' if ok else 'FAIL',
+                                                           len(res), len(targets)))
     io.open(os.path.join(run_dir, 'write_guard.txt'), 'w', encoding='utf-8',
-            newline='\n').write(u(json.dumps(res, indent=1, sort_keys=True) + '\n'))
+            newline='\n').write(u(json.dumps({'modes': res, 'targets': targets}, indent=1,
+                                             sort_keys=True) + '\n'))
     return 0 if ok else 1
+
 
 def do_dry_run(args):
     """environment, input and plan checks only: nothing is compiled, simulated or exported"""
@@ -1410,16 +2110,91 @@ def do_dry_run(args):
     return 0
 
 
+def entry_selftest():
+    """the runner's own integrity gates, tested without a simulator, a netlist or the checker
+
+    The checker selftest proves the waveform judgement. This proves the parts that decide whether a
+    result may be published at all: the statistics parse status, the gate that reads it, and the
+    multi-file publish rollback and success path.
+    """
+    global EVIDENCE
+    lines, bad = [], [0]
+
+    def note(cond, name, detail):
+        if not cond:
+            bad[0] += 1
+        lines.append(u'%-4s entry %-38s %s' % ('PASS' if cond else 'FAIL', name, detail))
+
+    odd_table = (u'3. Printing statistics.\n\n'
+                 u'   146 cells:                       1099 wires, 21 processes\n'
+                 u'    38   $_AND_                       38 cells\n'
+                 u'     6   $adff    6 cells (this shape is not the one parsed above)\n')
+    st = synth_status(0, odd_table)
+    note(st['stat_parse'].startswith('UNPARSED'), 'unparsable statistics table is noticed',
+         st['stat_parse'][:70])
+    note(st['entry_rc'] == 1 and bool(st['problems']),
+         'unparsed statistics fails the ENTRY, not just a note', 'entry_rc=%d problems=%d'
+         % (st['entry_rc'], len(st['problems'])))
+    note(st['yosys_rc'] == 0, 'the tool rc is still recorded separately', 'yosys_rc=%d'
+         % st['yosys_rc'])
+    note(not synth_gate_ok({'rc': 0, 'problems': [], 'stat_parse': st['stat_parse'], 'cells': {}}),
+         'gate refuses the stale rc=0 / empty-problems pair', 'the exact shape the old summary wrote')
+    note(synth_gate_ok({'rc': 0, 'problems': [], 'stat_parse': 'parsed', 'cells': {'$_adff': 6}}),
+         'gate accepts a clean parsed record', 'positive control')
+    note(not synth_gate_ok({'rc': 1, 'problems': ['an inferred latch'], 'stat_parse': 'parsed',
+                            'cells': {'$dlatch': 1}}), 'gate refuses a declared problem', 'negative')
+
+    scratch = os.path.join(PROJ, 'review', 'dd1_d7a', 'entry_selftest_publish')
+    old_ev = EVIDENCE
+    try:
+        names = ['dd1_d7a_cases.csv', 'dd1_d7a_control_cases.csv', 'dd1_d7a_manifest.json']
+        for attempt in ('fail', 'ok'):
+            ev = os.path.join(scratch, attempt)
+            _seed_evidence(ev, dict((n, u'OLD_NONEMPTY %s\n' % n) for n in names))
+            EVIDENCE = ev
+            before = _digest_set(ev)
+            art = dict((n, u'NEW_NONEMPTY %s\n' % n) for n in names)
+            promote, seen = _promote_failing_at(1) if attempt == 'fail' else (None, None)
+            raised = ''
+            try:
+                publish(art, backup_dir=os.path.join(scratch, 'backup_' + attempt), promote=promote)
+            except ck.Refuse as exc:
+                raised = str(exc)[:120]
+            after = _digest_set(ev)
+            if attempt == 'fail':
+                note(bool(raised), 'publish with a mid-set failure raises', raised[:60])
+                note(after == before, 'every previously published file kept its old bytes',
+                     'changed=%s missing=%s' % (sorted(k for k in before if before.get(k) !=
+                                                      after.get(k)), sorted(set(before) - set(after))))
+                note(not _leftovers(ev), 'no staging or marker file survives the rollback',
+                     str(_leftovers(ev)))
+            else:
+                want = dict((n, hashlib.sha256(u(art[n]).encode('utf-8')).hexdigest())
+                            for n in names)
+                note(not raised and after == want, 'a clean publish puts the new bytes in place',
+                     raised[:60] or 'ok')
+                note(not _leftovers(ev) and pending_publish() is None,
+                     'a clean publish leaves no pending transaction behind', 'checked')
+    finally:
+        EVIDENCE = old_ev
+        if os.path.isdir(scratch):
+            shutil.rmtree(scratch)
+    return bad[0], u'\n'.join(lines)
+
+
 def do_selftest(args):
     bad, report = ck.selftest()
-    print(report)
+    ebad, ereport = entry_selftest()
+    full = report + u'\n' + ereport + u'\n'
+    print(full)
     print('CHECKER_SELFTEST: %s' % ('PASS' if bad == 0 else 'FAIL (%d)' % bad))
+    print('ENTRY_SELFTEST: %s' % ('PASS' if ebad == 0 else 'FAIL (%d)' % ebad))
     run_dir = args.get('out')
-    if run_dir and bad == 0:
+    if run_dir and bad == 0 and ebad == 0:
         d = os.path.abspath(run_dir)
         os.path.isdir(d) or os.makedirs(d)
-        write_atomic(os.path.join(d, 'checker_selftest.txt'), report + '\n')
-    return 0 if bad == 0 else 1
+        write_atomic(os.path.join(d, 'checker_selftest.txt'), full)
+    return 0 if (bad == 0 and ebad == 0) else 1
 
 
 def parse_args(argv):

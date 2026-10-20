@@ -573,12 +573,26 @@ module tb_dd1_d7a_gray;
                     run_window(intervals, tdiv);
                 end
                 20: begin                                  // one load, two LATCH requests
-                    load_and_latch(pure_a, pure_b, ht_a, ht_b, pam_a, pam_b);
                     drive_begin;
-                    latch_stb = 1'b1;                      // no new load behind this request
+                    cfg_pure_a = pure_a[7:0]; cfg_pure_b = pure_b[7:0];
+                    cfg_ht_a = ht_a[5:0];     cfg_ht_b = ht_b[5:0];
+                    cfg_pam_a = pam_a[2:0];   cfg_pam_b = pam_b[2:0];
+                    cfg_valid = 1'b1;                      // one load transaction...
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b1;                      // ...consumed by this LATCH
                     edges(2);
                     drive_begin;
                     latch_stb = 1'b0;
+                    edges(2);
+                    drive_begin;
+                    // ...and offered again while the bus is UNCHANGED and cfg_valid is still high, so
+                    // the only thing missing is a new load: an incompleteness refusal would hide it
+                    latch_stb = 1'b1;
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b0;
+                    cfg_valid = 1'b0;
                     edges(2);
                 end
                 21: begin                                  // abort, then a bare START again
@@ -769,6 +783,174 @@ module tb_dd1_d7a_gray;
                     drive_begin;
                     blank = 1'b1;
                     edges(2);
+                end
+                29: begin                                  // next loaded during A, committed after A
+                    load_and_latch(pure_a, pure_b, ht_a, ht_b, pam_a, pam_b);
+                    arm_start(40);
+                    tick_div = tdiv;
+                    drive_begin;
+                    blank = 1'b0;
+                    tick_run = 1'b1;
+                    edges((intervals / 2) * tdiv);         // A is mid-window
+                    drive_begin;
+                    cfg_pure_a = q3; cfg_pure_b = q3;      // one new load transaction, prepared only
+                    cfg_ht_a = q3[5:0]; cfg_ht_b = q3[5:0];
+                    cfg_pam_a = q4; cfg_pam_b = q4;
+                    cfg_valid = 1'b1;
+                    edges((intervals / 2 + 12) * tdiv);    // A runs to its own completion untouched
+                    tick_run = 1'b0;
+                    edges(2);
+                    drive_begin;
+                    blank = 1'b1;
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b1;                      // consumes the prepared load
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b0;
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b1;                      // replay with no new load: refused
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b0;
+                    cfg_valid = 1'b0;
+                    edges(2);
+                    arm_start(40);
+                    run_window(intervals, tdiv);           // window B really uses the prepared code
+                end
+                30: begin                                  // abort with a pending load, then LATCH/START
+                    load_and_latch(pure_a, pure_b, ht_a, ht_b, pam_a, pam_b);
+                    arm_start(40);
+                    tick_div = tdiv;
+                    drive_begin;
+                    blank = 1'b0;
+                    tick_run = 1'b1;
+                    edges(q1 * tdiv);                      // inside the lit part of window A
+                    drive_begin;
+                    cfg_pure_a = q3; cfg_pure_b = q3;      // next prepared BEFORE the abort
+                    cfg_ht_a = q3[5:0]; cfg_ht_b = q3[5:0];
+                    cfg_pam_a = q4; cfg_pam_b = q4;
+                    cfg_valid = 1'b1;                      // and never consumed
+                    edges(2);
+                    drive_begin;
+                    if (q2 == 1) begin
+                        fault = 1'b1;                      // fault aborts even when not blanked
+                    end else begin
+                        blank = 1'b1;                      // blank aborts a running window
+                    end
+                    edges(6);
+                    drive_begin;
+                    fault = 1'b0;
+                    blank = 1'b1;                          // back into the safe preparation phase
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b1;                      // LATCH of the pre-abort pending: refused
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b0;
+                    cfg_valid = 1'b0;
+                    edges(2);
+                    arm_start(40);                         // START with nothing authorised: refused
+                    drive_begin;
+                    blank = 1'b0;                          // released as a normal arm would release it
+                    tick_run = 1'b1;
+                    edges(40 * tdiv);
+                    tick_run = 1'b0;
+                    edges(2);
+                    drive_begin;
+                    blank = 1'b1;
+                    edges(2);
+                end
+                31: begin                                  // abort with pending, then a real new load
+                    load_and_latch(pure_a, pure_b, ht_a, ht_b, pam_a, pam_b);
+                    arm_start(40);
+                    tick_div = tdiv;
+                    drive_begin;
+                    blank = 1'b0;
+                    tick_run = 1'b1;
+                    edges(q1 * tdiv);
+                    drive_begin;
+                    cfg_pure_a = q3; cfg_pure_b = q3;      // pending prepared before the abort
+                    cfg_ht_a = q3[5:0]; cfg_ht_b = q3[5:0];
+                    cfg_pam_a = pam_a; cfg_pam_b = pam_a;
+                    cfg_valid = 1'b1;
+                    edges(2);
+                    drive_begin;
+                    if (q2 == 1) begin
+                        fault = 1'b1;
+                    end else begin
+                        blank = 1'b1;
+                    end
+                    edges(6);
+                    drive_begin;
+                    fault = 1'b0;
+                    blank = 1'b1;                          // back into the safe preparation phase
+                    cfg_valid = 1'b0;                      // the pre-abort transaction is withdrawn
+                    edges(2);
+                    drive_begin;
+                    cfg_pure_a = q4; cfg_pure_b = q4;      // a genuinely NEW load after the abort
+                    cfg_ht_a = q4[5:0]; cfg_ht_b = q4[5:0];
+                    cfg_pam_a = pam_a; cfg_pam_b = pam_a;
+                    cfg_valid = 1'b1;
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b1;
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b0;
+                    cfg_valid = 1'b0;
+                    edges(2);
+                    arm_start(40);
+                    run_window(intervals, tdiv);           // must conduct the post-abort code
+                end
+                32: begin                                  // abort, invalid requests, then full recovery
+                    load_and_latch(pure_a, pure_b, ht_a, ht_b, pam_a, pam_b);
+                    arm_start(40);
+                    tick_div = tdiv;
+                    drive_begin;
+                    blank = 1'b0;
+                    tick_run = 1'b1;
+                    edges(q1 * tdiv);
+                    drive_begin;
+                    cfg_pure_a = q3; cfg_pure_b = q3;      // pending prepared before the abort
+                    cfg_ht_a = q3[5:0]; cfg_ht_b = q3[5:0];
+                    cfg_pam_a = pam_a; cfg_pam_b = pam_a;
+                    cfg_valid = 1'b1;
+                    edges(2);
+                    drive_begin;
+                    if (q2 == 1) begin
+                        fault = 1'b1;
+                    end else begin
+                        blank = 1'b1;
+                    end
+                    edges(6);
+                    drive_begin;
+                    fault = 1'b0;
+                    blank = 1'b1;                          // safe phase for the requests below
+                    edges(2);
+                    drive_begin;                           // an incomplete request first: cfg_valid low
+                    cfg_valid = 1'b0;
+                    latch_stb = 1'b1;
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b0;
+                    edges(2);
+                    drive_begin;
+                    cfg_pure_a = q4; cfg_pure_b = q4;      // the first load edge after the abort
+                    cfg_ht_a = q4[5:0]; cfg_ht_b = q4[5:0];
+                    cfg_pam_a = pam_a; cfg_pam_b = pam_a;
+                    cfg_valid = 1'b1;
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b1;
+                    edges(2);
+                    drive_begin;
+                    latch_stb = 1'b0;
+                    cfg_valid = 1'b0;
+                    edges(2);
+                    arm_start(40);
+                    run_window(intervals, tdiv);
                 end
                 default: begin
                     $display("TB-ERROR unknown profile %0d", profile);

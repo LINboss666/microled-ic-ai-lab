@@ -4,15 +4,23 @@
     python scripts/dd1_d7a_evidence_check.py
 
 This reads only `results/evidence/dd1_d7a_*` and the source files the manifest names. It does not
-run the simulator and it does not trust any report text: it re-counts rows, re-checks uniqueness,
-re-hashes every file, and refuses empty tables, duplicate or missing case ids, non-finite numbers,
-blank required fields, and any manifest digest that no longer matches the bytes on disk.
+run the simulator and it does not trust any report text: it re-counts rows, re-hashes every file,
+refuses empty tables, non-finite numbers, blank required fields and any digest that no longer matches
+the bytes on disk -- and, because a matching hash proves nothing about meaning, it also rebuilds the
+contract's expected (mode, frame, tick, code, pam) combination set, recomputes every interval,
+endpoint and accepted-tick count from mode + code + tick, checks that each control scenario kind was
+executed and that an expected refusal failed for the reason it declares, and checks that a failure
+model filed as functional was actually seen to break the design.
+
+`--selftest` runs the re-checker over isolated copies of the delivered evidence that are hash
+consistent but semantically wrong; each must be refused by the named check.
 
 A PASS here means the delivered evidence is internally consistent and traceable to the delivered
 source. It does not mean the circuit is correct -- that is the reviewer's judgement.
 """
 from __future__ import print_function
 
+import csv
 import io
 import json
 import math
@@ -32,9 +40,61 @@ REQUIRED_EVIDENCE = ['dd1_d7a_cases.csv', 'dd1_d7a_control_cases.csv', 'dd1_d7a_
                      'dd1_d7a_environment.json', 'dd1_d7a_checker_selftest.txt',
                      'dd1_d7a_write_guard.txt']
 NUMERIC = re.compile(r'^-?\d+(\.\d+)?$')
-MUTATION_CLASSES = ['pure255_only255', 'counter_rollover_reopens', 'blank_gate_removed',
-                    'start_level_rearm', 'instance_b_one_tick_late', 'auto_resume_after_abort',
-                    'stale_latch_accepted', 'abort_reauthorises_display', 'latch_adopts_mode']
+# The contract of reports/dd1_d7a_contract.md, restated here as data. It is deliberately NOT read
+# back out of the CSV columns it is used to check, and not derived from the RTL either: a verifier
+# that recomputes its expectations from the artefact it is auditing proves nothing.
+CONTRACT_GROUPS = (('PURE', '100', '30'), ('PURE', '60', '50'),
+                   ('HYBRID', '100', '120'), ('HYBRID', '60', '200'))
+CONTRACT_FULL = {'PURE': 256, 'HYBRID': 64}
+CONTRACT_PAM_PURE = '7'                       # a symbol code in Pure mode, not a current level
+
+
+def contract_intervals(mode, code):
+    code = int(code)
+    if mode == 'PURE':
+        if code == 255:
+            return 256
+        return code if 0 <= code <= 254 else None
+    if mode == 'HYBRID':
+        if code == 63:
+            return 64
+        return code if 0 <= code <= 62 else None
+    return None
+
+
+def expected_combinations():
+    """the exact (mode, frame, tick, time code, pam) set the matrix has to contain, no more, no less"""
+    out = set()
+    for mode, hz, tick in CONTRACT_GROUPS:
+        if mode == 'PURE':
+            for code in range(256):
+                out.add((mode, hz, tick, str(code), CONTRACT_PAM_PURE))
+        else:
+            for code in range(64):
+                for pam in range(8):
+                    out.add((mode, hz, tick, str(code), str(pam)))
+    return out
+
+
+# every control scenario kind the delivered suite has to have executed
+REQUIRED_KINDS = ['abort_pending', 'abort_pending_recover', 'abort_reauthorise',
+                  'async_off_between_edges', 'clock_stall', 'code_edges', 'config_freshness',
+                  'dark_only', 'display_frozen', 'mixed_codes', 'mode_bypass', 'mode_switch_safe',
+                  'next_window_commit', 'no_auto_resume', 'pam_toggle', 'refused_dark',
+                  'refused_then_window', 'recover_full_sequence', 'start_held_40ns_once',
+                  'start_latch_same_edge', 'tick_in_blank_consumed', 'window_ok']
+# an expected refusal has to fail for the reason that was declared, not merely fail
+EXPECTED_REFUSALS = {'2036': 'UNKNOWN_VALUE'}
+
+# failure models split by what they claim to break; a functional model must be seen to break something
+FUNCTIONAL_MODELS = ['abort_keeps_pending_config', 'abort_reauthorises_display',
+                     'auto_resume_after_abort', 'blank_gate_removed', 'counter_rollover_reopens',
+                     'instance_b_late_one_reference_cycle', 'instance_b_tick_late_two_cycles',
+                     'latch_really_adopts_mode', 'mixed_b_output_late_one_cycle',
+                     'mixed_b_output_late_three_cycles', 'mixed_b_one_interval_short',
+                     'pure255_only255', 'stale_latch_really_accepted', 'start_level_rearm']
+DIAGNOSTIC_MODELS = ['mode_unset_error_bit_masked', 'stale_latch_error_bit_masked']
+MUTATION_CLASSES = sorted(FUNCTIONAL_MODELS + DIAGNOSTIC_MODELS)
 RESERVED = ['PWM_MOS_IMPLEMENTATION', 'PAM_8LEVEL_ANALOG_IMPLEMENTATION',
             'HYBRID_CURRENT_INTEGRATION', 'GRAY_LUT_IMPLEMENTATION', 'OPTICAL_EFFECTIVE_BITS',
             'PHYSICAL_CDC_AND_SKEW', 'NEW_SPECTRE_RUNS', 'NEW_OA_WRITES', 'LAYOUT_DRC_LVS_PEX',
@@ -170,6 +230,66 @@ def main():
     note(matches == len(rows), 'INSTANCES_MATCH', '%d/%d rows agree between the two channels'
          % (matches, len(rows)))
 
+    # 2b. the combination set straight off the contract: unique, legal, complete. 1536 unique case ids
+    #     is a different claim: two rows can carry different ids and the same combination, which is
+    #     exactly what the reviewed version accepted.
+    keys = [(r['mode'], r['frame_hz'], r['tick_ns'], r['time_code'], r['pam_code']) for r in rows]
+    seen = set()
+    dupes = sorted(set(k for k in keys if k in seen or seen.add(k)))
+    note(len(keys) == len(set(keys)), 'COMBINATION_UNIQUE',
+         '%d rows carry %d distinct (mode, frame, tick, code, pam) combinations'
+         % (len(rows), len(set(keys))) + ('' if not dupes else ' ; duplicated: %s' % (dupes[:3],)))
+    want = expected_combinations()
+    got = set(keys)
+    extra = sorted(got - want)
+    note(not extra, 'COMBINATION_LEGAL', '%d combination(s) outside the contract table' % len(extra)
+         + ('' if not extra else ' ; e.g. %s' % (extra[:3],)))
+    missing = sorted(want - got)
+    note(not missing, 'COMBINATION_COMPLETE',
+         'the contract asks for %d combinations, the table is missing %d' % (len(want), len(missing))
+         + ('' if not missing else ' ; e.g. %s' % (missing[:3],)))
+
+    # 2c. intervals, full window, endpoints, accepted-tick counts and PAM recomputed from
+    #     mode + code + tick, never from the row's own exp_intervals claim
+    bad = []
+    for r in rows:
+        exp = contract_intervals(r['mode'], r['time_code'])
+        full = CONTRACT_FULL.get(r['mode'])
+        T = int(float(r['tick_ns']))
+        if exp is None or full is None:
+            bad.append('%s is not a legal %s code %s' % (r['case_id'], r['mode'], r['time_code']))
+            continue
+        if int(float(r['exp_intervals'])) != exp:
+            bad.append('%s says exp_intervals=%s, the contract says %d for code %s'
+                       % (r['case_id'], r['exp_intervals'], exp, r['time_code']))
+        if int(float(r['full_intervals'])) != full:
+            bad.append('%s says full_intervals=%s, the contract says %d'
+                       % (r['case_id'], r['full_intervals'], full))
+        for pre in ('a_', 'b_'):
+            if int(float(r[pre + 'on_segments'])) != (1 if exp else 0):
+                bad.append('%s%s shows %s segments for %d conducting intervals'
+                           % (r['case_id'], pre, r[pre + 'on_segments'], exp))
+            if int(float(r[pre + 'on_width_ns'])) != exp * T:
+                bad.append('%s%s width %s != %d x %d ns'
+                           % (r['case_id'], pre, r[pre + 'on_width_ns'], exp, T))
+            if int(float(r[pre + 'on_intervals_measured'])) != exp:
+                bad.append('%s%s measured %s intervals, the contract says %d'
+                           % (r['case_id'], pre, r[pre + 'on_intervals_measured'], exp))
+            if int(float(r[pre + 'window_end_ns'])) - int(float(r[pre + 't0_ns'])) != full * T:
+                bad.append('%s%s endpoint is not t0 + %d x %d ns' % (r['case_id'], pre, full, T))
+            if int(float(r[pre + 'obs_tick_pulses'])) != full + 1:
+                bad.append('%s%s accepted %s ticks, the window needs %d boundary events'
+                           % (r['case_id'], pre, r[pre + 'obs_tick_pulses'], full + 1))
+        if (r['mode'] == 'PURE' and r['pam_code'] != CONTRACT_PAM_PURE) or \
+                (r['mode'] == 'HYBRID' and not 0 <= int(float(r['pam_code'])) <= 7):
+            bad.append('%s pam_code %s is not a legal %s select' % (r['case_id'], r['pam_code'],
+                                                                    r['mode']))
+        if len(bad) > 5:
+            break
+    note(not bad, 'CONTRACT_RECOMPUTED',
+         'intervals, full window, endpoints, accepted-tick counts and PAM recomputed from '
+         'mode+code+tick' + ('' if not bad else ' ; %s' % bad[:2]))
+
     # 3. black code and full-window behaviour must appear in the table at all
     note(any(int(float(r['exp_intervals'])) == 0 for r in rows) and
          any(int(float(r['exp_intervals'])) == 256 for r in rows) and
@@ -196,18 +316,74 @@ def main():
                   if 'STIMULUS_UNATTESTED' in r['failures'] or 'STIMULUS_MISMATCH' in r['failures']]
     note(not unattested, 'STIMULUS_MATCHES', 'rows whose declared stimulus the trace contradicts: %s'
          % (unattested or 'none'))
+    absent_kinds = sorted(set(REQUIRED_KINDS) - set(kinds))
+    note(not absent_kinds, 'SCENARIOS_REQUIRED',
+         '%d/%d required scenario kinds executed' % (len(set(REQUIRED_KINDS)) - len(absent_kinds),
+                                                    len(REQUIRED_KINDS))
+         + ('' if not absent_kinds else ' ; never executed: %s' % absent_kinds))
+    wrong_reason = []
+    for cid, tag in sorted(EXPECTED_REFUSALS.items()):
+        row = [r for r in ctl if r['case_id'] == cid]
+        if not row:
+            wrong_reason.append('%s is absent' % cid)
+        elif row[0]['verdict'] != 'FAIL' or tag not in row[0]['failures']:
+            wrong_reason.append('%s verdict=%s failures=%s (needs %s)'
+                                % (cid, row[0]['verdict'], row[0]['failures'][:60], tag))
+    note(not wrong_reason, 'REFUSAL_REASON', 'every declared expected refusal fails for the reason it '
+         'declares' + ('' if not wrong_reason else ' ; %s' % wrong_reason))
+    thin = [k for k in ('abort_pending', 'abort_pending_recover', 'next_window_commit')
+            if len([r for r in ctl if r['kind'] == k]) < 2]
+    note(not thin, 'SCENARIO_PRESENT', 'the new F1/F4 kinds are each covered by at least two cases '
+         '(a blank and a fault path, or both code and PAM changing)'
+         + ('' if not thin else ' ; thin: %s' % thin))
     neg = rows_of(os.path.join(EV, 'dd1_d7a_negative.csv'))
     det = [r for r in neg if r['status'] == 'DETECTED' and r['class'] != 'checker_selftest']
     note(len(det) == len(MUTATION_CLASSES), 'MUTATION_CLASSES',
          '%d of %d mutation classes DETECTED' % (len(det), len(MUTATION_CLASSES)))
     note(sorted(r['class'] for r in det) == sorted(MUTATION_CLASSES), 'MUTATION_SET',
-         'the six original plus three new failure models are all represented')
+         'the %d functional and %d diagnostic failure models are all represented'
+         % (len(FUNCTIONAL_MODELS), len(DIAGNOSTIC_MODELS)))
+    cat_bad = []
+    for r in neg:
+        if r['class'] == 'checker_selftest':
+            continue
+        want = 'functional' if r['class'] in FUNCTIONAL_MODELS else \
+            ('diagnostic' if r['class'] in DIAGNOSTIC_MODELS else None)
+        if want is None:
+            cat_bad.append('%s is not a declared model' % r['class'])
+        elif r.get('category') != want:
+            cat_bad.append('%s filed as %s, the table says %s'
+                           % (r['class'], r.get('category'), want))
+    note(not cat_bad, 'MUTATION_CATEGORY_HONEST',
+         'each model is filed under the category its patch really changes'
+         + ('' if not cat_bad else ' ; %s' % cat_bad[:3]))
+    unconf = [r['class'] for r in neg if r.get('category') == 'functional'
+              and r.get('fault_confirmed') != 'yes']
+    note(not unconf, 'MUTATION_FAULT_OBSERVED', 'every functional model had its wrong behaviour seen '
+         'in its own trace before the refusal' + ('' if not unconf else ' ; not exercised: %s' % unconf))
+    fake = [r['class'] for r in neg if r.get('status') != 'DETECTED'
+            and r.get('fault_confirmed') == 'yes']
+    note(not fake, 'MUTATION_REFUSED_AFTER_FAULT', 'a model whose fault was observed must also be '
+         'refused by the checker' + ('' if not fake else ' ; %s' % fake))
     notdet = [r['class'] for r in neg if r['status'] not in ('DETECTED',)]
     note(not notdet, 'MUTATION_ALL_DETECTED', 'not detected: %s' % (notdet or 'none'))
     nodigest = [r['class'] for r in neg if r['class'] != 'checker_selftest'
                 and not re.match(r'^[0-9a-f]{64}$', r.get('mutant_rtl_sha256', ''))]
     note(not nodigest, 'MUTANT_SOURCE_DIGEST', 'each mutation records the sha256 of its real source'
          + ('' if not nodigest else ' ; missing: %s' % nodigest))
+
+    # 4b. one run, one identity: the same run_id must appear in every table and both JSON records
+    ids = set([r.get('run_id') for r in rows] + [r.get('run_id') for r in ctl] +
+              [r.get('run_id') for r in neg])
+    ids.discard(None)
+    ids.discard('')
+    note(len(ids) == 1 and ids == set([env.get('run_id'), man.get('run_id')]), 'RUN_ID_CHAIN',
+         'run_id %s in the tables and in both JSON records' % (sorted(ids) or 'none'))
+    tds = man.get('trace_digests') or {}
+    note(bool(tds) and all(re.match(r'^[0-9a-f]{64}$', str(v)) for v in tds.values()),
+         'TRACE_DIGESTS', '%d trace digests recorded in the manifest' % len(tds))
+    note(man.get('traces_rejudged_before_publish') is True and env.get('identity_verified') is True,
+         'REJUDGE_CHAIN', 'the export states that it re-judged the traces and verified the sources')
 
     # 5. edge samples must straddle their anchors, from the bytes alone
     smp = rows_of(os.path.join(EV, 'dd1_d7a_edge_samples.csv'))
@@ -246,5 +422,138 @@ def main():
     return 0 if not fails else 1
 
 
+def _write_rows(path, fields, rows):
+    with io.open(path, 'w', encoding='utf-8', newline='') as fp:
+        wr = csv.DictWriter(fp, fields, lineterminator='\n')
+        wr.writeheader()
+        wr.writerows(rows)
+
+
+def _read_rows(path):
+    with io.open(path, encoding='utf-8', newline='') as fp:
+        rd = csv.DictReader(fp)
+        return rd.fieldnames, list(rd)
+
+
+def _retab(ev_dir, name, rows, fields):
+    _write_rows(os.path.join(ev_dir, name), fields, rows)
+    mp = os.path.join(ev_dir, 'dd1_d7a_manifest.json')
+    man = json.load(io.open(mp, encoding='utf-8'))
+    p = os.path.join(ev_dir, name)
+    if name in man.get('evidence', {}):
+        man['evidence'][name] = {'bytes': os.path.getsize(p), 'sha256': R.sha256(p)}
+    with io.open(mp, 'w', encoding='utf-8', newline='\n') as fp:
+        fp.write(json.dumps(man, indent=1, sort_keys=True) + '\n')
+
+
+def selftest():
+    """hash-consistent but semantically wrong evidence must still be refused
+
+    Each case copies the delivered evidence into an isolated fixture, changes one thing that a digest
+    comparison cannot see, refreshes that file's manifest digest so the hash gate stays satisfied, and
+    then requires the named check to fail. An untouched copy must pass. Matching hashes are not a
+    functional judgement, which is what the review said the delivered re-checker still got wrong.
+    """
+    import contextlib
+    import shutil
+    global EV
+    real_ev = EV
+    fixture = os.path.join(PROJ, 'review', 'dd1_d7a', 'evidence_selftest')
+    cases = []
+
+    def fresh(name):
+        d = os.path.join(fixture, name)
+        if os.path.isdir(d):
+            shutil.rmtree(d)
+        shutil.copytree(real_ev, d)
+        return d
+
+    def run(dirpath):
+        global EV
+        del fails[:]
+        EV = dirpath
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = main()
+        got = list(fails)
+        del fails[:]
+        return rc, got
+
+    try:
+        rc, got = run(fresh('clean'))
+        cases.append(('clean_evidence_passes', rc == 0 and not got, 'rc=%s fails=%s' % (rc, got)))
+
+        d = fresh('duplicate_tuple')
+        fields, rows = _read_rows(os.path.join(d, 'dd1_d7a_cases.csv'))
+        rows[1] = dict(rows[0])
+        rows[1]['case_id'] = '2'
+        _retab(d, 'dd1_d7a_cases.csv', rows, fields)
+        rc, got = run(d)
+        cases.append(('duplicate_tuple_refused',
+                      rc == 1 and 'COMBINATION_UNIQUE' in got and 'COMBINATION_COMPLETE' in got,
+                      'fails=%s' % got[:3]))
+
+        d = fresh('wrong_exp_intervals')
+        fields, rows = _read_rows(os.path.join(d, 'dd1_d7a_cases.csv'))
+        r = rows[5]
+        r['exp_intervals'] = str(int(float(r['exp_intervals'])) + 1)
+        for pre in ('a_', 'b_'):
+            r[pre + 'on_intervals_measured'] = r['exp_intervals']
+            r[pre + 'on_width_ns'] = str(int(float(r['exp_intervals'])) * int(float(r['tick_ns'])))
+        _retab(d, 'dd1_d7a_cases.csv', rows, fields)
+        rc, got = run(d)
+        cases.append(('wrong_exp_intervals_refused',
+                      rc == 1 and 'CONTRACT_RECOMPUTED' in got, 'fails=%s' % got[:3]))
+
+        d = fresh('missing_required_scenario')
+        fields, rows = _read_rows(os.path.join(d, 'dd1_d7a_control_cases.csv'))
+        rows = [r for r in rows if r['kind'] != 'next_window_commit']
+        _retab(d, 'dd1_d7a_control_cases.csv', rows, fields)
+        rc, got = run(d)
+        cases.append(('missing_required_scenario_refused',
+                      rc == 1 and 'SCENARIOS_REQUIRED' in got, 'fails=%s' % got[:3]))
+
+        d = fresh('refusal_now_passing')
+        fields, rows = _read_rows(os.path.join(d, 'dd1_d7a_control_cases.csv'))
+        for r in rows:
+            if r['case_id'] == '2036':
+                r['verdict'], r['failures'] = 'PASS', 'none'
+        _retab(d, 'dd1_d7a_control_cases.csv', rows, fields)
+        rc, got = run(d)
+        cases.append(('refusal_reason_enforced',
+                      rc == 1 and 'REFUSAL_REASON' in got, 'fails=%s' % got[:3]))
+
+        d = fresh('functional_model_without_fault')
+        fields, rows = _read_rows(os.path.join(d, 'dd1_d7a_negative.csv'))
+        for r in rows:
+            if r.get('category') == 'functional':
+                r['fault_confirmed'] = 'no'
+        _retab(d, 'dd1_d7a_negative.csv', rows, fields)
+        rc, got = run(d)
+        cases.append(('functional_model_without_fault_refused',
+                      rc == 1 and 'MUTATION_FAULT_OBSERVED' in got, 'fails=%s' % got[:3]))
+
+        d = fresh('stale_run_id')
+        fields, rows = _read_rows(os.path.join(d, 'dd1_d7a_cases.csv'))
+        for r in rows:
+            r['run_id'] = 'some_other_run'
+        _retab(d, 'dd1_d7a_cases.csv', rows, fields)
+        rc, got = run(d)
+        cases.append(('run_id_chain_enforced', rc == 1 and 'RUN_ID_CHAIN' in got,
+                      'fails=%s' % got[:3]))
+    finally:
+        EV = real_ev
+        del fails[:]
+    bad = 0
+    for name, ok, detail in cases:
+        print('%-4s EVIDENCE_SELFTEST %-38s %s' % ('PASS' if ok else 'FAIL', name, detail[:90]))
+        if not ok:
+            bad += 1
+    print('EVIDENCE_SELFTEST: %s (%d cases)' % ('PASS' if not bad else 'FAIL (%d)' % bad, len(cases)))
+    return 0 if not bad else 1
+
+
 if __name__ == '__main__':
+    if '--selftest' in sys.argv[1:]:
+        sys.exit(selftest())
     sys.exit(main())

@@ -7,8 +7,8 @@
   "synthesis": "yosys -s <run>/structure.ys"
  },
  "counts": {
-  "control_pass": 35,
-  "control_rows": 36,
+  "control_pass": 42,
+  "control_rows": 43,
   "main_pass": 1536,
   "main_rows": 1536,
   "mixed_pass": 6,
@@ -31,48 +31,48 @@
    "aliased_ids": 24,
    "name": "pure_t30",
    "same_time_edges": 0,
-   "seconds": 26.08,
+   "seconds": 25.92,
    "signals": 228,
    "tb_cases": 256,
    "vcd": "trace_pure_t30.vcd",
    "vcd_bytes": 16301363,
-   "vcd_sha256": "1793c74f45f7c3102ba474e41e78a492d85b85861c2e07ddd6a040b34f5392cb",
+   "vcd_sha256": "5e725e6a22b4b1e5eb4cf43161edfffe623bbd0fb53c6f30862e93c6eed3f3c9",
    "vvp_rc": 0
   },
   {
    "aliased_ids": 24,
    "name": "pure_t50",
    "same_time_edges": 0,
-   "seconds": 42.32,
+   "seconds": 41.22,
    "signals": 228,
    "tb_cases": 256,
    "vcd": "trace_pure_t50.vcd",
    "vcd_bytes": 21944673,
-   "vcd_sha256": "035ff9725aa3a30e8e700e8c5e175d3596e3ff69a66e7dbdd43d42962fbf68cf",
+   "vcd_sha256": "776de50734bb2804fec410fd3ee15eedd95dde63d459e702e15ad271db0a2afa",
    "vvp_rc": 0
   },
   {
    "aliased_ids": 24,
    "name": "hyb_t120",
    "same_time_edges": 0,
-   "seconds": 83.06,
+   "seconds": 85.24,
    "signals": 228,
    "tb_cases": 512,
    "vcd": "trace_hyb_t120.vcd",
    "vcd_bytes": 25173260,
-   "vcd_sha256": "d7d2bafa6b3e44da5fc5cc923ed1c10de7c169e27fb0282455357b6e8dd481fe",
+   "vcd_sha256": "bcda5449581295238e173b5ced0e525b04edbcbbb855b04345d0ed8efa0cf1ba",
    "vvp_rc": 0
   },
   {
    "aliased_ids": 24,
    "name": "hyb_t200",
    "same_time_edges": 0,
-   "seconds": 111.0,
+   "seconds": 133.67,
    "signals": 228,
    "tb_cases": 512,
    "vcd": "trace_hyb_t200.vcd",
    "vcd_bytes": 38184356,
-   "vcd_sha256": "7376cfddaed1c97caf7d8ff59caf3ac1af49824c0bc63a912e611f2ac12c5a5b",
+   "vcd_sha256": "ae95eb781aa655dbbab3af45c2c1096216230920d33bdd0361a6d071be0ac673",
    "vvp_rc": 0
   },
   {
@@ -80,10 +80,10 @@
    "name": "control",
    "same_time_edges": 0,
    "signals": 228,
-   "tb_cases": 36,
+   "tb_cases": 43,
    "vcd": "trace_control.vcd",
-   "vcd_bytes": 2058317,
-   "vcd_sha256": "6aa5c483a9367cb5b83bf58254ad353de01e0aa3c2955cfb1f4d035e4f32ff24",
+   "vcd_bytes": 2626965,
+   "vcd_sha256": "429636aeaf6a134caa3c529d2f949eb04a0519c39766c610b172e58c20fa0626",
    "vvp_rc": 0
   },
   {
@@ -94,14 +94,14 @@
    "tb_cases": 6,
    "vcd": "trace_mixed.vcd",
    "vcd_bytes": 361534,
-   "vcd_sha256": "760b1bf9cfd9d2fd113772e0a7c049dc115bbe8660b08fdd0cc53092737fbf76",
+   "vcd_sha256": "3cffd67c1d4bce9db51e5c7289179e872f3095b8ffd15711e430770dc3d323b7",
    "vvp_rc": 0
   }
  ],
  "identity_verified": true,
  "mutation": {
-  "detected": 9,
-  "total": 9
+  "detected": 16,
+  "total": 16
  },
  "no_credentials_no_host_identity_no_private_paths": true,
  "oa_writes": 0,
@@ -123,7 +123,7 @@
   "PWM_MOS_IMPLEMENTATION": "NOT_RUN",
   "SOA_SIGNOFF": "NO"
  },
- "run_id": "r1_20261021",
+ "run_id": "r2_20261021",
  "simulator": {
   "iverilog": "Icarus Verilog version 14.0 (devel) (s20260301-626-g7e3d0c6bd-dirty)",
   "vvp": "Icarus Verilog runtime version 14.0 (devel) (s20260301-626-g7e3d0c6bd-dirty)",
@@ -141,10 +141,10 @@
   "tb_sha256"
  ],
  "sources": {
-  "checker_sha256": "86b1659cb155e2b5c17ec1409ac2c5994d5bc7d84da0b061015e7233eebed680",
+  "checker_sha256": "4b5197948ec2852454ffc1b6dd207c8c21badaddec7ea6dd77a66e4e5a13b307",
   "reader_sha256": "708c37027fb11d250b48d9ada55616c6591525e4dad339f00a33d1a63382696a",
-  "rtl_sha256": "fff22f96c15beefd800b199b2f12a9a69bd192d3603448ad6c0ea1e188ad65ee",
-  "tb_sha256": "3e5074f7129116793588d59916880972969db4b3c2792724ba2a0d27d2e574a0"
+  "rtl_sha256": "6dbf464a49e49ad489188fa51920c30a3c89d6b3106046a4fefe558ef0a50c87",
+  "tb_sha256": "426f93275faa9fdac8271f01656c6c6afab0f812a46d07d618fe78d11fed9109"
  },
  "spectre_runs": 0,
  "supersedes": {
@@ -154,7 +154,7 @@
  },
  "synthesis": "clean",
  "task": "DATA-7A",
- "task_revision": "DATA-7A-R1",
+ "task_revision": "DATA-7A-R2",
  "toolchain_provenance": {
   "asset_bytes": 603893871,
   "installed_outside_repo": true,

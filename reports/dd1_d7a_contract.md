@@ -151,11 +151,20 @@ the next accepted LATCH.
   nor a refused mode change clears a recorded error. Adoption invalidates the previous display
   authorisation and the pending load, so the new mode needs its own load and LATCH. When a mode change
   and a LATCH arrive on the same edge, adoption (if legal) happens first and the LATCH is refused.
-* **An abort withdraws the authorisation.** After a `blank` or `fault` abort, releasing the condition,
-  issuing a bare `pwm_start`, loading a new code without latching it, or latching without a new load,
-  must each leave the output dark; only a complete new load / LATCH / start sequence displays again.
+* **An abort withdraws the authorisation and the pending load.** After a `blank` or `fault` abort,
+  releasing the condition, issuing a bare `pwm_start`, loading a new code without latching it, or
+  latching without a new load, must each leave the output dark; only a complete new load / LATCH /
+  start sequence displays again. A load that was presented *before* the abort and never consumed is
+  revoked by it as well: the same transaction cannot be committed afterwards, because the aborted
+  window never took it, so recovery needs a `cfg_valid` edge that arrives after the abort.
+  Priority is explicit: an abort sampled on a reference edge outranks the load, mode adoption, LATCH
+  and start requests evaluated on that same edge, and none of them may re-authorise the display.
   The held `pam_sel` value is not cleared by an abort, because contract section 2 requires it to hold
   until the next legal LATCH.
+* **The next copy is committed after the running window ends.** A load presented while a window is
+  conducting must not change that window's code, PAM, width or mode; the first accepted LATCH after
+  the window's own completion commits it, and the following window then conducts exactly the committed
+  code and PAM. That load is consumed by that one LATCH: a further LATCH behind it is refused.
 * Refused, with an explicit recorded reason and never silently reusing an old code: LATCH with nothing
   new, LATCH outside the safe phase or while a window runs or is armed, LATCH and the new load on the
   same reference edge, an illegal `mode`, an incomplete configuration for the presented mode, a LATCH

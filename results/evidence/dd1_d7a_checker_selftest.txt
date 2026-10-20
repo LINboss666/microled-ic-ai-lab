@@ -58,4 +58,15 @@ PASS write guard refuses empty row set      digest unchanged=True
 PASS write guard refuses ragged row         digest unchanged=True
 PASS write guard still writes when rows are complete official write path not blocked
 
-synthetic traces written under D:\ic617_d7a_r1\review
+synthetic traces written under D:\ic617_d7a_r2\review
+PASS entry unparsable statistics table is noticed UNPARSED_FORMAT: yosys printed a statistics table this parser does not
+PASS entry unparsed statistics fails the ENTRY, not just a note entry_rc=1 problems=1
+PASS entry the tool rc is still recorded separately yosys_rc=0
+PASS entry gate refuses the stale rc=0 / empty-problems pair the exact shape the old summary wrote
+PASS entry gate accepts a clean parsed record     positive control
+PASS entry gate refuses a declared problem        negative
+PASS entry publish with a mid-set failure raises  publish aborted after 1/3 promotion(s), the previous set is 
+PASS entry every previously published file kept its old bytes changed=[] missing=[]
+PASS entry no staging or marker file survives the rollback []
+PASS entry a clean publish puts the new bytes in place ok
+PASS entry a clean publish leaves no pending transaction behind checked

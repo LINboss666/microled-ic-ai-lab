@@ -527,6 +527,13 @@ CONTROL_REQUIREMENT = {
                    'refusal is not erased',
     'mode_switch_safe': 'a mode adopted in the safe phase is what the following window really displays',
     'recover_full_sequence': 'a complete new load / LATCH / start after an abort displays the new code',
+    'abort_pending': 'an abort revokes a load that was prepared but unconsumed before it: the '
+                     'post-abort LATCH and START stay dark, record the refusal and do not step the version',
+    'abort_pending_recover': 'only a load transaction that arrives after the abort can restore the '
+                             'display, and it then conducts its own code',
+    'next_window_commit': 'a next load prepared inside window A leaves A untouched, is committed by the '
+                          'first LATCH after A completes, drives window B with its own code and PAM, and '
+                          'is consumed exactly once',
     'code_edges': 'the code boundary values keep their contract widths on both channels in both windows',
     'start_latch_same_edge': 'LATCH and START on one sampling edge: the LATCH commits, the start is '
                             'refused, and nothing lights',
@@ -550,12 +557,13 @@ def bits_set(tr, name, cs, ce, want, fails, who):
     return hit
 
 
-def no_light(tr, sm, cs, ce, fails, t_from=None, who=''):
-    """this channel must not conduct from t_from to the end of the case"""
+def no_light(tr, sm, cs, ce, fails, t_from=None, t_to=None, who=''):
+    """this channel must not conduct from t_from (default: case start) to t_to (default: case end)"""
     start = cs if t_from is None else t_from
+    stop = ce if t_to is None else t_to
     out = []
     for idx in (0, 1):
-        rises = tr.rises(sm.o(idx, 'data_en'), start, ce)
+        rises = tr.rises(sm.o(idx, 'data_en'), start, stop)
         if rises:
             fails.append(Fail('LIGHT_AFTER_REFUSAL', '%s.data_en opens at %s ns%s'
                               % (sm.tag[idx], fmt_ns(rises[0]), who)))
@@ -580,7 +588,9 @@ def attest_windows(tr, sm, cs, ce, sc, fails, idx=0, stable_codes=True):
             fails.append(Fail('STIMULUS_UNATTESTED', 'the mode bus never shows %s (saw %s)'
                               % (missing, vals)))
     for n in range(len(declared)):
-        w = measure_nth_window(tr, sm, idx, cs, ce, fails, n, stable_codes=stable_codes)
+        lats = sc.get('commit_latches')
+        w = measure_nth_window(tr, sm, idx, cs, ce, fails, n, stable_codes=stable_codes,
+                               lat_idx=(lats[n] if lats else None))
         measured.append(w)
         if not w:
             continue
@@ -606,8 +616,10 @@ def judge_windows(tr, sm, cs, ce, sc, fails, measured, start_at=0):
         if not w:
             continue
         for idx in (0, 1):
-            one = w if idx == 0 else measure_nth_window(tr, sm, idx, cs, ce, fails, n,
-                                                        stable_codes=sc.get('stable_codes', True))
+            lats = sc.get('commit_latches')
+            one = w if idx == 0 else measure_nth_window(
+                tr, sm, idx, cs, ce, fails, n, stable_codes=sc.get('stable_codes', True),
+                lat_idx=(lats[n] if lats else None))
             if not one:
                 continue
             got = _widths_ticks(one['segs'], one['T'])
@@ -659,7 +671,7 @@ def judge_windows(tr, sm, cs, ce, sc, fails, measured, start_at=0):
     return ' '.join(out)
 
 
-def measure_nth_window(tr, sm, idx, cs, ce, fails, n=0, stable_codes=True):
+def measure_nth_window(tr, sm, idx, cs, ce, fails, n=0, stable_codes=True, lat_idx=None):
     """read the n-th emission window of a control case entirely out of the trace
 
     Everything is measured from edges: the LATCH and blank-release events, the mode and code values
@@ -667,17 +679,22 @@ def measure_nth_window(tr, sm, idx, cs, ce, fails, n=0, stable_codes=True):
     first tick after the release, and this instance's own conducting segments. Nothing is taken from
     the testbench's own report.
 
+    `lat_idx` is the index of the LATCH that committed this window when the case also contains refused
+    LATCH requests: a refused request is still a rising edge on that bus, and reading the code at it
+    would describe a window the controller never committed. It defaults to the window number.
+
     `stable_codes` is False for the scenario whose whole point is that a next code is loaded while
     the window runs: there the expectation comes from the code carried in at the LATCH instant, and
     the measured width proves the display copy did not follow the load bus.
     """
     blank_f = tr.falls(sm.i('blank'), cs, ce)
     latch_r = tr.rises(sm.i('latch_stb'), cs, ce)
-    if len(blank_f) <= n or len(latch_r) <= n:
+    which = n if lat_idx is None else int(lat_idx)
+    if len(blank_f) <= n or len(latch_r) <= which:
         fails.append(Fail('WINDOW_MISSING', 'window %d needs a LATCH and a blank release, the trace has '
                                            '%d latch / %d release' % (n, len(latch_r), len(blank_f))))
         return None
-    t_lat, t_bl = latch_r[n], blank_f[n]
+    t_lat, t_bl = latch_r[which], blank_f[n]
     stop_r = [t for t in tr.rises(sm.i('blank'), cs, ce) if t > t_bl]
     t_to = (stop_r[0] - 1) if stop_r else ce - 1
     ok_m, mode, raw = sig_bits(tr, sm.i('mode'), t_lat, 'is the mode at LATCH %d' % n, fails)
@@ -753,7 +770,11 @@ def measure_nth_window(tr, sm, idx, cs, ce, fails, n=0, stable_codes=True):
 
 
 def _version_steps(tr, sm, cs, ce, fails, why):
-    """cfg_version may step exactly once inside this case, counted from its first LATCH"""
+    return _version_steps_count(tr, sm, cs, ce, fails, 1, why)
+
+
+def _version_steps_count(tr, sm, cs, ce, fails, want, why):
+    """cfg_version must step exactly `want` time(s) in this case, counted from its first LATCH"""
     lat = tr.rises(sm.i('latch_stb'), cs, ce)
     from_t = lat[0] if lat else cs
     out = []
@@ -767,10 +788,11 @@ def _version_steps(tr, sm, cs, ce, fails, why):
         if not (ok0 and ok1):
             fails.append(Fail('UNKNOWN_VALUE', '%s.cfg_version is unknown inside this case'
                               % sm.tag[idx]))
-        elif b - a != 1 or len(steps) > 1:
-            fails.append(Fail('VERSION_STEPPED', '%s.cfg_version went %d -> %d over %d edge(s); %s'
-                              % (sm.tag[idx], a, b, len(steps), why)))
-        out.append('%s=%d->%d' % (sm.tag[idx], a if ok0 else -1, b if ok1 else -1))
+        elif b - a != want or len(steps) != want:
+            fails.append(Fail('VERSION_STEPPED', '%s.cfg_version went %d -> %d over %d edge(s); it may '
+                                                 'step %d time(s): %s'
+                              % (sm.tag[idx], a, b, len(steps), want, why)))
+        out.append('%s=%d->%d/%d' % (sm.tag[idx], a if ok0 else -1, b if ok1 else -1, len(steps)))
     return ' '.join(out)
 
 
@@ -799,6 +821,21 @@ def ctl_window_ok(tr, sm, cs, ce, sc, fails):
     return judge_windows(tr, sm, cs, ce, sc, fails, measured)
 
 
+def _own_t0(tr, sm, idx, cs, t_from, t_to):
+    """this instance's own t0: the reference edge that consumes the first tick IT accepted
+
+    obs_tick is the controller's audit of an accepted tick, and the tick enable is raised ahead of
+    the edge that consumes it, so the first clock rise after the first accepted-tick rise is the edge
+    this channel actually acted on. Deriving t0 from the shared stimulus instead would compare two
+    numbers computed from the same inputs and could never see a channel whose output is late.
+    """
+    rises = tr.rises(sm.o(idx, 'obs_tick'), t_from, t_to)
+    if not rises:
+        return None, None
+    edges = [t for t in tr.rises(sm.i('clk'), rises[0], t_to)]
+    return rises[0], (edges[0] if edges else None)
+
+
 def ctl_mixed_codes(tr, sm, cs, ce, sc, fails):
     """different codes per channel: each start and completion edge is measured on that channel"""
     da = sc.get('windows', [])
@@ -814,22 +851,55 @@ def ctl_mixed_codes(tr, sm, cs, ce, sc, fails):
     if (a['code'], a['pam_exp']) == (b['code'], b['pam_exp']):
         fails.append(Fail('MIXED_NOT_INDEPENDENT', 'both channels were handed the same code and PAM '
                                                    'value, so independence was not exercised'))
-    if a['t0'] != b['t0'] or a['T'] != b['T']:
-        fails.append(Fail('MIXED_EDGES', 'the common start differs: %s vs %s ns'
-                          % (fmt_ns(a['t0']), fmt_ns(b['t0']))))
     out = []
     for w, tag in ((a, sm.tag[0]), (b, sm.tag[1])):
+        idx = 0 if tag == sm.tag[0] else 1
+        own_rise, own_t0 = _own_t0(tr, sm, idx, cs, w['t_bl'], w['t_to'])
+        if own_t0 is None:
+            fails.append(Fail('NO_T0', '%s never shows an accepted tick whose consuming reference edge '
+                                       'can be located' % tag))
+            continue
+        if own_t0 != w['t0']:
+            fails.append(Fail('MIXED_EDGES', '%s consumes its first tick at %s ns, the shared tick '
+                                             'stream puts that edge at %s ns'
+                             % (tag, fmt_ns(own_t0), fmt_ns(w['t0']))))
         got = _widths_ticks(w['segs'], w['T'])
         want = [w['exp']] if w['exp'] else []
         if got != want:
             fails.append(Fail('MIXED_WIDTH', '%s conducted %s ticks, its own code asks %s'
                               % (tag, got, want)))
-        done = [t for t, v in tr.edges(sm.o(0 if tag == sm.tag[0] else 1, 'win_state'))
-                if w['t0'] <= t <= w['window_end'] + 4 * w['T'] and v == format_vec(3, 3)]
-        if not done or done[0] != w['window_end']:
+        if w['exp']:
+            # a non-zero code must open exactly at this channel's own t0 and close exactly exp periods
+            # later; a whole-tick rounding of the width would hide a start that is late by less than
+            # one tick, so the edges themselves are compared in picoseconds
+            if not w['segs'] or w['segs'][0][0] != own_t0:
+                fails.append(Fail('ON_START', '%s.data_en opens at %s, this channel\'s own t0 is %s ns'
+                                  % (tag, fmt_ns(w['segs'][0][0]) if w['segs'] else 'never',
+                                     fmt_ns(own_t0))))
+            off = w['segs'][-1][1] if w['segs'] else None
+            want_off = own_t0 + w['exp'] * w['T']
+            if off != want_off:
+                fails.append(Fail('ON_WIDTH', '%s closes at %s, the contract endpoint for %d intervals '
+                                              'of %s ns is %s ns'
+                                  % (tag, fmt_ns(off), w['exp'], fmt_ns(w['T']), fmt_ns(want_off))))
+            span = sum(x[1] - x[0] for x in w['segs'])
+            if span != w['exp'] * w['T']:
+                fails.append(Fail('ON_SPAN', '%s conducted %s ps in total across %d segment(s); %d '
+                                                 'intervals of %s ps is %s ps'
+                                  % (tag, span, len(w['segs']), w['exp'], w['T'], w['exp'] * w['T'])))
+        elif w['segs']:
+            fails.append(Fail('BLACK_CONDUCTS', '%s shows code 0 yet data_en conducted %s'
+                              % (tag, w['segs'])))
+        want_done = own_t0 + w['full'] * w['T']
+        done = [t for t, v in tr.edges(sm.o(idx, 'win_state'))
+                if own_t0 <= t <= own_t0 + (w['full'] + 4) * w['T'] and v == format_vec(3, 3)]
+        if not done or done[0] != want_done:
             fails.append(Fail('DONE_EDGE', '%s completes at %s, its own window end is %s ns'
-                              % (tag, fmt_ns(done[0]) if done else 'never', fmt_ns(w['window_end']))))
-        out.append('%s=%s/%d done=%s' % (tag, got, w['exp'], fmt_ns(done[0]) if done else 'none'))
+                              % (tag, fmt_ns(done[0]) if done else 'never', fmt_ns(want_done))))
+        out.append('%s t0=%s on=%s done=%s %s=%s/%d'
+                   % (tag, fmt_ns(own_t0),
+                      fmt_ns(w['segs'][0][0]) if w['segs'] else 'dark',
+                      fmt_ns(done[0]) if done else 'none', tag, got, w['exp']))
     return ' '.join(out)
 
 
@@ -1160,6 +1230,100 @@ def ctl_recover(tr, sm, cs, ce, sc, fails):
     return 'abort@%s | %s' % (fmt_ns(aborts[0]) if aborts else 'none', measured)
 
 
+def _pending_before_abort(tr, sm, cs, ce, sc, fails):
+    """prove the trace carried an unconsumed load transaction into the abort it declares"""
+    key = 'fault' if sc.get('p2') == 1 else 'blank'
+    aborts = tr.rises(sm.i(key), cs + 1, ce)
+    if not aborts:
+        fails.append(Fail('STIMULUS_UNATTESTED', 'the scenario wants a pending load sitting in front of '
+                                                 'an abort, but %s is never asserted' % key))
+        return None, []
+    t_abort = aborts[0]
+    lat = tr.rises(sm.i('latch_stb'), cs, ce)
+    if not lat:
+        fails.append(Fail('STIMULUS_UNATTESTED', 'no LATCH at all in this case'))
+        return None, []
+    loads = [t for t in tr.rises(sm.i('cfg_valid'), lat[0], t_abort - 1)]
+    if not loads:
+        fails.append(Fail('STIMULUS_UNATTESTED', 'no load transaction was raised between the first LATCH '
+                                                 'and the abort at %s ns, so there was no pending config '
+                                                 'to revoke' % fmt_ns(t_abort)))
+    if tr.value_at(sm.o(0, 'win_state'), t_abort - 1) != '010' or \
+            not tr.rises(sm.o(0, 'data_en'), cs, t_abort - 1):
+        fails.append(Fail('STIMULUS_UNATTESTED', 'the abort at %s ns did not interrupt a lit, running '
+                                                 'window, so revoking a pending load would prove nothing'
+                         % fmt_ns(t_abort)))
+    return t_abort, loads
+
+
+def ctl_abort_pending(tr, sm, cs, ce, sc, fails):
+    """an abort revokes the pending load too: the post-abort LATCH and START must stay dark"""
+    t_abort, loads = _pending_before_abort(tr, sm, cs, ce, sc, fails)
+    if t_abort is None:
+        return 'none'
+    stale = bits_set(tr, sm.o(0, 'proto_err'), cs, ce, E_STALE_CONFIG, fails,
+                     '%s.proto_err (stale)' % sm.tag[0])
+    bits_set(tr, sm.o(1, 'proto_err'), cs, ce, E_STALE_CONFIG, fails,
+             '%s.proto_err (stale)' % sm.tag[1])
+    refused = bits_set(tr, sm.o(0, 'proto_err'), cs, ce, E_START_REJECTED, fails,
+                       '%s.proto_err (start)' % sm.tag[0])
+    bits_set(tr, sm.o(1, 'proto_err'), cs, ce, E_START_REJECTED, fails,
+             '%s.proto_err (start)' % sm.tag[1])
+    dark = no_light(tr, sm, cs, ce, fails, t_from=t_abort + 1,
+                    who=' after an abort that revoked a pending load')
+    vers = _version_steps_count(tr, sm, cs, ce, fails, 1,
+                                'only the pre-abort LATCH may commit; the revoked pending load may not')
+    state = [ST.get(int(tr.value_at(sm.o(i, 'win_state'), ce - 1), 2), '?') for i in (0, 1)]
+    return 'pending@%s abort@%s stale %s start %s dark %s version %s end %s' % (
+        fmt_ns(loads[0]) if loads else 'none', fmt_ns(t_abort), ' '.join(stale), ' '.join(refused),
+        dark, vers, '/'.join(state))
+
+
+def ctl_abort_pending_recover(tr, sm, cs, ce, sc, fails):
+    """after the revocation, a load that really arrives later restores the display"""
+    t_abort, _loads = _pending_before_abort(tr, sm, cs, ce, sc, fails)
+    if t_abort is None:
+        return 'none'
+    late = [t for t in tr.rises(sm.i('cfg_valid'), t_abort + 1, ce)]
+    if not late:
+        fails.append(Fail('STIMULUS_UNATTESTED', 'recovery was claimed but no load transaction arrives '
+                                                 'after the abort at %s ns' % fmt_ns(t_abort)))
+    dark_before = no_light(tr, sm, cs, ce, fails, t_from=t_abort + 1, t_to=late[0] if late else ce - 1,
+                           who=' between the abort and the first post-abort load')
+    judged = ctl_window_ok(tr, sm, cs, ce, dict(sc, stable_codes=False), fails)
+    vers = _version_steps_count(tr, sm, cs, ce, fails, 2,
+                                'one commit before the abort and one commit after the new load')
+    return 'abort@%s post_load@%s dark %s | %s | version %s' % (
+        fmt_ns(t_abort), fmt_ns(late[0]) if late else 'none', dark_before, judged, vers)
+
+
+def ctl_next_window(tr, sm, cs, ce, sc, fails):
+    """a next load prepared inside window A is committed only after A ends, used by B, once"""
+    a = measure_nth_window(tr, sm, 0, cs, ce, [], 0, stable_codes=False)
+    if not a:
+        return 'window A unreadable'
+    loads = [t for t in tr.rises(sm.i('cfg_valid'), cs, ce) if a['t0'] < t < a['window_end']]
+    if not loads:
+        fails.append(Fail('STIMULUS_UNATTESTED', 'no load transaction was presented while window A was '
+                                                 'running, so the next/display copies were not exercised'))
+    for t in loads:
+        for idx in (0, 1):
+            hold = min(t + a['T'], a['window_end'])
+            if tr.value_at(sm.o(idx, 'pam_sel'), t - 1) != tr.value_at(sm.o(idx, 'pam_sel'), hold):
+                fails.append(Fail('DISPLAY_MOVED', '%s.pam_sel moved around the next load at %s ns while '
+                                                   'A was still conducting' % (sm.tag[idx], fmt_ns(t))))
+    judged = ctl_window_ok(tr, sm, cs, ce, dict(sc, stable_codes=False), fails)
+    stale = bits_set(tr, sm.o(0, 'proto_err'), cs, ce, E_STALE_CONFIG, fails,
+                     '%s.proto_err (replayed LATCH)' % sm.tag[0])
+    bits_set(tr, sm.o(1, 'proto_err'), cs, ce, E_STALE_CONFIG, fails,
+             '%s.proto_err (replayed LATCH)' % sm.tag[1])
+    vers = _version_steps_count(tr, sm, cs, ce, fails, 2,
+                                'A commits once, B commits once, the replay behind the consumed load '
+                                'may not commit')
+    return 'next_load@%s | %s | replay refused %s | version %s' % (
+        ','.join(fmt_ns(t) for t in loads) or 'none', judged, ' '.join(stale), vers)
+
+
 def ctl_clock_stall(tr, sm, cs, ce, sc, fails):
     """find the frozen stretch in the trace, then check nothing moved in it, in the declared phase"""
     measured = ctl_window_ok(tr, sm, cs, ce, sc, fails)
@@ -1244,6 +1408,9 @@ CONTROL_HANDLERS = {
     'mode_bypass': ctl_mode_bypass,
     'mode_switch_safe': ctl_window_ok,
     'recover_full_sequence': ctl_recover,
+    'next_window_commit': ctl_next_window,
+    'abort_pending': ctl_abort_pending,
+    'abort_pending_recover': ctl_abort_pending_recover,
     'code_edges': ctl_window_ok,
     'start_latch_same_edge': ctl_start_latch_same_edge,
 }
