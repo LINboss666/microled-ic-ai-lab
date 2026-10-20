@@ -203,3 +203,28 @@ The freeze transcript (`results/evidence/dd1_d7a_freeze_security.txt`) hashes to
 * `D..D1` commit structure is described in the handoff, including the earlier lesson that a
   "metadata-only" delivery commit must not carry functional fixes: this round's functional changes all
   land in the payload commit.
+
+## 8. Commit ranges for this repair round
+
+```text
+B  (DATA-6 baseline)          = 731767519d1a51287eb5b7f4a6e4f9b8e613e990
+P  (reviewed round payload)   = ef6737d40912b91197df4c0954eee6edcff55ee0
+D  (reviewed delivery, base)  = 6a1f5a192f3f1618499335c4365d717bfcadef39
+P1 (this round's payload)     = b0196f995962e8098e218aabf86e5864792b7f8c
+D1 (this round's handoff)     = 202f11c63d7163487af3e5f33843e4a742c9115a
+branch                        = poc/data-gray-d7a-r1, ordinary push, no force, no --no-verify
+
+B..D1   26 tracked files  = the 24 files DATA-7A already changed over B (22 new DATA-7A files plus
+                            the two safety-rule files that round was allowed to touch) and the two
+                            files added by this round: reports/dd1_d7a_review_fix.md and
+                            reports/tasks/DATA-7A-R1.md. No shared safety tool, Spectre circuit,
+                            Data-6 evidence, scan circuit, PDK, OA, CDF, symbol, cds.lib or
+                            human-tidy schematic is in the range.
+D..D1   22 tracked files  = rtl 1, testbench 1, scripts 5, reports 5, evidence 9, task-book copy 1.
+                            `git diff --name-only D..D1` contains nothing outside the DATA-7A scope.
+P1..D1   2 tracked files  = reports/agent_handoffs/DATA-7A.json and .md, metadata only.
+```
+
+`D1` is the handoff commit and carries no functional change. The remote tip after the two pushes was
+read back twice (direct `git ls-remote` and `gh api`) and both gave `202f11c63d7163487af3e5f33843e4a742c9115a`;
+the full history scan runs in the `pre-push` hook on every push and passed.
