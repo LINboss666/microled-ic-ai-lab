@@ -94,7 +94,8 @@ def main():
     dest_dir = os.path.join(PROJ, 'review')
     if not os.path.isdir(dest_dir):
         os.makedirs(dest_dir)
-    short = subprocess.check_output(['git', '-C', PROJ, 'rev-parse', '--short', a.head]).strip()
+    short = subprocess.check_output(['git', '-C', PROJ, 'rev-parse', '--short',
+                                     a.head]).decode('utf-8', 'replace').strip()
     dest = os.path.join(dest_dir, 'dd1_d7a_bundle_%s.zip' % short)
     rows = []
     blocked = []
