@@ -681,17 +681,42 @@ reviewer's numeric probe adds one `EVIDENCE_DIGEST` label of its own making, are
 ```text
 BRANCH             = poc/data-gray-d7a-r3                       (new, own branch, ordinary push)
 BASE (reviewed T2) = 01e078bbf545b9191539dc1c0de228a6d8e7749b   (read back twice, not moved)
-PAYLOAD_SHA (P3)   = the commit that carries the two repaired tools, the new regression script, the
-                     re-published evidence tables and the R3 report. It cannot name its own SHA, so
-                     it is stated here as "this commit" and read back below after the push.
-DELIVERY_SHA (D3)  = the next commit: this handoff MD plus reports/agent_handoffs/DATA-7A.json, and
-                     nothing else. No source, script, RTL, testbench or evidence table changes in it.
-remote read-back   two paths over the pushed branch - git ls-remote (proxy) and gh api - both quoted
-                     in the chat receipt and in the review bundle; if only one answers, parity is
-                     reported PARTIAL rather than assumed.
-transport          https through this machine's existing system proxy, passed per command; no force,
-                     no --no-verify, no merge, no branch moved, no visibility change, nothing GCed.
+PAYLOAD_SHA (P3)   = 88e7a740cb7107bba93816beb452dc42a8a10b4b
+P3 contents         = 13 files (measured with `git diff --name-only T2..P3`): the two repaired tools,
+                      the new publish/recover regression, the bundle packer's required-file table, the
+                      R3 report, the R3 task-book copy, this handoff section, and six evidence files
+                      (manifest, environment, write guard, checker selftest, publish transcript,
+                      freeze transcript). The four measured tables are unchanged, so they are absent.
+                      No shared safety tool, no Spectre / Scan / Data-6 / PDK / OA file.
+P3 remote read-back   git ls-remote (proxy) : 88e7a740cb7107bba93816beb452dc42a8a10b4b
+                      gh api                : 88e7a740cb7107bba93816beb452dc42a8a10b4b
+                      LOCAL_REMOTE_PARITY   = PASS, transport = proxy, attempts = 1, dry-run clean,
+                      no force, no --no-verify, main / poc/data-gray-d7a / -r1 / -r2 and every
+                      teammate branch untouched, no merge, no visibility change, nothing GCed
+pre-push hook         scripts/precommit_safety_check.py --mode history : SAFETY_GATE: PASS
+DELIVERY_SHA (D3)   = the commit that stores reports/agent_handoffs/DATA-7A.json rebuilt from the
+                      published tables plus these two paragraphs. It cannot contain its own SHA, so it
+                      is named by reading the branch tip: `git rev-parse origin/poc/data-gray-d7a-r3`.
+                      No source, script, RTL, testbench or evidence table changes in it.
 ```
+
+`reports/agent_handoffs/DATA-7A.json` is regenerated from the published tables and the machine
+records (16,874 bytes, sha256
+`a4dd29b4b920953b7b9e9782ee7804deb3f216d78a9ec9f225e45856a27b13f3`), with `base_sha = T2`,
+`head_sha = P3`, `run_id = r2_20261021`, `waveform_reuse.new_rtl_simulations = 0`, 21 guard modes
+over 10 derived target files, 56 evidence checks with 0 failures, the 15-case semantic selftest, the
+23-case publish/recover regression and the 14-functional / 2-diagnostic model split, and it was run
+through the unchanged validator:
+
+```text
+$ python scripts/dd1_d7a_validate_handoff.py reports/agent_handoffs/DATA-7A.json
+HANDOFF_STRUCTURE: PASS (fields only; evidence/remote truth NOT verified)   rc=0
+```
+
+`objects_scan.result = FAIL` with the pre-existing blob named, and `scope_status = COMPLETE` is
+scoped in that file to the two tool repairs only. A schema PASS is a statement about fields, not
+about the silicon, and `push_status = REMOTE_VERIFIED` refers to P3 above, never to the commit that
+stores this text.
 
 `STOP_REASON=AWAITING_INDEPENDENT_REVIEW`, `NEXT_STAGE_AUTHORISED=NO`. Final acceptance, merging and
 the next stage belong to the user; DATA-7B, MOS PWM, eight-level PAM, current integration, the LUT,

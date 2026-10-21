@@ -1,7 +1,8 @@
 {
- "base_sha": "0b64d1d62b851ac46e03a4d0250c8014984f2ef5",
- "base_sha_semantics": "reviewed R1 tip T1 that this repair round is fixed on; read back from the remote twice before anything was written",
- "branch": "poc/data-gray-d7a-r2",
+ "base_sha": "01e078bbf545b9191539dc1c0de228a6d8e7749b",
+ "base_sha_semantics": "reviewed R2 tip T2 that this repair round is fixed on; read back from the remote over both the Git protocol (through this machine's existing system proxy) and the GitHub API before anything was written",
+ "branch": "poc/data-gray-d7a-r3",
+ "circuit_changed": false,
  "completion_level": "RTL_LOGIC_VERIFIED",
  "counts": {
   "control_and_mixed_rows": 49,
@@ -10,9 +11,9 @@
   "control_scenarios": 43,
   "edge_sample_rows": 3224,
   "edge_sample_sets": 248,
-  "evidence_identity_checks": 53,
+  "evidence_identity_checks": 56,
   "evidence_identity_failures": 0,
-  "evidence_semantic_selftest_cases": 7,
+  "evidence_semantic_selftest_cases": 15,
   "evidence_semantic_selftest_failures": 0,
   "instance_observations": 3072,
   "main_cases": 1536,
@@ -27,28 +28,38 @@
   "mutation_models": 16,
   "negative_table_detected_rows": 17,
   "negative_table_rows": 17,
+  "new_rtl_simulations": 0,
+  "payload_files_vs_T2": 13,
+  "publish_recovery_cases": 23,
+  "publish_recovery_failed_checks": 0,
   "synth_async_reset_registers": 21,
   "synth_cells": 151,
-  "write_guard_modes": 18,
-  "write_guard_modes_passed": 18,
-  "write_guard_target_files": 9
+  "tool_scripts_changed_vs_T2": 2,
+  "write_guard_modes": 21,
+  "write_guard_modes_passed": 21,
+  "write_guard_target_files": 10
  },
  "data6_baseline_sha": "731767519d1a51287eb5b7f4a6e4f9b8e613e990",
  "evidence_digests": {
   "dd1_d7a_cases.csv": "53e4c829d2cfdfb6cf34137ed06066067b646c2a2b146b3720a9ab9da5101995",
-  "dd1_d7a_checker_selftest.txt": "71a525e0429be522df58cef3b798ead241e12101d039beb826c6b71e20a379e9",
+  "dd1_d7a_checker_selftest.txt": "f4a57612fd65297d6e207fea878e653a0114b5b09d29dee44d147e8f2c363252",
   "dd1_d7a_control_cases.csv": "08b04d55c57dd09fb66c6143bfcd2d914c3e9119a83682ba67eb1a45e5041888",
   "dd1_d7a_edge_samples.csv": "a6951c9f717fa5b4c5a7d41110dc9a076f96bc1a65452ede40c89d8e60de0ec3",
-  "dd1_d7a_environment.json": "987b3d649d10e72a7133b848fccf198025a7575854e5840a71ba47c03b01a170",
+  "dd1_d7a_environment.json": "5878987e824b8dbb1e1de6ebd7598856f93f048c0e5d2a8a1b703e9fee7b9749",
   "dd1_d7a_negative.csv": "7f39a30411386ae1ece922cc830ddc9ee3dbe618a3957f51f8a6b0d5e7dee90e",
-  "dd1_d7a_write_guard.txt": "3b2cd5e5c19dc92fb000cd03fef977d027bc652fd9cc3086c9d12024f193053b"
+  "dd1_d7a_publish_test.txt": "5e7c5d3aa4a8bc6c860028f67dd57f5cc7f2e2755014e26403385eb9c3c0a143",
+  "dd1_d7a_write_guard.txt": "335c84a896fa90334b6941d5f679bfc41b14066e7ccd04e82a4f6a7f7b2fa2c1"
  },
  "evidence_paths": [
   "reports/agent_handoffs/DATA-7A.md",
   "reports/dd1_d7a_contract.md",
   "reports/dd1_d7a_review_fix.md",
+  "reports/dd1_d7a_review_fix_r2.md",
+  "reports/dd1_d7a_review_fix_r3.md",
   "reports/dd1_d7a_rtl.md",
   "reports/tasks/DATA-7A-R1.md",
+  "reports/tasks/DATA-7A-R2.md",
+  "reports/tasks/DATA-7A-R3.md",
   "reports/tasks/DATA-7A.md",
   "results/evidence/dd1_d7a_cases.csv",
   "results/evidence/dd1_d7a_checker_selftest.txt",
@@ -57,11 +68,13 @@
   "results/evidence/dd1_d7a_environment.json",
   "results/evidence/dd1_d7a_freeze_security.txt",
   "results/evidence/dd1_d7a_negative.csv",
+  "results/evidence/dd1_d7a_publish_test.txt",
   "results/evidence/dd1_d7a_write_guard.txt",
   "rtl/dd1_d7a_gray_ctrl.sv",
   "scripts/dd1_d7a_bundle.py",
   "scripts/dd1_d7a_check.py",
   "scripts/dd1_d7a_evidence_check.py",
+  "scripts/dd1_d7a_publish_test.py",
   "scripts/dd1_d7a_run.py",
   "scripts/dd1_d7a_trace.py",
   "scripts/dd1_d7a_validate_handoff.py",
@@ -76,11 +89,11 @@
   "SYNTHESIS_STRUCTURE": true,
   "XPROBE_REFUSED": true
  },
- "freeze_transcript_sha256": "36c8c5e58bc7d46a14bd584ae8ab97afc7eb2406f8052b04c114d9b216b873ba",
- "head_sha": "e151ebca59bc60df5e6e4d16fd6907e9787ded0a",
- "head_sha_semantics": "payload_commit: the commit carrying the repaired RTL, testbench, checker, reader, runner, evidence tables and reports. The commit that stores this JSON is the later metadata commit and is deliberately not named inside it.",
+ "freeze_transcript_sha256": "f6f703c570324856951e1f25fe6323a29b12fec537a12137b9c02b54d06c127b",
+ "head_sha": "88e7a740cb7107bba93816beb452dc42a8a10b4b",
+ "head_sha_semantics": "payload_commit: the commit carrying the two repaired verification tools, the new publish/recover regression, the re-published evidence tables and the R3 report. The commit that stores this JSON is the later metadata commit and is deliberately not named inside it.",
  "history_scan": {
-  "objects_checked": 1359,
+  "objects_checked": 1367,
   "result": "PASS",
   "tracked_credential_files": 0,
   "tracked_pdk_files": 0,
@@ -89,13 +102,13 @@
  },
  "known_limitations": [
   "The full VCD traces stay local (2 MB to 38 MB each, .vcd is not whitelisted); only their sha256, the small derived tables and the sample rows are committed, so a reviewer must re-run the chain to see waveforms.",
-  "The tick enable is supplied by the testbench reference domain. Its divider, the TCON column schedule and the 50 MHz DCLK-to-PWM crossing remain outside this task; no clock divider was added.",
-  "Asynchronous shut-off is proven as zero-delay combinational logic priority only. MOS propagation, metastability, safe reset release and real device glitches are unverified, and a pulse shorter than the declared minimum is only guaranteed to be gated off while it is asserted.",
+  "R3 re-published the evidence from the frozen R2 run r2_20261021; no new simulation was started. A reviewer who wants fresh waveforms must re-run --run-rtl, and the export refuses a cached run whose RTL/TB/checker/reader digests differ.",
+  "The publish/recover guarantees stay what the tool can actually deliver: a caught-failure rollback plus a marker a later process can use. Multi-file power-loss atomicity is not claimed, and the two BOUNDARY_DIAGNOSTIC cases that call do_export() stub the artefact builder, so they cover the entry gate only, never a build.",
+  "The numeric gates protect the delivered tables from a wrong value; they do not make the measurement itself more accurate, and no threshold, tolerance or endpoint was changed.",
   "pam_sel is a code. In Pure mode 7 is a symbol, not 15 uA; the eight current levels, trimming and the reference relationship remain NOT_RUN.",
   "Optical effective grey bits, LED I-V, array RC, final VLED/VSCAN and SOA are NOT_VERIFIED; an RTL pass proves none of them.",
   "One pre-existing unreachable large blob <blob:955497fb18ac> (3,583,407 bytes, dated 2026-10-14, not created by this round) makes the --mode objects scan FAIL. It is left exactly as found: no GC, no content printed, no gate relaxed, no history rewritten.",
-  "This validator and this JSON prove field structure only. They do not verify remote truth, circuit behaviour, or that any recorded number is physically correct.",
-  "The repair round changed the testbench ordering for the two recovery scenarios, so the abort re-authorisation refusal is now measured for the reason the contract states; a reviewer comparing with the previous round should read scenarios 2019 and 2020 again rather than assuming an unchanged suite."
+  "This validator and this JSON prove field structure only. They do not verify remote truth, circuit behaviour, or that any recorded number is physically correct."
  ],
  "next_stage_authorised": "NO",
  "objects_scan": {
@@ -103,22 +116,22 @@
   "item": "pre-existing unreachable blob 955497fb18ac, 3,583,407 bytes, pack date 2026-10-14, not created by this round and not reachable from any ref",
   "result": "FAIL"
  },
- "previous_reviewed_tip_sha": "0b64d1d62b851ac46e03a4d0250c8014984f2ef5",
+ "previous_reviewed_tip_sha": "01e078bbf545b9191539dc1c0de228a6d8e7749b",
  "project_id": "microled-ic-ai-lab",
  "push_status": "REMOTE_VERIFIED",
  "push_status_scope": "read-back of the payload commit above, taken before these bytes were written; it is never a claim about the commit that stores this file",
  "remote_readback": {
   "forced": false,
-  "method_1": "git ls-remote origin refs/heads/poc/data-gray-d7a-r1 (direct transport)",
-  "method_2": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/poc/data-gray-d7a-r1",
+  "method_1": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin refs/heads/poc/data-gray-d7a-r2 (direct transport without the flag fails on this machine: connection reset)",
+  "method_2": "gh api repos/LINboss666/microled-ic-ai-lab/git/refs/heads",
   "parity": "PASS",
   "protected_branch_touched": false,
   "push_attempts": 1,
-  "sha_1": "e151ebca59bc60df5e6e4d16fd6907e9787ded0a",
-  "sha_2": "e151ebca59bc60df5e6e4d16fd6907e9787ded0a",
-  "transport_used_for_push": "proxy (WinINET 127.0.0.1:7892), chosen by the measured push helper after comparing both paths"
+  "sha_1": "88e7a740cb7107bba93816beb452dc42a8a10b4b",
+  "sha_2": "88e7a740cb7107bba93816beb452dc42a8a10b4b",
+  "transport_used_for_push": "https through this machine's existing system proxy (127.0.0.1:7892), passed per command; no git config written"
  },
- "repair_scope": "F1 abort pending revocation, F2 publish transaction and guard/synthesis status, F3 functional mutation models, F4 per-channel output edges, F5 contract-level evidence checks",
+ "repair_scope": "A: publish/recover transaction identity (the marker's own backup, refusal on unreadable records, staging cleanup, refusal to start a new transaction while one is outstanding). B: evidence numeric kinds (integer counts, exact picosecond times, no truncation before comparison). Nothing else changed.",
  "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
  "reserved_statuses": {
   "COMPLETION_LEVEL": "RTL_LOGIC_VERIFIED",
@@ -133,21 +146,21 @@
   "PWM_MOS_IMPLEMENTATION": "NOT_RUN",
   "SOA_SIGNOFF": "NO"
  },
- "review_package_sha256": "fa0080b488d25191a3f0413f6d0e2b70a4248f2e6192ffbf103e5c910673ab48",
- "reviewed_handoff_sha": "202f11c63d7163487af3e5f33843e4a742c9115a",
- "reviewed_payload_sha": "b0196f995962e8098e218aabf86e5864792b7f8c",
- "reviewed_task_id": "DATA-7A-R1",
+ "review_package_sha256": "e31cdfe918cfa54a8960f7d3e0b96c89b36ae4d5cb5e1a6ea7225491ff7cf444",
+ "reviewed_handoff_sha": "ff477ae7996a6efe74bdd60d971443810daf485d",
+ "reviewed_payload_sha": "e151ebca59bc60df5e6e4d16fd6907e9787ded0a",
+ "reviewed_task_id": "DATA-7A-R2",
  "run_id": "r2_20261021",
  "schema_version": "1.0",
  "scope_status": "COMPLETE",
- "scope_status_meaning": "the DATA-7A-R2 digital-logic and verification-tool repair only: the five review items were repaired and re-measured inside the stated digital scope. It does not mean the PWM MOS circuit, the eight PAM current levels, the LUT, the current integration, the array, the optics or the layout are done, and the objects-scan item below is recorded as FAIL.",
+ "scope_status_meaning": "the DATA-7A-R3 tool repair only: both review items were repaired and re-measured inside the stated scope, with the circuit and waveform tools frozen byte-for-byte. It does not mean the PWM MOS circuit, the eight PAM current levels, the LUT, the current integration, the array, the optics or the layout are done, and the objects-scan item below is recorded as FAIL.",
  "security_gate": "PASS",
  "security_gate_scope": "staged scan at commit time plus the full-history scan in the pre-push hook, both over this branch. The separate --mode objects scan still fails on one pre-existing unreachable blob and that result is stated below rather than folded into this field.",
  "source_digests": {
   "reports/dd1_d7a_contract.md": "37f55cb9f0783e2f184ad360f69ee07526f1aba5d39f6698388826b3b8652284",
   "rtl/dd1_d7a_gray_ctrl.sv": "6dbf464a49e49ad489188fa51920c30a3c89d6b3106046a4fefe558ef0a50c87",
   "scripts/dd1_d7a_check.py": "4b5197948ec2852454ffc1b6dd207c8c21badaddec7ea6dd77a66e4e5a13b307",
-  "scripts/dd1_d7a_run.py": "19a13810e02ff803551acc73fdcc2f06b7ab5b910cb9bf77c81c2b86f4c9756a",
+  "scripts/dd1_d7a_run.py": "f868f763104b16637f959b2902b5a7bcb63b261dc8333c32052021673f8a039b",
   "scripts/dd1_d7a_trace.py": "708c37027fb11d250b48d9ada55616c6591525e4dad339f00a33d1a63382696a",
   "tests/dd1_d7a/tb_dd1_d7a_gray.sv": "426f93275faa9fdac8271f01656c6c6afab0f812a46d07d618fe78d11fed9109"
  },
@@ -157,16 +170,41 @@
   "previous_run_id": "FINAL",
   "reason": "R1 review fixes: abort re-authorisation, configuration freshness, safe-phase mode adoption, export failure guard, stimulus coverage"
  },
- "task_id": "DATA-7A-R2",
+ "task_id": "DATA-7A-R3",
  "tests": [
   {
-   "evidence_path": "results/evidence/dd1_d7a_checker_selftest.txt",
-   "name": "checker_and_entry_selftest",
+   "evidence_path": "results/evidence/dd1_d7a_publish_test.txt",
+   "name": "publish_transaction_record_and_recovery",
    "status": "PASS"
   },
   {
-   "evidence_path": "reports/dd1_d7a_review_fix_r2.md",
-   "name": "evidence_semantic_selftest",
+   "evidence_path": "results/evidence/dd1_d7a_write_guard.txt",
+   "name": "publish_write_guard_matrix",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_manifest.json",
+   "name": "evidence_numeric_kind_gates",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "reports/dd1_d7a_review_fix_r3.md",
+   "name": "evidence_semantic_selftest_numeric_cases",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_freeze_security.txt",
+   "name": "reviewer_t2_diagnostics_no_longer_reproduce",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_freeze_security.txt",
+   "name": "frozen_files_byte_identical_to_T2",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_checker_selftest.txt",
+   "name": "checker_and_entry_selftest",
    "status": "PASS"
   },
   {
@@ -240,16 +278,6 @@
    "status": "PASS"
   },
   {
-   "evidence_path": "results/evidence/dd1_d7a_write_guard.txt",
-   "name": "publish_transaction_rollback_and_recovery",
-   "status": "PASS"
-  },
-  {
-   "evidence_path": "results/evidence/dd1_d7a_write_guard.txt",
-   "name": "write_guard_modes_independent",
-   "status": "PASS"
-  },
-  {
    "evidence_path": "results/evidence/dd1_d7a_edge_samples.csv",
    "name": "edge_samples_straddle_anchors",
    "status": "PASS"
@@ -320,6 +348,7 @@
    "status": "NOT_RUN"
   }
  ],
+ "tool_only_round": true,
  "toolchain": {
   "cross_platform_note": "these are the Windows executables on the executing machine; the independent review ran Linux Icarus 12 and Yosys 0.33, which are different binaries, so no digest here claims to be the reviewer's",
   "simulator": {
@@ -328,5 +357,28 @@
    "yosys": "Yosys 0.70+176 (git sha1 365bb887b, Release, GNU /usr/bin/x86_64-w64-mingw32-g++ 15.2.1)"
   },
   "synthesis": "clean"
+ },
+ "waveform_reuse": {
+  "exported_by_task_revision": "DATA-7A-R3",
+  "meaning": "R3 repaired tools only. The waveforms are the frozen R2 run r2_20261021, re-judged from their own bytes by this revision and re-published under the R3 digests; they are not presented as a new simulation.",
+  "new_rtl_simulations": 0,
+  "produced_by_task_revision": "NOT_STAMPED_BY_THE_RUNNER_THAT_MADE_THIS_RUN",
+  "rejudged_from_trace_bytes_before_publish": true,
+  "reused_rtl_run": "r2_20261021",
+  "run_id_in_the_tables": "r2_20261021",
+  "sources_that_produced_the_traces": {
+   "checker_sha256": "4b5197948ec2852454ffc1b6dd207c8c21badaddec7ea6dd77a66e4e5a13b307",
+   "reader_sha256": "708c37027fb11d250b48d9ada55616c6591525e4dad339f00a33d1a63382696a",
+   "rtl_sha256": "6dbf464a49e49ad489188fa51920c30a3c89d6b3106046a4fefe558ef0a50c87",
+   "tb_sha256": "426f93275faa9fdac8271f01656c6c6afab0f812a46d07d618fe78d11fed9109"
+  },
+  "trace_digests": {
+   "trace_control.vcd": "429636aeaf6a134caa3c529d2f949eb04a0519c39766c610b172e58c20fa0626",
+   "trace_hyb_t120.vcd": "bcda5449581295238e173b5ced0e525b04edbcbbb855b04345d0ed8efa0cf1ba",
+   "trace_hyb_t200.vcd": "ae95eb781aa655dbbab3af45c2c1096216230920d33bdd0361a6d071be0ac673",
+   "trace_mixed.vcd": "3cffd67c1d4bce9db51e5c7289179e872f3095b8ffd15711e430770dc3d323b7",
+   "trace_pure_t30.vcd": "5e725e6a22b4b1e5eb4cf43161edfffe623bbd0fb53c6f30862e93c6eed3f3c9",
+   "trace_pure_t50.vcd": "776de50734bb2804fec410fd3ee15eedd95dde63d459e702e15ad271db0a2afa"
+  }
  }
 }
