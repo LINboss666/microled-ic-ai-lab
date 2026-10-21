@@ -79,6 +79,12 @@ PWL 是离线验证激励，不构成全 MOS 灰阶控制器、混合信号联�
 任何下一阶段内容。VM 未做电源/快照/.vmx/license 操作；网络只做了用户批准的
 `dhclient -1 eth0`（临时租约，未改 `ifcfg-*`）。
 
+## 5.5 推送与回读
+
+普通 push 新分支 `poc/data-pwm-d7b`（非 force、未跳 hooks）；Git 协议与 GitHub API 两条独立路径
+都回读到同一 tip，`main`、`poc/data-gray-d7a-r4-doc` 与其余旧分支逐条比对未动。
+`head_sha` 固定为功能 payload 提交，分支 tip 与最终包身份从 Git ref / 包外回执读，本文件不写自身 SHA。
+
 ## 6 下一步（等云端独立审核，不由执行者给 GO）
 
 1. 短窗不入带与 ~16.8 uA 导通峰值是本轮最实的物理发现；是否为此改动输出级由用户决定。

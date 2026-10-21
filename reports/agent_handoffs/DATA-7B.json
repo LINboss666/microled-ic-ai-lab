@@ -72,12 +72,31 @@
  },
  "payload_sha": "9d73cc184a266e646ae827f0350f7c931d9faa25",
  "project_id": "microled-ic-ai-lab",
- "push_status": "PUSH_PENDING",
+ "push_status": "REMOTE_VERIFIED",
  "pwm_current_feasibility_tt": "PASS",
  "remote_readback": {
-  "method_1_git_protocol": "pending: git ls-remote origin refs/heads/poc/data-pwm-d7b",
-  "method_2_github_api": "pending: gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/poc/data-pwm-d7b",
-  "note": "filled by the next metadata commit from the observed values; this file never records its own commit SHA"
+  "method_1_git_protocol": {
+   "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin",
+   "differences": 1,
+   "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+   "only_difference": "refs/heads/poc/data-pwm-d7b created (nothing else moved)",
+   "poc/data-gray-d7a-r4-doc": "c3513ffee57880bdc9d6d26d5c1c1a9a43c52e37",
+   "poc/data-pwm-d7b": "2dfdb462aa70f546c4bdc4a6a49b6b0a763bb712",
+   "rc": 0,
+   "ref_lines_compared_before_after": 19
+  },
+  "method_2_github_api": {
+   "commands": [
+    "gh api repos/.../git/ref/heads/poc/data-pwm-d7b",
+    "gh api repos/.../git/ref/heads/main"
+   ],
+   "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+   "poc/data-pwm-d7b": "2dfdb462aa70f546c4bdc4a6a49b6b0a763bb712",
+   "rc": 0
+  },
+  "note": "payload P is 9d73cc184a266e646ae827f0350f7c931d9faa25; this metadata commit is the branch tip and is read externally, never from this file",
+  "parity": "Git protocol and GitHub API return the same tip; main and every older branch are unmoved",
+  "recorded_utc": ""
  },
  "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
  "rtl": {
