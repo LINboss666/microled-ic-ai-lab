@@ -42,6 +42,50 @@
   "write_guard_target_files": 10
  },
  "data6_baseline_sha": "731767519d1a51287eb5b7f4a6e4f9b8e613e990",
+ "documentation_closeout": {
+  "base_sha": "0bfe339b8dbbb43e8356fc14f7a81acfd429a683",
+  "base_sha_semantics": "reviewed R4 tip T4 that this closeout branch was created from, read back over both the Git protocol and the GitHub API before anything was written",
+  "branch": "poc/data-gray-d7a-r4-doc",
+  "code_changed": false,
+  "functional_branch": "poc/data-gray-d7a-r4",
+  "functional_payload_sha": "c70039cb9764e00c9d780ad00a03d6c7ae9a2cb9",
+  "functional_tests_re_run": false,
+  "items_closed": [
+   "the R4 report quoted its own size and digest (14,736 B / 29170c92\u2026) against a committed blob of 22,284 B / a0a64f41\u2026; the row was measured before the file grew by the sections carrying it. The row is removed and delivered identity now comes only from the external bundle MANIFEST and git cat-file; no replacement self-digest was written",
+   "remote_readback.method_1 branch label corrected from the executor transcript, with the wrong string kept as method_1_wrong_label_as_delivered_at_T4",
+   "the trailing blank line at EOF of the R4 report removed; the over-scoped clean claim replaced by the measured T3..T4 rc=2 and the closeout checks below"
+  ],
+  "measured_evidence_changed": false,
+  "new_oa_writes": 0,
+  "new_rtl_simulations": 0,
+  "new_spectre_runs": 0,
+  "read_back_at_closeout_start": {
+   "git_protocol": "0bfe339b8dbbb43e8356fc14f7a81acfd429a683",
+   "github_api": "0bfe339b8dbbb43e8356fc14f7a81acfd429a683",
+   "meaning": "the live read-back taken when the documentation round started. It does not replace or restate the P4 read-back recorded above.",
+   "parity": "PASS",
+   "queried": "refs/heads/poc/data-gray-d7a-r4 plus main and every older poc/data-gray-d7a* ref",
+   "utc": "2026-10-21T07:37:15Z"
+  },
+  "review_input_package_sha256": "3c5b283b98e7c411fbc47821a242b0687b60935355eb414761a172c71f614f73",
+  "review_verdict_closed": "CONDITIONAL_GO, CORE_REPAIR_STATUS=PASS, three documentation items",
+  "reviewer_side_evidence_not_executor": {
+   "meaning": "independent positive fixtures the reviewer wrote; filed as reviewer evidence, not as something this round executed",
+   "reviewer/check_cleanup_positive.py": "7/7 pass against the delivered bytes, runner_sha256 dbb544f5483326e6dbe2d1319504a92675ef5d493b9ba1de0842bddb2f34f046"
+  },
+  "task_book_copy": {
+   "bytes": 6385,
+   "path": "reports/tasks/DATA-7A-R4-DOC.md",
+   "sha256": "af2e210f2f5dfd29c50ce92faa6933c5956a8b863aaf2aa39cf13d454d869162"
+  },
+  "task_id": "DATA-7A-R4-DOC",
+  "whitespace_checks": {
+   "git_diff_cached_check_before_this_commit": 0,
+   "git_diff_check_T3_to_T4_as_reviewed": 2,
+   "git_diff_check_T3_to_T4_cause": "new blank line at EOF of reports/dd1_d7a_review_fix_r4.md (line 290 of 292)",
+   "git_diff_check_T3_to_doc_tip": "cannot be stated inside the commit it measures; reported in the chat receipt and re-runnable as `git diff --check 33cd863093961d571aca3bd726beea32cb50ecfd origin/poc/data-gray-d7a-r4-doc`"
+  }
+ },
  "evidence_digests": {
   "dd1_d7a_cases.csv": "53e4c829d2cfdfb6cf34137ed06066067b646c2a2b146b3720a9ab9da5101995",
   "dd1_d7a_checker_selftest.txt": "41b8f6e0fa7b51860ebfa5553e8d53e99ac9a0f8e3475a2ead6ccfed10fa7771",
@@ -63,6 +107,7 @@
   "reports/tasks/DATA-7A-R1.md",
   "reports/tasks/DATA-7A-R2.md",
   "reports/tasks/DATA-7A-R3.md",
+  "reports/tasks/DATA-7A-R4-DOC.md",
   "reports/tasks/DATA-7A-R4.md",
   "reports/tasks/DATA-7A.md",
   "results/evidence/dd1_d7a_cases.csv",
@@ -113,7 +158,8 @@
   "pam_sel is a code. In Pure mode 7 is a symbol, not 15 uA; the eight current levels, trimming and the reference relationship remain NOT_RUN.",
   "Optical effective grey bits, LED I-V, array RC, final VLED/VSCAN and SOA are NOT_VERIFIED; an RTL pass proves none of them.",
   "One pre-existing unreachable large blob <blob:955497fb18ac> (3,583,407 bytes, dated 2026-10-14, not created by this round) makes the --mode objects scan FAIL. It is left exactly as found: no GC, no content printed, no gate relaxed, no history rewritten.",
-  "This validator and this JSON prove field structure only. They do not verify remote truth, circuit behaviour, or that any recorded number is physically correct."
+  "This validator and this JSON prove field structure only. They do not verify remote truth, circuit behaviour, or that any recorded number is physically correct.",
+  "A report cannot carry the digest of the bytes it is itself part-way through becoming: the R4 round proved that to itself. Delivered file identity is read from the bundle MANIFEST.csv and `git cat-file blob <tip>:<path>`, never restated inside the file it names."
  ],
  "next_stage_authorised": "NO",
  "numeric_rechecker_changed": false,
@@ -134,7 +180,9 @@
  "push_status_scope": "read-back of the payload commit above, taken before these bytes were written; it is never a claim about the commit that stores this file",
  "remote_readback": {
   "forced": false,
-  "method_1": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin refs/heads/poc/data-gray-d7a-r3 (direct transport without the flag fails on this machine: connection reset)",
+  "method_1": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin refs/heads/poc/data-gray-d7a-r4 refs/heads/poc/data-gray-d7a-r3 refs/heads/main (direct transport without the flag fails on this machine: connection reset)",
+  "method_1_correction": "the T4 delivery JSON named only refs/heads/poc/data-gray-d7a-r3 in method_1 while this record describes payload P4. The branch label was a documentation error; corrected from the executor session transcript, which shows the command above being run for P4 and answering main 23e471cb936b421ee97e1250c3be06edf96f9937, poc/data-gray-d7a-r3 33cd863093961d571aca3bd726beea32cb50ecfd and poc/data-gray-d7a-r4 c70039cb9764e00c9d780ad00a03d6c7ae9a2cb9. The wrong string is preserved above rather than invented over, and head_sha still denotes the functional payload P4.",
+  "method_1_wrong_label_as_delivered_at_T4": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin refs/heads/poc/data-gray-d7a-r3 (direct transport without the flag fails on this machine: connection reset)",
   "method_2": "gh api repos/LINboss666/microled-ic-ai-lab/git/refs/heads",
   "parity": "PASS",
   "protected_branch_touched": false,

@@ -880,3 +880,72 @@ this text.
 `STOP_REASON=AWAITING_INDEPENDENT_REVIEW`, `NEXT_STAGE_AUTHORISED=NO`. Final acceptance, merging and
 the next stage belong to the user; DATA-7B, MOS PWM, eight-level PAM, current integration, the LUT,
 the array, layout and any VM/Cadence/Spectre/OA work were not started.
+
+---
+
+# DATA-7A-R4-DOC — documentation closeout after the fourth review
+
+Review input: `MicroLED_DATA7A_R4_Independent_Review_20261021.zip`, sha256
+`3c5b283b98e7c411fbc47821a242b0687b60935355eb414761a172c71f614f73` (measured before extraction), whose
+`REVIEW_DATA7A_R4.md` returns `CORE_REPAIR_STATUS=PASS`, `FUNCTIONAL_REWORK_REQUIRED=NO` and three
+documentation items. The task book is kept byte-for-byte as `reports/tasks/DATA-7A-R4-DOC.md`
+(6,385 bytes, sha256 `af2e210f2f5dfd29c50ce92faa6933c5956a8b863aaf2aa39cf13d454d869162`). No chat
+history was available or assumed.
+
+```text
+reviewed tip  T4 = 0bfe339b8dbbb43e8356fc14f7a81acfd429a683   (poc/data-gray-d7a-r4)
+functional    P4 = c70039cb9764e00c9d780ad00a03d6c7ae9a2cb9   (unchanged, not amended, not moved)
+this branch   poc/data-gray-d7a-r4-doc in its own worktree, created from T4 after reading T4 back over
+              both the Git protocol and the GitHub API; main and every poc/data-gray-d7a* ref re-read
+              and left where they were. No reset, stash, force, merge or visibility change, and the
+              R4 branch itself was not moved.
+```
+
+## The three items, closed
+
+| item | what was actually wrong | what was done |
+|---|---|---|
+| R4 report self-identity | §6 listed this report as `14,736 B / 29170c92…` while the committed blob is `22,284 B / a0a64f41…`. The number was measured honestly and then the file grew by the sections that carried it — the self-reference trap inside a document rather than a commit message | the row is removed, §6 now states where a delivered file's identity comes from (the bundle `MANIFEST.csv` and `git cat-file blob <tip>:<path>`), and **no replacement self-digest was written**, because any value this file could state would expire by being stated. The old value is kept as the subject of the erratum, not as a live claim |
+| delivery JSON read-back label | `remote_readback.method_1` named `refs/heads/poc/data-gray-d7a-r3` in a record that describes payload P4 | corrected to the command the executor's session transcript actually shows for P4, with the wrong string preserved as `method_1_wrong_label_as_delivered_at_T4` and the reason written out; `head_sha` still means the functional payload; the live read-back taken for this closeout is a **separate** `documentation_closeout` record with query object, value and UTC time, so no current answer impersonates a historical command and nothing is invented |
+| whitespace scope | the R4 receipt reported `git diff --check 33cd863…` as rc=0. That command did run and did return 0, but against the worktree while this report was still untracked, so it could not see the file; the committed range check `git diff --check T3..T4` is **rc=2** for one new blank line at EOF | the trailing blank lines are gone and the file ends with a single newline; the §6 row carries the scope correction instead of the bare claim; the closeout measures `git diff --cached --check` over the staged set (which is how a new file gets inspected at all) and `git diff --check T3..<doc-tip>`. The first return code is recorded in the JSON; the second cannot be stated inside the commit it measures, so it is reported in the receipt and re-runnable as `git diff --check 33cd863093961d571aca3bd726beea32cb50ecfd origin/poc/data-gray-d7a-r4-doc` |
+
+## What did not change
+
+```text
+allowed paths        reports/dd1_d7a_review_fix_r4.md, reports/agent_handoffs/DATA-7A.md,
+                     reports/agent_handoffs/DATA-7A.json, reports/tasks/DATA-7A-R4-DOC.md
+everything else      byte-identical to T4: all scripts/, rtl/, tests/, results/, spec/, the contract,
+                     the numeric evidence re-checker, the publisher, the packager, both shared safety
+                     tools, the validator and every earlier task book
+re-runs              none. No RTL simulation, mutation, synthesis, export, Spectre or OA work. The 26
+                     transaction cases, 49 entry assertions, 56 evidence checks, 15 semantic selftest
+                     cases and 22 guard modes keep the identity they were recorded with in R4 and are
+                     not re-declared as freshly executed here
+```
+
+The review also ran seven positive cleanup fixtures of its own, which the executor did not write:
+`reviewer/check_cleanup_positive.py` against the delivered bytes reports `all_pass: true` for
+`partial_stage_1/2/3`, `pre_cleanup_denied`, `rollback_cleanup_denied`, `success_cleanup_denied` and
+`marker_close_denied`, with `runner_sha256 = dbb544f5483326e6dbe2d1319504a92675ef5d493b9ba1de0842bddb2f34f046`
+naming the exact runner it imported. That is reviewer-side evidence and is filed as such, not as an
+executor result.
+
+One word on the identity of the delivery JSON itself. The R4 section above quotes
+`19,406 bytes / a94864ae1a56a1962dc19e7a4a88fbdaa9b9767bad070ade988799dfca948c19`, which is the object
+as delivered by commit D4 and is what the fourth review read. This closeout adds one
+`documentation_closeout` object and corrects one string in `remote_readback`, leaving every functional
+field — `task_id`, `branch`, `base_sha`, `head_sha`, all counts and all digests — byte-identical; the
+patch script asserts that no other top-level key moved and reports the changed set explicitly. The
+closeout JSON is 23,512 bytes with sha256
+`54ddaad962cf423f5dc2853424dd59586920120ad74d103652cd8340ce534318`. That value can be stated here
+because the JSON does not contain this file — and this file's own identity is deliberately not stated
+anywhere inside it, for the reason the closeout items describe.
+
+`TASK_ID=DATA-7A-R4-DOC`, `BASE_SHA=0bfe339b8dbbb43e8356fc14f7a81acfd429a683`,
+`REPAIR_SCOPE=DOCUMENTATION_ONLY`, `CODE_CHANGED=NO`, `MEASURED_EVIDENCE_CHANGED=NO`,
+`NEW_RTL_SIMULATIONS=0`, `NEW_SPECTRE_RUNS=0`, `NEW_OA_WRITES=0`,
+`STOP_REASON=AWAITING_DOCUMENTATION_REVIEW`, `NEXT_STAGE_AUTHORISED=NO`, `SOA_SIGNOFF=NO`.
+The pre-existing unreachable blob still fails the objects scan on this machine and is left exactly as
+found: not collected, not printed, not exempted, not rewritten. Final acceptance and any next stage
+remain the user's decision; DATA-7B, MOS PWM, eight-level PAM, current integration, the LUT, the array,
+layout and any VM/Cadence/Spectre/OA work were not started.

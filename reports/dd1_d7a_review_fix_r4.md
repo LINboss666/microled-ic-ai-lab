@@ -223,7 +223,7 @@ Every step below was re-run after the last edit, and the whole command transcrip
 | guard matrix | `python scripts/dd1_d7a_run.py --write-guard-demo --out review/dd1_d7a/r2_20261021` | 0 | `WRITE_GUARD: PASS (22 modes, 10 target files)` |
 | history scan | `python scripts/precommit_safety_check.py --mode history` | 0 | 154 commits, `SAFETY_GATE: PASS` |
 | objects scan | `python scripts/precommit_safety_check.py --mode objects` | 1 | `BLOCKED <blob:955497fb18ac>` — pre-existing, reported as found |
-| whitespace | `git diff --check 33cd863…` | 0 | clean, including the R3 EOF blank line |
+| whitespace | `git diff --check 33cd863…` | 0 (as run) | **this row was misleading as printed and is corrected by the erratum below**: the command ran against the worktree, where the R4 report was still untracked, so it could not have seen that file at all. The committed range check the independent review ran, `git diff --check T3..T4`, returned **rc=2** for one new blank line at the end of this report. The blank lines are now gone and the final-scope checks in §8 are reported with their measured return codes. |
 
 Delivery digests (all LF, and every manifest-listed evidence file re-hashed from disk after the
 transcript regeneration: 8/8 match, and the run-directory `checker_selftest.txt` is identical to the
@@ -234,7 +234,6 @@ scripts/dd1_d7a_run.py              151,808  dbb544f5483326e6dbe2d1319504a92675e
 scripts/dd1_d7a_publish_test.py      43,617  ff7cc14cbe9272b67121788fcccdb30b94a94908b63c78a776d1cb26d24bef73
 scripts/dd1_d7a_bundle.py             7,983  f51fef9edbcff244dab4352396f43030cab7324bf0c6b96479f171bb69e5f2ae
 scripts/dd1_d7a_evidence_check.py    36,405  d4369e80413e5f014ba9821223e11a121ac01663dc1dc025a6b6de3c479da80a  (frozen = T3)
-reports/dd1_d7a_review_fix_r4.md     14,736  29170c9289c0731fbb083cf3f320719f40e3202ad9e6bf5c5a74576f08f6bbf1
 reports/dd1_d7a_review_fix_r3.md     29,643  66126f0d244dd19635fea9f4d96af9ff5c4f34d5084dac1cdf73f0ae6c0ed244  (erratum)
 reports/tasks/DATA-7A-R4.md           9,694  2b91892a8b0e93bd336baff41d7b3dad105c663633b8e37441ee48198c2efac0
 results/evidence/dd1_d7a_manifest.json      8,775  a8ef8fa7412546087a8efd03807a72cdb91664cadc0724ced5a8d6e915ab628d
@@ -243,6 +242,14 @@ results/evidence/dd1_d7a_write_guard.txt    8,656  1cde5ea616d6418bac949014b9a12
 results/evidence/dd1_d7a_checker_selftest.txt 12,574  41b8f6e0fa7b51860ebfa5553e8d53e99ac9a0f8e3475a2ead6ccfed10fa7771
 results/evidence/dd1_d7a_publish_test.txt    8,552  66544963d5187afd2caba00c2feea4f5e2eea0b8878e95b71bb79e6c84dad096
 ```
+
+This file's own size and digest are deliberately **not** listed above: a file cannot state the identity
+of the bytes it is itself part-way through being, and an earlier revision of this table carried a
+value measured before its own later sections were appended, which made it wrong on arrival. The
+delivered identity of every file in this commit, including this report, is taken from the external
+`review/dd1_d7a_bundle_<tip>.zip` `MANIFEST.csv` and from `git cat-file blob <tip>:<path>`, and the
+independent review read the same 23 manifest/blob pairs without mismatch. See the Erratum section at
+the end of this file.
 
 The four measured tables (`cases.csv`, `control_cases.csv`, `negative.csv`, `edge_samples.csv`) are
 again byte-identical to T3, so the values in them are the same 1536 / 43 / 6 / 16-record evidence this
@@ -288,4 +295,52 @@ Open, unchanged from before and not papered over:
   MOS PWM, eight-level PAM, current integration, the LUT, the array, layout and any VM/Cadence/Spectre
   or OA work were not started.
 
+## 8. Documentation closeout (DATA-7A-R4-DOC)
 
+The independent review of this commit returned `CORE_REPAIR_STATUS=PASS` with three documentation
+items; they are closed in the `poc/data-gray-d7a-r4-doc` branch, and no code, RTL, testbench,
+checker, re-checker, publisher, packer, safety rule, validator, contract or measured/identity evidence
+file differs by a single byte between T4 and that branch. Nothing functional was re-run for this
+closeout: no RTL simulation, mutation, synthesis, export, Spectre or OA work, so the 26 transaction
+cases, 49 entry assertions, 56 evidence checks and 15 semantic selftest cases above keep the identity
+they were recorded with and are not re-declared as freshly executed here.
+
+The three items, what was actually wrong, and how each was closed:
+
+1. **This report quoted its own size and digest.** §6 listed `14,736 B / 29170c92…` for itself while
+   the committed blob is `22,284 B / a0a64f4186874f74493a98165a3d8ad45ade81da56b5e8d8ceaf9cdc4053be74`.
+   The number was measured honestly at the moment it was written, then this file grew by the very
+   sections that carried it, so the row was stale the instant it landed — the ordinary
+   self-reference trap, in a report rather than in a commit message. The row is removed and the
+   paragraph above §6 now says where the delivered identity of any file in the commit comes from:
+   the external bundle `MANIFEST.csv` and `git cat-file blob <tip>:<path>`. No replacement
+   self-digest was written, because any value this file could state would expire by being stated.
+2. **The delivery JSON's read-back command named the wrong branch.** `remote_readback.method_1` said
+   `refs/heads/poc/data-gray-d7a-r3` while that record describes payload P4. The original session
+   transcript is available to the executor and shows the command that was actually run for P4, so the
+   label is corrected to that transcript and marked as a documentation error rather than an inferred
+   one: `git -c http.proxy=http://127.0.0.1:7892 ls-remote origin refs/heads/poc/data-gray-d7a-r4
+   refs/heads/poc/data-gray-d7a-r3 refs/heads/main`, which returned `main 23e471cb…`,
+   `-r3 33cd863…` and `-r4 c70039cb…`. `head_sha` stays P4: that field means the functional payload,
+   not the commit that stores this text. A separate `documentation_closeout` block records the new
+   real-time read-back with its query object, value and time, so no current answer is passed off as a
+   historical command and no historical command is invented.
+3. **The whitespace claim was for the wrong scope.** §6 said `git diff --check 33cd863…` returned 0;
+   that command did run and did return 0, but it ran against the worktree while this report was still
+   untracked, so it could not see the file whose trailing blank lines the review then found:
+   `git diff --check T3..T4` is **rc=2**, one new blank line at EOF. The blank lines are removed, the
+   §6 row now carries the scope correction instead of the bare claim, and the closeout branch records
+   the two checks the task asks for — `git diff --cached --check` over the staged set (which is how a
+   new file gets inspected at all) and `git diff --check T3..<doc-tip>` — with their measured return
+   codes in the delivery JSON and the chat receipt rather than asserted here.
+
+## Erratum, added by DATA-7A-R4-DOC
+
+Items 1 and 3 above are corrections of statements inside this report. The original wording of item 3
+is preserved in place with the correction attached rather than deleted, so a reader can see what was
+claimed, what was measured, and why the two differed. Item 2 concerns
+`reports/agent_handoffs/DATA-7A.json`, whose corrected field and separate closeout record live in
+that file; the R4 handoff section of `reports/agent_handoffs/DATA-7A.md` points at it. No measured
+value, command transcript, exit code of an actually-executed command, or failure history in this round
+was altered: the corrections are the stale self-reference, the over-scoped clean claim, and the branch
+label in one JSON string.
