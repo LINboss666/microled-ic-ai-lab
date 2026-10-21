@@ -949,3 +949,39 @@ The pre-existing unreachable blob still fails the objects scan on this machine a
 found: not collected, not printed, not exempted, not rewritten. Final acceptance and any next stage
 remain the user's decision; DATA-7B, MOS PWM, eight-level PAM, current integration, the LUT, the array,
 layout and any VM/Cadence/Spectre/OA work were not started.
+
+## Acceptance record, added after the documentation review
+
+The closeout review (`MicroLED_DATA7A_Documentation_Closeout_Review_20261021.zip`, sha256
+`40aabca89e201551d3512082a43ecb23ee0a8995bd545e057a2aac3483de8d59`) returned
+`DECISION_RECOMMENDATION=GO` with `PRIOR_CONDITIONAL_ITEMS=CLOSED_3_OF_3` and
+`FUNCTIONAL_REWORK_REQUIRED=NO`.
+
+```text
+ACCEPTED_VERSION   = f68449672774ac9266ba9e4893024e4f3027dd9d   (poc/data-gray-d7a-r4-doc, reviewed tip)
+accepted_as        = DATA-7A digital RTL control + verification-tool delivery, completion level
+                     RTL_LOGIC_VERIFIED
+functional_lineage = P4 c70039cb9764e00c9d780ad00a03d6c7ae9a2cb9 (payload) under T4 0bfe339…, unchanged
+main               = 23e471cb936b421ee97e1250c3be06edf96f9937   (NOT moved by this round)
+merged_into_main   = NO, deliberately
+```
+
+Why the acceptance is recorded without a merge: `merge-base(main, f684496)` is `23e471c` itself, so
+main is an ancestor of the reviewed commit and any merge of it would be a fast-forward in content —
+`--no-ff` would only add a merge commit. The consequence measured before acting was **77 commits and
+449 files**, which includes not only DATA-7A but the whole `scan R2A…R3A / S3-A / S3-B / S3-C /
+S3C1…S3C4` line and DATA-6 sitting in between. The scan S3-C work is recorded in its own reports as
+still open (`S3-C 仍 REWORK`, `VISUAL_REVIEW=WAITING_REVIEWER`), so merging now would promote
+unaccepted intermediate work into `main`. Squashing or cherry-picking would not narrow the content
+either — the reviewed tree already contains those files — and would only lose the reviewed SHA.
+
+Therefore this round registers the accepted version and leaves the integration decision open:
+
+* `poc/data-gray-d7a-r4-doc` keeps the reviewed content; this paragraph is the only change on top of
+  it, and the accepted SHA remains `f684496…` rather than the commit that records this sentence (a
+  commit cannot name itself — read it as the branch tip).
+* `main` stays where it is; nothing was forced, merged, tagged or GCed, and no other branch moved.
+* A merge into `main` still needs an explicit user decision, either after the scan S3-C line is
+  closed out or with eyes open that `main` would then represent the whole engineering line.
+* `NEXT_STAGE_AUTHORISED=NO` still holds: DATA-7B, MOS PWM, eight-level PAM, current integration, the
+  LUT, the array, layout and any VM/Cadence/Spectre/OA work were not started.
