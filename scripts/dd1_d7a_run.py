@@ -59,7 +59,7 @@ TOOL_URL = ('https://github.com/YosysHQ/oss-cad-suite-build/releases/download/20
 TOOL_SHA = 'b141f2523e265d8ca742f96760cb3c9260422194e28f6851741cf2ffce9bc943'
 TOOL_BYTES = 603893871
 
-TASK_REVISION = 'DATA-7A-R2'
+TASK_REVISION = 'DATA-7A-R3'
 
 MODE_PURE, MODE_HYBRID = ck.MODE_PURE, ck.MODE_HYBRID
 GROUPS = (('pure_t30', MODE_PURE, 3, 30), ('pure_t50', MODE_PURE, 5, 50),
@@ -533,6 +533,7 @@ def do_run(args):
                             for s in scen)]
     summary = {
         'run_id': run_id, 'groups': groups, 'compile_rc': crc,
+        'task_revision': TASK_REVISION,
         'main_rows': len(all_rows),
         'main_pass': len([r for r in all_rows if r['verdict'] == 'PASS']),
         'control_rows': len(ctl_rows),
@@ -1313,6 +1314,12 @@ def build_artefacts(run_dir):
 
 PENDING_MARKER = 'd7a_publish.pending'
 PUBLISH_BACKUP = os.path.join(PROJ, 'review', 'dd1_d7a', 'publish_backup')
+# The marker is the identity of a publish transaction. A reader has to be able to tell "no
+# transaction" from "transaction I cannot interpret", so the shape is written down and checked.
+MARKER_SCHEMA = 'd7a-publish/2'
+MARKER_PHASE = 'promoting'
+REQUIRED_MARKER_FIELDS = ('schema', 'phase', 'files', 'backup', 'previous', 'absent')
+SHA_RE = re.compile(r'^[0-9a-f]{64}$')
 
 
 def _fsync_write(path, data):
@@ -1325,78 +1332,210 @@ def _fsync_write(path, data):
         fp.close()
 
 
+def _record_path(path):
+    """how a backup directory names itself inside a marker: repo-relative whenever it can be"""
+    path = os.path.abspath(path)
+    try:
+        rel = os.path.relpath(path, PROJ)
+    except ValueError:                       # another drive on Windows: only an absolute name works
+        return path.replace('\\', '/')
+    if rel.startswith('..'):
+        return path.replace('\\', '/')
+    return rel.replace('\\', '/')
+
+
+def _resolve_recorded(rec):
+    """the absolute directory a marker's `backup` field points at"""
+    if os.path.isabs(rec):
+        return rec
+    return os.path.join(PROJ, rec.replace('/', os.sep))
+
+
+def _marker_error(rec):
+    """why this record cannot identify a transaction, or None when it can"""
+    if not isinstance(rec, dict):
+        return 'the marker is not a JSON object'
+    missing = sorted(k for k in REQUIRED_MARKER_FIELDS if k not in rec)
+    if missing:
+        return 'the marker lacks %s' % ', '.join(missing)
+    if rec['schema'] != MARKER_SCHEMA:
+        return 'the marker declares schema %r, this tool writes %r' % (rec['schema'], MARKER_SCHEMA)
+    if rec['phase'] != MARKER_PHASE:
+        return 'the marker records an unrecognised phase %r' % (rec['phase'],)
+    files, previous, absent = rec['files'], rec['previous'], rec['absent']
+    if not isinstance(files, list) or not files or \
+            not all(isinstance(n, _text) and n for n in files):
+        return 'the marker file list is not a non-empty list of names'
+    if files != sorted(files) or len(set(files)) != len(files):
+        return 'the marker file list is not sorted and unique'
+    if not isinstance(previous, dict) or not isinstance(absent, list):
+        return 'the marker previous/absent records have the wrong types'
+    if not all(isinstance(k, _text) and SHA_RE.match(str(v)) for k, v in sorted(previous.items())):
+        return 'the marker records a "previous" value that is not a sha256 hex string'
+    if not all(isinstance(n, _text) and n for n in absent):
+        return 'the marker absent list holds entries that are not names'
+    if set(previous) & set(absent):
+        return 'a target is recorded both as previously present and as previously absent'
+    if set(files) != set(previous) | set(absent):
+        return ('the marker names %d target(s) but records a prior state for %d present + %d absent'
+                % (len(files), len(previous), len(absent)))
+    if not isinstance(rec['backup'], _text) or not rec['backup']:
+        return 'the marker does not record where its own backup lives'
+    return None
+
+
 def pending_publish():
-    """the marker a promotion loop left behind, or None when no transaction is outstanding"""
+    """the outstanding publish transaction, or None when there is none
+
+    A marker that cannot identify a transaction is reported as an invalid one, never as an empty and
+    therefore already-satisfied transaction: the directory stays refused until the recorded bytes are
+    really back in place.
+    """
     p = os.path.join(EVIDENCE, PENDING_MARKER)
     if not os.path.exists(p):
         return None
     try:
-        return json.load(io.open(p, encoding='utf-8'))
-    except (ValueError, OSError, IOError):
-        return {'unreadable_marker': True}
+        rec = json.load(io.open(p, encoding='utf-8'))
+    except (ValueError, OSError, IOError) as exc:
+        return {'unreadable_marker': True,
+                'marker_invalid': 'it does not parse as JSON (%s)' % type(exc).__name__}
+    err = _marker_error(rec)
+    if err:
+        return {'unreadable_marker': True, 'marker_invalid': err}
+    return rec
 
 
 def publish(art, backup_dir=None, promote=None):
-    """stage every artefact, promote it atomically, and roll the whole set back on any caught failure
+    """stage every artefact, promote it atomically, and keep a readable transaction record
 
     Per-file replacement is atomic (`os.replace`), and that is the only atomicity a flat directory can
-    offer. The SET is kept consistent for every failure this process can catch: the bytes that were in
-    place before the first promotion are copied to `backup_dir` first, anything already promoted is
-    restored from that copy when a later step raises, no `.new` file and no marker survive, and the
-    caller still gets a non-zero exit. A SIGKILL or power loss between two promotions is NOT covered by
-    that rollback: the pending marker then stays on disk, `pending_publish()` reports the generation as
-    outstanding, and the same backup directory is what a later run restores from. Nothing here claims a
-    hardware transaction.
+    offer. The SET is kept consistent for every failure this process can catch. The stages and their
+    error boundaries are:
+
+      1. backup preparation -- the bytes that are in place are copied to `backup_dir` and each copy
+         is re-hashed against the file it came from;
+      2. marker write -- a record naming the target set, this transaction's own backup directory and
+         the prior state of every target (digest, or "did not exist"); it is validated before it is
+         written, so nothing is recorded that this tool could not later read back;
+      3. staging -- each new artefact is written as `<name>.new`;
+      4. promotion -- `<name>.new` is replaced over the target with `os.replace`;
+      5. verification and cleanup -- each target must hash to the staged bytes, then this
+         transaction's own `.new` files and the marker are removed.
+
+    A failure in 1..3 happens before the first promotion, so the published set is still intact and is
+    never touched; the staging files written so far and the marker are removed and the caller still
+    gets a non-zero exit. A failure in 4 or 5 rolls the whole set back from the backup, verifies every
+    file and then clears the marker; if the rollback or the marker cleanup itself fails, the marker and
+    the backup are KEPT and `pending_publish()` reports the transaction as outstanding, so no further
+    publish is accepted until `recover_publish()` has verified the whole set. Only this transaction's
+    own staging files are ever deleted.
+
+    A SIGKILL or power loss between two promotions is NOT covered by that rollback: the pending marker
+    then stays on disk and a later run restores from the backup the marker itself names. Nothing here
+    claims a hardware transaction.
 
     `promote` exists for the fault-injection regression: it replaces the promotion primitive.
     """
-    backup_dir = backup_dir or PUBLISH_BACKUP
     names = sorted(art)
+    if not names:
+        raise ck.Refuse('publish refused: there is nothing to publish')
+    stale = pending_publish()
+    if stale is not None:
+        raise ck.Refuse('publish refused: the previous publish is still outstanding (%s); its backup '
+                        'and marker are not overwritten and the evidence set is not treated as '
+                        'delivered' % (stale.get('marker_invalid') or
+                                       'recover it with recover_publish()'))
+    backup_dir = os.path.abspath(backup_dir or PUBLISH_BACKUP)
     if not os.path.isdir(EVIDENCE):
         os.makedirs(EVIDENCE)
-    if not os.path.isdir(backup_dir):
-        os.makedirs(backup_dir)
-    previous = {}
-    for name in names:
-        final = os.path.join(EVIDENCE, name)
-        if os.path.exists(final):
-            shutil.copyfile(final, os.path.join(backup_dir, name))
-            previous[name] = sha256(final)
-    _fsync_write(os.path.join(EVIDENCE, PENDING_MARKER),
-                 u(json.dumps({'phase': 'promoting', 'files': names,
-                               'backup': os.path.relpath(backup_dir, PROJ).replace('\\', '/'),
-                               'previous': previous}, sort_keys=True)).encode('utf-8'))
-    staged = {}
-    for name in names:
-        tmp = os.path.join(EVIDENCE, name + '.new')
-        _fsync_write(tmp, u(art[name]).encode('utf-8'))
-        staged[name] = tmp
+    marker = os.path.join(EVIDENCE, PENDING_MARKER)
+    previous, absent, staged = {}, [], []
+
+    def _discard_staging():
+        """remove exactly the staging files this transaction wrote, nothing else"""
+        left = []
+        for path in staged:
+            try:
+                if os.path.exists(path):
+                    os.remove(path)
+            except (OSError, IOError):
+                left.append(os.path.basename(path))
+        del staged[:]
+        return left
+
+    try:
+        if not os.path.isdir(backup_dir):
+            os.makedirs(backup_dir)
+        for name in names:
+            final = os.path.join(EVIDENCE, name)
+            if os.path.exists(final):
+                bak = os.path.join(backup_dir, name)
+                shutil.copyfile(final, bak)
+                want = sha256(final)
+                if sha256(bak) != want:
+                    raise ck.Refuse('the backup copy of %s does not match the file it was copied from'
+                                    % name)
+                previous[name] = want
+            else:
+                absent.append(name)          # a legal target that simply did not exist before
+        record = {'schema': MARKER_SCHEMA, 'phase': MARKER_PHASE, 'files': names,
+                  'backup': _record_path(backup_dir), 'previous': previous, 'absent': absent}
+        bad_record = _marker_error(record)
+        if bad_record:
+            raise ck.Refuse('refusing to write a marker this tool could not read back: %s'
+                            % bad_record)
+        _fsync_write(marker, u(json.dumps(record, sort_keys=True)).encode('utf-8'))
+        for name in names:
+            tmp = os.path.join(EVIDENCE, name + '.new')
+            _fsync_write(tmp, u(art[name]).encode('utf-8'))
+            staged.append(tmp)
+    except (Exception, SystemExit) as exc:                       # noqa: BLE001
+        detail = '%s: %s' % (type(exc).__name__, exc)
+        left = _discard_staging()
+        marker_kept = False
+        if os.path.exists(marker):
+            try:
+                os.remove(marker)
+            except (OSError, IOError):
+                marker_kept = True
+        raise ck.Refuse('publish stopped before the first promotion, the published set is untouched, '
+                        '%s%s; cause %s'
+                        % ('the marker stays so this transaction is still identifiable'
+                           if marker_kept else 'no marker survives',
+                           '; staging that could not be removed: %s' % left if left else '',
+                           detail))
+
     moved = []
     promote = promote or os.replace
 
     def _rollback():
         for name in names:
             final = os.path.join(EVIDENCE, name)
-            bak = os.path.join(backup_dir, name)
-            if name in previous and os.path.exists(bak):
+            if name in previous:
+                bak = os.path.join(backup_dir, name)
+                if not os.path.exists(bak):
+                    raise ck.Refuse("the rollback cannot restore %s: this transaction's backup copy "
+                                    'is gone' % name)
+                if sha256(bak) != previous[name]:
+                    raise ck.Refuse('the rollback cannot restore %s: its backup no longer holds the '
+                                    'recorded bytes' % name)
                 _fsync_write(final + '.restore', open(bak, 'rb').read())
                 os.replace(final + '.restore', final)
+                if sha256(final) != previous[name]:
+                    raise ck.Refuse('the rollback of %s did not restore the previous bytes' % name)
             elif os.path.exists(final):
                 os.remove(final)
-            try:
-                if sha256(final) != previous.get(name):
-                    raise ck.Refuse('the rollback of %s did not restore the previous bytes' % name)
-            except (OSError, IOError):
-                raise ck.Refuse('the rollback could not put %s back' % name)
+                if os.path.exists(final):
+                    raise ck.Refuse('the rollback could not put %s back to not-existing' % name)
+        _discard_staging()
         for name in names:
-            for junk in (os.path.join(EVIDENCE, name + '.new'),
-                         os.path.join(EVIDENCE, name + '.restore')):
-                if os.path.exists(junk):
-                    os.remove(junk)
+            junk = os.path.join(EVIDENCE, name + '.restore')
+            if os.path.exists(junk):
+                os.remove(junk)
 
     try:
         for name in names:
-            promote(staged[name], os.path.join(EVIDENCE, name))
+            promote(os.path.join(EVIDENCE, name + '.new'), os.path.join(EVIDENCE, name))
             moved.append(name)
         for name in names:
             want = hashlib.sha256(u(art[name]).encode('utf-8')).hexdigest()
@@ -1404,41 +1543,113 @@ def publish(art, backup_dir=None, promote=None):
             if got != want:
                 raise ck.Refuse('%s on disk does not match the bytes that were staged (%s vs %s)'
                                 % (name, got[:12], want[:12]))
-    except Exception as exc:
+    except (Exception, SystemExit) as exc:                       # noqa: BLE001
         detail = '%s: %s' % (type(exc).__name__, exc)
-        _rollback()
-        marker = os.path.join(EVIDENCE, PENDING_MARKER)
-        if os.path.exists(marker):
+        try:
+            _rollback()
+        except (Exception, SystemExit) as rexc:                  # noqa: BLE001
+            raise ck.Refuse('publish aborted after %d/%d promotion(s) and the ROLLBACK ITSELF FAILED: '
+                            '%s ; the published set is not restored, so the marker and the backup in '
+                            '%s are kept and every later publish stays refused until recover_publish() '
+                            'verifies the whole set; cause %s'
+                            % (len(moved), len(names), rexc, _record_path(backup_dir), detail))
+        try:
             os.remove(marker)
+        except (OSError, IOError) as mexc:
+            raise ck.Refuse('publish aborted after %d/%d promotion(s), the previous set is restored '
+                            'but the marker could not be removed (%s), so this transaction still counts '
+                            'as outstanding; cause %s' % (len(moved), len(names), mexc, detail))
         raise ck.Refuse('publish aborted after %d/%d promotion(s), the previous set is restored; '
                         'cause %s' % (len(moved), len(names), detail))
-    marker = os.path.join(EVIDENCE, PENDING_MARKER)
-    if os.path.exists(marker):
-        os.remove(marker)
+    _discard_staging()
+    try:
+        os.remove(marker)                  # the whole set is on disk and verified: transaction closed
+    except (OSError, IOError) as exc:
+        raise ck.Refuse('every artefact was published and verified but the marker could not be removed '
+                        '(%s), so this transaction still counts as outstanding' % exc)
     return names
 
 
 def recover_publish(backup_dir=None):
-    """restore the last complete generation when a marker shows an unfinished transaction"""
+    """restore the generation a pending marker identifies, from the backup that marker recorded
+
+    The marker is the transaction identity: the backup directory and the file set it names are what
+    gets used and verified, whether or not a caller happens to pass a directory -- a caller that
+    passes a different one is answered with a recorded mismatch rather than with a restore from the
+    wrong place. The marker is removed only after every target has been checked against the prior
+    state recorded before the transaction began (digest, or "did not exist"); anything else keeps the
+    marker, so the next run is refused too and nothing mixed is ever reported as delivered.
+    """
     state = pending_publish()
     if state is None:
         return {'needed': False}
-    backup_dir = backup_dir or PUBLISH_BACKUP
-    restored = []
-    for name, digest in sorted((state.get('previous') or {}).items()):
-        bak = os.path.join(backup_dir, name)
-        if os.path.exists(bak) and sha256(bak) == digest:
-            _fsync_write(os.path.join(EVIDENCE, name) + '.restore', open(bak, 'rb').read())
-            os.replace(os.path.join(EVIDENCE, name) + '.restore', os.path.join(EVIDENCE, name))
+    if state.get('marker_invalid'):
+        return {'needed': True, 'complete': False, 'restored': [], 'failed': [], 'targets': 0,
+                'phase': None, 'backup_used': None, 'marker_kept': True,
+                'reason': 'the pending marker cannot identify a transaction (%s); nothing was '
+                          'restored, the marker is kept and this evidence directory stays refused'
+                          % state['marker_invalid']}
+    recorded = _resolve_recorded(state['backup'])
+    names, previous, absent = state['files'], state['previous'], state['absent']
+    restored, failed = [], []
+    if backup_dir is not None and os.path.abspath(backup_dir) != recorded:
+        failed.append('the caller passed %s but this transaction recorded %s; the recorded location '
+                      'is the one that was used' % (_record_path(backup_dir), state['backup']))
+    for name in names:
+        final = os.path.join(EVIDENCE, name)
+        try:
+            if name in previous:
+                bak = os.path.join(recorded, name)
+                if not os.path.exists(bak):
+                    failed.append('%s: the backup this transaction recorded is missing' % name)
+                    continue
+                got = sha256(bak)
+                if got != previous[name]:
+                    failed.append('%s: its backup hashes to %s, the marker recorded %s'
+                                  % (name, got[:12], previous[name][:12]))
+                    continue
+                _fsync_write(final + '.restore', open(bak, 'rb').read())
+                os.replace(final + '.restore', final)
+                if sha256(final) != previous[name]:
+                    failed.append('%s: the bytes put back do not match the recorded digest' % name)
+                    continue
+            else:
+                if os.path.exists(final):
+                    os.remove(final)
+                if os.path.exists(final):
+                    failed.append('%s: still present, although this transaction recorded it as '
+                                  'absent' % name)
+                    continue
             restored.append(name)
-    marker = os.path.join(EVIDENCE, PENDING_MARKER)
-    if os.path.exists(marker):
-        os.remove(marker)
-    for name in os.listdir(EVIDENCE):
-        if name.endswith('.new') or name.endswith('.restore'):
-            os.remove(os.path.join(EVIDENCE, name))
-    return {'needed': True, 'restored': restored, 'phase': state.get('phase'),
-            'complete': len(restored) == len(state.get('previous') or {})}
+        except (OSError, IOError, ck.Refuse) as exc:
+            failed.append('%s: restoring it raised %s: %s' % (name, type(exc).__name__, exc))
+    for name in names:                       # only this transaction is allowed to clean up
+        for suffix in ('.new', '.restore'):
+            junk = os.path.join(EVIDENCE, name + suffix)
+            if not os.path.exists(junk):
+                continue
+            try:
+                os.remove(junk)
+            except (OSError, IOError):
+                failed.append('%s%s: a staging file of this transaction could not be deleted'
+                              % (name, suffix))
+    complete = not failed and len(restored) == len(names)
+    marker_kept = True
+    if complete:
+        try:
+            os.remove(os.path.join(EVIDENCE, PENDING_MARKER))
+            marker_kept = False
+        except (OSError, IOError) as exc:
+            failed.append('the whole set is restored but the marker could not be removed (%s)' % exc)
+            complete = False
+    out = {'needed': True, 'complete': complete, 'restored': restored, 'failed': failed,
+           'targets': len(names), 'phase': state['phase'], 'backup_used': _record_path(recorded),
+           'marker_recorded_backup': state['backup'], 'marker_kept': marker_kept}
+    if not complete:
+        out['reason'] = ('%d/%d target(s) verified and %d unresolved; the marker stays so no new '
+                         'transaction can be published over this one and the mixed content is not '
+                         'reported as delivered' % (len(restored), len(names), len(failed)))
+    return out
 
 
 def do_export(args):
@@ -1449,7 +1660,8 @@ def do_export(args):
         print('PENDING_PUBLISH_RECOVERED: %s' % json.dumps(rec, sort_keys=True))
         if rec.get('needed') and not rec.get('complete'):
             print('EXPORT_REFUSED: an earlier publish is still outstanding and its backup cannot '
-                  'restore the whole set; the evidence directory is not treated as delivered')
+                  'restore the whole set; the evidence directory is not treated as delivered (%s)'
+                  % rec.get('reason', 'see the record above'))
             return 1
     try:
         art = build_artefacts(run_dir)
@@ -1466,9 +1678,8 @@ def do_export(args):
         return 1
     print('exported %d files: %s' % (len(names), ', '.join(names)))
     print('PUBLISH_TRANSACTION: target_files=%d backup=%s marker=cleared guarantee=caught-failure '
-          'rollback (not kill/power-loss atomic)'
-          % (len(names), os.path.relpath(os.path.join(run_dir, 'publish_backup'), PROJ)
-             .replace('\\', '/')))
+          'rollback (not kill/power-loss atomic) marker_schema=%s'
+          % (len(names), _record_path(os.path.join(run_dir, 'publish_backup')), MARKER_SCHEMA))
     return 0
 
 def negative_rows(run_dir, mut):
@@ -1609,6 +1820,20 @@ def environment_json(run_dir, summary, mut, synth, identity=None, gates=None):
         'identity_verified': bool(identity),
         'source_digests_checked': sorted((identity or {}).keys()),
         'export_gates': gates or {},
+        # the traces are not re-simulated by an export: say whose bytes they are, so a reused run can
+        # never be read as a fresh simulation of this revision
+        'waveform_provenance': {
+            'run_id': os.path.basename(run_dir),
+            'produced_by_task_revision': summary.get('task_revision',
+                                                     'NOT_STAMPED_BY_THE_RUNNER_THAT_MADE_THIS_RUN'),
+            'exported_by_task_revision': TASK_REVISION,
+            'sources_that_produced_the_traces': dict(
+                (k, summary.get(k)) for k in ('rtl_sha256', 'tb_sha256', 'checker_sha256',
+                                              'reader_sha256')),
+            'simulations_started_by_this_export': 0,
+            'traces_rejudged_from_bytes_before_publish': True,
+            'trace_digests': dict((g['vcd'], g['vcd_sha256']) for g in summary['groups']),
+        },
         'supersedes': {'baseline_delivery': '6a1f5a192f3f1618499335c4365d717bfcadef39',
                        'previous_run_id': 'FINAL',
                        'reason': 'R1 review fixes: abort re-authorisation, configuration freshness, '
@@ -1802,7 +2027,7 @@ def guard_modes(fixture, cache_src, art, old_bytes):
         # the sampling stage sits behind a full re-judge, so it is exercised by calling the same
         # function the export calls, on a run copy whose main rows name a trace the sampler does not
         # use and whose control trace is absent: that is the state in which it has nothing to sample
-        d = cache_for('sample_extract_failure', private=()) 
+        d = cache_for('sample_extract_failure', private=())
         if os.path.exists(os.path.join(d, 'trace_control.vcd')):
             os.remove(os.path.join(d, 'trace_control.vcd'))
         rows = json.load(io.open(os.path.join(d, 'raw_main_rows.json'), encoding='utf-8'))
@@ -1838,6 +2063,74 @@ def guard_modes(fixture, cache_src, art, old_bytes):
             promote, seen = _promote_failing_at(min(at, len(names) - 1))
             publish(art2, backup_dir=backup, promote=promote)
         return _run
+
+    class Interrupted(BaseException):
+        """an interruption that the caught-failure rollback is not allowed to see"""
+
+    def _write_failing_mode(tag, pred, phase):
+        def _run():
+            art2 = dict((k, v + 'X\n') for k, v in sorted(art.items()))
+            backup = os.path.join(fixture, 'backup_' + tag)
+            _seed_evidence(ev, old_bytes)
+            original = _fsync_write
+
+            def fail(path, data):
+                if pred(path):
+                    raise OSError('INJECTED %s failure on %s' % (phase, os.path.basename(path)))
+                return original(path, data)
+            try:
+                globals()['_fsync_write'] = fail
+                publish(art2, backup_dir=backup)
+            finally:
+                globals()['_fsync_write'] = original
+        return _run
+
+    def _nth_staging_write(n):
+        """a predicate that answers true on the n-th .new this transaction tries to write"""
+        seen = []
+
+        def pred(path):
+            if not path.endswith('.new'):
+                return False
+            seen.append(os.path.basename(path))
+            return len(seen) == n
+        return pred
+
+    def m_recover_recorded_backup():
+        """the interrupted publish backed up into a non-default run directory, recovery gets no hint"""
+        art2 = dict((k, v + 'X\n') for k, v in sorted(art.items()))
+        backup = os.path.join(fixture, 'backup_recorded_marker')
+        _seed_evidence(ev, old_bytes)
+        before = _digest_set(ev)
+        calls = []
+
+        def promote(src, dst):
+            calls.append(os.path.basename(dst))
+            if len(calls) == 2:
+                raise Interrupted('INJECTED interruption between two promotions')
+            os.replace(src, dst)
+        try:
+            publish(art2, backup_dir=backup, promote=promote)
+        except Interrupted:
+            pass
+        if len(calls) != 2:
+            raise ck.Refuse('the injected interruption never reached the promotion boundary')
+        state = pending_publish()
+        if state is None or state.get('marker_invalid'):
+            raise ck.Refuse('the interrupted publish left no usable transaction marker behind')
+        rec = recover_publish()                      # exactly how do_export calls it: no argument
+        if rec.get('backup_used') != _record_path(backup):
+            raise ck.Refuse('recovery used %s instead of the %s recorded by the marker'
+                            % (rec.get('backup_used'), _record_path(backup)))
+        if not rec.get('complete'):
+            raise ck.Refuse('recovery from the recorded backup reported incomplete: %s'
+                            % json.dumps(rec, sort_keys=True)[:180])
+        after = _digest_set(ev)
+        if after != before:
+            raise ck.Refuse('recovery did not put the previous bytes back: %s'
+                            % sorted(k for k in before if before.get(k) != after.get(k)))
+        if pending_publish() is not None:
+            raise ck.Refuse('a completed recovery left its marker behind')
 
     def m_publish_ok():
         art2 = dict((k, v + 'NEWBYTES\n') for k, v in sorted(art.items()))
@@ -1930,6 +2223,19 @@ def guard_modes(fixture, cache_src, art, old_bytes):
         {'mode': 'publish_last_file_fails', 'expect': 'promotion(s), the previous set is restored',
          'inject': _publish_mode(10 ** 6), 'stage': 'the last promotion of the set',
          'rollback': True},
+        {'mode': 'publish_staging_write_fails', 'expect': 'publish stopped before the first promotion',
+         'inject': _write_failing_mode('staging', _nth_staging_write(2), 'staging write'),
+         'stage': 'a catchable failure while writing the second staging file: the published set is '
+                  'intact and neither the marker nor any .new of this transaction survives'},
+        {'mode': 'publish_marker_write_fails', 'expect': 'publish stopped before the first promotion',
+         'inject': _write_failing_mode('marker', lambda p: p.endswith(PENDING_MARKER), 'marker write'),
+         'stage': 'a catchable failure while recording the transaction itself: nothing is promoted and '
+                  'no half-written marker is left to be mistaken for an empty transaction'},
+        {'mode': 'recover_uses_marker_recorded_backup', 'expect': None,
+         'inject': m_recover_recorded_backup,
+         'stage': 'an interruption between two promotions whose backup lives in a non-default run '
+                  'directory: recovery with no argument must use the path the marker recorded and '
+                  'only clear it once every target verified'},
         {'mode': 'publish_success', 'expect': None, 'inject': m_publish_ok,
          'stage': 'the normal publish path still works end to end', 'writes': True},
     ]
@@ -2036,8 +2342,9 @@ def write_guard_report(run_dir):
     lines.append(u'')
     lines.append(u'per-mode detail (the refusal text that was actually produced):')
     for r in res:
-        lines.append(u'  %-26s expect=%-34s got=%s'
-                     % (r['mode'], str(r['expected_refusal'])[:34], r['detail'][:120]))
+        lines.append((u'  %-26s expect=%-34s got=%s'
+                      % (r['mode'], str(r['expected_refusal'])[:34],
+                         r['detail'][:120])).rstrip())
     lines.append(u'')
     ev = os.path.join(PROJ, 'review', 'dd1_d7a', 'write_guard_fixture', 'evidence')
     lines.append(u'per-file sha256 of the fixture evidence set after the last attempt:')
@@ -2050,8 +2357,12 @@ def write_guard_report(run_dir):
     lines.append(u'publish atomicity boundary: each file is replaced by os.replace (atomic per file);')
     lines.append(u'the SET is kept consistent for any failure the process can catch, by restoring the')
     lines.append(u'bytes backed up before the first promotion. A SIGKILL or power loss between two')
-    lines.append(u'promotions is not covered by that rollback: the pending marker then survives, is')
-    lines.append(u'reported by pending_publish(), and the same backup restores it.')
+    lines.append(u'promotions is not covered by that rollback: the pending marker then survives and it')
+    lines.append(u'names the backup directory of its own transaction, so recover_publish() restores')
+    lines.append(u'that set without being told where it is, clears the marker only after every target')
+    lines.append(u'has been verified, and keeps it -- refusing the next publish as well -- whenever a')
+    lines.append(u'backup is missing, hashes differently, cannot be written back, or the marker itself')
+    lines.append(u'cannot be read as a transaction record.')
     lines.append(u'')
     lines.append(u'WRITE_GUARD: %s' % ('PASS' if ok else 'FAIL'))
     return u'\n'.join(lines) + u'\n'
@@ -2114,8 +2425,9 @@ def entry_selftest():
     """the runner's own integrity gates, tested without a simulator, a netlist or the checker
 
     The checker selftest proves the waveform judgement. This proves the parts that decide whether a
-    result may be published at all: the statistics parse status, the gate that reads it, and the
-    multi-file publish rollback and success path.
+    result may be published at all: the statistics parse status, the gate that reads it, the multi-file
+    publish rollback and success path, and the publish transaction record -- the backup it names, the
+    prior state it carries, and what has to be verified before it may be closed.
     """
     global EVIDENCE
     lines, bad = [], [0]
@@ -2123,7 +2435,7 @@ def entry_selftest():
     def note(cond, name, detail):
         if not cond:
             bad[0] += 1
-        lines.append(u'%-4s entry %-38s %s' % ('PASS' if cond else 'FAIL', name, detail))
+        lines.append((u'%-4s entry %-38s %s' % ('PASS' if cond else 'FAIL', name, detail)).rstrip())
 
     odd_table = (u'3. Printing statistics.\n\n'
                  u'   146 cells:                       1099 wires, 21 processes\n'
@@ -2175,10 +2487,184 @@ def entry_selftest():
                      raised[:60] or 'ok')
                 note(not _leftovers(ev) and pending_publish() is None,
                      'a clean publish leaves no pending transaction behind', 'checked')
+
+        # ---- the transaction record: who it is, and what has to be true to close it ----
+        tx = os.path.join(scratch, 'transaction')
+        old_bytes = dict((n, u'TX_OLD %s\n' % n) for n in names)
+        new_bytes = dict((n, u'TX_NEW %s\n' % n) for n in names)
+
+        class Interrupted(BaseException):
+            """an interruption the caught-failure rollback is not allowed to see"""
+
+        def case(name):
+            """a fresh fixture with the previous generation in place, pointed at as the evidence dir"""
+            ev = os.path.join(tx, name)
+            _seed_evidence(ev, old_bytes)
+            return ev
+
+        def interrupt_at_second_promotion(ev, bak, after=False):
+            calls = []
+
+            def promote(src, dst):
+                calls.append(os.path.basename(dst))
+                os.replace(src, dst)
+                if len(calls) == (3 if after else 2):
+                    raise Interrupted('INJECTED interruption at the promotion boundary')
+            try:
+                publish(new_bytes, backup_dir=bak, promote=promote)
+            except Interrupted:
+                pass
+            return calls
+
+        good = {'schema': MARKER_SCHEMA, 'phase': MARKER_PHASE, 'files': names,
+                'backup': 'review/x', 'previous': dict((n, 'a' * 64) for n in names), 'absent': []}
+        note(_marker_error(good) is None, 'a complete transaction record validates',
+             'positive control for schema %s' % MARKER_SCHEMA)
+        note(_marker_error({'phase': MARKER_PHASE, 'files': names}) is not None,
+             'a record without schema/backup/prior state is unusable',
+             str(_marker_error({'phase': MARKER_PHASE, 'files': names}))[:70])
+        contradict = dict(good, absent=['dd1_d7a_negative.csv'])
+        note(_marker_error(contradict) is not None,
+             'a record whose file set contradicts its prior state is unusable',
+             str(_marker_error(contradict))[:70])
+
+        ev = case('recorded_backup')
+        EVIDENCE = ev
+        before = _digest_set(ev)
+        bak = os.path.join(tx, 'a_run_dir', 'publish_backup')
+        if len(interrupt_at_second_promotion(ev, bak)) != 2:
+            note(False, 'the injected interruption reached the promotion boundary', 'it did not')
+        state = pending_publish()
+        note(state is not None and not state.get('marker_invalid'),
+             'an interrupted publish leaves a readable transaction record',
+             str(state)[:70])
+        rec = recover_publish()                                 # no argument, exactly like do_export
+        note(rec.get('backup_used') == _record_path(bak) and rec.get('complete') is True,
+             'recovery with no argument uses the backup the marker names',
+             json.dumps(dict((k, rec[k]) for k in ('backup_used', 'complete', 'marker_kept')),
+                        sort_keys=True)[:90])
+        note(_digest_set(ev) == before, 'that recovery puts every previous byte back',
+             str(sorted(k for k in before if before.get(k) != _digest_set(ev).get(k)))[:70])
+        note(not _leftovers(ev) and pending_publish() is None,
+             'a completed recovery cleans up its own staging files', str(_leftovers(ev)))
+
+        ev = case('backup_missing')
+        EVIDENCE = ev
+        before = _digest_set(ev)
+        bak = os.path.join(tx, 'another_run', 'publish_backup')
+        interrupt_at_second_promotion(ev, bak)
+        os.remove(os.path.join(bak, names[0]))
+        first, second = recover_publish(), recover_publish()
+        note(first.get('complete') is False and second.get('complete') is False,
+             'an incomplete recovery stays incomplete on every retry',
+             'first=%s second=%s' % (first.get('complete'), second.get('complete')))
+        note(first.get('marker_kept') and second.get('marker_kept') and pending_publish() is not None,
+             'the failed recoveries keep the pending marker instead of hiding the transaction',
+             str(pending_publish())[:70])
+        refused = ''
+        try:
+            publish(new_bytes, backup_dir=os.path.join(tx, 'must_not_be_used'))
+        except ck.Refuse as exc:
+            refused = str(exc)[:70]
+        note(bool(refused), 'a new publish is refused while a transaction is outstanding', refused)
+        with io.open(os.path.join(bak, names[0]), 'w', encoding='utf-8', newline='\n') as fp:
+            fp.write(u(old_bytes[names[0]]))                    # the operator restores the backup
+        third = recover_publish()
+        note(third.get('complete') is True and pending_publish() is None,
+             'once the backup is whole the same transaction recovers and closes',
+             json.dumps(dict((k, third[k]) for k in ('complete', 'restored', 'marker_kept')),
+                        sort_keys=True)[:90])
+        note(_digest_set(ev) == before, 'the repaired recovery verified the whole set',
+             str(sorted(set(before) ^ set(_digest_set(ev))))[:70])
+
+        ev = case('corrupt_marker')
+        EVIDENCE = ev
+        with io.open(os.path.join(ev, names[0]), 'w', encoding='utf-8', newline='\n') as fp:
+            fp.write(u(new_bytes[names[0]]))                    # the mixed content a crash can leave
+        with io.open(os.path.join(ev, PENDING_MARKER), 'w', encoding='utf-8', newline='\n') as fp:
+            fp.write(u('{NOT_VALID_JSON'))
+        damaged = _digest_set(ev)
+        state = pending_publish()
+        rec = recover_publish()
+        note(bool(state.get('marker_invalid')), 'a corrupt marker is noticed, not read as empty',
+             str(state.get('marker_invalid'))[:70])
+        note(rec.get('complete') is False and rec.get('marker_kept') is True,
+             'a corrupt marker is never an already-completed recovery', str(rec)[:90])
+        note(os.path.exists(os.path.join(ev, PENDING_MARKER)) and _digest_set(ev) == damaged,
+             'the corrupt marker and the damaged set are both kept for the operator',
+             'leftovers=%s' % _leftovers(ev))
+
+        ev = case('bad_schema_marker')
+        EVIDENCE = ev
+        for text in (json.dumps({'phase': MARKER_PHASE, 'files': names}),
+                     json.dumps(dict(good, files='not-a-list')),
+                     json.dumps(dict(good, previous=dict((n, 'not-a-digest') for n in names))),
+                     json.dumps([])):
+            with io.open(os.path.join(ev, PENDING_MARKER), 'w', encoding='utf-8',
+                         newline='\n') as fp:
+                fp.write(u(text))
+            state = pending_publish()
+            rec = recover_publish()
+            if not (state.get('marker_invalid') and rec.get('complete') is False
+                    and rec.get('marker_kept') is True):
+                note(False, 'an incomplete or ill-typed marker is refused', text[:70])
+                break
+        else:
+            note(True, 'an incomplete or ill-typed marker is refused',
+                 '4 shapes: missing fields, wrong file type, wrong digest form, not an object')
+
+        ev = case('staging_write_fails')
+        EVIDENCE = ev
+        before = _digest_set(ev)
+        original, seen = _fsync_write, []
+
+        def fail_second_staging(path, data):
+            if path.endswith('.new'):
+                seen.append(os.path.basename(path))
+                if len(seen) == 2:
+                    raise OSError('INJECTED staging write failure')
+            return original(path, data)
+        raised = ''
+        try:
+            globals()['_fsync_write'] = fail_second_staging
+            publish(new_bytes, backup_dir=os.path.join(tx, 'staging_backup'))
+        except ck.Refuse as exc:
+            raised = str(exc)[:70]
+        finally:
+            globals()['_fsync_write'] = original
+        note(bool(raised), 'a catchable staging failure is refused, not left to escape', raised)
+        note(_digest_set(ev) == before and not _leftovers(ev) and pending_publish() is None,
+             'a staging failure cleans up this transaction and touches nothing else',
+             'extras=%s' % sorted(set(_digest_set(ev)) - set(before)))
+
+        ev = case('previously_absent_target')
+        os.remove(os.path.join(ev, names[-1]))                  # this one legitimately did not exist
+        EVIDENCE = ev
+        before = _digest_set(ev)
+        bak = os.path.join(tx, 'absent_backup')
+        # the interruption lands after the last promotion: the new file is really published
+        interrupt_at_second_promotion(ev, bak, after=True)
+        rec = recover_publish()
+        note(rec.get('complete') is True and pending_publish() is None,
+             'a target that did not exist before is restored to not-existing', str(rec)[:90])
+        note(_digest_set(ev) == before, 'the absent-target recovery verified every other file too',
+             str(sorted(set(_digest_set(ev)) ^ set(before)))[:70])
+
+        ev = case('foreign_staging_untouched')
+        EVIDENCE = ev
+        with io.open(os.path.join(ev, 'some_other_stage.csv.new'), 'w', encoding='utf-8',
+                     newline='\n') as fp:
+            fp.write(u('NOT A FILE OF THIS TRANSACTION\n'))
+        interrupt_at_second_promotion(ev, os.path.join(tx, 'foreign_backup'))
+        recover_publish()
+        note(os.path.exists(os.path.join(ev, 'some_other_stage.csv.new')),
+             'recovery cleans only its own transaction files, it never sweeps the directory',
+             str(_leftovers(ev)))
     finally:
         EVIDENCE = old_ev
-        if os.path.isdir(scratch):
-            shutil.rmtree(scratch)
+        for d in (scratch, tx):
+            if os.path.isdir(d):
+                shutil.rmtree(d)
     return bad[0], u'\n'.join(lines)
 
 

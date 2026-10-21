@@ -571,3 +571,128 @@ HANDOFF_STRUCTURE: PASS (fields only; evidence/remote truth NOT verified)   rc=0
 `objects_scan.result = FAIL` with the pre-existing blob named, and `scope_status = COMPLETE` is
 scoped in the same file to the digital-logic and verification-tool repair only. A schema PASS is a
 statement about fields, not about the silicon.
+
+---
+
+# DATA-7A-R3 — limited tool repair after the third independent review
+
+Task package: `MicroLED_DATA7A_R2_Review_and_R3_Task_20261021.zip`, sha256
+`e31cdfe918cfa54a8960f7d3e0b96c89b36ae4d5cb5e1a6ea7225491ff7cf444`; the review record inside it is
+`REVIEW_DATA7A_R2.md` (verdict REWORK, scope narrowed to two tool groups, the grey-scale circuit
+retained), the task book is kept byte-for-byte as `reports/tasks/DATA-7A-R3.md` (sha256
+`1e22f6ec768db0e812e62e5370b0f702e8a57ab22d8b32766bb08ec510f34e3a`). No chat history was available or
+assumed: the package, the named branch and the repository rules are the sources.
+
+## Remote read-back and branch
+
+```text
+poc/data-gray-d7a-r2 tip  git ls-remote (through this machine's existing system proxy):
+                                   01e078bbf545b9191539dc1c0de228a6d8e7749b
+                          gh api repos/.../git/refs/heads                       :
+                                   01e078bbf545b9191539dc1c0de228a6d8e7749b
+                          -> equals the reviewed T2 exactly; no unreviewed commit on that branch
+                          -> also read back, none moved: main 23e471cb…, poc/data-gray-d7a 6a1f5a19…,
+                             poc/data-gray-d7a-r1 0b64d1d…, poc/data-unit-1ch 7317675…
+transport note            bare `git ls-remote origin` fails here (connection reset to github.com:443,
+                          3 attempts) while api.github.com answers; the proxy was passed per command
+                          and no git configuration was written by this round
+new worktree              D:\ic617_d7a_r3, branch poc/data-gray-d7a-r3, created from the T2 SHA;
+                          the R1/R2 worktrees and every older branch were left where they were
+```
+
+## Reproduced against the reviewed bytes before changing anything
+
+The package snapshot `reviewer/repo/` was compared with the T2 worktree first: 33 files,
+byte-identical, none missing. Then both diagnostics ran in a fresh copy — **rc=0 there means the
+defect reproduced**, not that anything passed.
+
+| finding | local reproduction on T2 |
+|---|---|
+| A1 recorded backup ignored | `recover_publish()` with no argument after an interrupted publish: `complete=false, restored=[]`, one file still holding new bytes, **marker deleted**, second call `needed=false` |
+| A2 incomplete recovery clears the marker | one backup removed: two files restored, `complete=false`, marker gone, 1 new + 2 old left behind |
+| A3 corrupt marker read as complete | `{NOT_VALID_JSON` → `complete=true`, nothing restored over a mixed set, marker deleted |
+| A4 staging failure escapes | the second `.new` write raised `OSError` straight out of `publish()`; old bytes undamaged but `d7a_publish.pending` + one `.new` left behind |
+| B fractional truncation | `a_on_width_ns` 30→30.5 and `a_obs_tick_pulses` 257→257.5 in two digest-refreshed copies: the delivered re-checker answered `PASS (0 checks failed)`, rc=0, 53 checks |
+
+## What R3 changed
+
+```text
+A   the pending marker became the transaction record, schema d7a-publish/2: the sorted file set, the
+    backup directory this transaction wrote into, the digest of every file that existed before, and an
+    explicit absent list for targets that did not. publish() refuses to start while a transaction is
+    outstanding, validates its own record before writing it, keeps backup, marker and staging inside
+    the error boundary, and deletes exactly its own .new files. A caught failure before the first
+    promotion leaves the published set untouched and clears the record; a failure during or after
+    promotion rolls back, re-hashes every target against the recorded digest, and only then clears the
+    marker - if the rollback or that cleanup itself fails it says ROLLBACK ITSELF FAILED and keeps both,
+    so later runs are refused too. recover_publish() reads the backup path from the marker instead of a
+    global default, restores a previously-absent target by deleting it, treats an unreadable, ill-typed
+    or self-contradicting record as a refusal rather than an empty completed transaction, and no longer
+    sweeps other phases' *.new files. do_export() prints the recovery reason it refused on.
+B   the evidence re-checker stopped truncating before comparing. Discrete fields (case id, frame rate,
+    codes, ticks, expected/full intervals, segments, measured intervals, cfg versions, accepted-tick
+    pulses) must parse as integers; times parse through Decimal into whole picoseconds and are compared
+    as integers of ps (width == intervals x tick, end - t0 == full x tick, pulses == full + 1). Three
+    new checks (INTEGER_COUNTS, TIME_PICSECOND, SAMPLE_TIMES_EXACT) and eight new semantic selftest
+    cases: a legal 30.000 still passes, 30.5 and 257.5 do not. No threshold, tolerance or endpoint was
+    changed, and no expectation is re-derived from the CSV it audits.
+new tests  scripts/dd1_d7a_publish_test.py: 23 isolated-fixture cases - positive publish, first/middle/
+    last promotion failure, staging / marker / backup-preparation failure, a rollback that also fails,
+    the four T2 violations turned into positives, seven unusable-marker shapes, previously-absent
+    restore, foreign staging left alone, caller-vs-recorded backup disagreement, and two
+    BOUNDARY_DIAGNOSTIC calls of the real do_export() with the artefact builder stubbed. The
+    write-guard matrix grew 18 -> 21 modes with those stages added, and entry_selftest 11 -> 32
+    assertions.
+frozen  rtl/, tests/, scripts/dd1_d7a_check.py, scripts/dd1_d7a_trace.py, the contract, both shared
+    safety tools, the three earlier task books and the handoff validator are byte-identical to T2, and
+    so are the four measured evidence tables.
+```
+
+## R3 gate status, final (published from run_id `r2_20261021`, reused waveforms)
+
+| check | result |
+|---|---|
+| new simulation runs | **0** — `REUSED_RTL_RUN = r2_20261021`, six traces re-judged from their own bytes after the source-identity gate |
+| checker self-certification | PASS (frozen checker, unchanged bytes) |
+| runner entry selftest | PASS, 32 assertions |
+| publish / recovery regression | `PUBLISH_RECOVERY_TEST: PASS (23 cases, 0 failed checks)`, official evidence directory unchanged |
+| write and publish guard | `WRITE_GUARD: PASS (21 modes, 10 target files)` |
+| evidence re-check | `EVIDENCE_IDENTITY: PASS (0 checks failed)` over 56 checks |
+| evidence semantic selftest | `EVIDENCE_SELFTEST: PASS (15 cases)` |
+| reviewer diagnostics on the repaired tools | both `rc=1`: all four A violations false, both B corruptions refused |
+| same diagnostics on unmodified T2 | both `rc=0` (defects reproduce) — the starting state of this round |
+| main matrix | 1536/1536 PASS, 3072 instance observations, values identical to T2 byte for byte |
+| control matrix | 43 scenarios: 42 PASS + the one required refusal |
+| mixed-code rows | 6/6 PASS |
+| failure models | 16/16 refused: 14 functional with the fault observed first, 2 diagnostic |
+| synthesis (reused record) | entry rc=0, 151 cells, 21 async-reset registers, `stat_parse=parsed` |
+| safety rules / provenance / device count | PASS; shared tools byte-identical to T2 |
+| staged + history scans | PASS (the history scan also runs in the pre-push hook) |
+| objects scan | FAIL on the pre-existing unreachable blob `955497fb18ac`, unchanged and not worked around |
+
+Root causes, the T2 negatives, every command with its exit code, and the disclosure that the
+reviewer's numeric probe adds one `EVIDENCE_DIGEST` label of its own making, are in
+`reports/dd1_d7a_review_fix_r3.md`; the command transcript is
+`results/evidence/dd1_d7a_freeze_security.txt` (sha256
+`f6f703c570324856951e1f25fe6323a29b12fec537a12137b9c02b54d06c127b`).
+
+## R3 commit structure and remote read-back
+
+```text
+BRANCH             = poc/data-gray-d7a-r3                       (new, own branch, ordinary push)
+BASE (reviewed T2) = 01e078bbf545b9191539dc1c0de228a6d8e7749b   (read back twice, not moved)
+PAYLOAD_SHA (P3)   = the commit that carries the two repaired tools, the new regression script, the
+                     re-published evidence tables and the R3 report. It cannot name its own SHA, so
+                     it is stated here as "this commit" and read back below after the push.
+DELIVERY_SHA (D3)  = the next commit: this handoff MD plus reports/agent_handoffs/DATA-7A.json, and
+                     nothing else. No source, script, RTL, testbench or evidence table changes in it.
+remote read-back   two paths over the pushed branch - git ls-remote (proxy) and gh api - both quoted
+                     in the chat receipt and in the review bundle; if only one answers, parity is
+                     reported PARTIAL rather than assumed.
+transport          https through this machine's existing system proxy, passed per command; no force,
+                     no --no-verify, no merge, no branch moved, no visibility change, nothing GCed.
+```
+
+`STOP_REASON=AWAITING_INDEPENDENT_REVIEW`, `NEXT_STAGE_AUTHORISED=NO`. Final acceptance, merging and
+the next stage belong to the user; DATA-7B, MOS PWM, eight-level PAM, current integration, the LUT,
+the array, layout and any VM/Cadence/Spectre/OA work were not started.

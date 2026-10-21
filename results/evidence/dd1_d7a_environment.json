@@ -154,12 +154,33 @@
  },
  "synthesis": "clean",
  "task": "DATA-7A",
- "task_revision": "DATA-7A-R2",
+ "task_revision": "DATA-7A-R3",
  "toolchain_provenance": {
   "asset_bytes": 603893871,
   "installed_outside_repo": true,
   "path_label": "<tool-root>/bin (from D7A_TOOL_ROOT)",
   "sha256": "b141f2523e265d8ca742f96760cb3c9260422194e28f6851741cf2ffce9bc943",
   "url": "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-10-20/oss-cad-suite-windows-x64-20261020.tgz"
+ },
+ "waveform_provenance": {
+  "exported_by_task_revision": "DATA-7A-R3",
+  "produced_by_task_revision": "NOT_STAMPED_BY_THE_RUNNER_THAT_MADE_THIS_RUN",
+  "run_id": "r2_20261021",
+  "simulations_started_by_this_export": 0,
+  "sources_that_produced_the_traces": {
+   "checker_sha256": "4b5197948ec2852454ffc1b6dd207c8c21badaddec7ea6dd77a66e4e5a13b307",
+   "reader_sha256": "708c37027fb11d250b48d9ada55616c6591525e4dad339f00a33d1a63382696a",
+   "rtl_sha256": "6dbf464a49e49ad489188fa51920c30a3c89d6b3106046a4fefe558ef0a50c87",
+   "tb_sha256": "426f93275faa9fdac8271f01656c6c6afab0f812a46d07d618fe78d11fed9109"
+  },
+  "trace_digests": {
+   "trace_control.vcd": "429636aeaf6a134caa3c529d2f949eb04a0519c39766c610b172e58c20fa0626",
+   "trace_hyb_t120.vcd": "bcda5449581295238e173b5ced0e525b04edbcbbb855b04345d0ed8efa0cf1ba",
+   "trace_hyb_t200.vcd": "ae95eb781aa655dbbab3af45c2c1096216230920d33bdd0361a6d071be0ac673",
+   "trace_mixed.vcd": "3cffd67c1d4bce9db51e5c7289179e872f3095b8ffd15711e430770dc3d323b7",
+   "trace_pure_t30.vcd": "5e725e6a22b4b1e5eb4cf43161edfffe623bbd0fb53c6f30862e93c6eed3f3c9",
+   "trace_pure_t50.vcd": "776de50734bb2804fec410fd3ee15eedd95dde63d459e702e15ad271db0a2afa"
+  },
+  "traces_rejudged_from_bytes_before_publish": true
  }
 }

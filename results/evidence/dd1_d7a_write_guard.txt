@@ -1,13 +1,13 @@
 DATA-7A write guard matrix
 
 Every mode below gets its own clean copy of an exportable run and its own pre-seeded
-copy of the real evidence set -- 9 target files, the set derived from a clean build
+copy of the real evidence set -- 10 target files, the set derived from a clean build
 rather than typed -- so no mode can be stopped by the damage a previous mode did.
 A mode passes only when the refusal it claims is the refusal that happened, the whole
 file set is unchanged by name, content and absence, and no staging or marker file is
 left behind. The official evidence path is never the target of an attempt.
 
-target files seeded: dd1_d7a_cases.csv, dd1_d7a_checker_selftest.txt, dd1_d7a_control_cases.csv, dd1_d7a_edge_samples.csv, dd1_d7a_environment.json, dd1_d7a_freeze_security.txt, dd1_d7a_manifest.json, dd1_d7a_negative.csv, dd1_d7a_write_guard.txt
+target files seeded: dd1_d7a_cases.csv, dd1_d7a_checker_selftest.txt, dd1_d7a_control_cases.csv, dd1_d7a_edge_samples.csv, dd1_d7a_environment.json, dd1_d7a_freeze_security.txt, dd1_d7a_manifest.json, dd1_d7a_negative.csv, dd1_d7a_publish_test.txt, dd1_d7a_write_guard.txt
 
 mode                     outcome              reason-hit changed/added/missing  verdict
 dry_run_plan_only          completed_without_re yes        -/-/-                    PASS
@@ -27,16 +27,19 @@ synth_structure_problem    refused: Refuse      yes        -/-/-                
 publish_first_file_fails   refused: Refuse      yes        -/-/-                    PASS
 publish_middle_file_fails  refused: Refuse      yes        -/-/-                    PASS
 publish_last_file_fails    refused: Refuse      yes        -/-/-                    PASS
+publish_staging_write_fails refused: Refuse      yes        -/-/-                    PASS
+publish_marker_write_fails refused: Refuse      yes        -/-/-                    PASS
+recover_uses_marker_recorded_backup completed_without_re yes        -/-/-                    PASS
 publish_success            completed_without_re yes        dd1_d7a_cases.csv,dd1_d7a_checker_selftest.txt,dd1_d7a_control_cases.csv,dd1_d7a_edge_samples.csv,dd1_d7a_environment.json,dd1_d7a_manifest.json,dd1_d7a_negative.csv/-/- PASS
 
 per-mode detail (the refusal text that was actually produced):
   dry_run_plan_only          expect=None                               got=
-  empty_row_set              expect=refusing to render 0 rows          got=refusing to render 0 rows for D:\ic617_d7a_r2\review\dd1_d7a\write_guard_fixture\evidence\dd1_d7a_cases.csv: an empty re
+  empty_row_set              expect=refusing to render 0 rows          got=refusing to render 0 rows for D:\ic617_d7a_r3\review\dd1_d7a\write_guard_fixture\evidence\dd1_d7a_cases.csv: an empty re
   missing_run_dir            expect=is missing run_summary.json        got=the run directory is missing run_summary.json
-  compile_failure            expect=IVERILOG_FAILED                    got=compile refused: IVERILOG_FAILED rc=6: D:\ic617_d7a_r2\review\dd1_d7a\write_guard_fixture\run_compile_failure\broken.sv:
+  compile_failure            expect=IVERILOG_FAILED                    got=compile refused: IVERILOG_FAILED rc=6: D:\ic617_d7a_r3\review\dd1_d7a\write_guard_fixture\run_compile_failure\broken.sv:
   gates_not_met              expect=export gates failed                got=export gates failed: {"CONTROL_AND_ABORT": true, "MIXED": true, "MUTATION_DETECTION": false, "PURE_MATRIX": true, "STIMU
   missing_trace              expect=has no trace_pure_t30.vcd          got=the run directory has no trace_pure_t30.vcd: the trace behind these results is gone
-  corrupt_trace              expect=REVIEW                             got=no $enddefinitions in D:\ic617_d7a_r2\review\dd1_d7a\write_guard_fixture\run_corrupt_trace\trace_pure_t50.vcd: nothing w
+  corrupt_trace              expect=REVIEW                             got=no $enddefinitions in D:\ic617_d7a_r3\review\dd1_d7a\write_guard_fixture\run_corrupt_trace\trace_pure_t50.vcd: nothing w
   sample_extract_failure     expect=no edge samples could be extracted got=no edge samples could be extracted from these traces
   stale_cached_source        expect=produced by different sources      got=the cached run was produced by different sources, so its PASS counts cannot be re-stamped onto this checkout: checker_sh
   row_count_mismatch         expect=main rows are                      got=main rows are 1500, the summary says 1536, the matrix requires 1536
@@ -47,24 +50,32 @@ per-mode detail (the refusal text that was actually produced):
   publish_first_file_fails   expect=publish aborted after 0/           got=publish aborted after 0/7 promotion(s), the previous set is restored; cause OSError: INJECTED promotion failure on dd1_d
   publish_middle_file_fails  expect=promotion(s), the previous set is  got=publish aborted after 3/7 promotion(s), the previous set is restored; cause OSError: INJECTED promotion failure on dd1_d
   publish_last_file_fails    expect=promotion(s), the previous set is  got=publish aborted after 6/7 promotion(s), the previous set is restored; cause OSError: INJECTED promotion failure on dd1_d
+  publish_staging_write_fails expect=publish stopped before the first p got=publish stopped before the first promotion, the published set is untouched, no marker survives; cause OSError: INJECTED
+  publish_marker_write_fails expect=publish stopped before the first p got=publish stopped before the first promotion, the published set is untouched, no marker survives; cause OSError: INJECTED
+  recover_uses_marker_recorded_backup expect=None                               got=
   publish_success            expect=None                               got=
 
 per-file sha256 of the fixture evidence set after the last attempt:
   dd1_d7a_cases.csv                  b4ca49a34bf25d56887f5485eeea779e0ec400115332514eb6f89b5fb9b6ffa9
-  dd1_d7a_checker_selftest.txt       4c444af5b392e6da4e6b5bc212ee22f4cc6904db596f51cb8086599f531a5ee7
+  dd1_d7a_checker_selftest.txt       724ea04b219a3290dc29492cfae36d0c1264749736096c6d887b0df199d95797
   dd1_d7a_control_cases.csv          6e8e22400113b7ae3439310fdb517b724526924e17e2401724e5cf68f2c6bc47
   dd1_d7a_edge_samples.csv           2ef6d70ed55aceddd8296d2ea1dbbbeff6d3cb1220545dcce9c40f12204b5a8b
-  dd1_d7a_environment.json           67edf5f97e5b1fce50724771c0832134f5fcafb3bba30268e744682adf7732a7
-  dd1_d7a_freeze_security.txt        6beea277a7f5fae02169daf3027679ddc7f504fb11fe97ea745c721dc8647e9c
-  dd1_d7a_manifest.json              07de7adef38144f85311fffc1f5cf6cd7b829a67cf361b91a1fcd4cd0d9be1de
+  dd1_d7a_environment.json           64fa4e817beef1473fecf2f0e4a7dbe6f7986ea7415ea7eae0d1cad2a9316192
+  dd1_d7a_freeze_security.txt        d2a3a327eb5ac23b1addc6ad0df98f466fc9fc8a181a33a27c2971dd4b894330
+  dd1_d7a_manifest.json              40cb96dc9d7fbb301a9b2ef3e941577a5516edad50c5a0f245e14b9a951d5749
   dd1_d7a_negative.csv               3221a455ddd7f6cfb3d2e7bf9684709b2cf944cc14c153d045353d7e91081092
-  dd1_d7a_write_guard.txt            704fae7160e7a8efdbdb9f625d4f768d7b893c119727c875f6d2e7f50d521e9a
+  dd1_d7a_publish_test.txt           5e7c5d3aa4a8bc6c860028f67dd57f5cc7f2e2755014e26403385eb9c3c0a143
+  dd1_d7a_write_guard.txt            1bb120cac674224af656cd45bd3ba9d43cd1732eaeb86c0cc4b1837a992475b5
 
 state after the matrix: leftover staging/marker files = none
 publish atomicity boundary: each file is replaced by os.replace (atomic per file);
 the SET is kept consistent for any failure the process can catch, by restoring the
 bytes backed up before the first promotion. A SIGKILL or power loss between two
-promotions is not covered by that rollback: the pending marker then survives, is
-reported by pending_publish(), and the same backup restores it.
+promotions is not covered by that rollback: the pending marker then survives and it
+names the backup directory of its own transaction, so recover_publish() restores
+that set without being told where it is, clears the marker only after every target
+has been verified, and keeps it -- refusing the next publish as well -- whenever a
+backup is missing, hashes differently, cannot be written back, or the marker itself
+cannot be read as a transaction record.
 
 WRITE_GUARD: PASS

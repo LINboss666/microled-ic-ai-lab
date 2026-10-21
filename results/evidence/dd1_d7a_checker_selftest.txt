@@ -58,15 +58,36 @@ PASS write guard refuses empty row set      digest unchanged=True
 PASS write guard refuses ragged row         digest unchanged=True
 PASS write guard still writes when rows are complete official write path not blocked
 
-synthetic traces written under D:\ic617_d7a_r2\review
+synthetic traces written under D:\ic617_d7a_r3\review
 PASS entry unparsable statistics table is noticed UNPARSED_FORMAT: yosys printed a statistics table this parser does not
 PASS entry unparsed statistics fails the ENTRY, not just a note entry_rc=1 problems=1
 PASS entry the tool rc is still recorded separately yosys_rc=0
 PASS entry gate refuses the stale rc=0 / empty-problems pair the exact shape the old summary wrote
 PASS entry gate accepts a clean parsed record     positive control
 PASS entry gate refuses a declared problem        negative
-PASS entry publish with a mid-set failure raises  publish aborted after 1/3 promotion(s), the previous set is 
+PASS entry publish with a mid-set failure raises  publish aborted after 1/3 promotion(s), the previous set is
 PASS entry every previously published file kept its old bytes changed=[] missing=[]
 PASS entry no staging or marker file survives the rollback []
 PASS entry a clean publish puts the new bytes in place ok
 PASS entry a clean publish leaves no pending transaction behind checked
+PASS entry a complete transaction record validates positive control for schema d7a-publish/2
+PASS entry a record without schema/backup/prior state is unusable the marker lacks absent, backup, previous, schema
+PASS entry a record whose file set contradicts its prior state is unusable the marker names 3 target(s) but records a prior state for 3 present +
+PASS entry an interrupted publish leaves a readable transaction record {'absent': [], 'backup': 'review/dd1_d7a/entry_selftest_publish/transa
+PASS entry recovery with no argument uses the backup the marker names {"backup_used": "review/dd1_d7a/entry_selftest_publish/transaction/a_run_dir/publish_backu
+PASS entry that recovery puts every previous byte back []
+PASS entry a completed recovery cleans up its own staging files []
+PASS entry an incomplete recovery stays incomplete on every retry first=False second=False
+PASS entry the failed recoveries keep the pending marker instead of hiding the transaction {'absent': [], 'backup': 'review/dd1_d7a/entry_selftest_publish/transa
+PASS entry a new publish is refused while a transaction is outstanding publish refused: the previous publish is still outstanding (recover it
+PASS entry once the backup is whole the same transaction recovers and closes {"complete": true, "marker_kept": false, "restored": ["dd1_d7a_cases.csv", "dd1_d7a_contro
+PASS entry the repaired recovery verified the whole set []
+PASS entry a corrupt marker is noticed, not read as empty it does not parse as JSON (JSONDecodeError)
+PASS entry a corrupt marker is never an already-completed recovery {'needed': True, 'complete': False, 'restored': [], 'failed': [], 'targets': 0, 'phase': N
+PASS entry the corrupt marker and the damaged set are both kept for the operator leftovers=['d7a_publish.pending']
+PASS entry an incomplete or ill-typed marker is refused 4 shapes: missing fields, wrong file type, wrong digest form, not an object
+PASS entry a catchable staging failure is refused, not left to escape publish stopped before the first promotion, the published set is untou
+PASS entry a staging failure cleans up this transaction and touches nothing else extras=[]
+PASS entry a target that did not exist before is restored to not-existing {'needed': True, 'complete': True, 'restored': ['dd1_d7a_cases.csv', 'dd1_d7a_control_case
+PASS entry the absent-target recovery verified every other file too []
+PASS entry recovery cleans only its own transaction files, it never sweeps the directory ['some_other_stage.csv.new']

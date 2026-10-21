@@ -12,8 +12,14 @@ endpoint and accepted-tick count from mode + code + tick, checks that each contr
 executed and that an expected refusal failed for the reason it declares, and checks that a failure
 model filed as functional was actually seen to break the design.
 
+Counts and times are parsed as the two different kinds of quantity they are: a code, a segment count,
+a configuration version or an accepted-tick count has to be written as an integer, and a time is
+compared as an exact number of picoseconds (a fraction is a legal way to write a time, and 30.5 ns is
+a different time from 30 ns, so nothing is truncated before the comparison).
+
 `--selftest` runs the re-checker over isolated copies of the delivered evidence that are hash
-consistent but semantically wrong; each must be refused by the named check.
+consistent but semantically wrong; each must be refused by the named check, and a legal fractional
+representation of a correct time must still pass.
 
 A PASS here means the delivered evidence is internally consistent and traceable to the delivered
 source. It does not mean the circuit is correct -- that is the reviewer's judgement.
@@ -27,6 +33,7 @@ import math
 import os
 import re
 import sys
+from decimal import Decimal, InvalidOperation
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJ = os.path.dirname(HERE)
@@ -40,6 +47,57 @@ REQUIRED_EVIDENCE = ['dd1_d7a_cases.csv', 'dd1_d7a_control_cases.csv', 'dd1_d7a_
                      'dd1_d7a_environment.json', 'dd1_d7a_checker_selftest.txt',
                      'dd1_d7a_write_guard.txt']
 NUMERIC = re.compile(r'^-?\d+(\.\d+)?$')
+# Two different kinds of number arrive in these tables, and quietly turning one into the other is
+# exactly the mistake this file used to make: a count is an integer, while a time is an exact quantity
+# in a declared unit. `int(float("257.5"))` produced a legal-looking 257 boundary events and
+# `int(float("30.5"))` matched a 30 ns contract, so both are refused here rather than rounded into
+# agreement.
+INTEGER_RE = re.compile(r'^\d+$')                        # discrete: codes, segments, versions, pulses
+PS_RE = re.compile(r'^-?\d+(\.\d{1,3})?$')               # times: whole ns down to whole picoseconds
+PS_PER_NS = 1000
+COUNT_FIELDS = ('case_id', 'frame_hz', 'time_code', 'pam_code', 'tick_ns', 'exp_intervals',
+                'full_intervals', 'a_on_intervals_measured', 'b_on_intervals_measured',
+                'a_on_segments', 'b_on_segments', 'a_cfg_version', 'b_cfg_version',
+                'a_obs_tick_pulses', 'b_obs_tick_pulses')
+TIME_FIELDS = ('a_on_width_ns', 'b_on_width_ns', 'a_t0_ns', 'b_t0_ns', 'a_window_end_ns',
+               'b_window_end_ns')
+NUMERIC_FIELDS = list(COUNT_FIELDS) + list(TIME_FIELDS)
+
+
+def int_value(text):
+    """the integer a discrete field states, or None when the cell is not written as an integer"""
+    if text is None or not INTEGER_RE.match(text):
+        return None
+    return int(text)
+
+
+def ps_value(text):
+    """an exact time in picoseconds, or None when the cell is not a representable time
+
+    A fraction is a legal way to write a time -- the delivered checker reports picoseconds -- so this
+    accepts 30, 30.5 and 30.500 alike and refuses only a cell that is not a plain decimal, or one that
+    claims a fraction of a picosecond the measurement cannot carry. Refusing a *wrong* value is the
+    comparison's job, never the parser's.
+    """
+    if text is None or not PS_RE.match(text):
+        return None
+    try:
+        d = Decimal(text) * PS_PER_NS
+    except InvalidOperation:
+        return None
+    if d != d.to_integral_value():
+        return None
+    return int(d)
+
+
+def as_count(row, key):
+    return int_value(row.get(key, ''))
+
+
+def as_time(row, key):
+    return ps_value(row.get(key, ''))
+
+
 # The contract of reports/dd1_d7a_contract.md, restated here as data. It is deliberately NOT read
 # back out of the CSV columns it is used to check, and not derived from the RTL either: a verifier
 # that recomputes its expectations from the artefact it is auditing proves nothing.
@@ -50,7 +108,9 @@ CONTRACT_PAM_PURE = '7'                       # a symbol code in Pure mode, not 
 
 
 def contract_intervals(mode, code):
-    code = int(code)
+    code = int_value(code)
+    if code is None:
+        return None
     if mode == 'PURE':
         if code == 255:
             return 256
@@ -193,10 +253,7 @@ def main():
     # a code->interval statement must be recomputable from the row itself
     bad = []
     for r in rows:
-        for k in ('time_code', 'pam_code', 'tick_ns', 'exp_intervals', 'full_intervals',
-                  'a_on_intervals_measured', 'a_on_width_ns', 'a_on_segments', 'a_t0_ns',
-                  'b_on_intervals_measured', 'b_on_width_ns', 'b_on_segments', 'b_t0_ns',
-                  'a_cfg_version', 'b_cfg_version', 'a_obs_tick_pulses', 'b_obs_tick_pulses'):
+        for k in NUMERIC_FIELDS:
             v = r.get(k, '')
             if v == '' or not NUMERIC.match(v) or (float(v) != float(v)) or \
                     math.isinf(float(v)):
@@ -205,25 +262,53 @@ def main():
             break
     note(not bad, 'FINITE_FIELDS', 'every measured field parses as a finite number'
          + ('' if not bad else ' ; first %s' % bad[:3]))
+    # ... and a number is not yet the right *kind* of number: discrete quantities must be written as
+    # integers, times must land on a whole picosecond. 257.5 boundary events and 30.5005 ns fail here.
     bad = []
     for r in rows:
-        T = int(float(r['tick_ns']))
-        exp = int(float(r['exp_intervals']))
-        full = int(float(r['full_intervals']))
-        for pre in ('a_', 'b_'):
-            segs = int(float(r[pre + 'on_segments']))
-            width = int(float(r[pre + 'on_width_ns']))
-            meas = int(float(r[pre + 'on_intervals_measured']))
-            want_seg = 1 if exp else 0
-            if segs != want_seg or width != exp * T or meas != exp:
-                bad.append('%s%s exp=%d segs=%d width=%d meas=%d' % (r['case_id'], pre, exp,
-                                                                     segs, width, meas))
-            if int(float(r[pre + 'window_end_ns'])) - int(float(r[pre + 't0_ns'])) != full * T:
-                bad.append('%s%s window endpoint off' % (r['case_id'], pre))
+        for k in COUNT_FIELDS:
+            if as_count(r, k) is None:
+                bad.append('%s:%s=%r is not an integer count' % (r['case_id'], k, r.get(k, '')))
         if len(bad) > 5:
             break
-    note(not bad, 'WIDTH_RECOMPUTABLE', 'on-width == intervals x measured tick for both instances'
-         + ('' if not bad else ' ; %s' % bad[:2]))
+    note(not bad, 'INTEGER_COUNTS',
+         'codes, frame rates, segments, versions and accepted-tick counts are written as integers'
+         + ('' if not bad else ' ; first %s' % bad[:3]))
+    bad = []
+    for r in rows:
+        for k in TIME_FIELDS:
+            if as_time(r, k) is None:
+                bad.append('%s:%s=%r is not a time on a whole picosecond'
+                           % (r['case_id'], k, r.get(k, '')))
+        if len(bad) > 5:
+            break
+    note(not bad, 'TIME_PICSECOND', 'every time field parses as an exact picosecond value in ns; a '
+         'fraction is allowed, a truncated comparison is not'
+         + ('' if not bad else ' ; first %s' % bad[:3]))
+    bad = []
+    for r in rows:
+        T, exp, full = as_count(r, 'tick_ns'), as_count(r, 'exp_intervals'), as_count(r,
+                                                                                      'full_intervals')
+        if T is None or exp is None or full is None:
+            bad.append('%s tick/exp/full is not an integer count' % r['case_id'])
+            continue
+        for pre in ('a_', 'b_'):
+            segs = as_count(r, pre + 'on_segments')
+            width = as_time(r, pre + 'on_width_ns')
+            meas = as_count(r, pre + 'on_intervals_measured')
+            t0, end = as_time(r, pre + 't0_ns'), as_time(r, pre + 'window_end_ns')
+            want_seg = 1 if exp else 0
+            if segs != want_seg or width != exp * T * PS_PER_NS or meas != exp:
+                bad.append('%s%s exp=%d segs=%s width=%s meas=%s ns (want %d x %d ns)'
+                           % (r['case_id'], pre, exp, r[pre + 'on_segments'],
+                              r[pre + 'on_width_ns'], r[pre + 'on_intervals_measured'], exp, T))
+            if None in (t0, end) or end - t0 != full * T * PS_PER_NS:
+                bad.append('%s%s window endpoint %s-%s is not %d x %d ns'
+                           % (r['case_id'], pre, r[pre + 'window_end_ns'], r[pre + 't0_ns'], full, T))
+        if len(bad) > 5:
+            break
+    note(not bad, 'WIDTH_RECOMPUTABLE', 'on-width == intervals x measured tick for both instances, '
+         'compared in picoseconds' + ('' if not bad else ' ; %s' % bad[:2]))
     note(len(rows) * 2 == man['counts']['instance_observations'], 'INSTANCE_OBSERVATIONS',
          'rows x 2 = %d matches manifest %d' % (len(rows) * 2, man['counts']['instance_observations']))
     matches = len([r for r in rows if r['instances_match'] == 'PASS'])
@@ -250,38 +335,46 @@ def main():
          + ('' if not missing else ' ; e.g. %s' % (missing[:3],)))
 
     # 2c. intervals, full window, endpoints, accepted-tick counts and PAM recomputed from
-    #     mode + code + tick, never from the row's own exp_intervals claim
+    #     mode + code + tick, never from the row's own exp_intervals claim. Times are compared as whole
+    #     picoseconds and counts as integers, so a fractional cell contradicts the contract instead of
+    #     being truncated into agreement with it.
     bad = []
     for r in rows:
         exp = contract_intervals(r['mode'], r['time_code'])
         full = CONTRACT_FULL.get(r['mode'])
-        T = int(float(r['tick_ns']))
+        T = as_count(r, 'tick_ns')
         if exp is None or full is None:
             bad.append('%s is not a legal %s code %s' % (r['case_id'], r['mode'], r['time_code']))
             continue
-        if int(float(r['exp_intervals'])) != exp:
+        if T is None:
+            bad.append('%s tick_ns %s is not an integer number of ns' % (r['case_id'], r['tick_ns']))
+            continue
+        if as_count(r, 'exp_intervals') != exp:
             bad.append('%s says exp_intervals=%s, the contract says %d for code %s'
                        % (r['case_id'], r['exp_intervals'], exp, r['time_code']))
-        if int(float(r['full_intervals'])) != full:
+        if as_count(r, 'full_intervals') != full:
             bad.append('%s says full_intervals=%s, the contract says %d'
                        % (r['case_id'], r['full_intervals'], full))
         for pre in ('a_', 'b_'):
-            if int(float(r[pre + 'on_segments'])) != (1 if exp else 0):
+            if as_count(r, pre + 'on_segments') != (1 if exp else 0):
                 bad.append('%s%s shows %s segments for %d conducting intervals'
                            % (r['case_id'], pre, r[pre + 'on_segments'], exp))
-            if int(float(r[pre + 'on_width_ns'])) != exp * T:
+            if as_time(r, pre + 'on_width_ns') != exp * T * PS_PER_NS:
                 bad.append('%s%s width %s != %d x %d ns'
                            % (r['case_id'], pre, r[pre + 'on_width_ns'], exp, T))
-            if int(float(r[pre + 'on_intervals_measured'])) != exp:
+            if as_count(r, pre + 'on_intervals_measured') != exp:
                 bad.append('%s%s measured %s intervals, the contract says %d'
                            % (r['case_id'], pre, r[pre + 'on_intervals_measured'], exp))
-            if int(float(r[pre + 'window_end_ns'])) - int(float(r[pre + 't0_ns'])) != full * T:
-                bad.append('%s%s endpoint is not t0 + %d x %d ns' % (r['case_id'], pre, full, T))
-            if int(float(r[pre + 'obs_tick_pulses'])) != full + 1:
+            t0, end = as_time(r, pre + 't0_ns'), as_time(r, pre + 'window_end_ns')
+            if None in (t0, end) or end - t0 != full * T * PS_PER_NS:
+                bad.append('%s%s endpoint %s - %s is not t0 + %d x %d ns'
+                           % (r['case_id'], pre, r[pre + 'window_end_ns'], r[pre + 't0_ns'], full, T))
+            if as_count(r, pre + 'obs_tick_pulses') != full + 1:
                 bad.append('%s%s accepted %s ticks, the window needs %d boundary events'
                            % (r['case_id'], pre, r[pre + 'obs_tick_pulses'], full + 1))
+        pam = as_count(r, 'pam_code')
         if (r['mode'] == 'PURE' and r['pam_code'] != CONTRACT_PAM_PURE) or \
-                (r['mode'] == 'HYBRID' and not 0 <= int(float(r['pam_code'])) <= 7):
+                (r['mode'] == 'HYBRID' and (pam is None or not 0 <= pam <= 7)):
             bad.append('%s pam_code %s is not a legal %s select' % (r['case_id'], r['pam_code'],
                                                                     r['mode']))
         if len(bad) > 5:
@@ -291,9 +384,9 @@ def main():
          'mode+code+tick' + ('' if not bad else ' ; %s' % bad[:2]))
 
     # 3. black code and full-window behaviour must appear in the table at all
-    note(any(int(float(r['exp_intervals'])) == 0 for r in rows) and
-         any(int(float(r['exp_intervals'])) == 256 for r in rows) and
-         any(int(float(r['exp_intervals'])) == 64 for r in rows),
+    note(any(as_count(r, 'exp_intervals') == 0 for r in rows) and
+         any(as_count(r, 'exp_intervals') == 256 for r in rows) and
+         any(as_count(r, 'exp_intervals') == 64 for r in rows),
          'EDGE_CODES', 'the table contains code-0, Pure-full and Hybrid-full rows')
 
     # 4. control and negative tables
@@ -387,13 +480,19 @@ def main():
 
     # 5. edge samples must straddle their anchors, from the bytes alone
     smp = rows_of(os.path.join(EV, 'dd1_d7a_edge_samples.csv'))
-    by = {}
+    by, unread = {}, []
     for r in smp:
-        by.setdefault((r['case_id'], r['anchor'], r['signal']), []).append(int(float(r['relative_ns'])))
+        rel = ps_value(r.get('relative_ns', ''))
+        if rel is None:
+            unread.append('%s:%s relative_ns=%r' % (r['case_id'], r['anchor'], r.get('relative_ns')))
+            continue
+        by.setdefault((r['case_id'], r['anchor'], r['signal']), []).append(rel)
     bad = []
     for k, rels in sorted(by.items()):
         if not any(x < 0 for x in rels) or not any(x > 0 for x in rels) or len(rels) < 3:
             bad.append('%s' % (k,))
+    note(not unread, 'SAMPLE_TIMES_EXACT', '%d sample offsets are not exact picosecond times'
+         % len(unread) + ('' if not unread else ' ; %s' % unread[:3]))
     note(len(by) > 0 and not bad, 'SAMPLES_STRADDLE',
          '%d (case, anchor, signal) sample sets, all with points before and after the anchor'
          % len(by) + ('' if not bad else ' ; failing: %s' % bad[:3]))
@@ -496,14 +595,61 @@ def selftest():
         d = fresh('wrong_exp_intervals')
         fields, rows = _read_rows(os.path.join(d, 'dd1_d7a_cases.csv'))
         r = rows[5]
-        r['exp_intervals'] = str(int(float(r['exp_intervals'])) + 1)
+        r['exp_intervals'] = str(int_value(r['exp_intervals']) + 1)
         for pre in ('a_', 'b_'):
             r[pre + 'on_intervals_measured'] = r['exp_intervals']
-            r[pre + 'on_width_ns'] = str(int(float(r['exp_intervals'])) * int(float(r['tick_ns'])))
+            r[pre + 'on_width_ns'] = str(int_value(r['exp_intervals']) * int_value(r['tick_ns']))
         _retab(d, 'dd1_d7a_cases.csv', rows, fields)
         rc, got = run(d)
         cases.append(('wrong_exp_intervals_refused',
                       rc == 1 and 'CONTRACT_RECOMPUTED' in got, 'fails=%s' % got[:3]))
+
+        # --- the numeric kind gates: a fraction must contradict the contract, never be truncated
+        #     into agreement with it (the two corruptions the review reproduced, plus their neighbours)
+        def contract_row(rows):
+            for i, r in enumerate(rows):
+                if r['mode'] == 'PURE' and r['time_code'] == '1' and r['tick_ns'] == '30':
+                    return i
+            raise AssertionError('no PURE code-1 tick-30 row to corrupt')
+
+        def numeric_case(label, field, value, expect, forbidden=()):
+            d = fresh(label)
+            fields, rows = _read_rows(os.path.join(d, 'dd1_d7a_cases.csv'))
+            rows[contract_row(rows)][field] = value
+            _retab(d, 'dd1_d7a_cases.csv', rows, fields)
+            rc, got = run(d)
+            cases.append((label, rc == 1 and all(x in got for x in expect)
+                          and not any(x in got for x in forbidden),
+                          '%s=%s rc=%s hit=%s' % (field, value, rc, got[:3])))
+
+        numeric_case('fractional_width_refused', 'a_on_width_ns', '30.5',
+                     ('WIDTH_RECOMPUTABLE', 'CONTRACT_RECOMPUTED'),
+                     ('FINITE_FIELDS', 'INTEGER_COUNTS', 'TIME_PICSECOND'))
+        numeric_case('sub_picosecond_time_refused', 'a_on_width_ns', '30.5005',
+                     ('TIME_PICSECOND', 'WIDTH_RECOMPUTABLE', 'CONTRACT_RECOMPUTED'))
+        numeric_case('fractional_boundary_count_refused', 'a_obs_tick_pulses', '257.5',
+                     ('INTEGER_COUNTS', 'CONTRACT_RECOMPUTED'))
+        numeric_case('fractional_segments_refused', 'a_on_segments', '1.5',
+                     ('INTEGER_COUNTS', 'WIDTH_RECOMPUTABLE', 'CONTRACT_RECOMPUTED'))
+        numeric_case('fractional_tick_refused', 'tick_ns', '30.5',
+                     ('INTEGER_COUNTS',))
+        numeric_case('fractional_endpoint_refused', 'a_window_end_ns', '18545.5',
+                     ('WIDTH_RECOMPUTABLE', 'CONTRACT_RECOMPUTED'),
+                     ('INTEGER_COUNTS', 'TIME_PICSECOND'))
+        numeric_case('fractional_code_refused', 'time_code', '1.5',
+                     ('INTEGER_COUNTS', 'CONTRACT_RECOMPUTED'))
+
+        # ... while a time written as a fraction of the same value is a legal representation and must
+        # still pass: the gate is about the quantity, not about the presence of a decimal point.
+        d = fresh('legal_fractional_times')
+        fields, rows = _read_rows(os.path.join(d, 'dd1_d7a_cases.csv'))
+        r = rows[contract_row(rows)]
+        for f in ('a_on_width_ns', 'a_t0_ns', 'a_window_end_ns'):
+            r[f] = '%s.000' % r[f]
+        _retab(d, 'dd1_d7a_cases.csv', rows, fields)
+        rc, got = run(d)
+        cases.append(('legal_fractional_time_representation_passes', rc == 0 and not got,
+                      'rc=%s fails=%s' % (rc, got[:3])))
 
         d = fresh('missing_required_scenario')
         fields, rows = _read_rows(os.path.join(d, 'dd1_d7a_control_cases.csv'))

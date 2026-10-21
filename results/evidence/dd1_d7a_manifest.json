@@ -1,12 +1,12 @@
 {
  "artefact_bytes": {
   "dd1_d7a_cases.csv": 430093,
-  "dd1_d7a_checker_selftest.txt": 7570,
+  "dd1_d7a_checker_selftest.txt": 10067,
   "dd1_d7a_control_cases.csv": 17994,
   "dd1_d7a_edge_samples.csv": 196755,
-  "dd1_d7a_environment.json": 5016,
+  "dd1_d7a_environment.json": 6261,
   "dd1_d7a_negative.csv": 8771,
-  "dd1_d7a_write_guard.txt": 7171
+  "dd1_d7a_write_guard.txt": 8363
  },
  "counts": {
   "control_cases": 49,
@@ -21,9 +21,9 @@
    "sha256": "53e4c829d2cfdfb6cf34137ed06066067b646c2a2b146b3720a9ab9da5101995"
   },
   "dd1_d7a_checker_selftest.txt": {
-   "bytes": 7570,
+   "bytes": 10067,
    "origin": "the bytes this export is about to publish",
-   "sha256": "71a525e0429be522df58cef3b798ead241e12101d039beb826c6b71e20a379e9"
+   "sha256": "f4a57612fd65297d6e207fea878e653a0114b5b09d29dee44d147e8f2c363252"
   },
   "dd1_d7a_control_cases.csv": {
    "bytes": 17994,
@@ -36,19 +36,24 @@
    "sha256": "a6951c9f717fa5b4c5a7d41110dc9a076f96bc1a65452ede40c89d8e60de0ec3"
   },
   "dd1_d7a_environment.json": {
-   "bytes": 5016,
+   "bytes": 6261,
    "origin": "the bytes this export is about to publish",
-   "sha256": "987b3d649d10e72a7133b848fccf198025a7575854e5840a71ba47c03b01a170"
+   "sha256": "5878987e824b8dbb1e1de6ebd7598856f93f048c0e5d2a8a1b703e9fee7b9749"
   },
   "dd1_d7a_negative.csv": {
    "bytes": 8771,
    "origin": "the bytes this export is about to publish",
    "sha256": "7f39a30411386ae1ece922cc830ddc9ee3dbe618a3957f51f8a6b0d5e7dee90e"
   },
+  "dd1_d7a_publish_test.txt": {
+   "bytes": 7335,
+   "origin": "already in the evidence directory, not rewritten here",
+   "sha256": "5e7c5d3aa4a8bc6c860028f67dd57f5cc7f2e2755014e26403385eb9c3c0a143"
+  },
   "dd1_d7a_write_guard.txt": {
-   "bytes": 7171,
+   "bytes": 8363,
    "origin": "the bytes this export is about to publish",
-   "sha256": "3b2cd5e5c19dc92fb000cd03fef977d027bc652fd9cc3086c9d12024f193053b"
+   "sha256": "335c84a896fa90334b6941d5f679bfc41b14066e7ccd04e82a4f6a7f7b2fa2c1"
   }
  },
  "evidence_hashed_elsewhere": {
@@ -81,28 +86,28 @@
    "sha256": "09838a672e5e8f9e2bf04ee852007f41fe61b2f326477650ff6af8f4fd9539a7"
   },
   "chain_r2d.log": {
-   "bytes": 11,
-   "sha256": "be0c9e5e6f94bf74dd2d3a4072019ae8ec77a67bed741ed61e5d327b03ff229a"
+   "bytes": 60,
+   "sha256": "01d17e35e39609392e4cde0c02508818f2934f9cecd18145ec5723e82e2c6497"
   },
   "checker_selftest.txt": {
-   "bytes": 7570,
-   "sha256": "71a525e0429be522df58cef3b798ead241e12101d039beb826c6b71e20a379e9"
+   "bytes": 10067,
+   "sha256": "f4a57612fd65297d6e207fea878e653a0114b5b09d29dee44d147e8f2c363252"
   },
   "d7a.vvp": {
    "bytes": 187845,
    "sha256": "687094af18896532b1c96080d8e8357138bf836dc6071587ca3e476c803e5a6f"
   },
   "evidence_check.log": {
-   "bytes": 4914,
-   "sha256": "6d6f08035616774893782ba7b92bc5f9d1d7f37c47b6799518183319b95f0872"
+   "bytes": 4740,
+   "sha256": "249c8ee9a24843bc1c325d5c9beb3faa90e64275205f18ce94d76185706dd05e"
   },
   "evidence_selftest.log": {
-   "bytes": 967,
-   "sha256": "b2662f0ad2a3623ce370a118a5fb693639c11bf6dacb92f2664541b3e351e4f0"
+   "bytes": 1800,
+   "sha256": "d6437f90a6eddbb0ecdc10ed9d7698391f673d2056d06e1073afe579420bb371"
   },
   "export.log": {
-   "bytes": 0,
-   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+   "bytes": 1655,
+   "sha256": "793f0cac3ba442a17ecc57f4ada30948eb40262053c1e504d1c4096598ae7773"
   },
   "mutants.json": {
    "bytes": 10159,
@@ -151,6 +156,10 @@
   "synth_summary.json": {
    "bytes": 713,
    "sha256": "faefd1ffb034ff999641d914a1b19708ef91a7a008492e89e224431a688f9cbb"
+  },
+  "transcript_build.log": {
+   "bytes": 7231,
+   "sha256": "c2228472b3352f4dcd9b4f6d7b0db08d32147065649990aebc5ce5a6bbf79cd2"
   },
   "vectors_control.txt": {
    "bytes": 1528,
@@ -205,8 +214,8 @@
    "sha256": "c09ea6a14c8ff2762999c4f266a8830648695cd21df55338c8100246877db92d"
   },
   "write_guard.txt": {
-   "bytes": 10431,
-   "sha256": "3e4bd3a2ef5670b1bd0d2d260a353066eae9f1a2a8e53cc396ae6084111bb724"
+   "bytes": 12502,
+   "sha256": "b181cb7579d429505a5447f1506aa7bca55cb9eda5bf2723f8fc8ab339feb874"
   },
   "yosys_structure.log": {
    "bytes": 19443,
@@ -218,12 +227,12 @@
   "reports/dd1_d7a_contract.md": "37f55cb9f0783e2f184ad360f69ee07526f1aba5d39f6698388826b3b8652284",
   "rtl/dd1_d7a_gray_ctrl.sv": "6dbf464a49e49ad489188fa51920c30a3c89d6b3106046a4fefe558ef0a50c87",
   "scripts/dd1_d7a_check.py": "4b5197948ec2852454ffc1b6dd207c8c21badaddec7ea6dd77a66e4e5a13b307",
-  "scripts/dd1_d7a_run.py": "19a13810e02ff803551acc73fdcc2f06b7ab5b910cb9bf77c81c2b86f4c9756a",
+  "scripts/dd1_d7a_run.py": "f868f763104b16637f959b2902b5a7bcb63b261dc8333c32052021673f8a039b",
   "scripts/dd1_d7a_trace.py": "708c37027fb11d250b48d9ada55616c6591525e4dad339f00a33d1a63382696a",
   "tests/dd1_d7a/tb_dd1_d7a_gray.sv": "426f93275faa9fdac8271f01656c6c6afab0f812a46d07d618fe78d11fed9109"
  },
  "task": "DATA-7A",
- "task_revision": "DATA-7A-R2",
+ "task_revision": "DATA-7A-R3",
  "trace_digests": {
   "trace_control.vcd": "429636aeaf6a134caa3c529d2f949eb04a0519c39766c610b172e58c20fa0626",
   "trace_hyb_t120.vcd": "bcda5449581295238e173b5ced0e525b04edbcbbb855b04345d0ed8efa0cf1ba",
