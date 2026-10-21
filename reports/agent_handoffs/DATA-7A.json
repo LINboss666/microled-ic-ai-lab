@@ -1,7 +1,7 @@
 {
- "base_sha": "01e078bbf545b9191539dc1c0de228a6d8e7749b",
- "base_sha_semantics": "reviewed R2 tip T2 that this repair round is fixed on; read back from the remote over both the Git protocol (through this machine's existing system proxy) and the GitHub API before anything was written",
- "branch": "poc/data-gray-d7a-r3",
+ "base_sha": "33cd863093961d571aca3bd726beea32cb50ecfd",
+ "base_sha_semantics": "reviewed R3 tip T3 that this repair round is fixed on; read back from the remote over both the Git protocol (through this machine's existing system proxy) and the GitHub API before anything was written",
+ "branch": "poc/data-gray-d7a-r4",
  "circuit_changed": false,
  "completion_level": "RTL_LOGIC_VERIFIED",
  "counts": {
@@ -15,6 +15,7 @@
   "evidence_identity_failures": 0,
   "evidence_semantic_selftest_cases": 15,
   "evidence_semantic_selftest_failures": 0,
+  "frozen_files_checked_vs_T3": 13,
   "instance_observations": 3072,
   "main_cases": 1536,
   "main_pass": 1536,
@@ -29,26 +30,27 @@
   "negative_table_detected_rows": 17,
   "negative_table_rows": 17,
   "new_rtl_simulations": 0,
-  "payload_files_vs_T2": 13,
-  "publish_recovery_cases": 23,
+  "numeric_rechecker_files_changed": 0,
+  "payload_files_vs_T3": 13,
+  "publish_recovery_cases": 26,
   "publish_recovery_failed_checks": 0,
   "synth_async_reset_registers": 21,
   "synth_cells": 151,
-  "tool_scripts_changed_vs_T2": 2,
-  "write_guard_modes": 21,
-  "write_guard_modes_passed": 21,
+  "tool_files_changed_vs_T3": 2,
+  "write_guard_modes": 22,
+  "write_guard_modes_passed": 22,
   "write_guard_target_files": 10
  },
  "data6_baseline_sha": "731767519d1a51287eb5b7f4a6e4f9b8e613e990",
  "evidence_digests": {
   "dd1_d7a_cases.csv": "53e4c829d2cfdfb6cf34137ed06066067b646c2a2b146b3720a9ab9da5101995",
-  "dd1_d7a_checker_selftest.txt": "f4a57612fd65297d6e207fea878e653a0114b5b09d29dee44d147e8f2c363252",
+  "dd1_d7a_checker_selftest.txt": "41b8f6e0fa7b51860ebfa5553e8d53e99ac9a0f8e3475a2ead6ccfed10fa7771",
   "dd1_d7a_control_cases.csv": "08b04d55c57dd09fb66c6143bfcd2d914c3e9119a83682ba67eb1a45e5041888",
   "dd1_d7a_edge_samples.csv": "a6951c9f717fa5b4c5a7d41110dc9a076f96bc1a65452ede40c89d8e60de0ec3",
-  "dd1_d7a_environment.json": "5878987e824b8dbb1e1de6ebd7598856f93f048c0e5d2a8a1b703e9fee7b9749",
+  "dd1_d7a_environment.json": "1fbde1921fb94b1cff08c107f656f8410b9dfdadeec04eb06bfbef16e1a2bf1b",
   "dd1_d7a_negative.csv": "7f39a30411386ae1ece922cc830ddc9ee3dbe618a3957f51f8a6b0d5e7dee90e",
-  "dd1_d7a_publish_test.txt": "5e7c5d3aa4a8bc6c860028f67dd57f5cc7f2e2755014e26403385eb9c3c0a143",
-  "dd1_d7a_write_guard.txt": "335c84a896fa90334b6941d5f679bfc41b14066e7ccd04e82a4f6a7f7b2fa2c1"
+  "dd1_d7a_publish_test.txt": "66544963d5187afd2caba00c2feea4f5e2eea0b8878e95b71bb79e6c84dad096",
+  "dd1_d7a_write_guard.txt": "1cde5ea616d6418bac949014b9a1278e993390d68e0fde20908657590d0c52f9"
  },
  "evidence_paths": [
   "reports/agent_handoffs/DATA-7A.md",
@@ -56,10 +58,12 @@
   "reports/dd1_d7a_review_fix.md",
   "reports/dd1_d7a_review_fix_r2.md",
   "reports/dd1_d7a_review_fix_r3.md",
+  "reports/dd1_d7a_review_fix_r4.md",
   "reports/dd1_d7a_rtl.md",
   "reports/tasks/DATA-7A-R1.md",
   "reports/tasks/DATA-7A-R2.md",
   "reports/tasks/DATA-7A-R3.md",
+  "reports/tasks/DATA-7A-R4.md",
   "reports/tasks/DATA-7A.md",
   "results/evidence/dd1_d7a_cases.csv",
   "results/evidence/dd1_d7a_checker_selftest.txt",
@@ -89,11 +93,11 @@
   "SYNTHESIS_STRUCTURE": true,
   "XPROBE_REFUSED": true
  },
- "freeze_transcript_sha256": "f6f703c570324856951e1f25fe6323a29b12fec537a12137b9c02b54d06c127b",
- "head_sha": "88e7a740cb7107bba93816beb452dc42a8a10b4b",
- "head_sha_semantics": "payload_commit: the commit carrying the two repaired verification tools, the new publish/recover regression, the re-published evidence tables and the R3 report. The commit that stores this JSON is the later metadata commit and is deliberately not named inside it.",
+ "freeze_transcript_sha256": "9476bbed6ed1837059cb37cfb14dcb7ec23fb2bdd7d2a89b9cc3aacba4e73664",
+ "head_sha": "c70039cb9764e00c9d780ad00a03d6c7ae9a2cb9",
+ "head_sha_semantics": "payload_commit: the commit carrying the repaired publish cleanup path, the extended publish/recover regression, the R4 report, the R4 task-book copy and the re-published evidence records. The commit that stores this JSON is the later metadata commit and is deliberately not named inside it.",
  "history_scan": {
-  "objects_checked": 1367,
+  "objects_checked": 1369,
   "result": "PASS",
   "tracked_credential_files": 0,
   "tracked_pdk_files": 0,
@@ -102,7 +106,8 @@
  },
  "known_limitations": [
   "The full VCD traces stay local (2 MB to 38 MB each, .vcd is not whitelisted); only their sha256, the small derived tables and the sample rows are committed, so a reviewer must re-run the chain to see waveforms.",
-  "R3 re-published the evidence from the frozen R2 run r2_20261021; no new simulation was started. A reviewer who wants fresh waveforms must re-run --run-rtl, and the export refuses a cached run whose RTL/TB/checker/reader digests differ.",
+  "R4 re-published the evidence from the frozen R2 run r2_20261021; no new simulation was started. A reviewer who wants fresh waveforms must re-run --run-rtl, and the export refuses a cached run whose RTL/TB/checker/reader digests differ. The two entry cases that call do_export() stub the artefact builder and are labelled BOUNDARY_DIAGNOSTIC: they cover the recovery gate only, never a build or an export PASS.",
+  "The cleanup repairs are exercised against injected faults in private fixtures. A real disk that refuses deletion (a full volume, a locked handle) is not reproduced here, and the guarantee stays: the transaction record survives an unfinished cleanup, so nothing is lost rather than recovered.",
   "The publish/recover guarantees stay what the tool can actually deliver: a caught-failure rollback plus a marker a later process can use. Multi-file power-loss atomicity is not claimed, and the two BOUNDARY_DIAGNOSTIC cases that call do_export() stub the artefact builder, so they cover the entry gate only, never a build.",
   "The numeric gates protect the delivered tables from a wrong value; they do not make the measurement itself more accurate, and no threshold, tolerance or endpoint was changed.",
   "pam_sel is a code. In Pure mode 7 is a symbol, not 15 uA; the eight current levels, trimming and the reference relationship remain NOT_RUN.",
@@ -111,27 +116,34 @@
   "This validator and this JSON prove field structure only. They do not verify remote truth, circuit behaviour, or that any recorded number is physically correct."
  ],
  "next_stage_authorised": "NO",
+ "numeric_rechecker_changed": false,
  "objects_scan": {
   "action_taken": "reported as found: no garbage collection, no content printed, no rule relaxed, no history rewritten",
   "item": "pre-existing unreachable blob 955497fb18ac, 3,583,407 bytes, pack date 2026-10-14, not created by this round and not reachable from any ref",
   "result": "FAIL"
  },
- "previous_reviewed_tip_sha": "01e078bbf545b9191539dc1c0de228a6d8e7749b",
+ "previous_reviewed_tip_sha": "33cd863093961d571aca3bd726beea32cb50ecfd",
+ "prior_review_package_sha256_erratum": {
+  "handling": "annotated with an explicit erratum instead of being silently rewritten; the byte-for-byte task-book copy was verified against the file inside the archive, not against this string",
+  "measured": "e31cdfe918cfa54a8960f7d3e0b96c89b36ae4d5cb5e1a6ea7225491ff7cf44e",
+  "stated_at_T3": "e31cdfe918cfa54a8960f7d3e0b96c89b36ae4d5cb5e1a6ea7225491ff7cf444",
+  "where": "reports/dd1_d7a_review_fix_r3.md first paragraph, reports/agent_handoffs/DATA-7A.md R3 section and review_package_sha256 in the T3 delivery JSON"
+ },
  "project_id": "microled-ic-ai-lab",
  "push_status": "REMOTE_VERIFIED",
  "push_status_scope": "read-back of the payload commit above, taken before these bytes were written; it is never a claim about the commit that stores this file",
  "remote_readback": {
   "forced": false,
-  "method_1": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin refs/heads/poc/data-gray-d7a-r2 (direct transport without the flag fails on this machine: connection reset)",
+  "method_1": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin refs/heads/poc/data-gray-d7a-r3 (direct transport without the flag fails on this machine: connection reset)",
   "method_2": "gh api repos/LINboss666/microled-ic-ai-lab/git/refs/heads",
   "parity": "PASS",
   "protected_branch_touched": false,
   "push_attempts": 1,
-  "sha_1": "88e7a740cb7107bba93816beb452dc42a8a10b4b",
-  "sha_2": "88e7a740cb7107bba93816beb452dc42a8a10b4b",
+  "sha_1": "c70039cb9764e00c9d780ad00a03d6c7ae9a2cb9",
+  "sha_2": "c70039cb9764e00c9d780ad00a03d6c7ae9a2cb9",
   "transport_used_for_push": "https through this machine's existing system proxy (127.0.0.1:7892), passed per command; no git config written"
  },
- "repair_scope": "A: publish/recover transaction identity (the marker's own backup, refusal on unreadable records, staging cleanup, refusal to start a new transaction while one is outstanding). B: evidence numeric kinds (integer counts, exact picosecond times, no truncation before comparison). Nothing else changed.",
+ "repair_scope": "publish cleanup finalisation only: a staging file that already has bytes on disk is registered as this transaction's own file and is cleaned; a cleanup that cannot finish keeps the marker and the backup and is reported as NOT closed, with the content rollback judged apart from the transaction closing; lifting the fault lets the same transaction recover and a later publish succeed. The numeric re-checker was NOT touched this round.",
  "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
  "reserved_statuses": {
   "COMPLETION_LEVEL": "RTL_LOGIC_VERIFIED",
@@ -146,21 +158,21 @@
   "PWM_MOS_IMPLEMENTATION": "NOT_RUN",
   "SOA_SIGNOFF": "NO"
  },
- "review_package_sha256": "e31cdfe918cfa54a8960f7d3e0b96c89b36ae4d5cb5e1a6ea7225491ff7cf444",
- "reviewed_handoff_sha": "ff477ae7996a6efe74bdd60d971443810daf485d",
- "reviewed_payload_sha": "e151ebca59bc60df5e6e4d16fd6907e9787ded0a",
- "reviewed_task_id": "DATA-7A-R2",
+ "review_package_sha256": "5caaf213533f6e6d204d5d752c531ccbb549d3a008d817e421a42c1d7eefbcc7",
+ "reviewed_handoff_sha": "33cd863093961d571aca3bd726beea32cb50ecfd",
+ "reviewed_payload_sha": "88e7a740cb7107bba93816beb452dc42a8a10b4b",
+ "reviewed_task_id": "DATA-7A-R3",
  "run_id": "r2_20261021",
  "schema_version": "1.0",
  "scope_status": "COMPLETE",
- "scope_status_meaning": "the DATA-7A-R3 tool repair only: both review items were repaired and re-measured inside the stated scope, with the circuit and waveform tools frozen byte-for-byte. It does not mean the PWM MOS circuit, the eight PAM current levels, the LUT, the current integration, the array, the optics or the layout are done, and the objects-scan item below is recorded as FAIL.",
+ "scope_status_meaning": "the DATA-7A-R4 tool repair only: the one review item of this round was repaired and re-measured inside the stated scope, with the circuit, the waveform tools and the numeric re-checker frozen byte-for-byte. It does not mean the PWM MOS circuit, the eight PAM current levels, the LUT, the current integration, the array, the optics or the layout are done, and the objects-scan item below is recorded as FAIL.",
  "security_gate": "PASS",
  "security_gate_scope": "staged scan at commit time plus the full-history scan in the pre-push hook, both over this branch. The separate --mode objects scan still fails on one pre-existing unreachable blob and that result is stated below rather than folded into this field.",
  "source_digests": {
   "reports/dd1_d7a_contract.md": "37f55cb9f0783e2f184ad360f69ee07526f1aba5d39f6698388826b3b8652284",
   "rtl/dd1_d7a_gray_ctrl.sv": "6dbf464a49e49ad489188fa51920c30a3c89d6b3106046a4fefe558ef0a50c87",
   "scripts/dd1_d7a_check.py": "4b5197948ec2852454ffc1b6dd207c8c21badaddec7ea6dd77a66e4e5a13b307",
-  "scripts/dd1_d7a_run.py": "f868f763104b16637f959b2902b5a7bcb63b261dc8333c32052021673f8a039b",
+  "scripts/dd1_d7a_run.py": "dbb544f5483326e6dbe2d1319504a92675ef5d493b9ba1de0842bddb2f34f046",
   "scripts/dd1_d7a_trace.py": "708c37027fb11d250b48d9ada55616c6591525e4dad339f00a33d1a63382696a",
   "tests/dd1_d7a/tb_dd1_d7a_gray.sv": "426f93275faa9fdac8271f01656c6c6afab0f812a46d07d618fe78d11fed9109"
  },
@@ -170,11 +182,46 @@
   "previous_run_id": "FINAL",
   "reason": "R1 review fixes: abort re-authorisation, configuration freshness, safe-phase mode adoption, export failure guard, stimulus coverage"
  },
- "task_id": "DATA-7A-R3",
+ "task_id": "DATA-7A-R4",
  "tests": [
   {
    "evidence_path": "results/evidence/dd1_d7a_publish_test.txt",
    "name": "publish_transaction_record_and_recovery",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_publish_test.txt",
+   "name": "partial_staging_write_cleaned_as_own_file",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_publish_test.txt",
+   "name": "cleanup_failure_keeps_pending_transaction_outstanding",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_publish_test.txt",
+   "name": "restored_content_judged_apart_from_closed_transaction",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_publish_test.txt",
+   "name": "recovery_completes_once_the_cleanup_fault_lifts",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_publish_test.txt",
+   "name": "entry_export_gate_holds_while_cleanup_unfinished",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_freeze_security.txt",
+   "name": "reviewer_cleanup_diagnostic_no_longer_reproduces",
+   "status": "PASS"
+  },
+  {
+   "evidence_path": "results/evidence/dd1_d7a_manifest.json",
+   "name": "numeric_rechecker_unchanged_this_round",
    "status": "PASS"
   },
   {
@@ -359,8 +406,8 @@
   "synthesis": "clean"
  },
  "waveform_reuse": {
-  "exported_by_task_revision": "DATA-7A-R3",
-  "meaning": "R3 repaired tools only. The waveforms are the frozen R2 run r2_20261021, re-judged from their own bytes by this revision and re-published under the R3 digests; they are not presented as a new simulation.",
+  "exported_by_task_revision": "DATA-7A-R4",
+  "meaning": "R4 repaired the publish cleanup only. The waveforms are the frozen R2 run r2_20261021, re-judged from their own bytes by this revision and re-published under the R4 digests; they are not presented as a new simulation.",
   "new_rtl_simulations": 0,
   "produced_by_task_revision": "NOT_STAMPED_BY_THE_RUNNER_THAT_MADE_THIS_RUN",
   "rejudged_from_trace_bytes_before_publish": true,

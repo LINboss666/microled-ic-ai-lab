@@ -838,16 +838,44 @@ reuse boundary are in `reports/dd1_d7a_review_fix_r4.md`; the command transcript
 ```text
 BRANCH             = poc/data-gray-d7a-r4                       (new, own branch, ordinary push)
 BASE (reviewed T3) = 33cd863093961d571aca3bd726beea32cb50ecfd  (read back twice, not moved)
-PAYLOAD_SHA (P4)   = the commit carrying the repaired publish cleanup path, the extended regression,
-                     the R4 report and task-book copy, the R3 erratum and the re-published identity
-                     records. It cannot name its own SHA; read it as the branch tip below.
-DELIVERY_SHA (D4)  = the next commit: this handoff MD plus reports/agent_handoffs/DATA-7A.json, and
-                     nothing else. No source, script, RTL, testbench or evidence table changes in it.
-remote read-back   two paths over the pushed branch - git ls-remote (through the machine's existing
-                     proxy) and gh api. If only one answers, parity is reported PARTIAL, not assumed.
-transport          https through the existing system proxy passed per command; no force, no
-                     --no-verify, no merge, no branch moved, no visibility change, nothing GCed.
+PAYLOAD_SHA (P4)   = c70039cb9764e00c9d780ad00a03d6c7ae9a2cb9
+P4 contents         = 13 files (measured with `git diff --name-only T3..P4`): the repaired runner, the
+                      extended publish regression, the bundle packer's required-file table, the R4
+                      report, the byte-exact R4 task book, the R3 erratum, this handoff section, and six
+                      evidence records (manifest, environment, write guard, checker selftest, publish
+                      transcript, freeze transcript). The four measured tables and every frozen file are
+                      absent from that list because they did not change.
+P4 remote read-back   git ls-remote (proxy) : c70039cb9764e00c9d780ad00a03d6c7ae9a2cb9
+                      gh api                : c70039cb9764e00c9d780ad00a03d6c7ae9a2cb9
+                      LOCAL_REMOTE_PARITY   = PASS, transport = proxy, attempts = 1, no force,
+                      no --no-verify, main / poc/data-gray-d7a / -r1 / -r2 / -r3 and every teammate
+                      branch untouched, no merge, no visibility change, nothing GCed
+pre-push hook         scripts/precommit_safety_check.py --mode history : SAFETY_GATE: PASS
+DELIVERY_SHA (D4)   = the commit that stores reports/agent_handoffs/DATA-7A.json rebuilt from the
+                      published tables plus these two paragraphs. It cannot contain its own SHA, so it
+                      is named by reading the branch tip: `git rev-parse origin/poc/data-gray-d7a-r4`.
+                      No source, script, RTL, testbench or evidence table changes in it.
 ```
+
+`reports/agent_handoffs/DATA-7A.json` is regenerated from the published tables and the machine records
+(19,406 bytes, sha256
+`a94864ae1a56a1962dc19e7a4a88fbdaa9b9767bad070ade988799dfca948c19`, recomputable from the commit), with
+`base_sha = T3`,
+`head_sha = P4`, `run_id = r2_20261021`, `waveform_reuse.new_rtl_simulations = 0`,
+`numeric_rechecker_files_changed = 0`, `prior_review_package_sha256_erratum` carrying both the T3
+string and the measured one, 22 guard modes over 10 derived target files, 56 evidence checks with 0
+failures, the 15-case semantic selftest, the 26-case publish/recover regression with 0 failed checks
+and the 14-functional / 2-diagnostic model split, and it was run through the unchanged validator:
+
+```text
+$ python scripts/dd1_d7a_validate_handoff.py reports/agent_handoffs/DATA-7A.json
+HANDOFF_STRUCTURE: PASS (fields only; evidence/remote truth NOT verified)   rc=0
+```
+
+`objects_scan.result = FAIL` with the pre-existing blob named, and `scope_status = COMPLETE` is scoped
+in that file to this round's cleanup repair only. A schema PASS is a statement about fields, not about
+the silicon, and `push_status = REMOTE_VERIFIED` refers to P4 above, never to the commit that stores
+this text.
 
 `STOP_REASON=AWAITING_INDEPENDENT_REVIEW`, `NEXT_STAGE_AUTHORISED=NO`. Final acceptance, merging and
 the next stage belong to the user; DATA-7B, MOS PWM, eight-level PAM, current integration, the LUT,
