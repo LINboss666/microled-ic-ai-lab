@@ -1,0 +1,20 @@
+case_id,seq,window,role,mode,code,pam_request,tick_ns,window_ns,full_intervals,expected_accepted_ticks,expected_intervals,expected_conducting_ns,expected_pulses,trace_source,note
+D7B-P30-C000,1,normal,normal,PURE,0,7,30,7680,256,256,0,0,0,D7B-P30-C000.vcd,black code - no enabling edge
+D7B-P30-C001,1,normal,normal,PURE,1,7,30,7680,256,256,1,30,1,D7B-P30-C001.vcd,shortest commanded pulse in the set
+D7B-P30-C002,1,normal,normal,PURE,2,7,30,7680,256,256,2,60,1,D7B-P30-C002.vcd,two intervals
+D7B-P30-C016,1,normal,normal,PURE,16,7,30,7680,256,256,16,480,1,D7B-P30-C016.vcd,the code the safety scenarios reuse
+D7B-P30-C254,1,normal,normal,PURE,254,7,30,7680,256,256,254,7620,1,D7B-P30-C254.vcd,one interval short of the end
+D7B-P30-C255,1,normal,normal,PURE,255,7,30,7680,256,256,256,7680,1,D7B-P30-C255.vcd,contract maps 255 to 256 intervals not 255
+D7B-P50-C001,1,normal,normal,PURE,1,7,50,12800,256,256,1,50,1,D7B-P50-C001.vcd,60 Hz budget tick
+D7B-P50-C255,1,normal,normal,PURE,255,7,50,12800,256,256,256,12800,1,D7B-P50-C255.vcd,full bright at a 50 ns tick
+D7B-H120-C00,1,normal,normal,HYB,0,7,120,7680,64,64,0,0,0,D7B-H120-C00.vcd,time code zero - the pam request stays 7
+D7B-H120-C01,1,normal,normal,HYB,1,7,120,7680,64,64,1,120,1,D7B-H120-C01.vcd,shortest hybrid pulse
+D7B-H120-C02,1,normal,normal,HYB,2,7,120,7680,64,64,2,240,1,D7B-H120-C02.vcd,two intervals
+D7B-H120-C62,1,normal,normal,HYB,62,7,120,7680,64,64,62,7440,1,D7B-H120-C62.vcd,one interval short of the end
+D7B-H120-C63,1,normal,normal,HYB,63,7,120,7680,64,64,64,7680,1,D7B-H120-C63.vcd,contract maps 63 to 64 intervals
+D7B-H200-C01,1,normal,normal,HYB,1,7,200,12800,64,64,1,200,1,D7B-H200-C01.vcd,60 Hz budget tick
+D7B-H200-C63,1,normal,normal,HYB,63,7,200,12800,64,64,64,12800,1,D7B-H200-C63.vcd,full bright at a 200 ns tick
+D7B-BLANK,1,aborted,aborted,PURE,16,7,30,7680,256,5,4.5,135,1,D7B-BLANK.vcd,BLANK asserted at t0+4.5T and withdrawn at t0+7.5T
+D7B-BLANK,2,recovery,recovery,PURE,16,7,30,7680,256,256,16,480,1,D7B-BLANK.vcd,a fresh load LATCH START window after the abort
+D7B-FAULT,1,aborted,aborted,PURE,16,7,30,7680,256,5,4.5,135,1,D7B-FAULT.vcd,FAULT asserted at t0+4.5T and withdrawn at t0+7.5T
+D7B-FAULT,2,recovery,recovery,PURE,16,7,30,7680,256,256,16,480,1,D7B-FAULT.vcd,a fresh load LATCH START window after the abort

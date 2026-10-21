@@ -1,0 +1,25 @@
+case_id,group,trace_case,windows,maxstep_ns,ramp_ns,vclamp_v,reuse_of,role,note
+D7B-CAL,cal,NONE,cal,0.5,2,1.2,NONE,calibration,static long-pulse calibration bench - not an RTL trace
+D7B-P30-C000,pure30,D7B-P30-C000,normal,0.5,2,1.2,NONE,normal,black code at a 30 ns tick
+D7B-P30-C001,pure30,D7B-P30-C001,normal,0.5,2,1.2,NONE,normal,one interval
+D7B-P30-C002,pure30,D7B-P30-C002,normal,0.5,2,1.2,NONE,normal,two intervals
+D7B-P30-C016,pure30,D7B-P30-C016,normal,0.5,2,1.2,NONE,normal,sixteen intervals
+D7B-P30-C254,pure30,D7B-P30-C254,normal,0.5,2,1.2,NONE,normal,one interval short of the window
+D7B-P30-C255,pure30,D7B-P30-C255,normal,0.5,2,1.2,NONE,normal,full bright - 256 intervals
+D7B-P50-C001,pure50,D7B-P50-C001,normal,0.5,2,1.2,NONE,normal,one interval at 50 ns
+D7B-P50-C255,pure50,D7B-P50-C255,normal,0.5,2,1.2,NONE,normal,full bright at 50 ns
+D7B-H120-C00,hyb120,D7B-H120-C00,normal,0.5,2,1.2,NONE,normal,hybrid time code zero
+D7B-H120-C01,hyb120,D7B-H120-C01,normal,0.5,2,1.2,NONE,normal,one interval at 120 ns
+D7B-H120-C02,hyb120,D7B-H120-C02,normal,0.5,2,1.2,NONE,normal,two intervals at 120 ns
+D7B-H120-C62,hyb120,D7B-H120-C62,normal,0.5,2,1.2,NONE,normal,62 of 64 intervals
+D7B-H120-C63,hyb120,D7B-H120-C63,normal,0.5,2,1.2,NONE,normal,full bright - 64 intervals
+D7B-H200-C01,hyb200,D7B-H200-C01,normal,0.5,2,1.2,NONE,normal,one interval at 200 ns
+D7B-H200-C63,hyb200,D7B-H200-C63,normal,0.5,2,1.2,NONE,normal,full bright at 200 ns
+D7B-BLANK,safety,D7B-BLANK,aborted;recovery,0.5,2,1.2,NONE,safety,async BLANK at t0+4.5T then a fresh transaction
+D7B-FAULT,safety,D7B-FAULT,aborted;recovery,0.5,2,1.2,NONE,safety,async FAULT at t0+4.5T then a fresh transaction
+D7B-N1,negative,D7B-P30-C000,normal,0.5,2,1.2,D7B-P30-C000,negative_wiring,enable pin tied to vdd18 while the trace stays black
+D7B-CVG-P30-C001,convergence,D7B-P30-C001,normal,0.25,2,1.2,D7B-P30-C001,convergence,same stimulus at maxstep 0.25 ns
+D7B-CVG-P30-C255,convergence,D7B-P30-C255,normal,0.25,2,1.2,D7B-P30-C255,convergence,same stimulus at maxstep 0.25 ns
+D7B-CVG-H120-C01,convergence,D7B-H120-C01,normal,0.25,2,1.2,D7B-H120-C01,convergence,same stimulus at maxstep 0.25 ns
+D7B-CVG-BLANK,convergence,D7B-BLANK,aborted;recovery,0.25,2,1.2,D7B-BLANK,convergence,same stimulus at maxstep 0.25 ns
+D7B-SLEW-P30-C001,slew,D7B-P30-C001,normal,0.5,10,1.2,D7B-P30-C001,sensitivity,10 ns input rise and fall instead of 2 ns

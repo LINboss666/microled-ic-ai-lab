@@ -1,0 +1,334 @@
+{
+ "accepted_rtl_sha": "f68449672774ac9266ba9e4893024e4f3027dd9d",
+ "base_sha": "c3513ffee57880bdc9d6d26d5c1c1a9a43c52e37",
+ "run_id": "r11_main",
+ "traces": {
+  "D7B-BLANK": {
+   "end_ps": 17675000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-BLANK": "2",
+    "D7B-CVG-BLANK": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-BLANK.vcd",
+   "vcd_sha256": "c696a88be24fc4ed889e66d25ccaf2b296075fc0f425473166e2384148291461"
+  },
+  "D7B-CVG-BLANK": {
+   "end_ps": 17675000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {},
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-BLANK.vcd",
+   "vcd_sha256": "c696a88be24fc4ed889e66d25ccaf2b296075fc0f425473166e2384148291461"
+  },
+  "D7B-CVG-H120-C01": {
+   "end_ps": 9815000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {},
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-H120-C01.vcd",
+   "vcd_sha256": "5222b257cb262ce57e296b3e1f49143da334d1cc741648398c305098c7f50ed2"
+  },
+  "D7B-CVG-P30-C001": {
+   "end_ps": 9455000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {},
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P30-C001.vcd",
+   "vcd_sha256": "e5252726b77ed3723987dcf1e2b51105f155f98205ca6254a0e61d9b7efdcb86"
+  },
+  "D7B-CVG-P30-C255": {
+   "end_ps": 9455000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {},
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P30-C255.vcd",
+   "vcd_sha256": "0147d827052997ce61c6594df23c3a5e9554bad5af2324d36f349823dbcdf5b5"
+  },
+  "D7B-FAULT": {
+   "end_ps": 17675000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-FAULT": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-FAULT.vcd",
+   "vcd_sha256": "f407ede0cab8fad03fc724f07637ea724e2da0acb52f6d85333193deefcbb13a"
+  },
+  "D7B-H120-C00": {
+   "end_ps": 9815000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-H120-C00": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-H120-C00.vcd",
+   "vcd_sha256": "bc2d2d29f6b2b24d69b661ab2c9691efabef0dc9211a5fcb56ee84894a3ccdb6"
+  },
+  "D7B-H120-C01": {
+   "end_ps": 9815000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-CVG-H120-C01": "2",
+    "D7B-H120-C01": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-H120-C01.vcd",
+   "vcd_sha256": "5222b257cb262ce57e296b3e1f49143da334d1cc741648398c305098c7f50ed2"
+  },
+  "D7B-H120-C02": {
+   "end_ps": 9815000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-H120-C02": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-H120-C02.vcd",
+   "vcd_sha256": "6ebd7ada5a52bf7d9b6b2705004b529dbe3d90ff958863b72be48c1a676ed239"
+  },
+  "D7B-H120-C62": {
+   "end_ps": 9815000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-H120-C62": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-H120-C62.vcd",
+   "vcd_sha256": "6df47117b61c9fb0adeb5e8c50ff572d2d743b8acdceba87221690d574d83d9e"
+  },
+  "D7B-H120-C63": {
+   "end_ps": 9815000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-H120-C63": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-H120-C63.vcd",
+   "vcd_sha256": "d018658eb95988a1ff4254b7153aff7231a33c89f0ef80bf62037ce7aff41d18"
+  },
+  "D7B-H200-C01": {
+   "end_ps": 15255000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-H200-C01": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-H200-C01.vcd",
+   "vcd_sha256": "3e7e38968071459efd932a0640761096da77cffe06c567dd33eea5bced377056"
+  },
+  "D7B-H200-C63": {
+   "end_ps": 15255000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-H200-C63": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-H200-C63.vcd",
+   "vcd_sha256": "742fec680530280c174793f5cbd1811e4c6962b691e0f315605cf23582dfa414"
+  },
+  "D7B-N1": {
+   "end_ps": 9455000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {},
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P30-C000.vcd",
+   "vcd_sha256": "cb19f1629b7679d85b25f40bf3a5cd38c43c398823c7fd25b29c8704847d2ba1"
+  },
+  "D7B-P30-C002": {
+   "end_ps": 9455000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-P30-C002": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P30-C002.vcd",
+   "vcd_sha256": "152be511183d2cac5153abbe4faaa77ff7778e25fe64e3e6c70aa9071c2630e9"
+  },
+  "D7B-P30-C016": {
+   "end_ps": 9455000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-P30-C016": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P30-C016.vcd",
+   "vcd_sha256": "c355353500064b273b21386551f075d18e6b08e3f9c4050b242e903e5944fc57"
+  },
+  "D7B-P30-C254": {
+   "end_ps": 9455000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-P30-C254": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P30-C254.vcd",
+   "vcd_sha256": "3ed398ad26cda4fb743f2008305d12ddf18125db43c0372226458c909bcfcca9"
+  },
+  "D7B-P30-C255": {
+   "end_ps": 9455000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-CVG-P30-C255": "2",
+    "D7B-P30-C255": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P30-C255.vcd",
+   "vcd_sha256": "0147d827052997ce61c6594df23c3a5e9554bad5af2324d36f349823dbcdf5b5"
+  },
+  "D7B-P50-C001": {
+   "end_ps": 14655000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-P50-C001": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P50-C001.vcd",
+   "vcd_sha256": "070ef67e94fb4b9cab897e16d0c0ba07ab5ad1d34fb59d3d62ff8325d048c73c"
+  },
+  "D7B-P50-C255": {
+   "end_ps": 14655000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-P50-C255": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P50-C255.vcd",
+   "vcd_sha256": "d6d9da01bc7b8b4cfaa9792c8ac2023c640af7c8549394649e94e52eaec1ff4f"
+  },
+  "D7B-SLEW-P30-C001": {
+   "end_ps": 9455000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {},
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P30-C001.vcd",
+   "vcd_sha256": "e5252726b77ed3723987dcf1e2b51105f155f98205ca6254a0e61d9b7efdcb86"
+  }
+ }
+}

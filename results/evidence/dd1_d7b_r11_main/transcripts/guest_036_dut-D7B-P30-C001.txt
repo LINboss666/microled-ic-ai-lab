@@ -1,0 +1,26 @@
+ssh payload 331 bytes, timeout 2000 s
+SPECTRE name=D7B-P30-C001.scs rc=0 elapsed=1s timeout=1800s
+LOGFILE /root/microled_ai_project/cadence_work/dd1_d7b/r11_reuse/cases/D7B-P30-C001/sim/D7B-P30-C001.log
+RAWDIR  /root/microled_ai_project/cadence_work/dd1_d7b/r11_reuse/cases/D7B-P30-C001/sim/D7B-P30-C001.raw
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='/root/microled_ai_project/cadence_work/dd1_d7b/r11_reuse/cases/D7B-P30-C001/sim/D7B-P30-C001.raw/sw1.tran.tran'
+total 48
+drwxr-xr-x. 4 root root 4096 Oct 21 21:04 .
+drwxr-xr-x. 3 root root 4096 Oct 21 21:04 ..
+-rw-r--r--. 1 root root 6686 Oct 21 21:04 D7B-P30-C001.log
+drwxr-xr-x. 2 root root 4096 Oct 21 21:04 D7B-P30-C001.raw
+-rw-r--r--. 1 root root 6476 Oct 21 21:04 D7B-P30-C001.stdout
+-rw-r--r--. 1 root root 7140 Oct 21 21:04 preflight_D7B-P30-C001_D7B-P30-C001__r11_reuse.log
+drwxr-xr-x. 2 root root 4096 Oct 21 21:04 preflight_D7B-P30-C001_D7B-P30-C001__r11_reuse.raw
+-rw-r--r--. 1 root root 6953 Oct 21 21:04 preflight_D7B-P30-C001_D7B-P30-C001__r11_reuse.stdout
+----- log tail -----
+
+
+Aggregate audit (9:04:52 PM, Wed Oct 21, 2026):
+Time used: CPU = 665 ms, elapsed = 707 ms, util. = 94%.
+Time spent in licensing: elapsed = 74 ms, percentage of total = 10.5%.
+Peak memory used = 62.3 Mbytes.
+Simulation started at: 9:04:52 PM, Wed Oct 21, 2026, ended at: 9:04:52 PM, Wed Oct 21, 2026, with elapsed time (wall clock): 707 ms.
+spectre completes with 0 errors, 0 warnings, and 1 notice.
+D7B_D7B_P30_C001: PASS

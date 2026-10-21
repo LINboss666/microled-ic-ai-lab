@@ -1,0 +1,20 @@
+ssh payload 371 bytes, timeout 600 s
+== testbench preflight: /root/microled_ai_project/cadence_work/dd1_d7b/static_sp03/cases/D7B-CAL/D7B-CAL.scs (expected VDD=1.8)
+--- local cell files parsed for port lists: /root/microled_ai_project/cadence_work/dd1_d7b/static_sp03/cases/D7B-CAL/dd1_d6_bias_core.scs /root/microled_ai_project/cadence_work/dd1_d7b/static_sp03/cases/D7B-CAL/dd1_d6_sink_core.scs /root/microled_ai_project/cadence_work/dd1_d7b/static_sp03/cases/D7B-CAL/dd1_d6_inv18.scs /root/microled_ai_project/cadence_work/dd1_d7b/static_sp03/cases/D7B-CAL/dd1_d7b_pwm_stage.scs
+  SUPPLY_OK Xstage.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xstage.vss = 0 V via net vss
+  SUPPLY_OK Xstage.Xbias.VSS = 0 V via net vss
+  SUPPLY_OK Xstage.Xinv.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xstage.Xinv.vss = 0 V via net vss
+  SUPPLY_OK Xstage.Xsink.VSS = 0 V via net vss
+  SUPPLY_INSTANCES top=1 descendants=3 checked=6 internal=0 masters=4
+  SUPPLY_RESULT PASS
+SUPPLY_GATE: PASS top=1 checked=6 supply_nets=2
+STATIC_NOTE contract mode: 1 top-level instance(s), rail checks delegated to sc1_supply_check.awk
+STATIC_RESULT PASS
+NETS_TO_SAVE vcas vdd18 iref_in data_en vss data_out
+VDD_NETS
+PREFLIGHT_STAGE=static_gate
+STATIC_PROBE: accepted; supply/rail structure only
+CIRCUIT_VERDICT: NOT_RUN (static probe does not evaluate the circuit)
+TESTBENCH_PREFLIGHT: NOT_RUN (static probe)

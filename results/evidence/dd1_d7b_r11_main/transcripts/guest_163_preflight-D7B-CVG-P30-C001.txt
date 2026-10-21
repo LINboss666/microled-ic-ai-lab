@@ -1,0 +1,34 @@
+ssh payload 372 bytes, timeout 900 s
+== testbench preflight: /root/microled_ai_project/cadence_work/dd1_d7b/r11_main/cases/D7B-CVG-P30-C001/D7B-CVG-P30-C001.scs (expected VDD=1.8)
+--- local cell files parsed for port lists: /root/microled_ai_project/cadence_work/dd1_d7b/r11_main/cases/D7B-CVG-P30-C001/dd1_d6_bias_core.scs /root/microled_ai_project/cadence_work/dd1_d7b/r11_main/cases/D7B-CVG-P30-C001/dd1_d6_sink_core.scs /root/microled_ai_project/cadence_work/dd1_d7b/r11_main/cases/D7B-CVG-P30-C001/dd1_d6_inv18.scs /root/microled_ai_project/cadence_work/dd1_d7b/r11_main/cases/D7B-CVG-P30-C001/dd1_d7b_pwm_stage.scs
+  SUPPLY_OK Xstage.vdd18 = 1.8 V via net vdd18
+  SUPPLY_OK Xstage.vss = 0 V via net vss
+  SUPPLY_OK Xstage.Xbias.VSS = 0 V via net vss
+  SUPPLY_OK Xstage.Xinv.vdd = 1.8 V via net vdd18
+  SUPPLY_OK Xstage.Xinv.vss = 0 V via net vss
+  SUPPLY_OK Xstage.Xsink.VSS = 0 V via net vss
+  SUPPLY_INSTANCES top=1 descendants=3 checked=6 internal=0 masters=4
+  SUPPLY_RESULT PASS
+SUPPLY_GATE: PASS top=1 checked=6 supply_nets=2
+STATIC_NOTE contract mode: 1 top-level instance(s), rail checks delegated to sc1_supply_check.awk
+STATIC_RESULT PASS
+NETS_TO_SAVE vcas vdd18 iref_in data_en vss data_out
+VDD_NETS
+--- preflight netlist: /root/microled_ai_project/cadence_work/dd1_d7b/r11_main/cases/D7B-CVG-P30-C001/preflight_D7B-CVG-P30-C001_D7B-CVG-P30-C001__r11_main.scs
+spectre_rc=0 datafile=/root/microled_ai_project/cadence_work/dd1_d7b/r11_main/cases/D7B-CVG-P30-C001/sim/preflight_D7B-CVG-P30-C001_D7B-CVG-P30-C001__r11_main.raw/sw1.tran.tran
+--- operating point at the first sample
+    Ip_out:i 7.32741967e-13
+    clamp 1.2
+    Xstage.Xsink.vbias_ch 2.80198362e-10
+    Xstage.Xsink.node_m 1.1742286
+    vcas 1.8
+    vdd18 1.8
+    iref_in 0.884261418
+    data_en 0
+    vss 0
+    data_out 1.2
+    Xstage.data_en_b 1.79999998
+OP_OK supply net vdd18 = 1.8 (contract 1.8 V)
+OP_OK supply net vss = 0 (contract 0 V)
+PREFLIGHT_CONTRACT_SATISFIED: PASS
+TESTBENCH_PREFLIGHT: PASS

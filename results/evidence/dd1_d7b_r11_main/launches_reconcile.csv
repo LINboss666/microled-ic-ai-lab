@@ -1,0 +1,16 @@
+task_root_dir,preflight_logs,total_logs,dut_logs,in_delivered_set,processes_counted_against_ceiling,note
+r1_probe,0,0,0,no,0,probe or abandoned pass; every process it started is still counted
+r2_probe,1,1,0,no,1,probe or abandoned pass; every process it started is still counted
+r3_probe,1,2,1,no,2,probe or abandoned pass; every process it started is still counted
+r4_probe,1,2,1,no,2,probe or abandoned pass; every process it started is still counted
+r5_cal,1,2,1,YES,2,produced the delivered rows
+r6_main,0,0,0,no,0,probe or abandoned pass; every process it started is still counted
+r7_main,0,0,0,no,0,probe or abandoned pass; every process it started is still counted
+r8_smoke,1,2,1,no,2,probe or abandoned pass; every process it started is still counted
+r9_main,1,2,1,no,2,probe or abandoned pass; every process it started is still counted
+r10_main,1,2,1,no,2,probe or abandoned pass; every process it started is still counted
+r11_main,21,42,21,YES,42,produced the delivered rows
+r11_reuse,2,4,2,YES,4,produced the delivered rows
+static_sp02,0,0,0,no,0,probe or abandoned pass; every process it started is still counted
+static_sp03,0,0,0,no,0,probe or abandoned pass; every process it started is still counted
+TOTAL,30,59,29,,59,delivered set uses 24 DUT + 24 preflight = 48 processes; the other 11 came from reproducing this round's own tool defects

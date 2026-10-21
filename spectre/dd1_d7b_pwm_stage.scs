@@ -1,0 +1,29 @@
+// dd1_d7b_pwm_stage.scs -- DATA-7B: the accepted current output stage, entered at its enable pin.
+//
+// This wrapper exists so a PWM trace produced by the frozen DATA-7A digital controller can drive the
+// frozen analog core without re-instantiating the DATA-6 storage front end. Three masters only, each
+// byte-for-byte the accepted one: the shared diode-connected reference, the 1.8 V inverter that makes
+// the real complementary enable, and the four-device cascode sink. Expanded MOS count is 1 + 2 + 4 = 7
+// (n18 x1, p18 x1, n33 x4, n33_dnw_4t_ckt x1), machine-checked from the hierarchy, not by grep.
+//
+// What this is NOT: it contains no grey-scale counter, no 8-bit storage and no on-chip digital driver,
+// so it does not connect the 29-device DATA-6 top to the grey-scale controller. `iref_in` is the node
+// the bench current meter injects into the diode-connected reference, never an ideal VBIAS source; the
+// sink's own pass device keeps its frozen DNW body connection to vbias_ch; and the bleed device is
+// gated by the inverter's real output node, not by an ideal complementary source.
+//
+// POC_ASSUMPTION boundary: the enable arrives as finite-slope PWL stimulus derived offline from RTL
+// simulation. Real on-chip driver impedance, the eight PAM current levels, the LUT and the array are
+// all outside this round.
+
+subckt dd1_d7b_pwm_stage (data_en iref_in vcas data_out vdd18 vss)
+  parameters data_en input
+  parameters iref_in input
+  parameters vcas input
+  parameters data_out output
+  parameters vdd18 inputOutput
+  parameters vss inputOutput
+  Xbias (iref_in vss) data_bias_ref
+  Xinv (data_en data_en_b vdd18 vss) dd1_inv18
+  Xsink (data_en data_en_b iref_in vcas data_out vss) data_sink_1ch
+ends dd1_d7b_pwm_stage

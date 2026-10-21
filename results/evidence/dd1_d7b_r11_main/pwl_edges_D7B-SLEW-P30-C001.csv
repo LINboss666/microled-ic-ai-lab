@@ -1,0 +1,3 @@
+run_id,case_id,window,index,t_ps,t_ns,level,t_analog_ns,vcd_sha256,tick_lead_ps,ramp_ns
+r11_main,D7B-SLEW-P30-C001,normal,1,1415000,1415.0000,1,3915.0000,e5252726b77ed3723987dcf1e2b51105f155f98205ca6254a0e61d9b7efdcb86,5000,10
+r11_main,D7B-SLEW-P30-C001,normal,2,1445000,1445.0000,0,3945.0000,e5252726b77ed3723987dcf1e2b51105f155f98205ca6254a0e61d9b7efdcb86,5000,10

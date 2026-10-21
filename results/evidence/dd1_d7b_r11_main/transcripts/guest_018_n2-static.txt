@@ -1,0 +1,14 @@
+ssh payload 359 bytes, timeout 600 s
+== testbench preflight: /root/microled_ai_project/cadence_work/dd1_d7b/static_sp03/neg_static/D7B-N2.scs (expected VDD=1.8)
+--- local cell files parsed for port lists: /root/microled_ai_project/cadence_work/dd1_d7b/static_sp03/neg_static/dd1_d6_bias_core.scs /root/microled_ai_project/cadence_work/dd1_d7b/static_sp03/neg_static/dd1_d6_sink_core.scs /root/microled_ai_project/cadence_work/dd1_d7b/static_sp03/neg_static/dd1_d6_inv18.scs /root/microled_ai_project/cadence_work/dd1_d7b/static_sp03/neg_static/dd1_d7b_pwm_stage.scs
+  SUPPLY_OK Xstage.vdd18 = 1.8 V via net vdd18
+  SUPPLY_FAIL net vss (Xstage port vss) has no independent source from reference node 0
+  SUPPLY_FAIL net vss (Xstage.Xbias port VSS) has no independent source from reference node 0
+  SUPPLY_OK Xstage.Xinv.vdd = 1.8 V via net vdd18
+  SUPPLY_FAIL net vss (Xstage.Xinv port vss) has no independent source from reference node 0
+  SUPPLY_FAIL net vss (Xstage.Xsink port VSS) has no independent source from reference node 0
+  SUPPLY_INSTANCES top=1 descendants=3 checked=2 internal=0 masters=4
+  SUPPLY_RESULT FAIL
+PREFLIGHT_STAGE=supply_contract
+PREFLIGHT_REJECT: contract_refused:net vss (Xstage port vss) has no independent source from reference node 0
+TESTBENCH_PREFLIGHT: FAIL (stage=supply_contract reason=contract_refused:net vss (Xstage port vss) has no independent source from reference node 0)

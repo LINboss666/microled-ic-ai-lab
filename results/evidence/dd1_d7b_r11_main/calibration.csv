@@ -1,0 +1,4 @@
+run_id,quantity,value_A,window_ns,band_min_A,band_max_A
+r5_cal,Ical_A,1.493190564e-05,3000.0..3500.0,1.493190564e-05,1.493190564e-05
+r5_cal,OFF_baseline_max_abs_A,7.338564169e-13,1500.0..1900.0,,
+r5_cal,CAL_tail_max_abs_A,3.850281892e-09,4400.0..4500.0,,
