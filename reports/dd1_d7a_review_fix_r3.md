@@ -1,7 +1,9 @@
 # DATA-7A-R3: the two tool repairs the third review asked for
 
 Review input: `MicroLED_DATA7A_R2_Review_and_R3_Task_20261021.zip`, sha256
-`e31cdfe918cfa54a8960f7d3e0b96c89b36ae4d5cb5e1a6ea7225491ff7cf444`, whose `REVIEW_DATA7A_R2.md`
+`e31cdfe918cfa54a8960f7d3e0b96c89b36ae4d5cb5e1a6ea7225491ff7cf444` (last character transcribed
+wrong: the measured value is `...ff7cf44e`; see the Erratum section at the end of this file), whose
+`REVIEW_DATA7A_R2.md`
 judges the R2 tip and whose task book is stored byte-for-byte as
 `reports/tasks/DATA-7A-R3.md` (sha256 `1e22f6ec768db0e812e62e5370b0f702e8a57ab22d8b32766bb08ec510f34e3a`,
 10,026 bytes, identical to the file in the package).
@@ -354,4 +356,28 @@ delivery sequence rather than an assumption.
 * Nothing in this round is an analogue, optical, layout or timing-closure claim; `pam_sel` remains a
   select code.
 
+## Erratum, added by DATA-7A-R4
 
+The input ZIP digest in the first paragraph of this report ends in `444`. The measured digest of
+that package on this machine is:
+
+```text
+$ python -c "import hashlib; print(hashlib.sha256(open(r'C:\\Users\\LMX\\Downloads\\MicroLED_DATA7A_R2_Review_and_R3_Task_20261021.zip','rb').read()).hexdigest())"
+e31cdfe918cfa54a8960f7d3e0b96c89b36ae4d5cb5e1a6ea7225491ff7cf44e
+```
+
+so the final character was transcribed wrong: it is `e`, not `4`. The 40 hex digits before it are
+correct, and nothing else about the input is affected: the byte-for-byte task-book copy
+`reports/tasks/DATA-7A-R3.md` (sha256 `1e22f6ec768db0e812e62e5370b0f702e8a57ab22d8b32766bb08ec510f34e3a`)
+was verified against the file inside the archive, not against this string.
+
+The same wrong value is carried at T3 in two more places, which are corrected the same way rather
+than silently rewritten: `reports/agent_handoffs/DATA-7A.md` in the R3 section, and
+`review_package_sha256` in `reports/agent_handoffs/DATA-7A.json`. The R4 delivery states the correct
+value for the R3 package and records the R4 package digest separately, so no reader can confuse a
+source SHA, a ZIP SHA and a task SHA.
+
+This is a documentation transcription defect found by the independent review, not a tool or circuit
+finding, and it does not change any measurement, command result or conclusion recorded above. The
+`git diff --check` report of a new blank line at the end of this file (rc=2 at T3) is also fixed
+here: this file now ends with a single newline.

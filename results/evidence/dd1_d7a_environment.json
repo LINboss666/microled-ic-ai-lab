@@ -154,7 +154,7 @@
  },
  "synthesis": "clean",
  "task": "DATA-7A",
- "task_revision": "DATA-7A-R3",
+ "task_revision": "DATA-7A-R4",
  "toolchain_provenance": {
   "asset_bytes": 603893871,
   "installed_outside_repo": true,
@@ -163,7 +163,7 @@
   "url": "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-10-20/oss-cad-suite-windows-x64-20261020.tgz"
  },
  "waveform_provenance": {
-  "exported_by_task_revision": "DATA-7A-R3",
+  "exported_by_task_revision": "DATA-7A-R4",
   "produced_by_task_revision": "NOT_STAMPED_BY_THE_RUNNER_THAT_MADE_THIS_RUN",
   "run_id": "r2_20261021",
   "simulations_started_by_this_export": 0,

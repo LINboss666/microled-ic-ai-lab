@@ -59,7 +59,7 @@ TOOL_URL = ('https://github.com/YosysHQ/oss-cad-suite-build/releases/download/20
 TOOL_SHA = 'b141f2523e265d8ca742f96760cb3c9260422194e28f6851741cf2ffce9bc943'
 TOOL_BYTES = 603893871
 
-TASK_REVISION = 'DATA-7A-R3'
+TASK_REVISION = 'DATA-7A-R4'
 
 MODE_PURE, MODE_HYBRID = ck.MODE_PURE, ck.MODE_HYBRID
 GROUPS = (('pure_t30', MODE_PURE, 3, 30), ('pure_t50', MODE_PURE, 5, 50),
@@ -1420,7 +1420,8 @@ def publish(art, backup_dir=None, promote=None):
       3. staging -- each new artefact is written as `<name>.new`;
       4. promotion -- `<name>.new` is replaced over the target with `os.replace`;
       5. verification and cleanup -- each target must hash to the staged bytes, then this
-         transaction's own `.new` files and the marker are removed.
+         transaction's own `.new` files and the marker are removed; if one of its own files cannot be
+         removed here either, the marker stays and the transaction is reported as NOT closed.
 
     A failure in 1..3 happens before the first promotion, so the published set is still intact and is
     never touched; the staging files written so far and the marker are removed and the caller still
@@ -1429,6 +1430,12 @@ def publish(art, backup_dir=None, promote=None):
     the backup are KEPT and `pending_publish()` reports the transaction as outstanding, so no further
     publish is accepted until `recover_publish()` has verified the whole set. Only this transaction's
     own staging files are ever deleted.
+
+    Closing the transaction and restoring the bytes are two separate judgements. A staging file that
+    was created but only partly written is still this transaction's file and is cleaned, because it is
+    registered before the write is attempted. If a staging or restore file cannot be deleted at all,
+    the refusal says the previous set IS restored but the cleanup FAILED, and the marker and backup
+    stay: the transaction remains outstanding rather than being reported as closed over leftovers.
 
     A SIGKILL or power loss between two promotions is NOT covered by that rollback: the pending marker
     then stays on disk and a later run restores from the backup the marker itself names. Nothing here
@@ -1487,11 +1494,21 @@ def publish(art, backup_dir=None, promote=None):
         _fsync_write(marker, u(json.dumps(record, sort_keys=True)).encode('utf-8'))
         for name in names:
             tmp = os.path.join(EVIDENCE, name + '.new')
-            _fsync_write(tmp, u(art[name]).encode('utf-8'))
+            # register before writing: a write/flush/fsync error can happen after the file already
+            # exists with partial bytes, and that file is still this transaction's own file
             staged.append(tmp)
+            _fsync_write(tmp, u(art[name]).encode('utf-8'))
     except (Exception, SystemExit) as exc:                       # noqa: BLE001
         detail = '%s: %s' % (type(exc).__name__, exc)
         left = _discard_staging()
+        if left:
+            # the published set is intact, but this transaction is not finished: its record and its
+            # backup stay so that no later publish can quietly take over the half-cleaned directory
+            raise ck.Refuse('publish stopped before the first promotion, the published set is '
+                            'untouched, but the cleanup of this transaction FAILED (%s); the marker '
+                            'and the backup in %s are kept, so the transaction stays outstanding and '
+                            'every later publish is refused until recover_publish() finishes the '
+                            'cleanup; cause %s' % (', '.join(left), _record_path(backup_dir), detail))
         marker_kept = False
         if os.path.exists(marker):
             try:
@@ -1499,16 +1516,22 @@ def publish(art, backup_dir=None, promote=None):
             except (OSError, IOError):
                 marker_kept = True
         raise ck.Refuse('publish stopped before the first promotion, the published set is untouched, '
-                        '%s%s; cause %s'
+                        '%s; cause %s'
                         % ('the marker stays so this transaction is still identifiable'
-                           if marker_kept else 'no marker survives',
-                           '; staging that could not be removed: %s' % left if left else '',
+                           if marker_kept else 'no marker survives and no staging of this transaction '
+                                               'remains',
                            detail))
 
     moved = []
     promote = promote or os.replace
 
     def _rollback():
+        """put the recorded generation back, then delete this transaction's own temporary files
+
+        A failure to restore a previous byte raises here: that is a damaged published set. A failure
+        to delete a staging file does not -- the set is intact but the transaction is unfinished --
+        so it is returned and the caller keeps the marker instead of closing the transaction.
+        """
         for name in names:
             final = os.path.join(EVIDENCE, name)
             if name in previous:
@@ -1527,11 +1550,16 @@ def publish(art, backup_dir=None, promote=None):
                 os.remove(final)
                 if os.path.exists(final):
                     raise ck.Refuse('the rollback could not put %s back to not-existing' % name)
-        _discard_staging()
+        left = _discard_staging()
         for name in names:
             junk = os.path.join(EVIDENCE, name + '.restore')
-            if os.path.exists(junk):
+            if not os.path.exists(junk):
+                continue
+            try:
                 os.remove(junk)
+            except (OSError, IOError):
+                left.append(os.path.basename(junk))
+        return left
 
     try:
         for name in names:
@@ -1545,14 +1573,22 @@ def publish(art, backup_dir=None, promote=None):
                                 % (name, got[:12], want[:12]))
     except (Exception, SystemExit) as exc:                       # noqa: BLE001
         detail = '%s: %s' % (type(exc).__name__, exc)
+        cleanup_left = []
         try:
-            _rollback()
+            cleanup_left = _rollback()
         except (Exception, SystemExit) as rexc:                  # noqa: BLE001
             raise ck.Refuse('publish aborted after %d/%d promotion(s) and the ROLLBACK ITSELF FAILED: '
                             '%s ; the published set is not restored, so the marker and the backup in '
                             '%s are kept and every later publish stays refused until recover_publish() '
                             'verifies the whole set; cause %s'
                             % (len(moved), len(names), rexc, _record_path(backup_dir), detail))
+        if cleanup_left:
+            raise ck.Refuse('publish aborted after %d/%d promotion(s), the previous set IS restored '
+                            'and verified, but the cleanup of this transaction FAILED (%s); the marker '
+                            'and the backup in %s are kept, so the transaction is NOT closed and every '
+                            'later publish stays refused until recover_publish() finishes the cleanup; '
+                            'cause %s' % (len(moved), len(names), ', '.join(cleanup_left),
+                                          _record_path(backup_dir), detail))
         try:
             os.remove(marker)
         except (OSError, IOError) as mexc:
@@ -1561,7 +1597,16 @@ def publish(art, backup_dir=None, promote=None):
                             'as outstanding; cause %s' % (len(moved), len(names), mexc, detail))
         raise ck.Refuse('publish aborted after %d/%d promotion(s), the previous set is restored; '
                         'cause %s' % (len(moved), len(names), detail))
-    _discard_staging()
+    left = _discard_staging()
+    if left:
+        # every artefact is published, yet this transaction still owns files it could not delete:
+        # that is not a closed transaction, and a promotion primitive that copies instead of moving
+        # is exactly the case where it happens
+        raise ck.Refuse('every artefact was published and verified, but the cleanup of this '
+                        'transaction FAILED (%s); the marker and the backup in %s are kept, so the '
+                        'transaction is NOT closed and every later publish stays refused until '
+                        'recover_publish() finishes the cleanup'
+                        % (', '.join(left), _record_path(backup_dir)))
     try:
         os.remove(marker)                  # the whole set is on disk and verified: transaction closed
     except (OSError, IOError) as exc:
@@ -1674,7 +1719,9 @@ def do_export(args):
     try:
         names = publish(art, backup_dir=os.path.join(run_dir, 'publish_backup'))
     except ck.Refuse as exc:
-        print('PUBLISH_FAILED_ROLLED_BACK: %s' % exc)
+        # the refusal text itself says which boundary was hit (nothing promoted / rolled back and
+        # verified / restored but not closed / rollback failed), so the prefix claims nothing about it
+        print('PUBLISH_REFUSED: %s' % exc)
         return 1
     print('exported %d files: %s' % (len(names), ', '.join(names)))
     print('PUBLISH_TRANSACTION: target_files=%d backup=%s marker=cleared guarantee=caught-failure '
@@ -2096,6 +2143,29 @@ def guard_modes(fixture, cache_src, art, old_bytes):
             return len(seen) == n
         return pred
 
+    def _partial_staging_mode():
+        """the second staging file really gets bytes on disk, then the write is refused"""
+        def _run():
+            art2 = dict((k, v + 'X\n') for k, v in sorted(art.items()))
+            backup = os.path.join(fixture, 'backup_partial_staging')
+            _seed_evidence(ev, old_bytes)
+            original, seen = _fsync_write, []
+
+            def partial(path, data):
+                if str(path).endswith('.new'):
+                    seen.append(os.path.basename(str(path)))
+                    if len(seen) == 2:
+                        with io.open(str(path), 'wb') as fp:
+                            fp.write(u('PARTIAL_BYTES_BEFORE_ENOSPC\n').encode('utf-8'))
+                        raise OSError(28, 'INJECTED no space after a partial staging write')
+                return original(path, data)
+            try:
+                globals()['_fsync_write'] = partial
+                publish(art2, backup_dir=backup)
+            finally:
+                globals()['_fsync_write'] = original
+        return _run
+
     def m_recover_recorded_backup():
         """the interrupted publish backed up into a non-default run directory, recovery gets no hint"""
         art2 = dict((k, v + 'X\n') for k, v in sorted(art.items()))
@@ -2231,6 +2301,10 @@ def guard_modes(fixture, cache_src, art, old_bytes):
          'inject': _write_failing_mode('marker', lambda p: p.endswith(PENDING_MARKER), 'marker write'),
          'stage': 'a catchable failure while recording the transaction itself: nothing is promoted and '
                   'no half-written marker is left to be mistaken for an empty transaction'},
+        {'mode': 'publish_partial_staging_write', 'expect': 'publish stopped before the first promotion',
+         'inject': _partial_staging_mode(),
+         'stage': 'a staging file that already has bytes on disk when the write is refused: it is '
+                  'still this transaction\'s own file, so it is cleaned and nothing stays outstanding'},
         {'mode': 'recover_uses_marker_recorded_backup', 'expect': None,
          'inject': m_recover_recorded_backup,
          'stage': 'an interruption between two promotions whose backup lives in a non-default run '
@@ -2660,6 +2734,116 @@ def entry_selftest():
         note(os.path.exists(os.path.join(ev, 'some_other_stage.csv.new')),
              'recovery cleans only its own transaction files, it never sweeps the directory',
              str(_leftovers(ev)))
+
+        # ---- R4: the cleanup boundary. A file that exists is this transaction's file, and a
+        #      cleanup that cannot finish is not a closed transaction.
+        def deny_remove_for(path):
+            """os.remove keeps refusing this one path, so the refusal survives any retry"""
+            real, target = os.remove, os.path.abspath(path)
+
+            def deny(p, *a, **kw):
+                if os.path.abspath(p) == target:
+                    raise OSError(13, 'INJECTED persistent cleanup refusal')
+                return real(p, *a, **kw)
+            return deny, real
+
+        ev = case('partial_staging_write')
+        EVIDENCE = ev
+        before = _digest_set(ev)
+        old_write, seen = _fsync_write, []
+
+        def partial_second_staging(path, data):
+            if path.endswith('.new'):
+                seen.append(os.path.basename(path))
+                if len(seen) == 2:
+                    with io.open(path, 'wb') as fp:
+                        fp.write(u('PARTIAL_BYTES\n').encode('utf-8'))
+                    raise OSError(28, 'INJECTED no space after a partial staging write')
+            return old_write(path, data)
+        refused = ''
+        try:
+            globals()['_fsync_write'] = partial_second_staging
+            publish(new_bytes, backup_dir=os.path.join(tx, 'partial_backup'))
+        except ck.Refuse as exc:
+            refused = str(exc)
+        finally:
+            globals()['_fsync_write'] = old_write
+        note(bool(refused) and 'publish stopped before the first promotion' in refused,
+             'a partly written staging file is refused before the first promotion', refused[:60])
+        note(_digest_set(ev) == before and not _leftovers(ev) and pending_publish() is None,
+             'the partial file counts as this transaction\'s own and is cleaned',
+             'left=%s' % _leftovers(ev))
+
+        for tag, blocked_name, fail_where in (
+                ('prepromotion_cleanup_denied', 0, 'staging'),
+                ('rollback_cleanup_denied', 1, 'promotion')):
+            ev = case(tag)
+            EVIDENCE = ev
+            before = _digest_set(ev)
+            blocked = os.path.join(ev, names[blocked_name] + '.new')
+            deny, real_remove = deny_remove_for(blocked)
+            old_write, seen = _fsync_write, []
+
+            def fail_staging(path, data):
+                if path.endswith('.new'):
+                    seen.append(os.path.basename(path))
+                    if len(seen) == 2:
+                        raise OSError('INJECTED staging write refusal')
+                return old_write(path, data)
+            calls = []
+
+            def fail_promote(src, dst):
+                calls.append(os.path.basename(dst))
+                if len(calls) == 2:
+                    raise OSError('INJECTED promotion refusal')
+                os.replace(src, dst)
+            refused = ''
+            rec = []
+            try:
+                if fail_where == 'staging':
+                    globals()['_fsync_write'] = fail_staging
+                os.remove = deny
+                try:
+                    publish(new_bytes, backup_dir=os.path.join(tx, tag + '_backup'),
+                            promote=None if fail_where == 'staging' else fail_promote)
+                except ck.Refuse as exc:
+                    refused = str(exc)
+                rec = [recover_publish(), recover_publish()]
+            finally:
+                os.remove = real_remove
+                globals()['_fsync_write'] = old_write
+            note(bool(refused) and 'the cleanup of this transaction FAILED' in refused,
+                 '%s: the refusal says the cleanup failed' % tag, refused[:70])
+            if fail_where == 'promotion':
+                note('the previous set IS restored and verified' in refused,
+                     '%s: restored content is judged apart from the closed transaction' % tag,
+                     refused[:70])
+            st = pending_publish()
+            note(st is not None and not st.get('marker_invalid'),
+                 '%s: the marker survives the failed cleanup' % tag, str(st)[:70])
+            note(all(r.get('needed') is True and r.get('complete') is False
+                     and r.get('marker_kept') is True for r in rec),
+                 '%s: two retries while the fault is held both stay outstanding' % tag,
+                 json.dumps([dict((k, r.get(k)) for k in ('needed', 'complete', 'marker_kept'))
+                             for r in rec], sort_keys=True)[:90])
+            refused2 = ''
+            try:
+                publish(new_bytes, backup_dir=os.path.join(tx, tag + '_ignored'))
+            except ck.Refuse as exc:
+                refused2 = str(exc)[:70]
+            note(bool(refused2), '%s: a new publish is refused over the unfinished cleanup' % tag,
+                 refused2)
+            note(all(_digest_set(ev).get(n) == before.get(n) for n in names),
+                 '%s: the targets are intact while the leftover is held' % tag,
+                 str(sorted(_digest_set(ev)))[:70])
+            last = recover_publish()
+            note(last.get('complete') is True and pending_publish() is None
+                 and all(_digest_set(ev).get(n) == before.get(n) for n in names),
+                 '%s: lifting the fault lets the same transaction close' % tag,
+                 json.dumps(dict((k, last.get(k)) for k in ('complete', 'restored', 'failed')),
+                            sort_keys=True)[:90])
+            note(not _leftovers(ev), '%s: nothing of this transaction survives' % tag,
+                 str(_leftovers(ev)))
     finally:
         EVIDENCE = old_ev
         for d in (scratch, tx):

@@ -1,12 +1,13 @@
-DATA-7A-R3 publish / recover transaction regression
+DATA-7A-R4 publish / recover transaction regression
 command  : python scripts/dd1_d7a_publish_test.py
-rc       : 0  (0 means the repaired transaction behaviour held; it is not a design judgement)
-utc      : 2026-10-21T03:59:41.650854+00:00
-runner   : scripts/dd1_d7a_run.py sha256 f868f763104b16637f959b2902b5a7bcb63b261dc8333c32052021673f8a039b
+rc       : 0  (0 means the transaction behaviour held, including the R4 cleanup boundary; it is
+           not a design judgement)
+utc      : 2026-10-21T06:25:26.295206+00:00
+runner   : scripts/dd1_d7a_run.py sha256 dbb544f5483326e6dbe2d1319504a92675ef5d493b9ba1de0842bddb2f34f046
 fixtures : review/dd1_d7a/publish_recovery_test/<case> (ignored), never results/evidence
-note     : the PENDING_PUBLISH_RECOVERED / EXPORT_REFUSED / PUBLISH_TRANSACTION lines at the
-           top are the real entry prints of the two BOUNDARY_DIAGNOSTIC cases, which run before
-           the summary table is written
+note     : the PENDING_PUBLISH_RECOVERED / EXPORT_REFUSED / PUBLISH_TRANSACTION / PUBLISH_REFUSED
+           lines at the top are the real entry prints of the BOUNDARY_DIAGNOSTIC cases, which run
+           before the summary table is written
 --- transcript ---
 PENDING_PUBLISH_RECOVERED: {"backup_used": "review/dd1_d7a/publish_recovery_test/entry_export_refused/a_run_dir/publish_backup", "complete": false, "failed": ["dd1_d7a_cases.csv: the backup this transaction recorded is missing"], "marker_kept": true, "marker_recorded_backup": "review/dd1_d7a/publish_recovery_test/entry_export_refused/a_run_dir/publish_backup", "needed": true, "phase": "promoting", "reason": "2/3 target(s) verified and 1 unresolved; the marker stays so no new transaction can be published over this one and the mixed content is not reported as delivered", "restored": ["dd1_d7a_control_cases.csv", "dd1_d7a_manifest.json"], "targets": 3}
 EXPORT_REFUSED: an earlier publish is still outstanding and its backup cannot restore the whole set; the evidence directory is not treated as delivered (2/3 target(s) verified and 1 unresolved; the marker stays so no new transaction can be published over this one and the mixed content is not reported as delivered)
@@ -23,13 +24,19 @@ PASS publish_fail_middle              phase=promotion 2 fails                   
 PASS publish_fail_last                phase=promotion 3 fails                              rc=1 marker=False pending=none changed=[] own_staging=[] foreign=True/True
        refusal: publish aborted after 2/3 promotion(s), the previous set is restored; cause OSError: INJECTED failure before promotion 3
 PASS staging_write_fails              phase=staging write #2 fails                         rc=1 marker=False pending=none changed=[] own_staging=[] foreign=True/True
-       refusal: publish stopped before the first promotion, the published set is untouched, no marker survives; cause OSError: INJECTED staging write failure on dd1_d
+       refusal: publish stopped before the first promotion, the published set is untouched, no marker survives and no staging of this transaction remains; cause OSErr
+PASS partial_staging_write            phase=staging #2 partly written, then the write fail rc=1 marker=False pending=none changed=[] own_staging=[] foreign=True/True
+       refusal: publish stopped before the first promotion, the published set is untouched, no marker survives and no staging of this transaction remains; cause OSErr
 PASS marker_write_fails               phase=marker write fails                             rc=1 marker=False pending=none changed=[] own_staging=[] foreign=True/True
-       refusal: publish stopped before the first promotion, the published set is untouched, no marker survives; cause OSError: INJECTED marker write failure
+       refusal: publish stopped before the first promotion, the published set is untouched, no marker survives and no staging of this transaction remains; cause OSErr
 PASS backup_prepare_fails             phase=backup copy fails                              rc=1 marker=False pending=none changed=[] own_staging=[] foreign=True/True
-       refusal: publish stopped before the first promotion, the published set is untouched, no marker survives; cause OSError: INJECTED backup copy failure
+       refusal: publish stopped before the first promotion, the published set is untouched, no marker survives and no staging of this transaction remains; cause OSErr
 PASS rollback_write_fails             phase=promotion fails and the rollback fails too     rc=1 marker=False pending=none changed=[] own_staging=[] foreign=True/True
        refusal: publish aborted after 1/3 promotion(s) and the ROLLBACK ITSELF FAILED: INJECTED rollback write failure ; the published set is not restored, so the mar
+PASS prepromotion_cleanup_denied      phase=staging fails and deleting the first .new is r rc=0 marker=False pending=none changed=['dd1_d7a_cases.csv', 'dd1_d7a_control_cases.csv', 'dd1_d7a_manifest.json'] own_staging=[] foreign=True/True
+       refusal: publish stopped before the first promotion, the published set is untouched, but the cleanup of this transaction FAILED (dd1_d7a_cases.csv.new); the ma
+PASS rollback_cleanup_denied          phase=promotion 2 fails and deleting a .new is refus rc=0 marker=False pending=none changed=['dd1_d7a_cases.csv', 'dd1_d7a_control_cases.csv', 'dd1_d7a_manifest.json'] own_staging=[] foreign=True/True
+       refusal: publish aborted after 1/3 promotion(s), the previous set IS restored and verified, but the cleanup of this transaction FAILED (dd1_d7a_control_cases.c
 PASS interrupt_nondefault_backup      phase=crash mid-promotion, recovery with no argument rc=None marker=False pending=none changed=[] own_staging=[] foreign=True/True
 PASS one_backup_missing               phase=recovery with a backup the crash cannot satisf rc=None marker=False pending=none changed=[] own_staging=[] foreign=True/True
 PASS backup_digest_wrong              phase=a backup that is present but is not the record rc=None marker=False pending=none changed=[] own_staging=[] foreign=True/True
@@ -47,4 +54,4 @@ PASS entry_export_refused             phase=do_export with an outstanding transa
 PASS entry_export_proceeds            phase=do_export after a completed recovery (BOUNDARY rc=0 marker=False pending=none changed=['dd1_d7a_cases.csv', 'dd1_d7a_control_cases.csv', 'dd1_d7a_manifest.json'] own_staging=[] foreign=True/True
 
 official evidence directory before/after: 570 files, changed=none
-PUBLISH_RECOVERY_TEST: PASS (23 cases, 0 failed checks)
+PUBLISH_RECOVERY_TEST: PASS (26 cases, 0 failed checks)

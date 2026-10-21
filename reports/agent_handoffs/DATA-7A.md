@@ -721,3 +721,134 @@ stores this text.
 `STOP_REASON=AWAITING_INDEPENDENT_REVIEW`, `NEXT_STAGE_AUTHORISED=NO`. Final acceptance, merging and
 the next stage belong to the user; DATA-7B, MOS PWM, eight-level PAM, current integration, the LUT,
 the array, layout and any VM/Cadence/Spectre/OA work were not started.
+
+---
+
+# DATA-7A-R4 — publish cleanup finalisation after the fourth independent review
+
+Task package: `MicroLED_DATA7A_R3_Review_and_R4_Task_20261021.zip`, sha256
+`5caaf213533f6e6d204d5d752c531ccbb549d3a008d817e421a42c1d7eefbcc7` (measured before extraction); the
+review record inside it is `REVIEW_DATA7A_R3.md` — verdict REWORK with one blocker group, numeric
+truncation explicitly closed — and the task book is kept byte-for-byte as
+`reports/tasks/DATA-7A-R4.md` (9,694 bytes, sha256
+`2b91892a8b0e93bd336baff41d7b3dad105c663633b8e37441ee48198c2efac0`). No chat history was available or
+assumed.
+
+## Remote read-back and branch
+
+```text
+poc/data-gray-d7a-r3 tip  git ls-remote (through this machine's existing system proxy):
+                                   33cd863093961d571aca3bd726beea32cb50ecfd
+                          gh api repos/.../git/refs/heads                        :
+                                   33cd863093961d571aca3bd726beea32cb50ecfd
+                          -> equals the reviewed T3; no unreviewed commit on that branch; no
+                             poc/data-gray-d7a-r4 existed on the remote or locally
+                          -> read back too, none moved: main 23e471cb…, poc/data-gray-d7a 6a1f5a19…,
+                             -r1 0b64d1d6…, -r2 01e078bb…, poc/data-unit-1ch 7317675…
+transport note            a bare `git ls-remote origin` cannot reach github.com:443 from this machine;
+                          the proxy is the machine's own existing setting, passed per command, and no
+                          git configuration was written
+new worktree              D:\ic617_d7a_r4, branch poc/data-gray-d7a-r4, created from the T3 SHA;
+                          the R1/R2/R3 worktrees and every older branch were left where they were
+snapshot check            the package's reviewer/repo snapshot compared with the T3 worktree:
+                          37/37 byte-identical, none missing → the diagnostics ran on delivered bytes
+```
+
+## Reproduced on unmodified T3 before changing anything
+
+`python reviewer/probe_cleanup_failures.py` → **rc=0, meaning all three defects reproduce**; it is not
+a pass, and the fixture directory was created fresh because the probe refuses to reuse one.
+
+| path | T3 behaviour | what survived |
+|---|---|---|
+| `partial_second_staging_write` | second `.new` had bytes on disk when `ENOSPC` was raised; the publish refused, **deleted the marker**, left that file behind | old targets and foreign files intact; two later `recover_publish()` calls both answered `needed=false`; the real entry reached the builder |
+| `prepromotion_cleanup_denied` | the refusal even named the file it could not delete, then deleted the marker anyway | same |
+| `rollback_cleanup_denied` | content rollback succeeded, cleanup did not, and the message said "the previous set is restored" while the marker went away | same |
+
+No CSV was damaged and no formal export was recorded as a false success: the loss is the recoverable
+transaction identity, and the entry gate that depends on it.
+
+## What R4 changed
+
+```text
+publish()   registers each staging path BEFORE writing it, so a partially written .new is one of this
+            transaction's own files and gets cleaned; a pre-promotion stop whose cleanup could not
+            finish now keeps the marker and the backup and refuses with "the cleanup of this
+            transaction FAILED (…)"; a promotion failure whose content rollback succeeded but whose
+            cleanup did not is reported separately as "the previous set IS restored and verified, but
+            the cleanup … FAILED", so restoring content and closing the transaction are two
+            judgements; the same rule is applied on the success path, where a leftover would otherwise
+            have been swept under a cleared marker. Only files this transaction registered are ever
+            deleted, so another phase's .new is untouched.
+recover     already reports a file it cannot delete in failed[], which now matters: complete=false and
+            marker_kept=true on every retry while the fault is held, publish() refuses to start a new
+            transaction, and do_export() refuses before building. Once the deletion works again the
+            SAME marker restores every target (digest for files that existed, deletion for files
+            recorded absent), verifies them, removes only its own temporary files and then closes.
+entry       do_export's refusal prefix became PUBLISH_REFUSED because the old wording asserted a
+            rollback that had not necessarily happened; the refusal text itself names the boundary.
+tests       scripts/dd1_d7a_publish_test.py 23 → 26 cases: partial write really carrying bytes, and
+            both persistent cleanup refusals with the fault held across two retries by a FaultWindow
+            (not auto-lifted after the first exception), each ending in the shared tail that lifts the
+            fault, recovers the same transaction, and shows a normal publish working afterwards.
+            entry_selftest 32 → 49 assertions over the same three paths, and the write-guard matrix
+            21 → 22 modes with publish_partial_staging_write. The two stuck-cleanup cases stay out of
+            the guard table on purpose: that table scores "nothing changed and nothing left behind",
+            which is the opposite of a correctly unfinished transaction.
+documents   the R3 report's input-ZIP digest ends in 444 where the measured value ends in 44e; the
+            sentence is kept and annotated and an explicit erratum section was appended (also naming
+            the two other T3 places that carried it), rather than rewriting history. The R3 report's
+            trailing blank line, which made git diff --check report rc=2, is removed: R3→R4 is now
+            clean.
+frozen      rtl, tests, scripts/dd1_d7a_check.py, scripts/dd1_d7a_trace.py, scripts/dd1_d7a_evidence_check.py
+            (the numeric re-checker, deliberately untouched this round), the contract, both shared
+            safety tools, the handoff validator and the four earlier task books are byte-identical to
+            T3, and so are the four measured evidence tables.
+```
+
+## R4 gate status, final (published from run_id `r2_20261021`, reused waveforms)
+
+| check | result |
+|---|---|
+| new simulation runs | **0** — `REUSED_RTL_RUN = r2_20261021`, six traces re-judged from their own bytes behind the source-identity gate |
+| checker self-certification | PASS (frozen checker) |
+| runner entry selftest | PASS, **49** assertions |
+| publish / recovery regression | `PUBLISH_RECOVERY_TEST: PASS (26 cases, 0 failed checks)`, official evidence directory unchanged |
+| write and publish guard | `WRITE_GUARD: PASS (22 modes, 10 target files)` |
+| evidence re-check | `EVIDENCE_IDENTITY: PASS (0 checks failed)` over 56 checks, with the re-checker itself frozen |
+| evidence semantic selftest | `EVIDENCE_SELFTEST: PASS (15 cases)` |
+| reviewer cleanup diagnostic on the repaired tools | `rc=1`, `ALL_THREE_DEFECTS_REPRODUCED: False`, entry gate holding in both denial cases |
+| R3's publish diagnostic on the R4 tools | `rc=1` — the R3 fixes did not regress |
+| same cleanup diagnostic on unmodified T3 | `rc=0` (defects reproduce) — this round's starting point |
+| reviewer numeric full-copy reference | `rc=0`, `all_pass: true`: correct data and a legal `30.000` pass, `30.5` and `257.5` refused by the numeric checks only |
+| main matrix / control / mixed | 1536/1536 with 3072 observations; 43 scenarios (42 PASS + the required refusal); 6/6 mixed — values byte-identical to T3 |
+| failure models / synthesis | 16/16 refused (14 functional with the fault seen first, 2 diagnostic); entry rc=0, 151 cells, 21 async-reset registers, `stat_parse=parsed` |
+| safety rules / provenance / device count | PASS (408 files, 528 labelled lines, 0 violations) |
+| staged + history scans | PASS (154 commits, 1367 objects; the history scan also runs in the pre-push hook) |
+| objects scan | **FAIL** on the pre-existing unreachable blob `955497fb18ac`, unchanged and not worked around |
+| `git diff --check 33cd863…` | rc=0 |
+
+Root causes, the T3 negatives with their per-case JSON, every command with its exit code and the
+reuse boundary are in `reports/dd1_d7a_review_fix_r4.md`; the command transcript is
+`results/evidence/dd1_d7a_freeze_security.txt` (sha256
+`9476bbed6ed1837059cb37cfb14dcb7ec23fb2bdd7d2a89b9cc3aacba4e73664`).
+
+## R4 commit structure and remote read-back
+
+```text
+BRANCH             = poc/data-gray-d7a-r4                       (new, own branch, ordinary push)
+BASE (reviewed T3) = 33cd863093961d571aca3bd726beea32cb50ecfd  (read back twice, not moved)
+PAYLOAD_SHA (P4)   = the commit carrying the repaired publish cleanup path, the extended regression,
+                     the R4 report and task-book copy, the R3 erratum and the re-published identity
+                     records. It cannot name its own SHA; read it as the branch tip below.
+DELIVERY_SHA (D4)  = the next commit: this handoff MD plus reports/agent_handoffs/DATA-7A.json, and
+                     nothing else. No source, script, RTL, testbench or evidence table changes in it.
+remote read-back   two paths over the pushed branch - git ls-remote (through the machine's existing
+                     proxy) and gh api. If only one answers, parity is reported PARTIAL, not assumed.
+transport          https through the existing system proxy passed per command; no force, no
+                     --no-verify, no merge, no branch moved, no visibility change, nothing GCed.
+```
+
+`STOP_REASON=AWAITING_INDEPENDENT_REVIEW`, `NEXT_STAGE_AUTHORISED=NO`. Final acceptance, merging and
+the next stage belong to the user; DATA-7B, MOS PWM, eight-level PAM, current integration, the LUT,
+the array, layout and any VM/Cadence/Spectre/OA work were not started.

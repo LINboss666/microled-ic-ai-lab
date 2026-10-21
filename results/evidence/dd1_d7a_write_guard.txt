@@ -29,17 +29,18 @@ publish_middle_file_fails  refused: Refuse      yes        -/-/-                
 publish_last_file_fails    refused: Refuse      yes        -/-/-                    PASS
 publish_staging_write_fails refused: Refuse      yes        -/-/-                    PASS
 publish_marker_write_fails refused: Refuse      yes        -/-/-                    PASS
+publish_partial_staging_write refused: Refuse      yes        -/-/-                    PASS
 recover_uses_marker_recorded_backup completed_without_re yes        -/-/-                    PASS
 publish_success            completed_without_re yes        dd1_d7a_cases.csv,dd1_d7a_checker_selftest.txt,dd1_d7a_control_cases.csv,dd1_d7a_edge_samples.csv,dd1_d7a_environment.json,dd1_d7a_manifest.json,dd1_d7a_negative.csv/-/- PASS
 
 per-mode detail (the refusal text that was actually produced):
   dry_run_plan_only          expect=None                               got=
-  empty_row_set              expect=refusing to render 0 rows          got=refusing to render 0 rows for D:\ic617_d7a_r3\review\dd1_d7a\write_guard_fixture\evidence\dd1_d7a_cases.csv: an empty re
+  empty_row_set              expect=refusing to render 0 rows          got=refusing to render 0 rows for D:\ic617_d7a_r4\review\dd1_d7a\write_guard_fixture\evidence\dd1_d7a_cases.csv: an empty re
   missing_run_dir            expect=is missing run_summary.json        got=the run directory is missing run_summary.json
-  compile_failure            expect=IVERILOG_FAILED                    got=compile refused: IVERILOG_FAILED rc=6: D:\ic617_d7a_r3\review\dd1_d7a\write_guard_fixture\run_compile_failure\broken.sv:
+  compile_failure            expect=IVERILOG_FAILED                    got=compile refused: IVERILOG_FAILED rc=6: D:\ic617_d7a_r4\review\dd1_d7a\write_guard_fixture\run_compile_failure\broken.sv:
   gates_not_met              expect=export gates failed                got=export gates failed: {"CONTROL_AND_ABORT": true, "MIXED": true, "MUTATION_DETECTION": false, "PURE_MATRIX": true, "STIMU
   missing_trace              expect=has no trace_pure_t30.vcd          got=the run directory has no trace_pure_t30.vcd: the trace behind these results is gone
-  corrupt_trace              expect=REVIEW                             got=no $enddefinitions in D:\ic617_d7a_r3\review\dd1_d7a\write_guard_fixture\run_corrupt_trace\trace_pure_t50.vcd: nothing w
+  corrupt_trace              expect=REVIEW                             got=no $enddefinitions in D:\ic617_d7a_r4\review\dd1_d7a\write_guard_fixture\run_corrupt_trace\trace_pure_t50.vcd: nothing w
   sample_extract_failure     expect=no edge samples could be extracted got=no edge samples could be extracted from these traces
   stale_cached_source        expect=produced by different sources      got=the cached run was produced by different sources, so its PASS counts cannot be re-stamped onto this checkout: checker_sh
   row_count_mismatch         expect=main rows are                      got=main rows are 1500, the summary says 1536, the matrix requires 1536
@@ -50,22 +51,23 @@ per-mode detail (the refusal text that was actually produced):
   publish_first_file_fails   expect=publish aborted after 0/           got=publish aborted after 0/7 promotion(s), the previous set is restored; cause OSError: INJECTED promotion failure on dd1_d
   publish_middle_file_fails  expect=promotion(s), the previous set is  got=publish aborted after 3/7 promotion(s), the previous set is restored; cause OSError: INJECTED promotion failure on dd1_d
   publish_last_file_fails    expect=promotion(s), the previous set is  got=publish aborted after 6/7 promotion(s), the previous set is restored; cause OSError: INJECTED promotion failure on dd1_d
-  publish_staging_write_fails expect=publish stopped before the first p got=publish stopped before the first promotion, the published set is untouched, no marker survives; cause OSError: INJECTED
-  publish_marker_write_fails expect=publish stopped before the first p got=publish stopped before the first promotion, the published set is untouched, no marker survives; cause OSError: INJECTED
+  publish_staging_write_fails expect=publish stopped before the first p got=publish stopped before the first promotion, the published set is untouched, no marker survives and no staging of this tr
+  publish_marker_write_fails expect=publish stopped before the first p got=publish stopped before the first promotion, the published set is untouched, no marker survives and no staging of this tr
+  publish_partial_staging_write expect=publish stopped before the first p got=publish stopped before the first promotion, the published set is untouched, no marker survives and no staging of this tr
   recover_uses_marker_recorded_backup expect=None                               got=
   publish_success            expect=None                               got=
 
 per-file sha256 of the fixture evidence set after the last attempt:
   dd1_d7a_cases.csv                  b4ca49a34bf25d56887f5485eeea779e0ec400115332514eb6f89b5fb9b6ffa9
-  dd1_d7a_checker_selftest.txt       724ea04b219a3290dc29492cfae36d0c1264749736096c6d887b0df199d95797
+  dd1_d7a_checker_selftest.txt       17a5e1ac9e34cd6d253ad3835a7a51af946fb5e522955b797ff43e1e5196ab92
   dd1_d7a_control_cases.csv          6e8e22400113b7ae3439310fdb517b724526924e17e2401724e5cf68f2c6bc47
   dd1_d7a_edge_samples.csv           2ef6d70ed55aceddd8296d2ea1dbbbeff6d3cb1220545dcce9c40f12204b5a8b
-  dd1_d7a_environment.json           64fa4e817beef1473fecf2f0e4a7dbe6f7986ea7415ea7eae0d1cad2a9316192
-  dd1_d7a_freeze_security.txt        d2a3a327eb5ac23b1addc6ad0df98f466fc9fc8a181a33a27c2971dd4b894330
-  dd1_d7a_manifest.json              40cb96dc9d7fbb301a9b2ef3e941577a5516edad50c5a0f245e14b9a951d5749
+  dd1_d7a_environment.json           f201c506b97580aeb26451c1b3d9e99e35c8a2ac4b168fda30921be3bb804999
+  dd1_d7a_freeze_security.txt        f6f703c570324856951e1f25fe6323a29b12fec537a12137b9c02b54d06c127b
+  dd1_d7a_manifest.json              93a7556782d2ddee7c058e1a5d814602711f10baacfcf93b5bcf9475129481a5
   dd1_d7a_negative.csv               3221a455ddd7f6cfb3d2e7bf9684709b2cf944cc14c153d045353d7e91081092
-  dd1_d7a_publish_test.txt           5e7c5d3aa4a8bc6c860028f67dd57f5cc7f2e2755014e26403385eb9c3c0a143
-  dd1_d7a_write_guard.txt            1bb120cac674224af656cd45bd3ba9d43cd1732eaeb86c0cc4b1837a992475b5
+  dd1_d7a_publish_test.txt           66544963d5187afd2caba00c2feea4f5e2eea0b8878e95b71bb79e6c84dad096
+  dd1_d7a_write_guard.txt            335c84a896fa90334b6941d5f679bfc41b14066e7ccd04e82a4f6a7f7b2fa2c1
 
 state after the matrix: leftover staging/marker files = none
 publish atomicity boundary: each file is replaced by os.replace (atomic per file);

@@ -24,6 +24,7 @@ import json
 import os
 import shutil
 import sys
+import contextlib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJ = os.path.dirname(HERE)
@@ -221,6 +222,77 @@ def backup_copy_fail():
     return (install, restore)
 
 
+def partial_staging_write_at(n):
+    """the n-th .new really gets bytes written, then the write is refused (a partial file exists)"""
+    holder = {}
+
+    def install():
+        holder['old'] = R._fsync_write
+        seen = []
+
+        def patched(path, data):
+            if str(path).endswith('.new'):
+                seen.append(os.path.basename(str(path)))
+                if len(seen) == n:
+                    with io.open(str(path), 'wb') as fp:
+                        fp.write(b'PARTIAL_BYTES_BEFORE_ENOSPC\n')
+                    raise OSError(28, 'INJECTED no space left after writing staging bytes')
+            return holder['old'](path, data)
+        R._fsync_write = patched
+        return holder['old']
+
+    def restore(old):
+        R._fsync_write = old
+    return (install, restore)
+
+
+def cleanup_denied_for(basename):
+    """deleting this one file keeps failing, and stays failing across retries"""
+    holder = {}
+    target = [os.path.abspath(os.path.join(R.EVIDENCE, basename))]
+
+    def install():
+        holder['old'] = os.remove
+
+        def deny(path, *args, **kw):
+            if os.path.abspath(path) == target[0]:
+                raise PermissionError(13, 'INJECTED persistent cleanup refusal', str(path))
+            return holder['old'](path, *args, **kw)
+        os.remove = deny
+        return holder['old']
+
+    def restore(old):
+        os.remove = old
+    return (install, restore)
+
+
+def entry_boundary(case):
+    """BOUNDARY_DIAGNOSTIC: call the real do_export() with a builder that only raises
+
+    It proves which side of the recovery gate the entry reached. It never proves a build or an
+    export succeeded: when the gate lets the entry through, the sentinel aborts the call and the
+    return code is reported as ABORTED_AT_SENTINEL rather than as a pass.
+    """
+    reached = []
+    real = R.build_artefacts
+
+    def sentinel(run_dir):
+        reached.append(run_dir)
+        raise BuilderReached('the builder must not be reached while a transaction is outstanding')
+    R.build_artefacts = sentinel
+    out = io.StringIO()
+    rc = 'ABORTED_AT_SENTINEL'
+    try:
+        with contextlib.redirect_stdout(out):
+            rc = R.do_export({'out': case.dir})
+    except BuilderReached:
+        rc = 'ABORTED_AT_SENTINEL'
+    finally:
+        R.build_artefacts = real
+    return {'rc': rc, 'builder_reached': bool(reached),
+            'output': ' / '.join([l for l in out.getvalue().split('\n') if l.strip()])[:300]}
+
+
 def interrupt_promote(at, after=True, exc=None):
     """a promotion primitive that fails on the at-th call, as a crash (BaseException) or caught I/O"""
     calls = []
@@ -374,6 +446,166 @@ def case_rollback_also_fails():
             str(short(digests(c.ev)))[:90])
     c.check('the marker is only cleared by a verified recovery', not c.state()['marker'],
             str(c.state())[:90])
+    return c.finish()
+
+
+def case_partial_staging_write():
+    """a staging file really has bytes on disk when the write is refused, and is still cleaned"""
+    c = Case('partial_staging_write', 'staging #2 partly written, then the write fails')
+    before = digests(c.ev)
+    ok = publish_expect_raise(c, patch=partial_staging_write_at(2))
+    c.check('the partial staging write is refused', ok, c.refusal[:120])
+    c.check('the refusal names the pre-promotion stop',
+            'publish stopped before the first promotion' in c.refusal, c.refusal[:120])
+    st = c.state()
+    c.check('the partly written file is cleaned as this transaction\'s own file',
+            not st['own_staging_left'], str(st['own_staging_left']))
+    c.check('the published set is intact', digests(c.ev) == before, str(short(digests(c.ev)))[:90])
+    c.check('a fully cleaned stop leaves no marker', not st['marker'], st['pending'])
+    c.check('the foreign staging file is still untouched',
+            os.path.exists(os.path.join(c.ev, FOREIGN_STAGE)), 'kept')
+    c.check('and no transaction is claimed outstanding', R.recover_publish() == {'needed': False},
+            str(R.recover_publish())[:90])
+    b = entry_boundary(c)
+    c.check('with nothing outstanding the entry gets past the recovery gate to the builder '
+            '(labelled boundary, the sentinel aborts so this is not an export PASS)',
+            b['builder_reached'] and b['rc'] == 'ABORTED_AT_SENTINEL',
+            'rc=%s reached=%s' % (b['rc'], b['builder_reached']))
+    return c.finish()
+
+
+class FaultWindow(object):
+    """keeps injected faults installed across the whole retry sequence
+
+    The reviewer's requirement is that a cleanup refusal holds over two recoveries, so the fault may
+    not be lifted by the call that first reported it.
+    """
+
+    def __init__(self, *patches):
+        self.patches = patches
+        self.olds = []
+
+    def __enter__(self):
+        self.olds = [p[0]() for p in self.patches]
+        return self
+
+    def __exit__(self, *exc):
+        for p, old in zip(reversed(self.patches), reversed(self.olds)):
+            p[1](old)
+        return False
+
+
+def publish_inside(c, promote=None):
+    """run publish() and record the refusal, without restoring any fault on the way out"""
+    raised = False
+    c.refusal = ''
+    try:
+        R.publish(NEW, backup_dir=c.bak, promote=promote)
+    except ck.Refuse as exc:
+        raised = True
+        c.refusal = str(exc)
+        c.rc = 1
+    return raised
+
+
+def case_cleanup_denied_prepromotion():
+    """the cleanup of a pre-promotion stop keeps failing: the record must survive it"""
+    c = Case('prepromotion_cleanup_denied', 'staging fails and deleting the first .new is refused')
+    before = digests(c.ev)
+    with FaultWindow(cleanup_denied_for(NAMES[0] + '.new'), staging_fail_at(2)):
+        raised = publish_inside(c)
+        c.check('the publish is refused', raised, c.refusal[:120])
+        c.check('the refusal reports the cleanup as failed, not the transaction as closed',
+                'the cleanup of this transaction FAILED' in c.refusal
+                and (NAMES[0] + '.new') in c.refusal, c.refusal[:150])
+        st = c.state()
+        c.check('the marker survives the failed cleanup',
+                st['marker'] and st['pending'] == 'outstanding', str(st)[:90])
+        c.check('the leftover really is this transaction\'s own staging file',
+                st['own_staging_left'] == [NAMES[0] + '.new'], str(st['own_staging_left']))
+        rec = [R.recover_publish(), R.recover_publish()]
+        for i, r in enumerate(rec):
+            c.check('recover #%d while the fault is held refuses to close it' % (i + 1),
+                    r.get('needed') is True and r.get('complete') is False
+                    and r.get('marker_kept') is True
+                    and any('could not be deleted' in str(f) for f in r.get('failed', [])),
+                    json.dumps(dict((k, r.get(k)) for k in ('needed', 'complete', 'failed')),
+                               sort_keys=True)[:140])
+        refused = ''
+        try:
+            R.publish(NEW, backup_dir=os.path.join(c.dir, 'must_not_be_used'))
+        except ck.Refuse as exc:
+            refused = str(exc)[:80]
+        c.check('a new publish is refused instead of overwriting the backup and marker',
+                bool(refused), refused)
+        b = entry_boundary(c)
+        c.check('the real entry does not reach the builder while the cleanup is unfinished',
+                b['rc'] == 1 and not b['builder_reached'],
+                'rc=%s reached=%s' % (b['rc'], b['builder_reached']))
+        c.check('the old targets and the foreign files are intact even with the leftover',
+                all(digests(c.ev).get(n) == before[n] for n in NAMES + [FOREIGN, FOREIGN_STAGE]),
+                str(short(digests(c.ev)))[:90])
+    return case_finish_then_recover(c, before)
+
+
+def case_cleanup_denied_rollback():
+    """promotion fails, the previous bytes come back, but the cleanup still fails"""
+    c = Case('rollback_cleanup_denied', 'promotion 2 fails and deleting a .new is refused')
+    before = digests(c.ev)
+    promote, calls = interrupt_promote(2, after=False, exc=OSError)
+    with FaultWindow(cleanup_denied_for(NAMES[1] + '.new')):
+        raised = publish_inside(c, promote=promote)
+        c.check('the publish is refused', raised, c.refusal[:120])
+        c.check('the refusal separates restored content from an unclosed transaction',
+                'the previous set IS restored and verified' in c.refusal
+                and 'the cleanup of this transaction FAILED' in c.refusal, c.refusal[:150])
+        st = c.state()
+        c.check('the marker is kept although the rollback restored the bytes',
+                st['marker'] and st['pending'] == 'outstanding', str(st)[:90])
+        rec = [R.recover_publish(), R.recover_publish()]
+        for i, r in enumerate(rec):
+            c.check('recover #%d keeps refusing while the deletion is denied' % (i + 1),
+                    r.get('needed') is True and r.get('complete') is False
+                    and r.get('marker_kept') is True,
+                    json.dumps(dict((k, r.get(k)) for k in ('needed', 'complete', 'failed')),
+                               sort_keys=True)[:140])
+        b = entry_boundary(c)
+        c.check('the real entry stays behind the recovery gate', b['rc'] == 1 and
+                not b['builder_reached'], 'rc=%s reached=%s' % (b['rc'], b['builder_reached']))
+        c.check('the rolled-back targets and the foreign files are the old generation byte for byte',
+                all(digests(c.ev).get(n) == before[n]
+                    for n in NAMES + [FOREIGN, FOREIGN_STAGE]),
+                str(short(digests(c.ev)))[:90])
+    return case_finish_then_recover(c, before)
+
+
+def case_finish_then_recover(c, before):
+    """shared tail: lift the fault, the same transaction must close, and publishing must work again"""
+    rec = R.recover_publish()
+    c.check('once the fault is lifted the same transaction recovers and closes',
+            rec.get('complete') is True and rec.get('marker_kept') is False,
+            json.dumps(dict((k, rec[k]) for k in ('complete', 'restored', 'failed', 'marker_kept')),
+                       sort_keys=True)[:140])
+    c.check('the recovered set is the old generation', digests(c.ev) == before,
+            str(short(digests(c.ev)))[:90])
+    st = c.state()
+    c.check('the leftover staging file of this transaction is gone', not st['own_staging_left'],
+            str(st['own_staging_left']))
+    c.check('nothing is left outstanding', R.recover_publish() == {'needed': False},
+            str(R.recover_publish())[:60])
+    raised = ''
+    try:
+        R.publish(NEW, backup_dir=os.path.join(c.dir, 'recovered_publish_backup'))
+    except ck.Refuse as exc:
+        raised = str(exc)[:80]
+    want = dict((n, hashlib.sha256(NEW[n].encode('utf-8')).hexdigest()) for n in NAMES)
+    after = digests(c.ev)
+    c.check('a normal publish works again after the transaction closed',
+            not raised and all(after.get(n) == want[n] for n in NAMES), raised[:80])
+    c.check('and the unrelated content survived the whole sequence',
+            after.get(FOREIGN) == before.get(FOREIGN) and after.get(FOREIGN_STAGE) ==
+            before.get(FOREIGN_STAGE), 'unchanged')
+    c.rc = 0 if not raised else 1
     return c.finish()
 
 
@@ -664,9 +896,12 @@ def main():
         results.append(case_normal())
         results.extend(case_promotion_failures())
         results.append(case_staging_failure())
+        results.append(case_partial_staging_write())
         results.append(case_marker_write_failure())
         results.append(case_backup_prepare_failure())
         results.append(case_rollback_also_fails())
+        results.append(case_cleanup_denied_prepromotion())
+        results.append(case_cleanup_denied_rollback())
         results.append(case_recorded_backup())
         results.append(case_missing_backup())
         results.append(case_wrong_digest_backup())

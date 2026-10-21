@@ -1,21 +1,21 @@
-DATA-7A-R3 freeze and security check transcript
-generated: 2026-10-21T04:10:40Z by running, in the worktree at branch poc/data-gray-d7a-r3 fixed on reviewed base 01e078bbf545b9191539dc1c0de228a6d8e7749b
+DATA-7A-R4 freeze and security check transcript
+generated: 2026-10-21T06:42:35Z by running, in the worktree at branch poc/data-gray-d7a-r4 fixed on reviewed base 33cd863093961d571aca3bd726beea32cb50ecfd
 
-This round changes two verification tools only: the publish/recover transaction handling in
-scripts/dd1_d7a_run.py and the numeric parsing in scripts/dd1_d7a_evidence_check.py. The RTL,
-the testbench, the waveform checker and reader, the contract and the shared safety rules are
-frozen byte-for-byte against T2, and step 0 below is the command that proves it.
+This round changes the publish cleanup path in scripts/dd1_d7a_run.py and its regressions only.
+The RTL, the testbench, the waveform checker and reader, the contract, the shared safety rules,
+the earlier task books, the handoff validator and -- new this round -- the numeric evidence
+re-checker are frozen byte-for-byte against T3, and step 0 proves it.
 
-== 0a. frozen files against T2 (empty diff = byte-identical)
-$ git diff --name-only 01e078bbf545b9191539dc1c0de228a6d8e7749b -- rtl/dd1_d7a_gray_ctrl.sv tests/dd1_d7a/tb_dd1_d7a_gray.sv scripts/dd1_d7a_check.py scripts/dd1_d7a_trace.py reports/dd1_d7a_contract.md scripts/repo_safety_rules.py scripts/test_safety_rules.py
+== 0a. frozen files against T3 (empty diff = byte-identical)
+$ git diff --name-only 33cd863093961d571aca3bd726beea32cb50ecfd -- rtl/dd1_d7a_gray_ctrl.sv tests/dd1_d7a/tb_dd1_d7a_gray.sv scripts/dd1_d7a_check.py scripts/dd1_d7a_trace.py scripts/dd1_d7a_evidence_check.py reports/dd1_d7a_contract.md scripts/repo_safety_rules.py scripts/test_safety_rules.py scripts/dd1_d7a_validate_handoff.py reports/tasks/DATA-7A.md reports/tasks/DATA-7A-R1.md reports/tasks/DATA-7A-R2.md reports/tasks/DATA-7A-R3.md
 
 rc=0  expect: no output
 
-== 0b. what this round changed since T2
-$ git diff --name-only 01e078bbf545b9191539dc1c0de228a6d8e7749b -- scripts rtl tests reports
-reports/agent_handoffs/DATA-7A.md
+== 0b. what this round changed since T3
+$ git diff --name-only 33cd863093961d571aca3bd726beea32cb50ecfd -- scripts rtl tests reports
+reports/dd1_d7a_review_fix_r3.md
 scripts/dd1_d7a_bundle.py
-scripts/dd1_d7a_evidence_check.py
+scripts/dd1_d7a_publish_test.py
 scripts/dd1_d7a_run.py
 rc=0
 
@@ -33,8 +33,8 @@ PASS table HYBRID code 1                    hand-typed 1, function says 1
 PASS table HYBRID code 2                    hand-typed 2, function says 2
 PASS table HYBRID code 32                   hand-typed 32, function says 32
 PASS table HYBRID code 62                   hand-typed 62, function says 62
-   ... 80 lines omitted ...
-PASS entry recovery cleans only its own transaction files, it never sweeps the directory ['some_other_stage.csv.new']
+   ... 97 lines omitted ...
+PASS entry rollback_cleanup_denied: nothing of this transaction survives []
 
 CHECKER_SELFTEST: PASS
 ENTRY_SELFTEST: PASS
@@ -69,7 +69,7 @@ rc=0
 
 == 4. source provenance over the whole tree
 $ python scripts/provenance_check.py
-provenance_check: files=406 labelled_lines=528 violations=0
+provenance_check: files=408 labelled_lines=528 violations=0
 SOURCE_PROVENANCE_CHECK: PASS
 rc=0
 
@@ -95,7 +95,7 @@ report claims checked against the parser:
 DEVICE_COUNT_CHECK: PASS
 rc=0
 
-== 6. evidence identity recomputed from the published bytes
+== 6. evidence identity recomputed from the published bytes (numeric re-checker frozen)
 $ python scripts/dd1_d7a_evidence_check.py
 PASS   MISSING_EVIDENCE: dd1_d7a_cases.csv exists and is non-empty
 PASS   MISSING_EVIDENCE: dd1_d7a_control_cases.csv exists and is non-empty
@@ -116,7 +116,7 @@ PASS   TOOL_PROVENANCE: toolchain digest recorded matches the pinned asset diges
 EVIDENCE_IDENTITY: PASS (0 checks failed)
 rc=0
 
-== 6b. evidence re-checker semantic selftest, including the new numeric-kind cases
+== 6b. evidence re-checker semantic selftest
 $ python scripts/dd1_d7a_evidence_check.py --selftest
 PASS EVIDENCE_SELFTEST clean_evidence_passes                  rc=0 fails=[]
 PASS EVIDENCE_SELFTEST duplicate_tuple_refused                fails=['COMBINATION_UNIQUE', 'COMBINATION_COMPLETE']
@@ -136,7 +136,7 @@ PASS EVIDENCE_SELFTEST run_id_chain_enforced                  fails=['RUN_ID_CHA
 EVIDENCE_SELFTEST: PASS (15 cases)
 rc=0
 
-== 7. publish / recover transaction regression (isolated fixtures)
+== 7. publish / recover transaction regression, including the three R4 cleanup cases
 $ python scripts/dd1_d7a_publish_test.py
 PENDING_PUBLISH_RECOVERED: {"backup_used": "review/dd1_d7a/publish_recovery_test/entry_export_refused/a_run_dir/publish_backup", "complete": false, "failed": ["dd1_d7a_cases.csv: the backup this transaction recorded is missing"], "marker_kept": true, "marker_recorded_backup": "review/dd1_d7a/publish_recovery_test/entry_export_refused/a_run_dir/publish_backup", "needed": true, "phase": "promoting", "reason": "2/3 target(s) verified and 1 unresolved; the marker stays so no new transaction can be published over this one and the mixed content is not reported as delivered", "restored": ["dd1_d7a_control_cases.csv", "dd1_d7a_manifest.json"], "targets": 3}
 EXPORT_REFUSED: an earlier publish is still outstanding and its backup cannot restore the whole set; the evidence directory is not treated as delivered (2/3 target(s) verified and 1 unresolved; the marker stays so no new transaction can be published over this one and the mixed content is not reported as delivered)
@@ -150,22 +150,14 @@ PASS publish_fail_first               phase=promotion 1 fails                   
        refusal: publish aborted after 0/3 promotion(s), the previous set is restored; cause OSError: INJECTED failure before promotion 1
 PASS publish_fail_middle              phase=promotion 2 fails                              rc=1 marker=False pending=none changed=[] own_staging=[] foreign=True/True
        refusal: publish aborted after 1/3 promotion(s), the previous set is restored; cause OSError: INJECTED failure before promotion 2
-   ... 24 lines omitted ...
+   ... 30 lines omitted ...
 PASS entry_export_proceeds            phase=do_export after a completed recovery (BOUNDARY rc=0 marker=False pending=none changed=['dd1_d7a_cases.csv', 'dd1_d7a_control_cases.csv', 'dd1_d7a_manifest.json'] own_staging=[] foreign=True/True
 
 official evidence directory before/after: 570 files, changed=none
-PUBLISH_RECOVERY_TEST: PASS (23 cases, 0 failed checks)
+PUBLISH_RECOVERY_TEST: PASS (26 cases, 0 failed checks)
 rc=0
 
-== 8a. harness rebuilt from the current tools and published evidence
-$ python review\make_probe_harness.py
-harness rebuilt at <repo>\review\r3_probe_after_fix
-no probe fixture directory exists yet (the probes refuse to reuse one)
-scripts copied: dd1_d7a_run.py, dd1_d7a_evidence_check.py, dd1_d7a_publish_test.py, dd1_d7a_check.py, dd1_d7a_trace.py, dd1_d7a_bundle.py
-evidence copied: 10 files
-rc=0
-
-== 8b. the reviewer T2 diagnostics re-run against the repaired tools
+== 7b. the R3 publish probe against the R4 tools (the R3 fixes must still hold)
 $ python probe_publish_recovery.py
 {
   "scope": "isolated fixture; actual delivered publish/recover functions",
@@ -184,84 +176,73 @@ $ python probe_publish_recovery.py
   ],
   "all_reported_behaviours_reproduced": false
 }
-rc=1  expect rc=1: rc=0 would mean the T2 defect is still reproducible
+rc=1  expect rc=1: rc=0 would mean an R3 defect came back
 
-== 8c. the reviewer numeric diagnostic against the repaired re-checker
-$ python probe_numeric_precision.py
+== 8a. harness rebuilt from the current tools and published evidence
+$ python review\make_probe_harness_r4.py
+harness rebuilt at <repo>\review\r4_probe_after_fix
+scripts copied: dd1_d7a_run.py, dd1_d7a_evidence_check.py, dd1_d7a_publish_test.py, dd1_d7a_check.py, dd1_d7a_trace.py, dd1_d7a_bundle.py
+evidence copied: 10 files
+no probe fixture directory exists yet (the probes refuse to reuse one)
+rc=0
+
+== 8b. the reviewer R3 cleanup diagnostic against the repaired tools
+$ python probe_cleanup_failures.py
+partial_second_staging_write REPRODUCED=False own_staging=[] marker=False builder_reached=True
+  publish stopped before the first promotion, the published set is untouched, no marker survives and no staging of this transaction remains; cause OSError: [Errno 28] REVIEW simulated no space after writing staging bytes
+prepromotion_cleanup_denied REPRODUCED=False own_staging=['dd1_d7a_cases.csv.new'] marker=False builder_reached=False
+  publish stopped before the first promotion, the published set is untouched, but the cleanup of this transaction FAILED (dd1_d7a_cases.csv.new); the marker and the backup in review/dd1_d7a/reviewer_r3_cleanup/prepromotion_cleanup_denied/actual_run/publish_backup are kept, so the transaction stays outstanding and every later publish is refused until recover_publish() finishes the cleanup; cause OSError: REVIEW second staging write refused
+rollback_cleanup_denied REPRODUCED=False own_staging=['dd1_d7a_control_cases.csv.new'] marker=False builder_reached=False
+  publish aborted after 1/3 promotion(s), the previous set IS restored and verified, but the cleanup of this transaction FAILED (dd1_d7a_control_cases.csv.new); the marker and the backup in review/dd1_d7a/reviewer_r3_cleanup/rollback_cleanup_denied/actual_run/publish_backup are kept, so the transaction is NOT closed and every later publish stays refused until recover_publish() finishes the cleanup; cause OSError: REVIEW second promotion refused
+ALL_THREE_DEFECTS_REPRODUCED: False
+rc=1  expect rc=1: rc=0 would mean all three cleanup defects still reproduce
+
+== 8c. the same cleanup diagnostic against the unmodified T3 bytes
+$ python probe_cleanup_failures.py
+partial_second_staging_write REPRODUCED=True own_staging=['dd1_d7a_control_cases.csv.new'] marker=False builder_reached=True
+  publish stopped before the first promotion, the published set is untouched, no marker survives; cause OSError: [Errno 28] REVIEW simulated no space after writing staging bytes
+prepromotion_cleanup_denied REPRODUCED=True own_staging=['dd1_d7a_cases.csv.new'] marker=False builder_reached=True
+  publish stopped before the first promotion, the published set is untouched, no marker survives; staging that could not be removed: ['dd1_d7a_cases.csv.new']; cause OSError: REVIEW second staging write refused
+rollback_cleanup_denied REPRODUCED=True own_staging=['dd1_d7a_control_cases.csv.new'] marker=False builder_reached=True
+  publish aborted after 1/3 promotion(s), the previous set is restored; cause OSError: REVIEW second promotion refused
+ALL_THREE_DEFECTS_REPRODUCED: True
+rc=0  rc=0 here means the defects reproduce, which is how R4 started
+
+== 8d. the reviewer numeric reference probe on the full published evidence copy
+$ python probe_numeric_full_copy.py
 {
-  "scope": "isolated evidence fixtures; real R2 verifier and unchanged contract",
+  "scope": "complete evidence copies; manifest digests refreshed; actual delivered verifier",
   "results": [
     {
-      "case": "fractional_width",
-      "case_id": "2",
-      "field": "a_on_width_ns",
-      "before": "30",
-      "after": "30.5",
-      "manifest_hash_refreshed": true,
-      "verifier_rc": 1,
-      "verifier_failures": [
-   ... 20 lines omitted ...
-    }
-  ],
-  "all_reproduced": false
-}
-rc=1  expect rc=1
-
-== 8d. the same publish diagnostic against the unmodified T2 bytes
-$ python probe_publish_recovery.py
-{
-  "scope": "isolated fixture; actual delivered publish/recover functions",
-  "results": [
+      "case": "clean",
+      "field": null,
+      "value": null,
+      "rc": 0,
+      "failures": [],
+      "pass": true
+    },
     {
-      "case": "recorded_backup_ignored",
-      "marker_recorded_backup": "review/dd1_d7a/reviewer_publish_recovery/recorded_backup_ignored/actual_run/publish_backup",
-      "actual_backup_files": [
-        "dd1_d7a_cases.csv",
-        "dd1_d7a_control_cases.csv",
-        "dd1_d7a_manifest.json"
-      ],
-      "recovery_result": {
-   ... 58 lines omitted ...
+   ... 28 lines omitted ...
     }
   ],
-  "all_reported_behaviours_reproduced": true
+  "all_pass": true
 }
-rc=0  rc=0 here means the defect reproduced, which is how R3 started
-
-== 8e. the same numeric diagnostic against the unmodified T2 re-checker
-$ python probe_numeric_precision.py
-{
-  "scope": "isolated evidence fixtures; real R2 verifier and unchanged contract",
-  "results": [
-    {
-      "case": "fractional_width",
-      "case_id": "2",
-      "field": "a_on_width_ns",
-      "before": "30",
-      "after": "30.5",
-      "manifest_hash_refreshed": true,
-      "verifier_rc": 0,
-      "verifier_failures": [],
-   ... 12 lines omitted ...
-    }
-  ],
-  "all_reproduced": true
-}
-rc=0  rc=0 here means the defect reproduced
+rc=0  rc=0 here is the pass-shaped diagnostic: correct data and a legal 30.000 pass, 30.5 and 257.5 are refused by the named numeric checks
 
 == 9. precommit gate over staged content
 the git pre-commit hook runs scripts/precommit_safety_check.py at commit time; the
 staged, history, object and unreachable-blob results for this round are recorded
-in reports/dd1_d7a_review_fix_r3.md and reports/agent_handoffs/DATA-7A.md.
-The unreachable blob 955497fb18ac reported by earlier rounds stays reported as it
-was found: no garbage collection, no content printed, no gate relaxed.
+in reports/dd1_d7a_review_fix_r4.md and reports/agent_handoffs/DATA-7A.md.
+The unreachable blob 955497fb18ac reported by earlier rounds stays reported as it was
+found: no garbage collection, no content printed, no rule relaxed, no history rewrite.
 
 The handoff structure validator (scripts/dd1_d7a_validate_handoff.py, an unchanged
 byte-for-byte copy) is run over the delivery JSON in the metadata commit and its
 command and exit code are quoted next to the file it judged.
 
-Waveform reuse: the traces in this round come from run_id r2_20261021, produced by
-the frozen RTL/TB/checker/reader whose digests the export verifies before publishing.
-R3 started no new simulation; see waveform_provenance in dd1_d7a_environment.json.
+Waveform reuse: the traces come from run_id r2_20261021, produced by the frozen
+RTL/TB/checker/reader whose digests the export verifies before publishing. R4 started
+no new simulation and did not touch the numeric re-checker; see waveform_provenance
+in dd1_d7a_environment.json and the T3 digests of scripts/dd1_d7a_evidence_check.py.
 
 NEW_SPECTRE_RUNS=0  NEW_OA_WRITES=0  no VM, Cadence or OA access in this round
