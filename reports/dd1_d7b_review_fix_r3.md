@@ -41,7 +41,16 @@
    不能当作 §6 的凭据。已把该缺陷改为断言口径修正，并在 P3 提交之后重跑一次验证，
    提交进仓库的目录是 `results/evidence/dd1_d7b_r3_r20261022_174818_502025/`（13/13 PASS，§5 与 §6 两表都取自它）。改的是断言与运行时机，
    不是判据、数据或电气结论。
-6. 未做：PAM/LUT/阵列/版图/TCON、PDK/许可证/VM/凭据改动、GC、rewrite、force、跳 hooks、合并、
+6. 记录自身的一次缺陷与修正：已提交的 `..._174818_502025/commands.csv` 有一行单元格以空格结尾
+   （260 字符截断的转录尾巴），而同一目录的 `git_checks.csv` 声称 `git diff --check` 干净——
+   该断言在它被测量时成立，在该文件成为比较范围的一部分之后就不再成立。修法：`rows_write()`
+   写出前逐个单元格 `rstrip()`，并把那一行的尾随空格就地清掉（只动空格，未动任何命令、rc、
+   判决或正文），提交 `6fdae41` 后 `git diff --check b3fe93c..HEAD` 实测 0 行。
+   由于该目录的 `tools_identity.csv` 记录的是运行时工具摘要，事后改工具会让它与自己列出的摘要
+   不一致，因此用修好的工具**重跑一次完整验证**，权威记录是
+   `results/evidence/dd1_d7b_r3_r20261022_180059_efda9d/`；旧目录原样保留、不删除不改写历史，
+   §5 与 §6 两表取自新目录。
+7. 未做：PAM/LUT/阵列/版图/TCON、PDK/许可证/VM/凭据改动、GC、rewrite、force、跳 hooks、合并、
    改可见性、登记接受版。凭据回显事件仍未解除。
 
 ## 1 根因（F1）：非法账户状态被静默当成不占额
@@ -113,7 +122,7 @@ deck/PWL/case/golden/RTL/TB 在 `b3fe93c..HEAD` 内 blob 未变（§6），
 渲染命令：`python review/scratch/r3_render_tables.py`（只读 CSV，不重跑仿真）。
 
 <!-- BEGIN R3 GATES -->
-来源目录：`results/evidence/dd1_d7b_r3_r20261022_174818_502025`（本节与下一节同源；该目录由 `python scripts/dd1_d7b_r3_verify.py --out results/evidence/dd1_d7b_r3_r20261022_174818_502025 --diagnostic <审核方诊断脚本>` 生成）
+来源目录：`results/evidence/dd1_d7b_r3_r20261022_180059_efda9d`（本节与下一节同源；该目录由 `python scripts/dd1_d7b_r3_verify.py --out results/evidence/dd1_d7b_r3_r20261022_180059_efda9d --diagnostic <审核方诊断脚本>` 生成）
 
 | 门（gate） | 命令 | rc | 判决 | 关键输出 |
 |---|---|---|---|---|

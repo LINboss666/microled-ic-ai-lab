@@ -1,0 +1,70 @@
+{
+  "reviewed_tip": "b3fe93c17de014cb16031438ce28c7152dd0020f",
+  "task_requirement": "reports/tasks/DATA-7B-R2.md section 3.2: illegal account states",
+  "new_spectre_launches": 0,
+  "new_rtl_simulations": 0,
+  "new_oa_writes": 0,
+  "unit_cases": [
+    {
+      "injected_state": "UNRECOGNISED_STATE",
+      "synthetic_ceiling": 1,
+      "before_corruption_counts": {
+        "requested": 1,
+        "confirmed": 0,
+        "uncertain": 0,
+        "pending": 1,
+        "occupied": 1,
+        "no_launch": 0
+      },
+      "reopen_accepted": false,
+      "refusal": "account.csv carries 1 row(s) whose state is not one of REQUESTED|UNCERTAIN|CONFIRMED|COMPLETED|REFUSED_NO_LAUNCH: A001=UNRECOGNISED_STATE -- an unrecognised state is refused rather than counted as free, and the file is left exactly as it was read",
+      "second_reservation_accepted": false,
+      "defect_reproduced": false
+    },
+    {
+      "injected_state": "",
+      "synthetic_ceiling": 1,
+      "before_corruption_counts": {
+        "requested": 1,
+        "confirmed": 0,
+        "uncertain": 0,
+        "pending": 1,
+        "occupied": 1,
+        "no_launch": 0
+      },
+      "reopen_accepted": false,
+      "refusal": "account.csv carries 1 row(s) whose state is not one of REQUESTED|UNCERTAIN|CONFIRMED|COMPLETED|REFUSED_NO_LAUNCH: A001=(empty) -- an unrecognised state is refused rather than counted as free, and the file is left exactly as it was read",
+      "second_reservation_accepted": false,
+      "defect_reproduced": false
+    }
+  ],
+  "baseline": {
+    "rc": 1,
+    "failures": [
+      "BUDGET_RESPECTED"
+    ]
+  },
+  "counterfeit": {
+    "changed_row": {
+      "launch_id": "A001",
+      "case_id": "D7B-BLANK",
+      "original_state": "REFUSED_NO_LAUNCH"
+    },
+    "new_state": "UNRECOGNISED_STATE",
+    "environment_rollup_no_launch_before": 274,
+    "environment_rollup_no_launch_after": 273,
+    "manifest_resealed": true,
+    "rc": 1,
+    "failures": [
+      "ACCOUNT_STATES_VALID",
+      "BUDGET_RESPECTED"
+    ],
+    "new_failures": [
+      "ACCOUNT_STATES_VALID"
+    ],
+    "semantic_corruption_escaped": false,
+    "scope": "historical confirmed rows, fixed grant 56 and measured current data unchanged"
+  },
+  "defect_reproduced": false,
+  "all_requirements_met": true
+}

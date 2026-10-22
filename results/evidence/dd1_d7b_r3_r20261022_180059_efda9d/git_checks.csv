@@ -1,0 +1,2 @@
+check,rc,detail
+git diff --check b3fe93c1..HEAD,0,0 whitespace lines over the committed range
