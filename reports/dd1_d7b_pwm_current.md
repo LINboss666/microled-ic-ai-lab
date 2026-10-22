@@ -7,7 +7,7 @@
 | 层 | 位置 | 状态 |
 |---|---|---|
 | 原交付（T） | `results/evidence/dd1_d7b_r11_main/`，分支 `poc/data-pwm-d7b`，提交 `adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50` | **完全冻结、未改一字节**；用 R1 复核器重跑它得 14 项具名 FAIL（`reports/dd1_d7b_review_fix_r1.md` §3） |
-| R1 更正证据 | `results/evidence/dd1_d7b_r1_r20261022_122204_05417c/`，分支 `poc/data-pwm-d7b-r1` | 本报告 §3–§8 的每个数字都取自这里，不是手抄 |
+| R1 更正证据 | `results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/`，分支 `poc/data-pwm-d7b-r1` | 本报告 §3–§8 的每个数字都取自这里，不是手抄 |
 | 逐项更正说明 | `reports/dd1_d7b_review_fix_r1.md` | 旧结论保留在 Git 历史里，不抹去"旧交付曾报错"的事实 |
 
 电路、PWL、24 份原生 deck、冻结 RTL/TB、主 case 表、黄金表、`±0.5 LSB` / `150 nA` 判据与模拟条件本轮一律

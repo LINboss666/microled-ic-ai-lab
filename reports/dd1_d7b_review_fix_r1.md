@@ -12,8 +12,8 @@
 | 被接受的 DATA-7A | `f68449672774ac9266ba9e4893024e4f3027dd9d` |
 | main（未动） | `23e471cb936b421ee97e1250c3be06edf96f9937` |
 | 分支 | `poc/data-pwm-d7b-r1`（本轮新建，工作树 `D:\ic617_d7b_r1`） |
-| 交付证据 | `results/evidence/dd1_d7b_r1_r20261022_122204_05417c/`（发布 283 个文件；manifest 覆盖 282 条 / 21,199,023 B，上限 33,554,432 B） |
-| 证据内记录源码身份 | measure `06079331aaaff1ef748198da80ccad8bafc5355fb4dd1cc8a555a1c17e7d474f`；runner `5e3b00d4b6f4…`；trace `8ae5edf9e814c13fea411b3d67e8e4e1f26fd1f394a080833b48675ad8cdb0ce`；evidence_check `e486aaa18eca…`（四个摘要与盘上脚本逐个重算一致，完整值在包内 `environment.json`） |
+| 交付证据 | `results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/`（发布 284 个文件；manifest 覆盖 283 条 / 21,084,177 B，上限 33,554,432 B；283 条与暂存 blob 逐条一致） |
+| 证据内记录源码身份 | measure `06079331aaaff1ef748198da80ccad8bafc5355fb4dd1cc8a555a1c17e7d474f`；runner `64797d531342533539ea6c9848994c0c4dc3593187e12a29e1a1a5b5299bc705`；trace `8ae5edf9e814c13fea411b3d67e8e4e1f26fd1f394a080833b48675ad8cdb0ce`；evidence_check `6e2b1d217d36b5c6d3ef0c0d2318fa005684e329f065a8f9309ef004ff2fd44a`（四个摘要与盘上脚本逐个重算一致） |
 | 外部成本 | 新增 Spectre 进程 **0**；新增 OA 写入 **0**；新增四态 RTL 仿真 **17**（上限 17，已用满） |
 
 本报告不写自身摘要或大小；最终身份从固定 Git blob 与包外回执读。
@@ -26,23 +26,32 @@
    `..._111346_e3f62c`（282 / 21,237,557）。
    动因是我在"改脚本→重导出"的迭代里清理上一版，以免 `results/evidence/` 下同时留着多份候选包。
    这四个目录当时都**未提交、未推送**，其内容可由保留的 raw 字节与当时的脚本重新生成，但
-   **原始字节已不在机上**。用户在本轮中途明确指示不得先删记录再重做，此后我改用新 staging 目录 +
-   新 run_id，并保留已发布目录。机上留下三个被后续脚本改动取代的中间件，保持原样不提交：
-   `..._112014_0b7ee2`（manifest 281 / 21,179,420 B，`environment.json` 还没有
-   `evidence_check_source_sha256`）、`..._115827_ee0cc6`（281 / 21,185,208 B，其复核器摘要
-   `fe4cd40ebb84` 是"参照包自比"修正之前的版本）、`..._120120_65fd92`（281 / 21,190,894 B，
-   复核器摘要 `45f41cf4949d`，还没有 `gate_records.csv`）。交付的是
-   `..._122204_05417c`（282 / 21,199,023 B，复核器摘要 `e486aaa18eca`，含 `gate_records.csv`）。
-   四个都在机上，用当前复核器逐个重跑：三个中间件是 `BUDGET_RESPECTED` + `GATE_RECORDS_SHIPPED`
-   两项 FAIL（它们确实没带 gate 记录，不隐藏），交付包 39 项里只剩 `BUDGET_RESPECTED`。
-   输出留在 `review/scratch/r1_gates/`，不提交。
+   **原始字节已不在机上**。用户在本轮中途明确指示不得先删记录再重做；此后我改用新 staging 目录 +
+   新 run_id 并把已发布目录全部原地保留。机上现在留下五个被后续脚本改动取代的中间件，未提交、
+   未删除、可用当前复核器逐个重跑：
+   `..._112014_0b7ee2`（manifest 281 / 21,179,420 B，还没有 `evidence_check_source_sha256`）、
+   `..._115827_ee0cc6`（281 / 21,185,208 B，其复核器摘要 `fe4cd40ebb84` 是"参照包自比"修正前的版本）、
+   `..._120120_65fd92`（281 / 21,190,894 B，复核器摘要 `45f41cf4949d`）、
+   `..._122204_05417c`（282 / 21,199,023 B，已有 `gate_records.csv`，但 VCD 仍按 `*.vcd` 命名，
+   被 `.gitignore` 第 84 行挡在仓库外，Git 带不上它们）、`..._123430_1662e5`（282 / 21,204,709 B，
+   VCD 已改名 `.vcd.txt`，但还是 iverilog 的 CRLF 原字节，提交时 Git 归一化行尾会让摘要与新鲜
+   checkout 不一致）。
+   交付的是 `results/evidence/dd1_d7b_r1_r20261022_123825_8e1294`（284 个文件；manifest 覆盖 283 条 / 21,084,177 B），283 个条目与暂存区 Git blob
+   逐条重算一致（`git ls-files -s` + `git cat-file blob`，283/283，0 失配），所以清单在新鲜 checkout
+   上仍成立。五个中间件用当前复核器重跑都带 `GATE_RECORDS_SHIPPED` 或 `RTL_EDGES_REVERIFIED` 类具名
+   FAIL（它们确实缺那些 artefact，不隐藏）；重跑输出留在 `review/scratch/r1_gates/`，不提交。
+
 2. **凭据回显事件（独立记录，不视为已解除）**：本轮早些时候一条 `grep -vE` 过滤式写错，使 guest 口令
    值在本机终端输出中出现过一次。该值没有写进任何任务文件、报告、日志摘录、JSON、README、记忆文件或
    Git 对象；本任务不授权修改 guest 口令，我也没有做远端扫描，因此**不使用"远端扫描 PASS"宣称事件
    已解除**。口令仍只按既有规则在运行时从 `D:\ic617_agent_bridge\.ic617_agent_bridge_credentials` 取用，
    该文件不入 Git。
 3. 32 MiB 上限问题的处理方式是**删除每行重复的标识列**（分片从 8 列并回交付轮的 `t_ps,iout_A` 两列，
-   样本数一条不减），不是删证据腾空间；结果 59,893,603 B → 21,199,023 B。
+   样本数一条不减），不是删证据腾空间；结果 59,893,603 B → 21,084,177 B。
+4. **载荷提交 P1 里的报告文字落后于包身份**：P1 带的是最终脚本与最终证据目录
+   `dd1_d7b_r1_r20261022_123825_8e1294`，但当时三份报告正文还写着上一个中间件 `..._122204_05417c`
+   （我在提交 P1 之后才把正文改到最终 run_id）。这不是措辞问题而是交付一致性缺陷：读 P1 的人会在
+   同一棵树里看到两个包名。它由元数据提交 D1 更正，不改写、不替换 P1，因此这条顺序本身留在历史里。
 
 ## 1 A 组：执行入口与累计额度
 
@@ -142,7 +151,7 @@ tick/窗口映射、`maxstep`、输入沿与收敛配对；整数离散量用 De
 
 * `python scripts/dd1_d7b_evidence_check.py --selftest` → **rc=0**，`D7B_EVIDENCE_SELFTEST: PASS
   (8 counterfeits, 0 problem(s))`；缺基线时判 FAIL rc=1，**没有 SKIP 成功路径**。
-* `python scripts/dd1_d7b_evidence_check.py results/evidence/dd1_d7b_r1_r20261022_122204_05417c` →
+* `python scripts/dd1_d7b_evidence_check.py results/evidence/dd1_d7b_r1_r20261022_123825_8e1294` →
   **rc=1**，39 项中唯一失败 `BUDGET_RESPECTED`。
 * `python scripts/dd1_d7b_evidence_check.py results/evidence/dd1_d7b_r11_main` → **rc=1**，14 项具名失败：
   `EVERY_SHARD_IS_INDEXED CHARGE_RECOMPUTED SETTLED_RECOMPUTED EDGES_BRACKETED_BY_SAMPLES
@@ -184,7 +193,7 @@ tick/窗口映射、`maxstep`、输入沿与收敛配对；整数离散量用 De
 `segments_ps`、`t0/t1/t_stop`、`conducted_ps`、`accepted_ticks`、`pwl_points` 与 `pwl_sha256`。
 共比对 **304 个字段，17/17 AGREE**；新 VCD 的 `$date`、mtime 与摘要与原生身份分开记录
 （`accepted_vcd_sha256` ≠ `new_vcd_sha256` 17/17，且 `accepted_vcd_on_disk_sha256` 与文档一致 17/17），
-新 VCD 字节随包交付（17 个文件，953,717 B）。TB 与 RTL 未为凑一致而改：
+新 VCD 字节随包交付。两处仓库现实决定了交付形式：`.gitignore` 第 84 行把 `*.vcd` 挡在仓库外，而 iverilog 写的 CRLF 在提交时会被 Git 归一化成 LF —— 若原样交付，清单摘要只在工作副本成立，新鲜 checkout 会逐条失配。所以这些字节以 `r1rtl_<case>.vcd.txt` 交付（行尾预先归一化），并由 `rtl_reverify_delivery.csv` 把仿真器原摘要与交付摘要并列登记；复核器要求交付文件不含 CR、其摘要等于 索引的 `delivered_sha256`，且把行尾还原成 CRLF 后必须重新得到表里的 `new_vcd_sha256`，否则就不是同一次 仿真的字节。TB 与 RTL 未为凑一致而改：
 `git diff adcdf27` 只有 3 个 `scripts/` 文件改动。
 
 * 命令与 rc：`python scripts/dd1_d7b_r1_rtl_reverify.py --trace-dir
@@ -195,7 +204,7 @@ tick/窗口映射、`maxstep`、输入沿与收敛配对；整数离散量用 De
   以及把两个不同码的文档互相比 —— 全部 `MISMATCH` 并点名被改字段；未改文档自重比为 `AGREE, fields=16`。
   这些控制只读文档、不启仿真，因此没有超出 17 次上限。
 * 复核器侧：`RTL_EDGES_REVERIFIED` 要求每案例一行、`verdict=AGREE` 且 `fields_compared>0`、
-  新 VCD 在包内且摘要自洽、`accepted_vcd_sha256` 与 `source_identity.json` 一致、
+  交付的 `.vcd.txt` 在包内、与 delivery 索引两个摘要自洽且还原 CRLF 后等于仿真器字节、`accepted_vcd_sha256` 与 `source_identity.json` 一致、
   `rtl/tb` 摘要等于盘上冻结文件、行数 ≤ 17、新 VCD 必须带 `$date`；缺 `rtl_reverify.csv` 直接 FAIL
   （旧包正是这样被点名的）。
 * 环境坑（记一条）：本机 `oss-cad-suite/bin/vvp.exe` 需要把 `oss-cad-suite/lib`（`libgcc_s_seh-1.dll`、
@@ -230,14 +239,14 @@ tick/窗口映射、`maxstep`、输入沿与收敛配对；整数离散量用 De
 | `python scripts/dd1_d7b_evidence_check.py --selftest` | 0 | `PASS (8 counterfeits, 0 problem(s))` |
 | `python scripts/dd1_d7b_r1_guards.py` | 0 | `D7B_R1_GUARDS: PASS (8 groups, 0 problem(s))` |
 | `python scripts/dd1_d7b_r1_rtl_reverify.py …` | 0 | `17 AGREE / 0 MISMATCH`，`NEW_RTL_SIMULATIONS 17 (ceiling 17)` |
-| `python scripts/dd1_d7b_run.py --remeasure … --publish` | 0 | `NEW_SPECTRE_LAUNCHES 0`、`PUBLISHED …122204_05417c` |
+| `python scripts/dd1_d7b_run.py --remeasure … --publish` | 0 | `NEW_SPECTRE_LAUNCHES 0`、`PUBLISHED …123825_8e1294` |
 | `python scripts/dd1_d7b_evidence_check.py <交付包>` | 1 | 39 项唯一失败 `BUDGET_RESPECTED`（历史事实，已披露） |
 | `python scripts/dd1_d7b_evidence_check.py results/evidence/dd1_d7b_r11_main` | 1 | 14 项具名失败（第 3 节） |
 
 冻结核对：`git diff --name-only adcdf27` = `scripts/dd1_d7b_evidence_check.py`、
 `scripts/dd1_d7b_measure.py`、`scripts/dd1_d7b_run.py` 三个（第 2 节允许修改的工具）；
 新增只有 `scripts/dd1_d7b_r1_guards.py`、`scripts/dd1_d7b_r1_rtl_reverify.py`、
-`results/evidence/dd1_d7b_r1_r20261022_122204_05417c/` 与本轮文档。
+`results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/` 与本轮文档。
 B 的全部旧跟踪路径、冻结 D7B 电路/输入（`spectre/`、`tests/dd1_d7b/{cases,golden_windows,tb_dd1_d7b_pwm.sv}`、
 `rtl/dd1_d7a_gray_ctrl.sv`）、共享 runner/preflight/supply checker（摘要见
 `environment.json.frozen_tools`）与整个 `dd1_d7b_r11_main/` 均未变。
@@ -247,7 +256,7 @@ B 的全部旧跟踪路径、冻结 D7B 电路/输入（`spectre/`、`tests/dd1_
 1. **历史超支 3 次**：`BUDGET_RESPECTED` 仍是 FAIL，处置权在用户；本轮没有追加授权，也没有把 59 说成已授权。
 2. 短窗建立/关断行为是真实物理事件，不是本轮能"修好"的：23 个判定窗 `NOT_SETTLED_WITHIN_PULSE`，
    导通初期峰值最高 `16.845 µA`。是否为此改输出级由用户决定，本轮不改电路。
-3. 交付包内没有原始 PSF/VCD 与 PDK 内容，只有可从保留 raw 复算的样本分片；参照包的
+3. 交付包内没有原生 PSF/原生 VCD 与 PDK 内容（本轮 0 次启动也无从产生），只有可从保留 raw 复算的样本分片，加上本轮重新仿真的 17 份四态 VCD 字节；参照包的
    26 个电荷序列以"逐字节相同 + 摘要登记"的方式引用，而非重复搬运。
 4. 四个被删除的中间 R1 目录不可复原（第 0.1 条）。它们的 run_id、文件数与字节数已在上面登记。
 5. 凭据回显事件仍未被"解除"，也未由远端扫描证明（第 0.2 条）。
