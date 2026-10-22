@@ -270,6 +270,19 @@ git -c http.proxy=http://127.0.0.1:7892 push -u origin poc/data-pwm-d7b-r1      
 （`git merge-base --is-ancestor` 为真）。差异只有新建的 `poc/data-pwm-d7b-r1`，其余分支逐一比对未动。
 这是 ref 的回读，不是技术正确性的证明；本文件与交接 JSON 都不写自身摘要。
 
+新鲜 checkout 等价性（这是关键一步，不是本机工作副本的自我确认）：把 manifest 的 283 个条目加上
+`manifest.json` 本身共 284 个文件，逐个从**暂存区 Git blob** 用 `git ls-files -s` + `git cat-file blob`
+抽出到一个空目录，再对那个目录跑复核器：
+
+```text
+extracted 284 files (manifest included)      rc=1
+D7B_EVIDENCE_CHECK: FAIL (39 checks, 27 rows in scope, failures: BUDGET_RESPECTED)
+MANIFEST_COVERS_FILE_SET / MANIFEST_MATCHES_BYTES / TRACKED_BYTES_WITHIN_LIMIT   PASS
+RTL_EDGES_REVERIFIED (17/17, 304 字段)  GATE_RECORDS_SHIPPED (5 门)  CHARGE_SERIES_MATCHES_ACCEPTED (26 序列逐字节)  PASS
+```
+
+也就是说交付包在提交后的字节上仍然自洽，包括 `.vcd.txt` 那两个摘要的对应关系；临时目录随后删除。
+
 ## 7 仍未解决（不靠本轮工具掩盖）
 
 1. **历史超支 3 次**：`BUDGET_RESPECTED` 仍是 FAIL，处置权在用户；本轮没有追加授权，也没有把 59 说成已授权。
@@ -300,7 +313,8 @@ RAW_REUSED_FROM=native runs r5_cal/r9_main/r10_main/r11_main/r11_reuse (24 案�
   reused_from=adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50)
 NEW_RTL_SIMULATIONS=17
 EVIDENCE_INTEGRITY_STATUS=PASS_WITH_DISCLOSED_HISTORICAL_BUDGET_FAILURE
-  (39 项检查；唯一 FAIL=BUDGET_RESPECTED；旧包同检查 14 项具名 FAIL)
+  (39 项检查；唯一 FAIL=BUDGET_RESPECTED；旧包同检查 14 项具名 FAIL；
+   284 个文件从 Git blob 抽出到空目录后复核结果相同)
 MEASUREMENT_AND_GUARD_FIX_STATUS=PASS
   (measure 22/22、run 11、trace 13/13、篡改自测 8/8、守护 8 组、边沿复验 17/17 AGREE 304 字段)
 PWM_CURRENT_FEASIBILITY_TT=PASS_WITHIN_FROZEN_CRITERIA
