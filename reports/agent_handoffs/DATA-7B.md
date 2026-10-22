@@ -1,6 +1,6 @@
 # DATA-7B 交接（单通道固定电流 PWM 响应验证）
 
-日期 2026-10-21 交付，2026-10-22 由 **DATA-7B-R1** 更正工具、复算证据并修订本交接。
+日期 2026-10-21 交付，2026-10-22 由 **DATA-7B-R1** 更正工具、复算证据并修订本交接，2026-10-23 由 **DATA-7B-R2** 关闭预算权威、账本耐久与时间语义并追加 §10（§1–§9 是 T/R1 的事实记录，不抹去、不改写）。
 任务书两份逐字节副本：`reports/tasks/DATA-7B.md`（SHA-256
 `0f4db71f752aef5db9869fe097703a423266f433ee2e4040f621c7b0c6e21389`，34,198 B）与
 `reports/tasks/DATA-7B-R1.md`（SHA-256
@@ -135,3 +135,27 @@ VSCAN/VLED、CDC/skew、阵列与多通道、corner/温度/MC、版图/DRC/LVS/P
    与 Git 行尾归一化这两条现实，若仓库策略变化需重估。
 
 `NEXT_STAGE_AUTHORISED=NO`、`SOA_SIGNOFF=NO`、`MERGE_PERFORMED=NO`（`main` 与所有旧分支未动）。
+
+## 10 R2 追加（2026-10-23，本轮事实全部来自本轮发布包）
+
+| 项 | 值 |
+|---|---|
+| 本轮任务 / 基线 | `DATA-7B-R2`，唯一基线 H = `e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92`（被审 R1 tip） |
+| 分支 / 载荷 | `poc/data-pwm-d7b-r2`，功能载荷 P2 = `6abe1bf5b93dc4bb12ba179cea0ab26929f33a90` |
+| 交付证据 | `results/evidence/dd1_d7b_r2_r20261022_160652_e880be`（287 文件 / 21323343 B；manifest 覆盖 286 条且与提交内 blob 286/286 逐字节一致；从 Git 提取物重新复核 43 项，唯一失败 `BUDGET_RESPECTED`） |
+| 复核 | 43 项检查，PASS 42，FAIL 1（清单：BUDGET_RESPECTED） |
+| 本轮成本 | 新增 Spectre 0；新增 RTL 仿真 0（R1 已用满 17 次，本轮只重新解析交付字节）；新增 OA 写入 0；动 guest 否 |
+| 账户 | 333 行 = 59 CONFIRMED + 274 REFUSED_NO_LAUNCH；占额度 59；固定授权 56（任务书 52 + 追加 4）；历史超支 +3 |
+| 电气 | 27 行判决 {EXPECTED_REFUSAL: 1, PASS: 26}；最大绝对电荷误差 0.438391 LSB；Ical 1.493190564e-05 A |
+| 标定切片 | OFF 带内 800 样点、尾段 200 样点入包；原 raw 摘要 `e93bd38a2e2e2f64…` 与包内记录一致，直接核对 |
+| 四态 | 17 份交付 VCD 全部由冻结解析器重读，26 个窗口的脉冲段与 `pwl_edges`、`rtl_reverify.csv`、case 行一致 |
+| 系列比对 | 55 条系列（索引 158 行）：charge 26 条与接受包逐字节相同、3 条本轮新增；edge 26 条因新增全精度 `t_ps` 列而重算 |
+| 未解 | 历史超支 3 次处置权在用户；凭据事件未解除；R1 旧包的 0.1 ns 边邻切片无法在 0.05 ps 上复核（定义/精度滞后，非"旧证据全错"） |
+
+R2 关闭的缺陷（逐条修法与重放见 `reports/dd1_d7b_review_fix_r2.md`）：
+预算判据从被检文件取（`BUDGET_AUTHORITY_FIXED`）、`REQUESTED` 不占额度、先删后改名的写盘、
+过期实例覆盖、种子历史只比 ID、原生入口可被环境绕过、deadline 左侧不完整、互补节点相位错、
+20 mA 电流容差、采样时刻与连续阈值混同、收敛表 `delta_edge` 不重算、只查摘要不重读 VCD、
+CAL 的 OFF/尾段无样点支撑、以及 7 类语义破坏无人检出（现在 8+7 全部点名）。
+
+本轮不合并、不授权下一阶段、不做 SOA 签核；停在独立复审闸。

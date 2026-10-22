@@ -1,68 +1,54 @@
 {
  "accepted_data7a_content": "f68449672774ac9266ba9e4893024e4f3027dd9d",
- "base_sha": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
- "branch": "poc/data-pwm-d7b-r1",
+ "base_sha": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
+ "branch": "poc/data-pwm-d7b-r2",
  "completion_level": "RTL_TRACE_DRIVEN_MOS_OUTPUT_MEASURED_TT",
- "delivered_bundle_sha_base": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
+ "delivered_bundle_sha_base": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
  "development_base_b_sha": "c3513ffee57880bdc9d6d26d5c1c1a9a43c52e37",
  "evidence_check_overall": "FAIL_ON_BUDGET_ONLY",
- "evidence_dir": "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294",
+ "evidence_dir": "results/evidence/dd1_d7b_r2_r20261022_160652_e880be",
  "evidence_paths": [
-  "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/cases.csv",
-  "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/calibration.csv",
-  "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/convergence.csv",
-  "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/negative.csv",
-  "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/charge_index.csv",
-  "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/launches_reconcile.csv",
-  "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/launch_account.csv",
-  "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/process_ledger.csv",
-  "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/rtl_reverify.csv",
-  "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/rtl_reverify_delivery.csv",
-  "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/gate_records.csv",
-  "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/source_identity.json",
-  "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/environment.json",
-  "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/manifest.json",
-  "reports/dd1_d7b_review_fix_r1.md",
-  "reports/dd1_d7b_pwm_current.md",
-  "reports/dd1_d7b_contract.md",
-  "reports/tasks/DATA-7B.md",
-  "reports/tasks/DATA-7B-R1.md",
-  "reports/tasks/DATA-7B-BUDGET-01.md",
-  "scripts/dd1_d7b_run.py",
-  "scripts/dd1_d7b_measure.py",
-  "scripts/dd1_d7b_evidence_check.py",
-  "scripts/dd1_d7b_trace.py",
-  "scripts/dd1_d7b_r1_guards.py",
-  "scripts/dd1_d7b_r1_rtl_reverify.py",
-  "scripts/dd1_d7b_r1_gate_records.py",
-  "scripts/dd1_d7b_validate_handoff.py",
-  "tests/dd1_d7b/cases.csv",
-  "tests/dd1_d7b/golden_windows.csv",
-  "tests/dd1_d7b/tb_dd1_d7b_pwm.sv",
-  "rtl/dd1_d7a_gray_ctrl.sv",
-  "spectre/dd1_d7b_pwm_stage.scs",
-  "results/evidence/dd1_d7b_r11_main/manifest.json"
+  "results/evidence/dd1_d7b_r2_r20261022_160652_e880be/cases.csv",
+  "results/evidence/dd1_d7b_r2_r20261022_160652_e880be/calibration.csv",
+  "results/evidence/dd1_d7b_r2_r20261022_160652_e880be/charge_index.csv",
+  "results/evidence/dd1_d7b_r2_r20261022_160652_e880be/convergence.csv",
+  "results/evidence/dd1_d7b_r2_r20261022_160652_e880be/rtl_reverify.csv",
+  "results/evidence/dd1_d7b_r2_r20261022_160652_e880be/rtl_reverify_delivery.csv",
+  "results/evidence/dd1_d7b_r2_r20261022_160652_e880be/launch_account.csv",
+  "results/evidence/dd1_d7b_r2_r20261022_160652_e880be/launches_reconcile.csv",
+  "results/evidence/dd1_d7b_r2_r20261022_160652_e880be/gate_records.csv",
+  "results/evidence/dd1_d7b_r2_r20261022_160652_e880be/golden_windows.csv",
+  "results/evidence/dd1_d7b_r2_r20261022_160652_e880be/manifest.json",
+  "reports/dd1_d7b_review_fix_r2.md",
+  "reports/tasks/DATA-7B-R2.md"
  ],
  "evidence_status": "PASS_WITH_DISCLOSED_HISTORICAL_BUDGET_FAILURE",
- "evidence_status_note": "39 semantic checks rebuilt from the frozen contract; the only failure is BUDGET_RESPECTED, because 59 Spectre processes were started in DATA-7B against the ceiling of 56 (task book 52 plus the 4 the user granted). The previous note claiming 19 of 20 checks passed is withdrawn: the reviewer injected eight semantic counterfeits that the old checker let through, and the accepted bundle now reports 14 named failures under the rebuilt checker.",
+ "evidence_status_note": "43 checks rebuilt from the frozen contract and the delivered bytes; the only failure is BUDGET_RESPECTED, because 59 Spectre processes were started in DATA-7B against the fixed authorisation of 56 (task book 52 plus the 4 the user granted). The ceiling is now a constant of the checker, and a forged account ceiling is refused by BUDGET_AUTHORITY_FIXED instead of being read as the authorisation. The R1 note about 39 checks is superseded by this round: the R1 bundle is frozen history and is judged by the R1 checker.",
  "frozen": {
   "circuit_pwl_decks_rtl_tb_case_table_golden_table_criteria": "UNCHANGED",
-  "code_changed": "only scripts/dd1_d7b_run.py, dd1_d7b_measure.py and dd1_d7b_evidence_check.py, plus three new offline dd1_d7b_r1_* helpers",
+  "code_changed": "the three main tools plus the existing offline helper scripts/dd1_d7b_r1_gate_records.py; two new R2 scripts added",
+  "documents_corrected": "reports/dd1_d7b_contract.md section 16, reports/dd1_d7b_pwm_current.md section 11, the repair report and this handoff",
+  "earlier_evidence_dirs_changed": "NO (git diff --name-only over dd1_d7b_r11_main and dd1_d7b_r1_r20261022_123825_8e1294 is empty)",
   "measured_evidence_from_earlier_rounds_changed": "NO (dd1_d7b_r11_main untouched; its 26 charge series are byte-identical inside the new bundle)",
   "tracked_paths_changed_vs_base": 3,
   "verification": "git diff --name-only adcdf27 lists the three allowed scripts; the frozen task-book digests were re-checked against the B blobs"
  },
- "head_sha": "d13e251d2874a9a9942fa103ff7ead3c798b5b14",
- "head_sha_role": "payload commit P1: the repaired tools and the re-measured evidence. The metadata commits that record this field are read from the Git ref, never from this file.",
+ "head_sha": "6abe1bf5b93dc4bb12ba179cea0ab26929f33a90",
+ "head_sha_role": "payload commit P2: the repaired tools, the two new R2 test scripts and the re-exported evidence. The metadata commits that record this field are read from the Git ref, never from this file.",
  "historical_budget": {
+  "account_composition": "59 CONFIRMED + 274 REFUSED_NO_LAUNCH",
+  "account_rows_delivered": 333,
   "authorisation_status": "VIOLATED_NOT_RETROACTIVELY_AUTHORISED",
   "ceiling": 56,
+  "checker_ceiling_is_constant": "YES (BUDGET_AUTHORITY_FIXED verifies every declaration)",
   "dut": 29,
   "ledger_composition": "27 preflight + 27 dut + 4 static_negative",
   "ledger_rows_delivered": 58,
   "note": "the ledger count and the reconcile total are two different readings; only the per-directory reconcile gives the round total. See reports/tasks/DATA-7B-BUDGET-01.md",
+  "occupied_against_ceiling": "59 of 56",
   "overrun": 3,
   "preflight": 30,
+  "retroactive_authorisation": "NO",
   "started": 59,
   "taskbook": 52,
   "user_granted_extra": 4
@@ -78,27 +64,54 @@
   "The pre-existing unreachable blob still fails the --mode objects hygiene scan on this machine (same identity as recorded in DATA-7A/R4). It was not printed, GCed, exempted or rewritten, and no claim of a clean object store is made.",
   "Four intermediate R1 evidence directories that this executor had published were deleted with rm -rf during the script-iteration loop before the user forbade it (names in this_round_cost). They were never committed or pushed and are regenerable from the retained raw, but their bytes are gone from the machine. Five further superseded bundles are kept on disk, uncommitted.",
   "Credential echo event: a malformed grep -vE once echoed the guest password into this machine terminal output. The value was never written into any task file, report, log excerpt, JSON, README, memory file or Git object; changing the guest password is not authorised here and no remote scan was run, so this record does not claim the event is resolved.",
-  "The re-simulated VCD bytes are delivered as name.vcd.txt because .gitignore holds *.vcd out of the repository and Git normalises CRLF to LF on commit; rtl_reverify_delivery.csv records both digests so the transformation is a stated fact rather than a silent one."
+  "The re-simulated VCD bytes are delivered as name.vcd.txt because .gitignore holds *.vcd out of the repository and Git normalises CRLF to LF on commit; rtl_reverify_delivery.csv records both digests so the transformation is a stated fact rather than a silent one.",
+  "the edge neighbourhood shards delivered by R1 print their times to 0.1 ns, so a crossing re-derived from them cannot be verified at 0.05 ps; the R2 shards carry an exact t_ps column",
+  "data_en_b is only checkable where the delivered neighbourhood reaches 0.9 V; a window whose complement crosses outside the searched +-50 ns stays NOT_FOUND rather than being filled",
+  "the credential echo incident stays unremediated: no password was changed in this round and no repository scan is offered as its closure",
+  "the historical 3-launch over-run is reported, not repaired: retroactive authorisation is the user decision"
  ],
  "measured": {
+  "blocked_items": 0,
   "blocked_or_tool_fail": 0,
+  "cal_off_slice_samples": 800,
+  "cal_tail_slice_samples": 200,
   "case_rows": 27,
   "charge_series_identical_to_accepted": 26,
+  "charge_series_new": 3,
   "charge_series_new_in_r1": 27,
   "convergence_pairs_converged": 5,
   "convergence_rows": 5,
   "declared_pulse_edges_missing": 0,
+  "delivered_traces_reparsed": 17,
   "dut_runs": 29,
+  "edge_series_rewritten_for_t_ps": 26,
   "electrical_fail": 0,
   "ical_A": 1.493190564e-05,
+  "index_rows": 158,
   "judged_windows": 25,
   "manifest_bytes": 21084177,
   "manifest_entries": 283,
+  "max_abs_charge_error_LSB": 0.438391,
   "max_abs_charge_error_LSB_excluding_N1": 0.438391,
   "normal_windows": 15,
+  "off_states": {
+   "NEVER_WITHIN_LIMIT": 1,
+   "OFF": 26
+  },
   "preflight_runs": 30,
   "safety_windows": 4,
+  "series_count": 55,
+  "settled_states": {
+   "MEASURED": 1,
+   "NOT_APPLICABLE_NO_CONDUCTING_EDGE": 3,
+   "NOT_SETTLED_WITHIN_PULSE": 23
+  },
   "spectre_launches": 59,
+  "verdicts": {
+   "EXPECTED_REFUSAL": 1,
+   "PASS": 26
+  },
+  "windows_bound_to_trace_pulses": 26,
   "windows_no_conducting_edge": 3,
   "windows_not_settled_within_pulse": 23,
   "worst_last_100ns_max_abs_A": 2.0600878e-08,
@@ -115,52 +128,31 @@
   "monte_carlo": "NOT_RUN",
   "network_change": "NOT_RUN",
   "new_oa_writes": 0,
+  "new_rtl_simulation": "NOT_RUN (17 of 17 were spent in R1)",
+  "new_spectre_launch": "NOT_RUN",
   "new_spectre_runs": 0,
+  "oa_or_virtuoso": "NOT_RUN",
   "optical_effective_bits": "NOT_VERIFIED",
   "pam_8level_analog": "NOT_RUN",
+  "password_change": "NOT_RUN",
   "physical_cdc_skew": "NOT_VERIFIED",
   "spectre_help_probe": "NOT_RUN",
   "virtuoso_dbaccess": "NOT_RUN",
   "vm_power_or_snapshot": "NOT_RUN"
  },
  "objects_hygiene_gate": "FAIL_PREEXISTING_UNREACHABLE_BLOB_NOT_GCDED_NOT_PRINTED",
- "payload_sha": "d13e251d2874a9a9942fa103ff7ead3c798b5b14",
+ "payload_sha": "6abe1bf5b93dc4bb12ba179cea0ab26929f33a90",
  "project_id": "microled-ic-ai-lab",
- "push_command": "git -c http.proxy=http://127.0.0.1:7892 push -u origin poc/data-pwm-d7b-r1 (normal push, no force, no --no-verify)",
- "push_status": "REMOTE_VERIFIED",
- "pushed_utc": "2026-10-22",
+ "push_command": "git -c http.proxy=http://127.0.0.1:7892 push -u origin poc/data-pwm-d7b-r2 (normal push, no force, no --no-verify)",
+ "push_status": "PUSH_PENDING",
+ "pushed_utc": "",
  "pwm_current_feasibility_tt": "PASS_WITHIN_FROZEN_CRITERIA",
  "remote_readback": {
-  "main_and_older_branches": "UNCHANGED",
-  "method_1_git_protocol": {
-   "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin",
-   "only_difference": "refs/heads/poc/data-pwm-d7b-r1 created; nothing else moved",
-   "rc": 0,
-   "ref_lines_after": 20,
-   "ref_lines_before": 19,
-   "refs": {
-    "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
-    "poc/data-gray-d7a-r4-doc": "c3513ffee57880bdc9d6d26d5c1c1a9a43c52e37",
-    "poc/data-pwm-d7b": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
-    "poc/data-pwm-d7b-r1": "4b39b24df5b78af6298d024b8ba53f68763f163f"
-   }
-  },
-  "method_2_github_api": {
-   "commands": [
-    "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<ref>"
-   ],
-   "rc": 0,
-   "refs": {
-    "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
-    "poc/data-gray-d7a-r4-doc": "c3513ffee57880bdc9d6d26d5c1c1a9a43c52e37",
-    "poc/data-pwm-d7b": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
-    "poc/data-pwm-d7b-r1": "4b39b24df5b78af6298d024b8ba53f68763f163f"
-   }
-  },
-  "parity": "the two independent reads return the same object id for every ref named above; this is a read-back of the refs, not a proof of technical correctness",
-  "payload_reachable": "P1 d13e251d2874a9a9942fa103ff7ead3c798b5b14 is an ancestor of the pushed tip (git merge-base --is-ancestor)"
+  "method_1_git_protocol": "NOT_ATTEMPTED_YET",
+  "method_2_api": "NOT_ATTEMPTED_YET",
+  "status": "PENDING"
  },
- "repair_of_task": "DATA-7B",
+ "repair_of_task": "DATA-7B-R1",
  "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
  "rtl": {
   "dut_bytes": "rtl/dd1_d7a_gray_ctrl.sv accepted in DATA-7A, unmodified",
@@ -170,92 +162,80 @@
  "run_ids": {
   "accepted_bundle_t": "r11_main",
   "delivery_r1": "r20261022_123825_8e1294",
+  "delivery_r2": "r20261022_160652_e880be",
   "native_runs_reused": "r5_cal, r9_main, r10_main, r11_main, r11_reuse"
  },
  "schema_version": "1.0",
  "scope_status": "PARTIAL",
  "security_gate": "PASS",
  "source_identity": {
-  "evidence_check_source_sha256": "6e2b1d217d36b5c6d3ef0c0d2318fa005684e329f065a8f9309ef004ff2fd44a",
-  "measurement_source_sha256": "06079331aaaff1ef748198da80ccad8bafc5355fb4dd1cc8a555a1c17e7d474f",
+  "evidence_check_source_sha256": "92a2d34db1526c2715e4cc616dc865a8e0691a625a89bcf9f52ffa48a676658e",
+  "measurement_source_sha256": "f3da5b53d5c777ec7f60c159fbf4b8840f6257019045146546e1e0a7793fbb7f",
   "reused_cases": 24,
-  "reused_from": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
+  "reused_from": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
   "runner_source_sha256": "64797d531342533539ea6c9848994c0c4dc3593187e12a29e1a1a5b5299bc705",
   "trace_source_sha256": "8ae5edf9e814c13fea411b3d67e8e4e1f26fd1f394a080833b48675ad8cdb0ce"
  },
- "stop_reason": "AWAITING_INDEPENDENT_REVIEW_OF_THE_R1_REPAIR",
- "task_id": "DATA-7B-R1",
+ "stop_reason": "AWAITING_INDEPENDENT_REVIEW_OF_THE_R2_REPAIR",
+ "task_id": "DATA-7B-R2",
  "tests": [
   {
-   "evidence_path": "reports/dd1_d7b_review_fix_r1.md",
-   "name": "measure selftest (22 hand-computed items incl. edge, settling and zero-crossing break cases)",
+   "evidence_path": "results/evidence/dd1_d7b_r2_r20261022_160652_e880be/gate_records.csv",
+   "name": "measurement self test: 24 hand-computed items, including the reviewer deadline counter-example (band left at 21 ns against a 25 ns deadline) and the sample-vs-interpolated turn-off pair",
    "status": "PASS"
   },
   {
-   "evidence_path": "reports/dd1_d7b_review_fix_r1.md",
-   "name": "run entry selftest (11 checks) and trace selftest (13 checks) rebuilt from committed bytes",
+   "evidence_path": "results/evidence/dd1_d7b_r2_r20261022_160652_e880be/gate_records.csv",
+   "name": "run entry self test: 13 checks, including the constants shared with the re-checker and the refusal of the production launch entry under every environment combination",
    "status": "PASS"
   },
   {
-   "evidence_path": "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/gate_records.csv",
-   "name": "evidence re-checker tamper selftest: 8 reviewer counterfeits, each with its own failure, no SKIP path",
+   "evidence_path": "results/evidence/dd1_d7b_r2_r20261022_160652_e880be/gate_records.csv",
+   "name": "trace self test of the frozen four-state converter (unchanged tool)",
    "status": "PASS"
   },
   {
-   "evidence_path": "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/gate_records.csv",
-   "name": "execution guards: 8 groups covering entry routing, ledger reopen, account boundaries, reuse refusals, the publish gate and offline modes never building a link",
+   "evidence_path": "results/evidence/dd1_d7b_r2_r20261022_160652_e880be/gate_records.csv",
+   "name": "evidence re-checker tamper self test: 8 reviewer counterfeits plus the 7 R2 semantic breaks, each raising its own named failure after the manifest is re-sealed",
    "status": "PASS"
   },
   {
-   "evidence_path": "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/rtl_reverify.csv",
-   "name": "RTL edge re-verification: 17 frozen-RTL simulations, 304 fields compared, all AGREE",
+   "evidence_path": "scripts/dd1_d7b_r2_guards.py",
+   "name": "R2 guard suite: 14 probes that first reproduce every finding on the base bytes, then close against the published bundle",
    "status": "PASS"
   },
   {
-   "evidence_path": "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/manifest.json",
-   "name": "delivered bundle re-checked by the rebuilt 39-check verifier",
+   "evidence_path": "results/evidence/dd1_d7b_r2_r20261022_160652_e880be/gate_records.csv",
+   "name": "R1 guard suite re-run against the repaired tools (8 groups)",
    "status": "PASS"
   },
   {
-   "evidence_path": "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/manifest.json",
-   "name": "manifest entries against staged Git blobs: 283 of 283 digests equal",
+   "evidence_path": "reports/dd1_d7b_review_fix_r2.md",
+   "name": "bundle re-verified from a fresh Git extraction: 43 checks, only BUDGET_RESPECTED",
    "status": "PASS"
   },
   {
-   "evidence_path": "reports/dd1_d7b_review_fix_r1.md",
-   "name": "staged and history safety scans (0 PDK, 0 credential, 0 vendor model, 0 private key)",
-   "status": "PASS"
-  },
-  {
-   "evidence_path": "results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/launches_reconcile.csv",
-   "name": "historical Spectre launch budget: 59 started against a ceiling of 56, 3 over and not retroactively authorised",
-   "status": "FAIL"
-  },
-  {
-   "evidence_path": "reports/dd1_d7b_review_fix_r1.md",
-   "name": "object-store hygiene scan: a pre-existing unreachable blob blocks --mode objects on this machine; it was not printed, GCed or exempted",
+   "evidence_path": "results/evidence/dd1_d7b_r2_r20261022_160652_e880be/launch_account.csv",
+   "name": "historical budget over-run of 3 launches against the fixed ceiling of 56",
    "status": "FAIL"
   }
  ],
  "this_round_cost": {
-  "deleted_intermediate_bundles": [
-   "r20261022_105514_12119e",
-   "r20261022_105959_806e84",
-   "r20261022_111106_b3171e",
-   "r20261022_111346_e3f62c"
-  ],
+  "account_rows_added_by_staging": 124,
+  "deleted_account_rows": "NO",
+  "deleted_intermediate_bundles": [],
   "guest_touched": "NO",
-  "kept_uncommitted_intermediate_bundles": [
-   "r20261022_112014_0b7ee2",
-   "r20261022_115827_ee0cc6",
-   "r20261022_120120_65fd92",
-   "r20261022_122204_05417c",
-   "r20261022_123430_1662e5"
-  ],
   "new_oa_writes": 0,
-  "new_rtl_simulations": 17,
+  "new_rtl_simulations": 0,
   "new_spectre_launches": 0,
-  "rtl_simulation_ceiling": 17,
-  "ssh_built": "NO"
+  "published_bundles_overwritten": 0,
+  "staging_passes_kept_in_ignored_scratch": [
+   "r2_stage_prov",
+   "r2_stage_A",
+   "r2_stage_B",
+   "r2_gaterec1",
+   "r2_gaterec_A",
+   "r2_fresh_extract"
+  ]
  }
 }

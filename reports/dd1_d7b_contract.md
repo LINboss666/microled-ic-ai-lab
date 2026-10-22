@@ -228,3 +228,32 @@ R1 的返修不改任何判据数值，但必须把三个原先含糊的**定义
 `±0.5 LSB` 与 `150 nA` 判据、窗口长度与 `t0` 定义、PWL 拼式与 `SHIFT/TAIL/EDGE_SEARCH/SLEW`、24 份原生 deck、
 主 case 表、黄金表、冻结 RTL/TB、模拟条件（TT/27 °C/钳位 1.2 V/`gear2only`），以及
 `results/evidence/dd1_d7b_r11_main/` 整个目录。
+
+## 16 R2 勘误：带内判据、互补相位、时刻精度与切片（2026-10-23）
+
+`REVIEW_DATA7B_R1.md` 判 REWORK，`TASK_DATA7B_R2` 只关闭工具语义，不改电路、不改判据数值。
+本节是本契约文档的追加勘误，不覆盖 §15；逐条实现与结果见 `reports/dd1_d7b_review_fix_r2.md`。
+
+| 项 | §13/§15 的写法 | 本轮事实 |
+|---|---|---|
+| 带内持续判据 | "持续到本脉冲自身声明的关断沿"，实现里把最后一个带内样点当作延伸到截止点 | 跨 deadline 的分段在 deadline 处切开并检查其**左极限**；手算反例（0/10/20 ns=1、30 ns=0.5、带宽 0.95–1.05、deadline 25 ns）现为 `NOT_SETTLED_WITHIN_PULSE`，并写出"21.0 ns 离带"。10 ns 与 ±5 % 数值判据未动，deadline 未移动、带宽未加宽 |
+| 最长带内段 | 只有一个数 | `longest_in_band_ns`（采样界定，可由切片逐样点手算）与 `longest_in_band_interp_ns`（连续插值）分列，另附 `band_left_at_ns` 与 `deadline_left_limit_A` |
+| 互补节点 | 在 `data_en` 下降沿处找 `data_en_b` 的下降沿 | 相位按真实反相关系：`data_en` 升 ↔ `data_en_b` 降、`data_en` 降 ↔ `data_en_b` 升；新增 `de_b_rise_50_ns`、`de_and_de_b_edge_gap_ns`、`de_b_rise_gap_ns` |
+| 关断时刻精度 | `off_ns` 一列既当采样点又当阈值 | `off_ns` 明确为首个合格**采样时刻**（复核器要求它必须是真实交付样点），`off_interp_ns` 是相邻样点求得的连续阈值。P30-C001：3968.0376 ns（采样）对 3967.8687 ns（连续）并列 |
+| 穿越点验证 | 电流按 `max(0.02·阈值, 0.02)` A 容差 | 取消该容差；电流与电压各按 SI 阈值求穿越**时刻**，与声明值在列的显示精度 0.05 ps 上比对；边邻切片新增全精度 `t_ps`。切片只印 0.1 ns 时，检查原因里点名其量化限制 |
+| 收敛表 | 只把沿差并入布尔判决 | `delta_edge_ns` 与新增 `limit_edge_ns` 逐列重算，被比较物理量写明为 `data_en` 的 50 % 下降沿；`delta_edge_ns=9999` 现在触发具名失败 |
+| 四态字节 | 复核器只查摘要、日期、AGREE 与字段数 | 复核器用冻结 `dd1_d7b_trace` 重读交付的 17 份 `.vcd.txt`，把窗口、脉冲段与 `pwl_edges_<case>.csv`、`rtl_reverify.csv`、case 行逐条绑定；golden 表、`shift_ns`、`tail_ns` 随包交付并由摘要绑定 |
+| CAL 覆盖面 | 只交付 3.0–3.5 µs 带内片段，仍断言 OFF 基线与尾段 | 从摘要一致的原 raw 只读另导 `1500–1900`、`4400–4500` 两段切片（含边界样点），`calibration.csv` 记数量、范围、原 raw 摘要、切片系列名与 section/temp；均值分母为窗口实际积分跨度（边界插值，样点不足时钳到真实覆盖并两个跨度都写），缺失时给 `BLOCKED_MISSING_CAL_OFF`/`_TAIL` |
+| 授权来源 | 复核器可读账户首行 `ceiling` | 判据常量为固定授权 56（任务书 52 + 用户追加 4）；新增 `BUDGET_AUTHORITY_FIXED` 要求账户每行、`environment.json` 的 `ceiling`/`budget`、对账表 TOTAL 注记与账户计数互相一致。伪 60 副本被拒，`BUDGET_RESPECTED` 仍按 56 判失败 |
+| 账本耐久 | `REQUESTED` 不计额度；替换写盘用先删后改名 | `REQUESTED` 自写入即占额度且恢复为 `UNCERTAIN` 不退额；写盘为临时文件 + fsync + 原子替换，失败保留旧账并上浮错误；盘上残留 `.tmp` 载入即拒；过期实例按盘摘要被拒 |
+| 生产入口 | 可由环境变量或新账本恢复启动 | 本轮 `NEW_LAUNCH_GRANT=0`，原生入口在任何环境组合下先拒；55/56 边界只在隔离合成账本上测 |
+
+§15 的账本更正仍然有效，另补一条：旧文档里"账户 134 / 75"是更早一轮的过期计数。R1 交付包的真实账户为
+209 行（59 CONFIRMED + 150 REFUSED_NO_LAUNCH）；本轮 R2 发布包携带的账户为 **333 行
+（59 CONFIRMED + 274 REFUSED_NO_LAUNCH）**，多出的 124 行全部是离线暂存与守护测试逐例写下的
+"未启动进程"记录，占额度者仍只有 59 条 CONFIRMED。两个数字都不改写历史 59 对 56 的 +3 违规。
+
+未改清单（与 §15 同）：`±0.5 LSB`、`150 nA`、`±5 %`、`10 ns`、`500 ps` 收敛沿限值、窗口长度与 `t0`
+定义、PWL 拼式与 `SHIFT/TAIL/EDGE_SEARCH/SLEW`、24 份原生 deck、主 case 表、黄金表、冻结 RTL/TB、
+模拟条件（TT/27 °C/钳位 1.2 V/`gear2only`），以及 `results/evidence/dd1_d7b_r11_main/` 与
+`results/evidence/dd1_d7b_r1_r20261022_123825_8e1294/` 两个已发布目录。
