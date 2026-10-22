@@ -77,7 +77,9 @@ def rows_write(path, hdr, rows):
     with io.open(path, 'w', encoding='utf-8', newline='\n') as f:
         f.write(','.join(hdr) + '\n')
         for r in rows:
-            f.write(','.join(str(r.get(k, '')).replace(',', ';') for k in hdr) + '\n')
+            # a captured transcript can end in spaces, and git's whitespace check over the committed
+            # range then contradicts the git_checks.csv row this same run writes, so cells are trimmed
+            f.write(','.join(str(r.get(k, '')).replace(',', ';').rstrip() for k in hdr) + '\n')
 
 
 def run(cmd, cwd=PROJ):
