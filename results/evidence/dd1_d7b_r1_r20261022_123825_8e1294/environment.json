@@ -1,0 +1,112 @@
+{
+ "accepted_sha": "f68449672774ac9266ba9e4893024e4f3027dd9d",
+ "base_sha": "c3513ffee57880bdc9d6d26d5c1c1a9a43c52e37",
+ "budget": 56,
+ "ceiling": 56,
+ "evidence_check_source_sha256": "6e2b1d217d36b5c6d3ef0c0d2318fa005684e329f065a8f9309ef004ff2fd44a",
+ "frozen_tools": {
+  "run_spectre.sh": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+  "sc1_supply_check.awk": "7f7cb0223f97d1567425e0d42a6e104eca76584a80b4ca33ee554edbd707cfaa",
+  "tb_preflight.sh": "6255981cb6975149b3542305b4f24c7e283eb617b51427c594818134d2e4d3bc"
+ },
+ "guest_host": "<not touched>",
+ "launch_account": {
+  "confirmed": 59,
+  "no_launch": 150,
+  "occupied": 59,
+  "requested": 209,
+  "uncertain": 0
+ },
+ "launch_account_origin": "D:/ic617_d7b_r1/results/evidence/dd1_d7b_r11_main/launches_reconcile.csv (TOTAL=59, 14 directory row(s))",
+ "launches_used": 0,
+ "masters": [
+  {
+   "name": "dd1_d6_bias_core.scs",
+   "repo_sha256": "4115e2d17a86fb92e7c222df085f1d1a82da14cb7640654d90f4e2589e9b31e7",
+   "sent_sha256": "379536efb1dd9b2626e93ec384d572c734d5c1b398881c6de6ce4405e230c293",
+   "stripped": 2,
+   "stripped_lines": [
+    "parameters VBIAS_SHARED output",
+    "parameters VSS inputOutput"
+   ]
+  },
+  {
+   "name": "dd1_d6_sink_core.scs",
+   "repo_sha256": "6cfe2338014a4b152833ef1974f197b0e4c65e963947f57f0cc8b79b73ee91db",
+   "sent_sha256": "77f0220a6a152a65f99fdd7396ed68ce92df7271288b926126d6fd73081c6549",
+   "stripped": 6,
+   "stripped_lines": [
+    "parameters DATA_EN input",
+    "parameters DATA_EN_B input",
+    "parameters VBIAS_SHARED input",
+    "parameters VCAS input",
+    "parameters DATA_OUT output",
+    "parameters VSS inputOutput"
+   ]
+  },
+  {
+   "name": "dd1_d6_inv18.scs",
+   "repo_sha256": "04cd6833087511465aba06a3d2ba2f1ba71a49cce1ae962febff3b3eb1e4d79b",
+   "sent_sha256": "d535ad0112c31952d0c51e314cc57054b631b18c7457ba8088d970945ca6de77",
+   "stripped": 4,
+   "stripped_lines": [
+    "parameters a input",
+    "parameters z output",
+    "parameters vdd inputOutput",
+    "parameters vss inputOutput"
+   ]
+  },
+  {
+   "name": "dd1_d7b_pwm_stage.scs",
+   "repo_sha256": "cee61136e81bdefd10282aaed35218e0fc0bb14262bb016f80e75232ae90a952",
+   "sent_sha256": "5f1a3165c4f521f3a70c91a09311a36805a6ad76bbd8688bd7a23046ee32a9cc",
+   "stripped": 6,
+   "stripped_lines": [
+    "parameters data_en input",
+    "parameters iref_in input",
+    "parameters vcas input",
+    "parameters data_out output",
+    "parameters vdd18 inputOutput",
+    "parameters vss inputOutput"
+   ]
+  }
+ ],
+ "measurement_source_sha256": "06079331aaaff1ef748198da80ccad8bafc5355fb4dd1cc8a555a1c17e7d474f",
+ "mode": "remeasure",
+ "new_spectre_launches_this_pass": 0,
+ "python_local": "3.12.5",
+ "repair_base_sha": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
+ "repair_payload_sha": "9d73cc184a266e646ae827f0350f7c931d9faa25",
+ "reused_cases": [
+  "D7B-BLANK",
+  "D7B-CAL",
+  "D7B-CVG-BLANK",
+  "D7B-CVG-H120-C01",
+  "D7B-CVG-P30-C001",
+  "D7B-CVG-P30-C255",
+  "D7B-FAULT",
+  "D7B-H120-C00",
+  "D7B-H120-C01",
+  "D7B-H120-C02",
+  "D7B-H120-C62",
+  "D7B-H120-C63",
+  "D7B-H200-C01",
+  "D7B-H200-C63",
+  "D7B-N1",
+  "D7B-P30-C000",
+  "D7B-P30-C001",
+  "D7B-P30-C002",
+  "D7B-P30-C016",
+  "D7B-P30-C254",
+  "D7B-P30-C255",
+  "D7B-P50-C001",
+  "D7B-P50-C255",
+  "D7B-SLEW-P30-C001"
+ ],
+ "reused_from": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
+ "run_id": "r20261022_123825_8e1294",
+ "runner_source_sha256": "64797d531342533539ea6c9848994c0c4dc3593187e12a29e1a1a5b5299bc705",
+ "stopped": "",
+ "task_root": "<none: offline re-measurement, no guest was touched>",
+ "trace_source_sha256": "8ae5edf9e814c13fea411b3d67e8e4e1f26fd1f394a080833b48675ad8cdb0ce"
+}

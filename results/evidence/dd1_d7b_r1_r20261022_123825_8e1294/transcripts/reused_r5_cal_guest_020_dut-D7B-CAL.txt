@@ -1,0 +1,26 @@
+ssh payload 307 bytes, timeout 2000 s
+SPECTRE name=D7B-CAL.scs rc=0 elapsed=0s timeout=1800s
+LOGFILE /root/microled_ai_project/cadence_work/dd1_d7b/r5_cal/cases/D7B-CAL/sim/D7B-CAL.log
+RAWDIR  /root/microled_ai_project/cadence_work/dd1_d7b/r5_cal/cases/D7B-CAL/sim/D7B-CAL.raw
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='/root/microled_ai_project/cadence_work/dd1_d7b/r5_cal/cases/D7B-CAL/sim/D7B-CAL.raw/sw1.tran.tran'
+total 48
+drwxr-xr-x. 4 root root 4096 Oct 21 20:13 .
+drwxr-xr-x. 3 root root 4096 Oct 21 20:13 ..
+-rw-r--r--. 1 root root 6559 Oct 21 20:13 D7B-CAL.log
+drwxr-xr-x. 2 root root 4096 Oct 21 20:13 D7B-CAL.raw
+-rw-r--r--. 1 root root 6349 Oct 21 20:13 D7B-CAL.stdout
+-rw-r--r--. 1 root root 6980 Oct 21 20:13 preflight_D7B-CAL_D7B-CAL__r5_cal.log
+drwxr-xr-x. 2 root root 4096 Oct 21 20:13 preflight_D7B-CAL_D7B-CAL__r5_cal.raw
+-rw-r--r--. 1 root root 6793 Oct 21 20:13 preflight_D7B-CAL_D7B-CAL__r5_cal.stdout
+----- log tail -----
+
+
+Aggregate audit (8:13:53 PM, Wed Oct 21, 2026):
+Time used: CPU = 370 ms, elapsed = 407 ms, util. = 90.9%.
+Time spent in licensing: elapsed = 66.5 ms, percentage of total = 16.3%.
+Peak memory used = 62.2 Mbytes.
+Simulation started at: 8:13:53 PM, Wed Oct 21, 2026, ended at: 8:13:53 PM, Wed Oct 21, 2026, with elapsed time (wall clock): 407 ms.
+spectre completes with 0 errors, 0 warnings, and 1 notice.
+D7B_D7B_CAL: PASS

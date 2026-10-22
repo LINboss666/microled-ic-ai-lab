@@ -204,3 +204,27 @@ CDC/skew、阵列、版图/DRC/LVS/PEX、PVT 与温度扫描、Monte Carlo、SOA
 其中 48 次属于交付矩阵本身（24 DUT + 24 动态 preflight），11 次是缺陷成本。
 用户在得知差 1 例时先追加 4 次（上限 56），随后我的插错仍让补齐轮新起了 4 次，
 因此最终**超出追加后的上限 3 次**；发现后立刻停止，未再启动任何进程，也没有把任何一次失败说成不计数。
+逐目录账与"52/56/59/+3"的口径统一登记在 `reports/tasks/DATA-7B-BUDGET-01.md`（R1 补写，不追认授权）。
+
+## 15 DATA-7B-R1 勘误：只改定义、来源与状态（阈值/窗口/case/PWL 一字未改）
+
+R1 的返修不改任何判据数值，但必须把三个原先含糊的**定义**、两处**来源**标注和一组**状态**写清；
+以下每一条都能在 `results/evidence/dd1_d7b_r1_r20261022_122204_05417c/` 的字节里复算：
+
+| 类别 | 原契约的含糊处 | R1 采用的定义（阈值不变） | 来源/实现 |
+|---|---|---|---|
+| 定义·持续入带 | §6 写"进入 `Ical±5 %` 后至少 10 ns"，未说明越过预期关断沿是否仍算，交付实现因此把 19 个窗判成 `SETTLED` | 入带段必须以该窗**实际的下降 50 % 沿为排他期限**（样本 `t < 该沿`），并且要一直延伸到该期限才算 `SETTLED`；否则 `NOT_SETTLED_WITHIN_PULSE`，并另报 `longest_in_band_ns` | `dd1_d7b_measure.sustained_in_band()`，手算用例在 measure 自测 T6b/T6c |
+| 定义·下降沿查找 | 只在整窗末 500 ns 内找下降沿，找不到就回退 `t1`（这就是短码窗"关断=窗口末"的来源） | 逐个**声明脉冲段**查找上升/下降沿，段取自冻结 trace 的 `segments_ps` 并与 `full_intervals` 互校；未找到写 `NOT_FOUND` 并计入 `pulse_edges_missing`，**不回退** | `dd1_d7b_measure.measure_window()`；17 份段的复验见 `rtl_reverify.csv` |
+| 定义·关断持续性 | "先低于 150 nA 后又反弹"被当成"永不关断" | 在关断观察段内**继续扫描**：`OFF` / `NOT_PERMANENTLY_OFF_BY_SEGMENT_END`（附首次反弹时刻与值）/ `NEVER_WITHIN_LIMIT` / `NO_DATA_IN_OFF_SEGMENT` 四态分明 | `dd1_d7b_measure.turn_off()`，用例 T4/T5 |
+| 定义·N/A | 黑码与常亮负例被塞进"未入带"这类实测状态里 | 无导通沿的窗一律 `NOT_APPLICABLE_NO_CONDUCTING_EDGE`，且不虚构关断延迟；标定行状态 `MEASURED` | 同上；`cases.csv` 的 `settled_status` 分布 |
+| 定义·时刻 vs 延迟 | 表里只有绝对时刻，读者要自己减 `t0` | 绝对时刻与延迟分列：新增 `de_fall_delay_ns`、`turn_off_delay_ns`、`off_segment_start_ns` | `dd1_d7b_run.CASE_HDR` |
+| 来源·电流列单位 | `negative.csv` 的列名叫 `window_peak_A`/`last_100ns_max_abs_A`，填的却是 µA 数值 | 列名带真实单位（`window_peak_uA`/`last_100ns_max_abs_uA`）；`cases.csv` 里带 `_A` 的列一律是安培 | `dd1_d7b_run.write_negative()`；复核器按数值量级判单位 |
+| 来源·section/temp | 报告断言"从 log 与 psf 头反读"，交付表里 `temp_read` 却是空，且 `tt` 是硬编码 | `section` 从 deck 的 include 行读、`temp` 从 psf 的 `temp` 列读，再与 deck 声明互相核对；本轮 27 行全部 `tt / 27.0000` | `dd1_d7b_run.condition_readback()`；标定行同表附 `band_samples`/`integration_s` |
+| 来源·样本身份 | 只写"复用"，一个摘要都可能是抄账本 | 三个身份分列且不互替：原生 run（`src_native_run`/`src_launch_id`）、测量源码（`measurement_source_sha256`）、本轮导出（`run_id` + `reused_from=T`）；电荷序列另带 `series_vs_accepted_bundle` | `cases.csv`、`charge_index.csv`、`source_identity.json`、`environment.json` |
+| 状态·EVIDENCE_STATUS | 旧报告写 `PASS`、JSON 写 `scope_status=COMPLETE` 与"超额 0" | 状态只由复核器给出：本轮 `PASS_WITH_DISCLOSED_HISTORICAL_BUDGET_FAILURE`（39 项唯一 FAIL = `BUDGET_RESPECTED`），历史预算状态 `VIOLATED_NOT_RETROACTIVELY_AUTHORISED`，不改判据、不放宽、不 NOT_RUN | `scripts/dd1_d7b_evidence_check.py` 输出，逐条命令与 rc 见 `reports/dd1_d7b_review_fix_r1.md` §6 |
+| 状态·发布闸 | "校验通过才发布"只写在文档里 | 发布前必须过同一复核器，只允许 `BUDGET_RESPECTED` 作为已披露失败放行；拒收时正式目录清单与摘要逐条不变（本轮真实发生过两次拒收：字节超 32 MiB、`.vcd` 不在文本白名单，均 rc=6 且未落正式目录） | `dd1_d7b_run.publish()`；守护组 `A3 publish gate` |
+
+未改清单（复核方式：`git diff --name-only adcdf27` 只有 §13 那三个 `scripts/` 文件加两个新离线助手）：
+`±0.5 LSB` 与 `150 nA` 判据、窗口长度与 `t0` 定义、PWL 拼式与 `SHIFT/TAIL/EDGE_SEARCH/SLEW`、24 份原生 deck、
+主 case 表、黄金表、冻结 RTL/TB、模拟条件（TT/27 °C/钳位 1.2 V/`gear2only`），以及
+`results/evidence/dd1_d7b_r11_main/` 整个目录。

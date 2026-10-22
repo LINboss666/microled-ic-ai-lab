@@ -1,0 +1,28 @@
+simulator lang=spectre insensitive=yes
+// DATA-7B D7B-H200-C63 -- r11_main
+// model binding comes from the git-ignored spectre/pdk_local.env on the guest; run_spectre.sh refuses
+// an unexpanded ${QODER_PDK_LIB}, so this deck is only runnable where that file exists.
+include "${QODER_PDK_LIB}" section=tt
+include "dd1_d6_bias_core.scs"
+include "dd1_d6_sink_core.scs"
+include "dd1_d6_inv18.scs"
+include "dd1_d7b_pwm_stage.scs"
+// temperature is read back from the produced log and psf header; the instantiation
+// form is what this build accepts (a bare `options temp=27' is SFE-709).
+simopt options temp=27
+// TESTBENCH_ASSUMPTION: IREF is injected into the diode-connected reference node and
+// VCAS is a bench rail. No autonomous reference, no PAM ladder, no LED model.
+Iref (0 iref_in) isource dc=15u
+Vcas (vcas 0) vsource dc=1.8
+V18 (vdd18 0) vsource dc=1.8
+// rule 19: every rail has an explicit source to the reference node, including 0 V
+Vss (vss 0) vsource dc=0
+// the pixel is a clamp, not a load: DATA_OUT is held at 1.2 V
+Vclamp (clamp 0) vsource dc=1.2
+Vde (data_en 0) vsource type=pwl wave=[0 0 3914n 0 3916n 1.8 16714n 1.8 16716n 0 16915n 0 16965n 0]
+Xstage (data_en iref_in vcas data_out vdd18 vss) dd1_d7b_pwm_stage
+// zero-burden ammeter; positive means current from the clamp into the DUT pin
+Ip_out (clamp data_out) iprobe
+sw1 tran stop=1.6965e-05 maxstep=5e-10 method=gear2only
+save data_en iref_in vcas vdd18 vss clamp data_out Xstage.data_en_b Xstage.Xsink.vbias_ch Xstage.Xsink.node_m
+save Ip_out:i

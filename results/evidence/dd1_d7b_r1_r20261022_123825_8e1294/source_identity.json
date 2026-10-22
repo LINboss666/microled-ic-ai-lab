@@ -1,0 +1,954 @@
+{
+ "accepted_rtl_sha": "f68449672774ac9266ba9e4893024e4f3027dd9d",
+ "base_sha": "c3513ffee57880bdc9d6d26d5c1c1a9a43c52e37",
+ "measurement_source_sha256": "06079331aaaff1ef748198da80ccad8bafc5355fb4dd1cc8a555a1c17e7d474f",
+ "native_runs": {
+  "D7B-BLANK": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 4049n 1.8 4051n 0 12134n 0 12136n 1.8 12614n 1.8 12616n 0 20015n 0 20065n 0",
+    "stop": "2.0065e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "b6bf24664fb9810ea3956c32fd0f59086c053a1b5bf7ad1fa6a68cb90e67a483",
+   "dut_launch_id": "r11_main/L028",
+   "identity_notes": [],
+   "log_sha256": "94661918f1738f795ad29353519dcd41c8e98e5441da1c79f51e50f266389c61",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L027",
+   "pwl_sha256": "df59545bb8c6a3671c0c9d4b8929f96baa4bcab9eebd0b4dffcc0d20434f0453",
+   "raw_sha256": "4137996e01855395396febe8907eff38769c77f17c1fcdc6f5ea5480e4c32710",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "eb3f1cac907e1dc86a3edef3c76336a8491e0871e8af9ce762e8789573d8c251"
+  },
+  "D7B-CAL": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 1999n 0 2001n 1.8 3999n 1.8 4001n 0 4500n 0",
+    "stop": "4.5e-06",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "a366c8c4defce6ac02a0b9a9bccd99910b06c902b7ff3a3bbf09b00314f9c42b",
+   "dut_launch_id": "REUSED",
+   "identity_notes": [
+    "stop: retained 4.5e-06 s, this round 4.55e-06 s (+50 ns hold point added to the builder after the retained run; the measured windows are inside the retained stop)"
+   ],
+   "log_sha256": "fb6f3a47d5f26b179881040ef15e213baaa19afbe3acc806c756fd4ee0835311",
+   "native_run_id": "r5_cal",
+   "preflight_launch_id": "",
+   "pwl_sha256": "4fdf035d2c4b22f518ef0232ebac37970ba3f57fba9b36ebb86bc163b984ebee",
+   "raw_sha256": "e93bd38a2e2e2f6401ea9aaed61e839becb57fe86949df3c8feee3f157755bca",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "89d8ddf80eb80783c86d209aedaff44b91bfdf047ffe677e249621b3991e3453"
+  },
+  "D7B-CVG-BLANK": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "2.5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 4049n 1.8 4051n 0 12134n 0 12136n 1.8 12614n 1.8 12616n 0 20015n 0 20065n 0",
+    "stop": "2.0065e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "84c6d679bd9400dbaef29631e3b7d24cac213382d9d0a5e904dd26ee9e5aa433",
+   "dut_launch_id": "r11_main/L040",
+   "identity_notes": [],
+   "log_sha256": "292c68131e034a6edc99115e78a43127359bc93962112ed7ce754d3e97c1a982",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L039",
+   "pwl_sha256": "df59545bb8c6a3671c0c9d4b8929f96baa4bcab9eebd0b4dffcc0d20434f0453",
+   "raw_sha256": "f12d379f9e03e318603e658ba09b79b75df1993932b700dafed94b634ab3c50a",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "1fbf7821d88653ec2d4427fd31e3a716947d166417fe344edb56d30a242ba960"
+  },
+  "D7B-CVG-H120-C01": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "2.5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 4034n 1.8 4036n 0 11795n 0 11845n 0",
+    "stop": "1.1845e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "07cd922cbcedf98d5d56205c2d44a5de3e0c8dab2b95c19e2a70fdc2e64d5bb0",
+   "dut_launch_id": "r11_main/L038",
+   "identity_notes": [],
+   "log_sha256": "8d9bf7228c5c15f4a1a67afc70e43aa5e397cf993a5a99defb78c0ba4cbb2061",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L037",
+   "pwl_sha256": "e603b2729203e710866e7849d1097e4935985350dbdc17fffe02564f421a0e77",
+   "raw_sha256": "a0b44ca7e60f3a9c1745a1e4087f81ee2e12e0271e971a83ee1af1bb2e1f081a",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "6ceac535e627b9eb4972f7b7786f9dea37cf2c4482ea3545d7a9aa78a59cade0"
+  },
+  "D7B-CVG-P30-C001": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "2.5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 3944n 1.8 3946n 0 11795n 0 11845n 0",
+    "stop": "1.1845e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "4668b18d24b39dcd0961168fcb10f6d41f95764126cbc56d291da2016bd1bab1",
+   "dut_launch_id": "r11_main/L034",
+   "identity_notes": [],
+   "log_sha256": "4d12197c0edf3d5240767499356b1203ee933ed6b81e74b5966a293e39aa997f",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L033",
+   "pwl_sha256": "18f03b5e15156081a250f380c1302af72e85bc7c5eb994bb742d8fbd7f8816f9",
+   "raw_sha256": "b3c3848c24265bd781d673d8f5bfc50f60c5820609123a0700af71277d21bcbd",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "52ba25f86cf6f7c625492e75fd95dbffd911c4a31057905d59fdc75688d760ce"
+  },
+  "D7B-CVG-P30-C255": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "2.5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 11594n 1.8 11596n 0 11795n 0 11845n 0",
+    "stop": "1.1845e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "2b04ac887383851df6c62c8fd3dd3f615b607801894f1522806810e4a81a9630",
+   "dut_launch_id": "r11_main/L036",
+   "identity_notes": [],
+   "log_sha256": "afd63687631561921cde236ee4a49afd06c122230ea68ffe56cfc28d686cdc0d",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L035",
+   "pwl_sha256": "5a8ae8dd40cfea718b132d0d9ecc44d9ae7760be35d0fe626099262a0890f4b1",
+   "raw_sha256": "ef0c6dbff5ebd471003fd14d092fe6133a1eacf798699873cb07b2bc53a75688",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "23eb3726a73665f8855c4d6258bba8b4b4ba83313d3a6cd8eb644487207da594"
+  },
+  "D7B-FAULT": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 4049n 1.8 4051n 0 12134n 0 12136n 1.8 12614n 1.8 12616n 0 20015n 0 20065n 0",
+    "stop": "2.0065e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "44b8103744a760f52f2a06b2c6dfa28ee318abf7ad0db41944dcfce3f2f97859",
+   "dut_launch_id": "r11_main/L030",
+   "identity_notes": [],
+   "log_sha256": "9abd375d2eb7672227c299d60708da5ba0dd281051c2727c997b7f6aaf2b70ff",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L029",
+   "pwl_sha256": "df59545bb8c6a3671c0c9d4b8929f96baa4bcab9eebd0b4dffcc0d20434f0453",
+   "raw_sha256": "74fbdabf3390965e09fd46daf9c09f6118a1bfb3ec25815d2d29d7c684d440b0",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "c4a3cb35b30d558821975d00debcbb049f6ac04eed2090e26bdb3f63bb756d83"
+  },
+  "D7B-H120-C00": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 11795n 0 11845n 0",
+    "stop": "1.1845e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "9b1cf7bcfd979e98018aa93219527aee65e20b205bb7fd780ceeeae5e4645407",
+   "dut_launch_id": "r11_main/L014",
+   "identity_notes": [],
+   "log_sha256": "08e9ef1a65ad6036760b151d26593e29bf32b10f695468c834e95d9c15735c53",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L013",
+   "pwl_sha256": "2a88999c9ffb68897eed8423c14ed53d54ccb99bce20c37035f015beee372c8e",
+   "raw_sha256": "38ec0bbf44b217ed07781d670414547d798b8dab54e4cad0b16709ee21900c2d",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "180752d177190fc770fce15ad782bf56bfcb702dbaef1b9ed7b2dae850b18696"
+  },
+  "D7B-H120-C01": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 4034n 1.8 4036n 0 11795n 0 11845n 0",
+    "stop": "1.1845e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "99426dfb17e89d50ba1021d3c20918fc194463af55b7291cc5853fa583a99c0a",
+   "dut_launch_id": "r11_main/L016",
+   "identity_notes": [],
+   "log_sha256": "51b78863e80f61b060ab9b86433c3ad758243877e6a91c871c8e988edf53c67a",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L015",
+   "pwl_sha256": "e603b2729203e710866e7849d1097e4935985350dbdc17fffe02564f421a0e77",
+   "raw_sha256": "c7d95d6c9a91476ce7c9915699259909b720cf358e9a6a14647e6cd492529b2c",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "7b52f16f551d1a152685da88a769dc9c6ee5a6ae0b5eb5c627e7d44518482363"
+  },
+  "D7B-H120-C02": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 4154n 1.8 4156n 0 11795n 0 11845n 0",
+    "stop": "1.1845e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "8a262b28e8699772099d5364a8881fa5b40c50644bb7d48194c48da2e8f5b994",
+   "dut_launch_id": "r11_main/L018",
+   "identity_notes": [],
+   "log_sha256": "e693d0d8dc372214812e5e79ad0c8273444b3bf311d072a252267d36ecaa8197",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L017",
+   "pwl_sha256": "bea728a611451f27a9eb8742790f709bfa67fe884c937292e19f92d0ba052732",
+   "raw_sha256": "ace8135b216040470703fa8d889640514eff563ad09ff22b27b5dd744ff8334e",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "6d2d0d635093e817a50d11a6a4289c200c36a698bdda6b932d43c158da561a94"
+  },
+  "D7B-H120-C62": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 11354n 1.8 11356n 0 11795n 0 11845n 0",
+    "stop": "1.1845e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "cf101a384f00fcbecd1d38d423b3b23d0a6e388187edef1a8532a8ca5f2e00cb",
+   "dut_launch_id": "r11_main/L020",
+   "identity_notes": [],
+   "log_sha256": "1e2af50ca8736b66429ce51fc8ab6821c350fd3d6861b5f95001b41722ec6d4c",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L019",
+   "pwl_sha256": "a6d33936ce10926f38116873cc6534fe00ee026cf2ec2960cae044ab036901de",
+   "raw_sha256": "b6246c5e7b92161c9919854b0050ab54ddcf874bf69b8e8f58db90f58c289cd0",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "51d3189adfe1d0cf61688abb98fb6da104eeacdd8ae9bd2bfbf1d0ef7568c9f1"
+  },
+  "D7B-H120-C63": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 11594n 1.8 11596n 0 11795n 0 11845n 0",
+    "stop": "1.1845e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "599e487af706cb6db4b15f2ffe475db14140c4ad6dd65cd713a2801390666658",
+   "dut_launch_id": "r11_main/L022",
+   "identity_notes": [],
+   "log_sha256": "4c4b7a3a642dfa15c9d867a403bb61b38289eb49705b4f21d4dd82f14dbc1823",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L021",
+   "pwl_sha256": "5a8ae8dd40cfea718b132d0d9ecc44d9ae7760be35d0fe626099262a0890f4b1",
+   "raw_sha256": "4ab86006c825cc0dd862ac551c08f3506ccc7db021508a07e08a30f9020f4d0c",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "775510a075f880462eea8009eb4f48f69995dabff96cdea7f6306eab324b3c34"
+  },
+  "D7B-H200-C01": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 4114n 1.8 4116n 0 16915n 0 16965n 0",
+    "stop": "1.6965e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "c5c82d615a9c5b76842a8c0e9f0cbcd84a4e72be9b16f921d09e1cc90183b792",
+   "dut_launch_id": "r11_main/L024",
+   "identity_notes": [],
+   "log_sha256": "32e3550bc8d34286c9aba438bb9382ecbea80815b50a86737c603f2e36d25156",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L023",
+   "pwl_sha256": "0e9775d0fd335dabcabac24f107848c4ab0cdbc6f4ac16b827db5eabfb2c5b99",
+   "raw_sha256": "d3d8241b10082cae90a5103757ae8d05329cf52734227a4bb7c360ff7c7ba18d",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "6e596b7e4e84d4d547938ab79d65def3fb27b96c9f5a03acc776d7a3a78b1bed"
+  },
+  "D7B-H200-C63": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 16714n 1.8 16716n 0 16915n 0 16965n 0",
+    "stop": "1.6965e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "ebdf41f6e88c22e75a0e7f91cf0fac592c0f77124766f836f1100dc9be9268c9",
+   "dut_launch_id": "r11_main/L026",
+   "identity_notes": [],
+   "log_sha256": "1cd6ea001511db6d29bade8f29ae6b6aa6b570cd8eedabfdf608099d97ddcfb3",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L025",
+   "pwl_sha256": "de78195ce03b2b1ebb5bfd4f1fc7ae9d9f952252b12fbe238ac0d73c9ac6d5d7",
+   "raw_sha256": "41041095f0fb32ff6d6c2e67259ffb930a94c7ff15076638cc211f0a21e23706",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "e226201faf37589586951417bd8cd5df98489fab0e34d4bc645bdeacf0b02e0e"
+  },
+  "D7B-N1": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "",
+    "stop": "1.1845e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "0a2d21311e9628255a3d4135f9a2d4b2c76c9387345fd4b2b6389dc3ae09521c",
+   "dut_launch_id": "r11_main/L032",
+   "identity_notes": [
+    "neither deck carries a PWL wave: this case drives the enable from a bench source, which is the wiring fault under test"
+   ],
+   "log_sha256": "e577958f9388c9b613ccd5e9f73efac01bf1e4f599bb99cf86590502168ce425",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L031",
+   "pwl_sha256": "2a88999c9ffb68897eed8423c14ed53d54ccb99bce20c37035f015beee372c8e",
+   "raw_sha256": "b1ac38ee10818ad366da797ed39ee549c58ea02ac74d18612151f50df0d99dfc",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "8e17a1a984f542a15e430a7a714899b1f736e5a3bb7b6cb8b278a5bf87349767"
+  },
+  "D7B-P30-C000": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 11795n 0 11845n 0",
+    "stop": "1.1845e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "c4dca6a5a19417bcb183bf359606603381817900d4f71d2f8fd1059e93d8ec2a",
+   "dut_launch_id": "r11_reuse/L003",
+   "identity_notes": [],
+   "log_sha256": "2ec93e97325e4900b6936691effe9819889455024d9dbf5ba73bcc114dce84ba",
+   "native_run_id": "r11_reuse",
+   "preflight_launch_id": "r11_reuse/L002",
+   "pwl_sha256": "2a88999c9ffb68897eed8423c14ed53d54ccb99bce20c37035f015beee372c8e",
+   "raw_sha256": "993561369bd771607392de76d1200c6cfbe4c8e91f7ef0bfb3cefad0f43905b4",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "a6f09d502f99ff82471320c70f73d952f8599d37f27eee9b88ff08e7d88ac230"
+  },
+  "D7B-P30-C001": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 3944n 1.8 3946n 0 11795n 0 11845n 0",
+    "stop": "1.1845e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "75cd28ff4b1eb404f401efc25c44b3bc76dd420c9dc1f74463aed5576af0afca",
+   "dut_launch_id": "r11_reuse/L005",
+   "identity_notes": [],
+   "log_sha256": "180dc0072beb0e022ac4d256bfa46b9f23dcfe50535f766fd384aadc6e9ea53d",
+   "native_run_id": "r11_reuse",
+   "preflight_launch_id": "r11_reuse/L004",
+   "pwl_sha256": "18f03b5e15156081a250f380c1302af72e85bc7c5eb994bb742d8fbd7f8816f9",
+   "raw_sha256": "ce262973c339fc6bcb7daf90b87260c6156fb3831c8d98005ca1fe4d7bc1397d",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "a4d6cc48426e8537cc9b4e079f7aee87f73a8a5f4cedde29cb6e66c84b6000cf"
+  },
+  "D7B-P30-C002": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 3974n 1.8 3976n 0 11795n 0 11845n 0",
+    "stop": "1.1845e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "b0a5df448b2dc6c79c368cbc7c66eff0430bf0c6f9ae60db200c7f299d287828",
+   "dut_launch_id": "r11_main/L002",
+   "identity_notes": [],
+   "log_sha256": "232a2443ff421b47fcca61558bf1f69aceb864fd55a3b878f73352ad153ec2f9",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L001",
+   "pwl_sha256": "046005128c1e773848b8f2652f0feb92d39fbed7959c39912db0f2b998fe81b6",
+   "raw_sha256": "a35a8166e1afe49e4b2e59817cabbd7686e188d8dbe856ae746d906fd2cd2843",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "5cd61cd4293f576f577f4625e5c9edb5abebc1e0a57f7cba5a09e7edc1d88ef5"
+  },
+  "D7B-P30-C016": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 4394n 1.8 4396n 0 11795n 0 11845n 0",
+    "stop": "1.1845e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "87e5ee9f59fe991597b6bf60d9b6cec2b4612eb5f881f2ff41c4d6544e6b7694",
+   "dut_launch_id": "r11_main/L004",
+   "identity_notes": [],
+   "log_sha256": "19ae0c3166a5066c83ce92b81700293aae9ca8c7596b1aa55f4b3b5ea4158cfe",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L003",
+   "pwl_sha256": "9e3311c0221d5a195990db23ccbc10fab3e24016df9291eb13712d8ec5c0db4c",
+   "raw_sha256": "671ca31fe6321e52fc0caeac819fc764277d64592a0e9b1a5a7d0d032d5a4df7",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "86dbf71e4deb2613385b1d7b2f7ceec8c036ebc69e313a73dfaf83ce95ffd815"
+  },
+  "D7B-P30-C254": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 11534n 1.8 11536n 0 11795n 0 11845n 0",
+    "stop": "1.1845e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "650639edb6a18f71944614a4fafc002d31ee59d5c849605cdc79e66ec3592ba4",
+   "dut_launch_id": "r11_main/L006",
+   "identity_notes": [],
+   "log_sha256": "3b66ec1734699bad6a9be680f5abf47a5f8f0208b9ccf09c1e53ff5031e67a22",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L005",
+   "pwl_sha256": "c6cd85719a1c47054a672037f16de6eade65d2342b49f0ceea855bc1c2b23d13",
+   "raw_sha256": "53b49b2ad6ee08e07bd30410740b9ac17f4bf88e02adcbb4093b5808ca1c1640",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "f7cdd61351d3daa617b55b4b8359564332a66339ebf050add92c106f5778ed63"
+  },
+  "D7B-P30-C255": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 11594n 1.8 11596n 0 11795n 0 11845n 0",
+    "stop": "1.1845e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "265ec1f432ad4dace874b5e15f5a99de3f44f02c9d4453f302a82014dbc94e65",
+   "dut_launch_id": "r11_main/L008",
+   "identity_notes": [],
+   "log_sha256": "ffbe6d208d6e005b0df650cdd1f8930ed146fb161ef54b1c457921e1c098e353",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L007",
+   "pwl_sha256": "5a8ae8dd40cfea718b132d0d9ecc44d9ae7760be35d0fe626099262a0890f4b1",
+   "raw_sha256": "6d77e8c55249acfc267e6cecd393622a00fb4dc6eb8fc6751895c3333ced0f4e",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "818396b1d975f45902465b6b5485fd5d9180a8431de757278eab6115b86fec07"
+  },
+  "D7B-P50-C001": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 3964n 1.8 3966n 0 16915n 0 16965n 0",
+    "stop": "1.6965e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "6fdf36634ca1e44241938bbcebf5b76f795c1a3c07012401ff4a4e9db0b124ba",
+   "dut_launch_id": "r11_main/L010",
+   "identity_notes": [],
+   "log_sha256": "a293e08eddecaeb7819a311c8943256fd1fb38b3f371907a1560df949c9b4095",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L009",
+   "pwl_sha256": "319c92adea29400d53b0f097753a3cc0264360c23b5d8ee3fc38aee63d6a1530",
+   "raw_sha256": "0cf363619f36c5eca07dc65bdb1c412cd7ab6c501dd8e9c680650f8c1706c7bd",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "764d402c717fdd8ea9733759a60adc7622dcf0cac660b4d467de6c3c3a7fba22"
+  },
+  "D7B-P50-C255": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3914n 0 3916n 1.8 16714n 1.8 16716n 0 16915n 0 16965n 0",
+    "stop": "1.6965e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "37d052bdf682ac4a582e7ada8753eca107fb53efb19df85c07c8bd6bf12e66ca",
+   "dut_launch_id": "r11_main/L012",
+   "identity_notes": [],
+   "log_sha256": "ad1f5236582ba17b520b7d82d1864678d55d067b1459316b301dd48444c91888",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L011",
+   "pwl_sha256": "de78195ce03b2b1ebb5bfd4f1fc7ae9d9f952252b12fbe238ac0d73c9ac6d5d7",
+   "raw_sha256": "f63f409d3a5d62bb4115789e8a6645d59d41fa280e07031ee553de1617c8d627",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "105e686f3f7476fc6ba232bf95b78772899939db86c45b890ad196225929d359"
+  },
+  "D7B-SLEW-P30-C001": {
+   "conditions": {
+    "deck_section": "tt",
+    "iprobe": true,
+    "iref_A": "15u",
+    "maxstep": "5e-10",
+    "method": "gear2only",
+    "pwl_wave": "0 0 3910n 0 3920n 1.8 3940n 1.8 3950n 0 11795n 0 11845n 0",
+    "stop": "1.1845e-05",
+    "temp": "27",
+    "vcas_V": "1.8",
+    "vclamp_V": "1.2"
+   },
+   "deck_sha256": "6cdf362e8f70cb95535d420fc6c6d85ba0c30cd1cedd16d6957a2b5ad27474af",
+   "dut_launch_id": "r11_main/L042",
+   "identity_notes": [],
+   "log_sha256": "0bc7a2e7385ac5a9aaabd358b291e9f057ef26a7415008e836601d1741c58417",
+   "native_run_id": "r11_main",
+   "preflight_launch_id": "r11_main/L041",
+   "pwl_sha256": "e6340d3ef404e5ff359a1a60cc0679dd1f268ad47131abcd7a44fdbf0e3906b9",
+   "raw_sha256": "150cb915b8b3c704a93942976285c9abb898a54ccc519a4de88a49500ed304f8",
+   "retained_dir": "D:/ic617_d7b/review/scratch/d7b_stage",
+   "transcript_sha256": "0e35002c8a0892bb1c73478b4659ba35a6e9831f0f372b1efba46cc48bf14b49"
+  }
+ },
+ "repair_base_sha": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
+ "run_id": "r20261022_123825_8e1294",
+ "runner_source_sha256": "64797d531342533539ea6c9848994c0c4dc3593187e12a29e1a1a5b5299bc705",
+ "traces": {
+  "D7B-BLANK": {
+   "end_ps": 17675000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-BLANK": "2",
+    "D7B-CVG-BLANK": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-BLANK.vcd",
+   "vcd_sha256": "c696a88be24fc4ed889e66d25ccaf2b296075fc0f425473166e2384148291461"
+  },
+  "D7B-CVG-BLANK": {
+   "end_ps": 17675000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {},
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-BLANK.vcd",
+   "vcd_sha256": "c696a88be24fc4ed889e66d25ccaf2b296075fc0f425473166e2384148291461"
+  },
+  "D7B-CVG-H120-C01": {
+   "end_ps": 9815000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {},
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-H120-C01.vcd",
+   "vcd_sha256": "5222b257cb262ce57e296b3e1f49143da334d1cc741648398c305098c7f50ed2"
+  },
+  "D7B-CVG-P30-C001": {
+   "end_ps": 9455000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {},
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P30-C001.vcd",
+   "vcd_sha256": "e5252726b77ed3723987dcf1e2b51105f155f98205ca6254a0e61d9b7efdcb86"
+  },
+  "D7B-CVG-P30-C255": {
+   "end_ps": 9455000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {},
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P30-C255.vcd",
+   "vcd_sha256": "0147d827052997ce61c6594df23c3a5e9554bad5af2324d36f349823dbcdf5b5"
+  },
+  "D7B-FAULT": {
+   "end_ps": 17675000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-FAULT": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-FAULT.vcd",
+   "vcd_sha256": "f407ede0cab8fad03fc724f07637ea724e2da0acb52f6d85333193deefcbb13a"
+  },
+  "D7B-H120-C00": {
+   "end_ps": 9815000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-H120-C00": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-H120-C00.vcd",
+   "vcd_sha256": "bc2d2d29f6b2b24d69b661ab2c9691efabef0dc9211a5fcb56ee84894a3ccdb6"
+  },
+  "D7B-H120-C01": {
+   "end_ps": 9815000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-CVG-H120-C01": "2",
+    "D7B-H120-C01": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-H120-C01.vcd",
+   "vcd_sha256": "5222b257cb262ce57e296b3e1f49143da334d1cc741648398c305098c7f50ed2"
+  },
+  "D7B-H120-C02": {
+   "end_ps": 9815000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-H120-C02": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-H120-C02.vcd",
+   "vcd_sha256": "6ebd7ada5a52bf7d9b6b2705004b529dbe3d90ff958863b72be48c1a676ed239"
+  },
+  "D7B-H120-C62": {
+   "end_ps": 9815000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-H120-C62": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-H120-C62.vcd",
+   "vcd_sha256": "6df47117b61c9fb0adeb5e8c50ff572d2d743b8acdceba87221690d574d83d9e"
+  },
+  "D7B-H120-C63": {
+   "end_ps": 9815000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-H120-C63": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-H120-C63.vcd",
+   "vcd_sha256": "d018658eb95988a1ff4254b7153aff7231a33c89f0ef80bf62037ce7aff41d18"
+  },
+  "D7B-H200-C01": {
+   "end_ps": 15255000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-H200-C01": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-H200-C01.vcd",
+   "vcd_sha256": "3e7e38968071459efd932a0640761096da77cffe06c567dd33eea5bced377056"
+  },
+  "D7B-H200-C63": {
+   "end_ps": 15255000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-H200-C63": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-H200-C63.vcd",
+   "vcd_sha256": "742fec680530280c174793f5cbd1811e4c6962b691e0f315605cf23582dfa414"
+  },
+  "D7B-N1": {
+   "end_ps": 9455000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {},
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P30-C000.vcd",
+   "vcd_sha256": "cb19f1629b7679d85b25f40bf3a5cd38c43c398823c7fd25b29c8704847d2ba1"
+  },
+  "D7B-P30-C000": {
+   "end_ps": 9455000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-N1": "2",
+    "D7B-P30-C000": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P30-C000.vcd",
+   "vcd_sha256": "cb19f1629b7679d85b25f40bf3a5cd38c43c398823c7fd25b29c8704847d2ba1"
+  },
+  "D7B-P30-C001": {
+   "end_ps": 9455000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-CVG-P30-C001": "2",
+    "D7B-P30-C001": "2",
+    "D7B-SLEW-P30-C001": "10"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P30-C001.vcd",
+   "vcd_sha256": "e5252726b77ed3723987dcf1e2b51105f155f98205ca6254a0e61d9b7efdcb86"
+  },
+  "D7B-P30-C002": {
+   "end_ps": 9455000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-P30-C002": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P30-C002.vcd",
+   "vcd_sha256": "152be511183d2cac5153abbe4faaa77ff7778e25fe64e3e6c70aa9071c2630e9"
+  },
+  "D7B-P30-C016": {
+   "end_ps": 9455000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-P30-C016": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P30-C016.vcd",
+   "vcd_sha256": "c355353500064b273b21386551f075d18e6b08e3f9c4050b242e903e5944fc57"
+  },
+  "D7B-P30-C254": {
+   "end_ps": 9455000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-P30-C254": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P30-C254.vcd",
+   "vcd_sha256": "3ed398ad26cda4fb743f2008305d12ddf18125db43c0372226458c909bcfcca9"
+  },
+  "D7B-P30-C255": {
+   "end_ps": 9455000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-CVG-P30-C255": "2",
+    "D7B-P30-C255": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P30-C255.vcd",
+   "vcd_sha256": "0147d827052997ce61c6594df23c3a5e9554bad5af2324d36f349823dbcdf5b5"
+  },
+  "D7B-P50-C001": {
+   "end_ps": 14655000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-P50-C001": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P50-C001.vcd",
+   "vcd_sha256": "070ef67e94fb4b9cab897e16d0c0ba07ab5ad1d34fb59d3d62ff8325d048c73c"
+  },
+  "D7B-P50-C255": {
+   "end_ps": 14655000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {
+    "D7B-P50-C255": "2"
+   },
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P50-C255.vcd",
+   "vcd_sha256": "d6d9da01bc7b8b4cfaa9792c8ac2023c640af7c8549394649e94e52eaec1ff4f"
+  },
+  "D7B-SLEW-P30-C001": {
+   "end_ps": 9455000,
+   "header": {
+    "date": "",
+    "first_scope": "$scope module tb_dd1_d7b_pwm $end",
+    "timescale": "",
+    "version": ""
+   },
+   "ramp_ns": {},
+   "shift_ps": 2500000,
+   "tick_lead_ps": 5000,
+   "vcd": "trace_D7B-P30-C001.vcd",
+   "vcd_sha256": "e5252726b77ed3723987dcf1e2b51105f155f98205ca6254a0e61d9b7efdcb86"
+  }
+ }
+}

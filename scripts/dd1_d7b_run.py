@@ -49,7 +49,12 @@ import sc1_read_psf as RD                         # frozen PSF-ASCII parser
 BASE_SHA = 'c3513ffee57880bdc9d6d26d5c1c1a9a43c52e37'
 ACCEPTED_SHA = 'f68449672774ac9266ba9e4893024e4f3027dd9d'
 TASK_ID = 'DATA-7B'
-BRANCH = 'poc/data-pwm-d7b'
+# DATA-7B-R1: this build repairs the tools of the delivered round. T is the reviewed tip the retained
+# raw bytes come from; every reused number is labelled with it instead of being passed off as new.
+REPAIR_TASK_ID = 'DATA-7B-R1'
+REPAIR_BASE_SHA = 'adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50'
+REPAIR_PAYLOAD_SHA = '9d73cc184a266e646ae827f0350f7c931d9faa25'
+BRANCH = 'poc/data-pwm-d7b-r1'
 
 V18 = 1.8
 VCAS_V = 1.8
@@ -92,6 +97,26 @@ LAUNCH_BUDGET_TASKBOOK = 52
 LAUNCH_BUDGET_USER_GRANTED_EXTRA = 4
 PREFLIGHT_PER_DUT = 1
 
+# DATA-7B-R1 execution guards. The modes are a closed list: a call that names none of them, or more
+# than one, is refused before a single byte of preparation happens, because in the delivered build a
+# bare call fell through to the native branch with both authorisation variables unset.
+MODES = ('selftest', 'dry', 'run', 'supply_negative', 'check_evidence', 'static_probe',
+         'write_manifest', 'remeasure', 'account')
+NATIVE_MODES = ('run', 'supply_negative', 'static_probe')
+AUTH_VARS = ('RUN', 'QODER_SIM_AUTHORISED')
+# the delivered DATA-7B bundle is the only source of the historical launch count; the account is
+# rebuilt from its reconcile table so a fresh checkout cannot quietly start from zero
+HISTORICAL_EVIDENCE = os.path.join(PROJ, 'results', 'evidence', 'dd1_d7b_r11_main')
+ACCEPTED_BUNDLE_NAME = 'dd1_d7b_r11_main'
+NEW_SERIES_MARK = 'NEW_IN_R1_NOT_IN_ACCEPTED_BUNDLE'
+RTL_PATH = os.path.join(PROJ, 'rtl', 'dd1_d7a_gray_ctrl.sv')
+TB_PATH = os.path.join(PROJ, 'tests', 'dd1_d7b', 'tb_dd1_d7b_pwm.sv')
+MAX_RTL_SIMULATIONS = 17           # the four-state re-verifications TASK_DATA7B_R1 grants, at most
+ACCOUNT_PATH = os.environ.get('DD1_D7B_ACCOUNT') or os.path.join(
+    PROJ, 'review', 'scratch', 'dd1_d7b_launch_account.csv')
+RUN_ID_RE = re.compile(r'^r[0-9]{8}_[0-9]{6}_[0-9a-f]{6}$')
+PUBLISHED_PREFIX = 'dd1_d7b_r1_'          # DATA-7B-R1 evidence is named dd1_d7b_r1_<run_id>
+
 MASTER_FILES = ('dd1_d6_bias_core.scs', 'dd1_d6_sink_core.scs', 'dd1_d6_inv18.scs',
                'dd1_d7b_pwm_stage.scs')
 FROZEN_RUNNER = ('scripts/run_spectre.sh', 'scripts/tb_preflight.sh', 'scripts/sc1_supply_check.awk')
@@ -112,6 +137,19 @@ def sha_txt(t):
 def sha_file(path):
     with open(path, 'rb') as f:
         return hashlib.sha256(f.read()).hexdigest()
+
+
+def _source_sha(name):
+    p = os.path.join(HERE, name)
+    return sha_file(p) if os.path.isfile(p) else ''
+
+
+# Three identities are kept apart, because the delivered round reported them under one word and a
+# re-measurement then looked like a re-run: the native run that produced the bytes, the measurement
+# source that turned them into numbers, and this round's export.
+MS_SOURCE_SHA = _source_sha('dd1_d7b_measure.py')
+RUN_SOURCE_SHA = _source_sha('dd1_d7b_run.py')
+TRACE_SOURCE_SHA = _source_sha('dd1_d7b_trace.py')
 
 
 def git_blob(ref, path):
@@ -336,26 +374,104 @@ class Link(object):
 
 
 # ------------------------------------------------------------------ process ledger
-class Ledger(object):
+class AppendCSV(object):
+    """a file that already exists is read back before anything is written, and only ever grows
+
+    The DATA-7B-R1 defect was the opposite: `__init__` ignored the bytes on disk and `write()` used
+    mode `w`, so re-opening the same path in a new process reset the count to zero and deleted the
+    history. Both the per-run ledger and the task-level account now load first, keep every row they
+    did not create, and refuse to write a file that has lost rows. A file whose own id series has a
+    hole in it is refused on read, so an external edit cannot quietly remove a launch.
+    """
+
+    HDR = []
+    PREFIX = ''
+
+    def __init__(self, path):
+        self.path = path
+        self.rows = []
+        self.loaded_ids = set()
+        if os.path.isfile(path):
+            with io.open(path, encoding='utf-8', newline='') as f:
+                hdr = f.readline().strip().split(',')
+                if hdr and hdr != self.HDR:
+                    raise RuntimeError('%s was written with a different header: %s'
+                                       % (os.path.basename(path), ','.join(hdr)))
+                for line in f:
+                    if not line.strip():
+                        continue
+                    vals = line.rstrip('\r\n').split(',')
+                    if len(vals) != len(self.HDR):
+                        raise RuntimeError('%s has a %d-field row, the header has %d'
+                                           % (os.path.basename(path), len(vals), len(self.HDR)))
+                    self.rows.append(dict(zip(self.HDR, vals)))
+            self.loaded_ids = set(r['launch_id'] for r in self.rows)
+            if self.PREFIX:
+                self.check_ids()
+
+    def check_ids(self):
+        nums = []
+        for r in self.rows:
+            lid = r['launch_id']
+            if not lid.startswith(self.PREFIX):
+                continue
+            if not re.match(r'^%s\d+$' % self.PREFIX, lid):
+                raise RuntimeError('%s has a malformed launch id %r' % (self.path, lid))
+            nums.append(int(lid[len(self.PREFIX):]))
+        if sorted(nums) != list(range(1, len(nums) + 1)):
+            raise RuntimeError('%s lost a row: its %s ids are %s, not a gapless 1..%d series'
+                               % (os.path.basename(self.path), self.PREFIX,
+                                  ','.join(str(n) for n in sorted(nums)[:6]), len(nums)))
+
+    def _next_id(self):
+        """the next id in this file's own series, whatever other prefixes it also carries"""
+        used = [int(r['launch_id'][len(self.PREFIX):]) for r in self.rows
+                if re.match(r'^%s\d+$' % self.PREFIX, r['launch_id'])]
+        return '%s%03d' % (self.PREFIX, max(used) + 1 if used else 1)
+
+    def flush(self):
+        for r in self.rows:
+            for k, v in r.items():
+                if ',' in str(v) or '\n' in str(v):
+                    raise RuntimeError('%s: field %s carries a comma or newline' % (self.path, k))
+        ids = [r['launch_id'] for r in self.rows]
+        if len(set(ids)) != len(ids):
+            raise RuntimeError('%s: launch_id repeats' % self.path)
+        lost = self.loaded_ids - set(ids)
+        if lost:
+            raise RuntimeError('%s refuses to drop %d previously recorded row(s)'
+                               % (self.path, len(lost)))
+        tmp = self.path + '.tmp'
+        with io.open(tmp, 'w', encoding='utf-8', newline='\n') as f:
+            f.write(','.join(self.HDR) + '\n')
+            for r in self.rows:
+                f.write(','.join(str(r.get(k, '')) for k in self.HDR) + '\n')
+        if os.path.isfile(self.path):
+            os.remove(self.path)
+        os.rename(tmp, self.path)
+
+
+class Ledger(AppendCSV):
     """a row exists before the launch; a failed launch still costs one"""
 
     HDR = ['launch_id', 'case_id', 'role', 'state', 'requested_utc', 'ended_utc', 'rc',
            'spectre_line', 'deck_sha256', 'pwl_sha256', 'raw_sha256', 'log_sha256', 'refusal',
            'launches_used_after']
+    PREFIX = 'L'
 
     def __init__(self, path):
-        self.path = path
-        self.rows = []
-        self.used = 0
+        AppendCSV.__init__(self, path)
+        # a reopened ledger starts where the file left off, never at zero
+        self.used = max([int(r['launches_used_after'] or 0) for r in self.rows] or [0])
 
     def begin(self, case_id, role, deck_sha, pwl_sha):
-        self.rows.append({'launch_id': 'L%03d' % (len(self.rows) + 1), 'case_id': case_id,
+        self.rows.append({'launch_id': self._next_id(), 'case_id': case_id,
                           'role': role, 'state': 'REQUESTED',
                           'requested_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
                           'ended_utc': '', 'rc': '', 'spectre_line': '', 'deck_sha256': deck_sha,
                           'pwl_sha256': pwl_sha, 'raw_sha256': '', 'log_sha256': '',
                           'refusal': '', 'launches_used_after': str(self.used)})
-        self.write()
+        self.flush()
         return self.rows[-1]
 
     def finish(self, row, rc, text, raw_sha='', log_sha='', refusal='', launched=None):
@@ -375,14 +491,204 @@ class Ledger(object):
         row['log_sha256'] = log_sha
         row['refusal'] = (refusal or '').replace(',', ';')[:180]
         row['launches_used_after'] = str(self.used)
-        self.write()
+        self.flush()
         return launched
 
     def write(self):
-        with io.open(self.path, 'w', encoding='utf-8', newline='\n') as f:
-            f.write(','.join(self.HDR) + '\n')
-            for r in self.rows:
-                f.write(','.join(str(r.get(k, '')) for k in self.HDR) + '\n')
+        self.flush()
+
+
+# ------------------------------------------------------------------ task level launch account
+class OverBudget(Exception):
+    """the ceiling is reached before the process starts, so it can never be spent by the refusal"""
+
+
+class Account(AppendCSV):
+    """the task-level cumulative account of every Spectre process this task has asked for
+
+    Three facts are kept apart, because collapsing them is what let the DATA-7B round overrun:
+      * requested  -- a row was written before the process started;
+      * confirmed  -- the returned text proves a simulator really ran (a SPECTRE line or the
+        preflight's own `spectre_rc=`), which is the honest count of executed launches;
+      * uncertain  -- a row left in REQUESTED by a crash or a lost connection. It is never counted as
+        executed, and it still occupies the ceiling, because nobody can prove it did not start.
+    The file is seeded from the delivered reconcile table, so a fresh checkout cannot reset the
+    history to zero and a new run_id cannot start a fresh budget.
+    """
+
+    HDR = ['launch_id', 'task_id', 'run_id', 'case_id', 'role', 'state', 'requested_utc',
+           'ended_utc', 'rc', 'launch_evidence', 'deck_sha256', 'pwl_sha256', 'raw_sha256',
+           'log_sha256', 'refusal', 'ceiling', 'confirmed_after', 'occupied_after']
+    PREFIX = 'A'
+
+    def __init__(self, path, ceiling, seed):
+        existed = os.path.isfile(path)
+        AppendCSV.__init__(self, path)
+        self.ceiling = ceiling
+        self.seed_origin = seed['origin']
+        if not existed:
+            for row in seed['rows']:
+                self.rows.append(row)
+        else:
+            have = set(r['launch_id'] for r in self.rows)
+            want = set(r['launch_id'] for r in seed['rows'])
+            if not want <= have:
+                raise RuntimeError('%s lost %d seeded historical row(s); the account is not trusted'
+                                   % (os.path.basename(path), len(want - have)))
+        self.recover()
+        self._restamp()
+        self.flush()
+
+    def recover(self):
+        """a REQUESTED row with no outcome is an uncertain launch, not a free one"""
+        for r in self.rows:
+            if r['state'] == 'REQUESTED':
+                r['state'] = 'UNCERTAIN'
+                r['refusal'] = ('recovered: the process ended before this row could be settled; '
+                                'it occupies the ceiling but is not claimed as executed'
+                                )[:180].replace(',', ';')
+                r['launch_evidence'] = 'NO_OUTCOME_AT_RECOVERY'
+
+    def counts(self):
+        conf = [r for r in self.rows if r['state'] in ('CONFIRMED', 'COMPLETED')]
+        unc = [r for r in self.rows if r['state'] == 'UNCERTAIN']
+        return {'requested': len(self.rows), 'confirmed': len(conf), 'uncertain': len(unc),
+                'occupied': len(conf) + len(unc),
+                'no_launch': len([r for r in self.rows if r['state'] == 'REFUSED_NO_LAUNCH'])}
+
+    def remaining(self):
+        return self.ceiling - self.counts()['occupied']
+
+    def _restamp(self):
+        """running totals, recomputed over the whole file, so no row can carry a friendlier number"""
+        conf = occ = 0
+        for r in self.rows:
+            if r['state'] in ('CONFIRMED', 'COMPLETED'):
+                conf += 1
+                occ += 1
+            elif r['state'] == 'UNCERTAIN':
+                occ += 1
+            r['ceiling'] = str(self.ceiling)
+            r['confirmed_after'] = str(conf)
+            r['occupied_after'] = str(occ)
+
+    def reserve(self, case_id, role, deck_sha, pwl_sha, run_id):
+        """write the row and charge the ceiling before the process is started"""
+        c = self.counts()
+        if c['occupied'] + 1 > self.ceiling:
+            raise OverBudget('%s/%s needs a launch: %d confirmed + %d uncertain = %d occupied of a '
+                             '%d ceiling (history seeded from %s)'
+                             % (case_id, role, c['confirmed'], c['uncertain'], c['occupied'],
+                                self.ceiling, self.seed_origin))
+        row = {'launch_id': self._next_id(), 'task_id': TASK_ID, 'run_id': run_id,
+               'case_id': case_id, 'role': role, 'state': 'REQUESTED',
+               'requested_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+               'ended_utc': '', 'rc': '', 'launch_evidence': '', 'deck_sha256': deck_sha,
+               'pwl_sha256': pwl_sha, 'raw_sha256': '', 'log_sha256': '', 'refusal': ''}
+        self.rows.append(row)
+        self._restamp()
+        self.flush()
+        return row
+
+    def settle(self, row, rc, text, launched, evidence, raw_sha='', log_sha='', refusal=''):
+        row['state'] = ('COMPLETED' if launched else 'REFUSED_NO_LAUNCH')
+        row['ended_utc'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+        row['rc'] = str(rc)
+        row['launch_evidence'] = (evidence or 'NO_LAUNCH_EVIDENCE').replace(',', ';')[:180]
+        row['raw_sha256'] = raw_sha
+        row['log_sha256'] = log_sha
+        row['refusal'] = (refusal or '').replace(',', ';')[:180]
+        self._restamp()
+        self.flush()
+        return launched
+
+    def mark_uncertain(self, row, why):
+        """contact was lost: the process may or may not have run, so the ceiling pays for it
+
+        Turning an unproven launch into zero is how an overrun hides. The row keeps state UNCERTAIN,
+        is never counted as executed, and is always counted against the ceiling.
+        """
+        row['state'] = 'UNCERTAIN'
+        row['ended_utc'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+        row['launch_evidence'] = 'NO_OUTCOME_RECORD'
+        row['refusal'] = why.replace(',', ';')[:180]
+        self._restamp()
+        self.flush()
+        return row
+
+    def note(self, case_id, role, run_id, detail, rc=''):
+        """a fact that costs no launch at all (a reused measurement, a refused offline gate)"""
+        now = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+        row = {'launch_id': self._next_id(), 'task_id': TASK_ID, 'run_id': run_id,
+               'case_id': case_id, 'role': role, 'state': 'REFUSED_NO_LAUNCH',
+               'requested_utc': now, 'ended_utc': now, 'rc': str(rc),
+               'launch_evidence': 'NO_PROCESS_STARTED', 'deck_sha256': '', 'pwl_sha256': '',
+               'raw_sha256': '', 'log_sha256': '', 'refusal': detail.replace(',', ';')[:180]}
+        self.rows.append(row)
+        self._restamp()
+        self.flush()
+        return row
+
+    def flush_account(self):
+        self._restamp()
+        self.flush()
+
+
+def launch_evidence_of(text):
+    """(launched, evidence) from what the runner or the preflight actually printed"""
+    m = re.search(r'^SPECTRE name=\S+ rc=\S+', text or '', re.M)
+    if m:
+        return 1, m.group(0).replace(' ', '_')
+    if re.search(r'^spectre_rc=', text or '', re.M):
+        return 1, 'PREFLIGHT_INNER_spectre_rc_seen'
+    return 0, 'NO_SPECTRE_LINE'
+
+
+def seed_account_rows(ev_dir):
+    """the delivered reconcile table is the historical fact the ceiling is measured against"""
+    path = os.path.join(ev_dir, 'launches_reconcile.csv')
+    if not os.path.isfile(path):
+        raise RuntimeError('%s is missing, so the historical launch count cannot be rebuilt' % path)
+    with io.open(path, encoding='utf-8', newline='') as f:
+        hdr = f.readline().strip().split(',')
+        recs = [dict(zip(hdr, l.rstrip('\r\n').split(','))) for l in f if l.strip()]
+    dirs = [r for r in recs if r['task_root_dir'] != 'TOTAL']
+    total = [r for r in recs if r['task_root_dir'] == 'TOTAL']
+    if len(total) != 1:
+        raise RuntimeError('%s must carry exactly one TOTAL row' % path)
+    per_dir = sum(int(r['processes_counted_against_ceiling']) for r in dirs)
+    if per_dir != int(total[0]['processes_counted_against_ceiling']):
+        raise RuntimeError('the reconcile rows sum to %d but TOTAL says %d'
+                           % (per_dir, int(total[0]['processes_counted_against_ceiling'])))
+    rows = []
+    for r in dirs:
+        n_pre = int(r['preflight_logs'])
+        n_dut = int(r['dut_logs'])
+        n_all = int(r['processes_counted_against_ceiling'])
+        if n_pre + n_dut != n_all:
+            raise RuntimeError('%s: %d preflight + %d dut logs do not sum to %d counted'
+                               % (r['task_root_dir'], n_pre, n_dut, n_all))
+        for i in range(n_pre):
+            rows.append({'launch_id': 'H%03d' % (len(rows) + 1), 'task_id': TASK_ID,
+                         'run_id': r['task_root_dir'], 'case_id': '(per-directory record)',
+                         'role': 'preflight', 'state': 'CONFIRMED',
+                         'requested_utc': '', 'ended_utc': '', 'rc': '',
+                         'launch_evidence': 'reconcile_log_count',
+                         'deck_sha256': '', 'pwl_sha256': '', 'raw_sha256': '', 'log_sha256': '',
+                         'refusal': 'seeded from %s: %s' % (os.path.basename(path),
+                                                            r['note'].replace(',', ';'))})
+        for i in range(n_dut):
+            rows.append({'launch_id': 'H%03d' % (len(rows) + 1), 'task_id': TASK_ID,
+                         'run_id': r['task_root_dir'], 'case_id': '(per-directory record)',
+                         'role': 'dut', 'state': 'CONFIRMED',
+                         'requested_utc': '', 'ended_utc': '', 'rc': '',
+                         'launch_evidence': 'reconcile_log_count',
+                         'deck_sha256': '', 'pwl_sha256': '', 'raw_sha256': '', 'log_sha256': '',
+                         'refusal': 'seeded from %s: %s' % (os.path.basename(path),
+                                                            r['note'].replace(',', ';'))})
+    return {'origin': '%s (TOTAL=%d, %d directory row(s))' % (path.replace(os.sep, '/'),
+                                                              per_dir, len(dirs)),
+            'rows': rows, 'confirmed': len(rows)}
 
 
 def parse_runner(text):
@@ -512,8 +818,12 @@ CASE_HDR = ['run_id', 'launch_id', 'case_id', 'group', 'role', 'window', 'mode',
             'log_sha256', 'section_read', 'temp_read', 't0_ns', 't1_ns', 'q_win_C', 'q_expected_C',
             'q_lsb_C', 'charge_error_LSB', 'charge_error_pC', 'gain_error_vs_15uA', 'q_positive_C',
             'q_negative_C', 'q_tail_C', 'window_peak_A', 'window_peak_t_ns', 'de_rise_50_ns',
-            'de_fall_50_ns', 'de_b_fall_50_ns', 'settled_status', 'settled_ns', 'off_status',
-            'off_ns', 'last_100ns_max_abs_A', 'probe_direction_suspect', 'verdict', 'reasons']
+            'de_fall_50_ns', 'de_b_fall_50_ns', 'de_fall_delay_ns', 'declared_pulses',
+            'pulse_edges_missing', 'current_10pct_ns', 'current_90pct_ns', 'current_rise_10_90_ns',
+            'settled_status', 'settled_ns', 'longest_in_band_ns', 'off_status', 'off_ns',
+            'off_segment_start_ns', 'turn_off_delay_ns', 'last_100ns_max_abs_A',
+            'probe_direction_suspect', 'reused_from_native_run', 'src_launch_id',
+            'measurement_source_sha256', 'verdict', 'reasons']
 
 EDGE_HDR = ['run_id', 'case_id', 'window', 'quantity', 't_ns', 'data_en_V', 'data_en_b_V',
             'vbias_ch_V', 'node_m_V', 'iref_in_V', 'iout_A']
@@ -658,8 +968,13 @@ def measure_one(c, w, series, ical, launch_id, ids, run_id):
     cur = window_axis(series, 'Ip_out:i', t0, t1)
     den = window_axis(series, 'data_en', t0, t1)
     deb = [(t, v) for t, v in series.get('Xstage.data_en_b', [])]
+    # the pulse this window is supposed to conduct comes from the accepted RTL trace, shifted exactly
+    # like the PWL was: an edge is searched at the pulse, never at the end of the window
+    segs = [[int(s[0]) + SHIFT_NS * NS, int(s[1]) + SHIFT_NS * NS]
+            for s in (w.get('segments_ps') or [])]
     win = {'current': cur, 'de': den, 'de_b': deb, 't0_ps': t0, 't1_ps': t1,
            'de_declared_flat_zero': (series.get('data_en') is None),
+           'pulse_segments_ps': segs,
            'expected_intervals': float(w['expected_intervals'])}
     out = MS.measure_window(win, ical, tick_ps, tail_ns=TAIL_NS,
                             ctx='%s/%s' % (c['case_id'], w['window']))
@@ -695,8 +1010,7 @@ def selftest_main():
         bad.append('master mix %r is not the frozen 7-device mix' % (mix,))
     # 3 deck build is deterministic and every deck carries the supply contract ports
     n += 1
-    doc = json.loads(u(io.open(os.path.join(PROJ, 'review', 'scratch', 'traceout',
-                                            'trace_D7B-P30-C001.json'), encoding='utf-8').read()))
+    doc = selftest_doc('D7B-P30-C001')
     c = [x for x in cases if x['case_id'] == 'D7B-P30-C001'][0]
     pts = combined_pwl(doc, ['normal'], SHIFT_NS * 1000, int(c['ramp_ns']) * 1000)
     d1, p1, s1 = build_deck(c, pts, mst)
@@ -722,7 +1036,8 @@ def selftest_main():
     cur = [[0, -15e-6], [30000, -15e-6], [31000, 0.0], [230000, 0.0]]
     out = MS.measure_window({'current': [(int(t), v) for t, v in cur],
                              'de': [(0, 0.0), (500, 1.8), (29500, 1.8), (30000, 0.0)],
-                             't0_ps': 0, 't1_ps': 30000, 'expected_intervals': 1.0},
+                             't0_ps': 0, 't1_ps': 30000, 'expected_intervals': 1.0,
+                             'pulse_segments_ps': [[0, 30000]]},
                             15e-6, 30000, ctx='break2')
     if not out['probe_direction_suspect'] or MS.judge(out)[0] != 'FAIL':
         bad.append('a flipped ammeter was not caught')
@@ -761,14 +1076,184 @@ def selftest_main():
     n2 = dp.replace('Vss (vss 0) vsource dc=0\n', '')
     if 'Vss (vss 0)' in n2 or n2.count('vsource') != dp.count('vsource') - 1:
         bad.append('the static negative deck is not a single-statement removal')
+    # 8 the mode list is closed, and the native entry is refused before any preparation
+    n += 1
+    import optparse
+    for argv, want in (([], []), (['--dry'], ['dry']), (['--run'], ['run']),
+                       (['--run', '--dry'], ['dry', 'run']),
+                       (['--check-evidence', 'x'], ['check_evidence'])):
+        ap = optparse.OptionParser()
+        for flag in ('--selftest', '--dry', '--run', '--supply-negative', '--static-probe',
+                     '--remeasure', '--account'):
+            ap.add_option(flag, action='store_true')
+        ap.add_option('--check-evidence', default='')
+        ap.add_option('--write-manifest', default='')
+        got = chosen_modes(ap.parse_args(argv)[0])
+        if got != want:
+            bad.append('the mode table read %r from %r, expected %r' % (got, argv, want))
+    if authorisation_problem() and os.environ.get('RUN') == '1':
+        bad.append('the authorisation gate reports a problem it should not')
+    # 9 an append-only account: reopening keeps the count, a lost row is refused, and an abandoned
+    #   launch occupies the ceiling instead of being quietly written off
+    n += 1
+    import tempfile
+    temp = tempfile.mkdtemp(prefix='d7b-run-selftest-')
+    try:
+        path = os.path.join(temp, 'ledger.csv')
+        first = Ledger(path)
+        row = first.begin('SYN', 'dut', 'deck', 'pwl')
+        first.finish(row, 0, 'SPECTRE name=x.scs rc=0', launched=1)
+        if Ledger(path).used != 1 or not any(r['case_id'] == 'SYN' for r in Ledger(path).rows):
+            bad.append('reopening the ledger lost its count or its history')
+        acct = Account(os.path.join(temp, 'account.csv'), 2,
+                       {'origin': 'selftest', 'rows': []})
+        live = acct.reserve('SYN', 'preflight', 'd', 'p', 'r_selftest')
+        acct.settle(live, 0, 'spectre_rc=0', *launch_evidence_of('spectre_rc=0'))
+        second = acct.reserve('SYN', 'dut', 'd', 'p', 'r_selftest')
+        acct.settle(second, 0, 'SPECTRE name=x.scs rc=0', *launch_evidence_of(
+            'SPECTRE name=x.scs rc=0'))
+        try:
+            acct.reserve('SYN', 'dut', 'd', 'p', 'r_selftest_third')
+            bad.append('the ceiling stayed open after 2 of 2 launches')
+        except OverBudget:
+            pass
+        abandoned = Account(os.path.join(temp, 'crash.csv'), 1, {'origin': 'selftest', 'rows': []})
+        abandoned.reserve('SYN', 'dut', 'd', 'p', 'r_crash')
+        recovered = Account(os.path.join(temp, 'crash.csv'), 1, {'origin': 'selftest', 'rows': []})
+        c = recovered.counts()
+        if c['uncertain'] != 1 or c['occupied'] != 1 or c['confirmed'] != 0:
+            bad.append('an abandoned launch recovered as %r' % c)
+    finally:
+        shutil.rmtree(temp, ignore_errors=True)
     print('D7B_RUN_SELFTEST: %s (%d checks)' % ('FAIL' if bad else 'PASS', n))
     for b in bad:
         print('SELFTEST_BAD %s' % b)
     return 1 if bad else 0
 
 
+def selftest_doc(cid, ev_dir=HISTORICAL_EVIDENCE):
+    """a trace document rebuilt from the delivered bundle's own committed bytes
+
+    The delivered self test read `review/scratch/traceout/trace_<case>.json`, which is generated and
+    never committed, so a fresh checkout could not run it at all (the review reported exactly that
+    FileNotFoundError). The edges and the window bounds of this case are inside the frozen bundle, so
+    the fixture is re-derived from them instead: same geometry, committed bytes, no skip-with-rc-0.
+    """
+    if not os.path.isdir(ev_dir):
+        raise RuntimeError('the self test fixture needs the delivered bundle at %s' % ev_dir)
+    edges = []
+    for r in read_csv_rows(os.path.join(ev_dir, 'pwl_edges_%s.csv' % cid)):
+        edges.append((int(r['t_ps']), int(float(r['level']))))
+    edges = sorted(set(edges))
+    if not edges:
+        raise RuntimeError('the delivered bundle carries no PWL edges for %s' % cid)
+    rows = [r for r in read_csv_rows(os.path.join(ev_dir, 'cases.csv')) if r['case_id'] == cid]
+    if not rows:
+        raise RuntimeError('the delivered case table has no %s row' % cid)
+    windows = []
+    for r in rows:
+        t0 = int(float(r['t0_ns']) * 1000) - SHIFT_NS * NS
+        t1 = int(float(r['t1_ns']) * 1000) - SHIFT_NS * NS
+        windows.append(synth_window_from(r, t0, t1, edges))
+    segs = TR.segments_of(edges, windows[0]['t0_ps'], windows[0]['t1_ps'])
+    windows[0]['segments_ps'] = [[s[0], s[1]] for s in segs]
+    windows[0]['conducted_ps'] = sum(s[2] for s in segs)
+    return {'case_id': cid, 'shift_ps': SHIFT_NS * NS, 'windows': windows,
+            'facts': {'data_en_edges': edges, 'vcd_sha256': rows[0]['trace_sha256'],
+                      'vcd': 'derived from %s' % os.path.basename(ev_dir), 'header': 0,
+                      'end_ps': max(t for t, _v in edges), 'tick_lead_ps': 5, 'tick_count': 1}}
+
+
+def synth_window_from(r, t0, t1, edges):
+    tick = int(float(r['tick_ns'])) * NS
+    segments = [[s[0], s[1]] for s in TR.segments_of(edges, t0, t1)]
+    stop = t1 + TAIL_NS * NS
+    pts, _cur = TR.build_pwl(TR.window_edges(edges, t0, stop), t0, stop, SHIFT_NS * NS,
+                             int(float(r['ramp_ns'])) * NS)
+    return {'window': r['window'], 'seq': 1, 'role': r['role'], 'mode': r['mode'],
+            'code': r['code'], 'pam_request': r['pam_request'], 'tick_ns': r['tick_ns'],
+            'window_ns': str((t1 - t0) // NS), 'full_intervals': r['full_intervals'],
+            'expected_intervals': r['expected_intervals'], 'expected_conducting_ns': '',
+            'expected_pulses': str(len(segments)), 't0_ps': t0, 't1_ps': t1,
+            'accepted_ticks_in_window': str(len(segments)), 'expected_accepted_ticks': '',
+            'first_tick_ps': t0, 'tick_lead_ps': 5, 'segments_ps': segments,
+            'conducted_ps': sum(s[1] - s[0] for s in segments), 't_stop_ps': stop,
+            'pwl_points': pts,
+            'pwl_sha256': sha_txt('\n'.join('%d %.6g' % (t, v) for t, v in pts))}
+
+
+def chosen_modes(opts):
+    """the mode list is closed: none of them, or more than one, is a refusal rather than a default"""
+    table = [('selftest', opts.selftest), ('dry', opts.dry), ('run', opts.run),
+             ('supply_negative', opts.supply_negative),
+             ('check_evidence', bool(opts.check_evidence)), ('static_probe', opts.static_probe),
+             ('write_manifest', bool(opts.write_manifest)), ('remeasure', opts.remeasure),
+             ('account', opts.account)]
+    return [name for name, on in table if on]
+
+
+def authorisation_problem():
+    bad = [k for k in AUTH_VARS if os.environ.get(k) != '1']
+    if bad:
+        return ('RUN=1 AND QODER_SIM_AUTHORISED=1 are both required before any remote preparation; '
+                'unset or not 1: %s' % ', '.join(bad))
+    return ''
+
+
+def run_id_taken(run_id, out_root):
+    return (os.path.exists(os.path.join(PROJ, 'results', 'evidence', PUBLISHED_PREFIX + run_id))
+            or os.path.exists(os.path.join(out_root, 'evidence', run_id)))
+
+
+def make_run_id(opts, out_root):
+    """a real unique id, and an existing directory is a refusal -- never an overwrite
+
+    The delivered default was `r%%Y%%m%%d_%%H%%M%%S`, which kept literal percent signs and so was the
+    same string on every call: two passes could not be told apart and the second could reach the first.
+    """
+    if opts.run_id:
+        if not RUN_ID_RE.match(opts.run_id):
+            raise RuntimeError('--run-id %r is not rYYYYMMDD_HHMMSS_xxxxxx' % opts.run_id)
+        if run_id_taken(opts.run_id, out_root):
+            raise RuntimeError('run id %s already has an evidence directory; nothing is overwritten'
+                               % opts.run_id)
+        return opts.run_id
+    for _ in range(12):
+        cand = 'r%s_%s' % (time.strftime('%Y%m%d_%H%M%S', time.gmtime()),
+                           hashlib.sha256(os.urandom(32)).hexdigest()[:6])
+        if not run_id_taken(cand, out_root):
+            return cand
+    raise RuntimeError('no unique run id could be made in twelve attempts')
+
+
+def account_report(account):
+    c = account.counts()
+    roles = {}
+    for r in account.rows:
+        roles[r['role']] = roles.get(r['role'], 0) + 1
+    print('ACCOUNT_FILE %s' % account.path)
+    print('ACCOUNT_SEEDED_FROM %s' % account.seed_origin)
+    print('ACCOUNT_ROWS %d roles=%s' % (len(account.rows),
+                                        ' '.join('%s=%d' % kv for kv in sorted(roles.items()))))
+    print('ACCOUNT_CONFIRMED %d UNCERTAIN %d OCCUPIED %d CEILING %d REMAINING %d'
+          % (c['confirmed'], c['uncertain'], c['occupied'], account.ceiling,
+             account.remaining()))
+    print('ACCOUNT_NO_LAUNCH_ROWS %d' % c['no_launch'])
+    if c['occupied'] > account.ceiling:
+        print('HISTORICAL_BUDGET_STATUS VIOLATED_BY_%d_NOT_RETROACTIVELY_AUTHORISED'
+              % (c['occupied'] - account.ceiling))
+        return 1
+    return 0
+
+
 def main(argv):
-    ap = optparse.OptionParser(usage='%prog [--selftest|--dry|--run|--supply-negative] [options]')
+    ap = optparse.OptionParser(usage='%prog MODE [options]\n'
+                                     '  MODE is exactly one of --selftest --dry --run '
+                                     '--supply-negative --static-probe --remeasure '
+                                     '--check-evidence=DIR --write-manifest=DIR --account\n'
+                                     '  native modes (--run --static-probe --supply-negative) need '
+                                     'RUN=1 and QODER_SIM_AUTHORISED=1 and launch only inside the '
+                                     'task launch ceiling')
     ap.add_option('--selftest', action='store_true')
     ap.add_option('--dry', action='store_true')
     ap.add_option('--run', action='store_true')
@@ -776,22 +1261,51 @@ def main(argv):
     ap.add_option('--check-evidence', default='')
     ap.add_option('--publish', action='store_true')
     ap.add_option('--static-probe', action='store_true')
+    ap.add_option('--remeasure', action='store_true')
+    ap.add_option('--account', action='store_true')
     ap.add_option('--only', default='')
     ap.add_option('--cal-from', default='')
+    ap.add_option('--n2-from', default='')
+    ap.add_option('--rtl-verify', default='')
+    ap.add_option('--gate-records', default='')
     ap.add_option('--reuse', default='')
     ap.add_option('--write-manifest', default='')
     ap.add_option('--expect', type='int', default=24)
     ap.add_option('--run-id', default='')
     ap.add_option('--trace-dir', default=os.path.join(PROJ, 'review', 'scratch', 'traceout'))
     ap.add_option('--out', default=os.path.join(PROJ, 'review', 'scratch', 'd7b_stage'))
+    ap.add_option('--account-file', default=ACCOUNT_PATH)
+    ap.add_option('--seed-from', default=HISTORICAL_EVIDENCE)
+    ap.add_option('--published-dir', default=HISTORICAL_EVIDENCE)
     opts, _args = ap.parse_args(argv)
+    modes = chosen_modes(opts)
+    if not modes:
+        ap.print_usage()
+        print('D7B_REFUSED no mode was named; nothing was prepared and no process was started')
+        return 5
+    if len(modes) > 1:
+        print('D7B_REFUSED modes %s conflict: name exactly one' % ','.join(modes))
+        return 5
+    mode = modes[0]
+    if opts.publish and mode not in ('run', 'remeasure'):
+        print('D7B_REFUSED --publish only follows --run or --remeasure')
+        return 5
+    if opts.cal_from:
+        print('D7B_REFUSED --cal-from is removed: a calibration copied out of another bundle\'s '
+              'table is a number without bytes. Reuse the calibration case itself '
+              '(--reuse D7B-CAL=<stage dir>) so Ical is recomputed from the retained psf, log and '
+              'deck that produced it')
+        return 5
     if opts.write_manifest:
         return write_manifest_main(opts.write_manifest)
-    if opts.selftest:
+    if mode == 'selftest':
         return selftest_main()
-    if opts.check_evidence:
+    if mode == 'check_evidence':
         import dd1_d7b_evidence_check as EC
         return EC.main_dir(opts.check_evidence)
+    if mode == 'account':
+        return account_report(Account(opts.account_file, LAUNCH_BUDGET,
+                                      seed_account_rows(opts.seed_from)))
     cases = load_cases(os.path.join(PROJ, 'tests', 'dd1_d7b', 'cases.csv'))
     table_rows = len(cases)
     if opts.only:
@@ -804,19 +1318,41 @@ def main(argv):
     if table_rows != opts.expect:
         print('D7B_REFUSED case table has %d rows, --expect says %d' % (table_rows, opts.expect))
         return 5
-    if opts.run and not (os.environ.get('RUN') == '1' and
-                         os.environ.get('QODER_SIM_AUTHORISED') == '1'):
-        print('D7B_REFUSED run=%s authorisation=%s: RUN=1 AND QODER_SIM_AUTHORISED=1 are both '
-              'required before any Spectre launch'
-              % (os.environ.get('RUN') or 'unset', os.environ.get('QODER_SIM_AUTHORISED') or 'unset'))
-        return 5
+    # the native entry is refused here, before the masters are read and long before a task root is
+    # prepared: no mode argument and no authorisation may not fall through to the simulator
+    account = None
+    if mode in NATIVE_MODES or mode == 'remeasure':
+        account = Account(opts.account_file, LAUNCH_BUDGET, seed_account_rows(opts.seed_from))
+        c = account.counts()
+        print('LAUNCH_ACCOUNT confirmed=%d uncertain=%d occupied=%d ceiling=%d remaining=%d'
+              % (c['confirmed'], c['uncertain'], c['occupied'], account.ceiling,
+                 account.remaining()))
+    if mode in NATIVE_MODES:
+        problem = authorisation_problem()
+        if problem:
+            print('D7B_REFUSED %s' % problem)
+            return 5
+        if c['occupied'] > account.ceiling:
+            print('D7B_REFUSED %s: the task already shows %d occupied launches against a ceiling of '
+                  '%d (seeded from %s). This repair round authorises 0 new launches; producing '
+                  'evidence here needs a user decision about the historical overrun, not a process.'
+                  % (OVERBUDGET_REFUSAL, c['occupied'], account.ceiling, account.seed_origin))
+            print('NO_PROCESS_WAS_STARTED')
+            return 5
+        if mode == 'run':
+            need = plan_launches(cases, resolve_reuse_count(opts.reuse))
+            if need > account.remaining():
+                print('D7B_REFUSED %s: the plan needs %d launches, %d of %d remain'
+                      % (OVERBUDGET_REFUSAL, need, account.remaining(), account.ceiling))
+                print('NO_PROCESS_WAS_STARTED')
+                return 5
     if 2 * len(cases) > LAUNCH_BUDGET:
-        print('D7B_REFUSED the plan needs %d launches, the budget is %d'
+        print('D7B_REFUSED the plan needs %d launches, the ceiling is %d'
               % (2 * len(cases), LAUNCH_BUDGET))
         return 5
     mst = masters()
-    run_id = opts.run_id or time.strftime('r%%Y%%m%%d_%%H%%M%%S', time.localtime())
     out_root = os.path.abspath(opts.out)
+    run_id = make_run_id(opts, out_root)
     if not os.path.isdir(out_root):
         os.makedirs(out_root)
     log_dir = os.path.join(out_root, 'transcripts')
@@ -834,8 +1370,8 @@ def main(argv):
             print('STATIC_GATE_FAIL %s' % p)
         print('D7B_REFUSED static gates: %d problem(s); no simulator was started' % len(problems))
         return 5
-    print('STATIC_GATES: PASS (%d cases, %d masters, 7 devices, %d launches planned of a %d budget)'
-          % (len(cases), len(mst), 2 * len(cases), LAUNCH_BUDGET))
+    print('STATIC_GATES: PASS (%d cases, %d masters, 7 devices, %d launched processes of a %d '
+          'ceiling)' % (len(cases), len(mst), 2 * len(cases), LAUNCH_BUDGET))
     _d, decks = build_all(cases, mst, opts.trace_dir, out_root, run_id)
     for cid in sorted(decks):
         stage_deck({'case_id': cid}, decks[cid]['deck'], decks[cid]['points'], out_root)
@@ -844,35 +1380,46 @@ def main(argv):
         print('  %s deck=%s stop_ns=%.1f pwl_points=%d'
               % (cid, decks[cid]['deck_sha256'][:12], decks[cid]['stop_ps'] / 1000.0,
                  len(decks[cid]['points'])))
-    if opts.supply_negative:
-        print('D7B_SUPPLY_NEGATIVE use --supply-negative on the guest path: it stages the deck with '
-              'the VSS source removed in its own directory and runs the frozen checker only')
+    if mode == 'dry':
+        print('D7B_DRY: PASS (decks and gates only, 0 Spectre launches, 0 remote calls)')
         return 0
-    if opts.dry:
-        print('D7B_DRY: PASS (decks and gates only, 0 Spectre launches)')
-        return 0
-    if opts.static_probe:
-        return static_probe(cases, mst, decks, run_id, out_root, log_dir)
-    res = native_run(cases, mst, docs, decks, opts, run_id, out_root, log_dir)
+    if mode == 'supply_negative':
+        return supply_negative(mst, decks, run_id, out_root, log_dir, account)
+    if mode == 'static_probe':
+        return static_probe(cases, mst, decks, run_id, out_root, log_dir, account)
+    try:
+        if mode == 'remeasure':
+            res = remeasure_run(cases, mst, docs, decks, opts, run_id, out_root, account)
+        else:
+            res = native_run(cases, mst, docs, decks, opts, run_id, out_root, log_dir, account)
+    except RuntimeError as exc:
+        # a refusal raised while staging is still a refusal: it must not reach the caller as a
+        # traceback, and the half-staged bundle stays in ignored scratch
+        print('D7B_REFUSED %s' % exc)
+        return 5
     rows = res['rows']
     verdicts = {}
     for r in rows:
         v = r[CASE_HDR.index('verdict')]
         verdicts[v] = verdicts.get(v, 0) + 1
+    c = res['account'].counts()
     print('RUN_ID %s' % res['run_id'])
-    print('LEDGER_LAUNCHES %d of %d' % (res['ledger'].used, LAUNCH_BUDGET))
-    print('EVIDENCE_ROWS %d %s' % (len(rows), ' '.join('%s=%d' % kv for kv in sorted(verdicts.items()))))
+    print('LEDGER_LAUNCHES_THIS_PASS %d' % res['ledger'].used)
+    print('LAUNCH_ACCOUNT confirmed=%d uncertain=%d occupied=%d ceiling=%d'
+          % (c['confirmed'], c['uncertain'], c['occupied'], res['account'].ceiling))
+    print('EVIDENCE_ROWS %d %s' % (len(rows), ' '.join('%s=%d' % kv for kv in
+                                                       sorted(verdicts.items()))))
     elec = [r for r in rows if r[CASE_HDR.index('role')] in
             ('normal', 'safety', 'convergence', 'sensitivity')]
     fails = [r for r in elec if r[CASE_HDR.index('verdict')] == 'FAIL']
     print('PWM_CURRENT_FEASIBILITY_TT %s'
           % ('REWORK_REQUIRED' if fails else ('PASS' if elec else 'NOT_VERIFIED')))
-    print('EVIDENCE_STATUS %s' % ('COMPLETE' if res['ledger'].used and not res['stopped'] else
-                                 'PARTIAL'))
+    print('EVIDENCE_STATUS %s' % ('STAGED' if not res['stopped'] else 'PARTIAL'))
     if res['stopped']:
         print('STOPPED %s' % res['stopped'])
     if opts.publish:
         try:
+            write_manifest_main(res['ev_dir'])
             print('PUBLISHED %s' % publish(res['ev_dir'], res['run_id']))
         except RuntimeError as exc:
             print('PUBLISH_REFUSED %s' % exc)
@@ -880,6 +1427,24 @@ def main(argv):
     else:
         print('PUBLISHED no (--publish was not given; the bundle stays in ignored scratch)')
     return 0
+
+
+def resolve_reuse_count(spec):
+    """how many cases the reuse claim covers, without verifying the bytes twice"""
+    return dict((p.split('=', 1)[0], True) for p in [x for x in (spec or '').split(',') if x.strip()])
+
+
+def supply_negative(mst, decks, run_id, out_root, log_dir, account):
+    """N2 on the guest: the deck loses its VSS source and the frozen checker must refuse it"""
+    root = '%s/neg_%s' % (GUEST_ROOT, run_id)
+    link = Link(GUEST_HOST, root, log_dir)
+    ledger = Ledger(os.path.join(out_root, 'negative_ledger_%s.csv' % run_id))
+    prepare(link, mst, out_root, log_dir)
+    n2 = build_static_negative(mst, decks, out_root, run_id)
+    row = run_static_negative(link, ledger, n2, run_id, mst, out_root, account)
+    print('N2 %s' % row['verdict'])
+    print('N2_LAUNCHES %d' % row['spectre_launches'])
+    return 0 if row['detected'] == 'YES' and row['spectre_launches'] == 0 else 1
 
 # ------------------------------------------------------------------ calibration and evidence
 def calibrate(series, run_id, ids):
@@ -899,7 +1464,8 @@ def calibrate(series, run_id, ids):
     tail_max = max(abs(v) for _t, v in tail) if tail else None
     rows = [{'run_id': run_id, 'quantity': 'Ical_A', 'value': ical,
              'window_ns': '%.1f..%.1f' % (CAL_BAND[0] / 1000.0, CAL_BAND[1] / 1000.0),
-             'band_min_A': bmin, 'band_max_A': bmax},
+             'band_min_A': bmin, 'band_max_A': bmax, 'band_samples': len(band),
+             'integration_s': dt},
             {'run_id': run_id, 'quantity': 'OFF_baseline_max_abs_A', 'value': off_max,
              'window_ns': '%.1f..%.1f' % (CAL_OFF[0] / 1000.0, CAL_OFF[1] / 1000.0)},
             {'run_id': run_id, 'quantity': 'CAL_tail_max_abs_A', 'value': tail_max,
@@ -918,8 +1484,11 @@ def calibrate(series, run_id, ids):
             'tail_max_abs_A': tail_max, 'ok': ok, 'reasons': reason, 'rows': rows, 'ids': ids}
 
 
-CHARGE_HDR = ['run_id', 'case_id', 'window', 't_ps', 'iout_A', 't_ns', 'iout_uA',
-              'time_quantum_ps']   # part -> case/deck/raw binding lives in charge_index.csv
+# The full native series is tens of millions of digits, so the shards carry only what no other byte
+# in the bundle states: the sample time and the sampled current. The part -> case/deck/raw/run
+# binding lives in charge_index.csv, whose series digest is compared to the delivered DATA-7B
+# bundle's, so a reviewer can see the samples are the same bytes rather than a re-imagined series.
+CHARGE_HDR = ['t_ps', 'iout_A']
 EDGE_COLS = {'data_en': 'data_en', 'Xstage.data_en_b': 'data_en_b',
              'Xstage.Xsink.vbias_ch': 'vbias_ch', 'Xstage.Xsink.node_m': 'node_m',
              'iref_in': 'iref_in'}
@@ -934,13 +1503,11 @@ def emit_charge_slice(series, c, w, out, run_id, ids, ev_dir):
     if not cur:
         raise RuntimeError('%s/%s: no samples inside the delivered slice' % (c['case_id'],
                                                                             w['window']))
-    rows = [[run_id, c['case_id'], w['window'], '%.17g' % t, '%.12g' % v, '%.6f' % (t * 1e-3),
-             '%.6f' % (v * 1e6), '%.6g' % series.get('_time_quantum_ps', 0.0)]
-            for t, v in cur]
+    rows = [['%.17g' % t, '%.12g' % v] for t, v in cur]
     meta = shard_samples(rows, CHARGE_HDR, 'charge_%s_%s' % (c['case_id'], w['window']),
                          ev_dir)
     # the delivered slice must reproduce the same charge on its own bytes
-    chk = MS.integrate([(float(r[3]), float(r[4])) for r in rows], t0, t1, 'slice re-read')
+    chk = MS.integrate([(float(r[0]), float(r[1])) for r in rows], t0, t1, 'slice re-read')
     if abs(chk['q'] - out['q_win']['q']) > max(1e-30, abs(out['q_win']['q']) * 1e-9):
         raise RuntimeError('%s/%s: the delivered samples do not reproduce the reported charge'
                            % (c['case_id'], w['window']))
@@ -1011,17 +1578,44 @@ def case_row(run_id, c, w, out, verdict, reasons, ids, launch_id):
          'q_tail_C': fmt_num((out.get('q_tail') or {}).get('q'), 1.0),
          'window_peak_A': fmt_num((out.get('window_peak') or {}).get('value'), 1.0),
          'window_peak_t_ns': fmt_num((out.get('window_peak') or {}).get('t_ps'), 1e-3),
-         'de_rise_50_ns': fmt_num(out.get('de_rise_50_ps'), 1e-3),
-         'de_fall_50_ns': fmt_num(out.get('de_fall_50_ps'), 1e-3),
-         'de_b_fall_50_ns': fmt_num(out.get('de_b_rise_50_ps'), 1e-3),
+         'de_rise_50_ns': fmt_edge(out.get('de_rise_50_ps')),
+         'de_fall_50_ns': fmt_edge(out.get('de_fall_50_ps')),
+         'de_b_fall_50_ns': fmt_edge(out.get('de_b_fall_50_ps')),
+         'de_fall_delay_ns': fmt_edge(out.get('de_fall_delay_ps')),
+         'declared_pulses': out.get('declared_pulses', ''),
+         'pulse_edges_missing': fmt_missing_edges(out.get('pulse_edges_missing_ps')),
+         'current_10pct_ns': fmt_edge(out.get('current_10pct_ps')),
+         'current_90pct_ns': fmt_edge(out.get('current_90pct_ps')),
+         'current_rise_10_90_ns': fmt_edge(out.get('current_rise_10_90_ps')),
          'settled_status': (out.get('settled') or {}).get('status', ''),
-         'settled_ns': fmt_num((out.get('settled') or {}).get('settled_ps'), 1e-3),
+         'settled_ns': fmt_edge((out.get('settled') or {}).get('settled_ps')),
+         'longest_in_band_ns': fmt_edge((out.get('settled') or {}).get('longest_in_band_ps')),
          'off_status': (out.get('turn_off') or {}).get('status', ''),
-         'off_ns': fmt_num((out.get('turn_off') or {}).get('off_ps'), 1e-3),
+         'off_ns': fmt_edge((out.get('turn_off') or {}).get('off_ps')),
+         'off_segment_start_ns': fmt_edge(out.get('off_segment_start_ps')),
+         'turn_off_delay_ns': fmt_edge(out.get('turn_off_delay_ps')),
          'last_100ns_max_abs_A': fmt_num(out.get('last_100ns_max_abs_A'), 1.0),
          'probe_direction_suspect': str(bool(out.get('probe_direction_suspect'))),
+         'reused_from_native_run': ids.get('src_native_run', '') if ids.get('reused_from') else '',
+         'src_launch_id': ids.get('src_launch_id', ''),
+         'measurement_source_sha256': MS_SOURCE_SHA,
          'verdict': verdict, 'reasons': '; '.join(reasons).replace(',', ';')[:220]}
     return [r.get(k, '') for k in CASE_HDR]
+
+
+def fmt_edge(v, scale=1e-3):
+    """a time column that spells out NOT_FOUND / NOT_APPLICABLE instead of leaving them blank"""
+    if v is None:
+        return ''
+    if isinstance(v, str):
+        return v.replace(',', ';')
+    return '%.4f' % (float(v) * scale)
+
+
+def fmt_missing_edges(missing):
+    if not missing:
+        return ''
+    return ';'.join('%d:%s' % (t, which) for t, which in missing)[:120]
 
 
 def trace_edge_table(ev_dir, run_id, doc, c):
@@ -1052,11 +1646,12 @@ def push_case_dir(link, mst, decks, cid, out_root, remote_dir):
     return deck_local, pwl_local
 
 
-def static_probe(cases, mst, decks, run_id, out_root, log_dir):
+def static_probe(cases, mst, decks, run_id, out_root, log_dir, account):
     """every deck through the frozen static gates; this must start zero simulators"""
     root = '%s/static_%s' % (GUEST_ROOT, run_id)
     link = Link(GUEST_HOST, root, log_dir)
-    ledger = Ledger(os.path.join(out_root, 'static_probe_ledger.csv'))
+    ledger = Ledger(os.path.join(out_root, 'static_probe_ledger_%s.csv' % run_id))
+    before = account.counts()
     prepare(link, mst, out_root, log_dir)
     n2 = build_static_negative(mst, decks, out_root, run_id)
     link.run('mkdir -p %s/neg_static' % root, 120, 'mkdir-N2')
@@ -1076,29 +1671,6 @@ def static_probe(cases, mst, decks, run_id, out_root, log_dir):
     bad = []
     for c in cases:
         cid = c['case_id']
-        if cid in reuse_map:
-            info = reuse_map[cid]
-            ids = {'deck_sha256': info['deck_sha256'], 'pwl_sha256': info['pwl_sha256'],
-                   'trace_sha256': docs[cid]['facts']['vcd_sha256'], 'raw_sha256': info['raw_sha256'],
-                   'log_sha256': info['log_sha256'], 'section': 'tt', 'temp': '27.0'}
-            series, _t = psf_series(info['psf'])
-            by_window = dict((x['window'], x) for x in docs[cid]['windows'])
-            for wname in c['windows'].split(';'):
-                w = by_window[wname]
-                out = measure_one(c, w, series, cal['ical_A'], 'REUSED', ids, run_id)
-                verdict, reasons = MS.judge(out)
-                results[(cid, wname)] = out
-                rows.append(case_row(run_id, c, w, out, verdict,
-                                     reasons + ['measured from the retained run %s at %s; no process '
-                                                'was started for it this pass'
-                                                % (info['src_run'], info['psf'].replace(os.sep, '/'))],
-                                     ids, 'REUSED'))
-                charge_index.append(emit_charge_slice(series, c, w, out, run_id, ids, ev_dir))
-                emit_edge_slice(series, c, w, out, run_id, ev_dir)
-                trace_edge_table(ev_dir, run_id, docs[cid], c)
-            print('DUT %s REUSED from %s launches=%d/%d'
-                  % (cid, info['src_run'], ledger.used, LAUNCH_BUDGET))
-            continue
         rd = '%s/cases/%s' % (root, cid)
         push_case_dir(link, mst, decks, cid, out_root, rd)
         r = ledger.begin(cid, 'static_probe', decks[cid]['deck_sha256'], decks[cid]['pwl_sha256'])
@@ -1111,52 +1683,13 @@ def static_probe(cases, mst, decks, run_id, out_root, log_dir):
         print('  %-20s rc=%s static=%s' % (cid, rc, 'PASS' if tok else 'REFUSED'))
         if not tok:
             bad.append('%s: %s' % (cid, tail_reason(text)))
-    print('STATIC_PROBE %s (%d decks, %d Spectre launches, N2 refused=%s)'
-          % ('FAIL' if bad else 'PASS', len(cases), ledger.used, refused))
+    after = account.counts()
+    spent = after['confirmed'] - before['confirmed']
+    print('STATIC_PROBE %s (%d decks, %d Spectre launches, account launches spent=%d, N2 refused=%s)'
+          % ('FAIL' if (bad or spent) else 'PASS', len(cases), ledger.used, spent, refused))
     for b in bad[:6]:
         print('  STATIC_BAD %s' % b)
-    return 1 if (bad or not refused or ledger.used != 0) else 0
-
-
-def reuse_calibration(src_dir, run_id):
-    """reuse a calibration that really ran, keeping its own run_id and digests visible"""
-    rows = {}
-    with io.open(os.path.join(src_dir, 'calibration.csv'), encoding='utf-8', newline='') as f:
-        hdr = f.readline().strip().split(',')
-        for line in f:
-            if line.strip():
-                d = dict(zip(hdr, [v.strip() for v in line.rstrip('\r\n').split(',')]))
-                rows[d['quantity']] = d
-    picked = None
-    with io.open(os.path.join(src_dir, 'cases.csv'), encoding='utf-8', newline='') as f:
-        hdr = f.readline().strip().split(',')
-        for line in f:
-            if line.strip():
-                d = dict(zip(hdr, [v.strip() for v in line.rstrip('\r\n').split(',')]))
-                if d['role'] == 'calibration':
-                    picked = d
-    if not picked:
-        raise RuntimeError('no calibration row in %s' % src_dir)
-    ical = float(rows['Ical_A']['value_A'])
-    off = float(rows['OFF_baseline_max_abs_A']['value_A'])
-    tail = float(rows['CAL_tail_max_abs_A']['value_A'])
-    reasons = []
-    if abs(ical - 15e-6) > 15e-6 * 0.05:
-        reasons.append('Ical %r is outside 15 uA +/- 5 pct' % ical)
-    if off > 0.15e-6:
-        reasons.append('the OFF baseline max |I| is %r' % off)
-    if tail > 0.15e-6:
-        reasons.append('the calibration tail max |I| is %r' % tail)
-    return {'ical_A': ical, 'ok': not reasons, 'reasons': reasons, 'rows': [],
-            'band_min_A': float(rows['Ical_A']['band_min_A']),
-            'band_max_A': float(rows['Ical_A']['band_max_A']),
-            'off_max_abs_A': off, 'tail_max_abs_A': tail,
-            'reused_from_run': picked['run_id'],
-            'reused_from_dir': src_dir.replace(os.sep, '/'),
-            'ids': {'deck_sha256': picked['deck_sha256'], 'pwl_sha256': picked['pwl_sha256'],
-                    'raw_sha256': picked['raw_sha256'], 'log_sha256': picked['log_sha256'],
-                    'trace_sha256': 'declared static long-pulse calibration bench - not an RTL trace'},
-            'launches': 0, 'run_id': run_id}
+    return 1 if (bad or spent or not refused or ledger.used != 0) else 0
 
 
 def write_manifest_main(ev_dir):
@@ -1200,56 +1733,389 @@ def write_manifest_main(ev_dir):
     return 0
 
 
-def parse_reuse(spec):
-    # case_id=<dir> pairs: a real earlier run whose bytes are still on disk, re-measured offline
+def read_csv_rows(path):
+    if not os.path.isfile(path):
+        raise RuntimeError('%s is missing' % path)
+    with io.open(path, encoding='utf-8', newline='') as f:
+        hdr = f.readline().strip().split(',')
+        return [dict(zip(hdr, l.rstrip('\r\n').split(','))) for l in f if l.strip()]
+
+
+def mirror_target_of(guest_path, cid, stage_dir):
+    """the local mirrored file a printed guest path stands for, and the native run it names
+
+    The layout is the one `native_run` produced: everything from `/cases/<cid>/` down is repeated
+    under `<stage>/mirror`, and the path component in front of it is the guest task root's run id.
+    Nothing is guessed from a glob, so a second pass that left a same-named file behind cannot be
+    silently chosen for it.
+    """
+    key = '/cases/%s/' % cid
+    i = (guest_path or '').rfind(key)
+    if i < 0:
+        return None, ''
+    rel = guest_path[i + 1:].strip("'").split('?')[0]
+    return os.path.join(stage_dir, 'mirror', *rel.split('/')), guest_path[:i].rsplit('/', 1)[-1]
+
+
+def condition_readback(deck_text, log_text, raw_head):
+    """where the section and the temperature of a run really come from
+
+    This build's Spectre log does not echo the `section=` word, so the only byte that states it is the
+    deck's own include line, and the only byte that states the temperature the analysis actually used
+    is the psf header's `"temp"` column. Both are read here and made to agree with each other and with
+    the 27 C the round is defined at; neither is copied from a file name or hard-coded.
+    """
+    conds = deck_conditions(deck_text)
+    env = readback_env(log_text, raw_head)
+    section = conds['deck_section']
+    src = {'section': 'deck include line', 'temp': 'psf header temp column'}
+    if not section:
+        raise RuntimeError('the deck carries no section= word, so the corner is unknown')
+    if not conds['temp']:
+        raise RuntimeError('the deck carries no simopt options temp=, so the temperature is unknown')
+    header_temp = env['temp_header_C']
+    if not header_temp:
+        raise RuntimeError('the produced psf names no "temp" column, so the analysed temperature '
+                           'cannot be read back')
+    if abs(float(header_temp) - float(conds['temp'])) > 1e-6:
+        raise RuntimeError('the deck asks for temp=%s but the psf header reports %s'
+                           % (conds['temp'], header_temp))
+    if abs(float(header_temp) - TEMP_C) > 1e-6:
+        raise RuntimeError('the run analysed at %s C, not the %d C this round is defined at'
+                           % (header_temp, TEMP_C))
+    return section, header_temp, src, conds
+
+
+def wave_points(wave):
+    """the PWL `(time_ps, volt)` pairs out of a deck's `wave=[...]` clause"""
+    toks = (wave or '').split()
+    pts = []
+    for i in range(0, len(toks) - 1, 2):
+        t = toks[i]
+        ps = float(t[:-1]) * NS if t.endswith('n') else float(t)
+        pts.append((ps, float(toks[i + 1])))
+    return pts
+
+
+def deck_identity_compare(cid, retained_deck, rebuilt_deck):
+    """what must not differ between a retained run and this round's rebuild, and what is explained
+
+    The circuit and every declared condition have to be identical, because a reused number is only the
+    same measurement if it came off the same seven devices at the same bias. The one difference the
+    delivered round really carries is the simulation stop: the calibration ran in `r5_cal`, before the
+    builder learned to append the STOP_MARGIN hold point that keeps an integration bound from sitting
+    on the last sample. That difference is reported, not hidden, and it must be exactly the hold point.
+    """
+    notes = []
+    if device_digest(retained_deck) != device_digest(rebuilt_deck):
+        raise RuntimeError('%s: the retained run is not the same circuit as this round rebuilds '
+                           '(%s vs %s)' % (cid, device_digest(retained_deck),
+                                           device_digest(rebuilt_deck)))
+    for line in ('Xstage (data_en iref_in vcas data_out vdd18 vss) dd1_d7b_pwm_stage',
+                 'Ip_out (clamp data_out) iprobe'):
+        if (line in retained_deck) != (line in rebuilt_deck):
+            raise RuntimeError('%s: the stage or the ammeter instance line is not the same in the '
+                               'retained deck: %r' % (cid, line))
+    c1 = deck_conditions(retained_deck)
+    c2 = deck_conditions(rebuilt_deck)
+    for k in ('temp', 'deck_section', 'iref_A', 'vcas_V', 'vclamp_V', 'maxstep', 'method', 'iprobe'):
+        if c1[k] != c2[k]:
+            raise RuntimeError('%s: the retained deck declares %s=%s, this round declares %s'
+                               % (cid, k, c1[k], c2[k]))
+    w1, w2 = wave_points(c1['pwl_wave']), wave_points(c2['pwl_wave'])
+    if bool(w1) != bool(w2):
+        raise RuntimeError('%s: one deck drives data_en from a PWL clause and the other does not'
+                           % cid)
+    if not w1:
+        notes.append('neither deck carries a PWL wave: this case drives the enable from a bench '
+                     'source, which is the wiring fault under test')
+        return c1, notes
+    if not c1['stop'] or not c2['stop']:
+        raise RuntimeError('%s: a deck carries no tran stop=, so the stimulus span cannot be '
+                           'compared' % cid)
+    stop1 = float(c1['stop'].rstrip('s')) if c1['stop'].endswith('s') else float(c1['stop'])
+    stop2 = float(c2['stop'].rstrip('s')) if c2['stop'].endswith('s') else float(c2['stop'])
+    inside = [p for p in w1 if p[0] <= stop1 * 1e12]
+    rebuilt_inside = [p for p in w2 if p[0] <= stop1 * 1e12]
+    if inside != rebuilt_inside:
+        raise RuntimeError('%s: the stimulus up to the retained stop differs: %r vs %r'
+                           % (cid, inside[-2:], rebuilt_inside[-2:]))
+    if stop2 != stop1:
+        extra_ps = (stop2 - stop1) * 1e12
+        if abs(extra_ps - STOP_MARGIN_NS * NS) > 1.0:
+            raise RuntimeError('%s: the retained run stopped at %.12g s and this round at %.12g s, '
+                               'which is not the documented %d ns hold point'
+                               % (cid, stop1, stop2, STOP_MARGIN_NS))
+        notes.append('stop: retained %.12g s, this round %.12g s (+%d ns hold point added to the '
+                     'builder after the retained run; the measured windows are inside the retained '
+                     'stop)' % (stop1, stop2, STOP_MARGIN_NS))
+    return c1, notes
+
+
+def resolve_reuse(spec, decks, mst, published_dir=HISTORICAL_EVIDENCE):
+    """`case_id=<retained stage dir>` pairs, verified byte for byte before anything is measured
+
+    The retained ledger is treated as an index, never as proof. For every reused case this recomputes
+    the digest of the raw, the log, the deck and the PWL that are really still on this machine, binds
+    them to a transcript whose printed datafile path leads to exactly those bytes, requires the native
+    rc of both the preflight and the DUT launch to be zero, and requires the deck and PWL to be the
+    same bytes this round rebuilds from the frozen Git blobs and the same bytes the delivered bundle
+    published. A glob hit, an ambiguous transcript, a missing twin or a drifted deck is a refusal.
+    """
     out = {}
+    published_cases = {}
+    for r in read_csv_rows(os.path.join(published_dir, 'cases.csv')):
+        published_cases.setdefault(r['case_id'], r)
     for pair in [x for x in (spec or '').split(',') if x.strip()]:
+        if '=' not in pair:
+            raise RuntimeError('--reuse wants case_id=stage_dir, got %r' % pair)
         cid, base = pair.split('=', 1)
-        led = os.path.join(base, 'process_ledger.csv')
-        rows = []
-        with io.open(led, encoding='utf-8', newline='') as f:
-            hdr = f.readline().strip().split(',')
-            for line in f:
-                if line.strip():
-                    rows.append(dict(zip(hdr, line.rstrip('\r\n').split(','))))
-        dut = [r for r in rows if r['case_id'] == cid and r['role'] == 'dut'
-               and r.get('raw_sha256')]
-        if not dut:
-            raise RuntimeError('no retained dut launch with a raw digest for %s in %s' % (cid, led))
-        r = dut[-1]
-        import glob as _glob
-        psf = _glob.glob(os.path.join(base, cid, 'sim', '*', 'sw1.tran.tran'))
-        if not psf:
-            raise RuntimeError('the retained psf for %s is not under %s' % (cid, base))
-        out[cid] = {'deck_sha256': r['deck_sha256'], 'pwl_sha256': r['pwl_sha256'],
-                    'raw_sha256': r['raw_sha256'], 'log_sha256': r['log_sha256'],
-                    'src_run': '%s/%s' % (r['launch_id'], r.get('requested_utc', '')),
-                    'psf': psf[0]}
+        base = os.path.abspath(base)
+        if not os.path.isdir(base):
+            raise RuntimeError('%s: the retained directory %s is not there' % (cid, base))
+        if cid not in decks:
+            raise RuntimeError('%s: this round builds no deck for it, so it cannot be reused' % cid)
+        pub = published_cases.get(cid)
+        if pub is None:
+            raise RuntimeError('%s is not in the delivered case table, so nothing about it is fixed'
+                               % cid)
+        # the delivered bundle is the committed index of the native run: it names the launch, its rc
+        # and the digests the numbers were made from. The retained stage only has to prove that those
+        # same bytes are still here.
+        led_key = '%s/%s' % (pub['run_id'], pub['launch_id'])
+        pub_led = read_csv_rows(os.path.join(published_dir, 'process_ledger.csv'))
+        d = [r for r in pub_led if r['launch_id'] == led_key and r['role'] == 'dut']
+        launched_by = led_key
+        if len(d) == 1:
+            pre = [r for r in pub_led if r['case_id'] == cid and r['role'] == 'preflight'
+                   and r['launch_id'].startswith('%s/' % pub['run_id'])]
+            if len(pre) != 1 or pre[0]['rc'] != '0':
+                raise RuntimeError('%s: the delivered ledger has %d rail-preflight twin(s) for run '
+                                   '%s with rc 0' % (cid, len(pre), pub['run_id']))
+            pre_row = pre[0]
+        else:
+            # the delivered round recorded its own reused calibration as run `r11_main<-r5_cal`,
+            # launch `REUSED`, which is a note rather than a ledger row: the native rc then has to come
+            # from the transcript of the run that produced the bytes, and the pass must be unambiguous
+            if d and len(d) > 1:
+                raise RuntimeError('%s: %d delivered ledger rows are named %s' % (cid, len(d),
+                                                                                  led_key))
+            d = [{}]
+            pre_row = {'launch_id': ''}
+            launched_by = ''
+        d = d[0]
+        if d:
+            if d.get('state') not in ('DONE', 'COMPLETED') or d.get('rc') != '0':
+                raise RuntimeError('%s: the delivered dut row %s is %s rc=%s'
+                                   % (cid, led_key, d.get('state'), d.get('rc')))
+            if not d['spectre_line'].startswith('SPECTRE_name=') or not d['spectre_line'].endswith(
+                    '_rc=0'):
+                raise RuntimeError('%s: the delivered dut row carries no native rc=0 evidence (%s)'
+                                   % (cid, d['spectre_line'][:60]))
+        raw_want, log_want = pub['raw_sha256'], pub['log_sha256']
+        deck_want, pwl_want = pub['deck_sha256'], pub['pwl_sha256']
+        # when the delivered ledger names the launch, it also names the native run, and a transcript
+        # of another run is not evidence about these bytes even if the mirror path still holds them
+        want_run = pub['run_id'] if d else ''
+        tdir = os.path.join(base, 'transcripts')
+        cands = sorted(x for x in os.listdir(tdir) if x.endswith('_dut-%s.txt' % cid))
+        if not cands:
+            raise RuntimeError('%s: no retained dut transcript under %s' % (cid, tdir))
+        picked = []
+        for name in cands:
+            text = u(io.open(os.path.join(tdir, name), encoding='utf-8',
+                             errors='replace').read())
+            parts = parse_runner(text)
+            if parts['rc'] != '0' or not re.search(r'^SPECTRE name=\S+ rc=0', text, re.M):
+                continue
+            raw_local, src_run = mirror_target_of(parts['datafile'], cid, base)
+            log_local, _ = mirror_target_of(parts['logfile'], cid, base)
+            if not raw_local or not os.path.isfile(raw_local):
+                continue
+            if want_run and src_run != want_run:
+                continue
+            if sha_file(raw_local) != raw_want:
+                continue
+            if not log_local or not os.path.isfile(log_local):
+                continue
+            if sha_file(log_local) != log_want:
+                continue
+            if parts['datafile'] not in text or parts['logfile'] not in text:
+                continue
+            picked.append((name, raw_local, log_local, src_run, parts, text))
+        if not picked:
+            raise RuntimeError('%s: none of the %d retained transcripts leads to the bytes the '
+                               'delivered bundle hashes to %s' % (cid, len(cands), raw_want[:12]))
+        runs = sorted(set(p[3] for p in picked))
+        if len(runs) > 1:
+            raise RuntimeError('%s: the retained transcripts name %d different native runs (%s) for '
+                               'the same bytes; the reuse is ambiguous and is refused'
+                               % (cid, len(runs), ', '.join(runs)))
+        if len(picked) > 1:
+            raise RuntimeError('%s: %d transcripts of run %s lead to the same bytes; nothing is '
+                               'chosen by taking the first' % (cid, len(picked), runs[0]))
+        name, raw_local, log_local, src_run, parts, text = picked[0]
+        deck_local = os.path.join(base, 'mirror', 'cases', cid, '%s.scs' % cid)
+        pwl_local = os.path.join(base, 'pwl', '%s_pwl.txt' % cid)
+        for label, path in (('deck', deck_local), ('pwl', pwl_local)):
+            if not os.path.isfile(path):
+                raise RuntimeError('%s: the retained %s %s is gone' % (cid, label, path))
+        got_deck = sha_file(deck_local)
+        got_pwl = sha_file(pwl_local)
+        if got_deck != deck_want:
+            raise RuntimeError('%s: the retained deck bytes are %s, the delivered table says %s'
+                               % (cid, got_deck[:12], deck_want[:12]))
+        want_pwl = sha_txt(pwl_text(decks[cid]['points']))
+        if got_pwl != want_pwl:
+            raise RuntimeError('%s: the retained PWL bytes hash to %s, this round rebuilds %s'
+                               % (cid, got_pwl[:12], want_pwl[:12]))
+        retained_deck = u(io.open(deck_local, encoding='utf-8', newline='\n').read())
+        rebuilt = u(decks[cid]['deck'])
+        conds, identity_notes = deck_identity_compare(cid, retained_deck, rebuilt)
+        for m in mst:
+            ml = os.path.join(base, 'masters', m['name'])
+            if not os.path.isfile(ml):
+                raise RuntimeError('%s: the master %s the retained run read is gone (%s)'
+                                   % (cid, m['name'], ml))
+            if sha_file(ml) != m['sent_sha256']:
+                raise RuntimeError('%s: master %s hashes to %s, this round sends %s'
+                                   % (cid, m['name'], sha_file(ml)[:12], m['sent_sha256'][:12]))
+        log_text = u(io.open(log_local, encoding='utf-8', errors='replace').read())
+        head = u(io.open(raw_local, encoding='utf-8', errors='replace').read())[:4000]
+        section, temp, cond_src, _c = condition_readback(retained_deck, log_text, head)
+        out[cid] = {'src_dir': base, 'src_native_run': src_run,
+                    'src_run': '%s/%s' % (src_run, launched_by or 'delivered note %s' % pub['run_id']),
+                    'launch_id': d.get('launch_id') or pub['launch_id'],
+                    'preflight_launch_id': pre_row['launch_id'],
+                    'psf': raw_local, 'log': log_local, 'deck': deck_local, 'pwl': pwl_local,
+                    'transcript': os.path.join(tdir, name),
+                    'deck_sha256': got_deck, 'pwl_sha256': got_pwl,
+                    'raw_sha256': raw_want, 'log_sha256': log_want,
+                    'native_rc': d.get('rc') or parts['rc'],
+                    'preflight_rc': pre_row.get('rc', ''),
+                    'section': section, 'temp': temp, 'condition_sources': cond_src,
+                    'conditions': conds, 'identity_notes': identity_notes,
+                    'published_row': pub}
+        for wkey, col in (('section', 'section_read'), ('temp', 'temp_read')):
+            if pub[col] and out[cid][wkey] != pub[col]:
+                # the delivered calibration row left these two columns empty, which is one of the
+                # corrections this round makes; an empty old cell is not a disagreement
+                raise RuntimeError('%s: the retained run reads %s=%s, the delivered table says %s'
+                                   % (cid, wkey, out[cid][wkey], pub[col]))
     return out
 
-def reused_cal_row(cal, run_id):
-    c = {'case_id': 'D7B-CAL', 'group': 'cal', 'role': 'calibration', 'maxstep_ns': '0.5',
-         'ramp_ns': '2', 'vclamp_v': '1.2'}
-    w = {'window': 'cal', 'tick_ns': '', 'full_intervals': '', 'expected_intervals': '',
-         'mode': '', 'code': '', 'pam_request': ''}
-    out = {'analog_t0_ps': CAL_BAND[0], 'analog_t1_ps': CAL_BAND[1],
-           'q_win': {'q': cal['ical_A'] * (CAL_BAND[1] - CAL_BAND[0]) * 1e-12},
-           'settled': {'status': 'MEASURED'}, 'turn_off': {'status': 'OFF'}}
-    row = case_row(run_id, c, w, out, 'REUSED', ['the calibration ran in run %s and is reused here '
-                   'with its own deck/raw digests; it is not presented as a new measurement'
-                   % cal['reused_from_run']], cal['ids'], 'REUSED')
-    row[CASE_HDR.index('run_id')] = '%s<-%s' % (run_id, cal['reused_from_run'])
-    return row
+
+def pwl_text(points):
+    """the one serialisation a PWL file is allowed to have, so its bytes and its digest agree
+
+    The delivered bundle recorded a digest over a newline-joined text while the file on disk carried a
+    trailing newline on the last line, so no checker could recompute the delivered number from the
+    delivered bytes. Here the table digest is the digest of exactly these bytes.
+    """
+    return ''.join('%d %.6g\n' % (t, v) for t, v in points)
 
 
-def native_run(cases, mst, docs, decks, opts, run_id, out_root, log_dir):
+def deck_conditions(deck_text):
+    """the electrical conditions a deck really carries, read out of the bytes it was run with"""
+    out = {}
+    m = re.search(r'^\s*simopt\s+options\s+temp=(\S+)', deck_text, re.M)
+    out['temp'] = m.group(1) if m else ''
+    m = re.search(r'section=(\w+)', deck_text)
+    out['deck_section'] = m.group(1) if m else ''
+    m = re.search(r'^\s*Iref\s*\([^)]*\)\s*isource\s+dc=(\S+)', deck_text, re.M)
+    out['iref_A'] = m.group(1) if m else ''
+    m = re.search(r'^\s*Vcas\s*\(\s*(\S+)\s+\S+\s*\)\s*vsource\s+dc=(\S+)', deck_text, re.M)
+    out['vcas_V'] = m.group(2) if m else ''
+    m = re.search(r'^\s*Vclamp\s*\(\s*(\S+)\s+\S+\s*\)\s*vsource\s+dc=(\S+)', deck_text, re.M)
+    out['vclamp_V'] = m.group(2) if m else ''
+    m = re.search(r'^\s*\w+\s+tran\s+stop=(\S+)\s+maxstep=(\S+)', deck_text, re.M)
+    out['stop'] = m.group(1) if m else ''
+    out['maxstep'] = m.group(2) if m else ''
+    out['method'] = (re.search(r'tran\s+stop=\S+\s+maxstep=\S+\s+method=(\S+)', deck_text)
+                     or [None, ''])[1]
+    out['iprobe'] = ('Ip_out (clamp data_out) iprobe' in deck_text)
+    m = re.search(r'Vde\s*\(data_en 0\)\s*vsource\s+type=pwl\s+wave=\[([^\]]*)\]', deck_text)
+    out['pwl_wave'] = re.sub(r'\s+', ' ', m.group(1)).strip() if m else ''
+    return out
+
+
+def emit_case_windows(c, series, ids, cal, docs, run_id, ev_dir, rows, charge_index, results,
+                      negative_rows, launch_id, note=''):
+    """measure every declared window of one delivered current series and stage its evidence
+
+    Both entrances call this: a native launch and an offline re-measurement of retained bytes. That
+    is deliberate -- a reused row and a freshly measured row must mean the same arithmetic, and the
+    only difference allowed between them is the note that says where the bytes came from.
+    """
+    cid = c['case_id']
+    doc = docs.get(cid)
+    if doc is None:
+        rows.append(case_row(run_id, c, {'window': ''}, {}, 'FAIL_TOOL',
+                             ['no trace document for %s' % cid], ids, launch_id))
+        return
+    by_window = dict((w['window'], w) for w in doc['windows'])
+    for wname in c['windows'].split(';'):
+        w = by_window.get(wname)
+        if w is None:
+            rows.append(case_row(run_id, c, {'window': wname}, {}, 'FAIL_TOOL',
+                                 ['the trace document declares no window %s' % wname], ids,
+                                 launch_id))
+            continue
+        out = measure_one(c, w, series, cal['ical_A'], launch_id, ids, run_id)
+        verdict, reasons = MS.judge(out)
+        if c['role'] == 'negative_wiring':
+            # a dark window is a fault when the port really carries current above the OFF criterion
+            # in the direction that lights the pixel -- not by a charge-scale accident
+            det = ((out['window_peak']['value'] or 0.0) > MS.OFF_ABS and out['q_win']['q'] > 0.0)
+            neg = {'case_id': cid, 'window': wname, 'detected': 'YES' if det else 'NO',
+                   'q_win_C': out['q_win']['q'], 'expected_dark_C': 0.0,
+                   'window_peak_A': out['window_peak']['value'],
+                   'last_100ns_max_abs_A': out['last_100ns_max_abs_A'],
+                   'verdict': 'EXPECTED_REFUSAL / WIRING_FAULT_DETECTED' if det
+                              else 'NOT_DETECTED',
+                   'deck_sha256': ids['deck_sha256'], 'raw_sha256': ids['raw_sha256'],
+                   'run_id': run_id, 'launch_id': launch_id,
+                   'src_native_run': ids.get('src_native_run', ''),
+                   'transcript_sha256': ids.get('transcript_sha256', '')}
+            negative_rows.append(neg)
+            verdict, reasons = ('EXPECTED_REFUSAL' if det else 'NEGATIVE_NOT_DETECTED',
+                                ['the black window carries %r A of peak current'
+                                 % out['window_peak']['value']])
+        if note:
+            reasons = reasons + [note]
+        results[(cid, wname)] = out
+        rows.append(case_row(run_id, c, w, out, verdict, reasons, ids, launch_id))
+        charge_index.append(emit_charge_slice(series, c, w, out, run_id, ids, ev_dir))
+        edge_meta = emit_edge_slice(series, c, w, out, run_id, ev_dir)
+        if edge_meta:
+            # an unindexed shard set is bytes nobody can bind: the delivered bundle shipped 26
+            # edge_*.csv files that its own charge_index.csv never named
+            charge_index.append(edge_meta)
+        trace_edge_table(ev_dir, run_id, doc, c)
+        print('  %s q_win=%.6g C err=%+.4f LSB settled=%s off=%s %s'
+              % (wname, out['q_win']['q'], out['charge_error_LSB'] or 0.0,
+                 out['settled']['status'], out['turn_off']['status'], verdict))
+
+
+def reused_ids(info, trace_sha):
+    """the identity columns of a reused run: native identity, deck bytes and this export's code"""
+    return {'deck_sha256': info['deck_sha256'], 'pwl_sha256': info['pwl_sha256'],
+            'trace_sha256': trace_sha, 'raw_sha256': info['raw_sha256'],
+            'log_sha256': info['log_sha256'], 'section': info['section'], 'temp': info['temp'],
+            'condition_sources': info['condition_sources'],
+            'src_native_run': info['src_native_run'], 'src_launch_id': info['launch_id'],
+            'transcript_sha256': sha_file(info['transcript']),
+            'reused_from': info['src_dir'].replace(os.sep, '/')}
+
+
+def native_run(cases, mst, docs, decks, opts, run_id, out_root, log_dir, account):
     root = '%s/%s' % (GUEST_ROOT, run_id)
     link = Link(GUEST_HOST, root, log_dir)
-    ledger = Ledger(os.path.join(out_root, 'process_ledger.csv'))
     ev_dir = os.path.join(out_root, 'evidence', run_id)
     for sub in ('', 'pwl', 'decks', 'transcripts'):
         if not os.path.isdir(os.path.join(ev_dir, sub)):
             os.makedirs(os.path.join(ev_dir, sub))
+    ledger = stage_ledger(ev_dir)
     frozen = prepare(link, mst, out_root, log_dir)
     print('TASK_ROOT %s' % root)
     print('FROZEN_TOOLS ' + ' '.join('%s=%s' % (k, v[:12]) for k, v in sorted(frozen.items())))
@@ -1257,31 +2123,51 @@ def native_run(cases, mst, docs, decks, opts, run_id, out_root, log_dir):
     rows = []
     charge_index = []
     results = {}
-    reuse_map = parse_reuse(opts.reuse)
+    # the reuse split happens here, before the loop can reach a single preflight: a reused case is
+    # never pushed, never preflighted and never launched, and its bytes are verified first
+    reuse_map = resolve_reuse(opts.reuse, decks, mst, opts.published_dir)
     if reuse_map:
-        print('REUSE_CASES ' + ' '.join('%s<-%s' % (k, v['src_run'])
+        print('REUSE_CASES %s' % ' '.join('%s<-%s/%s' % (k, v['src_native_run'], v['launch_id'])
                                           for k, v in sorted(reuse_map.items())))
+        for cid in sorted(reuse_map):
+            account.note(cid, 'reused_measurement', run_id,
+                         'measured offline from native run %s launch %s'
+                         % (reuse_map[cid]['src_native_run'], reuse_map[cid]['launch_id']))
     cal = None
-    if opts.cal_from:
-        cal = reuse_calibration(opts.cal_from, run_id)
-        print('CAL_REUSED from %s Ical=%.6g ok=%s' % (opts.cal_from, cal['ical_A'], cal['ok']))
-        rows.append(reused_cal_row(cal, run_id))
     negative_rows = []
     stopped = ''
 
     # static negative N2 first: it must refuse without ever starting the simulator
     if 'D7B-P30-C001' in decks:
         n2 = build_static_negative(mst, decks, out_root, run_id)
-        negative_rows.append(run_static_negative(link, ledger, n2, run_id, mst, out_root))
+        negative_rows.append(run_static_negative(link, ledger, n2, run_id, mst, out_root, account))
     else:
         print('N2_SKIPPED this pass does not carry its source deck')
 
     for c in cases:
         cid = c['case_id']
+        # the ceiling is checked before the case is pushed, preflighted or launched, so a plan that
+        # has run out can never spend one more process on its way to the refusal
+        if cid not in reuse_map and account.remaining() < PREFLIGHT_PER_DUT + 1:
+            stopped = ('the launch ceiling leaves %d of %d occupied; %s was not started'
+                       % (account.remaining(), account.ceiling, cid))
+            rows.append(case_row(run_id, c, {'window': ''}, {}, 'BLOCKED_BUDGET',
+                                 [stopped], decks[cid], ''))
+            break
         if cal is not None and not cal['ok'] and c['role'] != 'calibration':
             rows.append(case_row(run_id, c, {'window': 'normal'}, {}, 'BLOCKED',
                                  ['the calibration current never met its own window, so no other '
                                   'current conclusion is admissible'], decks[cid], ''))
+            continue
+        if cid in reuse_map:
+            cal, why = remeasure_case(c, reuse_map[cid], cal, docs, run_id, ev_dir, rows,
+                                      charge_index, results, negative_rows)
+            if why:
+                stopped = why
+                break
+            print('DUT %s REUSED from %s/%s launches=%d/%d'
+                  % (cid, reuse_map[cid]['src_native_run'], reuse_map[cid]['launch_id'],
+                     account.counts()['confirmed'], account.ceiling))
             continue
         remote_dir = '%s/cases/%s' % (root, cid)
         push_case_dir(link, mst, decks, cid, out_root, remote_dir)
@@ -1289,9 +2175,21 @@ def native_run(cases, mst, docs, decks, opts, run_id, out_root, log_dir):
         pf = ('export PROJ=%s PDK_ENV=%s\nbash %s/scripts/tb_preflight.sh %s/%s.scs %s %s "%s"\n'
               % (root, GUEST_PDK_ENV, root, remote_dir, cid, EXPECTED_VDD, tag, SUPPLY_MAP))
         prow = ledger.begin(cid, 'preflight', decks[cid]['deck_sha256'], decks[cid]['pwl_sha256'])
-        rc, text = link.run(pf, 900, 'preflight-' + cid)
+        arow = account.reserve(cid, 'preflight', decks[cid]['deck_sha256'],
+                               decks[cid]['pwl_sha256'], run_id)
+        try:
+            rc, text = link.run(pf, 900, 'preflight-' + cid)
+        except Exception as exc:
+            account.mark_uncertain(arow, 'rail preflight outcome unknown: %s' % exc)
+            stopped = 'rail preflight of %s lost contact; the launch stays uncertain' % cid
+            rows.append(case_row(run_id, c, {'window': 'preflight'}, {}, 'UNCERTAIN_LAUNCH',
+                                 [str(exc)], decks[cid], prow['launch_id']))
+            break
+        launched, evidence = launch_evidence_of(text)
         p_ok = (rc == 0 and len(re.findall(r'^TESTBENCH_PREFLIGHT: PASS$', text or '', re.M)) == 1)
-        p_launched = 1 if re.search(r'^spectre_rc=', text or '', re.M) else 0
+        account.settle(arow, rc, text, launched, evidence,
+                       refusal='' if p_ok else tail_reason(text))
+        p_launched = launched if re.search(r'^spectre_rc=', text or '', re.M) else 0
         ledger.finish(prow, rc, text, refusal='' if p_ok else tail_reason(text),
                       launched=p_launched)
         if not p_ok:
@@ -1304,11 +2202,21 @@ def native_run(cases, mst, docs, decks, opts, run_id, out_root, log_dir):
         script = ('export PROJ=%s PDK_ENV=%s\nLABEL=%s bash %s/scripts/run_spectre.sh '
                   '%s/%s.scs %d\n' % (root, GUEST_PDK_ENV, label, root, remote_dir, cid, 1800))
         drow = ledger.begin(cid, 'dut', decks[cid]['deck_sha256'], decks[cid]['pwl_sha256'])
-        rc, text = link.run(script, 2000, 'dut-' + cid)
+        arow = account.reserve(cid, 'dut', decks[cid]['deck_sha256'], decks[cid]['pwl_sha256'],
+                               run_id)
+        try:
+            rc, text = link.run(script, 2000, 'dut-' + cid)
+        except Exception as exc:
+            account.mark_uncertain(arow, 'dut launch outcome unknown: %s' % exc)
+            stopped = 'the DUT launch of %s lost contact; the launch stays uncertain' % cid
+            rows.append(case_row(run_id, c, {'window': ''}, {}, 'UNCERTAIN_LAUNCH', [str(exc)],
+                                 decks[cid], drow['launch_id']))
+            break
         parts = parse_runner(text)
         ids = {'deck_sha256': decks[cid]['deck_sha256'], 'pwl_sha256': decks[cid]['pwl_sha256'],
                'trace_sha256': docs[cid]['facts']['vcd_sha256'] if cid in docs else 'bench',
-               'raw_sha256': '', 'log_sha256': '', 'section': '', 'temp': ''}
+               'raw_sha256': '', 'log_sha256': '', 'section': '', 'temp': '',
+               'src_native_run': run_id, 'src_launch_id': drow['launch_id'], 'reused_from': ''}
         mirror_dir = os.path.join(out_root, 'mirror', 'cases', cid)
         mirror_sim = os.path.join(mirror_dir, 'sim')
         if not os.path.isdir(mirror_sim):
@@ -1338,96 +2246,442 @@ def native_run(cases, mst, docs, decks, opts, run_id, out_root, log_dir):
             ids['log_text'] = u(io.open(log_local, encoding='utf-8', errors='replace').read())
         local_text = (text or '').replace(root, mirror_posix)
         ok, reasons, got = CC.runner_verdict(label, '%s/%s.scs' % (mirror_dir, cid), rc, local_text)
+        launched, evidence = launch_evidence_of(text)
+        account.settle(arow, rc, text, launched, evidence, ids['raw_sha256'], ids['log_sha256'],
+                       refusal='' if ok else tail_reason('; '.join(reasons)))
         ledger.finish(drow, rc, text, ids['raw_sha256'], ids['log_sha256'],
                       refusal='' if ok else tail_reason('; '.join(reasons)))
         print('DUT %s rc=%s verdict=%s launches=%d/%d' % (cid, rc, 'OK' if ok else 'REFUSED',
-                                                           ledger.used, LAUNCH_BUDGET))
+                                                          account.counts()['confirmed'],
+                                                          account.ceiling))
         if not ok:
             print('  REFUSED ' + '; '.join(reasons)[:400])
             for wname in c['windows'].split(';'):
                 rows.append(case_row(run_id, c, {'window': wname}, {}, 'FAIL_TOOL', reasons, ids,
                                      drow['launch_id']))
-            if ledger.used >= LAUNCH_BUDGET:
-                stopped = 'budget exhausted after %s' % cid
-                break
             continue
         if not ids['raw_sha256']:
             rows.append(case_row(run_id, c, {'window': ''}, {}, 'FAIL_TOOL',
                                  ['no datafile was reported'], ids, drow['launch_id']))
             continue
         series, _times = psf_series(ids['raw_local'])
-        env = readback_env(ids.get('log_text', ''),
-                           u(io.open(raw_local, encoding='utf-8', errors='replace').read())[:4000])
-        ids['section'] = 'tt'
-        ids['temp'] = env['temp_header_C'] or env['temp_log_C']
-        if env['temp_header_C'] and abs(float(env['temp_header_C']) - TEMP_C) > 1e-6:
-            rows.append(case_row(run_id, c, {'window': ''}, {}, 'FAIL_TOOL',
-                                 ['the run reports temp=%s, not 27 C' % env['temp_header_C']], ids,
+        head = u(io.open(raw_local, encoding='utf-8', errors='replace').read())[:4000]
+        try:
+            section, temp, cond_src, _c = condition_readback(u(decks[cid]['deck']),
+                                                             ids.get('log_text', ''), head)
+        except RuntimeError as exc:
+            rows.append(case_row(run_id, c, {'window': ''}, {}, 'FAIL_TOOL', [str(exc)], ids,
                                  drow['launch_id']))
             continue
+        ids['section'] = section
+        ids['temp'] = temp
+        ids['condition_sources'] = cond_src
         if c['role'] == 'calibration':
             cal = calibrate(series, run_id, ids)
-            write_rows(os.path.join(ev_dir, 'calibration.csv'),
-                       [[r['run_id'], r['quantity'], fmt_num(r.get('value'), 1.0),
-                         r.get('window_ns', ''), fmt_num(r.get('band_min_A'), 1.0),
-                         fmt_num(r.get('band_max_A'), 1.0)] for r in cal['rows']],
-                       ['run_id', 'quantity', 'value_A', 'window_ns', 'band_min_A', 'band_max_A'])
+            write_calibration_rows(ev_dir, cal)
+            out = cal_measure(series)
+            cal_slice(series, c, out, run_id, ids, ev_dir, charge_index)
             print('CAL Ical=%r ok=%s %s' % (cal['ical_A'], cal['ok'], '; '.join(cal['reasons'])))
-            rows.append(case_row(run_id, c, {'window': 'cal'},
-                                 {'analog_t0_ps': CAL_BAND[0], 'analog_t1_ps': CAL_BAND[1],
-                                  'q_win': {'q': cal['ical_A'] * 0.5e-6},
-                                  'settled': {'status': 'MEASURED'}, 'turn_off': {'status': 'OFF'}},
+            rows.append(case_row(run_id, c, {'window': 'cal'}, out,
                                  'PASS' if cal['ok'] else 'FAIL', cal['reasons'], ids,
                                  drow['launch_id']))
             if not cal['ok']:
                 stopped = 'the calibration current failed; every other current conclusion is BLOCKED'
                 break
             continue
-        doc = docs[cid]
-        by_window = dict((w['window'], w) for w in doc['windows'])
-        for wname in c['windows'].split(';'):
-            w = by_window[wname]
-            out = measure_one(c, w, series, cal['ical_A'], drow['launch_id'], ids, run_id)
-            verdict, reasons = MS.judge(out)
-            if c['role'] == 'negative_wiring':
-                # a dark window is a fault when the port really carries current above the OFF
-                # criterion in the direction that lights the pixel -- not by a charge-scale accident
-                det = ((out['window_peak']['value'] or 0.0) > MS.OFF_ABS
-                       and out['q_win']['q'] > 0.0)
-                neg = {'case_id': cid, 'window': wname, 'detected': 'YES' if det else 'NO',
-                       'q_win_C': out['q_win']['q'], 'expected_dark_C': 0.0,
-                       'window_peak_A': out['window_peak']['value'],
-                       'last_100ns_max_abs_A': out['last_100ns_max_abs_A'],
-                       'verdict': 'EXPECTED_REFUSAL / WIRING_FAULT_DETECTED' if det
-                                  else 'NOT_DETECTED',
-                       'deck_sha256': ids['deck_sha256'], 'raw_sha256': ids['raw_sha256']}
-                negative_rows.append(neg)
-                verdict, reasons = ('EXPECTED_REFUSAL' if det else 'NEGATIVE_NOT_DETECTED',
-                                    ['the black window carries %r A of peak current'
-                                     % out['window_peak']['value']])
-            results[(cid, wname)] = out
-            rows.append(case_row(run_id, c, w, out, verdict, reasons, ids, drow['launch_id']))
-            charge_index.append(emit_charge_slice(series, c, w, out, run_id, ids, ev_dir))
-            emit_edge_slice(series, c, w, out, run_id, ev_dir)
-            trace_edge_table(ev_dir, run_id, doc, c)
-            print('  %s q_win=%.6g C err=%+.4f LSB settled=%s off=%s %s'
-                  % (wname, out['q_win']['q'], out['charge_error_LSB'] or 0.0,
-                     out['settled']['status'], out['turn_off']['status'], verdict))
-        if ledger.used >= LAUNCH_BUDGET:
-            stopped = 'budget exhausted after %s' % cid
-            break
+        if cal is None:
+            rows.append(case_row(run_id, c, {'window': ''}, {}, 'BLOCKED',
+                                 ['no calibration current is available yet'], ids,
+                                 drow['launch_id']))
+            continue
+        emit_case_windows(c, series, ids, cal, docs, run_id, ev_dir, rows, charge_index, results,
+                          negative_rows, drow['launch_id'])
 
+    return write_bundle(run_id, cases, mst, docs, decks, out_root, ev_dir, rows, charge_index,
+                        results, negative_rows, reuse_map, cal, ledger, account, mode='run',
+                        root=root, stopped=stopped, reused=False, frozen=frozen)
+
+
+def refuse_overbudget(case_id, role, why, run_id, out_root):
+    """the native entry point is closed while the historical account is over its ceiling"""
+    print('D7B_REFUSED %s of %s: %s' % (OVERBUDGET_REFUSAL, role, why))
+    print('NO_PROCESS_WAS_STARTED run_id=%s out=%s' % (run_id, out_root))
+    return 5
+
+
+def write_calibration_rows(ev_dir, cal):
+    """6.1: the calibration table, with the temperature and corner it was read out of, not assumed
+
+    The delivered bundle left `section` and `temp` empty here while asserting they had been read from
+    the products, which is what DATA-7B-R1 had to correct.
+    """
+    ids = cal.get('ids') or {}
+    src = ids.get('condition_sources') or {}
+    rows = []
+    for r in cal['rows']:
+        rows.append([r['run_id'], r['quantity'], fmt_num(r.get('value'), 1.0),
+                     r.get('window_ns', ''), fmt_num(r.get('band_min_A'), 1.0),
+                     fmt_num(r.get('band_max_A'), 1.0), r.get('band_samples', ''),
+                     r.get('integration_s', ''), ids.get('section', ''), ids.get('temp', ''),
+                     '; '.join('%s from %s' % (k, v) for k, v in sorted(src.items()))])
+    write_rows(os.path.join(ev_dir, 'calibration.csv'), rows,
+               ['run_id', 'quantity', 'value_A', 'window_ns', 'band_min_A', 'band_max_A',
+                'band_samples', 'integration_s', 'section_read', 'temp_read_C', 'condition_source'])
+
+
+def cal_measure(series):
+    """the calibration window as a measurable row: the band integral over the delivered samples"""
+    t0, t1 = CAL_BAND
+    return {'analog_t0_ps': t0, 'analog_t1_ps': t1,
+            'q_win': {'q': MS.integrate(series['Ip_out:i'], t0, t1, 'calibration band')['q']},
+            'settled': {'status': 'MEASURED'}, 'turn_off': {'status': 'OFF'}}
+
+
+def cal_slice(series, c, out, run_id, ids, ev_dir, charge_index):
+    """the calibration band samples, delivered as their own shard series
+
+    The delivered bundle asserted an Ical it could not show the bytes of, which is why an independent
+    reviewer had to take the calibration table on trust and could not recompute 3.0..3.5 us at all.
+    """
+    w = {'window': 'cal', 'tick_ns': '', 'full_intervals': '', 'expected_intervals': '',
+         'mode': '', 'code': '', 'pam_request': ''}
+    meta = emit_charge_slice(series, c, w, out, run_id, ids, ev_dir)
+    if meta:
+        charge_index.append(meta)
+    return meta
+
+
+def remeasure_case(c, info, cal, docs, run_id, ev_dir, rows, charge_index, results,
+                   negative_rows):
+    """one case measured from bytes a previous native run already produced; returns (cal, stop)
+
+    The same `emit_case_windows` and the same `calibrate` serve a live launch and a retained file, so
+    a reused row cannot quietly mean a different arithmetic than a fresh one.
+    """
+    cid = c['case_id']
+    ids = reused_ids(info, docs[cid]['facts']['vcd_sha256'] if cid in docs else 'bench')
+    series, _t = psf_series(info['psf'])
+    note = ('reused: measured offline from native run %s launch %s (retained bytes under %s); no '
+            'process was started for it this pass' % (info['src_native_run'], info['launch_id'],
+                                                      info['src_dir'].replace(os.sep, '/')))
+    if c['role'] == 'calibration':
+        cal = calibrate(series, run_id, ids)
+        write_calibration_rows(ev_dir, cal)
+        out = cal_measure(series)
+        cal_slice(series, c, out, run_id, ids, ev_dir, charge_index)
+        rows.append(case_row(run_id, c, {'window': 'cal'}, out,
+                             'PASS' if cal['ok'] else 'FAIL', cal['reasons'] + [note], ids,
+                             info['launch_id']))
+        print('CAL_REUSED Ical=%r ok=%s %s' % (cal['ical_A'], cal['ok'], '; '.join(cal['reasons'])))
+        return cal, ('' if cal['ok'] else
+                     'the reused calibration current failed; every other current conclusion is '
+                     'BLOCKED')
+    if cal is None or not cal.get('ok'):
+        rows.append(case_row(run_id, c, {'window': ''}, {}, 'BLOCKED',
+                             ['no admissible calibration current was available when this case was '
+                              're-measured'] + [note], ids, info['launch_id']))
+        return cal, ''
+    emit_case_windows(c, series, ids, cal, docs, run_id, ev_dir, rows, charge_index, results,
+                      negative_rows, info['launch_id'], note=note)
+    return cal, ''
+
+
+def carried_negative(stage_dir, published_dir):
+    """the N2 supply refusal carried forward from bytes, with its own digests re-verified
+
+    Re-measuring offline cannot re-refuse a deck on a guest that is not being touched, so the fact is
+    taken from the retained transcript of the run that really refused it -- and only after the deck
+    bytes behind that transcript still hash to what the delivered bundle published.
+    """
+    pub_rows = [r for r in read_csv_rows(os.path.join(published_dir, 'negative.csv'))
+                if r['case_id'] == 'D7B-N2']
+    if len(pub_rows) != 1:
+        raise RuntimeError('the delivered bundle has %d N2 row(s)' % len(pub_rows))
+    pub = pub_rows[0]
+    cands = sorted(x for x in os.listdir(os.path.join(stage_dir, 'transcripts'))
+                   if x.endswith('_n2.txt'))
+    if len(cands) != 1:
+        raise RuntimeError('%d retained N2 transcripts: the refusal cannot be bound to one run'
+                           % len(cands))
+    text = u(io.open(os.path.join(stage_dir, 'transcripts', cands[0]), encoding='utf-8',
+                     errors='replace').read())
+    stage = re.search(r'^PREFLIGHT_STAGE=(\S+)', text, re.M)
+    fail = re.search(r'^\s*SUPPLY_FAIL (.*)', text, re.M)
+    launched, evidence = launch_evidence_of(text)
+    if launched or not stage or stage.group(1) != 'supply_contract' or not fail:
+        raise RuntimeError('the retained N2 transcript is not a zero-launch supply_contract refusal')
+    n2_local = os.path.join(stage_dir, 'neg_static', 'D7B-N2.scs')
+    if not os.path.isfile(n2_local):
+        raise RuntimeError('the retained N2 deck %s is gone' % n2_local)
+    got = sha_file(n2_local)
+    if got != pub['deck_sha256']:
+        raise RuntimeError('the retained N2 deck hashes to %s, the bundle says %s'
+                           % (got[:12], pub['deck_sha256'][:12]))
+    n2_text = u(io.open(n2_local, encoding='utf-8', newline='\n').read())
+    parent_path = os.path.join(published_dir, 'decks', 'D7B-P30-C001.scs')
+    parent = u(io.open(parent_path, encoding='utf-8', newline='\n').read())
+    if 'Vss (vss 0) vsource dc=0' in n2_text:
+        raise RuntimeError('the retained N2 deck still carries the VSS source it is meant to lose')
+    if device_digest(n2_text) != device_digest(parent):
+        raise RuntimeError('the retained N2 deck is not the delivered circuit: %s vs %s'
+                           % (device_digest(n2_text), device_digest(parent)))
+    if n2_text.count('vsource') != parent.count('vsource') - 1:
+        raise RuntimeError('the N2 deck is not a single-statement removal from its positive twin')
+    return {'run_id': '', 'case_id': 'D7B-N2', 'kind': 'static_supply_negative',
+            'deck': n2_local,
+            'detected': pub['detected'], 'rc': pub['rc'], 'stage': stage.group(1),
+            'supply_fail': fail.group(1).replace(',', ';'), 'spectre_launches': 0,
+            'deck_sha256': got, 'raw_sha256': '', 'verdict': pub['verdict'],
+            'window': '', 'q_win_C': None, 'expected_dark_C': None, 'window_peak_A': None,
+            'last_100ns_max_abs_A': None,
+            'src_native_run': run_of_n2(text),
+            'transcript': os.path.join(stage_dir, 'transcripts', cands[0]),
+            'transcript_sha256': sha_file(os.path.join(stage_dir, 'transcripts', cands[0]))}
+
+
+def run_of_n2(text):
+    """the native run a carried refusal really came from, read out of the paths it printed"""
+    m = re.search(r'/dd1_d7b/([^/\s]+)/neg_static', text or '')
+    return m.group(1) if m else ''
+
+
+def stage_ledger(ev_dir):
+    """the per-pass ledger lives inside the pass's own staging directory
+
+    Sharing one ledger file between passes is how the delivered round let a second run overwrite the
+    first: the task-level cumulative record is `Account`, and a per-pass record must be able to say
+    zero without erasing anybody else's history.
+    """
+    ledger = Ledger(os.path.join(ev_dir, 'process_ledger.csv'))
+    ledger.flush()
+    return ledger
+
+
+def carry_rtl_reverify(dir_path, ev_dir):
+    """the four-state re-verification of the trace edges, proved over before it is copied in
+
+    The reviewer had to take the pulse edges the fall times were read from on the delivered document.
+    Re-running the frozen RTL and the frozen testbench on this machine is the one way to show those
+    edges come out of the design again, so the bundle ships the new VCDs and the table that compares
+    them -- and a table that did not actually agree, or was built over a different RTL, is refused
+    here rather than published and argued about later.
+    """
+    path = os.path.join(dir_path, 'rtl_reverify.csv')
+    if not os.path.isfile(path):
+        raise RuntimeError('--rtl-verify has no rtl_reverify.csv; run '
+                           'scripts/dd1_d7b_r1_rtl_reverify.py first')
+    rows = read_csv_rows(path)
+    if not rows:
+        raise RuntimeError('%s has a header and no rows' % path)
+    if len(rows) > MAX_RTL_SIMULATIONS:
+        raise RuntimeError('%s re-simulated %d trace cases, the task grants at most %d'
+                           % (path, len(rows), MAX_RTL_SIMULATIONS))
+    rtl, tb = sha256_of(RTL_PATH), sha256_of(TB_PATH)
+    delivery_rows = []
+    for r in rows:
+        cid = r['case_id']
+        if r['verdict'] != 'AGREE':
+            raise RuntimeError('%s: the frozen RTL does not reproduce the delivered edges (%s)'
+                               % (cid, r['mismatched_fields']))
+        if r['rtl_sha256'] != rtl or r['tb_sha256'] != tb:
+            raise RuntimeError('%s: the re-simulation ran over a different RTL or testbench than the '
+                               'frozen one on disk' % cid)
+        if not int(r['fields_compared']):
+            raise RuntimeError('%s: the comparison names no field, so AGREE would prove nothing'
+                               % cid)
+        if r['new_vcd_sha256'] == r['accepted_vcd_sha256']:
+            raise RuntimeError('%s: the new VCD is labelled with the native run\'s digest' % cid)
+        src = os.path.join(dir_path, r['new_vcd'])
+        if not os.path.isfile(src) or sha256_of(src) != r['new_vcd_sha256']:
+            raise RuntimeError('%s: %s is missing or no longer hashes to the table\'s digest'
+                               % (cid, r['new_vcd']))
+        # .gitignore keeps `*.vcd` out of the repository, but the re-simulated bytes are the point of
+        # the re-verification, so they are delivered under their own name plus `.txt`. iverilog writes
+        # them with CRLF and Git normalises CRLF to LF on commit, which would leave every delivered
+        # digest matching only the working copy and nothing matching a fresh checkout: the bytes are
+        # delivered already normalised, and the two digests are recorded side by side so the
+        # normalisation is a stated fact instead of a silent one.
+        delivered = r['new_vcd'] + '.txt'
+        with io.open(src, encoding='utf-8', newline='') as f:
+            raw_text = f.read()
+        normalised = raw_text.replace('\r\n', '\n')
+        with io.open(os.path.join(ev_dir, delivered), 'w', encoding='utf-8', newline='') as f:
+            f.write(normalised)
+        raw_sha = sha256_of(src)
+        if raw_sha != r['new_vcd_sha256']:
+            raise RuntimeError('%s: %s is missing or no longer hashes to the table\'s digest'
+                               % (cid, r['new_vcd']))
+        if sha256_of(os.path.join(ev_dir, delivered)) != sha_txt(normalised):
+            raise RuntimeError('%s: the delivered %s is not the bytes this pass wrote' % (cid,
+                                                                                         delivered))
+        if sha_txt(normalised.replace('\n', '\r\n')) != raw_sha:
+            raise RuntimeError('%s: restoring the delivered bytes to CRLF does not give the '
+                               'simulator\'s own file back' % cid)
+        delivery_rows.append([cid, r['new_vcd'], delivered, raw_sha, sha_txt(normalised),
+                              os.path.getsize(os.path.join(ev_dir, delivered)),
+                              len(raw_text) - len(normalised), 'CRLF to LF (Git normalises this)'])
+    shutil.copyfile(path, os.path.join(ev_dir, 'rtl_reverify.csv'))
+    write_rows(os.path.join(ev_dir, 'rtl_reverify_delivery.csv'), delivery_rows,
+               ['case_id', 'simulator_file', 'delivered_as', 'simulator_sha256',
+                'delivered_sha256', 'delivered_bytes', 'bytes_removed', 'normalisation'])
+    return len(rows)
+
+
+GATE_RECORD_NAMES = ('measure_selftest', 'run_entry_selftest', 'trace_selftest',
+                     'evidence_tamper_selftest', 'execution_guards')
+LOCAL_PATH_RE = re.compile(r'(?i)([a-z]:[\\/]|/home/|/users/|\\\\)')
+
+
+def carry_gate_records(dir_path, ev_dir):
+    """the self-tests and the write-guard / fake-Link refusals, as the gates actually printed them
+
+    A published bundle that claims its tools were tested has to carry the record of that testing,
+    and the record has to be safe to commit: a gate whose transcript still names a local path would
+    put this machine into the repository, and a gate that did not pass cannot be delivered as a pass.
+    """
+    path = os.path.join(dir_path, 'gate_records.csv')
+    if not os.path.isfile(path):
+        raise RuntimeError('--gate-records has no gate_records.csv; run '
+                           'scripts/dd1_d7b_r1_gate_records.py first')
+    rows = read_csv_rows(path)
+    if len(rows) < len(GATE_RECORD_NAMES):
+        raise RuntimeError('%s carries %d gate rows, the offline gates are %d'
+                           % (path, len(rows), len(GATE_RECORD_NAMES)))
+    named = set(r['gate'] for r in rows)
+    if not set(GATE_RECORD_NAMES) <= named:
+        raise RuntimeError('%s is missing the gates %s'
+                           % (path, ', '.join(sorted(set(GATE_RECORD_NAMES) - named))))
+    for r in rows:
+        if r['verdict'] != 'PASS' or r['rc'] != '0':
+            raise RuntimeError('gate %s did not pass (rc=%s, verdict=%s); a refused round cannot '
+                               'deliver its own transcript as evidence' % (r['gate'], r['rc'],
+                                                                           r['verdict']))
+        if not int(r['printed_lines_kept']):
+            raise RuntimeError('gate %s kept no printed line, so the PASS is not corroborated'
+                               % r['gate'])
+        for k, v in r.items():
+            if LOCAL_PATH_RE.search(str(v)):
+                raise RuntimeError('gate %s: the field %s still names a local path' % (r['gate'], k))
+        for k in ('starts_spectre', 'opens_socket', 'writes_outside_ignored'):
+            if r[k] != 'NO':
+                raise RuntimeError('gate %s claims it %s, which this round forbids' % (r['gate'], k))
+    shutil.copyfile(path, os.path.join(ev_dir, 'gate_records.csv'))
+    return len(rows)
+
+
+def remeasure_run(cases, mst, docs, decks, opts, run_id, out_root, account):
+    """the whole round re-exported from retained bytes: this path never builds a Link at all"""
+    before = account.counts()['confirmed']
+    # the plan is proved to need no launch *before* any directory is created, so a refusal cannot
+    # leave a half-built bundle sitting where a reviewer might read it as an export
+    reuse_map = resolve_reuse(opts.reuse, decks, mst, opts.published_dir)
+    need = set(c['case_id'] for c in cases)
+    if not need <= set(reuse_map):
+        raise RuntimeError('--remeasure has no retained bytes for %s; the case would need a launch, '
+                           'which this round does not authorise'
+                           % ', '.join(sorted(need - set(reuse_map))))
+    ev_dir = os.path.join(out_root, 'evidence', run_id)
+    for sub in ('', 'pwl', 'decks', 'transcripts'):
+        if not os.path.isdir(os.path.join(ev_dir, sub)):
+            os.makedirs(os.path.join(ev_dir, sub))
+    ledger = stage_ledger(ev_dir)
+    rows = []
+    charge_index = []
+    results = {}
+    negative_rows = []
+    for cid in sorted(reuse_map):
+        account.note(cid, 'reused_measurement', run_id,
+                     're-measured offline from native run %s launch %s'
+                     % (reuse_map[cid]['src_native_run'], reuse_map[cid]['launch_id']))
+    print('REMEASURE_CASES %d, all from retained bytes' % len(reuse_map))
+    cal = None
+    stopped = ''
+    for c in cases:
+        cal, why = remeasure_case(c, reuse_map[c['case_id']], cal, docs, run_id, ev_dir, rows,
+                                  charge_index, results, negative_rows)
+        if why:
+            stopped = why
+            break
+    if opts.n2_from:
+        n2 = carried_negative(opts.n2_from, opts.published_dir)
+        n2['run_id'] = run_id
+        negative_rows.append(n2)
+        shutil.copyfile(n2['deck'], os.path.join(ev_dir, 'decks', 'D7B-N2.scs'))
+        shutil.copyfile(n2['transcript'], os.path.join(
+            ev_dir, 'transcripts', 'carried_%s_%s' % (n2['src_native_run'],
+                                                      os.path.basename(n2['transcript']))))
+        account.note('D7B-N2', 'static_negative_carried', run_id,
+                     'refusal carried from the retained transcript, 0 launches')
+    else:
+        print('N2_NOT_CARRIED --n2-from was not given; the supply refusal of this round is not '
+              'claimed')
+    if opts.rtl_verify:
+        n = carry_rtl_reverify(opts.rtl_verify, ev_dir)
+        print('RTL_REVERIFY_CARRIED %d trace case(s), byte-for-byte from %s' % (n, opts.rtl_verify))
+    else:
+        print('RTL_REVERIFY_NOT_CARRIED no --rtl-verify table; the published bundle will be refused '
+              'until the frozen RTL has been re-run over the trace edges')
+    if opts.gate_records:
+        n = carry_gate_records(opts.gate_records, ev_dir)
+        print('GATE_RECORDS_CARRIED %d gate row(s), all PASS, from %s' % (n, opts.gate_records))
+    else:
+        print('GATE_RECORDS_NOT_CARRIED no --gate-records table; the bundle cannot claim its '
+              'self-tests and write-guard refusals were run')
+    res = write_bundle(run_id, cases, mst, docs, decks, out_root, ev_dir, rows, charge_index,
+                       results, negative_rows, reuse_map, cal, ledger, account,
+                       mode='remeasure',
+                       root='<none: offline re-measurement, no guest was touched>',
+                       stopped=stopped, reused=True, frozen=local_frozen_digests())
+    after = account.counts()['confirmed']
+    print('REMEASURE_ACCOUNT before=%d after=%d' % (before, after))
+    if after != before or ledger.used:
+        raise RuntimeError('the offline re-measurement spent %d launch(es); it is authorised for none'
+                           % (after - before))
+    print('NEW_SPECTRE_LAUNCHES 0')
+    return res
+
+
+def local_frozen_digests():
+    """the frozen runner tools as the object store holds them, without touching a guest"""
+    out = {}
+    for rel in FROZEN_RUNNER:
+        out[os.path.basename(rel)] = sha_txt(git_blob(BASE_SHA, rel))
+    return out
+
+
+def write_bundle(run_id, cases, mst, docs, decks, out_root, ev_dir, rows, charge_index, results,
+                 negative_rows, reuse_map, cal, ledger, account, mode, root, stopped, reused,
+                 frozen=None):
+    """the one place a staged bundle is written, so a live run and a re-measurement cannot drift"""
     write_rows(os.path.join(ev_dir, 'cases.csv'), rows, CASE_HDR)
     write_convergence(os.path.join(ev_dir, 'convergence.csv'), results, cases, run_id)
     write_negative(os.path.join(ev_dir, 'negative.csv'), negative_rows)
-    write_index(os.path.join(ev_dir, 'charge_index.csv'), charge_index, run_id)
-    environment = {'run_id': run_id, 'task_root': root, 'guest_host': '<redacted>',
+    write_index(os.path.join(ev_dir, 'charge_index.csv'), charge_index, run_id,
+                enforce_accepted_identity=(mode == 'remeasure'))
+    account.flush_account()
+    shutil.copyfile(account.path, os.path.join(ev_dir, 'launch_account.csv'))
+    environment = {'run_id': run_id, 'mode': mode, 'task_root': root,
+                   'guest_host': ('<not touched>' if mode == 'remeasure' else '<redacted>'),
                    'python_local': sys.version.split()[0], 'base_sha': BASE_SHA,
-                   'accepted_sha': ACCEPTED_SHA, 'frozen_tools': frozen,
+                   'accepted_sha': ACCEPTED_SHA, 'repair_base_sha': REPAIR_BASE_SHA,
+                   'repair_payload_sha': REPAIR_PAYLOAD_SHA,
+                   'frozen_tools': (frozen or {}),
                    'masters': [{'name': m['name'], 'repo_sha256': m['repo_sha256'],
-                               'sent_sha256': m['sent_sha256'], 'stripped': len(m['removed']),
-                               'stripped_lines': m['removed']} for m in mst],
-                   'launches_used': ledger.used, 'budget': LAUNCH_BUDGET, 'stopped': stopped}
+                                'sent_sha256': m['sent_sha256'], 'stripped': len(m['removed']),
+                                'stripped_lines': m['removed']} for m in mst],
+                   'launches_used': ledger.used, 'budget': LAUNCH_BUDGET, 'stopped': stopped,
+                   'launch_account': account.counts(),
+                   'launch_account_origin': account.seed_origin,
+                   'ceiling': account.ceiling,
+                   'new_spectre_launches_this_pass': ledger.used,
+                   'reused_cases': sorted(reuse_map),
+                   'reused_from': (REPAIR_BASE_SHA if reused else ''),
+                   'measurement_source_sha256': MS_SOURCE_SHA,
+                   'runner_source_sha256': RUN_SOURCE_SHA,
+                   'trace_source_sha256': TRACE_SOURCE_SHA,
+                   # which re-checker the bundle was written to be read by, so a later reviewer can
+                   # tell whether a passing report came from these bytes or from a changed checker
+                   'evidence_check_source_sha256': _source_sha('dd1_d7b_evidence_check.py')}
     write_json(os.path.join(ev_dir, 'environment.json'), environment)
     traces = {}
     for cid, d in docs.items():
@@ -1438,22 +2692,96 @@ def native_run(cases, mst, docs, decks, opts, run_id, out_root, log_dir):
                                        if c2.get('trace_case') == cid)}
     write_json(os.path.join(ev_dir, 'source_identity.json'),
                {'run_id': run_id, 'base_sha': BASE_SHA, 'accepted_rtl_sha': ACCEPTED_SHA,
-                'traces': traces})
-    shutil.copyfile(os.path.join(out_root, 'process_ledger.csv'),
-                    os.path.join(ev_dir, 'process_ledger.csv'))
-    for src in os.listdir(log_dir):
-        shutil.copyfile(os.path.join(log_dir, src), os.path.join(ev_dir, 'transcripts', src))
+                'repair_base_sha': REPAIR_BASE_SHA, 'traces': traces,
+                'native_runs': dict((cid, {'native_run_id': v['src_native_run'],
+                                           'dut_launch_id': v['launch_id'],
+                                           'preflight_launch_id': v['preflight_launch_id'],
+                                           'deck_sha256': v['deck_sha256'],
+                                           'pwl_sha256': v['pwl_sha256'],
+                                           'raw_sha256': v['raw_sha256'],
+                                           'log_sha256': v['log_sha256'],
+                                           'transcript_sha256': sha_file(v['transcript']),
+                                           'conditions': v['conditions'],
+                                           'identity_notes': v['identity_notes'],
+                                           'retained_dir': v['src_dir'].replace(os.sep, '/')})
+                                    for cid, v in reuse_map.items()),
+                'measurement_source_sha256': MS_SOURCE_SHA,
+                'runner_source_sha256': RUN_SOURCE_SHA})
+    log_dir = os.path.join(out_root, 'transcripts')
+    if mode == 'remeasure':
+        # a re-measurement touches no guest, so it carries no transcripts of its own. The transcripts
+        # that prove where each reused number came from are copied in under the native run they name.
+        for cid in sorted(reuse_map):
+            src = reuse_map[cid]['transcript']
+            shutil.copyfile(src, os.path.join(ev_dir, 'transcripts',
+                                              'reused_%s_%s' % (reuse_map[cid]['src_native_run'],
+                                                                os.path.basename(src))))
+    elif os.path.isdir(log_dir):
+        for src in os.listdir(log_dir):
+            shutil.copyfile(os.path.join(log_dir, src), os.path.join(ev_dir, 'transcripts', src))
     for cid in sorted(decks):
+        # a reused row ships the deck and PWL bytes that actually produced its samples: the rebuilt
+        # text differs only by the run identity comment, and a bundle that swapped those bytes would
+        # no longer describe the run it claims to
+        info = reuse_map.get(cid)
+        if info:
+            shutil.copyfile(info['deck'], os.path.join(ev_dir, 'decks', '%s.scs' % cid))
+            shutil.copyfile(info['pwl'], os.path.join(ev_dir, 'pwl', '%s_pwl.txt' % cid))
+            continue
         with io.open(os.path.join(ev_dir, 'decks', '%s.scs' % cid), 'w', encoding='utf-8',
                      newline='\n') as f:
             f.write(u(decks[cid]['deck']))
         with io.open(os.path.join(ev_dir, 'pwl', '%s_pwl.txt' % cid), 'w', encoding='utf-8',
                      newline='\n') as f:
-            for t, v in decks[cid]['points']:
-                f.write('%d %.6g\n' % (t, v))
-    print('EVIDENCE_STAGED %s rows=%d launches=%d' % (ev_dir, len(rows), ledger.used))
+            f.write(u(pwl_text(decks[cid]['points'])))
+    write_reconcile(ev_dir, account)
+    print('EVIDENCE_STAGED %s mode=%s rows=%d launches_this_pass=%d account=%s'
+          % (ev_dir, mode, len(rows), ledger.used, account.counts()))
     return {'ev_dir': ev_dir, 'run_id': run_id, 'rows': rows, 'cal': cal, 'ledger': ledger,
-            'stopped': stopped}
+            'account': account, 'stopped': stopped}
+
+
+def write_reconcile(ev_dir, account):
+    """launches_reconcile.csv rebuilt from the account, so the sum can be checked not asserted
+
+    A re-measurement starts no process, so its own row is all zeroes. The history comes from the
+    account file, which is seeded from the delivered bundle's own reconcile table, and each run
+    keeps the preflight/DUT split it was recorded with.
+    """
+    per = {}
+    for r in account.rows:
+        if r['state'] not in ('CONFIRMED', 'COMPLETED', 'UNCERTAIN'):
+            continue
+        key = r['run_id'] or 'unattributed'
+        slot = per.setdefault(key, {'preflight': 0, 'dut': 0, 'other': 0})
+        slot[r['role'] if r['role'] in ('preflight', 'dut') else 'other'] += 1
+    rows = []
+    for key in sorted(per):
+        s = per[key]
+        n = s['preflight'] + s['dut'] + s['other']
+        rows.append([key, s['preflight'], n, s['dut'], 'YES', n, 'carried in the task account'])
+    rows.append([os.path.basename(ev_dir), 0, 0, 0, 'YES', 0,
+                 'this pass started no process: an offline re-measurement of retained bytes'])
+    total = sum(int(r[5]) for r in rows)
+    rows.append(['TOTAL', sum(int(r[1]) for r in rows), total, sum(int(r[3]) for r in rows), '',
+                 total, '%d launches accounted against a ceiling of %d'
+                 % (total, account.ceiling)])
+    # the accepted bundle called this column in_delivered_set and said YES for probe directories
+    # that were never delivered; what is actually true of every row here is that the task account
+    # carries its processes toward the 59
+    write_rows(os.path.join(ev_dir, 'launches_reconcile.csv'), rows,
+               ['task_root_dir', 'preflight_logs', 'total_logs', 'dut_logs',
+                'carried_in_task_account', 'processes_counted_against_ceiling', 'note'])
+    return total
+
+
+OVERBUDGET_REFUSAL = 'LAUNCH_CEILING_REACHED'
+
+
+def plan_launches(cases, reuse_map=None):
+    """how many processes the plan still needs: one rail preflight plus one DUT per live case"""
+    reuse_map = reuse_map or {}
+    return (PREFLIGHT_PER_DUT + 1) * len([c for c in cases if c['case_id'] not in reuse_map])
 
 
 def build_static_negative(mst, decks, out_root, run_id):
@@ -1471,7 +2799,7 @@ def build_static_negative(mst, decks, out_root, run_id):
     return {'local': path, 'sha256': sha_txt(removed), 'run_id': run_id}
 
 
-def run_static_negative(link, ledger, n2, run_id, mst, out_root):
+def run_static_negative(link, ledger, n2, run_id, mst, out_root, account=None):
     remote_dir = '%s/neg_static' % link.root
     link.run('mkdir -p %s' % remote_dir, 120, 'mkdir-N2')
     for m in mst:
@@ -1488,6 +2816,11 @@ def run_static_negative(link, ledger, n2, run_id, mst, out_root):
     res = re.search(r'^SUPPLY_FAIL (.*)', text or '', re.M)
     ok = (rc != 0 and stage and stage.group(1) == 'supply_contract' and launched == 0
           and ledger.used == before)
+    if account is not None:
+        # a refusal that started nothing is a fact about the gate, not a launch: it is recorded in the
+        # same account so nobody can read the row count as a spent process
+        account.note('D7B-N2', 'static_negative', run_id,
+                     'supply_contract refusal rc=%s, launched=%d' % (rc, launched), rc=rc)
     return {'run_id': run_id, 'case_id': 'D7B-N2', 'kind': 'static_supply_negative',
             'detected': 'YES' if ok else 'NO', 'rc': rc, 'stage': stage.group(1) if stage else '',
             'supply_fail': (res.group(1) if res else '').replace(',', ';'),
@@ -1505,17 +2838,77 @@ def write_json(path, obj):
         f.write(json.dumps(obj, indent=1, sort_keys=True, default=str))
 
 
-def write_index(path, metas, run_id):
+def write_index(path, metas, run_id, enforce_accepted_identity=True):
     rows = []
+    tally = {}
     for m in metas:
         if not m:
             continue
+        ref = accepted_bundle_series(m['base'])
+        if ref is None:
+            verdict = NEW_SERIES_MARK
+        elif ref == (int(m['total_rows']), m['series_sha256']):
+            verdict = 'IDENTICAL_BYTES'
+        else:
+            verdict = 'DIFFERENT_SAMPLES'
+            if enforce_accepted_identity:
+                raise RuntimeError('%s: the re-emitted samples are not the accepted bundle%s (%d '
+                                   'rows / %s against %d rows / %s)'
+                                   % (m['base'], ACCEPTED_BUNDLE_NAME, int(m['total_rows']),
+                                      m['series_sha256'][:16], ref[0], ref[1][:16]))
+        tally[verdict] = tally.get(verdict, 0) + 1
         for p in m['parts']:
             rows.append([run_id, m['base'], p['part'], p['rows'], p['bytes'], p['first_row'],
                          p['last_row'], p['sha256'], m['total_rows'], m['series_sha256'],
-                         m.get('recompute_q_win_C', '')])
+                         m.get('recompute_q_win_C', ''),
+                         (ACCEPTED_BUNDLE_NAME if ref is not None else ''),
+                         ('' if ref is None else str(ref[0])),
+                         ('' if ref is None else ref[1]), verdict])
     write_rows(path, rows, ['run_id', 'base', 'part', 'rows', 'bytes', 'first_row', 'last_row',
-                            'sha256', 'total_rows', 'series_sha256', 'recompute_q_win_C'])
+                            'sha256', 'total_rows', 'series_sha256', 'recompute_q_win_C',
+                            'accepted_bundle', 'accepted_series_rows', 'accepted_series_sha256',
+                            'series_vs_accepted_bundle'])
+    print('CHARGE_SERIES_VS_ACCEPTED %s'
+          % ' '.join('%s=%d' % kv for kv in sorted(tally.items())))
+
+
+ACCEPTED_BUNDLE = {}
+
+
+def accepted_bundle_series(base):
+    """the accepted DATA-7B bundle's own sample lines for one series, as (rows, sha256)
+
+    R1 re-emits its shards from the retained raw, so the bundle has to say whether those are the same
+    bytes the accepted run already shipped or new ones. The answer is read off dd1_d7b_r11_main's
+    index order and file text, so any reviewer comparing the two directories gets the same digest.
+    """
+    if 'by_base' not in ACCEPTED_BUNDLE:
+        by = {}
+        idx = os.path.join(HISTORICAL_EVIDENCE, 'charge_index.csv')
+        if os.path.isfile(idx):
+            for r in read_csv_rows(idx):
+                by.setdefault(r['base'], []).append(r)
+            for base2 in by:
+                by[base2].sort(key=lambda r: r['part'])
+        ACCEPTED_BUNDLE['by_base'] = by
+        ACCEPTED_BUNDLE['series'] = {}
+    if base in ACCEPTED_BUNDLE['series']:
+        return ACCEPTED_BUNDLE['series'][base]
+    parts = ACCEPTED_BUNDLE['by_base'].get(base)
+    out = None
+    if parts:
+        lines = []
+        for r in parts:
+            path = os.path.join(HISTORICAL_EVIDENCE, r['part'])
+            if not os.path.isfile(path):
+                raise RuntimeError('%s is listed by the accepted bundle but missing from it'
+                                   % r['part'])
+            with io.open(path, encoding='utf-8', newline='\n') as f:
+                text = f.read()
+            lines.extend([l for l in text.split('\n', 1)[1].split('\n') if l])
+        out = (len(lines), sha_txt(''.join(l + '\n' for l in lines)))
+    ACCEPTED_BUNDLE['series'][base] = out
+    return out
 
 
 def write_convergence(path, results, cases, run_id):
@@ -1551,9 +2944,12 @@ def write_convergence(path, results, cases, run_id):
 
 
 def write_negative(path, rows):
+    # the peak columns are microampere and are named that way: the delivered table printed a microamp
+    # value under an `_A` header, which is the unit error DATA-7B-R1 was told to correct
     hdr = ['run_id', 'case_id', 'kind', 'window', 'detected', 'q_win_C', 'expected_dark_C',
-           'window_peak_A', 'last_100ns_max_abs_A', 'rc', 'stage', 'supply_fail',
-           'spectre_launches', 'deck_sha256', 'raw_sha256', 'verdict']
+           'window_peak_uA', 'last_100ns_max_abs_uA', 'rc', 'stage', 'supply_fail',
+           'spectre_launches', 'deck_sha256', 'raw_sha256', 'launch_id', 'src_native_run',
+           'transcript_sha256', 'verdict']
     out = []
     for r in rows:
         out.append([r.get('run_id', ''), r.get('case_id', ''), r.get('kind', 'dynamic_wiring'),
@@ -1561,21 +2957,67 @@ def write_negative(path, rows):
                     fmt_num(r.get('expected_dark_C'), 1.0), fmt_num(r.get('window_peak_A'), 1e6),
                     fmt_num(r.get('last_100ns_max_abs_A'), 1e6), r.get('rc', ''),
                     r.get('stage', ''), r.get('supply_fail', ''), r.get('spectre_launches', ''),
-                    r.get('deck_sha256', ''), r.get('raw_sha256', ''), r.get('verdict', '')])
+                    r.get('deck_sha256', ''), r.get('raw_sha256', ''), r.get('launch_id', ''),
+                    r.get('src_native_run', ''), r.get('transcript_sha256', ''),
+                    r.get('verdict', '')])
     write_rows(path, out, hdr)
 
 
+PUBLISH_BUDGET_ONLY = ('BUDGET_RESPECTED',)
+
+
+def listing_of(root):
+    out = {}
+    for base, _dirs, names in os.walk(root):
+        for name in names:
+            p = os.path.join(base, name)
+            out[os.path.relpath(p, root).replace(os.sep, '/')] = sha_file(p)
+    return out
+
+
 def publish(ev_dir, run_id):
-    """move the validated bundle into a path that must not exist yet; nothing is overwritten"""
-    target = os.path.join(PROJ, 'results', 'evidence', 'dd1_d7b_' + run_id)
+    """move a fully validated bundle into a path that must not exist yet; nothing is overwritten
+
+    The gate is the complete semantic re-check of the staged bytes, not a file-existence glance. A
+    bundle with any non-budget failure stays exactly where it is, and the formal directory is
+    re-listed to prove the refusal changed nothing in it. The historical budget violation keeps its
+    own failing status and is the single check allowed to be red here -- it cannot hide behind being
+    red, and it cannot be made green by widening the ceiling.
+    """
+    import dd1_d7b_evidence_check as EC
+    if not RUN_ID_RE.match(run_id or ''):
+        raise RuntimeError('run id %r is not rYYYYMMDD_HHMMSS_xxxxxx' % run_id)
+    ev_dir = os.path.abspath(ev_dir)
+    if not os.path.isdir(ev_dir):
+        raise RuntimeError('%s is not a staged bundle' % ev_dir)
+    res = EC.check_dir(ev_dir)
+    blocking = [f for f in res['failures'] if f not in PUBLISH_BUDGET_ONLY]
+    if res['failures']:
+        print('PUBLISH_CHECK_FAILURES %s' % ' '.join(res['failures']))
+    if blocking:
+        raise RuntimeError('the staged bundle %s is refused: %s' % (ev_dir, ', '.join(blocking)))
+    if not res['file_count']:
+        raise RuntimeError('%s holds no files, so publishing it would publish nothing' % ev_dir)
+    target = os.path.join(PROJ, 'results', 'evidence', PUBLISHED_PREFIX + run_id)
     if os.path.exists(target):
         raise RuntimeError('%s already exists: refusing to overwrite published evidence' % target)
     parent = os.path.dirname(target)
     if not os.path.isdir(parent):
         os.makedirs(parent)
-    if os.path.dirname(os.path.abspath(ev_dir)) != os.path.abspath(parent):
-        raise RuntimeError('the staging directory %s is not next to %s' % (ev_dir, parent))
+    before = listing_of(parent)
+    want = listing_of(ev_dir)
     shutil.move(ev_dir, target)
+    got = listing_of(target)
+    if got != want:
+        raise RuntimeError('%d file(s) changed while being published; the bundle is not trusted'
+                           % len([k for k in set(got) | set(want) if got.get(k) != want.get(k)]))
+    added = [k for k in got if k not in before]
+    print('PUBLISHED_TARGET %s files=%d bytes=%d new_under_results=%d'
+          % (target, len(got), sum(os.path.getsize(os.path.join(target, k.replace('/', os.sep)))
+                                   for k in got), len(added)))
+    if res['failures']:
+        print('PUBLISHED_WITH_DISCLOSED_FAILURE %s (kept as an independent status, not repaired)'
+              % ' '.join(res['failures']))
     return target
 
 if __name__ == '__main__':

@@ -1,0 +1,12 @@
+task_root_dir,preflight_logs,total_logs,dut_logs,carried_in_task_account,processes_counted_against_ceiling,note
+r10_main,1,2,1,YES,2,carried in the task account
+r11_main,21,42,21,YES,42,carried in the task account
+r11_reuse,2,4,2,YES,4,carried in the task account
+r2_probe,1,1,0,YES,1,carried in the task account
+r3_probe,1,2,1,YES,2,carried in the task account
+r4_probe,1,2,1,YES,2,carried in the task account
+r5_cal,1,2,1,YES,2,carried in the task account
+r8_smoke,1,2,1,YES,2,carried in the task account
+r9_main,1,2,1,YES,2,carried in the task account
+r20261022_123825_8e1294,0,0,0,YES,0,this pass started no process: an offline re-measurement of retained bytes
+TOTAL,30,59,29,,59,59 launches accounted against a ceiling of 56

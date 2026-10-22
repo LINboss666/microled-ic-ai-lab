@@ -12,12 +12,22 @@ Every rule the task book freezes in 6.2 is implemented here:
   * trapezoid integration over the real, unequal sample spacing, with both window boundaries
     interpolated onto the enclosing sample pair -- never "mean of a few points x width";
   * positive and negative halves integrated separately, so a cancelling transient cannot be presented
-    as no pulse, and `Qwin == Qpositive + Qnegative` is asserted;
+    as no pulse, and `Qwin == Qpositive + Qnegative` is asserted. Every linear segment that changes
+    sign is split at its interpolated zero crossing first: clamping both halves to the segment ends
+    doubles each area while the net still looks perfect;
   * 10 %/90 % current crossings are thresholds against the calibrated Ical, found only between two
     bracketing samples with linear interpolation, and reported NOT_FOUND when no bracket exists;
-  * sustained in-band time needs the current to stay inside Ical +/- 5 % for at least 10 ns and up to
-    the expected turn-off edge; a short pulse that never does that says NOT_SETTLED_WITHIN_PULSE;
-  * turn-off needs |I| <= 0.15 uA and it must stay there for the rest of the observed segment;
+  * every voltage edge is searched around the pulse's own declared RTL/PWL segment edges, never around
+    the end of the full window: a short code falls tens of ns after t0 while t1 is the window
+    boundary. A declared edge with no bracketing pair stays NOT_FOUND and fails the judgement, and a
+    window that conducts without declaring its segments is refused rather than measured against t1;
+  * sustained in-band time needs the current to stay inside Ical +/- 5 % for at least 10 ns all the way
+    up to this pulse's declared off edge; a run that satisfies 10 ns and then leaves the band says
+    NOT_SETTLED_WITHIN_PULSE, and the longest in-band run is reported beside it as a separate,
+    sample-bounded quantity;
+  * turn-off needs |I| <= 0.15 uA and it must stay there for the rest of the observed segment; a dip
+    that comes back above the limit is reported as a transient, and the search continues to the end of
+    the segment because a later permanent turn-off is still a real fact;
   * times are whole picoseconds and values are finite; SI is the only internal unit.
 """
 from __future__ import print_function
@@ -30,7 +40,12 @@ S_PER_PS = 1e-12                              # the internal time unit is second
 BAND_REL = 0.05                               # Ical +/- 5 %  (POC_ASSUMPTION, inherited tolerance)
 OFF_ABS = 0.15e-6                             # 0.15 uA        (POC_ASSUMPTION, inherited tolerance)
 I_REF = 15e-6                                 # the nominal pixel current this project is built on
-MIN_IN_BAND_PS = 10 * NS                      # "sustained" means at least 10 ns
+MIN_IN_BAND_PS = 10 * NS                        # "sustained" means at least 10 ns of in-band time
+DE_50_V = 0.9                                   # 50 % of the 1.8 V data_en rail, the edge reference
+SETTLED_STATES = ('SETTLED', 'NOT_SETTLED_WITHIN_PULSE',
+                  'NO_DATA_IN_PULSE', 'NOT_APPLICABLE_NO_CONDUCTING_EDGE')
+TURN_OFF_STATES = ('OFF', 'NOT_PERMANENTLY_OFF_BY_SEGMENT_END', 'NEVER_WITHIN_LIMIT',
+                   'NO_DATA_IN_OFF_SEGMENT')
 
 
 class Refuse(Exception):
@@ -181,16 +196,48 @@ def trapezoid(pts):
     return total * S_PER_PS                        # ps * A -> C
 
 
+def signed_areas(pts):
+    """positive and negative areas of the piecewise-linear curve, split at every zero crossing
+
+    Clipping the endpoint values and then trapezoid-ing them doubles each half when a segment crosses
+    zero (a 0..2 ns ramp from -1 A to +1 A has +/-5e-10 C of area, not +/-1e-9 C), while the net still
+    cancels to zero -- so the identity alone could never notice.
+    """
+    qp = 0.0
+    qn = 0.0
+    crossings = 0
+    for i in range(len(pts) - 1):
+        t0, v0 = pts[i]
+        t1, v1 = pts[i + 1]
+        dt = t1 - t0
+        if dt <= 0:
+            continue
+        if v0 >= 0.0 and v1 >= 0.0:
+            qp += dt * (v0 + v1) / 2.0
+        elif v0 <= 0.0 and v1 <= 0.0:
+            qn += dt * (v0 + v1) / 2.0
+        else:
+            tz = t0 + dt * (v0 / (v0 - v1))
+            crossings += 1
+            if v0 > 0.0:
+                qp += (tz - t0) * v0 / 2.0
+                qn += (t1 - tz) * v1 / 2.0
+            else:
+                qn += (tz - t0) * v0 / 2.0
+                qp += (t1 - tz) * v1 / 2.0
+    return qp * S_PER_PS, qn * S_PER_PS, crossings
+
+
 def integrate(samples_ps, a_ps, b_ps, ctx=''):
     """net, positive and negative charge over [a, b], with the identity asserted"""
     pts = clip_window(samples_ps, a_ps, b_ps, ctx)
     q = trapezoid(pts)
-    qp = trapezoid([(t, max(v, 0.0)) for t, v in pts])
-    qn = trapezoid([(t, min(v, 0.0)) for t, v in pts])
+    qp, qn, crossings = signed_areas(pts)
     tol = max(1e-30, abs(q) * 1e-9)
     if abs(q - (qp + qn)) > tol:
         raise Refuse('%s: Qwin %r does not equal Qpositive + Qnegative %r' % (ctx, q, qp + qn))
     return {'q': q, 'q_pos': qp, 'q_neg': qn, 'points': len(pts),
+            'zero_crossings': crossings,
             'first_s': pts[0][0], 'last_s': pts[-1][0]}
 
 
@@ -219,43 +266,85 @@ def extreme(samples_ps, lo_ps, hi_ps, want_max=True):
     return best[1], best[0]
 
 
+def _in_band_runs(pts, band_lo, band_hi):
+    """maximal in-band runs [first, last] over the real sample sequence
+
+    A run is bounded by the first and last sample that are inside the band, so its span is a
+    difference of delivered sample times and can be re-derived by hand from the sample list.
+    """
+    runs = []
+    start = None
+    prev = None
+    for i, (t, v) in enumerate(pts):
+        inside = band_lo <= v <= band_hi
+        if inside:
+            if start is None:
+                start = t
+            prev = t
+        if (not inside or i == len(pts) - 1) and start is not None:
+            runs.append((start, prev))
+            start = None
+    return runs
+
+
 def sustained_in_band(samples_ps, t_edge_ps, band_lo, band_hi, until_ps):
-    """earliest time after `t_edge_ps` from which the value stays inside the band for at least 10 ns
-    and until `until_ps`; NOT_SETTLED_WITHIN_PULSE when no such interval exists"""
+    """the value must stay inside the band all the way up to this pulse's own expected off edge
+
+    The deadline is the fall edge declared by the original pulse; it is never moved and the band is
+    never widened to make a window look settled. Only samples strictly before that edge enter the
+    check, because a finite-slope falling ramp has already left the band at the edge instant itself.
+    A run that satisfies the 10 ns minimum and then leaves the band before the edge is not sustained
+    settlement -- the old rule asked only for a 10 ns piece anywhere. The longest in-band run is
+    still reported separately, and never mixed up with this verdict.
+    """
     pts = [(t_edge_ps, interp_pair(samples_ps, t_edge_ps, 'in-band edge'))]
     pts += [(t, v) for t, v in samples_ps if t_edge_ps < t < until_ps]
-    pts.append((until_ps, interp_pair(samples_ps, until_ps, 'in-band end')))
     if len(pts) < 2:
-        return {'status': 'NO_DATA_IN_PULSE', 'settled_ps': None, 'checked_points': len(pts)}
-    for i, (t, v) in enumerate(pts):
-        if not (band_lo <= v <= band_hi):
-            continue
-        rest = pts[i:]
-        out = [p for p in rest if not (band_lo <= p[1] <= band_hi)]
-        first_out = out[0][0] if out else until_ps
-        if first_out - t >= MIN_IN_BAND_PS:
-            return {'status': 'SETTLED', 'settled_ps': t,
-                    'held_ps': first_out - t, 'checked_points': len(rest)}
+        return {'status': 'NO_DATA_IN_PULSE', 'settled_ps': None, 'checked_points': len(pts),
+                'longest_in_band_ps': 0.0}
+    runs = _in_band_runs(pts, band_lo, band_hi)
+    longest = max([(e - s) for s, e in runs], default=0.0)
+    last_t = pts[-1][0]
+    for s, e in runs:
+        if e == last_t and (until_ps - s) >= MIN_IN_BAND_PS:
+            return {'status': 'SETTLED', 'settled_ps': s, 'held_ps': until_ps - s,
+                    'checked_points': len(pts), 'longest_in_band_ps': longest,
+                    'band_lo_A': band_lo, 'band_hi_A': band_hi, 'until_ps': until_ps}
     return {'status': 'NOT_SETTLED_WITHIN_PULSE', 'settled_ps': None,
-            'checked_points': len(pts)}
+            'checked_points': len(pts), 'longest_in_band_ps': longest, 'until_ps': until_ps,
+            'band_lo_A': band_lo, 'band_hi_A': band_hi}
 
 
 def turn_off(samples_ps, t_edge_ps, limit_abs, seg_end_ps):
-    """earliest time after the fall edge from which |value| stays <= limit to the end of the segment"""
+    """earliest time after the fall edge from which |value| stays <= limit to the end of the segment
+
+    A candidate that later rebounds is reported, but it does not end the search: a transient dip
+    below the limit is not a permanent turn-off, and the real turn-off may still exist further on.
+    """
     pts = [(t_edge_ps, interp_pair(samples_ps, t_edge_ps, 'turn-off edge'))]
     pts += [(t, v) for t, v in samples_ps if t_edge_ps < t < seg_end_ps]
     pts.append((seg_end_ps, interp_pair(samples_ps, seg_end_ps, 'turn-off end')))
     if len(pts) < 2:
         return {'status': 'NO_DATA_IN_OFF_SEGMENT', 'off_ps': None}
+    first_candidate = None
+    first_rebound = None
     for i, (t, v) in enumerate(pts):
         if abs(v) > limit_abs:
             continue
+        if first_candidate is None:
+            first_candidate = (t, v)
         over = [p for p in pts[i:] if abs(p[1]) > limit_abs]
         if not over:
             return {'status': 'OFF', 'off_ps': t, 'overshoot_after': 0,
-                    'checked_points': len(pts) - i}
-        return {'status': 'RETURNED_ABOVE_LIMIT', 'off_ps': None,
-                'first_rebound_ps': over[0][0], 'value_at_rebound': over[0][1]}
+                    'checked_points': len(pts) - i,
+                    'transient_off_ps': None if first_candidate[0] == t else first_candidate[0]}
+        if first_rebound is None:
+            first_rebound = over[0]
+    if first_candidate is not None:
+        return {'status': 'NOT_PERMANENTLY_OFF_BY_SEGMENT_END', 'off_ps': None,
+                'transient_off_ps': first_candidate[0],
+                'first_rebound_ps': first_rebound[0], 'value_at_rebound': first_rebound[1],
+                'checked_points': len(pts)}
     return {'status': 'NEVER_WITHIN_LIMIT', 'off_ps': None, 'checked_points': len(pts)}
 
 
@@ -322,29 +411,94 @@ def measure_window(win, ical, tick_ps, tail_ns=200, ctx=''):
     out['window_min'] = {'value': low, 't_ps': tlow}
     tpeak_tail, tpeak_tail_at = extreme(cur, t1, tail_to, True)
     out['tail_peak'] = {'value': tpeak_tail, 't_ps': tpeak_tail_at}
-    rise = crossing(den, 0.5 * 1.8, True, t0 - 500 * NS, t0 + 500 * NS, '%s de-rise' % ctx)
-    fall = crossing(den, 0.5 * 1.8, False, t1 - 500 * NS, tail_to, '%s de-fall' % ctx)
-    out['de_rise_50_ps'] = rise
-    out['de_fall_50_ps'] = fall
-    if deb is not None:
-        brise = crossing(deb, 0.5 * 1.8, False, t0 - 500 * NS, t0 + 500 * NS, '%s deb' % ctx)
-        out['de_b_rise_50_ps'] = brise
-        out['de_and_de_b_edge_gap_ps'] = (None if (brise is None or rise is None)
-                                          else brise - rise)
-    i90 = crossing(cur, 0.9 * ical, True, t0, t1, '%s i90' % ctx)
-    i10 = crossing(cur, 0.1 * ical, False, t0, t1, '%s i10' % ctx)
-    out['current_10pct_ps'] = i10 if i10 is not None else 'NOT_FOUND'
-    out['current_90pct_ps'] = i90 if i90 is not None else 'NOT_FOUND'
-    edge = rise if rise is not None else float(t0)
-    out['settled'] = sustained_in_band(cur, edge, ical * (1 - BAND_REL), ical * (1 + BAND_REL),
-                                       t1 if n_intervals >= 1 else t1)
-    off_edge = fall if fall is not None else float(t1)
-    out['turn_off'] = turn_off(cur, off_edge, OFF_ABS, tail_to)
+
+    # The pulse is located by its own declared RTL/PWL edges, never by the end of the full window:
+    # a short code's falling edge sits tens of ns after t0 while t1 is the window boundary. Substituting
+    # t1 for a missing crossing reported the window end as the turn-off instant.
+    segs = win.get('pulse_segments_ps')
+    if segs is None:
+        segs = ([] if win.get('pulse_rise_ps') is None
+                else [[int(win['pulse_rise_ps']), int(win['pulse_fall_ps'])]])
+    segs = [[int(s[0]), int(s[1])] for s in segs]
+    rise_at = segs[0][0] if segs else None
+    fall_at = segs[-1][1] if segs else None
+    search = 50 * NS
+    rise = None
+    fall = None
+    out['declared_pulses'] = len(segs)
+    # a window that is supposed to conduct must declare its own pulse edges: without them every edge
+    # question would have to be answered from the window boundary, which is exactly the old defect
+    if (n_intervals > 0.0) != bool(segs):
+        raise Refuse('%s: %r expected interval(s) but %d declared pulse segment(s)'
+                     % (ctx, n_intervals, len(segs)))
+    if n_intervals <= 0.0:
+        out['de_rise_50_ps'] = 'NOT_APPLICABLE_NO_CONDUCTING_EDGE'
+        out['de_fall_50_ps'] = 'NOT_APPLICABLE_NO_CONDUCTING_EDGE'
+        out['de_fall_delay_ps'] = None
+        out['pulse_edges_missing_ps'] = []
+    else:
+        missing = []
+        for i, (rs, fl) in enumerate(segs):
+            r = crossing(den, DE_50_V, True, rs - search, rs + search,
+                         '%s de-rise[%d]' % (ctx, i))
+            f = crossing(den, DE_50_V, False, fl - search, fl + search,
+                         '%s de-fall[%d]' % (ctx, i))
+            if r is None:
+                missing.append([rs, 'rise'])
+            if f is None:
+                missing.append([fl, 'fall'])
+            if i == 0:
+                rise = r
+            if i == len(segs) - 1:
+                fall = f
+        out['de_rise_50_ps'] = rise if rise is not None else 'NOT_FOUND'
+        out['de_fall_50_ps'] = fall if fall is not None else 'NOT_FOUND'
+        out['de_fall_delay_ps'] = (None if (rise is None or fall is None) else fall - rise)
+        out['pulse_edges_missing_ps'] = missing
+    if win.get('de_b'):
+        if fall_at is None:
+            out['de_b_fall_50_ps'] = 'NOT_APPLICABLE_NO_CONDUCTING_EDGE'
+            out['de_and_de_b_edge_gap_ps'] = None
+        else:
+            bfall = crossing(win['de_b'], DE_50_V, False, int(fall_at) - search,
+                             int(fall_at) + search, '%s de_b' % ctx)
+            out['de_b_fall_50_ps'] = bfall if bfall is not None else 'NOT_FOUND'
+            out['de_and_de_b_edge_gap_ps'] = (None if (bfall is None or fall is None)
+                                              else bfall - fall)
+    else:
+        out['de_b_fall_50_ps'] = 'NOT_SAVED'
+        out['de_and_de_b_edge_gap_ps'] = None
+    if rise is None:
+        out['current_10pct_ps'] = 'NOT_APPLICABLE_NO_CONDUCTING_EDGE'
+        out['current_90pct_ps'] = 'NOT_APPLICABLE_NO_CONDUCTING_EDGE'
+        out['current_rise_10_90_ps'] = None
+    else:
+        hi = int(fall_at if fall_at is not None else t1) + int(tail_ns) * NS + search
+        i90 = crossing(cur, 0.9 * ical, True, int(rise_at) - search, hi, '%s i90' % ctx)
+        i10 = crossing(cur, 0.1 * ical, True, int(rise_at) - search, hi, '%s i10' % ctx)
+        out['current_10pct_ps'] = i10 if i10 is not None else 'NOT_FOUND'
+        out['current_90pct_ps'] = i90 if i90 is not None else 'NOT_FOUND'
+        out['current_rise_10_90_ps'] = (None if (i90 is None or i10 is None) else i90 - i10)
+    # sustained in-band is judged up to this pulse's own expected off edge
+    until_band = int(fall_at) if (fall_at is not None and n_intervals > 0.0) else t1
+    edge = rise if rise is not None else (int(rise_at) if rise_at is not None else float(t0))
+    if n_intervals <= 0.0:
+        out['settled'] = {'status': 'NOT_APPLICABLE_NO_CONDUCTING_EDGE', 'settled_ps': None,
+                          'longest_in_band_ps': 0.0, 'checked_points': 0}
+    else:
+        out['settled'] = sustained_in_band(cur, edge, ical * (1 - BAND_REL),
+                                           ical * (1 + BAND_REL), until_band)
+    # with no conducting edge there is no turn-off to time, so the off segment starts at t0 and the
+    # delay stays None instead of inventing a delay against the window boundary
+    off_start = fall if fall is not None else (int(fall_at) if fall_at is not None else float(t0))
+    out['off_segment_start_ps'] = off_start
+    out['turn_off'] = turn_off(cur, off_start, OFF_ABS, tail_to)
+    out['turn_off_delay_ps'] = (None if (out['turn_off'].get('off_ps') is None or fall is None)
+                                else out['turn_off']['off_ps'] - off_start)
     last100 = tail_segment_max_abs(cur, tail_to - 100 * NS, tail_to)
     out['last_100ns_max_abs_A'] = last100[0]
     out['last_100ns_ok'] = (last100[0] is not None and last100[0] <= OFF_ABS)
     return out
-
 
 def judge(out, tol_lsb=0.5):
     """the 6.3 feasibility judgement for one window, separate from the evidence judgement"""
@@ -360,8 +514,14 @@ def judge(out, tol_lsb=0.5):
     if not out['last_100ns_ok']:
         reasons.append('the last 100 ns of the off window carries %r A'
                        % out['last_100ns_max_abs_A'])
-    if out['settled']['status'] not in ('SETTLED', 'NOT_SETTLED_WITHIN_PULSE', 'NO_DATA_IN_PULSE'):
+    if out.get('pulse_edges_missing_ps'):
+        reasons.append('%d declared pulse edge(s) were not found in the delivered samples'
+                       % len(out['pulse_edges_missing_ps']))
+    if out['settled']['status'] not in SETTLED_STATES:
         reasons.append('settle status %s is not a stated outcome' % out['settled']['status'])
+    if out['turn_off'].get('status') not in TURN_OFF_STATES:
+        reasons.append('turn-off status %s is not a stated outcome'
+                       % out['turn_off'].get('status'))
     return ('PASS' if not reasons else 'FAIL'), reasons
 
 
@@ -370,11 +530,22 @@ def _micro(v):
     return v * 1e-6
 
 
-def _win(current, de, t0, t1, intervals, tick_ps=30000, ical=_micro(15.0)):
+def _win(current, de, t0, t1, intervals, tick_ps=30000, ical=_micro(15.0), pulse=None,
+         segments=None):
+    """a synthetic window; the declared pulse comes from `segments`, else from the data_en levels"""
+    if segments is None:
+        if pulse is None:
+            hi = [t for t, v in de if v >= 0.9]
+            lo = [t for t, v in de if v < 0.9 and t > min(hi, default=0)]
+            pulse = (min(hi) if hi else None, max(lo) if (hi and lo) else None)
+        segments = [] if pulse[0] is None else [[pulse[0], pulse[1]]]
     return {'current': samples([str(t * 1e-12) for t, _ in current],
                                ['%.9g' % v for _, v in current], 'current'),
             'de': samples([str(t * 1e-12) for t, _ in de], ['%.9g' % v for _, v in de], 'de'),
-            't0_ps': t0, 't1_ps': t1, 'expected_intervals': intervals}
+            't0_ps': t0, 't1_ps': t1, 'expected_intervals': intervals,
+            'pulse_segments_ps': [[int(a), int(b)] for a, b in segments],
+            'pulse_rise_ps': segments[0][0] if segments else None,
+            'pulse_fall_ps': segments[-1][1] if segments else None}
 
 
 def selftest():
@@ -413,102 +584,192 @@ def selftest():
     n += 1
     got = integrate(s, 500, 2500, 'T2')
     ok &= near('T2 clipped', got['q'], 7500 * 1e-12, 1e-21)
-    ok &= expect("T2 got['points'] == 3", got['points'] == 3)
-    # 3 positive and negative halves stay separate when the net cancels
+    ok &= expect('T2 points 3', got['points'] == 3)
+    # 3 positive and negative halves, re-derived by hand with the zero crossing taken as a real
+    #    vertex: +500*5/2 + 1000*5 = 6250 ps*A on each side, not the endpoint-clipped 7500.
     n += 1
     s3 = samples(['0e-9', '1e-9', '2e-9', '3e-9'], ['5', '5', '-5', '-5'], 'T3')
     g3 = integrate(s3, 0, 3000, 'T3')
     ok &= near('T3 net', g3['q'], 0.0, 1e-24)
-    ok &= near('T3 pos', g3['q_pos'], 7500e-12, 1e-21)
-    ok &= near('T3 neg', g3['q_neg'], -7500e-12, 1e-21)
+    ok &= near('T3 pos', g3['q_pos'], 6250e-12, 1e-21)
+    ok &= near('T3 neg', g3['q_neg'], -6250e-12, 1e-21)
+    ok &= expect('T3 one zero crossing', g3['zero_crossings'] == 1)
+    # 3b the reviewer's single ramp through zero: +/-5e-10 C, the endpoint method doubled both
+    n += 1
+    g3b = integrate([(0, -1.0), (2000, 1.0)], 0, 2000, 'T3b')
+    ok &= near('T3b pos', g3b['q_pos'], 5e-10, 1e-24)
+    ok &= near('T3b neg', g3b['q_neg'], -5e-10, 1e-24)
+    ok &= near('T3b net', g3b['q'], 0.0, 1e-24)
     # 4 an integration range outside the delivered samples is refused, never extrapolated
     n += 1
     ok &= refuse('T4 outside', lambda: integrate(s, 0, 5000, 'T4'))
     # 5 a crossing only counts when two samples bracket it
     n += 1
     sc = samples(['0e-9', '1e-9'], ['0', '1'], 'T5')
-    ok &= expect("T5 crossing(sc, 0.5, True, 0, 1000, 'T5') == 500", crossing(sc, 0.5, True, 0, 1000, 'T5') == 500)
-    ok &= expect("T5 crossing(sc, 2.0, True, 0, 1000, 'T5') is None", crossing(sc, 2.0, True, 0, 1000, 'T5') is None)
-    # 6 sustained in-band needs 10 ns of holding
+    ok &= expect('T5 interpolated', crossing(sc, 0.5, True, 0, 1000, 'T5') == 500)
+    ok &= expect('T5 no bracket', crossing(sc, 2.0, True, 0, 1000, 'T5') is None)
+    # 6 sustained in-band must hold to the off edge: a 15 ns piece inside a 30 ns pulse is not it
     n += 1
     g = sustained_in_band([(0, 0.5), (2000, 1.0), (20000, 1.0)], 0, 0.95, 1.05, 20000)
-    ok &= expect("T6 g['status'] == 'SETTLED' and g['settled_ps'] == 2000", g['status'] == 'SETTLED' and g['settled_ps'] == 2000)
-    # 7 in band and then out of band must not be reported as settled
+    ok &= expect('T6 settled', g['status'] == 'SETTLED' and g['settled_ps'] == 2000)
     n += 1
     g = sustained_in_band([(0, 1.0), (5000, 1.0), (6000, 0.5), (20000, 0.5)], 0, 0.95, 1.05, 20000)
-    ok &= expect("T7 g['status'] == 'NOT_SETTLED_WITHIN_PULSE'", g['status'] == 'NOT_SETTLED_WITHIN_PULSE')
-    # 8 turn-off requires the limit to hold to the end of the segment
+    ok &= expect('T6b in-then-out refused', g['status'] == 'NOT_SETTLED_WITHIN_PULSE')
+    # hand: samples in band are 0 and 5000, the band is left at 6000 -> run [0, 5000] = 5000 ps
+    ok &= near('T6b longest run', g['longest_in_band_ps'], 5000, 1e-9)
+    n += 1
+    g = sustained_in_band([(0, 1.0), (15000, 1.0), (16000, 0.5), (30000, 0.5)], 0, 0.95, 1.05,
+                          30000)
+    ok &= expect('T6c reviewer case', g['status'] == 'NOT_SETTLED_WITHIN_PULSE')
+    # hand: in band at 0 and 15000, out at 16000 and 30000 -> run [0, 15000] = 15000 ps
+    ok &= near('T6c longest run', g['longest_in_band_ps'], 15000, 1e-9)
+    # 7 turn-off: a rebound after a first dip does not end the search
     n += 1
     g = turn_off([(0, 1e-9), (1000, 1e-9), (20000, 1e-9)], 0, OFF_ABS, 20000)
-    ok &= expect("T8 g['status'] == 'OFF' and g['off_ps'] == 0", g['status'] == 'OFF' and g['off_ps'] == 0)
-    g = turn_off([(0, 1e-9), (1000, 2e-7), (20000, 2e-7)], 0, OFF_ABS, 20000)
-    ok &= expect("T8 g['status'] == 'RETURNED_ABOVE_LIMIT'", g['status'] == 'RETURNED_ABOVE_LIMIT')
-    # 9 x/z, NaN, Inf and non-numeric spellings refuse
+    ok &= expect('T7 off at 0', g['status'] == 'OFF' and g['off_ps'] == 0)
+    g = turn_off([(0, 0.0), (1000, 2e-7), (2000, 0.0), (10000, 0.0)], 0, OFF_ABS, 10000)
+    ok &= expect('T7b later permanent off', g['status'] == 'OFF' and g['off_ps'] == 2000)
+    ok &= expect('T7b transient reported', g.get('transient_off_ps') == 0)
+    g = turn_off([(0, 0.0), (1000, 2e-7), (10000, 2e-7)], 0, OFF_ABS, 10000)
+    ok &= expect('T7c never off', g['status'] == 'NOT_PERMANENTLY_OFF_BY_SEGMENT_END')
+    # 8 a full 16-interval window measures exactly its expected charge and passes
     n += 1
-    ok &= refuse('T9 nan', lambda: parse_value('nan', 'T9'))
-    ok &= refuse('T9 inf', lambda: parse_value('inf', 'T9'))
-    ok &= refuse('T9 xz', lambda: parse_value("1'bX", 'T9'))
-    # 10 a time that is not a whole number of picoseconds refuses, an integral one does not
-    n += 1
-    ok &= expect("T10 parse_time_ps('30.000e-9', 'T10') == 30000", parse_time_ps('30.000e-9', 'T10') == 30000)
-    ok &= expect("T10 parse_time_ps('0.333e-9', 'T10') == 333", parse_time_ps('0.333e-9', 'T10') == 333)
-    ok &= refuse('T10 sub-ps', lambda: parse_time_ps('1e-13', 'T10'))
-    # 11 backwards, repeated, mismatched-length or empty sample sets refuse
-    n += 1
-    ok &= refuse('T11 backwards', lambda: samples(['1e-9', '0e-9'], ['1', '1'], 'T11'))
-    ok &= refuse('T11 repeat', lambda: samples(['1e-9', '1e-9'], ['1', '2'], 'T11'))
-    ok &= refuse('T11 length', lambda: samples(['0e-9'], ['1', '2'], 'T11'))
-    ok &= refuse('T11 empty', lambda: samples([], [], 'T11'))
-    # 12 a full 16-interval window measures exactly its expected charge and passes
-    n += 1
-    cur = [(0, _micro(15.0)), (480000, _micro(15.0)), (481000, 0.0), (680000, 0.0)]
+    cur = [(0, _micro(15.0)), (20000, _micro(15.0)), (480000, _micro(15.0)),
+           (481000, 0.0), (680000, 0.0)]
     de = [(0, 0.0), (499, 0.0), (501, 1.8), (480499, 1.8), (480501, 0.0)]
     w = _win(cur, de, 0, 480000, 16)
-    out = measure_window(w, _micro(15.0), 30000, ctx='T12')
-    ok &= near('T12 q', out['q_win']['q'], 15e-6 * 480e-9, 1e-18)
-    ok &= near('T12 qexp', out['q_expected_C'], 15e-6 * 480e-9, 1e-18)
-    ok &= expect("T12 abs(out['charge_error_LSB']) < 1e-9", abs(out['charge_error_LSB']) < 1e-9)
-    ok &= expect("T12 out['settled']['status'] == 'SETTLED'", out['settled']['status'] == 'SETTLED')
-    ok &= expect("T12 out['turn_off']['status'] == 'OFF'", out['turn_off']['status'] == 'OFF')
-    ok &= expect("T12 judge(out)[0] == 'PASS'", judge(out)[0] == 'PASS')
-    # 13 a short pulse that never reaches the band is reported, not invented
+    out = measure_window(w, _micro(15.0), 30000, ctx='T8')
+    ok &= near('T8 q', out['q_win']['q'], 15e-6 * 480e-9, 1e-18)
+    ok &= expect('T8 no charge error', abs(out['charge_error_LSB']) < 1e-6)
+    ok &= expect('T8 settled', out['settled']['status'] == 'SETTLED')
+    ok &= expect('T8 off', out['turn_off']['status'] == 'OFF')
+    ok &= expect('T8 fall edge found', abs(out['de_fall_50_ps'] - 480500) < 1.0)
+    ok &= near('T8 fall delay', out['de_fall_delay_ps'], 480000, 2.0)
+    ok &= expect('T8 judge', judge(out)[0] == 'PASS')
+    # 9 a short pulse inside the full window: its own falling edge is found at the pulse, and the
+    #    window end is never substituted for a crossing. This is the P30-code1 class of defect, where
+    #    the search was limited to [t1-500 ns, t1] and an empty result silently became off_ns = t1.
     n += 1
-    cur = [(0, 0.0), (10000, _micro(3.0)), (30000, _micro(3.0)), (31000, 0.0), (230000, 0.0)]
-    de_short = [(0, 0.0), (499, 0.0), (501, 1.8), (29499, 1.8), (29501, 0.0)]
-    w = _win(cur, de_short, 0, 30000, 1)
-    out = measure_window(w, _micro(15.0), 30000, ctx='T13')
-    ok &= expect("T13 out['settled']['status'] == 'NOT_SETTLED_WITHIN_PULSE'", out['settled']['status'] == 'NOT_SETTLED_WITHIN_PULSE')
-    ok &= expect("T13 out['charge_error_LSB'] < 0.0", out['charge_error_LSB'] < 0.0)
-    ok &= expect("T13 judge(out)[0] == 'FAIL'", judge(out)[0] == 'FAIL')
-    # 14 a black window has no percentage scale and must not divide by zero
+    cur = [(0, 0.0), (500, _micro(3.0)), (3944000, _micro(3.0)), (3946000, 0.0), (11795000, 0.0)]
+    de_short = [(0, 0.0), (499, 0.0), (501, 1.8), (3944999, 1.8), (3945001, 0.0), (11795000, 0.0)]
+    # hand: the pulse is declared to fall at 3945001 ps, t1 stays the full-window end at 11595000
+    w = _win(cur, de_short, 0, 11595000, 1, pulse=(501, 3945001))
+    out = measure_window(w, _micro(15.0), 30000, ctx='T9')
+    # hand: 0.9 V is crossed 1 ps after the 499/501 pair and 1 ps after the 3944999/3945001 pair
+    ok &= expect('T9 rise edge', abs(out['de_rise_50_ps'] - 500) < 1.0)
+    ok &= expect('T9 fall edge at the pulse', abs(out['de_fall_50_ps'] - 3945000) < 1.0)
+    ok &= expect('T9 fall is not the window end', out['de_fall_50_ps'] < w['t1_ps'] - 500 * NS)
+    ok &= near('T9 fall delay', out['de_fall_delay_ps'], 3945000 - 500, 1.0)
+    # hand: 3 uA is outside the 14.25..15.75 uA band everywhere, so nothing settles before the edge
+    ok &= expect('T9 not settled', out['settled']['status'] == 'NOT_SETTLED_WITHIN_PULSE')
+    ok &= expect('T9 deadline is the pulse edge', out['settled']['until_ps'] == 3945001)
+    # hand: the first sample at or below 150 nA after the edge is 3946000 and none rises after it
+    ok &= expect('T9 off at the sample after the ramp',
+                 out['turn_off']['status'] == 'OFF' and out['turn_off']['off_ps'] == 3946000)
+    ok &= near('T9 off delay', out['turn_off_delay_ps'], 1000, 1.0)
+    ok &= expect('T9 quiet off window', out['last_100ns_ok'] is True)
+    ok &= expect('T9 judge fails the charge target', judge(out)[0] == 'FAIL')
+    # 9d a declared edge that the delivered samples never bracket is reported NOT_FOUND, and the
+    #     judgement names it; the window end is not used to make the row look complete
+    n += 1
+    cur = [(0, 0.0), (500, _micro(15.0)), (3944000, _micro(15.0)), (3946000, 0.0),
+           (11795000, 0.0)]
+    de_stuck = [(0, 0.0), (499, 0.0), (501, 1.8), (11795000, 1.8)]
+    w = _win(cur, de_stuck, 0, 11595000, 1, pulse=(501, 3945001))
+    out = measure_window(w, _micro(15.0), 30000, ctx='T9d')
+    ok &= expect('T9d rise still found', abs(out['de_rise_50_ps'] - 500) < 1.0)
+    ok &= expect('T9d fall NOT_FOUND, not t1', out['de_fall_50_ps'] == 'NOT_FOUND')
+    ok &= expect('T9d the miss is recorded', out['pulse_edges_missing_ps'] == [[3945001, 'fall']])
+    ok &= expect('T9d no invented delay', out['de_fall_delay_ps'] is None)
+    ok &= expect('T9d the judgement names it',
+                 judge(out)[0] == 'FAIL' and any('pulse edge' in r for r in judge(out)[1]))
+    # 9e two declared pulses: every one of them is searched for its own edges, and a gap between
+    #    pulses is a real gap -- it is not reported as sustained in-band time
+    n += 1
+    cur = [(0, 0.0), (500, _micro(15.0)), (3944000, _micro(15.0)), (3946000, 0.0), (4944000, 0.0),
+           (4946000, _micro(15.0)), (8889000, _micro(15.0)), (8891000, 0.0), (11795000, 0.0)]
+    de_two = [(0, 0.0), (499, 0.0), (501, 1.8), (3945001, 1.8), (3945003, 0.0), (4944999, 0.0),
+              (4945001, 1.8), (8890001, 1.8), (8890003, 0.0), (11795000, 0.0)]
+    w = _win(cur, de_two, 0, 11595000, 2, segments=[[501, 3945002], [4945001, 8890002]])
+    out = measure_window(w, _micro(15.0), 30000, ctx='T9e')
+    ok &= expect('T9e two pulses', out['declared_pulses'] == 2)
+    ok &= expect('T9e no edge missing', out['pulse_edges_missing_ps'] == [])
+    # hand: the first rise brackets 499/501 at 500, the last fall brackets 8890001/8890003 at 8890002
+    ok &= expect('T9e first rise', abs(out['de_rise_50_ps'] - 500) < 1.0)
+    ok &= expect('T9e last fall', abs(out['de_fall_50_ps'] - 8890002) < 1.0)
+    # hand: from 4946000 (the second pulse) every sample up to the 8890002 deadline is in band, so
+    #       this window really does settle -- on its second pulse, and settled_ps says which one
+    ok &= expect('T9e settles on the second pulse',
+                 out['settled']['status'] == 'SETTLED' and out['settled']['settled_ps'] == 4946000)
+    # hand: the first run is [500, 3944000] = 3943500 ps and the second is [4946000, 8889000] =
+    #       3943000 ps, both bounded by delivered sample times, so the longer of the two is reported
+    ok &= near('T9e longest run', out['settled']['longest_in_band_ps'], 3943500, 1e-9)
+    ok &= expect('T9e off after the last pulse',
+                 out['turn_off']['status'] == 'OFF' and out['turn_off']['off_ps'] == 8891000)
+    # 9f the pulse declaration cannot be missing, invented or contradicted by the interval count
+    n += 1
+    cur = [(0, 0.0), (500, _micro(15.0)), (480000, _micro(15.0)), (481000, 0.0), (680000, 0.0)]
+    ok &= refuse('T9f conducting window without declared edges',
+                 lambda: measure_window({'current': [(0, 0.0), (680000, 0.0)],
+                                         'de': [(0, 0.0), (680000, 0.0)], 't0_ps': 0, 't1_ps': 480000,
+                                         'expected_intervals': 1.0}, _micro(15.0), 30000,
+                                        ctx='T9f'))
+    ok &= refuse('T9f black window with declared edges',
+                 lambda: measure_window(_win(cur, de, 0, 480000, 0, pulse=(501, 480501)),
+                                        _micro(15.0), 30000, ctx='T9fb'))
+    # 10 a black window has no percentage scale, no held charge and no invented edges
     n += 1
     cur = [(0, 0.0), (480000, 0.0), (680000, 0.0)]
-    w = _win(cur, [(0, 0.0), (680000, 0.0)], 0, 480000, 0)
-    out = measure_window(w, _micro(15.0), 30000, ctx='T14')
-    ok &= expect("T14 out['charge_error_LSB'] == 0.0", out['charge_error_LSB'] == 0.0)
-    ok &= expect("T14 out['abs_gain_error_vs_15uA'] is None", out['abs_gain_error_vs_15uA'] is None)
-    ok &= expect("T14 out['de_rise_50_ps'] is None", out['de_rise_50_ps'] is None)
-    # 15 break test: the ammeter wired the other way round is caught, not honoured
+    w = _win(cur, [(0, 0.0), (680000, 0.0)], 0, 480000, 0, pulse=(None, None))
+    out = measure_window(w, _micro(15.0), 30000, ctx='T10')
+    ok &= expect('T10 zero LSB error', out['charge_error_LSB'] == 0.0)
+    ok &= expect('T10 no gain scale', out['abs_gain_error_vs_15uA'] is None)
+    ok &= expect('T10 rise N/A', out['de_rise_50_ps'] == 'NOT_APPLICABLE_NO_CONDUCTING_EDGE')
+    ok &= expect('T10 fall N/A', out['de_fall_50_ps'] == 'NOT_APPLICABLE_NO_CONDUCTING_EDGE')
+    ok &= expect('T10 de_b N/A', out['de_b_fall_50_ps'] == 'NOT_SAVED')
+    ok &= expect('T10 current edges N/A',
+                 out['current_10pct_ps'] == 'NOT_APPLICABLE_NO_CONDUCTING_EDGE'
+                 and out['current_rise_10_90_ps'] is None)
+    ok &= expect('T10 no invented delay', out['de_fall_delay_ps'] is None)
+    ok &= expect('T10 settle N/A', out['settled']['status'] == 'NOT_APPLICABLE_NO_CONDUCTING_EDGE')
+    ok &= expect('T10 off still measured', out['turn_off']['status'] == 'OFF')
+    # 11 break test: the ammeter reversed is caught, not honoured
     n += 1
     cur = [(0, -_micro(15.0)), (480000, -_micro(15.0)), (481000, 0.0), (680000, 0.0)]
     w = _win(cur, de, 0, 480000, 16)
-    out = measure_window(w, _micro(15.0), 30000, ctx='T15')
-    ok &= expect("T15 out['probe_direction_suspect'] is True", out['probe_direction_suspect'] is True)
-    ok &= expect("T15 judge(out)[0] == 'FAIL'", judge(out)[0] == 'FAIL')
-    # 16 break test: the tail of the integration data is missing
+    out = measure_window(w, _micro(15.0), 30000, ctx='T11')
+    ok &= expect('T11 direction suspect', out['probe_direction_suspect'] is True)
+    ok &= expect('T11 direction judged FAIL', judge(out)[0] == 'FAIL')
+    # 12 break test: the tail of the integration data is missing
     n += 1
     short = [(0, _micro(15.0)), (300000, _micro(15.0))]
     w = _win(short, de, 0, 480000, 16)
-    ok &= refuse('T16 truncated tail', lambda: measure_window(w, _micro(15.0), 30000, ctx='T16'))
-    # 17 break test: a case table that repeats a key and drops a required case
+    ok &= refuse('T12 truncated tail', lambda: measure_window(w, _micro(15.0), 30000, ctx='T12'))
+    # 13 break test: a case table that repeats or drops a key
     n += 1
-    ok &= refuse('T17 duplicate id', lambda: validate_case_ids(['A', 'A'], ['A', 'B']))
-    ok &= refuse('T17 missing id', lambda: validate_case_ids(['A'], ['A', 'B']))
-    ok &= expect("T17 validate_case_ids(['A', 'B'], ['A', 'B']) == {'A': 0, 'B': 1}", validate_case_ids(['A', 'B'], ['A', 'B']) == {'A': 0, 'B': 1})
-    # 18 an event-before excerpt cannot stand in for a whole-window integral
+    ok &= refuse('T13 duplicate id', lambda: validate_case_ids(['A', 'A'], ['A']))
+    ok &= refuse('T13 missing id', lambda: validate_case_ids(['A'], ['A', 'B']))
+    ok &= expect('T13 accepted set', validate_case_ids(['A', 'B'], ['A', 'B']) == {'A': 0, 'B': 1})
+    # 14 an event-before excerpt cannot stand in for a whole-window integral
     n += 1
     pre = [(0, _micro(1.0)), (5000, _micro(3.0))]
-    ok &= refuse('T18 excerpt as evidence', lambda: integrate(pre, 0, 480000, 'T18'))
+    ok &= refuse('T14 excerpt as evidence', lambda: integrate(pre, 0, 480000, 'T14'))
+    # 15 x/z, NaN, Inf and non-numeric spellings refuse; whole-ps spellings do not
+    n += 1
+    ok &= refuse('T15 nan', lambda: parse_value('nan', 'T15'))
+    ok &= refuse('T15 inf', lambda: parse_value('inf', 'T15'))
+    ok &= refuse('T15 xz', lambda: parse_value("1'bX", 'T15'))
+    ok &= refuse('T15 sub-ps', lambda: parse_time_ps('1e-13', 'T15'))
+    ok &= expect('T15 whole ps', parse_time_ps('30.000e-9', 'T15') == 30000)
+    ok &= expect('T15 ns rounding', parse_time_ps('0.333e-9', 'T15') == 333)
+    # 16 a simulator sample grid is kept at its own precision, with the printed bound
+    n += 1
+    series, quantum = float_samples(['1.999016675925999e-06', '2.000016675926000e-06'],
+                                    ['1e-5', '1e-5'], 'T16')
+    ok &= near('T16 ps kept', series[0][0], 1999016.675925999, 1e-6)
+    ok &= expect('T16 bound tiny', quantum < 1e-3)
+    ok &= refuse('T16 backwards', lambda: float_samples(['2e-6', '1e-6'], ['1', '1'], 'T16'))
+    ok &= refuse('T16 empty', lambda: float_samples([], [], 'T16'))
     return ok, bad, n
 
 
