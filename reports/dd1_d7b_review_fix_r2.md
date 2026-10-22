@@ -215,5 +215,25 @@ results/evidence/dd1_d7b_r2_r20261022_160652_e880be/；handoff 两份在下面 D
 
 ## 8 回执
 
+## 8 回执
+
+推送与双路回读（真实命令与结果，记录在下一个元数据提交里，不由本文件自称）：
+
+```text
+git -c http.proxy=http://127.0.0.1:7892 push -u origin poc/data-pwm-d7b-r2   rc=0（普通 push，非 force，未跳 hooks）
+方法一  git -c http.proxy=http://127.0.0.1:7892 ls-remote origin             rc=0  21 行 ref（推送前 20 行）
+方法二  gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<ref>       rc=0  逐个读取 4 个 ref
+```
+
+| ref | 两条独立路径读到的同一对象 |
+|---|---|
+| `poc/data-pwm-d7b-r2` | `c53e800b6a4645a08d7981b58b2756a9f500fd95`（D2 tip；功能载荷 P2 = `6abe1bf5b93dc4bb12ba179cea0ab26929f33a90`，`git merge-base --is-ancestor` 为真） |
+| `poc/data-pwm-d7b-r1`（H） | `e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92` 未动 |
+| `poc/data-pwm-d7b`（T） | `adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50` 未动 |
+| `main` | `23e471cb936b421ee97e1250c3be06edf96f9937` 未动 |
+
+§7 的 `BLOCKED` 项本轮为零：需要的原 raw 小片段在机上可得且摘要一致，两段 CAL 切片已入包；
+没有以缺资料为由跳过任何已声明判据，也没有把缺失判成成功。
+
 见 `reports/agent_handoffs/DATA-7B.md` / `.json`。本轮停在独立复审闸：
 `STOP_REASON=AWAITING_INDEPENDENT_REVIEW`，不合并、不授权下一阶段、不做 SOA 签核。

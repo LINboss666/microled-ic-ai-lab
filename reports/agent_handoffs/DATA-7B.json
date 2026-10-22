@@ -68,7 +68,8 @@
   "the edge neighbourhood shards delivered by R1 print their times to 0.1 ns, so a crossing re-derived from them cannot be verified at 0.05 ps; the R2 shards carry an exact t_ps column",
   "data_en_b is only checkable where the delivered neighbourhood reaches 0.9 V; a window whose complement crosses outside the searched +-50 ns stays NOT_FOUND rather than being filled",
   "the credential echo incident stays unremediated: no password was changed in this round and no repository scan is offered as its closure",
-  "the historical 3-launch over-run is reported, not repaired: retroactive authorisation is the user decision"
+  "the historical 3-launch over-run is reported, not repaired: retroactive authorisation is the user decision",
+  "the R2 guard suite picked its base bundle by newest-first across both rounds; that ordering was corrected after publication to prefer this round, and the suite was re-run against the published bundle (14/14, each probe naming only its own check)"
  ],
  "measured": {
   "blocked_items": 0,
@@ -144,13 +145,31 @@
  "payload_sha": "6abe1bf5b93dc4bb12ba179cea0ab26929f33a90",
  "project_id": "microled-ic-ai-lab",
  "push_command": "git -c http.proxy=http://127.0.0.1:7892 push -u origin poc/data-pwm-d7b-r2 (normal push, no force, no --no-verify)",
- "push_status": "PUSH_PENDING",
- "pushed_utc": "",
+ "push_status": "REMOTE_VERIFIED",
+ "pushed_utc": "2026-10-23",
  "pwm_current_feasibility_tt": "PASS_WITHIN_FROZEN_CRITERIA",
  "remote_readback": {
-  "method_1_git_protocol": "NOT_ATTEMPTED_YET",
-  "method_2_api": "NOT_ATTEMPTED_YET",
-  "status": "PENDING"
+  "method_1_git_protocol": {
+   "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin",
+   "only_difference": "refs/heads/poc/data-pwm-d7b-r2 created; nothing else moved",
+   "rc": 0,
+   "ref_lines_after": 21,
+   "ref_lines_before": 20
+  },
+  "method_2_api": {
+   "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<ref>",
+   "rc": 0,
+   "refs_read": 4
+  },
+  "note": "this is a read-back of refs, not a proof of technical correctness; the recorded tip is the commit that carries this note or the one it is amended into, never a value copied ahead of the push",
+  "payload_p2_is_ancestor_of_tip": true,
+  "refs": {
+   "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+   "poc/data-pwm-d7b": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
+   "poc/data-pwm-d7b-r1": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
+   "poc/data-pwm-d7b-r2": "c53e800b6a4645a08d7981b58b2756a9f500fd95"
+  },
+  "status": "BOTH_METHODS_AGREE"
  },
  "repair_of_task": "DATA-7B-R1",
  "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
