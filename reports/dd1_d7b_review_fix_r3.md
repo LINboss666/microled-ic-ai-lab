@@ -207,5 +207,25 @@ deck/PWL/case/golden/RTL/TB 在 `b3fe93c..HEAD` 内 blob 未变（§6），
 
 ## 10 推送与回读
 
-（待写入：Git 协议与 API 两条通道分别列出的查询对象、完整 SHA 与结果；
-一条通道失败时如实分列。）
+```text
+git -c http.proxy=http://127.0.0.1:7892 push -u origin poc/data-pwm-d7b-r3   rc=0（新建分支，普通 push，非 force，未跳 hooks）
+方法一  git -c http.proxy=http://127.0.0.1:7892 ls-remote origin   rc=0  22 行 ref（推送前 21 行）
+方法二  gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<ref>   rc=0  逐个读取 5 个 ref
+```
+
+| 查询对象（refs/heads/…） | 两条通道读到的同一完整 SHA | 与上一轮的关系 |
+|---|---|---|
+| `poc/data-pwm-d7b-r3` | `19f86ce16491f56dc6c223bdbcc789b5ef399291` | 本轮新建（P3 `242f43fdd4c775d4e92ebddde548e65b75aec402` 是其祖先，`git merge-base --is-ancestor` 为真） |
+| `poc/data-pwm-d7b-r2` | `b3fe93c17de014cb16031438ce28c7152dd0020f` | 未动（本轮 base） |
+| `poc/data-pwm-d7b-r1` | `e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92` | 未动 |
+| `poc/data-pwm-d7b` | `adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50` | 未动 |
+| `main` | `23e471cb936b421ee97e1250c3be06edf96f9937` | 未动 |
+
+表中 SHA 是**写入本节的记录提交之前**的分支 tip；承载这段文字的记录提交再多一枚，其 SHA 只从
+远端 ref 读，不由本文件自称。两条通道是同一对象的两个独立读法，不是两枚不同的证明；
+这只是 ref 的回读，不表示技术结论由审核方接受。
+
+审核包（本提交内 blob 打包，不复制旧电流样本）：
+`review/scratch/MicroLED_DATA7B_R3_Package_20261023.zip`，47 条目 / 307,781 B，
+`verify_package.py` 自检 `PACKAGE_SELF_CHECK: PASS (45 files listed, 0 unlisted)`；
+清单绑定 commit、只读输入 R2 包路径与其 `manifest.json` 摘要。
