@@ -240,7 +240,7 @@ R1 的返修不改任何判据数值，但必须把三个原先含糊的**定义
 | 最长带内段 | 只有一个数 | `longest_in_band_ns`（采样界定，可由切片逐样点手算）与 `longest_in_band_interp_ns`（连续插值）分列，另附 `band_left_at_ns` 与 `deadline_left_limit_A` |
 | 互补节点 | 在 `data_en` 下降沿处找 `data_en_b` 的下降沿 | 相位按真实反相关系：`data_en` 升 ↔ `data_en_b` 降、`data_en` 降 ↔ `data_en_b` 升；新增 `de_b_rise_50_ns`、`de_and_de_b_edge_gap_ns`、`de_b_rise_gap_ns` |
 | 关断时刻精度 | `off_ns` 一列既当采样点又当阈值 | `off_ns` 明确为首个合格**采样时刻**（复核器要求它必须是真实交付样点），`off_interp_ns` 是相邻样点求得的连续阈值。P30-C001：3968.0376 ns（采样）对 3967.8687 ns（连续）并列 |
-| 穿越点验证 | 电流按 `max(0.02·阈值, 0.02)` A 容差 | 取消该容差；电流与电压各按 SI 阈值求穿越**时刻**，与声明值在列的显示精度 0.05 ps 上比对；边邻切片新增全精度 `t_ps`。切片只印 0.1 ns 时，检查原因里点名其量化限制 |
+| 穿越点验证 | 电流按 `max(0.02·阈值, 0.02)` A 容差 | 取消该容差；电流与电压各按 SI 阈值求穿越**时刻**，与声明值在列的显示精度 0.05 ps 上比对；边邻切片新增全精度 `t_ps`。切片只印四位小数 ns（量化 0.1 **ps**；R3 更正此处原写的 0.1 ns）时，检查原因里点名其量化限制 |
 | 收敛表 | 只把沿差并入布尔判决 | `delta_edge_ns` 与新增 `limit_edge_ns` 逐列重算，被比较物理量写明为 `data_en` 的 50 % 下降沿；`delta_edge_ns=9999` 现在触发具名失败 |
 | 四态字节 | 复核器只查摘要、日期、AGREE 与字段数 | 复核器用冻结 `dd1_d7b_trace` 重读交付的 17 份 `.vcd.txt`，把窗口、脉冲段与 `pwl_edges_<case>.csv`、`rtl_reverify.csv`、case 行逐条绑定；golden 表、`shift_ns`、`tail_ns` 随包交付并由摘要绑定 |
 | CAL 覆盖面 | 只交付 3.0–3.5 µs 带内片段，仍断言 OFF 基线与尾段 | 从摘要一致的原 raw 只读另导 `1500–1900`、`4400–4500` 两段切片（含边界样点），`calibration.csv` 记数量、范围、原 raw 摘要、切片系列名与 section/temp；均值分母为窗口实际积分跨度（边界插值，样点不足时钳到真实覆盖并两个跨度都写），缺失时给 `BLOCKED_MISSING_CAL_OFF`/`_TAIL` |

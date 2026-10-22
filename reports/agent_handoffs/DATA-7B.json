@@ -2,7 +2,60 @@
  "accepted_data7a_content": "f68449672774ac9266ba9e4893024e4f3027dd9d",
  "base_sha": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
  "branch": "poc/data-pwm-d7b-r2",
+ "charge_series_provenance": {
+  "edge_neighbourhood_series_rewritten_for_full_precision_t_ps": 26,
+  "frozen_reused_from_accepted_bundle": 26,
+  "new_calibration_series_total_vs_accepted": 3,
+  "new_in_r1_calibration_band": 1,
+  "new_in_r2_calibration_slices": 2,
+  "note": "a new or rewritten shard is a new delivery of bytes already produced by the authorised runs; none of these is a new simulation",
+  "read_from": "results/evidence/dd1_d7b_r2_r20261022_160652_e880be"
+ },
  "completion_level": "RTL_TRACE_DRIVEN_MOS_OUTPUT_MEASURED_TT",
+ "corrections_r3": [
+  {
+   "field": "measured.manifest_entries / manifest_bytes",
+   "now": "286 / 21264382",
+   "was": "283 / 21,084,177",
+   "why": "the R1 bundle figures were still labelled as this round's; the directory total 287 files / 21323343 B includes manifest.json and is recorded separately"
+  },
+  {
+   "field": "source_identity.runner_source_sha256",
+   "now": "dea050a5685eded8… (R2 exporter, read from the R2 bundle)",
+   "was": "64797d5313425335… (R1 exporter)",
+   "why": "R3 validation tools are listed apart and never replace the identity of the run that produced the numbers"
+  },
+  {
+   "field": "rtl.new_rtl_simulations",
+   "now": "0",
+   "was": "17",
+   "why": "17 is the R1 history; R3 starts no simulation and this_round_cost says the same"
+  },
+  {
+   "field": "frozen.tracked_paths_changed_vs_base",
+   "now": "8 existing paths modified against H (4 of them code), 291 added, 0 deleted",
+   "was": "3 with an adcdf27 comparison",
+   "why": "the three main tools are not the whole set of changed paths"
+  },
+  {
+   "field": "measured.charge_series_new_in_r1",
+   "now": "26 frozen reused + 1 calibration band new in R1 + 2 calibration slices new in R2",
+   "was": "27",
+   "why": "one count mixed a reuse tally with a new-delivery tally; see charge_series_provenance"
+  },
+  {
+   "field": "known_limitations edge time precision",
+   "now": "0.1 ps",
+   "was": "0.1 ns",
+   "why": "a four-decimal nanosecond column quantises at 0.1 ps"
+  },
+  {
+   "field": "reports/dd1_d7b_review_fix_r2.md section 4",
+   "now": "only 3 are under 10 ns; the rest leave the band shortly before their own deadline",
+   "was": "23 windows were NOT_SETTLED because their longest in-band piece is under 10 ns",
+   "why": "the causality was wrong, the verdicts and data are unchanged"
+  }
+ ],
  "delivered_bundle_sha_base": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
  "development_base_b_sha": "c3513ffee57880bdc9d6d26d5c1c1a9a43c52e37",
  "evidence_check_overall": "FAIL_ON_BUDGET_ONLY",
@@ -25,13 +78,16 @@
  "evidence_status": "PASS_WITH_DISCLOSED_HISTORICAL_BUDGET_FAILURE",
  "evidence_status_note": "43 checks rebuilt from the frozen contract and the delivered bytes; the only failure is BUDGET_RESPECTED, because 59 Spectre processes were started in DATA-7B against the fixed authorisation of 56 (task book 52 plus the 4 the user granted). The ceiling is now a constant of the checker, and a forged account ceiling is refused by BUDGET_AUTHORITY_FIXED instead of being read as the authorisation. The R1 note about 39 checks is superseded by this round: the R1 bundle is frozen history and is judged by the R1 checker.",
  "frozen": {
+  "base_of_that_count": "e97f02ec (R1 tip H) .. b3fe93c1 (R2 tip: payload P2 plus its metadata commits)",
   "circuit_pwl_decks_rtl_tb_case_table_golden_table_criteria": "UNCHANGED",
   "code_changed": "the three main tools plus the existing offline helper scripts/dd1_d7b_r1_gate_records.py; two new R2 scripts added",
+  "code_paths_modified_vs_base": 4,
   "documents_corrected": "reports/dd1_d7b_contract.md section 16, reports/dd1_d7b_pwm_current.md section 11, the repair report and this handoff",
   "earlier_evidence_dirs_changed": "NO (git diff --name-only over dd1_d7b_r11_main and dd1_d7b_r1_r20261022_123825_8e1294 is empty)",
   "measured_evidence_from_earlier_rounds_changed": "NO (dd1_d7b_r11_main untouched; its 26 charge series are byte-identical inside the new bundle)",
-  "tracked_paths_changed_vs_base": 3,
-  "verification": "git diff --name-only adcdf27 lists the three allowed scripts; the frozen task-book digests were re-checked against the B blobs"
+  "paths_added_vs_base": 291,
+  "tracked_paths_changed_vs_base": 8,
+  "verification": "the three main tools are dd1_d7b_run.py, dd1_d7b_measure.py and dd1_d7b_evidence_check.py; the remaining existing-path changes of R2 were the offline gate-record helper and four reports/handoff files, so \"three tools\" never meant \"three paths\". R3's own diff is recomputed below and is not copied from R2."
  },
  "head_sha": "6abe1bf5b93dc4bb12ba179cea0ab26929f33a90",
  "head_sha_role": "payload commit P2: the repaired tools, the two new R2 test scripts and the re-exported evidence. The metadata commits that record this field are read from the Git ref, never from this file.",
@@ -65,7 +121,7 @@
   "Four intermediate R1 evidence directories that this executor had published were deleted with rm -rf during the script-iteration loop before the user forbade it (names in this_round_cost). They were never committed or pushed and are regenerable from the retained raw, but their bytes are gone from the machine. Five further superseded bundles are kept on disk, uncommitted.",
   "Credential echo event: a malformed grep -vE once echoed the guest password into this machine terminal output. The value was never written into any task file, report, log excerpt, JSON, README, memory file or Git object; changing the guest password is not authorised here and no remote scan was run, so this record does not claim the event is resolved.",
   "The re-simulated VCD bytes are delivered as name.vcd.txt because .gitignore holds *.vcd out of the repository and Git normalises CRLF to LF on commit; rtl_reverify_delivery.csv records both digests so the transformation is a stated fact rather than a silent one.",
-  "the edge neighbourhood shards delivered by R1 print their times to 0.1 ns, so a crossing re-derived from them cannot be verified at 0.05 ps; the R2 shards carry an exact t_ps column",
+  "the edge neighbourhood shards delivered by R1 print their times to 0.1 ps, so a crossing re-derived from them cannot be verified at 0.05 ps; the R2 shards carry an exact t_ps column",
   "data_en_b is only checkable where the delivered neighbourhood reaches 0.9 V; a window whose complement crosses outside the searched +-50 ns stays NOT_FOUND rather than being filled",
   "the credential echo incident stays unremediated: no password was changed in this round and no repository scan is offered as its closure",
   "the historical 3-launch over-run is reported, not repaired: retroactive authorisation is the user decision",
@@ -79,19 +135,23 @@
   "case_rows": 27,
   "charge_series_identical_to_accepted": 26,
   "charge_series_new": 3,
-  "charge_series_new_in_r1": 27,
+  "charge_series_new_in_r1": 1,
+  "charge_series_new_in_r2": 2,
   "convergence_pairs_converged": 5,
   "convergence_rows": 5,
   "declared_pulse_edges_missing": 0,
   "delivered_traces_reparsed": 17,
+  "directory_bytes": 21323343,
+  "directory_files": 287,
   "dut_runs": 29,
   "edge_series_rewritten_for_t_ps": 26,
   "electrical_fail": 0,
   "ical_A": 1.493190564e-05,
   "index_rows": 158,
   "judged_windows": 25,
-  "manifest_bytes": 21084177,
-  "manifest_entries": 283,
+  "manifest_bytes": 21264382,
+  "manifest_entries": 286,
+  "manifest_scope": "excludes manifest.json itself; the directory total is in directory_files/directory_bytes",
   "max_abs_charge_error_LSB": 0.438391,
   "max_abs_charge_error_LSB_excluding_N1": 0.438391,
   "normal_windows": 15,
@@ -148,34 +208,56 @@
  "push_status": "REMOTE_VERIFIED",
  "pushed_utc": "2026-10-23",
  "pwm_current_feasibility_tt": "PASS_WITHIN_FROZEN_CRITERIA",
+ "r3": {
+  "account_rows": 333,
+  "account_states": {
+   "CONFIRMED": 59,
+   "REFUSED_NO_LAUNCH": 274
+  },
+  "base_sha": "b3fe93c17de014cb16031438ce28c7152dd0020f",
+  "branch": "poc/data-pwm-d7b-r3",
+  "checks_added": [
+   "ACCOUNT_STATES_VALID"
+  ],
+  "counterfeits_now": 16,
+  "diff_measured_from": "b3fe93c1..HEAD (recorded at the time of writing; the payload and metadata commits of R3 are read from the Git ref)",
+  "diff_vs_base": {
+   "code_paths_modified": 2,
+   "existing_paths_modified": 2,
+   "first_added": "scripts/dd1_d7b_r3_guards.py scripts/dd1_d7b_r3_verify.py",
+   "modified_list": "scripts/dd1_d7b_evidence_check.py scripts/dd1_d7b_run.py",
+   "paths_added": 2,
+   "paths_deleted": 0
+  },
+  "payload_sha": "242f43fdd4c775d4e92ebddde548e65b75aec402",
+  "scope": "reject illegal account states in Account and the re-checker, and correct the handoff and report text; no circuit, measurement, sample or verdict change",
+  "task_id": "DATA-7B-R3",
+  "validation_tools": {
+   "scripts/dd1_d7b_evidence_check.py": "fbeda532111d9c1c3f56d8b3a54d085542a04cea558e62656bd5d0cb23802d77",
+   "scripts/dd1_d7b_r3_guards.py": "c53569ff4823ef27517ab4311a74074c5e4e90d34093505def3a1472f785fe7d",
+   "scripts/dd1_d7b_r3_verify.py": "46b9d6ad91f1d461fc00c74e414723b2355b468c7c2f03f62f8c2a965451552e",
+   "scripts/dd1_d7b_run.py": "6f7572a685ae9e2f50a1d900abf1968a31b2f1f7cdca3b112e55b3d5d56276d9"
+  },
+  "verification_dir": "results/evidence/dd1_d7b_r3_r20261022_174818_502025"
+ },
  "remote_readback": {
-  "method_1_git_protocol": {
-   "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin",
-   "only_difference": "refs/heads/poc/data-pwm-d7b-r2 created; nothing else moved",
-   "rc": 0,
-   "ref_lines_after": 21,
-   "ref_lines_before": 20
-  },
-  "method_2_api": {
-   "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<ref>",
-   "rc": 0,
-   "refs_read": 4
-  },
-  "note": "this is a read-back of refs, not a proof of technical correctness; the recorded tip is the commit that carries this note or the one it is amended into, never a value copied ahead of the push",
-  "payload_p2_is_ancestor_of_tip": true,
-  "refs": {
+  "note": "this is a historical record of what the two channels returned for the R2 branch; the R3 tip and the confirmation that nothing else moved are recorded after the R3 push, in a separate commit, not by editing this entry",
+  "queried_objects": {
    "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
-   "poc/data-pwm-d7b": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
-   "poc/data-pwm-d7b-r1": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
-   "poc/data-pwm-d7b-r2": "c53e800b6a4645a08d7981b58b2756a9f500fd95"
+   "poc/data-pwm-d7b-r2": "b3fe93c17de014cb16031438ce28c7152dd0020f"
   },
-  "status": "BOTH_METHODS_AGREE"
+  "r3_readback": "PENDING",
+  "recorded_at": "D2 (2026-10-23), for the R2 push",
+  "status": "SUPERSEDED_BY_R3_PUSH"
  },
  "repair_of_task": "DATA-7B-R1",
  "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
  "rtl": {
   "dut_bytes": "rtl/dd1_d7a_gray_ctrl.sv accepted in DATA-7A, unmodified",
-  "new_rtl_simulations": 17,
+  "new_rtl_simulations": 0,
+  "new_rtl_simulations_round": "DATA-7B-R3",
+  "r1_historical_rtl_simulations": 17,
+  "r3_note": "R3 re-parses the 17 VCD bytes R1 produced; it runs no simulator. The 17 belong to R1 and are kept out of this round's cost fields",
   "tool": "oss-cad-suite 2026-10-20 Icarus 14.0 devel"
  },
  "run_ids": {
@@ -184,15 +266,18 @@
   "delivery_r2": "r20261022_160652_e880be",
   "native_runs_reused": "r5_cal, r9_main, r10_main, r11_main, r11_reuse"
  },
+ "schema_notes": "the frozen validator pins schema_version at 1.0, so the version is kept and the field meaning is stated here instead: this round separates the round that produced a number from the round that verified it. `source_identity` keeps the R2 exporter, `r3.validation_tools` names the R3 checker, and every tally says which bundle it was read from. v1 fields are not redefined; where one carried an R1 value under an R2 label it is corrected in place and the original claim is kept in `corrections_r3`.",
  "schema_version": "1.0",
  "scope_status": "PARTIAL",
  "security_gate": "PASS",
  "source_identity": {
   "evidence_check_source_sha256": "92a2d34db1526c2715e4cc616dc865a8e0691a625a89bcf9f52ffa48a676658e",
+  "evidence_check_source_sha256_at_r2_export": "92a2d34db1526c2715e4cc616dc865a8e0691a625a89bcf9f52ffa48a676658e",
   "measurement_source_sha256": "f3da5b53d5c777ec7f60c159fbf4b8840f6257019045146546e1e0a7793fbb7f",
   "reused_cases": 24,
   "reused_from": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
-  "runner_source_sha256": "64797d531342533539ea6c9848994c0c4dc3593187e12a29e1a1a5b5299bc705",
+  "runner_source_sha256": "dea050a5685eded854502f85c45f8f356acb006e5c421fd084513da5d39b70bc",
+  "source_of_this_field": "the R2 bundle's own environment.json, i.e. the exporter of the delivered numbers; the R3 validation tools are listed separately under r3.validation_tools and did not produce them",
   "trace_source_sha256": "8ae5edf9e814c13fea411b3d67e8e4e1f26fd1f394a080833b48675ad8cdb0ce"
  },
  "stop_reason": "AWAITING_INDEPENDENT_REVIEW_OF_THE_R2_REPAIR",

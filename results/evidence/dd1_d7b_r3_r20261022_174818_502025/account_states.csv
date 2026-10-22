@@ -1,0 +1,7 @@
+state,billed_by_the_protocol,occupies_the_ceiling,note
+REQUESTED,YES,YES,reserved before the process starts; costs the ceiling when written
+UNCERTAIN,YES,YES,a recovered REQUESTED row; provenance changes; price does not
+CONFIRMED,YES,YES,returned text proves a process ran
+COMPLETED,YES,YES,same billing as CONFIRMED; counted once
+REFUSED_NO_LAUNCH,YES,NO,no process was ever started for this row
+(empty) / (missing) / any other spelling,NO,REFUSED,Account raises before recover/_restamp/flush; so the bytes stay; counts() and reserve() refuse the same row in memory; the re-checker adds ACCOUNT_STATES_VALID over every row
