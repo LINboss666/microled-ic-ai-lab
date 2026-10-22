@@ -81,6 +81,10 @@ CAL_BAND = (3000000, 3500000)
 CAL_OFF = (1500000, 1900000)
 CAL_TAIL = (4400000, 4500000)
 DE_50 = 0.9
+# the account protocol's only legal states, spelled exactly as the writer spells them. The checker
+# keeps its own copy because it must not import the tool it audits; dd1_d7b_run.py asserts in its
+# self test that the two lists agree, so neither side can widen the other by accident.
+ACCOUNT_STATES = ('REQUESTED', 'UNCERTAIN', 'CONFIRMED', 'COMPLETED', 'REFUSED_NO_LAUNCH')
 PULSE_EDGE_TOLERANCE_PS = 50 * NS
 # every time column of the case table is printed as '%.4f' of a nanosecond, so the most a printed
 # claim can be away from the value the same arithmetic gives now is half of its last digit -- 0.05 ps.
@@ -1650,6 +1654,23 @@ def check_convergence(B, C):
           '%d pairs re-derived; %s' % (n, '; '.join(bad[:4]) or 'consistent'), bad)
 
 
+def illegal_account_states(rows):
+    """every account row must carry one of the five protocol states, spelled exactly
+
+    A state nothing recognises is not free: the DATA-7B-R2 defect was that an unknown or empty cell
+    simply fell out of every billing branch, so a reserved launch stopped costing the ceiling while the
+    account still opened. This is checked over all rows, not only the seeded ones, and it is its own
+    named failure so it cannot be hidden behind a roll-up mismatch or the historical budget finding.
+    """
+    bad = []
+    for r in rows:
+        cell = r.get('state')
+        shown = '(missing)' if cell is None else ('(empty)' if cell == '' else cell)
+        if shown not in ACCOUNT_STATES:
+            bad.append('%s=%s' % (r.get('launch_id', '(no id)'), shown))
+    return bad
+
+
 def check_launches(B, C):
     bad = []
     per_dir = [r for r in B.reconcile if r['task_root_dir'] != 'TOTAL']
@@ -1691,6 +1712,11 @@ def check_launches(B, C):
           % (' '.join('%s=%d' % kv for kv in sorted(roles.items())) or 'none', len(launched),
              '' if started is None else ', %d started per the reconcile table' % started))
     if B.account:
+        bad_states = illegal_account_states(B.account)
+        C.add('ACCOUNT_STATES_VALID', not bad_states,
+              '%d account rows, every one carrying one of %s%s'
+              % (len(B.account), '|'.join(ACCOUNT_STATES),
+                 '' if not bad_states else '; refused: ' + ', '.join(bad_states[:4])))
         conf = [r for r in B.account if r['state'] in ('CONFIRMED', 'COMPLETED')]
         unc = [r for r in B.account if r['state'] == 'UNCERTAIN']
         pend = [r for r in B.account if r['state'] == 'REQUESTED']
@@ -1740,6 +1766,8 @@ def check_launches(B, C):
               'not repaired here' % (occupied, CEILING_GRANTED, CEILING_TASKBOOK,
                                      CEILING_GRANTED - CEILING_TASKBOOK))
     else:
+        C.add('ACCOUNT_STATES_VALID', False,
+              'launch_account.csv is missing, so no state can be verified at all')
         C.add('ACCOUNT_KEEPS_HISTORY', False,
               'launch_account.csv is missing, so the cumulative ceiling cannot be re-derived')
         C.add('ACCOUNT_COVERS_RECONCILE', False, 'no account file to compare with')
@@ -2165,7 +2193,9 @@ COUNTERFEITS = ('false_off_with_PASS',
                 # a re-derivation from the delivered bytes can refuse it
                 'unauthorised_ceiling_60', 'off_time_zero', 'current_crossing_off_by_5ns',
                 'complementary_time_zero', 'convergence_edge_delta_9999ns',
-                'delivered_vcd_transition_flipped', 'cal_off_baseline_without_support')
+                'delivered_vcd_transition_flipped', 'cal_off_baseline_without_support',
+                # the DATA-7B-R3 finding: a state nothing bills, hidden behind synced roll-ups
+                'illegal_account_state_with_synced_rollup')
 # each break names the check that must react and the case it touched: a check the delivered bundle
 # already fails cannot count as "detected", so the new reason itself has to mention this case
 EXPECTED_NEW_FAILURE = {
@@ -2188,6 +2218,7 @@ EXPECTED_NEW_FAILURE = {
     'delivered_vcd_transition_flipped': (('RTL_VCD_SEMANTICS_REPARSED',
                                           'RTL_EDGES_REVERIFIED'), 'D7B-P30-C001'),
     'cal_off_baseline_without_support': (('CALIBRATION_OFF_BASELINE_SAMPLES',), 'D7B-CAL'),
+    'illegal_account_state_with_synced_rollup': (('ACCOUNT_STATES_VALID',), 'A001'),
 }
 
 
@@ -2292,6 +2323,28 @@ def tamper(name, ev):
         hdr = list(rows[0].keys())
         next(r for r in rows if r['quantity'] == 'OFF_baseline_max_abs_A')['value_A'] = '1e-07'
         write_rows(os.path.join(ev, 'calibration.csv'), hdr, rows)
+    elif name == 'illegal_account_state_with_synced_rollup':
+        # the row that says "no process was started" is moved to a state nothing bills, and the
+        # environment roll-up is lowered to match, so no count disagrees with any other count and
+        # only an enumeration of every row can see that a legal spelling was replaced by nonsense
+        rows = rows_of(os.path.join(ev, 'launch_account.csv'))
+        hdr = list(rows[0].keys())
+        moved = None
+        for r in rows:
+            if r['state'] == 'REFUSED_NO_LAUNCH':
+                r['state'] = 'UNRECOGNISED_STATE'
+                moved = r['launch_id']
+                break
+        if moved is None:
+            raise MS.Refuse('no REFUSED_NO_LAUNCH row to corrupt')
+        write_rows(os.path.join(ev, 'launch_account.csv'), hdr, rows)
+        epath = os.path.join(ev, 'environment.json')
+        env = json.loads(u(io.open(epath, encoding='utf-8').read()))
+        roll = env.get('launch_account') or {}
+        if 'no_launch' in roll:
+            roll['no_launch'] = roll['no_launch'] - 1
+            with io.open(epath, 'w', encoding='utf-8', newline='\n') as f:
+                f.write(json.dumps(env, indent=1, sort_keys=True) + '\n')
     else:
         raise MS.Refuse('unknown counterfeit %s' % name)
 

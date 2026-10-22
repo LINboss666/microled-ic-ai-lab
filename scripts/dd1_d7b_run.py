@@ -550,6 +550,34 @@ class OverBudget(Exception):
 
 SEED_FACTS = ('task_id', 'run_id', 'case_id', 'role', 'state', 'launch_evidence')
 
+# The account protocol has exactly five states, and only these five spellings. An empty cell, a
+# case or whitespace variant, or a word nothing recognises is a damaged account: it must not be
+# quietly sorted into "refused, therefore free", because that is how a reserved launch stops
+# costing the ceiling without anybody deciding it. This is the account table only -- the per-pass
+# Ledger has its own protocol with `DONE`, which is a different table and stays as it is.
+ACCOUNT_STATES = ('REQUESTED', 'UNCERTAIN', 'CONFIRMED', 'COMPLETED', 'REFUSED_NO_LAUNCH')
+
+
+def illegal_account_states(rows):
+    """(launch_id, what the cell says) for every row whose state is not one of the five"""
+    bad = []
+    for r in rows:
+        cell = r.get('state')
+        bad.append((r.get('launch_id', '(no id)'),
+                    '(missing)' if cell is None else ('(empty)' if cell == '' else cell)))
+    return [b for b in bad if b[1] not in ACCOUNT_STATES]
+
+
+def require_account_states(rows, source):
+    """refuse an account that carries a state nothing can bill, before anything is written"""
+    bad = illegal_account_states(rows)
+    if bad:
+        raise RuntimeError(
+            '%s carries %d row(s) whose state is not one of %s: %s -- an unrecognised state is '
+            'refused rather than counted as free, and the file is left exactly as it was read'
+            % (source, len(bad), '|'.join(ACCOUNT_STATES),
+               '; '.join('%s=%s' % b for b in bad[:3])))
+
 
 class Account(AppendCSV):
     """the task-level cumulative account of every Spectre process this task has asked for
@@ -599,6 +627,9 @@ class Account(AppendCSV):
                             'launch may not be relabelled, so the seed binds %s field by field'
                             % (os.path.basename(path), row['launch_id'], field, row.get(field, ''),
                                got.get(field, ''), '|'.join(SEED_FACTS)))
+        # before anything is recovered, restamped or written: an account carrying a state nothing
+        # bills is refused with its bytes untouched
+        require_account_states(self.rows, os.path.basename(path))
         self.recover()
         self._restamp()
         self.flush()
@@ -614,6 +645,9 @@ class Account(AppendCSV):
                 r['launch_evidence'] = 'NO_OUTCOME_AT_RECOVERY'
 
     def counts(self):
+        # billing an account is only allowed over rows whose state this protocol recognises, so a
+        # caller that mutated a row in memory cannot get a friendlier occupancy either
+        require_account_states(self.rows, os.path.basename(self.path))
         conf = [r for r in self.rows if r['state'] in ('CONFIRMED', 'COMPLETED')]
         unc = [r for r in self.rows if r['state'] == 'UNCERTAIN']
         # a reservation is a promise that a process may be running; recovery changes what we can
@@ -628,6 +662,7 @@ class Account(AppendCSV):
 
     def _restamp(self):
         """running totals, recomputed over the whole file, so no row can carry a friendlier number"""
+        require_account_states(self.rows, os.path.basename(self.path))
         conf = occ = 0
         for r in self.rows:
             if r['state'] in ('CONFIRMED', 'COMPLETED'):
@@ -1211,6 +1246,40 @@ def selftest_main():
     if EC.CONV_Q_LSB_REL != 0.01:
         bad.append('the convergence dQ limit is %r of one LSB, not the frozen 1 %%'
                    % EC.CONV_Q_LSB_REL)
+    if EC.ACCOUNT_STATES != ACCOUNT_STATES:
+        bad.append('the builder bills %s while the checker verifies %s'
+                   % ('|'.join(ACCOUNT_STATES), '|'.join(EC.ACCOUNT_STATES)))
+    # 10b an unrecognised or empty state is a damaged account: it is refused, and refused before
+    #     anything is written, so the bytes on disk stay exactly as they were read
+    n += 1
+    temp2 = tempfile.mkdtemp(prefix='d7b-state-selftest-')
+    try:
+        pth = os.path.join(temp2, 'states.csv')
+        fresh = Account(pth, 2, {'origin': 'selftest', 'rows': []})
+        fresh.reserve('SYN', 'dut', 'd', 'p', 'r_state')
+        text = u(io.open(pth, encoding='utf-8', newline='').read())
+        for variant in ('UNRECOGNISED_STATE', '', ' confirmed', 'CONFIRMED '):
+            broken = text.replace(',REQUESTED,', ',%s,' % variant)
+            with io.open(pth, 'w', encoding='utf-8', newline='\n') as f:
+                f.write(broken)
+            before = sha_file(pth)
+            try:
+                Account(pth, 2, {'origin': 'selftest', 'rows': []})
+                bad.append('state %r reopened the account as if it were billable' % variant)
+                continue
+            except RuntimeError:
+                pass
+            if sha_file(pth) != before:
+                bad.append('refusing state %r still wrote the account' % variant)
+        # the legal spellings keep their billing semantics
+        with io.open(pth, 'w', encoding='utf-8', newline='\n') as f:
+            f.write(text.replace(',REQUESTED,', ',REFUSED_NO_LAUNCH,'))
+        refused_only = Account(pth, 2, {'origin': 'selftest', 'rows': []})
+        if refused_only.counts()['occupied'] != 0 or refused_only.counts()['no_launch'] != 1:
+            bad.append('REFUSED_NO_LAUNCH stopped meaning "no launch, therefore free": %r'
+                       % refused_only.counts())
+    finally:
+        shutil.rmtree(temp2, ignore_errors=True)
     # 11 this round authorises no launch at all, whatever the caller passes in
     n += 1
     for env in ({'D7B_ALLOW_LAUNCH': '1', 'D7B_SPECTRE_BIN': '/usr/bin/spectre'}, {}):
