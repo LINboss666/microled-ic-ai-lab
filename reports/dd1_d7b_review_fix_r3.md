@@ -50,7 +50,15 @@
    不一致，因此用修好的工具**重跑一次完整验证**，权威记录是
    `results/evidence/dd1_d7b_r3_r20261022_180059_efda9d/`；旧目录原样保留、不删除不改写历史，
    §5 与 §6 两表取自新目录。
-7. 未做：PAM/LUT/阵列/版图/TCON、PDK/许可证/VM/凭据改动、GC、rewrite、force、跳 hooks、合并、
+7. 本轮文档写入自身的一次破坏与恢复：用一段临时 Python 补丁改写 §10 的审核包段落时，字符串按字符
+   展开，把 `reports/dd1_d7b_review_fix_r3.md` 的工作副本写成 13,838,728 B（每个原字符后重复粘贴整段
+   新文字），SHA-256 `769e6cd9e6fa59f682223f39c13a812fb0aab566b0e61c20b47a0283d7f2d229`。
+   该文件的**已提交版本未被触及**（`git cat-file -s HEAD:...` 在恢复前后都是 19,524 B），
+   处置是把破坏副本原样挪进不入库的 `review/scratch/r3_corrupt_report_copy_13mb.md` 保留、
+   再用 `git checkout -- <该文件>` 从提交恢复工作副本，然后改用逐段替换工具重打这一处编辑。
+   未删除任何已发布产物、未改判据与数据；教训与 §0.6 同一类：**写入路径上的自指与量级都要事后实测**，
+   这次是靠"文件大小与提交版本相差 700 倍"这一条判据立刻发现的。
+8. 未做：PAM/LUT/阵列/版图/TCON、PDK/许可证/VM/凭据改动、GC、rewrite、force、跳 hooks、合并、
    改可见性、登记接受版。凭据回显事件仍未解除。
 
 ## 1 根因（F1）：非法账户状态被静默当成不占额
@@ -240,7 +248,22 @@ git -c http.proxy=http://127.0.0.1:7892 push -u origin poc/data-pwm-d7b-r3   rc=
 远端 ref 读，不由本文件自称。两条通道是同一对象的两个独立读法，不是两枚不同的证明；
 这只是 ref 的回读，不表示技术结论由审核方接受。
 
-审核包（本提交内 blob 打包，不复制旧电流样本）：
-`review/scratch/MicroLED_DATA7B_R3_Package_20261023.zip`，47 条目 / 307,781 B，
-`verify_package.py` 自检 `PACKAGE_SELF_CHECK: PASS (45 files listed, 0 unlisted)`；
-清单绑定 commit、只读输入 R2 包路径与其 `manifest.json` 摘要。
+审核包（全部取自本分支已提交的 blob，不复制旧电流样本）：
+`review/scratch/MicroLED_DATA7B_R3_Package_20261023.zip`，构建器
+`review/scratch/r3_build_package.py`（§3 允许的 scratch 工具，不入库；它只用 `git cat-file blob <rev>`
+读提交，不读工作副本，且清单为空时主动拒收）。构建来源是本节所在那枚提交的 tip，其 SHA 由包内
+`MANIFEST.json` 的 `commit` 字段给出、不由本文件复制。归档内 **56 个文件**：`MANIFEST.json`（54 条：
+R3 两件改动工具、它们调用的全部冻结工具与更早轮次套件、`tests/dd1_d7b/` 三张只读表与 RTL/TB、
+四份任务书、R1/R2/R3 三份报告、合同与 pwm_current 两份口径文档、交接 MD/JSON，以及**两枚都已提交的
+`dd1_d7b_r3_*` 验证目录**）+ `verify_package.py` + `README.md`；较早那枚目录是 §0.6 记录缺陷的披露历史，
+只携带最新那枚会让本包读成"只给审核方看对的那一次运行"，所以两枚都进包、并说明哪一枚权威。
+自检 `python verify_package.py` 逐条核对清单内文件的字节数与 SHA-256，并对未列出的文件报失败。
+
+- 本包**不写自身归档摘要**：包内任何文件一旦记下 zip 的 SHA-256，那次记录本身就改变了 zip。
+  因此包内只留可自证的两项（`MANIFEST.json` 的 `commit` 与只读 R2 输入 `manifest.json` 的 SHA-256），
+  zip 的字节数与 SHA-256 记在本段所在提交之后的元数据提交信息里（`git log` 可查）与交付回执中。
+- **本包曾经的一次错误声明（不得抹去）**：提交 `f2fcae4` 的信息写了
+  "Also recorded here: the reviewer package rebuilt from the pushed tip"，而那次 `r3_build_package.py`
+  正因为提交里出现两枚 `dd1_d7b_r3_*` 目录而主动拒收并退出，磁盘上留下的仍是更早（`19f86ce` 时点、
+  47 条目）的归档——"按已推送 tip 重建"当时并未发生。本节按构建器现在的真实行为改写（携带全部已提交
+  目录、点名权威目录、去掉自指的摘要），改的是构建器的选取规则与这段说明，不是判据、数据或电气结论。
