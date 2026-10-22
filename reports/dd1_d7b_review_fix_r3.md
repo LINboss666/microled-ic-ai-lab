@@ -204,6 +204,11 @@ deck/PWL/case/golden/RTL/TB 在 `b3fe93c..HEAD` 内 blob 未变（§6），
    电荷 PASS 不等于整段电流已稳定 —— 23 个窗口保留 `NOT_SETTLED_WITHIN_PULSE` 负发现。
 6. R3 不重新导出 21 MB 采样：验证目录只放身份、输入摘要、命令与 rc、状态正反例与冻结比较。
 
+
+另记一条口径：审核方诊断脚本在 Windows 上以 CRLF 写出 `diagnostics/account_states_after.json`，
+入仓时被 Git 归一为 LF——该文件不被任何清单摘要绑定（包内清单摘要按 Git blob 计算），
+因此新鲜检出的字节与清单一致；这一点与 R2 里"交付的 VCD 必须已是 LF"是同一教训的不同面。
+
 ## 9 交付与回执
 
 `TASK_ID=DATA-7B-R3`，`BASE_SHA=b3fe93c17de014cb16031438ce28c7152dd0020f`，
@@ -224,12 +229,13 @@ git -c http.proxy=http://127.0.0.1:7892 push -u origin poc/data-pwm-d7b-r3   rc=
 
 | 查询对象（refs/heads/…） | 两条通道读到的同一完整 SHA | 与上一轮的关系 |
 |---|---|---|
-| `poc/data-pwm-d7b-r3` | `19f86ce16491f56dc6c223bdbcc789b5ef399291` | 本轮新建（P3 `242f43fdd4c775d4e92ebddde548e65b75aec402` 是其祖先，`git merge-base --is-ancestor` 为真） |
+| `poc/data-pwm-d7b-r3` | `039a28a35cab506beb498259025eb50c20964ce2`（此前一次回读为 `19f86ce16491f56dc6c223bdbcc789b5ef399291`，再前一次为 `a670a1190569f1fcf28338a2b8865d0bfbbf2f3b`；每次回读都标查询时间） | 本轮新建（P3 `242f43fdd4c775d4e92ebddde548e65b75aec402` 是其祖先，`git merge-base --is-ancestor` 为真） |
 | `poc/data-pwm-d7b-r2` | `b3fe93c17de014cb16031438ce28c7152dd0020f` | 未动（本轮 base） |
 | `poc/data-pwm-d7b-r1` | `e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92` | 未动 |
 | `poc/data-pwm-d7b` | `adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50` | 未动 |
 | `main` | `23e471cb936b421ee97e1250c3be06edf96f9937` | 未动 |
 
+两条通道（`git ls-remote` 经本机代理，与 `gh api` 直连）在同一时刻对同一对象给出同一完整 SHA。
 表中 SHA 是**写入本节的记录提交之前**的分支 tip；承载这段文字的记录提交再多一枚，其 SHA 只从
 远端 ref 读，不由本文件自称。两条通道是同一对象的两个独立读法，不是两枚不同的证明；
 这只是 ref 的回读，不表示技术结论由审核方接受。

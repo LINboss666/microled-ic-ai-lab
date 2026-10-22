@@ -205,8 +205,8 @@
  "payload_sha": "6abe1bf5b93dc4bb12ba179cea0ab26929f33a90",
  "project_id": "microled-ic-ai-lab",
  "push_command": "git -c http.proxy=http://127.0.0.1:7892 push -u origin poc/data-pwm-d7b-r2 (normal push, no force, no --no-verify)",
- "push_status": "PUSH_PENDING",
- "pushed_utc": "",
+ "push_status": "REMOTE_VERIFIED",
+ "pushed_utc": "2026-10-23",
  "pwm_current_feasibility_tt": "PASS_WITHIN_FROZEN_CRITERIA",
  "r3": {
   "account_rows": 333,
@@ -230,6 +230,7 @@
    "paths_deleted": 0
   },
   "payload_sha": "242f43fdd4c775d4e92ebddde548e65b75aec402",
+  "recorded_tip_at_readback": "039a28a35cab506beb498259025eb50c20964ce2",
   "scope": "reject illegal account states in Account and the re-checker, and correct the handoff and report text; no circuit, measurement, sample or verdict change",
   "task_id": "DATA-7B-R3",
   "validation_tools": {
@@ -241,29 +242,54 @@
   "verification_dir": "results/evidence/dd1_d7b_r3_r20261022_180059_efda9d"
  },
  "remote_readback": {
-  "local_tip_when_this_was_written": "6fdae412c7a9432a2eed93d2f262a7e5a96c1757",
-  "previously_verified": {
-   "method_1_git_protocol": {
-    "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin",
-    "rc": 0,
-    "ref_lines": 22
+  "earlier_rounds_kept": {
+   "local_tip_when_this_was_written": "6fdae412c7a9432a2eed93d2f262a7e5a96c1757",
+   "previously_verified": {
+    "method_1_git_protocol": {
+     "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin",
+     "rc": 0,
+     "ref_lines": 22
+    },
+    "method_2_api": {
+     "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<ref>",
+     "rc": 0,
+     "refs_read": 5
+    },
+    "note": "what the two channels returned for the push that preceded this commit; the verification record and the hygiene fix on top of it are read back by the next commit, not asserted here",
+    "queried_utc": "2026-10-23",
+    "refs": {
+     "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+     "poc/data-pwm-d7b": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
+     "poc/data-pwm-d7b-r1": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
+     "poc/data-pwm-d7b-r2": "b3fe93c17de014cb16031438ce28c7152dd0020f",
+     "poc/data-pwm-d7b-r3": "a670a1190569f1fcf28338a2b8865d0bfbbf2f3b"
+    }
    },
-   "method_2_api": {
-    "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<ref>",
-    "rc": 0,
-    "refs_read": 5
-   },
-   "note": "what the two channels returned for the push that preceded this commit; the verification record and the hygiene fix on top of it are read back by the next commit, not asserted here",
-   "queried_utc": "2026-10-23",
-   "refs": {
-    "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
-    "poc/data-pwm-d7b": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
-    "poc/data-pwm-d7b-r1": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
-    "poc/data-pwm-d7b-r2": "b3fe93c17de014cb16031438ce28c7152dd0020f",
-    "poc/data-pwm-d7b-r3": "a670a1190569f1fcf28338a2b8865d0bfbbf2f3b"
-   }
+   "status": "PENDING_FOR_THIS_COMMIT"
   },
-  "status": "PENDING_FOR_THIS_COMMIT"
+  "method_1_git_protocol": {
+   "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin",
+   "only_difference_vs_previous_round": "refs/heads/poc/data-pwm-d7b-r3 created; nothing else moved since 21 refs",
+   "rc": 0,
+   "ref_lines": 22
+  },
+  "method_2_api": {
+   "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<ref>",
+   "rc": 0,
+   "refs_read": 5
+  },
+  "note": "the commit carrying this note sits above the recorded tip; its own SHA and this branch's current value are read from the remote ref, never from this file",
+  "payload_p3_is_ancestor_of_tip": true,
+  "queried_utc": "2026-10-23",
+  "recorded_tip": "039a28a35cab506beb498259025eb50c20964ce2",
+  "refs": {
+   "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+   "poc/data-pwm-d7b": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
+   "poc/data-pwm-d7b-r1": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
+   "poc/data-pwm-d7b-r2": "b3fe93c17de014cb16031438ce28c7152dd0020f",
+   "poc/data-pwm-d7b-r3": "039a28a35cab506beb498259025eb50c20964ce2"
+  },
+  "status": "BOTH_CHANNELS_AGREE"
  },
  "repair_of_task": "DATA-7B-R1",
  "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
