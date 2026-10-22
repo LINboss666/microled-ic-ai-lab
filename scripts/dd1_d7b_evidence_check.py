@@ -46,6 +46,7 @@ PROJ = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
 import dd1_d7b_measure as MS
+import dd1_d7b_trace as TR
 
 # the accepted DATA-7B bundle is what a re-emitted sample series is compared against, so its path is
 # a fact of this repository rather than something a bundle can point at
@@ -72,11 +73,21 @@ CONV_EDGE_PS = 500
 CEILING_TASKBOOK = 52
 CEILING_GRANTED = 56
 TAIL_NS = 200
+# the deck's PWL is the RTL trace moved forward by this much, so a case window is the trace window
+# plus it; dd1_d7b_run.py asserts its own constant equals these two
+SHIFT_NS = 2500
+SHIFT_PS = SHIFT_NS * NS
 CAL_BAND = (3000000, 3500000)
 CAL_OFF = (1500000, 1900000)
 CAL_TAIL = (4400000, 4500000)
 DE_50 = 0.9
 PULSE_EDGE_TOLERANCE_PS = 50 * NS
+# every time column of the case table is printed as '%.4f' of a nanosecond, so the most a printed
+# claim can be away from the value the same arithmetic gives now is half of its last digit -- 0.05 ps.
+# A crossing is therefore re-derived and compared in the time domain at that resolution; a value
+# domain test would need a current or voltage tolerance, and a 20 mA one certified 15 uA crossings
+# anywhere within 1.3 ms.
+EDGE_CLAIM_TOL_PS = 0.05 + 1e-6
 FORBIDDEN = ((r'/root/tech', 'the instructor PDK path'),
              (r'ms018_enhanced', 'a model card name'),
              (r'QODER_GUEST_PW', 'a credential variable'),
@@ -296,6 +307,8 @@ class Bundle(object):
         self.reconcile = read_rows(os.path.join(ev_dir, 'launches_reconcile.csv'))
         self._samples = {}
         self._edges = {}
+        self._pwl = {}
+        self._vcd = {}
 
     def json(self, name):
         path = os.path.join(self.dir, name)
@@ -353,6 +366,57 @@ class Bundle(object):
             self._samples[key] = (series, parts[0]['series_sha256'])
         return self._samples[key]
 
+    def pwl_edges(self, case_id):
+        """the binary stimulus edges of one case, in analog time, as the bundle delivered them
+
+        This is the deck the simulator was handed, not a result it produced: the pulse a window has to
+        conduct is read from here, so an edge claim is checked against the stimulus that declares it
+        instead of against the row that reports it.
+        """
+        if case_id not in self._pwl:
+            path = os.path.join(self.dir, 'pwl_edges_%s.csv' % case_id)
+            rows = []
+            if os.path.isfile(path):
+                # a black code legitimately drives no edge at all, so a header-only file means "no
+                # pulse"; a conducting window that finds nothing here is reported by the caller
+                with io.open(path, encoding='utf-8', newline='') as f:
+                    head = f.readline().strip().split(',')
+                    for line in f:
+                        if not line.strip():
+                            continue
+                        rows.append(dict(zip(head, line.rstrip('\r\n').split(','))))
+                edges = []
+                for r in rows:
+                    t = num(r.get('t_analog_ns'))
+                    level = integer_value(r.get('level'))
+                    if t is None or level not in (0, 1):
+                        raise MS.Refuse('pwl_edges_%s.csv row %r is not a binary edge at an '
+                                        'integer analog time' % (case_id, r))
+                    ps = int(round(t * 1000))
+                    if ps != t * 1000:
+                        raise MS.Refuse('pwl_edges_%s.csv places an edge at %s ns, which is not a '
+                                        'whole picosecond' % (case_id, r['t_analog_ns']))
+                    edges.append((ps, level))
+                self._pwl[case_id] = sorted(set(edges))
+                return self._pwl[case_id]
+            self._pwl[case_id] = []
+        return self._pwl[case_id]
+
+    def pulse_segments(self, r, t0_ps, t1_ps):
+        """the high runs of this window's own stimulus, clipped to the window"""
+        edges = self.pwl_edges(r['case_id'])
+        if not edges or t0_ps is None or t1_ps is None:
+            return None
+        return TR.segments_of(edges, t0_ps, t1_ps)
+
+    def vcd_document(self, vcd_path, case_id, ramp_ns, shift_ns):
+        """the delivered four-state bytes re-read through the frozen parser, memoised per case"""
+        key = (vcd_path, case_id, ramp_ns, shift_ns)
+        if key not in self._vcd:
+            self._vcd[key] = TR.case_document(vcd_path, case_id, golden_table(self),
+                                              shift_ns, ramp_ns)
+        return self._vcd[key]
+
     def edges(self, case_id, window):
         key = (case_id, window)
         if key not in self._edges:
@@ -368,14 +432,58 @@ class Bundle(object):
         return self._edges[key]
 
 
+def golden_table(B):
+    """the frozen golden rows: the bundle's own copy when it ships one, else the repository table
+
+    A reviewer who only has the bundle must still be able to re-derive every pulse, so the R2 export
+    carries the golden table next to the rows that are checked against it; reading an older bundle
+    falls back to the repository copy and the fallback is named in the check detail.
+    """
+    local = os.path.join(B.dir, 'golden_windows.csv')
+    if os.path.isfile(local):
+        want = B.env.get('golden_windows_sha256')
+        if want and digest(local) != want:
+            raise MS.Refuse('the bundle ships golden_windows.csv, but it does not hash to the digest '
+                            'its own environment.json records')
+        B.golden_src = 'the golden table delivered inside the bundle'
+        return TR.load_golden(local)
+    B.golden_src = 'the repository golden table (this bundle ships no copy)'
+    return TR.load_golden(FROZEN_GOLDEN_TABLE)
+
+
+def bundle_shift(B):
+    """the deck's PWL shift, named by the bundle when it records one"""
+    got = integer_value(B.env.get('shift_ns'))
+    return (got or SHIFT_NS) * NS
+
+
 def edge_series(rows, column):
+    """(time in ps, value) for one node column of one delivered edge slice
+
+    A slice that prints its times as four-decimal nanoseconds quantises them to 0.1 ps, which is
+    coarser than the crossing it is meant to prove, so `t_ps` is used when the slice carries it and
+    the quantisation is reported rather than hidden by rounding the times up to whole picoseconds.
+    """
     out = []
     for r in rows:
-        v, t = r.get(column), num(r.get('t_ns'))
+        v, t = r.get(column), edge_time_ps(r)
         if v in (None, '') or t is None:
             continue
-        out.append((int(round(t * 1000)), float(v)))
+        out.append((t, float(v)))
     return sorted(set(out))
+
+
+def edge_time_ps(r):
+    """the delivered time of an edge row at the precision the slice really carries"""
+    if r.get('t_ps') not in (None, ''):
+        return float(r['t_ps'])
+    t = num(r.get('t_ns'))
+    return None if t is None else t * 1000.0
+
+
+def edge_times_quantised(rows):
+    """True when a slice only offers four-decimal nanosecond times"""
+    return bool(rows) and rows[0].get('t_ps') in (None, '')
 
 
 def window_times(r):
@@ -794,84 +902,307 @@ def check_settle(B, C):
             continue
         tick = integer_value(c['tick_ns']) * NS
         pulses = integer_value(c['expected_pulses'])
-        deadline = int(round(edge * 1000)) + int(round(intervals * tick)) if pulses == 1 else t1
+        segs = B.pulse_segments(r, _t0, t1)
+        if not segs:
+            bad.append('%s/%s no stimulus pulse in [%s, %s] ps, so the settle deadline is unknown'
+                       % (r['case_id'], r['window'], _t0, t1))
+            continue
+        # the deadline is the fall edge of this window's own pulse, taken from the stimulus the deck
+        # was built from; the contract width is checked against it instead of being used to guess it
+        anchor = int(segs[-1][1]) if pulses == 1 else t1
+        if pulses == 1:
+            width = int(round(float(intervals) * tick))
+            if abs((int(segs[-1][1]) - int(segs[0][0])) - width) > EDGE_CLAIM_TOL_PS:
+                bad.append('%s/%s the stimulus pulse is %d ps, %s interval(s) of %d ps say %d'
+                           % (r['case_id'], r['window'], int(segs[-1][1]) - int(segs[0][0]),
+                              c['expected_intervals'], tick, width))
+                continue
+            anchor = int(segs[0][0]) + width
         got = MS.sustained_in_band(samples, int(round(edge * 1000)), ical * (1 - MS.BAND_REL),
-                                   ical * (1 + MS.BAND_REL), deadline)
+                                   ical * (1 + MS.BAND_REL), anchor)
         n += 1
         if got['status'] != status:
-            bad.append('%s/%s records settled_status=%s, the delivered samples give %s'
-                       % (r['case_id'], r['window'], status, got['status']))
+            bad.append('%s/%s records settled_status=%s, the delivered samples give %s (the curve '
+                       'leaves the band at %s ps against a deadline of %d ps)'
+                       % (r['case_id'], r['window'], status, got['status'],
+                          ('%.4f' % (got['band_left_at_ps'] / 1000.0))
+                          if got['band_left_at_ps'] is not None else 'never', anchor))
+            continue
+        settled = num(r.get('settled_ns'))
+        if got['settled_ps'] is None and settled is not None:
+            bad.append('%s/%s is not settled yet still reports settled_ns=%s'
+                       % (r['case_id'], r['window'], r.get('settled_ns')))
+        elif got['settled_ps'] is not None and settled is None:
+            bad.append('%s/%s settles at %.4f ns but the row leaves settled_ns empty'
+                       % (r['case_id'], r['window'], got['settled_ps'] / 1000.0))
+        elif got['settled_ps'] is not None \
+                and abs(settled * 1000 - got['settled_ps']) > EDGE_CLAIM_TOL_PS:
+            bad.append('%s/%s settled_ns=%s is not the re-derived %.4f ns'
+                       % (r['case_id'], r['window'], r.get('settled_ns'), got['settled_ps'] / 1000.0))
+        longest = num(r.get('longest_in_band_ns'))
+        if longest is not None and abs(longest * 1000 - got['longest_in_band_ps']) > 0.05 + 1e-6:
+            bad.append('%s/%s longest_in_band_ns=%s is not the sample-bounded %.4f ns'
+                       % (r['case_id'], r['window'], r.get('longest_in_band_ns'),
+                          got['longest_in_band_ps'] / 1000.0))
     C.add('SETTLED_RECOMPUTED', not bad and n > 0,
           '%d windows re-derived; %s' % (n, '; '.join(bad[:3]) or 'consistent'))
 
 
+def check_off(B, C):
+    """off_status, off_ns, the segment bound and the delay re-derived from the delivered current
+
+    The turn-off time the task table prints is the first delivered *sample* at or below the limit, so
+    it is a sample instant: the row has to name a time a sample really sits at. The continuous
+    threshold crossing is a different quantity, printed beside it, and the two are never swapped.
+    """
+    n, bad = 0, []
+    for r in B.cases:
+        key = (r['case_id'], r['window'])
+        c = B.contract.get(key)
+        if not c or c['role'] == 'calibration':
+            continue
+        if r['verdict'] in NON_ELECTRICAL:
+            continue
+        t0, t1 = window_times(r)
+        try:
+            samples, _s = B.samples(*key)
+        except MS.Refuse as exc:
+            bad.append(str(exc))
+            continue
+        segs = B.pulse_segments(r, t0, t1) or []
+        intervals = num(c['expected_intervals'])
+        fall = claim_ps(r.get('de_fall_50_ns'))
+        if intervals and not segs:
+            bad.append('%s/%s no stimulus pulse in [%s, %s] ps, so turn-off has no segment start'
+                       % (key + (t0, t1)))
+            continue
+        if intervals and fall is None:
+            bad.append('%s/%s conducts with no fall edge, so the off search has no start' % key)
+            continue
+        off_start = int(round(fall)) if intervals else t0
+        want_start = r.get('off_segment_start_ns')
+        if want_start not in ('', None) and abs(claim_ps(want_start) - off_start) > EDGE_CLAIM_TOL_PS:
+            bad.append('%s/%s off_segment_start_ns=%s is not the %s edge at %.4f ns'
+                       % (key[0], key[1], want_start, 'declared fall' if intervals else
+                          'window start', off_start / 1000.0))
+            continue
+        got = MS.turn_off(samples, float(off_start), OFF_LIMIT, t1 + TAIL_NS * NS)
+        if (got.get('status') or '') != r.get('off_status', ''):
+            bad.append('%s/%s records off_status=%s, the delivered current gives %s'
+                       % (key[0], key[1], r.get('off_status'), got.get('status')))
+            continue
+        n += 1
+        if r.get('off_ns') in ('', None):
+            continue
+        claim = claim_ps(r.get('off_ns'))
+        off = got.get('off_ps')
+        if off is None:
+            bad.append('%s/%s off_status=%s reports no off time yet prints off_ns=%s'
+                       % (key + (r.get('off_status'), r.get('off_ns'))))
+            continue
+        if abs(claim - off) > EDGE_CLAIM_TOL_PS:
+            bad.append('%s/%s off_ns=%s is not the re-derived %.4f ns'
+                       % (key[0], key[1], r.get('off_ns'), off / 1000.0))
+            continue
+        # an off time printed as a sample instant must BE a delivered sample instant
+        if not any(abs(t - claim) <= EDGE_CLAIM_TOL_PS for t, _v in samples):
+            bad.append('%s/%s off_ns=%s is not one of the delivered sample times, so it cannot be a '
+                       'first-sampling-point statement' % (key + (r.get('off_ns'),)))
+            continue
+        interp = MS.crossing(samples, OFF_LIMIT, False, off_start, t1 + TAIL_NS * NS, 'off crossing')
+        printed = num(r.get('off_interp_ns'))
+        if interp is not None and printed is None and 'off_interp_ns' in r:
+            bad.append('%s/%s the continuous %r A crossing is %.4f ns and the row leaves it empty'
+                       % (key[0], key[1], OFF_LIMIT, interp / 1000.0))
+        elif printed is not None and interp is not None \
+                and abs(printed * 1000 - interp) > EDGE_CLAIM_TOL_PS:
+            bad.append('%s/%s off_interp_ns=%s is not the adjacent-sample crossing %.4f ns'
+                       % (key[0], key[1], r.get('off_interp_ns'), interp / 1000.0))
+        elif printed is not None and interp is None:
+            bad.append('%s/%s prints a continuous off time (%s ns) that no two delivered samples '
+                       'bracket' % (key + (r.get('off_interp_ns'),)))
+    C.add('OFF_TIMES_RECOMPUTED', not bad and n > 0,
+          '%d turn-offs re-derived from the delivered current; %s'
+          % (n, '; '.join(bad[:3]) or 'consistent'))
+
+
+def claim_ps(value):
+    """a printed nanosecond claim kept at the resolution the table actually prints"""
+    if value in (None, '', 'NOT_FOUND', 'NOT_APPLICABLE_NO_CONDUCTING_EDGE', 'NOT_SAVED'):
+        return None
+    return float(value) * 1000.0
+
+
 def check_edges(B, C):
-    """every claimed crossing must be bracketed by the samples delivered with it"""
+    """every claimed crossing re-derived from its own samples, at the pulse the stimulus declares"""
     ical = calibration_value(B)
     n, bad = 0, []
-    marks = (('de_rise_50_ns', 'de_rise_50', DE_50, 'data_en_V'),
-             ('de_fall_50_ns', 'de_fall_50', DE_50, 'data_en_V'),
-             ('current_10pct_ns', 'i10', 0.1 * (ical or 0.0), 'iout_A'),
-             ('current_90pct_ns', 'i90', 0.9 * (ical or 0.0), 'iout_A'))
+    search = PULSE_EDGE_TOLERANCE_PS
     for r in B.cases:
-        c = B.contract.get((r['case_id'], r['window']))
+        key = (r['case_id'], r['window'])
+        c = B.contract.get(key)
         if not c or c['role'] == 'calibration':
             continue
         intervals = num(c['expected_intervals'])
-        for col, label, threshold, series_col in marks:
-            value = r.get(col, '')
-            if not intervals:
-                if value not in ('', 'NOT_APPLICABLE_NO_CONDUCTING_EDGE'):
-                    bad.append('%s/%s a black window declares %s=%s'
-                               % (r['case_id'], r['window'], col, value))
+        for col in ('de_rise_50_ns', 'de_fall_50_ns', 'current_10pct_ns', 'current_90pct_ns',
+                    'de_b_fall_50_ns', 'de_b_rise_50_ns'):
+            if not intervals and r.get(col, '') not in ('', 'NOT_APPLICABLE_NO_CONDUCTING_EDGE',
+                                                         'NOT_SAVED'):
+                bad.append('%s/%s a black window declares %s=%s' % (key[0], key[1], col, r[col]))
+        if not intervals:
+            continue
+        if r['verdict'] in NON_ELECTRICAL:
+            continue
+        if ical is None:
+            bad.append('no Ical to build the current thresholds from')
+            continue
+        t0, t1 = window_times(r)
+        segs = B.pulse_segments(r, t0, t1)
+        if not segs:
+            bad.append('%s/%s the delivered stimulus edge list holds no pulse in [%s, %s] ps, so '
+                       'none of its crossings has an anchor' % (key + (t0, t1)))
+            continue
+        exp_pulses = integer_value(c['expected_pulses'])
+        if exp_pulses is not None and len(segs) != exp_pulses:
+            bad.append('%s/%s the delivered stimulus conducts %d pulse(s) in [%d, %d) ps, the frozen '
+                       'table says %d' % (key[0], key[1], len(segs), t0, t1, exp_pulses))
+            continue
+        if integer_value(r.get('declared_pulses')) != len(segs):
+            bad.append('%s/%s records declared_pulses=%s while its own stimulus gives %d'
+                       % (key[0], key[1], r.get('declared_pulses'), len(segs)))
+            continue
+        rise_at, fall_at = int(segs[0][0]), int(segs[-1][1])
+        tick = integer_value(c['tick_ns']) * NS
+        width = int(round(float(intervals) * tick))
+        if exp_pulses == 1 and abs((fall_at - rise_at) - width) > EDGE_CLAIM_TOL_PS:
+            bad.append('%s/%s its stimulus pulse is %d ps wide while %s interval(s) of %d ps make %d'
+                       % (key[0], key[1], fall_at - rise_at, c['expected_intervals'], tick, width))
+            continue
+        ed = B.edges(*key)
+        try:
+            cur, _s = B.samples(*key)
+        except MS.Refuse as exc:
+            bad.append(str(exc))
+            continue
+        # (column, slice labels to try in order, node column, level, direction, lo, hi, must find,
+        #  what it is). data_en_b is the inverter output, so its edge is the opposite phase: the fall
+        #  of data_en is where data_en_b rises. Searching a fall there is what made a short window
+        #  "find" an edge by luck while every long window reported NOT_FOUND.
+        marks = (('de_rise_50_ns', ('de_rise_50',), 'data_en_V', DE_50, True, rise_at - search,
+                  rise_at + search, True, 'the 50 % rise of data_en at the stimulus rise edge'),
+                 ('de_fall_50_ns', ('de_fall_50',), 'data_en_V', DE_50, False, fall_at - search,
+                  fall_at + search, True, 'the 50 % fall of data_en at the stimulus fall edge'),
+                 ('de_b_fall_50_ns', ('de_b_fall_50', 'de_rise_50'), 'data_en_b_V', DE_50, False,
+                  rise_at - search, rise_at + search, False,
+                  'the 50 % fall of data_en_b where data_en rises'),
+                 ('de_b_rise_50_ns', ('de_b_rise_50', 'de_fall_50'), 'data_en_b_V', DE_50, True,
+                  fall_at - search, fall_at + search, False,
+                  'the 50 % rise of data_en_b where data_en falls'),
+                 ('current_10pct_ns', None, None, 0.1 * ical, True, rise_at - search,
+                  fall_at + (TAIL_NS + search) * NS, True, 'iout rising through 10 % of Ical'),
+                 ('current_90pct_ns', None, None, 0.9 * ical, True, rise_at - search,
+                  fall_at + (TAIL_NS + search) * NS, True, 'iout rising through 90 % of Ical'))
+        got_t = {}
+        for col, labels, node, threshold, rising, lo, hi, required, what in marks:
+            if col not in r:
+                # the column was not part of the table this bundle was written with
                 continue
-            if r['verdict'] in NON_ELECTRICAL:
+            value = r[col]
+            if labels is None:
+                series, slice_rows = cur, []
+            else:
+                slice_rows = []
+                for lab in labels:
+                    slice_rows = ed.get(lab, [])
+                    if slice_rows:
+                        break
+                series = edge_series(slice_rows, node)
+            if value == 'NOT_SAVED':
+                if series:
+                    bad.append('%s/%s says %s is NOT_SAVED while the slice carries the node'
+                               % (key[0], key[1], col))
                 continue
-            if value in ('', 'NOT_FOUND', 'NOT_APPLICABLE_NO_CONDUCTING_EDGE'):
-                bad.append('%s/%s conducts but %s is %r' % (r['case_id'], r['window'], col, value))
-                continue
-            claim = int(round(float(value) * 1000))
-            series = edge_series(B.edges(r['case_id'], r['window']).get(label, []), series_col)
             if len(series) < 2:
-                bad.append('%s/%s %s has no delivered samples around it'
-                           % (r['case_id'], r['window'], col))
+                if required:
+                    bad.append('%s/%s %s=%r has no delivered %s samples to re-derive it from'
+                               % (key[0], key[1], col, value, what))
+                elif value not in ('', 'NOT_FOUND', 'NOT_APPLICABLE_NO_CONDUCTING_EDGE'):
+                    bad.append('%s/%s records %s=%s although no delivered %s samples bracket it'
+                               % (key[0], key[1], col, value, what))
                 continue
-            lo, hi = series[0][0], series[-1][0]
-            if not (lo <= claim <= hi):
-                bad.append('%s/%s %s=%s lies outside its delivered samples [%d, %d] ps'
-                           % (r['case_id'], r['window'], col, value, lo, hi))
+            want = MS.crossing(series, threshold, rising, lo, hi,
+                               '%s/%s %s' % (key[0], key[1], col))
+            if want is None:
+                if value not in ('', 'NOT_FOUND'):
+                    bad.append('%s/%s records %s=%s but no two delivered samples bracket %r inside '
+                               '[%d, %d] ps of the %s' % (key[0], key[1], col, value, threshold,
+                                                           lo, hi, what))
+                elif required:
+                    bad.append('%s/%s leaves %s NOT_FOUND, yet the same %s is what the deck drives, '
+                               'so the miss is evidence and not a blank' % (key + (col, what)))
                 continue
-            got = MS.interp_pair(series, claim, 'edge check')
-            tol = max(abs(threshold) * 0.02, 0.02)
-            if abs(got - threshold) > tol:
-                bad.append('%s/%s %s=%s: the delivered %s is %r there, not %r (tolerance %r)'
-                           % (r['case_id'], r['window'], col, value, series_col, got, threshold,
-                              tol))
+            if value in ('', 'NOT_FOUND'):
+                bad.append('%s/%s %s is %r while the delivered samples cross %r at %.4f ns of the %s'
+                           % (key[0], key[1], col, value, threshold, want / 1000.0, what))
+                continue
+            got_t[col] = want
+            if abs(claim_ps(value) - want) > EDGE_CLAIM_TOL_PS:
+                bad.append('%s/%s %s=%s ns is not the crossing of the delivered samples (%.4f ns), '
+                           'a difference of %.4f ps beyond the 0.05 ps the column can print%s'
+                           % (key[0], key[1], col, value, want / 1000.0, abs(claim_ps(value) - want),
+                              '' if labels is None or not edge_times_quantised(slice_rows) else
+                              ' (and this slice only prints its times to 0.1 ps)'))
                 continue
             n += 1
-        t0, t1 = window_times(r)
-        fall = num(r.get('de_fall_50_ns'))
-        if intervals and fall is not None and t0 is not None:
-            tick = integer_value(c['tick_ns']) * NS
-            if integer_value(c['expected_pulses']) == 1:
-                rise = num(r.get('de_rise_50_ns'))
-                if rise is not None:
-                    want = int(round(rise * 1000)) + int(round(intervals * tick))
-                    if abs(fall * 1000 - want) > PULSE_EDGE_TOLERANCE_PS:
-                        bad.append('%s/%s the fall edge is at %s ns while the single declared pulse '
-                                   'ends at %.4f ns' % (r['case_id'], r['window'], fall,
-                                                         want / 1000.0))
-            if not (t0 - 50 * NS <= fall * 1000 <= t1 + TAIL_NS * NS):
-                bad.append('%s/%s the fall edge %s ns is outside the window and its tail'
-                           % (r['case_id'], r['window'], fall))
+        i10, i90 = got_t.get('current_10pct_ns'), got_t.get('current_90pct_ns')
+        if i10 is not None and i90 is not None and i90 <= i10:
+            bad.append('%s/%s the 90 %% crossing (%.4f ns) does not follow the 10 %% one (%.4f ns)'
+                       % (key + (i90 / 1000.0, i10 / 1000.0)))
+        span = r.get('current_rise_10_90_ns')
+        if span not in ('', None) and i10 is not None and i90 is not None \
+                and abs(claim_ps(span) - (i90 - i10)) > EDGE_CLAIM_TOL_PS:
+            bad.append('%s/%s current_rise_10_90_ns=%s is not i90 - i10 = %.4f ns'
+                       % (key + (span, (i90 - i10) / 1000.0)))
+        b_fall, b_rise = got_t.get('de_b_fall_50_ns'), got_t.get('de_b_rise_50_ns')
+        if b_fall is not None and got_t.get('de_rise_50_ns') is not None:
+            # data_en rising is data_en_b falling: the two 50 % crossings belong to the same edge
+            gap = b_fall - got_t['de_rise_50_ns']
+            if abs(gap) > search:
+                bad.append('%s/%s data_en_b falls %.4f ns away from the data_en rise, which is not '
+                           'the complement of this edge' % (key[0], key[1], gap / 1000.0))
+            rec = r.get('de_and_de_b_edge_gap_ns')
+            if rec not in ('', None) and abs(claim_ps(rec) - gap) > EDGE_CLAIM_TOL_PS:
+                bad.append('%s/%s the recorded data_en/data_en_b gap is %s, the samples give %.4f ns'
+                           % (key + (rec, gap / 1000.0)))
+        if b_rise is not None and got_t.get('de_fall_50_ns') is not None:
+            gap = b_rise - got_t['de_fall_50_ns']
+            if abs(gap) > search:
+                bad.append('%s/%s data_en_b rises %.4f ns away from the data_en fall, which is not '
+                           'the complement of this edge' % (key[0], key[1], gap / 1000.0))
+            rec = r.get('de_b_rise_gap_ns')
+            if rec not in ('', None) and abs(claim_ps(rec) - gap) > EDGE_CLAIM_TOL_PS:
+                bad.append('%s/%s the recorded data_en_b rise gap is %s, the samples give %.4f ns'
+                           % (key + (rec, gap / 1000.0)))
+        fall = claim_ps(r.get('de_fall_50_ns'))
+        if fall is not None and not (t0 - search <= fall <= t1 + TAIL_NS * NS + search):
+            bad.append('%s/%s the fall edge %s ns is outside the window and its tail'
+                       % (key[0], key[1], r.get('de_fall_50_ns')))
         if r.get('off_status') and r['off_status'] not in MS.TURN_OFF_STATES:
             bad.append('%s/%s off_status %r is not a stated outcome'
-                       % (r['case_id'], r['window'], r['off_status']))
-        if not intervals and r.get('turn_off_delay_ns'):
-            bad.append('%s/%s a window with no conducting edge reports a turn-off delay of %s ns'
-                       % (r['case_id'], r['window'], r['turn_off_delay_ns']))
+                       % (key[0], key[1], r['off_status']))
+        off_start = claim_ps(r.get('off_segment_start_ns'))
+        off = claim_ps(r.get('off_ns'))
+        delay = claim_ps(r.get('turn_off_delay_ns'))
+        if r.get('turn_off_delay_ns') not in ('', None):
+            if off is None or off_start is None:
+                bad.append('%s/%s reports a turn-off delay of %s ns with no off time or segment start'
+                           % (key + (r['turn_off_delay_ns'],)))
+            elif abs(delay - (off - off_start)) > EDGE_CLAIM_TOL_PS:
+                bad.append('%s/%s turn_off_delay_ns=%s is not off_ns - off_segment_start_ns = %.4f ns'
+                           % (key[0], key[1], r['turn_off_delay_ns'], (off - off_start) / 1000.0))
     C.add('EDGES_BRACKETED_BY_SAMPLES', not bad and n > 0,
-          '%d crossings verified against their own samples; %s' % (n, '; '.join(bad[:4]) or '-'))
+          '%d crossings re-derived from their own samples at the stimulus pulse; %s'
+          % (n, '; '.join(bad[:4]) or 'consistent'))
 
 
 def check_electrical_verdict(B, C):
@@ -896,25 +1227,74 @@ def check_electrical_verdict(B, C):
           '%d verdicts re-derived; %s' % (n, '; '.join(bad[:3]) or 'consistent'), bad)
 
 
+def slice_recheck(B, window, bounds, recorded, label, row=None):
+    """one calibration window re-read from the slice that is supposed to prove it
+
+    A missing slice is reported as its own blocked state instead of being skipped: `if off:` used to
+    drop the empty set and still print that everything had been re-derived.
+    """
+    tag = window.split('_', 1)[1].upper()
+    span = '%.1f..%.1f ns' % (bounds[0] / 1000.0, bounds[1] / 1000.0)
+    try:
+        samples, _s = B.samples('D7B-CAL', window)
+    except MS.Refuse:
+        return (['BLOCKED_MISSING_CAL_%s: the bundle carries no %s slice for %s'
+                 % (tag, label, span)]), '%s: no delivered bytes' % label
+    inside = [p for p in samples if bounds[0] < p[0] < bounds[1]]
+    if len(inside) < 1:
+        return (['BLOCKED_MISSING_CAL_%s: the delivered %s slice holds %d sample(s) inside %s'
+                 % (tag, label, len(inside), span)]), '%s: %d samples' % (label, len(inside))
+    # the same reconstruction the builder used: the straight line through the delivered samples,
+    # clipped to the window, so its two interpolated end points count as part of the window
+    clipped = MS.window_curve(samples, bounds[0], bounds[1], '%s slice' % label)
+    got = max(abs(v) for _t, v in clipped)
+    a, b = MS.window_bounds(samples, bounds[0], bounds[1])
+    integrated_s = (b - a) * MS.S_PER_PS if a is not None else None
+    cover_s = ((inside[-1][0] - inside[0][0]) * MS.S_PER_PS) if inside else None
+    note = '%s: %d samples inside %s, max |I| %.12g A over the %d clipped points' % (
+        label, len(inside), span, got, len(clipped))
+    if recorded is None:
+        return (['the %s slice carries %d samples but calibration.csv asserts no value for it'
+                 % (label, len(inside))]), note
+    if abs(got - recorded) > max(abs(recorded) * 1e-9, 1e-30):
+        return (['the %s max |I| %r is not the delivered samples\' %r (%d samples in %s)'
+                 % (label, recorded, got, len(inside), span)]), note
+    stated = integer_value((row or {}).get('band_samples'))
+    if stated is not None and stated != len(inside):
+        return (['calibration.csv says %d samples for the %s window, its delivered slice holds %d'
+                 % (stated, label, len(inside))]), note
+    for col, want, what in (('band_integration_s', integrated_s, 'integrated'),
+                            ('integration_s', cover_s, 'covered by its own samples')):
+        got_s = num((row or {}).get(col))
+        if got_s is not None and want is not None and abs(got_s - want) > max(want * 1e-9, 1e-18):
+            return (['the %s window says it was %s over %r s, the delivered slice is %r s'
+                     % (label, what, got_s, want)]), note
+    return [], note
+
+
 def check_calibration(B, C):
     ical = calibration_value(B)
     rows = B.cal
     n_cal = len([r for r in B.cases if r['role'] == 'calibration'])
     C.add('CALIBRATION_PRESENT', n_cal == 1, '%d calibration row(s)' % n_cal)
     band_min = band_max = off_max = tail_max = None
+    off_row = tail_row = None
     for r in rows:
         if r['quantity'] == 'Ical_A':
             band_min, band_max = num(r.get('band_min_A')), num(r.get('band_max_A'))
         elif r['quantity'] == 'OFF_baseline_max_abs_A':
             off_max = num(r['value_A'])
+            off_row = r
         elif r['quantity'] == 'CAL_tail_max_abs_A':
             tail_max = num(r['value_A'])
+            tail_row = r
     in_band = (ical is not None and abs(ical - ICAL_TARGET) <= ICAL_BAND_REL * ICAL_TARGET
                and off_max is not None and off_max <= OFF_LIMIT
                and tail_max is not None and tail_max <= OFF_LIMIT)
     C.add('CALIBRATION_NUMBERS_IN_BAND', in_band, 'Ical=%r off=%r tail=%r'
           % (ical, off_max, tail_max))
     bad = []
+    band_bad = []
     cal_row = [r for r in B.cases if r['role'] == 'calibration']
     if cal_row:
         r = cal_row[0]
@@ -931,36 +1311,60 @@ def check_calibration(B, C):
     try:
         samples, _s = B.samples('D7B-CAL', 'cal')
     except MS.Refuse as exc:
-        C.add('CALIBRATION_SAMPLES_RECOMPUTED', False, 'BLOCKED_MISSING_RAW: %s' % exc)
+        band_bad.append('BLOCKED_MISSING_CAL_BAND: %s' % exc)
+    band_mean = None
+    band_internal = 0
     if samples is not None:
-        band = [(t, v) for t, v in samples if CAL_BAND[0] <= t <= CAL_BAND[1]]
-        if len(band) < 2:
-            C.add('CALIBRATION_SAMPLES_RECOMPUTED', False,
-                  'BLOCKED_MISSING_RAW: the delivered CAL band holds %d samples' % len(band))
+        # the mean is taken over the 500 ns the window declares, with the two boundary values
+        # interpolated between the samples that straddle them; the samples themselves only cover
+        # 499.5 ns, and that difference is reported instead of being smoothed over
+        clipped = MS.window_curve(samples, CAL_BAND[0], CAL_BAND[1], 'calibration band')
+        lo_hi = MS.window_bounds(samples, CAL_BAND[0], CAL_BAND[1])
+        integrated_s = (lo_hi[1] - lo_hi[0]) * MS.S_PER_PS if lo_hi[0] is not None else None
+        band_internal = len([p for p in clipped if CAL_BAND[0] < p[0] < CAL_BAND[1]])
+        band_mean = (MS.trapezoid(clipped) / integrated_s) if integrated_s else None
+        inside = [(t, v) for t, v in clipped if CAL_BAND[0] <= t <= CAL_BAND[1]]
+        if len(inside) < 2:
+            band_bad.append('the delivered CAL band holds %d samples' % len(inside))
         else:
-            dt = (band[-1][0] - band[0][0]) * MS.S_PER_PS
-            mean = MS.trapezoid(band) / dt if dt else None
-            off = [abs(v) for t, v in samples if CAL_OFF[0] <= t <= CAL_OFF[1]]
-            tail = [abs(v) for t, v in samples if CAL_TAIL[0] <= t <= CAL_TAIL[1]]
-            if mean is None or ical is None or abs(mean - ical) > max(abs(ical) * 1e-9, 1e-24):
-                bad.append('Ical %r is not the mean of its own delivered band (%r)'
-                           % (ical, mean))
-            if band_min is not None and abs(min(v for _t, v in band) - band_min) > abs(
+            stated_span = num((cal_row[0] if cal_row else {}).get('band_integration_s'))
+            if stated_span is not None and integrated_s is not None \
+                    and abs(stated_span - integrated_s) > max(integrated_s * 1e-9, 1e-18):
+                band_bad.append('calibration.csv says the band was integrated over %r s, the '
+                                'delivered samples cover %r s' % (stated_span, integrated_s))
+            stated_cover = num((cal_row[0] if cal_row else {}).get('integration_s'))
+            cover = ((inside[-1][0] - inside[0][0]) * MS.S_PER_PS)
+            if stated_cover is not None and abs(stated_cover - cover) > max(cover * 1e-9, 1e-18):
+                band_bad.append('calibration.csv says its own samples span %r s, they span %r s'
+                                % (stated_cover, cover))
+            if ical is None or band_mean is None or abs(band_mean - ical) > max(
+                    abs(ical) * 1e-9, 1e-24):
+                band_bad.append('Ical %r is not the mean of its own band over the declared %d ns '
+                                '(%.12g)' % (ical, (CAL_BAND[1] - CAL_BAND[0]) // NS, band_mean))
+            if band_min is not None and abs(min(v for _t, v in inside) - band_min) > abs(
                     band_min) * 1e-9:
-                bad.append('the band minimum %r is not the delivered samples\' %r'
-                           % (band_min, min(v for _t, v in band)))
-            if band_max is not None and abs(max(v for _t, v in band) - band_max) > abs(
+                band_bad.append('the band minimum %r is not the delivered samples\' %r'
+                                % (band_min, min(v for _t, v in inside)))
+            if band_max is not None and abs(max(v for _t, v in inside) - band_max) > abs(
                     band_max) * 1e-9:
-                bad.append('the band maximum %r is not the delivered samples\' %r'
-                           % (band_max, max(v for _t, v in band)))
-            if off and off_max is not None and abs(max(off) - off_max) > max(off_max * 1e-9, 1e-30):
-                bad.append('the OFF baseline %r is not the delivered samples\' %r'
-                           % (off_max, max(off)))
-            if tail and tail_max is not None and abs(max(tail) - tail_max) > 1e-30:
-                bad.append('the calibration tail %r is not the delivered samples\' %r'
-                           % (tail_max, max(tail)))
-            C.add('CALIBRATION_SAMPLES_RECOMPUTED', not bad,
-                  '; '.join(bad[:3]) or 'mean, band, OFF baseline and tail re-derived')
+                band_bad.append('the band maximum %r is not the delivered samples\' %r'
+                                % (band_max, max(v for _t, v in inside)))
+            stated = integer_value(cal_row[0].get('band_samples')) if cal_row else None
+            if stated is not None and 'band_samples' in cal_row[0] and stated != band_internal:
+                band_bad.append('calibration.csv says %d band samples, the delivered shard holds %d'
+                                % (stated, band_internal))
+    C.add('CALIBRATION_BANDS_FROM_SAMPLES', not band_bad and samples is not None,
+          '; '.join(band_bad[:3]) or 'Ical re-read as the mean of %d internal samples over the '
+                                     'declared 500 ns with both bounds interpolated' % band_internal)
+    # the two windows outside the band: each one is only a fact once its own bytes are in the bundle
+    off_bad, off_note = slice_recheck(B, 'cal_off', CAL_OFF, off_max, 'OFF baseline', off_row)
+    tail_bad, tail_note = slice_recheck(B, 'cal_tail', CAL_TAIL, tail_max, 'tail', tail_row)
+    bad += off_bad + tail_bad
+    blocked = [x for x in off_bad + tail_bad if x.startswith('BLOCKED_')]
+    C.add('CALIBRATION_OFF_BASELINE_SAMPLES', not off_bad and not tail_bad,
+          '%s; %s%s' % (off_note, tail_note,
+                        '' if not blocked else '; ' + '; '.join(bad[:2])))
+    bad += band_bad
     if cal_row and not in_band:
         survivors = [r for r in B.cases if r['role'] not in ('calibration', 'negative_wiring')
                      and r['verdict'] not in NON_ELECTRICAL]
@@ -1213,12 +1617,34 @@ def check_convergence(B, C):
             continue
         ok = dq <= lim and dp <= lim_p
         ea, eb = num(a.get('de_fall_50_ns')), num(b.get('de_fall_50_ns'))
-        if ea is not None and eb is not None:
-            ok = ok and abs((eb - ea) * 1000) <= CONV_EDGE_PS
+        if ea is None or eb is None:
+            bad.append('%s/%s has no fall edge on both sides of the pair, so its edge delta cannot '
+                       'be re-derived (a=%r b=%r)' % (key[0], key[1], a.get('de_fall_50_ns'),
+                                                      b.get('de_fall_50_ns')))
+            continue
+        edge_ps = abs((eb - ea) * 1000)
+        rec_edge = num(r.get('delta_edge_ns'))
+        if rec_edge is not None and abs(edge_ps - rec_edge * 1000) > EDGE_CLAIM_TOL_PS:
+            bad.append('%s/%s delta_edge_ns=%s is not the recomputed %.4f ns'
+                       % (key[0], key[1], r.get('delta_edge_ns'), edge_ps / 1000.0))
+            continue
+        if 'limit_edge_ns' in r:
+            if num(r.get('limit_edge_ns')) is None \
+                    or abs(num(r['limit_edge_ns']) * 1000 - CONV_EDGE_PS) > 1e-9:
+                bad.append('%s/%s the edge limit column is %r, not the frozen %d ps'
+                           % (key[0], key[1], r.get('limit_edge_ns'), CONV_EDGE_PS))
+                continue
+        # what is compared is one physical quantity on one node: the 50 % fall of data_en, taken from
+        # the delivered samples of each member of the pair. Agreement of the ideal input edges does not
+        # make the analogue convergence any wider than this number says.
+        if edge_ps > CONV_EDGE_PS:
+            ok = False
         want_v = 'CONVERGED' if ok else 'NUMERICAL_NOT_CONVERGED'
         if r.get('verdict') != want_v:
-            bad.append('%s/%s records %s while its own numbers give %s'
-                       % (key[0], key[1], r.get('verdict'), want_v))
+            bad.append('%s/%s records %s while its own numbers give %s (dQ %r vs %r, dPeak %r vs %r,'
+                       ' dEdge %.4f ns vs %.4f ns)'
+                       % (key[0], key[1], r.get('verdict'), want_v, dq * 1e12, lim * 1e12,
+                          dp * 1e6, lim_p * 1e6, edge_ps / 1000.0, CONV_EDGE_PS / 1000.0))
         n += 1
     C.add('CONVERGENCE_RECOMPUTED', not bad and n > 0,
           '%d pairs re-derived; %s' % (n, '; '.join(bad[:4]) or 'consistent'), bad)
@@ -1267,22 +1693,57 @@ def check_launches(B, C):
     if B.account:
         conf = [r for r in B.account if r['state'] in ('CONFIRMED', 'COMPLETED')]
         unc = [r for r in B.account if r['state'] == 'UNCERTAIN']
-        occupied = len(conf) + len(unc)
-        C.add('ACCOUNT_KEEPS_HISTORY', bool(conf) or bool(unc),
-              '%d account rows: %d confirmed, %d uncertain, %d refused without launching'
-              % (len(B.account), len(conf), len(unc),
+        pend = [r for r in B.account if r['state'] == 'REQUESTED']
+        # a reservation is a launch somebody may not have seen return; recovering it changes what can
+        # be proved about it, never what it cost, so REQUESTED occupies the ceiling here too
+        occupied = len(conf) + len(unc) + len(pend)
+        C.add('ACCOUNT_KEEPS_HISTORY', bool(conf) or bool(unc) or bool(pend),
+              '%d account rows: %d confirmed, %d uncertain, %d reserved and unreturned, '
+              '%d refused without launching'
+              % (len(B.account), len(conf), len(unc), len(pend),
                  len([r for r in B.account if r['state'] == 'REFUSED_NO_LAUNCH'])))
         C.add('ACCOUNT_COVERS_RECONCILE', started is None or started <= occupied,
               'the account occupies %d, the reconcile table names %s' % (occupied, started))
-        ceiling = integer_value(B.account[0].get('ceiling')) or CEILING_GRANTED
-        C.add('BUDGET_RESPECTED', occupied <= ceiling,
-              '%d launches occupied against a ceiling of %d (the task book %d plus the 4 the user '
-              'granted later); the excess is a historical fact of the delivered round, not repaired '
-              'here' % (occupied, ceiling, CEILING_TASKBOOK))
+        # the judgement number is the authorisation, never a column in the file being judged: reading
+        # it from row one is what let a forged ceiling turn 59 of 56 into a PASS
+        wrong = []
+        for value in sorted(set(r.get('ceiling', '') for r in B.account)):
+            if value != str(CEILING_GRANTED):
+                wrong.append('%d account row(s) declare a ceiling of %s'
+                             % (len([r for r in B.account if r.get('ceiling', '') == value]), value
+                                or '(blank)'))
+        for key in ('ceiling', 'budget'):
+            if B.env.get(key) not in (None, CEILING_GRANTED):
+                wrong.append('environment.json %s = %s' % (key, B.env.get(key)))
+        if totals and str(CEILING_GRANTED) not in (totals[0].get('note') or ''):
+            wrong.append('the reconcile TOTAL note does not name the ceiling of %d' % CEILING_GRANTED)
+        acc = B.env.get('launch_account') or {}
+        mismatch = []
+        for key, want in (('confirmed', len(conf)), ('uncertain', len(unc)),
+                          ('no_launch', len([r for r in B.account
+                                             if r['state'] == 'REFUSED_NO_LAUNCH'])),
+                          ('occupied', occupied)):
+            got = integer_value(acc.get(key))
+            if got is not None and got != want:
+                mismatch.append('environment.json says %s=%d, the account rows say %d'
+                                % (key, got, want))
+        if mismatch:
+            wrong.append('; '.join(mismatch[:3]))
+        C.add('BUDGET_AUTHORITY_FIXED', not wrong,
+              'the judgement ceiling is the fixed authorisation %d (task book %d plus the %d the user '
+              'granted on 2026-10-21), and every declaration in the bundle says the same%s'
+              % (CEILING_GRANTED, CEILING_TASKBOOK, CEILING_GRANTED - CEILING_TASKBOOK,
+                 '' if not wrong else '; ' + '; '.join(wrong[:3])))
+        C.add('BUDGET_RESPECTED', occupied <= CEILING_GRANTED,
+              '%d launches occupied against the authorised ceiling of %d (the task book %d plus the '
+              '%d the user granted later); the excess is a historical fact of the delivered round, '
+              'not repaired here' % (occupied, CEILING_GRANTED, CEILING_TASKBOOK,
+                                     CEILING_GRANTED - CEILING_TASKBOOK))
     else:
         C.add('ACCOUNT_KEEPS_HISTORY', False,
               'launch_account.csv is missing, so the cumulative ceiling cannot be re-derived')
         C.add('ACCOUNT_COVERS_RECONCILE', False, 'no account file to compare with')
+        C.add('BUDGET_AUTHORITY_FIXED', False, 'no account file, so no declaration can be verified')
         C.add('BUDGET_RESPECTED', started is not None and started <= CEILING_GRANTED,
               '%s processes started in total against a ceiling of %d'
               % ('-' if started is None else started, CEILING_GRANTED))
@@ -1381,6 +1842,135 @@ def check_bundle_shape(B, C):
     total = sum(integer_value(e['bytes']) or 0 for e in B.manifest.get('files', []))
     C.add('TRACKED_BYTES_WITHIN_LIMIT', 0 < total <= 32 * 1024 * 1024,
           '%d bytes across %d entries' % (total, len(listed)))
+
+
+def parse_segments(txt):
+    """`[[[a;b;c]];[[d;e;f]]]` as one segment list per window, the way the table records it"""
+    if not txt or str(txt).strip() in ('-', '[]'):
+        return []
+    try:
+        got = json.loads(str(txt).replace(';', ','))
+    except ValueError:
+        raise MS.Refuse('the re-verification table records segments %r, which is not readable'
+                        % (txt,))
+    out = []
+    for win in got:
+        segs = []
+        for seg in win:
+            cells = [integer_value(x) for x in seg]
+            if len(cells) != 3 or None in cells:
+                raise MS.Refuse('the re-verification table records the segment %r, which is not '
+                                'three whole picoseconds' % (seg,))
+            segs.append(cells)
+        out.append(segs)
+    return out
+
+
+def check_vcd_semantics(B, C):
+    """the delivered four-state bytes read back through the frozen parser and bound to the rows
+
+    A digest says a file is the file; it does not say the transitions inside it still mean the pulse a
+    case row reads its edges from. So the same converter that turned the RTL trace into the stimulus is
+    run over the delivered bytes again, and what it finds is compared with the stimulus edge list, the
+    re-verification table and every case row's own window and pulse count. A flipped transition that
+    keeps every hash consistent is refused here, because the golden table no longer fits the trace.
+    """
+    rpath = os.path.join(B.dir, 'rtl_reverify.csv')
+    dpath = os.path.join(B.dir, 'rtl_reverify_delivery.csv')
+    if not (os.path.isfile(rpath) and os.path.isfile(dpath)):
+        C.add('RTL_VCD_SEMANTICS_REPARSED', False,
+              'the bundle ships no re-verification table and delivery index, so no delivered trace '
+              'can be re-read')
+        return
+    table = read_rows(rpath)
+    delivery = dict((r['case_id'], r) for r in read_rows(dpath))
+    gold = golden_table(B)
+    gold = golden_table(B)
+    shift_ps = bundle_shift(B)
+    by_trace = dict((c['trace_case'], c) for c in B.contract.values() if c['trace_case'])
+    bad = []
+    parsed = 0
+    shifts = set()
+    B._rtl_windows = {}
+    for row in table:
+        cid = row['case_id']
+        d = delivery.get(cid)
+        if d is None:
+            bad.append('%s: the re-verification table names a trace nothing delivers' % cid)
+            continue
+        path = os.path.join(B.dir, d['delivered_as'])
+        if not os.path.isfile(path):
+            bad.append('%s: %s is not in the bundle to re-parse' % (cid, d['delivered_as']))
+            continue
+        cdef = by_trace.get(cid)
+        ramp = integer_value((cdef or {}).get('ramp_ns')) or 2
+        try:
+            doc = B.vcd_document(path, cid, ramp, 0)
+        except TR.Refuse as exc:
+            bad.append('%s: the frozen parser refuses the delivered bytes (%s)' % (cid, exc))
+            continue
+        except Exception as exc:
+            bad.append('%s: re-parsing raised %s instead of a refusal' % (cid, exc))
+            continue
+        parsed += 1
+        for w in doc['windows']:
+            B._rtl_windows[(cid, w['window'])] = w
+        recorded = parse_segments(row.get('segments_ps', ''))
+        if len(recorded) != len(doc['windows']):
+            bad.append('%s: the table records %d window(s) of segments, the trace gives %d'
+                       % (cid, len(recorded), len(doc['windows'])))
+            continue
+        for w, segs in zip(doc['windows'], recorded):
+            got = [[s[0], s[1], s[2]] for s in w['segments_ps']]
+            if got != segs:
+                bad.append('%s/%s the table records segments %s, re-parsing the delivered bytes '
+                           'gives %s' % (cid, w['window'], segs, got))
+    bound = 0
+    for r in B.cases:
+        c = B.contract.get((r['case_id'], r['window']))
+        if not c or c['role'] == 'calibration':
+            continue
+        tc = c['trace_case']
+        if tc in ('', 'NONE'):
+            continue
+        key = (r['case_id'], r['window'])
+        w = B._rtl_windows.get((tc, r['window']))
+        if w is None:
+            bad.append('%s/%s names trace case %s, whose delivered bytes conduct no such window'
+                       % (key + (tc,)))
+            continue
+        t0, t1 = window_times(r)
+        shifts.add(int(round(claim_ps(r.get('t0_ns')))) - w['t0_ps'])
+        if t0 != w['t0_ps'] + shift_ps or t1 != w['t1_ps'] + shift_ps:
+            bad.append('%s/%s the case window is [%d, %d] ps while the delivered trace gives '
+                       '[%d, %d] ps plus the %d ns shift'
+                       % (key + (t0, t1, w['t0_ps'], w['t1_ps'], shift_ps // NS)))
+            continue
+        edges = B.pwl_edges(r['case_id']) or []
+        stim = TR.segments_of(edges, t0, t1) if edges else []
+        rtl = [(s[0] + shift_ps, s[1] + shift_ps, s[2]) for s in w['segments_ps']]
+        if [s[:2] for s in stim] != [(s[0], s[1]) for s in rtl]:
+            bad.append('%s/%s the delivered stimulus edges give %s while the trace pulses are %s'
+                       % (key[0], key[1], str([s[:2] for s in stim]),
+                          str([(s[0], s[1]) for s in rtl])))
+            continue
+        if integer_value(r.get('declared_pulses')) != len(w['segments_ps']):
+            bad.append('%s/%s declares %s pulse(s); the delivered trace conducts %d'
+                       % (key[0], key[1], r.get('declared_pulses'), len(w['segments_ps'])))
+            continue
+        bound += 1
+    if len(shifts) > 1:
+        bad.append('the case rows and the trace disagree about the PWL shift: %s'
+                   % ', '.join(str(x) for x in sorted(shifts)))
+    elif shifts and shifts != {shift_ps}:
+        bad.append('the rows sit %d ps after the trace, not the %d ps the deck declares'
+                   % (sorted(shifts)[0], shift_ps))
+    C.add('RTL_VCD_SEMANTICS_REPARSED', not bad and parsed == len(table) and parsed > 0
+          and bound > 0,
+          '%d/%d delivered traces re-parsed through the frozen four-state converter and %d case '
+          'window(s) bound to their pulses and stimulus edges; %s'
+          % (parsed, len(table), bound, '; '.join(bad[:3]) or 'all agree')
+          if not bad else '; '.join(bad[:3]))
 
 
 def check_rtl_reverify(B, C):
@@ -1518,10 +2108,10 @@ def check_gate_records(B, C):
 
 
 CHECKS = (check_matrix, check_discrete, check_shards, check_series_vs_accepted, check_charge,
-          check_qlsb, check_last100, check_peak, check_settle, check_edges,
+          check_qlsb, check_last100, check_peak, check_settle, check_edges, check_off,
           check_electrical_verdict, check_calibration, check_artifacts, check_negatives,
           check_convergence, check_launches, check_identity, check_rtl_reverify,
-          check_gate_records, check_bundle_shape)
+          check_vcd_semantics, check_gate_records, check_bundle_shape)
 
 
 def build_checks(ev_dir, C):
@@ -1570,7 +2160,12 @@ def main_dir(ev_dir, report=True):
 COUNTERFEITS = ('false_off_with_PASS',
                 'wrong_calibration_scale_and_electrical_FAIL_labeled_PASS',
                 'different_PWL_input', 'missing_safety_recovery', 'missing_convergence_rows',
-                'false_launch_TOTAL', 'fractional_tick', 'false_N1_observations')
+                'false_launch_TOTAL', 'fractional_tick', 'false_N1_observations',
+                # the seven DATA-7B-R2 breaks: each one is a number that stays legal to read and only
+                # a re-derivation from the delivered bytes can refuse it
+                'unauthorised_ceiling_60', 'off_time_zero', 'current_crossing_off_by_5ns',
+                'complementary_time_zero', 'convergence_edge_delta_9999ns',
+                'delivered_vcd_transition_flipped', 'cal_off_baseline_without_support')
 # each break names the check that must react and the case it touched: a check the delivered bundle
 # already fails cannot count as "detected", so the new reason itself has to mention this case
 EXPECTED_NEW_FAILURE = {
@@ -1585,6 +2180,14 @@ EXPECTED_NEW_FAILURE = {
     'false_launch_TOTAL': (('RECONCILE_SUMS_TO_TOTAL',), 'TOTAL'),
     'fractional_tick': (('DISCRETE_VALUES_MATHEMATICAL',), 'D7B-P30-C001'),
     'false_N1_observations': (('NEGATIVES_BOUND_TO_BYTES',), 'D7B-N1'),
+    'unauthorised_ceiling_60': (('BUDGET_AUTHORITY_FIXED',), 'ceiling'),
+    'off_time_zero': (('OFF_TIMES_RECOMPUTED',), 'D7B-P30-C001'),
+    'current_crossing_off_by_5ns': (('EDGES_BRACKETED_BY_SAMPLES',), 'D7B-P30-C001'),
+    'complementary_time_zero': (('EDGES_BRACKETED_BY_SAMPLES',), 'data_en_b'),
+    'convergence_edge_delta_9999ns': (('CONVERGENCE_RECOMPUTED',), 'D7B-CVG'),
+    'delivered_vcd_transition_flipped': (('RTL_VCD_SEMANTICS_REPARSED',
+                                          'RTL_EDGES_REVERIFIED'), 'D7B-P30-C001'),
+    'cal_off_baseline_without_support': (('CALIBRATION_OFF_BASELINE_SAMPLES',), 'D7B-CAL'),
 }
 
 
@@ -1650,8 +2253,104 @@ def tamper(name, ev):
             if col in hdr:
                 n[col] = '0'
         write_rows(os.path.join(ev, 'negative.csv'), hdr, rows)
+    elif name == 'unauthorised_ceiling_60':
+        rows = rows_of(os.path.join(ev, 'launch_account.csv'))
+        hdr = list(rows[0].keys())
+        for r in rows:
+            r['ceiling'] = '60'
+        write_rows(os.path.join(ev, 'launch_account.csv'), hdr, rows)
+    elif name == 'off_time_zero':
+        def edit(rows):
+            next(x for x in rows if x['case_id'] == 'D7B-P30-C001'
+                 and x['window'] == 'normal')['off_ns'] = '0.0000'
+        change_cases(edit)
+    elif name == 'current_crossing_off_by_5ns':
+        def edit(rows):
+            r = next(x for x in rows if x['case_id'] == 'D7B-P30-C001'
+                     and x['window'] == 'normal')
+            r['current_10pct_ns'] = '%.4f' % (float(r['current_10pct_ns']) + 5.0)
+        change_cases(edit)
+    elif name == 'complementary_time_zero':
+        def edit(rows):
+            for r in rows:
+                for col in ('de_b_fall_50_ns', 'de_b_rise_50_ns'):
+                    if col in r and r[col] not in ('', 'NOT_SAVED', 'NOT_FOUND',
+                                                   'NOT_APPLICABLE_NO_CONDUCTING_EDGE'):
+                        r[col] = '0.0000'
+        change_cases(edit)
+    elif name == 'convergence_edge_delta_9999ns':
+        rows = rows_of(os.path.join(ev, 'convergence.csv'))
+        hdr = list(rows[0].keys())
+        for r in rows:
+            if r.get('delta_edge_ns') not in ('', 'NOT_FOUND_BOTH'):
+                r['delta_edge_ns'] = '9999.0000'
+        write_rows(os.path.join(ev, 'convergence.csv'), hdr, rows)
+    elif name == 'delivered_vcd_transition_flipped':
+        tamper_vcd_transition(ev)
+    elif name == 'cal_off_baseline_without_support':
+        rows = rows_of(os.path.join(ev, 'calibration.csv'))
+        hdr = list(rows[0].keys())
+        next(r for r in rows if r['quantity'] == 'OFF_baseline_max_abs_A')['value_A'] = '1e-07'
+        write_rows(os.path.join(ev, 'calibration.csv'), hdr, rows)
     else:
         raise MS.Refuse('unknown counterfeit %s' % name)
+
+
+def tamper_vcd_transition(ev):
+    """hold one data_en rise low inside the abort window, then forge every digest around it
+
+    The four-state bytes still hash to what the tables say, so only a verifier that reads the
+    transitions themselves can notice that the window no longer conducts the pulse its golden row and
+    its case row both claim.
+    """
+    dpath = os.path.join(ev, 'rtl_reverify_delivery.csv')
+    if not os.path.isfile(dpath):
+        raise MS.Refuse('no delivery index, so the counterfeit has nothing to flip')
+    delivery = rows_of(dpath)
+    row = next((r for r in delivery if r['case_id'] == 'D7B-P30-C001'), None) or delivery[0]
+    path = os.path.join(ev, row['delivered_as'])
+    lines = u(io.open(path, encoding='utf-8', errors='replace').read()).split('\n')
+    ident = {}
+    for line in lines:
+        if line.startswith('$var'):
+            parts = line.split()
+            if len(parts) >= 5 and parts[4] == 'data_en':
+                ident['data_en'] = parts[3]
+    if 'data_en' not in ident:
+        raise MS.Refuse('%s names no data_en variable, so there is no transition to flip'
+                        % row['delivered_as'])
+    mark = ident['data_en']
+    now, out, flipped = None, [], None
+    for line in lines:
+        if line.startswith('#'):
+            now = float(line[1:].strip())
+            out.append(line)
+            continue
+        if not flipped and line == '1' + mark and 1400000 <= (now or 0) <= 1600000:
+            line = '0' + mark
+            flipped = now
+            continue
+        out.append(line)
+    if not flipped:
+        raise MS.Refuse('no data_en rise inside 1.4..1.6 us, so this counterfeit would prove nothing')
+    blob = '\n'.join(out)
+    with io.open(path, 'w', encoding='utf-8', newline='\n') as f:
+        f.write(blob)
+    delivered = hashlib.sha256(blob.replace('\n', '\r\n').encode('utf-8'))
+    simulator = delivered.hexdigest()
+    lf = hashlib.sha256(blob.encode('utf-8')).hexdigest()
+    for name, pairs in ((os.path.join(ev, 'rtl_reverify.csv'),
+                        (('new_vcd_sha256', simulator),)),
+                        (dpath, (('delivered_sha256', lf), ('simulator_sha256', simulator),
+                                 ('delivered_bytes', str(len(blob)))))):
+        rows = rows_of(name)
+        hdr = list(rows[0].keys())
+        for r in rows:
+            if r['case_id'] != row['case_id']:
+                continue
+            for col, value in pairs:
+                r[col] = value
+        write_rows(name, hdr, rows)
 
 
 def reseal(ev):
@@ -1672,8 +2371,16 @@ def reseal(ev):
 
 def selftest(base=None):
     """each counterfeit must raise its own named failure on a disposable copy of committed bytes"""
+    import glob
     import shutil
     import tempfile
+    if base is None:
+        for pattern in ('dd1_d7b_r2_*', 'dd1_d7b_r1_*', ACCEPTED_BUNDLE_NAME):
+            hits = sorted(glob.glob(os.path.join(PROJ, 'results', 'evidence', pattern)))
+            hits = [h for h in hits if os.path.isfile(os.path.join(h, 'cases.csv'))]
+            if hits:
+                base = hits[-1]
+                break
     base = base or os.path.join(PROJ, 'results', 'evidence', 'dd1_d7b_r11_main')
     if not os.path.isdir(base):
         print('D7B_EVIDENCE_SELFTEST: FAIL no committed bundle to copy at %s' % base)
@@ -1722,9 +2429,9 @@ def selftest(base=None):
 
 
 def main(argv):
-    if '--selftest' in argv:
-        return selftest()
     args = [a for a in argv if not a.startswith('--')]
+    if '--selftest' in argv:
+        return selftest(args[0] if args else None)
     if not args:
         print('usage: dd1_d7b_evidence_check.py <evidence dir> [--selftest]')
         return 2

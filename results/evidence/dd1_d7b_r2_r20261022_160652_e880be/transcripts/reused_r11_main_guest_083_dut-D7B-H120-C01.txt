@@ -1,0 +1,26 @@
+ssh payload 328 bytes, timeout 2000 s
+SPECTRE name=D7B-H120-C01.scs rc=0 elapsed=1s timeout=1800s
+LOGFILE /root/microled_ai_project/cadence_work/dd1_d7b/r11_main/cases/D7B-H120-C01/sim/D7B-H120-C01.log
+RAWDIR  /root/microled_ai_project/cadence_work/dd1_d7b/r11_main/cases/D7B-H120-C01/sim/D7B-H120-C01.raw
+CHECK done_line='spectre completes with 0 error'
+CHECK error_hits=0
+CHECK datafile='/root/microled_ai_project/cadence_work/dd1_d7b/r11_main/cases/D7B-H120-C01/sim/D7B-H120-C01.raw/sw1.tran.tran'
+total 48
+drwxr-xr-x. 4 root root 4096 Oct 21 21:01 .
+drwxr-xr-x. 3 root root 4096 Oct 21 21:01 ..
+-rw-r--r--. 1 root root 6658 Oct 21 21:01 D7B-H120-C01.log
+drwxr-xr-x. 2 root root 4096 Oct 21 21:01 D7B-H120-C01.raw
+-rw-r--r--. 1 root root 6448 Oct 21 21:01 D7B-H120-C01.stdout
+-rw-r--r--. 1 root root 7087 Oct 21 21:01 preflight_D7B-H120-C01_D7B-H120-C01__r11_main.log
+drwxr-xr-x. 2 root root 4096 Oct 21 21:01 preflight_D7B-H120-C01_D7B-H120-C01__r11_main.raw
+-rw-r--r--. 1 root root 6908 Oct 21 21:01 preflight_D7B-H120-C01_D7B-H120-C01__r11_main.stdout
+----- log tail -----
+
+
+Aggregate audit (9:01:52 PM, Wed Oct 21, 2026):
+Time used: CPU = 705 ms, elapsed = 744 ms, util. = 94.7%.
+Time spent in licensing: elapsed = 71.8 ms, percentage of total = 9.65%.
+Peak memory used = 62.3 Mbytes.
+Simulation started at: 9:01:51 PM, Wed Oct 21, 2026, ended at: 9:01:52 PM, Wed Oct 21, 2026, with elapsed time (wall clock): 744 ms.
+spectre completes with 0 errors, 0 warnings, and 1 notice.
+D7B_D7B_H120_C01: PASS

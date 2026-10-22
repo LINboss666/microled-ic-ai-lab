@@ -28,13 +28,19 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_PROJ = os.path.dirname(HERE)
 
 # (record name, arguments, the substring its success line must contain)
+BUNDLE = '@EVIDENCE_BUNDLE@'   # substituted with --evidence-base, the bytes the suite is replayed on
+
 GATES = (
     ('measure_selftest', ('scripts/dd1_d7b_measure.py', '--selftest'), 'D7B_MEASURE_SELFTEST: PASS'),
     ('run_entry_selftest', ('scripts/dd1_d7b_run.py', '--selftest'), 'D7B_RUN_SELFTEST: PASS'),
     ('trace_selftest', ('scripts/dd1_d7b_trace.py', '--selftest'), 'D7B_TRACE_SELFTEST: PASS'),
-    ('evidence_tamper_selftest', ('scripts/dd1_d7b_evidence_check.py', '--selftest'),
+    ('evidence_tamper_selftest', ('scripts/dd1_d7b_evidence_check.py', '--selftest', BUNDLE),
      'D7B_EVIDENCE_SELFTEST: PASS'),
     ('execution_guards', ('scripts/dd1_d7b_r1_guards.py',), 'D7B_R1_GUARDS: PASS'),
+    # the R2 suite is the claim of repair: the same fourteen probes that reproduced the findings on
+    # the base bytes have to close, and they are run against the evidence this round exported
+    ('r2_guards_closed', ('scripts/dd1_d7b_r2_guards.py', '--phase', 'fixed', '--bundle', BUNDLE),
+     'D7B_R2_GUARDS: PASS'),
 )
 LOCAL_PATH = re.compile(r'(?i)([a-z]:[\\/]|/dev/|/home/|/users/|\\\\)')
 VERDICT = re.compile(r'^(D7B_[A-Z0-9_]+|GUARD_[A-Z0-9_]+|[0-9]+\.[0-9]+ [a-z].*(PASS|FAIL)|'
@@ -74,8 +80,13 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--out', required=True, help='ignored directory for gate_records.csv')
     ap.add_argument('--project', default=DEFAULT_PROJ)
+    ap.add_argument('--evidence-base', default='', help='the staged or published bundle the '
+                        'counterfeit suite and the R2 guard suite are replayed against')
     opts = ap.parse_args(argv)
     proj = os.path.abspath(opts.project)
+    base = os.path.abspath(opts.evidence_base) if opts.evidence_base else ''
+    if opts.evidence_base and not os.path.isfile(os.path.join(base, 'cases.csv')):
+        raise SystemExit('D7B_GATE_RECORDS_REFUSED --evidence-base %s has no cases.csv' % base)
     out_dir = os.path.abspath(opts.out)
     if os.path.exists(os.path.join(out_dir, 'gate_records.csv')):
         raise SystemExit('D7B_GATE_RECORDS_REFUSED %s already holds a record; write a fresh one '
@@ -84,9 +95,14 @@ def main(argv=None):
         os.makedirs(out_dir)
     rows = []
     for name, args, expect in GATES:
-        rc, lines, dropped = run_gate(proj, name, args)
+        argv = [a for a in args if a != BUNDLE] if not base else [
+            (base if a == BUNDLE else a) for a in args]
+        # the command cell travels inside the bundle, where no machine path may appear, so the
+        # evidence base is written relative to the project root instead of as an absolute path
+        shown = [os.path.relpath(a, proj).replace(os.sep, '/') if a == base else a for a in argv]
+        rc, lines, dropped = run_gate(proj, name, argv)
         rows.append({'gate': name,
-                     'command': ' '.join(args),
+                     'command': ' '.join(shown),
                      'rc': rc,
                      'verdict': 'PASS' if rc == 0 and any(expect in l for l in lines) else 'FAIL',
                      'expected_line': expect,

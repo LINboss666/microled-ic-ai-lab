@@ -266,6 +266,56 @@ def extreme(samples_ps, lo_ps, hi_ps, want_max=True):
     return best[1], best[0]
 
 
+def _level_cross(t0, v0, t1, v1, level):
+    """where the straight line between two samples equals `level`, or None if it never does"""
+    if v1 == v0:
+        return None
+    frac = (level - v0) / (v1 - v0)
+    if not 0.0 <= frac <= 1.0:
+        return None
+    return t0 + frac * (t1 - t0)
+
+
+def _clipped_span(t0, v0, t1, v1, band_lo, band_hi):
+    """the part of one sample segment on which the linear value is inside the band, or None"""
+    cuts = [t0, t1]
+    for level in (band_lo, band_hi):
+        c = _level_cross(t0, v0, t1, v1, level)
+        if c is not None:
+            cuts.append(c)
+    cuts = sorted(set(cuts))
+    inside = []
+    for a, b in zip(cuts, cuts[1:]):
+        mid = v0 + (v1 - v0) * ((a + b) / 2.0 - t0) / (t1 - t0) if t1 != t0 else v0
+        if band_lo <= mid <= band_hi:
+            inside.append((a, b))
+    if not inside:
+        return None
+    return inside[0][0], inside[-1][1]
+
+
+def band_spans(pts, band_lo, band_hi):
+    """maximal continuous spans where the piecewise-linear curve stays inside the band
+
+    The samples are points on a curve, not the whole of it: a signal that is in band at 20 ns and
+    still in band at the deadline may have left the band at 21 ns in between, which is exactly what a
+    sample-only rule missed. Each segment is clipped at the level crossings and the touching pieces
+    are merged, so a span's ends are where the curve really entered and left.
+    """
+    spans = []
+    for (t0, v0), (t1, v1) in zip(pts, pts[1:]):
+        if t1 <= t0:
+            continue
+        piece = _clipped_span(t0, v0, t1, v1, band_lo, band_hi)
+        if piece is None:
+            continue
+        if spans and abs(piece[0] - spans[-1][1]) <= 1e-9:
+            spans[-1] = (spans[-1][0], piece[1])
+        else:
+            spans.append(piece)
+    return spans
+
+
 def _in_band_runs(pts, band_lo, band_hi):
     """maximal in-band runs [first, last] over the real sample sequence
 
@@ -291,28 +341,70 @@ def sustained_in_band(samples_ps, t_edge_ps, band_lo, band_hi, until_ps):
     """the value must stay inside the band all the way up to this pulse's own expected off edge
 
     The deadline is the fall edge declared by the original pulse; it is never moved and the band is
-    never widened to make a window look settled. Only samples strictly before that edge enter the
-    check, because a finite-slope falling ramp has already left the band at the edge instant itself.
-    A run that satisfies the 10 ns minimum and then leaves the band before the edge is not sustained
-    settlement -- the old rule asked only for a 10 ns piece anywhere. The longest in-band run is
-    still reported separately, and never mixed up with this verdict.
+    never widened to make a window look settled. Two things used to be wrong here: dropping every
+    sample at or after the deadline and treating the last in-band sample as if it held until the
+    deadline, and asking only for *a* 10 ns piece anywhere. The curve is now evaluated up to the
+    deadline itself -- the segment that straddles it is cut at the deadline and its left limit has to
+    be in band -- so leaving the band 4 ns before the edge cannot pass.
+
+    The sample-bounded run and the continuous span are both reported and never mixed up: the first
+    is a difference of delivered sample times a reviewer can re-derive from the shard, the second is
+    what the interpolated curve actually held for.
     """
-    pts = [(t_edge_ps, interp_pair(samples_ps, t_edge_ps, 'in-band edge'))]
-    pts += [(t, v) for t, v in samples_ps if t_edge_ps < t < until_ps]
-    if len(pts) < 2:
-        return {'status': 'NO_DATA_IN_PULSE', 'settled_ps': None, 'checked_points': len(pts),
-                'longest_in_band_ps': 0.0}
-    runs = _in_band_runs(pts, band_lo, band_hi)
-    longest = max([(e - s) for s, e in runs], default=0.0)
-    last_t = pts[-1][0]
-    for s, e in runs:
-        if e == last_t and (until_ps - s) >= MIN_IN_BAND_PS:
-            return {'status': 'SETTLED', 'settled_ps': s, 'held_ps': until_ps - s,
-                    'checked_points': len(pts), 'longest_in_band_ps': longest,
-                    'band_lo_A': band_lo, 'band_hi_A': band_hi, 'until_ps': until_ps}
-    return {'status': 'NOT_SETTLED_WITHIN_PULSE', 'settled_ps': None,
-            'checked_points': len(pts), 'longest_in_band_ps': longest, 'until_ps': until_ps,
-            'band_lo_A': band_lo, 'band_hi_A': band_hi}
+    if float(until_ps) <= float(t_edge_ps):
+        return {'status': 'NO_DATA_IN_PULSE', 'settled_ps': None, 'settled_sample_ps': None,
+                'held_ps': None, 'checked_points': 0, 'longest_in_band_ps': 0.0,
+                'longest_in_band_interp_ps': 0.0, 'band_left_at_ps': None,
+                'deadline_left_limit_A': None, 'until_ps': until_ps,
+                'band_lo_A': band_lo, 'band_hi_A': band_hi}
+    # the points the reviewer can re-derive from the shard: the pulse edge plus the delivered samples
+    # strictly inside this pulse. The deadline point is added separately, because it is interpolated.
+    body = [(t_edge_ps, interp_pair(samples_ps, t_edge_ps, 'in-band edge'))]
+    body += [(t, v) for t, v in samples_ps if t_edge_ps < t < until_ps]
+    pts = body + [(float(until_ps), interp_pair(samples_ps, until_ps, 'in-band deadline'))]
+    runs = _in_band_runs(body, band_lo, band_hi)
+    longest_samples = max([(e - s) for s, e in runs], default=0.0)
+    spans = band_spans(pts, band_lo, band_hi)
+    longest_interp = max([(e - s) for s, e in spans], default=0.0)
+    left = max([e for s, e in spans if e < float(until_ps) - 1e-9], default=None)
+    out = {'checked_points': len(pts), 'longest_in_band_ps': longest_samples,
+           'longest_in_band_interp_ps': longest_interp, 'deadline_left_limit_A': pts[-1][1],
+           'band_left_at_ps': left, 'until_ps': until_ps,
+           'band_lo_A': band_lo, 'band_hi_A': band_hi}
+    reached = [s for s, e in spans if abs(e - float(until_ps)) <= 1e-9]
+    if reached and (float(until_ps) - min(reached)) >= MIN_IN_BAND_PS:
+        start = min(reached)
+        out.update({'status': 'SETTLED', 'settled_ps': start, 'held_ps': until_ps - start,
+                    'settled_sample_ps': next((t for t, v in body
+                                               if t >= start and band_lo <= v <= band_hi), None)})
+        return out
+    out.update({'status': 'NOT_SETTLED_WITHIN_PULSE', 'settled_ps': None, 'held_ps': None,
+                'settled_sample_ps': None})
+    return out
+
+
+def window_bounds(samples_ps, lo_ps, hi_ps):
+    """the part of [lo, hi] the delivered samples really cover, clamped at the simulation ends
+
+    A window bound can legitimately be the stop of the run: there is nothing to interpolate past it,
+    and extrapolating would invent a value. The clamp is returned so the caller can state the span it
+    actually integrated instead of quietly reporting the declared one.
+    """
+    if not samples_ps:
+        return None, None
+    first, last = samples_ps[0][0], samples_ps[-1][0]
+    a, b = max(float(lo_ps), float(first)), min(float(hi_ps), float(last))
+    if b < a:
+        return None, None
+    return a, b
+
+
+def window_curve(samples_ps, lo_ps, hi_ps, ctx=''):
+    """the piecewise-linear curve clipped to the covered part of one window"""
+    a, b = window_bounds(samples_ps, lo_ps, hi_ps)
+    if a is None:
+        return []
+    return clip_window(samples_ps, a, b, ctx)
 
 
 def turn_off(samples_ps, t_edge_ps, limit_abs, seg_end_ps):
@@ -456,22 +548,40 @@ def measure_window(win, ical, tick_ps, tail_ns=200, ctx=''):
         out['de_fall_delay_ps'] = (None if (rise is None or fall is None) else fall - rise)
         out['pulse_edges_missing_ps'] = missing
     if win.get('de_b'):
-        if fall_at is None:
+        # data_en_b is the inverter's output, so its edges are the opposite phase: data_en rising is
+        # data_en_b falling, data_en falling is data_en_b rising. Searching for a fall at the fall
+        # edge is what made a short window "find" something by luck (the +-50 ns window happened to
+        # reach the open edge) while every long window reported NOT_FOUND.
+        if rise_at is None and fall_at is None:
             out['de_b_fall_50_ps'] = 'NOT_APPLICABLE_NO_CONDUCTING_EDGE'
+            out['de_b_rise_50_ps'] = 'NOT_APPLICABLE_NO_CONDUCTING_EDGE'
             out['de_and_de_b_edge_gap_ps'] = None
+            out['de_b_rise_gap_ps'] = None
         else:
-            bfall = crossing(win['de_b'], DE_50_V, False, int(fall_at) - search,
-                             int(fall_at) + search, '%s de_b' % ctx)
-            out['de_b_fall_50_ps'] = bfall if bfall is not None else 'NOT_FOUND'
-            out['de_and_de_b_edge_gap_ps'] = (None if (bfall is None or fall is None)
-                                              else bfall - fall)
+            b_fall = b_rise = None
+            if rise_at is not None:
+                b_fall = crossing(win['de_b'], DE_50_V, False, int(rise_at) - search,
+                                  int(rise_at) + search, '%s de_b fall' % ctx)
+            if fall_at is not None:
+                b_rise = crossing(win['de_b'], DE_50_V, True, int(fall_at) - search,
+                                  int(fall_at) + search, '%s de_b rise' % ctx)
+            out['de_b_fall_50_ps'] = b_fall if b_fall is not None else (
+                'NOT_APPLICABLE_NO_CONDUCTING_EDGE' if rise is None else 'NOT_FOUND')
+            out['de_b_rise_50_ps'] = b_rise if b_rise is not None else (
+                'NOT_APPLICABLE_NO_CONDUCTING_EDGE' if fall is None else 'NOT_FOUND')
+            out['de_and_de_b_edge_gap_ps'] = (None if (b_fall is None or rise is None)
+                                              else b_fall - rise)
+            out['de_b_rise_gap_ps'] = None if (b_rise is None or fall is None) else b_rise - fall
     else:
         out['de_b_fall_50_ps'] = 'NOT_SAVED'
+        out['de_b_rise_50_ps'] = 'NOT_SAVED'
         out['de_and_de_b_edge_gap_ps'] = None
+        out['de_b_rise_gap_ps'] = None
     if rise is None:
         out['current_10pct_ps'] = 'NOT_APPLICABLE_NO_CONDUCTING_EDGE'
         out['current_90pct_ps'] = 'NOT_APPLICABLE_NO_CONDUCTING_EDGE'
         out['current_rise_10_90_ps'] = None
+        out['current_edge_order_ok'] = None
     else:
         hi = int(fall_at if fall_at is not None else t1) + int(tail_ns) * NS + search
         i90 = crossing(cur, 0.9 * ical, True, int(rise_at) - search, hi, '%s i90' % ctx)
@@ -479,6 +589,10 @@ def measure_window(win, ical, tick_ps, tail_ns=200, ctx=''):
         out['current_10pct_ps'] = i10 if i10 is not None else 'NOT_FOUND'
         out['current_90pct_ps'] = i90 if i90 is not None else 'NOT_FOUND'
         out['current_rise_10_90_ps'] = (None if (i90 is None or i10 is None) else i90 - i10)
+        # the two crossings must belong to this pulse in this order; a number that happens to be a
+        # legal time somewhere else is not evidence that the pulse rose through 10 % then 90 %
+        out['current_edge_order_ok'] = (i10 is not None and i90 is not None and i10 < i90
+                                        and i10 >= int(rise_at) - search and i90 <= hi)
     # sustained in-band is judged up to this pulse's own expected off edge
     until_band = int(fall_at) if (fall_at is not None and n_intervals > 0.0) else t1
     edge = rise if rise is not None else (int(rise_at) if rise_at is not None else float(t0))
@@ -493,6 +607,12 @@ def measure_window(win, ical, tick_ps, tail_ns=200, ctx=''):
     off_start = fall if fall is not None else (int(fall_at) if fall_at is not None else float(t0))
     out['off_segment_start_ps'] = off_start
     out['turn_off'] = turn_off(cur, off_start, OFF_ABS, tail_to)
+    # the same limit read as a continuous quantity: the first place the straight line between two
+    # delivered samples passes through it. It is printed beside the sample instant, never instead of
+    # it, because "the first sample at or below 150 nA" and "the curve crossed 150 nA" are two
+    # different precisions of one event.
+    out['off_crossing_ps'] = crossing(cur, OFF_ABS, False, int(round(off_start)), tail_to,
+                                      '%s off crossing' % ctx)
     out['turn_off_delay_ps'] = (None if (out['turn_off'].get('off_ps') is None or fall is None)
                                 else out['turn_off']['off_ps'] - off_start)
     last100 = tail_segment_max_abs(cur, tail_to - 100 * NS, tail_to)
@@ -611,18 +731,41 @@ def selftest():
     # 6 sustained in-band must hold to the off edge: a 15 ns piece inside a 30 ns pulse is not it
     n += 1
     g = sustained_in_band([(0, 0.5), (2000, 1.0), (20000, 1.0)], 0, 0.95, 1.05, 20000)
-    ok &= expect('T6 settled', g['status'] == 'SETTLED' and g['settled_ps'] == 2000)
+    # hand: the rise is the straight line (0, 0.5) -> (2000, 1.0), so it enters 0.95 at
+    #       0 + (0.95 - 0.5)/(1.0 - 0.5) * 2000 = 1800 ps and stays there to the 20000 ps deadline.
+    #       held = 20000 - 1800 = 18200 ps >= 10 ns, so this settles at 1800 ps; the first delivered
+    #       sample inside the band is still the 2000 ps one, and that is reported separately.
+    ok &= expect('T6 settled', g['status'] == 'SETTLED')
+    ok &= near('T6 settled at', g['settled_ps'], 1800, 1e-9)
+    ok &= expect('T6 settled sample', g['settled_sample_ps'] == 2000)
+    ok &= near('T6 held', g['held_ps'], 18200, 1e-9)
     n += 1
     g = sustained_in_band([(0, 1.0), (5000, 1.0), (6000, 0.5), (20000, 0.5)], 0, 0.95, 1.05, 20000)
     ok &= expect('T6b in-then-out refused', g['status'] == 'NOT_SETTLED_WITHIN_PULSE')
     # hand: samples in band are 0 and 5000, the band is left at 6000 -> run [0, 5000] = 5000 ps
     ok &= near('T6b longest run', g['longest_in_band_ps'], 5000, 1e-9)
+    # hand: the 5000 -> 6000 line crosses 0.95 at 5000 + (1.0 - 0.95)/(1.0 - 0.5) * 1000 = 5100 ps
+    ok &= near('T6b band left at', g['band_left_at_ps'], 5100, 1e-9)
     n += 1
     g = sustained_in_band([(0, 1.0), (15000, 1.0), (16000, 0.5), (30000, 0.5)], 0, 0.95, 1.05,
                           30000)
     ok &= expect('T6c reviewer case', g['status'] == 'NOT_SETTLED_WITHIN_PULSE')
     # hand: in band at 0 and 15000, out at 16000 and 30000 -> run [0, 15000] = 15000 ps
     ok &= near('T6c longest run', g['longest_in_band_ps'], 15000, 1e-9)
+    # hand: the 15000 -> 16000 line crosses 0.95 at 15100 ps, 14.9 ns before the deadline
+    ok &= near('T6c band left at', g['band_left_at_ps'], 15100, 1e-9)
+    # 6d the reviewer's hand counter-example, kept as a permanent regression: value 1 at 0/10/20 ns,
+    #    0.5 at 30 ns, band 0.95..1.05, deadline 25 ns. Every sample up to the deadline is in band,
+    #    so the sample-only rule answered SETTLED; the line leaves the band at 21 ns and the deadline
+    #    left limit is 0.75, so nothing is sustained up to the deadline.
+    n += 1
+    g = sustained_in_band([(0, 1.0), (10000, 1.0), (20000, 1.0), (30000, 0.5), (40000, 0.5)],
+                          0, 0.95, 1.05, 25000)
+    ok &= expect('T6d sample run alone would settle', g['longest_in_band_ps'] == 20000)
+    ok &= expect('T6d deadline left limit', abs(g['deadline_left_limit_A'] - 0.75) < 1e-12)
+    ok &= expect('T6d not settled', g['status'] == 'NOT_SETTLED_WITHIN_PULSE')
+    # hand: the 20000 -> 25000 line crosses 0.95 at 20000 + (1.0 - 0.95)/(1.0 - 0.75) * 5000 = 21000
+    ok &= near('T6d band left at', g['band_left_at_ps'], 21000, 1e-9)
     # 7 turn-off: a rebound after a first dip does not end the search
     n += 1
     g = turn_off([(0, 1e-9), (1000, 1e-9), (20000, 1e-9)], 0, OFF_ABS, 20000)
@@ -634,18 +777,42 @@ def selftest():
     ok &= expect('T7c never off', g['status'] == 'NOT_PERMANENTLY_OFF_BY_SEGMENT_END')
     # 8 a full 16-interval window measures exactly its expected charge and passes
     n += 1
-    cur = [(0, _micro(15.0)), (20000, _micro(15.0)), (480000, _micro(15.0)),
+    # the current now holds its top exactly to the pulse's own declared off edge (480501 ps), which is
+    # what a settling window means; 8b keeps the old shape, whose top ended 451 ps before the edge
+    cur = [(0, _micro(15.0)), (20000, _micro(15.0)), (480501, _micro(15.0)),
            (481000, 0.0), (680000, 0.0)]
     de = [(0, 0.0), (499, 0.0), (501, 1.8), (480499, 1.8), (480501, 0.0)]
     w = _win(cur, de, 0, 480000, 16)
     out = measure_window(w, _micro(15.0), 30000, ctx='T8')
     ok &= near('T8 q', out['q_win']['q'], 15e-6 * 480e-9, 1e-18)
     ok &= expect('T8 no charge error', abs(out['charge_error_LSB']) < 1e-6)
+    # hand: the deadline is the declared segment end 480501 ps, where the delivered sample says
+    #       15.0 uA, and the curve is in band at every point from the 500 ps rise edge on, so the
+    #       interpolated span is [500, 480501] and held = 480001 ps.
     ok &= expect('T8 settled', out['settled']['status'] == 'SETTLED')
+    ok &= near('T8 settled at', out['settled']['settled_ps'], 500, 1e-9)
+    ok &= expect('T8 settled sample', out['settled']['settled_sample_ps'] == 500)
+    ok &= near('T8 held', out['settled']['held_ps'], 480001, 1e-9)
     ok &= expect('T8 off', out['turn_off']['status'] == 'OFF')
     ok &= expect('T8 fall edge found', abs(out['de_fall_50_ps'] - 480500) < 1.0)
     ok &= near('T8 fall delay', out['de_fall_delay_ps'], 480000, 2.0)
     ok &= expect('T8 judge', judge(out)[0] == 'PASS')
+    # 8b the shape this test used to carry: 15 uA at 480000 and 0 at 481000 with the off edge at
+    #    480501. The top left the band at 480050 ps -- before its own off edge -- so under the
+    #    deadline rule it is NOT_SETTLED, even though the sample-only rule called it settled.
+    n += 1
+    cur8b = [(0, _micro(15.0)), (20000, _micro(15.0)), (480000, _micro(15.0)),
+             (481000, 0.0), (680000, 0.0)]
+    out8b = measure_window(_win(cur8b, de, 0, 480000, 16), _micro(15.0), 30000, ctx='T8b')
+    ok &= expect('T8b charge is still right', abs(out8b['charge_error_LSB']) < 1e-6)
+    ok &= expect('T8b top ends before the edge',
+                 out8b['settled']['status'] == 'NOT_SETTLED_WITHIN_PULSE')
+    ok &= near('T8b band left at', out8b['settled']['band_left_at_ps'], 480050, 1e-9)
+    # hand: v(t) = 15 uA * (481000 - t)/1000 on [480000, 481000]; at 480501 it is 7.485 uA
+    ok &= near('T8b deadline left limit', out8b['settled']['deadline_left_limit_A'],
+               _micro(7.485), 1e-18)
+    ok &= expect('T8b sample run looked long enough',
+                 out8b['settled']['longest_in_band_ps'] == 479500)
     # 9 a short pulse inside the full window: its own falling edge is found at the pulse, and the
     #    window end is never substituted for a crossing. This is the P30-code1 class of defect, where
     #    the search was limited to [t1-500 ns, t1] and an empty result silently became off_ns = t1.
@@ -686,8 +853,9 @@ def selftest():
     # 9e two declared pulses: every one of them is searched for its own edges, and a gap between
     #    pulses is a real gap -- it is not reported as sustained in-band time
     n += 1
+    # the second pulse holds its top exactly to its own off edge (8890002 ps) and falls at 8891000
     cur = [(0, 0.0), (500, _micro(15.0)), (3944000, _micro(15.0)), (3946000, 0.0), (4944000, 0.0),
-           (4946000, _micro(15.0)), (8889000, _micro(15.0)), (8891000, 0.0), (11795000, 0.0)]
+           (4946000, _micro(15.0)), (8890002, _micro(15.0)), (8891000, 0.0), (11795000, 0.0)]
     de_two = [(0, 0.0), (499, 0.0), (501, 1.8), (3945001, 1.8), (3945003, 0.0), (4944999, 0.0),
               (4945001, 1.8), (8890001, 1.8), (8890003, 0.0), (11795000, 0.0)]
     w = _win(cur, de_two, 0, 11595000, 2, segments=[[501, 3945002], [4945001, 8890002]])
@@ -697,13 +865,21 @@ def selftest():
     # hand: the first rise brackets 499/501 at 500, the last fall brackets 8890001/8890003 at 8890002
     ok &= expect('T9e first rise', abs(out['de_rise_50_ps'] - 500) < 1.0)
     ok &= expect('T9e last fall', abs(out['de_fall_50_ps'] - 8890002) < 1.0)
-    # hand: from 4946000 (the second pulse) every sample up to the 8890002 deadline is in band, so
-    #       this window really does settle -- on its second pulse, and settled_ps says which one
-    ok &= expect('T9e settles on the second pulse',
-                 out['settled']['status'] == 'SETTLED' and out['settled']['settled_ps'] == 4946000)
-    # hand: the first run is [500, 3944000] = 3943500 ps and the second is [4946000, 8889000] =
-    #       3943000 ps, both bounded by delivered sample times, so the longer of the two is reported
+    # hand: the deadline is the second pulse's off edge 8890002 ps and the curve is 15.0 uA there.
+    #       Coming back up, the 4944000 (0 A) -> 4946000 (15 uA) line enters the band at
+    #       4944000 + (14.25/15) * 2000 = 4945900 ps, so the span that reaches the deadline starts
+    #       there: settled_ps = 4945900, held = 8890002 - 4945900 = 3944102 ps. The first delivered
+    #       sample inside that span is 4946000 -- the sample view, kept apart from the interpolated one.
+    ok &= expect('T9e settles on the second pulse', out['settled']['status'] == 'SETTLED')
+    ok &= near('T9e settled at', out['settled']['settled_ps'], 4945900, 1e-9)
+    ok &= expect('T9e settled sample', out['settled']['settled_sample_ps'] == 4946000)
+    ok &= near('T9e held', out['settled']['held_ps'], 3944102, 1e-9)
+    # hand: the first run is [500, 3944000] = 3943500 ps and the second is [4946000, 4946000] = 0 ps
+    #       over the delivered samples, so the longer of the two is the first one
     ok &= near('T9e longest run', out['settled']['longest_in_band_ps'], 3943500, 1e-9)
+    # hand: the continuous spans are [500, 3944100] = 3943600 ps and [4945900, 8890002] = 3944102 ps
+    ok &= near('T9e longest interpolated run', out['settled']['longest_in_band_interp_ps'],
+               3944102, 1e-9)
     ok &= expect('T9e off after the last pulse',
                  out['turn_off']['status'] == 'OFF' and out['turn_off']['off_ps'] == 8891000)
     # 9f the pulse declaration cannot be missing, invented or contradicted by the interval count

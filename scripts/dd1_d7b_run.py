@@ -46,15 +46,21 @@ import dd1_d7b_measure as MS                   # this round's measurement core
 import sc1_r2e1_call_contract as CC              # frozen: real exit codes, never a pipeline status
 import sc1_read_psf as RD                         # frozen PSF-ASCII parser
 
-BASE_SHA = 'c3513ffee57880bdc9d6d26d5c1c1a9a43c52e37'
+BASE_SHA = 'e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92'
 ACCEPTED_SHA = 'f68449672774ac9266ba9e4893024e4f3027dd9d'
+# the launch account belongs to the DATA-7B task, not to a round: the 59 historical rows were
+# recorded under this id and the seeded history is now compared field by field, so renaming the task
+# here would relabel other people's recorded launches
 TASK_ID = 'DATA-7B'
-# DATA-7B-R1: this build repairs the tools of the delivered round. T is the reviewed tip the retained
-# raw bytes come from; every reused number is labelled with it instead of being passed off as new.
-REPAIR_TASK_ID = 'DATA-7B-R1'
-REPAIR_BASE_SHA = 'adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50'
-REPAIR_PAYLOAD_SHA = '9d73cc184a266e646ae827f0350f7c931d9faa25'
-BRANCH = 'poc/data-pwm-d7b-r1'
+# DATA-7B-R2 repairs the tools of the R1 round. H is this round's base = the reviewed R1 tip; P1 is
+# that round's payload. Every reused number is labelled with them instead of being passed off as new.
+REPAIR_TASK_ID = 'DATA-7B-R2'
+REPAIR_BASE_SHA = 'e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92'
+REPAIR_PAYLOAD_SHA = 'd13e251d2874a9a9942fa103ff7ead3c798b5b14'
+REPAIRED_TASK_ID = 'DATA-7B-R1'
+REPAIRED_BASE_SHA = 'adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50'
+REPAIRED_PAYLOAD_SHA = '9d73cc184a266e646ae827f0350f7c931d9faa25'
+BRANCH = 'poc/data-pwm-d7b-r2'
 
 V18 = 1.8
 VCAS_V = 1.8
@@ -77,6 +83,9 @@ CAL_STOP_PS = 4500000
 CAL_BAND = (3000000, 3500000)          # Ical window, 3.0 us .. 3.5 us
 CAL_OFF = (1500000, 1900000)           # OFF baseline before the calibration pulse
 CAL_TAIL = (4400000, 4500000)          # end-of-conduction check
+CONV_EDGE_LIMIT_PS = 500               # a convergence pair may not move the fall edge by more than
+# this, and the same number is what dd1_d7b_evidence_check.py judges the printed column against, so
+# the two are asserted equal in selftest_main rather than being allowed to drift apart.
 
 GUEST_ROOT = '/root/microled_ai_project/cadence_work/dd1_d7b'
 GUEST_HOST = os.environ.get('QODER_GUEST_IP', '192.168.3.128')
@@ -92,7 +101,11 @@ EXPECTED_VDD = '1.8'
 # The task book authorises 52 launches. Seven were spent on reproducing this round's own two
 # tool defects (see the report's failed-attempt table); on 2026-10-21 the user granted four more
 # for this round only, so the ceiling this run enforces is 56 and every launch is still counted.
+# The number is a fact about the authorisation, not a parameter: no bundle, environment file, seed
+# directory or command line may restate it upward.
 LAUNCH_BUDGET = 56
+AUTHORISED_CEILING = LAUNCH_BUDGET           # 52 from the task book plus the 4 the user granted
+NEW_LAUNCH_GRANT = 0                         # DATA-7B-R2 authorises no new Spectre process at all
 LAUNCH_BUDGET_TASKBOOK = 52
 LAUNCH_BUDGET_USER_GRANTED_EXTRA = 4
 PREFLIGHT_PER_DUT = 1
@@ -115,7 +128,8 @@ MAX_RTL_SIMULATIONS = 17           # the four-state re-verifications TASK_DATA7B
 ACCOUNT_PATH = os.environ.get('DD1_D7B_ACCOUNT') or os.path.join(
     PROJ, 'review', 'scratch', 'dd1_d7b_launch_account.csv')
 RUN_ID_RE = re.compile(r'^r[0-9]{8}_[0-9]{6}_[0-9a-f]{6}$')
-PUBLISHED_PREFIX = 'dd1_d7b_r1_'          # DATA-7B-R1 evidence is named dd1_d7b_r1_<run_id>
+PUBLISHED_PREFIXES = ('dd1_d7b_r2_', 'dd1_d7b_r1_')   # this round names dd1_d7b_r2_<run_id>
+PUBLISHED_PREFIX = 'dd1_d7b_r2_'
 
 MASTER_FILES = ('dd1_d6_bias_core.scs', 'dd1_d6_sink_core.scs', 'dd1_d6_inv18.scs',
                'dd1_d7b_pwm_stage.scs')
@@ -391,6 +405,14 @@ class AppendCSV(object):
         self.path = path
         self.rows = []
         self.loaded_ids = set()
+        # a surviving .tmp is the mark of a write that did not finish. Silently ignoring it, or
+        # treating the absence of the account as "no history", is how a crashed round could be made
+        # to look like it never launched anything.
+        if os.path.isfile(path + '.tmp'):
+            raise RuntimeError('%s is left beside the account: a previous write did not finish. '
+                               'Compare the two, move one aside deliberately, and reopen'
+                               % os.path.basename(path + '.tmp'))
+        self.baseline_sha = self._disk_sha()
         if os.path.isfile(path):
             with io.open(path, encoding='utf-8', newline='') as f:
                 hdr = f.readline().strip().split(',')
@@ -441,14 +463,37 @@ class AppendCSV(object):
         if lost:
             raise RuntimeError('%s refuses to drop %d previously recorded row(s)'
                                % (self.path, len(lost)))
+        # An account is the one file whose own history is the evidence, so a failed write may not
+        # destroy it. The old sequence removed the live file before renaming, which turned a caught
+        # ENOSPC into "the task never launched anything"; os.replace moves the new file into place
+        # without ever leaving the path absent, and the previous bytes stay readable if it fails.
+        disk = self._disk_sha()
+        if disk != self.baseline_sha:
+            raise RuntimeError('%s changed on disk since it was read (%s against the loaded %s); a '
+                               'second writer has recorded rows this instance never saw, and the '
+                               'older instance may not overwrite them'
+                               % (os.path.basename(self.path), (disk or 'absent')[:12],
+                                  (self.baseline_sha or 'absent')[:12]))
         tmp = self.path + '.tmp'
         with io.open(tmp, 'w', encoding='utf-8', newline='\n') as f:
             f.write(','.join(self.HDR) + '\n')
             for r in self.rows:
                 f.write(','.join(str(r.get(k, '')) for k in self.HDR) + '\n')
-        if os.path.isfile(self.path):
-            os.remove(self.path)
-        os.rename(tmp, self.path)
+            f.flush()
+            os.fsync(f.fileno())
+        try:
+            os.replace(tmp, self.path)
+        except OSError as exc:
+            raise RuntimeError('%s: the replacement failed (%s), so the previous account is left in '
+                               'place and %s remains for inspection; nothing was lost'
+                               % (os.path.basename(self.path), exc, os.path.basename(tmp)))
+        self.baseline_sha = self._disk_sha()
+
+    def _disk_sha(self):
+        if not os.path.isfile(self.path):
+            return None
+        with open(self.path, 'rb') as f:
+            return hashlib.sha256(f.read()).hexdigest()
 
 
 class Ledger(AppendCSV):
@@ -503,17 +548,22 @@ class OverBudget(Exception):
     """the ceiling is reached before the process starts, so it can never be spent by the refusal"""
 
 
+SEED_FACTS = ('task_id', 'run_id', 'case_id', 'role', 'state', 'launch_evidence')
+
+
 class Account(AppendCSV):
     """the task-level cumulative account of every Spectre process this task has asked for
 
-    Three facts are kept apart, because collapsing them is what let the DATA-7B round overrun:
-      * requested  -- a row was written before the process started;
+    Four facts are kept apart, because collapsing them is what let the DATA-7B round overrun:
+      * requested  -- a row was written before the process started, and it costs the ceiling at that
+        moment, because from here on a process may be running that nobody has seen return;
       * confirmed  -- the returned text proves a simulator really ran (a SPECTRE line or the
         preflight's own `spectre_rc=`), which is the honest count of executed launches;
       * uncertain  -- a row left in REQUESTED by a crash or a lost connection. It is never counted as
-        executed, and it still occupies the ceiling, because nobody can prove it did not start.
-    The file is seeded from the delivered reconcile table, so a fresh checkout cannot reset the
-    history to zero and a new run_id cannot start a fresh budget.
+        executed, and it still occupies the ceiling, because nobody can prove it did not start;
+      * refused    -- a row for something that never started a process at all, which is free.
+    The file is seeded from the delivered reconcile table and the seeded rows are compared field by
+    field, so neither a fresh checkout nor a rewritten history can reset the count to zero.
     """
 
     HDR = ['launch_id', 'task_id', 'run_id', 'case_id', 'role', 'state', 'requested_utc',
@@ -524,17 +574,31 @@ class Account(AppendCSV):
     def __init__(self, path, ceiling, seed):
         existed = os.path.isfile(path)
         AppendCSV.__init__(self, path)
-        self.ceiling = ceiling
+        # `ceiling` stays a parameter only for the isolated synthetic accounts the guards use to
+        # exercise the arithmetic. The production entry always passes AUTHORISED_CEILING, and the
+        # delivered account is judged against that fixed number, never against its own column.
+        self.ceiling = int(ceiling)
         self.seed_origin = seed['origin']
         if not existed:
             for row in seed['rows']:
                 self.rows.append(row)
         else:
-            have = set(r['launch_id'] for r in self.rows)
+            have = {}
+            for r in self.rows:
+                have[r['launch_id']] = r
             want = set(r['launch_id'] for r in seed['rows'])
-            if not want <= have:
+            if not want <= set(have):
                 raise RuntimeError('%s lost %d seeded historical row(s); the account is not trusted'
-                                   % (os.path.basename(path), len(want - have)))
+                                   % (os.path.basename(path), len(want - set(have))))
+            for row in seed['rows']:
+                got = have[row['launch_id']]
+                for field in SEED_FACTS:
+                    if got.get(field, '') != row.get(field, ''):
+                        raise RuntimeError(
+                            '%s: the seeded history says %s has %s=%r, the file says %r -- a recorded '
+                            'launch may not be relabelled, so the seed binds %s field by field'
+                            % (os.path.basename(path), row['launch_id'], field, row.get(field, ''),
+                               got.get(field, ''), '|'.join(SEED_FACTS)))
         self.recover()
         self._restamp()
         self.flush()
@@ -552,8 +616,11 @@ class Account(AppendCSV):
     def counts(self):
         conf = [r for r in self.rows if r['state'] in ('CONFIRMED', 'COMPLETED')]
         unc = [r for r in self.rows if r['state'] == 'UNCERTAIN']
+        # a reservation is a promise that a process may be running; recovery changes what we can
+        # prove about it, never what it cost
+        pend = [r for r in self.rows if r['state'] == 'REQUESTED']
         return {'requested': len(self.rows), 'confirmed': len(conf), 'uncertain': len(unc),
-                'occupied': len(conf) + len(unc),
+                'pending': len(pend), 'occupied': len(conf) + len(unc) + len(pend),
                 'no_launch': len([r for r in self.rows if r['state'] == 'REFUSED_NO_LAUNCH'])}
 
     def remaining(self):
@@ -566,7 +633,7 @@ class Account(AppendCSV):
             if r['state'] in ('CONFIRMED', 'COMPLETED'):
                 conf += 1
                 occ += 1
-            elif r['state'] == 'UNCERTAIN':
+            elif r['state'] in ('UNCERTAIN', 'REQUESTED'):
                 occ += 1
             r['ceiling'] = str(self.ceiling)
             r['confirmed_after'] = str(conf)
@@ -818,14 +885,17 @@ CASE_HDR = ['run_id', 'launch_id', 'case_id', 'group', 'role', 'window', 'mode',
             'log_sha256', 'section_read', 'temp_read', 't0_ns', 't1_ns', 'q_win_C', 'q_expected_C',
             'q_lsb_C', 'charge_error_LSB', 'charge_error_pC', 'gain_error_vs_15uA', 'q_positive_C',
             'q_negative_C', 'q_tail_C', 'window_peak_A', 'window_peak_t_ns', 'de_rise_50_ns',
-            'de_fall_50_ns', 'de_b_fall_50_ns', 'de_fall_delay_ns', 'declared_pulses',
+            'de_fall_50_ns', 'de_b_fall_50_ns', 'de_b_rise_50_ns', 'de_and_de_b_edge_gap_ns',
+            'de_b_rise_gap_ns', 'de_fall_delay_ns', 'declared_pulses',
             'pulse_edges_missing', 'current_10pct_ns', 'current_90pct_ns', 'current_rise_10_90_ns',
-            'settled_status', 'settled_ns', 'longest_in_band_ns', 'off_status', 'off_ns',
+            'current_edge_order_ok', 'settled_status', 'settled_ns', 'settled_sample_ns',
+            'longest_in_band_ns', 'longest_in_band_interp_ns', 'band_left_at_ns',
+            'deadline_left_limit_A', 'off_status', 'off_ns', 'off_interp_ns',
             'off_segment_start_ns', 'turn_off_delay_ns', 'last_100ns_max_abs_A',
             'probe_direction_suspect', 'reused_from_native_run', 'src_launch_id',
             'measurement_source_sha256', 'verdict', 'reasons']
 
-EDGE_HDR = ['run_id', 'case_id', 'window', 'quantity', 't_ns', 'data_en_V', 'data_en_b_V',
+EDGE_HDR = ['run_id', 'case_id', 'window', 'quantity', 't_ps', 't_ns', 'data_en_V', 'data_en_b_V',
             'vbias_ch_V', 'node_m_V', 'iref_in_V', 'iout_A']
 
 
@@ -1125,6 +1195,34 @@ def selftest_main():
             bad.append('an abandoned launch recovered as %r' % c)
     finally:
         shutil.rmtree(temp, ignore_errors=True)
+    # 10 the two tools must not be able to drift apart on a frozen criterion: the edge limit the
+    #    convergence table prints is the same number the re-checker judges it against
+    n += 1
+    import dd1_d7b_evidence_check as EC
+    if EC.CONV_EDGE_PS != CONV_EDGE_LIMIT_PS:
+        bad.append('the builder limits a convergence edge to %d ps while the checker allows %d'
+                   % (CONV_EDGE_LIMIT_PS, EC.CONV_EDGE_PS))
+    if EC.CEILING_GRANTED != AUTHORISED_CEILING:
+        bad.append('the builder reads the ceiling as %d and the checker as %d'
+                   % (AUTHORISED_CEILING, EC.CEILING_GRANTED))
+    if (EC.SHIFT_NS, EC.TAIL_NS) != (SHIFT_NS, TAIL_NS):
+        bad.append('the builder drives the PWL with shift %d ns and tail %d ns while the checker '
+                   'assumes %d and %d' % (SHIFT_NS, TAIL_NS, EC.SHIFT_NS, EC.TAIL_NS))
+    if EC.CONV_Q_LSB_REL != 0.01:
+        bad.append('the convergence dQ limit is %r of one LSB, not the frozen 1 %%'
+                   % EC.CONV_Q_LSB_REL)
+    # 11 this round authorises no launch at all, whatever the caller passes in
+    n += 1
+    for env in ({'D7B_ALLOW_LAUNCH': '1', 'D7B_SPECTRE_BIN': '/usr/bin/spectre'}, {}):
+        saved = dict(os.environ)
+        try:
+            os.environ.update(env)
+            problem = authorisation_problem()
+            if not problem:
+                bad.append('the production launch gate opened with %r in the environment' % env)
+        finally:
+            os.environ.clear()
+            os.environ.update(saved)
     print('D7B_RUN_SELFTEST: %s (%d checks)' % ('FAIL' if bad else 'PASS', n))
     for b in bad:
         print('SELFTEST_BAD %s' % b)
@@ -1193,6 +1291,19 @@ def chosen_modes(opts):
 
 
 def authorisation_problem():
+    """two independent gates: this round may not launch at all, and a launch needs both variables
+
+    TASK_DATA7B_R2 section 0 fixes NEW_SPECTRE_LAUNCHES at 0, and section 3.2 says explicitly that no
+    different --seed-from, a fresh account file or an inherited RUN=1 may bring the native entry back.
+    So the zero grant is refused before the authorisation variables are even looked at, and the
+    account arithmetic is exercised only by the isolated synthetic files the guards build.
+    """
+    if NEW_LAUNCH_GRANT <= 0:
+        return ('%s: this round authorises no new Spectre process (NEW_LAUNCH_GRANT=%d). The offline '
+                'paths are --remeasure, --check-evidence, --write-manifest and --account; a launch '
+                'would need a new authorisation from the user, and no flag, seed directory or '
+                'environment variable supplies one'
+                % (REPAIR_TASK_ID, NEW_LAUNCH_GRANT))
     bad = [k for k in AUTH_VARS if os.environ.get(k) != '1']
     if bad:
         return ('RUN=1 AND QODER_SIM_AUTHORISED=1 are both required before any remote preparation; '
@@ -1201,8 +1312,10 @@ def authorisation_problem():
 
 
 def run_id_taken(run_id, out_root):
-    return (os.path.exists(os.path.join(PROJ, 'results', 'evidence', PUBLISHED_PREFIX + run_id))
-            or os.path.exists(os.path.join(out_root, 'evidence', run_id)))
+    """a run id is unique across every repair round's evidence, not just this round's prefix"""
+    return any(os.path.exists(os.path.join(PROJ, 'results', 'evidence', p + run_id))
+               for p in PUBLISHED_PREFIXES) or os.path.exists(os.path.join(out_root, 'evidence',
+                                                                            run_id))
 
 
 def make_run_id(opts, out_root):
@@ -1448,28 +1561,57 @@ def supply_negative(mst, decks, run_id, out_root, log_dir, account):
 
 # ------------------------------------------------------------------ calibration and evidence
 def calibrate(series, run_id, ids):
-    """6.1: the calibration current, its band, the OFF baseline and the end-of-conduction sample"""
+    """6.1: the calibration current over the full declared band, the OFF baseline and the tail
+
+    The band mean divides by the 500 ns the window declares, not by the span the delivered samples
+    happen to cover: 1000 internal samples reaching 499.5 ns are not a 500 ns integral. Both spans are
+    recorded, and the two outer windows are reported as their own sample counts, because a missing
+    sample set used to be skipped by `if off:` and still printed as if it had been measured.
+    """
     cur = series['Ip_out:i']
-    band = [(t, v) for t, v in cur if CAL_BAND[0] <= t <= CAL_BAND[1]]
+    band = MS.window_curve(cur, CAL_BAND[0], CAL_BAND[1], 'calibration band')
+    band_a, band_b = MS.window_bounds(cur, CAL_BAND[0], CAL_BAND[1])
     if len(band) < 2:
         raise RuntimeError('the calibration window has %d samples' % len(band))
+    internal = [p for p in band if CAL_BAND[0] < p[0] < CAL_BAND[1]]
     q = MS.trapezoid(band)
-    dt = (band[-1][0] - band[0][0]) * MS.S_PER_PS
+    dt = (band_b - band_a) * MS.S_PER_PS
+    covered_s = (internal[-1][0] - internal[0][0]) * MS.S_PER_PS if internal else None
     ical = q / dt if dt else None
     bmin = min(v for _t, v in band)
     bmax = max(v for _t, v in band)
-    off = [(t, v) for t, v in cur if CAL_OFF[0] <= t <= CAL_OFF[1]]
-    tail = [(t, v) for t, v in cur if CAL_TAIL[0] <= t <= CAL_TAIL[1]]
+    off = MS.window_curve(cur, CAL_OFF[0], CAL_OFF[1], 'calibration OFF baseline')
+    tail = MS.window_curve(cur, CAL_TAIL[0], CAL_TAIL[1], 'calibration tail')
+    off_a, off_b = MS.window_bounds(cur, CAL_OFF[0], CAL_OFF[1])
+    tail_a, tail_b = MS.window_bounds(cur, CAL_TAIL[0], CAL_TAIL[1])
     off_max = max(abs(v) for _t, v in off) if off else None
     tail_max = max(abs(v) for _t, v in tail) if tail else None
+
+    def span(pts, lo, hi, a, b):
+        inside = [p for p in pts if lo < p[0] < hi]
+        return ((inside[-1][0] - inside[0][0]) * MS.S_PER_PS if inside else None,
+                (b - a) * MS.S_PER_PS if a is not None else None)
+    off_covered, off_integrated = span(off, CAL_OFF[0], CAL_OFF[1], off_a, off_b)
+    tail_covered, tail_integrated = span(tail, CAL_TAIL[0], CAL_TAIL[1], tail_a, tail_b)
     rows = [{'run_id': run_id, 'quantity': 'Ical_A', 'value': ical,
              'window_ns': '%.1f..%.1f' % (CAL_BAND[0] / 1000.0, CAL_BAND[1] / 1000.0),
-             'band_min_A': bmin, 'band_max_A': bmax, 'band_samples': len(band),
-             'integration_s': dt},
+             'band_min_A': bmin, 'band_max_A': bmax, 'band_samples': len(internal),
+             'integration_s': covered_s, 'band_integration_s': dt,
+             'slice_series': 'charge_D7B-CAL_cal'},
             {'run_id': run_id, 'quantity': 'OFF_baseline_max_abs_A', 'value': off_max,
-             'window_ns': '%.1f..%.1f' % (CAL_OFF[0] / 1000.0, CAL_OFF[1] / 1000.0)},
+             'window_ns': '%.1f..%.1f' % (CAL_OFF[0] / 1000.0, CAL_OFF[1] / 1000.0),
+             'band_samples': len([p for p in off if CAL_OFF[0] < p[0] < CAL_OFF[1]]),
+             'integration_s': off_covered, 'band_integration_s': off_integrated,
+             'slice_series': 'charge_D7B-CAL_cal_off'},
             {'run_id': run_id, 'quantity': 'CAL_tail_max_abs_A', 'value': tail_max,
-             'window_ns': '%.1f..%.1f' % (CAL_TAIL[0] / 1000.0, CAL_TAIL[1] / 1000.0)}]
+             'window_ns': '%.1f..%.1f' % (CAL_TAIL[0] / 1000.0, CAL_TAIL[1] / 1000.0),
+             'band_samples': len([p for p in tail if CAL_TAIL[0] < p[0] < CAL_TAIL[1]]),
+             'integration_s': tail_covered, 'band_integration_s': tail_integrated,
+             'slice_series': 'charge_D7B-CAL_cal_tail'}]
+    for row in rows:
+        row['raw_sha256'] = ids.get('raw_sha256', '')
+        row['section'] = ids.get('section', '')
+        row['temp_C'] = ids.get('temp', '')
     tol = abs(15e-6) * 0.05
     ok = (ical is not None and abs(ical - 15e-6) <= tol and off_max is not None
           and off_max <= 0.15e-6 and tail_max is not None and tail_max <= 0.15e-6)
@@ -1515,6 +1657,24 @@ def emit_charge_slice(series, c, w, out, run_id, ids, ev_dir):
     return meta
 
 
+def emit_window_slice(series, c, window, lo_ps, hi_ps, ev_dir, margin_ps=5 * NS):
+    """a named slice of the current, with a sample on each side so the bounds can be interpolated
+
+    The OFF baseline and the end-of-conduction window are not the band the calibration current is read
+    from, so they used to be asserted without any delivered bytes behind them. A slice that carries no
+    sample inside its own bounds is a refusal, not a row that quietly keeps its old number.
+    """
+    cur = [(t, v) for t, v in series['Ip_out:i'] if lo_ps - margin_ps <= t <= hi_ps + margin_ps]
+    inside = [p for p in cur if lo_ps <= p[0] <= hi_ps]
+    if len(inside) < 2:
+        raise RuntimeError('%s/%s: the retained run carries %d sample(s) inside [%.1f, %.1f] ns, so '
+                           'this quantity has no bytes to deliver'
+                           % (c['case_id'], window, len(inside), lo_ps / 1000.0, hi_ps / 1000.0))
+    rows = [['%.17g' % t, '%.12g' % v] for t, v in cur]
+    meta = shard_samples(rows, CHARGE_HDR, 'charge_%s_%s' % (c['case_id'], window), ev_dir)
+    return meta
+
+
 def around_rows(samples, centre_ps, span=4):
     """the samples on both sides of a claimed crossing or peak, so the claim can be re-verified"""
     if centre_ps is None or isinstance(centre_ps, str):
@@ -1529,6 +1689,8 @@ def around_rows(samples, centre_ps, span=4):
 
 def emit_edge_slice(series, c, w, out, run_id, ev_dir):
     marks = [('de_rise_50', out.get('de_rise_50_ps')), ('de_fall_50', out.get('de_fall_50_ps')),
+             ('de_b_fall_50', out.get('de_b_fall_50_ps')),
+             ('de_b_rise_50', out.get('de_b_rise_50_ps')),
              ('i10', out.get('current_10pct_ps')), ('i90', out.get('current_90pct_ps')),
              ('peak', (out.get('window_peak') or {}).get('t_ps')),
              ('settled', (out.get('settled') or {}).get('settled_ps')),
@@ -1544,7 +1706,8 @@ def emit_edge_slice(series, c, w, out, run_id, ev_dir):
                 gathered.setdefault(t, {})[EDGE_COLS.get(name, 'iout')] = v
         for t in sorted(gathered):
             d = gathered[t]
-            rows.append([run_id, c['case_id'], w['window'], label, '%.4f' % (t * 1e-3),
+            rows.append([run_id, c['case_id'], w['window'], label, '%.17g' % t,
+                         '%.4f' % (t * 1e-3),
                          d.get('data_en', ''), d.get('data_en_b', ''), d.get('vbias_ch', ''),
                          d.get('node_m', ''), d.get('iref_in', ''), d.get('iout', '')])
     if not rows:
@@ -1581,17 +1744,29 @@ def case_row(run_id, c, w, out, verdict, reasons, ids, launch_id):
          'de_rise_50_ns': fmt_edge(out.get('de_rise_50_ps')),
          'de_fall_50_ns': fmt_edge(out.get('de_fall_50_ps')),
          'de_b_fall_50_ns': fmt_edge(out.get('de_b_fall_50_ps')),
+         'de_b_rise_50_ns': fmt_edge(out.get('de_b_rise_50_ps')),
+         'de_and_de_b_edge_gap_ns': fmt_edge(out.get('de_and_de_b_edge_gap_ps')),
+         'de_b_rise_gap_ns': fmt_edge(out.get('de_b_rise_gap_ps')),
          'de_fall_delay_ns': fmt_edge(out.get('de_fall_delay_ps')),
          'declared_pulses': out.get('declared_pulses', ''),
          'pulse_edges_missing': fmt_missing_edges(out.get('pulse_edges_missing_ps')),
          'current_10pct_ns': fmt_edge(out.get('current_10pct_ps')),
          'current_90pct_ns': fmt_edge(out.get('current_90pct_ps')),
          'current_rise_10_90_ns': fmt_edge(out.get('current_rise_10_90_ps')),
+         'current_edge_order_ok': str(out.get('current_edge_order_ok'))
+                                   if out.get('current_edge_order_ok') is not None else '',
          'settled_status': (out.get('settled') or {}).get('status', ''),
          'settled_ns': fmt_edge((out.get('settled') or {}).get('settled_ps')),
+         'settled_sample_ns': fmt_edge((out.get('settled') or {}).get('settled_sample_ps')),
          'longest_in_band_ns': fmt_edge((out.get('settled') or {}).get('longest_in_band_ps')),
+         'longest_in_band_interp_ns': fmt_edge((out.get('settled') or {})
+                                               .get('longest_in_band_interp_ps')),
+         'band_left_at_ns': fmt_edge((out.get('settled') or {}).get('band_left_at_ps')),
+         'deadline_left_limit_A': fmt_num((out.get('settled') or {}).get('deadline_left_limit_A'),
+                                          1.0),
          'off_status': (out.get('turn_off') or {}).get('status', ''),
          'off_ns': fmt_edge((out.get('turn_off') or {}).get('off_ps')),
+         'off_interp_ns': fmt_edge(out.get('off_crossing_ps')),
          'off_segment_start_ns': fmt_edge(out.get('off_segment_start_ps')),
          'turn_off_delay_ns': fmt_edge(out.get('turn_off_delay_ps')),
          'last_100ns_max_abs_A': fmt_num(out.get('last_100ns_max_abs_A'), 1.0),
@@ -2322,11 +2497,15 @@ def write_calibration_rows(ev_dir, cal):
         rows.append([r['run_id'], r['quantity'], fmt_num(r.get('value'), 1.0),
                      r.get('window_ns', ''), fmt_num(r.get('band_min_A'), 1.0),
                      fmt_num(r.get('band_max_A'), 1.0), r.get('band_samples', ''),
-                     r.get('integration_s', ''), ids.get('section', ''), ids.get('temp', ''),
+                     fmt_num(r.get('integration_s'), 1.0),
+                     fmt_num(r.get('band_integration_s'), 1.0),
+                     r.get('slice_series', ''),
+                     r.get('raw_sha256', ''), ids.get('section', ''), ids.get('temp', ''),
                      '; '.join('%s from %s' % (k, v) for k, v in sorted(src.items()))])
     write_rows(os.path.join(ev_dir, 'calibration.csv'), rows,
                ['run_id', 'quantity', 'value_A', 'window_ns', 'band_min_A', 'band_max_A',
-                'band_samples', 'integration_s', 'section_read', 'temp_read_C', 'condition_source'])
+                'band_samples', 'integration_s', 'band_integration_s', 'slice_series',
+                'raw_sha256', 'section_read', 'temp_read_C', 'condition_source'])
 
 
 def cal_measure(series):
@@ -2348,6 +2527,13 @@ def cal_slice(series, c, out, run_id, ids, ev_dir, charge_index):
     meta = emit_charge_slice(series, c, w, out, run_id, ids, ev_dir)
     if meta:
         charge_index.append(meta)
+    # the two windows the calibration table also asserts: they are outside the band, so without their
+    # own bytes the only thing a reviewer could check was the number itself
+    for window, bounds in (('cal_off', CAL_OFF), ('cal_tail', CAL_TAIL)):
+        extra = emit_window_slice(series, c, window, bounds[0], bounds[1], ev_dir)
+        charge_index.append(extra)
+        print('CAL_SLICE %s %d..%d ns %d rows' % (window, bounds[0] // NS, bounds[1] // NS,
+                                                  int(extra['total_rows'])))
     return meta
 
 
@@ -2683,6 +2869,19 @@ def write_bundle(run_id, cases, mst, docs, decks, out_root, ev_dir, rows, charge
                    # tell whether a passing report came from these bytes or from a changed checker
                    'evidence_check_source_sha256': _source_sha('dd1_d7b_evidence_check.py')}
     write_json(os.path.join(ev_dir, 'environment.json'), environment)
+    # the frozen golden table travels with the bundle: whoever holds only these bytes must still be
+    # able to re-derive every pulse, and the deck conventions the re-checker needs are named here
+    # instead of being read back out of a case row that is itself under test
+    import dd1_d7b_evidence_check as EC
+    golden_local = os.path.join(ev_dir, 'golden_windows.csv')
+    shutil.copyfile(EC.FROZEN_GOLDEN_TABLE, golden_local)
+    environment['golden_windows_sha256'] = sha_file(golden_local)
+    environment['golden_windows_table'] = 'tests/dd1_d7b/golden_windows.csv of the base commit'
+    environment['shift_ns'] = SHIFT_NS
+    environment['tail_ns'] = TAIL_NS
+    environment['conv_edge_limit_ps'] = CONV_EDGE_LIMIT_PS
+    environment['new_launch_grant'] = NEW_LAUNCH_GRANT
+    write_json(os.path.join(ev_dir, 'environment.json'), environment)
     traces = {}
     for cid, d in docs.items():
         traces[cid] = {'vcd': d['facts']['vcd'], 'vcd_sha256': d['facts']['vcd_sha256'],
@@ -2921,7 +3120,7 @@ def write_convergence(path, results, cases, run_id):
             a = results.get((parent, wname))
             b = results.get((c['case_id'], wname))
             if not a or not b:
-                rows.append([run_id, c['case_id'], wname, parent, '', '', '', '', '',
+                rows.append([run_id, c['case_id'], wname, parent, '', '', '', '', '', '',
                              'BLOCKED_MISSING_PARENT'])
                 continue
             dq = abs(b['q_win']['q'] - a['q_win']['q'])
@@ -2932,15 +3131,16 @@ def write_convergence(path, results, cases, run_id):
             if isinstance(a['de_fall_50_ps'], (int, float)) and isinstance(
                     b['de_fall_50_ps'], (int, float)):
                 dt = abs(b['de_fall_50_ps'] - a['de_fall_50_ps'])
-            ok = dq <= lim_q and dp <= lim_p and (dt is None or dt <= 500)
+            ok = dq <= lim_q and dp <= lim_p and (dt is None or dt <= CONV_EDGE_LIMIT_PS)
             rows.append([run_id, c['case_id'], wname, parent, fmt_num(dq, 1e12, '%.6f'),
                          fmt_num(lim_q, 1e12, '%.6f'), fmt_num(dp, 1e6, '%.6f'),
                          fmt_num(lim_p, 1e6, '%.6f'),
                          fmt_num(dt, 1e-3, '%.4f') if dt is not None else 'NOT_FOUND_BOTH',
+                         fmt_num(CONV_EDGE_LIMIT_PS, 1e-3, '%.4f'),
                          'CONVERGED' if ok else 'NUMERICAL_NOT_CONVERGED'])
     write_rows(path, rows, ['run_id', 'case_id', 'window', 'parent_case', 'delta_q_pC',
                             'limit_q_pC', 'delta_peak_uA', 'limit_peak_uA', 'delta_edge_ns',
-                            'verdict'])
+                            'limit_edge_ns', 'verdict'])
 
 
 def write_negative(path, rows):

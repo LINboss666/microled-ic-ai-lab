@@ -1,0 +1,4 @@
+run_id,quantity,value_A,window_ns,band_min_A,band_max_A,band_samples,integration_s,band_integration_s,slice_series,raw_sha256,section_read,temp_read_C,condition_source
+r20261022_160652_e880be,Ical_A,1.493190564e-05,3000.0..3500.0,1.493190564e-05,1.493190564e-05,1000,4.995e-07,5e-07,charge_D7B-CAL_cal,e93bd38a2e2e2f6401ea9aaed61e839becb57fe86949df3c8feee3f157755bca,tt,27.0000,section from deck include line; temp from psf header temp column
+r20261022_160652_e880be,OFF_baseline_max_abs_A,7.338564169e-13,1500.0..1900.0,,,800,3.995e-07,4e-07,charge_D7B-CAL_cal_off,e93bd38a2e2e2f6401ea9aaed61e839becb57fe86949df3c8feee3f157755bca,tt,27.0000,section from deck include line; temp from psf header temp column
+r20261022_160652_e880be,CAL_tail_max_abs_A,3.850680718e-09,4400.0..4500.0,,,200,9.95e-08,1e-07,charge_D7B-CAL_cal_tail,e93bd38a2e2e2f6401ea9aaed61e839becb57fe86949df3c8feee3f157755bca,tt,27.0000,section from deck include line; temp from psf header temp column
