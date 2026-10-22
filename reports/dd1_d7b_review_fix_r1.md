@@ -251,6 +251,25 @@ B 的全部旧跟踪路径、冻结 D7B 电路/输入（`spectre/`、`tests/dd1_
 `rtl/dd1_d7a_gray_ctrl.sv`）、共享 runner/preflight/supply checker（摘要见
 `environment.json.frozen_tools`）与整个 `dd1_d7b_r11_main/` 均未变。
 
+## 6.5 推送与双路回读（真实命令与结果）
+
+```text
+git -c http.proxy=http://127.0.0.1:7892 push -u origin poc/data-pwm-d7b-r1      rc=0  （普通 push，非 force，未跳 hooks）
+方法一  git -c http.proxy=http://127.0.0.1:7892 ls-remote origin                 rc=0  20 行 ref（推送前 19 行）
+方法二  gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<ref>           rc=0  逐个 ref 读取
+```
+
+| ref | 两条独立路径读到的同一对象 |
+|---|---|
+| `poc/data-pwm-d7b-r1` | `4b39b24df5b78af6298d024b8ba53f68763f163f`（本轮 tip，D 提交） |
+| `poc/data-pwm-d7b`（T） | `adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50` 未动 |
+| `main` | `23e471cb936b421ee97e1250c3be06edf96f9937` 未动 |
+| `poc/data-gray-d7a-r4-doc`（B） | `c3513ffee57880bdc9d6d26d5c1c1a9a43c52e37` 未动 |
+
+载荷提交 P1 `d13e251d2874a9a9942fa103ff7ead3c798b5b14` 是 tip 的祖先
+（`git merge-base --is-ancestor` 为真）。差异只有新建的 `poc/data-pwm-d7b-r1`，其余分支逐一比对未动。
+这是 ref 的回读，不是技术正确性的证明；本文件与交接 JSON 都不写自身摘要。
+
 ## 7 仍未解决（不靠本轮工具掩盖）
 
 1. **历史超支 3 次**：`BUDGET_RESPECTED` 仍是 FAIL，处置权在用户；本轮没有追加授权，也没有把 59 说成已授权。

@@ -126,18 +126,39 @@
  "objects_hygiene_gate": "FAIL_PREEXISTING_UNREACHABLE_BLOB_NOT_GCDED_NOT_PRINTED",
  "payload_sha": "d13e251d2874a9a9942fa103ff7ead3c798b5b14",
  "project_id": "microled-ic-ai-lab",
- "push_status": "PUSH_PENDING",
+ "push_command": "git -c http.proxy=http://127.0.0.1:7892 push -u origin poc/data-pwm-d7b-r1 (normal push, no force, no --no-verify)",
+ "push_status": "REMOTE_VERIFIED",
+ "pushed_utc": "2026-10-22",
  "pwm_current_feasibility_tt": "PASS_WITHIN_FROZEN_CRITERIA",
  "remote_readback": {
+  "main_and_older_branches": "UNCHANGED",
   "method_1_git_protocol": {
    "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin",
-   "status": "PENDING"
+   "only_difference": "refs/heads/poc/data-pwm-d7b-r1 created; nothing else moved",
+   "rc": 0,
+   "ref_lines_after": 20,
+   "ref_lines_before": 19,
+   "refs": {
+    "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+    "poc/data-gray-d7a-r4-doc": "c3513ffee57880bdc9d6d26d5c1c1a9a43c52e37",
+    "poc/data-pwm-d7b": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
+    "poc/data-pwm-d7b-r1": "4b39b24df5b78af6298d024b8ba53f68763f163f"
+   }
   },
   "method_2_github_api": {
-   "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/poc/data-pwm-d7b-r1",
-   "status": "PENDING"
+   "commands": [
+    "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<ref>"
+   ],
+   "rc": 0,
+   "refs": {
+    "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+    "poc/data-gray-d7a-r4-doc": "c3513ffee57880bdc9d6d26d5c1c1a9a43c52e37",
+    "poc/data-pwm-d7b": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
+    "poc/data-pwm-d7b-r1": "4b39b24df5b78af6298d024b8ba53f68763f163f"
+   }
   },
-  "note": "read back after the push; the executor does not claim parity before both reads exist"
+  "parity": "the two independent reads return the same object id for every ref named above; this is a read-back of the refs, not a proof of technical correctness",
+  "payload_reachable": "P1 d13e251d2874a9a9942fa103ff7ead3c798b5b14 is an ancestor of the pushed tip (git merge-base --is-ancestor)"
  },
  "repair_of_task": "DATA-7B",
  "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
