@@ -39,7 +39,7 @@
    修好的表发布在**新目录**（见 §5），坏表不删不改，只在本报告里指出坏在哪一行。
 5. 未做：PAM/LUT/阵列/版图/TCON、PDK/模型卡/许可证/凭据读取、VM/SSH、GC、历史重写、force、跳 hooks、
    合并、推 main、登记接受版、进入下一阶段。DATA-7B 的三条非阻断待办仍未动。
-6. **被取代的中间运行**：本轮正式记录是 `results/evidence/dd1_d7c_a_r1_20261023_093159_006152/`。
+6. **被取代的中间运行**：本轮正式记录是 `results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/`。
    在它之前有四次完整运行留在工作树里、**不提交也不删除**：
    - `results/evidence/dd1_d7c_a_r1_20261023_085000_3f9a1c/`：冻结面语义修好**之前**的运行。它的
      仪器/离线/反例/渲染四类门有效，但 `frozen_comparison.csv` 把白名单内的编辑当成 11 条失配，
@@ -176,6 +176,7 @@ multiplicity 合计（145，因 `m` 全部未书写）与逐模型有效宽度�
 | `history_safety` | `python precommit_safety_check.py --mode history` | 0 | 0 | PASS | SAFETY_GATE: PASS |
 | `reviewer_instrument_on_fixed_bytes` | `python D:\ic617_d7c_a_r1\review\MicroLED_DATA7C_A_Independent_Review_2` | 1 | 1 | PASS | baseline_checks=30 baseline_failures=none all_reproduced=False cases_named=8/8 |
 | `frozen_surfaces` | `git ls-tree -r at B, T and HEAD plus a digest walk against the T extra` | 0 | 0 | PASS | enforced rows 21, violations none; git diff --check T..HEAD=0 B..HEAD=0 |
+| `record_line_endings` | `scan every published file for CR and round-trip a comma-and-quote row ` | 0 | 0 | PASS | published files still carrying CR: none; the table writer emits LF (confirmed); the instrument writes its own JSON with platform newlines, so those tw |
 
 每条命令的完整文本与原始尾行见 `commands.csv`（本目录）；`INFORMATIONAL_NOT_PASS` 不是失败也不是通过，它是"这台工具的范围不支持这个结论"的记录。
 <!-- END R1 GATES -->
@@ -214,7 +215,7 @@ multiplicity 合计（145，因 `m` 全部未书写）与逐模型有效宽度�
 | T_frozen_surfaces | `first_round_task_book` | 1 | 0 | - | `identical` | yes |
 | T_frozen_surfaces | `read_only_inputs_named_by_the_brief` | 15 | 0 | - | `identical` | yes |
 | T_frozen_surfaces | `every_T_path_off_the_whitelist` | 2547 | 0 | - | `identical` | yes |
-| T_to_tip_whitelist | `whitelisted_paths_edited` | 12 | 8 | reports/dd1_d7c_a_native_test_plan.md; reports/dd1_d7c_a_pam_candidate.md; scripts/dd1_d7c_a_guards.py; script | `editable` | no |
+| T_to_tip_whitelist | `whitelisted_paths_edited` | 12 | 10 | reports/agent_handoffs/DATA-7C-A.json; reports/agent_handoffs/DATA-7C-A.md; reports/dd1_d7c_a_native_test_plan | `editable` | no |
 | T_to_tip_whitelist | `T_paths_modified_off_whitelist` | 2547 | 0 | - | `none_modified` | yes |
 | T_to_tip_whitelist | `paths_removed_against_T` | 2559 | 0 | - | `none_removed` | yes |
 | T_to_tip_whitelist | `paths_added_not_allowed` | 4 | 0 | - | `only_allowed_new` | yes |

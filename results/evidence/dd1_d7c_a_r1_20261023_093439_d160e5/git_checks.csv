@@ -1,0 +1,3 @@
+gate,command,rc,lines,scope
+diff_check_T_to_HEAD,git diff --check 89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79..HEAD,0,see rc,committed range over the reviewed tip only
+diff_check_B_to_HEAD,git diff --check 272d6de6d2f2fc8a82d5038d73d6b3e4c656f683..HEAD,0,see rc,committed range over the development base as well
