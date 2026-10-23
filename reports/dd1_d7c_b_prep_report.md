@@ -204,23 +204,23 @@ C06 非均匀样点边界插值等于手算 `1.375e-13 C`；C08 的 NaN、重复
 | `reviewer_remaining_on_fixed_bytes` | `python D:\ic617_d7c_b_prep\review\MicroLED_DATA7C_A_R1_Review_20261023\r` | 1 | 1 | PASS | baseline_checks=34 baseline_failures=none all_gaps_reproduced=False cases=7/7 gap_state=closed=6; still reporting reproduced: published_record_reader_ |
 | `offline_checks` | `python dd1_d7c_a_offline_check.py --json <out>` | 0 | 0 | PASS | D7C_A_OFFLINE_CHECK: PASS (34 checks, failures: none) |
 | `counterexamples` | `python dd1_d7c_a_guards.py --json <out>` | 0 | 0 | PASS | D7C_A_GUARDS: PASS (65/65 named exactly; not hit: none) |
-| `record_tool_selftest` | `python dd1_d7c_a_r1_selftest.py --json <out>/selftest.json run in a thro` | 0 | 0 | PASS | clone_at_R2 PASS (9 cases, failures: none); this_tree rc=1 FAIL, failing cases frozen_gate_counts_only_enforced_rows, other 8 cases PASS, all 38 paths |
+| `record_tool_selftest` | `python dd1_d7c_a_r1_selftest.py --json <out>/selftest.json run in a thro` | 0 | 0 | PASS | clone_at_R2 PASS (9 cases, failures: none); this_tree rc=1 FAIL, failing cases frozen_gate_counts_only_enforced_rows, other 8 cases PASS, all 53 paths |
 | `synthetic_measure_cases` | `python dd1_d7c_b_prep_cases.py --json <out>` | 0 | 0 | PASS | D7C_B_PREP_CASES: PASS (17/17 named exactly, failures: none, evidence SYNTHETIC_NOT_MEASURED) |
 | `contract_selfcheck` | `python dd1_d7c_b_prep_contract.py --check` | 0 | 0 | PASS | D7C_B_CONTRACT_CHECK: PASS (state=PROPOSED_FOR_REVIEW sweep_points=19 markdown_rows=13 problems=0) |
 | `schedule_check` | `python dd1_d7c_b_prep_schedule.py --check` | 0 | 0 | PASS | D7C_B_SCHEDULE_CHECK: PASS (rows=15 windows=62 pwl=215 problems=0) |
 | `deck_check` | `python dd1_d7c_b_prep_deckgen.py --check` | 0 | 0 | PASS | D7C_B_DECKGEN_CHECK: PASS (15 decks, problems=0) |
 | `deck_regenerated_from_sources` | `python dd1_d7c_b_prep_deckgen.py --to <scratch>` | 0 | 0 | PASS | D7C_B_DECKGEN_REGENERATED 15 decks in a scratch tree, comparison problems=0 |
-| `fresh_extraction_replay` | `git archive 7e883b75c5db / tar -x, then run the suites there` | 0 | 0 | PASS | contract_check rc=0 D7C_B_CONTRACT_CHECK: PASS (state=PROPOSED_FOR_REVIEW sweep_points=19 markdown_rows=13 problems=0); schedule_check rc=0 D7C_B_SCHE |
+| `fresh_extraction_replay` | `git archive f9b4608b37a7 / tar -x, then run the suites there` | 0 | 0 | PASS | contract_check rc=0 D7C_B_CONTRACT_CHECK: PASS (state=PROPOSED_FOR_REVIEW sweep_points=19 markdown_rows=13 problems=0); schedule_check rc=0 D7C_B_SCHE |
 | `previous_record_reader_finds_its_own_staleness` | `git archive da6f5fc3f497 / tar -x, then python scripts/dd1_d7c_a_r2_reco` | 0 | 0 | PASS | 9 semantic problems over 3 paths (DATA-7C-A.json,DATA-7C-A.md,dd1_d7c_a_review_fix_r1.md); paths outside the three R1 disclosed: 0 |
 | `handoff_structure` | `python dd1_d7c_b_prep_verify.py --handoff-check (in process)` | 0 | 0 | PASS | fields, digests against disk, zero costs, markers and forbidden claims all checked |
 | `native_entry_refused` | `python dd1_d7c_a_deckgen.py --probe <temp>` | 0 | 0 | PASS | DECKGEN_PROBE refused=True untouched=True reason=DATA-7C-A: this round authorises no native launch and no deck publication; NATIVE_AUTHORISED_THIS_ROU |
 | `provenance` | `python scripts/provenance_check.py` | 0 | 0 | PASS | SOURCE_PROVENANCE_CHECK: PASS |
 | `netlist_stats_scope` | `python scripts/netlist_stats.py --check` | 1 | INFORMATIONAL: this tool counts MOS lines, it does not judge this round | INFORMATIONAL_NOT_PASS | DEVICE_COUNT_CHECK: FAIL |
 | `history_safety` | `python scripts/precommit_safety_check.py --mode history` | 0 | 0 | PASS | SAFETY_GATE: PASS |
-| `frozen_surfaces` | `git ls-tree -r, blob and mode comparison over explicit path lists, plus ` | 0 | 0 | PASS | enforced rows 6, violations 0, informational rows 1, added 38, removed 0, modified 0; git diff --check R2..HEAD=0 T..HEAD=0 base..HEAD=0 |
+| `frozen_surfaces` | `git ls-tree -r, blob and mode comparison over explicit path lists, plus ` | 0 | 0 | PASS | enforced rows 6, violations 0, informational rows 1, added 53, removed 0, modified 0; git diff --check R2..HEAD=0 T..HEAD=0 base..HEAD=0 |
 | `record_line_endings` | `scan every published file for CR and round-trip a comma-and-quote row th` | 0 | 0 | PASS | published files still carrying CR: none; the table writer emits LF (confirmed); the instruments write their own JSON with platform newlines, so those  |
 
-渲染发生在 `7e883b75c5db` 之后、`record_semantics` 与 `published_record_recheck` 判定之前；最后两门的最终值与每条命令的完整文本在 `commands.csv`。本表不含本轮记录的摘要，摘要写在本目录的 `verification_summary.json`（它写于本文件之后，故不进摘要）。
+渲染发生在 `f9b4608b37a7` 之后、`record_semantics` 与 `published_record_recheck` 判定之前；最后两门的最终值与每条命令的完整文本在 `commands.csv`。本表不含本轮记录的摘要，摘要写在本目录的 `verification_summary.json`（它写于本文件之后，故不进摘要）。
 <!-- END 7CB GATES -->
 
 ### 9.2 15 例清单
@@ -282,15 +282,15 @@ C06 非均匀样点边界插值等于手算 `1.375e-13 C`；C08 的 NaN、重复
 | this_round | `four_candidate_DUT_netlists` | 4 | 0 |  | `identical` | yes |
 | this_round | `shared_tools_and_safety_rules` | 14 | 0 |  | `identical` | yes |
 | this_round | `previous_round_record_dirs` | 51 | 0 |  | `identical` | yes |
-| this_round | `paths_added_this_round` | 38 | 0 |  | `only_allowed_new` | yes |
+| this_round | `paths_added_this_round` | 53 | 0 |  | `only_allowed_new` | yes |
 | this_round | `paths_removed_or_modified_vs_R2` | 0 | 0 |  | `none_removed` | yes |
-| this_round | `added_paths_listed_for_the_reviewer` | 38 | 0 | reports/agent_handoffs/DATA-7C-B-PREP.json;reports/agent_handoffs/DATA-7C-B-PREP.md;report | `informational_listing` | no |
+| this_round | `added_paths_listed_for_the_reviewer` | 53 | 0 | reports/agent_handoffs/DATA-7C-B-PREP.json;reports/agent_handoffs/DATA-7C-B-PREP.md;report | `informational_listing` | no |
 
-* `git diff --check 3e4703f1763223024f442c0826e95055782bca13..HEAD` → rc=0，0，committed range from 3e4703f17632 to HEAD at 2026-10-23T18:28:21Z
-* `git diff --check 89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79..HEAD` → rc=0，0，committed range from 89b3dd8e244e to HEAD at 2026-10-23T18:28:21Z
-* `git diff --check 272d6de6d2f2fc8a82d5038d73d6b3e4c656f683..HEAD` → rc=0，0，committed range from 272d6de6d2f2 to HEAD at 2026-10-23T18:28:21Z
+* `git diff --check 3e4703f1763223024f442c0826e95055782bca13..HEAD` → rc=0，0，committed range from 3e4703f17632 to HEAD at 2026-10-23T18:48:24Z
+* `git diff --check 89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79..HEAD` → rc=0，0，committed range from 89b3dd8e244e to HEAD at 2026-10-23T18:48:24Z
+* `git diff --check 272d6de6d2f2fc8a82d5038d73d6b3e4c656f683..HEAD` → rc=0，0，committed range from 272d6de6d2f2 to HEAD at 2026-10-23T18:48:25Z
 
-R2 的全部 2613 条跟踪路径逐条比 (mode, type, blob)；四份候选 DUT、共享工具、安全闸脚本与全部旧证据目录各成一行为 enforced；本轮新增 38 条路径全部落在任务书 §9 允许的新路径前缀里，删除与修改计数为 0。
+R2 的全部 2613 条跟踪路径逐条比 (mode, type, blob)；四份候选 DUT、共享工具、安全闸脚本与全部旧证据目录各成一行为 enforced；本轮新增 53 条路径全部落在任务书 §9 允许的新路径前缀里，删除与修改计数为 0。
 <!-- END 7CB FROZEN -->
 
 ## 10 停止状态

@@ -1,0 +1,156 @@
+{
+  "diagnostic_rc_convention": "0=every listed gap reproduced; 1=one or more no longer reproduce",
+  "baseline_checks": 34,
+  "baseline_failures": [],
+  "results": [
+    {
+      "case": "decoder_supply_shorted_to_vss",
+      "file": "spectre/dd1_d7c_a_pam_top.scs",
+      "sha256_before": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24",
+      "sha256_after": "361a080101878b1f2051b071b9a201ad35ea851a251fc8163961ac3e1676dfba",
+      "facts": {
+        "actual_decoder_power_binding": {
+          "vdd18": "vss",
+          "vss": "vss"
+        },
+        "fault": "both decoder power rails resolve to the same top-level vss net",
+        "native_electrical_behaviour": "NOT_SIMULATED"
+      },
+      "checks": 34,
+      "failures": [
+        "TOP_SUPPLY_BINDINGS"
+      ],
+      "exception": null,
+      "reproduced": false
+    },
+    {
+      "case": "golden_ragged_extra_cell_ignored",
+      "file": "tests/dd1_d7c_a/pam_mask_golden.csv",
+      "sha256_before": "6ff91d98ea84d65c36cb9d139e3fdd87afbe5c567cbef017d9404a20b749ab25",
+      "sha256_after": "0556d28d4c869d1f5cde134607713d8c264586fefcdd464f5dca67c6f2595239",
+      "facts": {
+        "header_columns": 15,
+        "row2_columns": 16
+      },
+      "checks": 34,
+      "failures": [
+        "INPUT_TABLE_SCHEMAS",
+        "GOLDEN_TABLE_SCHEMA",
+        "THERMO_GOLDEN_16",
+        "TOP_INTEGRATED_THERMO_16"
+      ],
+      "exception": null,
+      "reproduced": false
+    },
+    {
+      "case": "claim_table_header_only_accepted",
+      "file": "tests/dd1_d7c_a/device_count_claims.csv",
+      "sha256_before": "cb4056b5bffe81a967d42e41e63defcd93ca9b7bd29f7067326f5395c47e3041",
+      "sha256_after": "28d4bc2c2a9ecdaec91fdac5453a3ca1832034c167baedfe82b4d35ad1fc7c48",
+      "facts": {
+        "data_rows": 0,
+        "expected_object_bound_claims_at_reviewed_tip": 17
+      },
+      "checks": 34,
+      "failures": [
+        "INPUT_TABLE_SCHEMAS",
+        "CLAIM_TABLE_MATCHES_PARSE"
+      ],
+      "exception": null,
+      "reproduced": false
+    },
+    {
+      "case": "golden_nonfinite_numeric_crashes",
+      "file": "tests/dd1_d7c_a/pam_mask_golden.csv",
+      "sha256_before": "6ff91d98ea84d65c36cb9d139e3fdd87afbe5c567cbef017d9404a20b749ab25",
+      "sha256_after": "80ec34b584d2a05b85383c19ed612620c461665c163d66c39738a6fc16a0e24b",
+      "facts": {
+        "row": 2,
+        "field": "en0",
+        "value": "NaN",
+        "required": "named structured refusal rather than an unhandled exception"
+      },
+      "checks": 34,
+      "failures": [
+        "INPUT_TABLE_SCHEMAS",
+        "GOLDEN_TABLE_SCHEMA",
+        "THERMO_GOLDEN_16",
+        "TOP_INTEGRATED_THERMO_16"
+      ],
+      "exception": null,
+      "reproduced": false
+    },
+    {
+      "case": "all_eight_dc_codes_replaced_by_zero",
+      "file": "tests/dd1_d7c_a/native_case_plan.csv",
+      "sha256_before": "216c6eb79de748b3b753c999991e0952524bf14c7dc688c3ca3a48cf3f4ad6b5",
+      "sha256_after": "5a6772d8919db7f509df20ccc4977d3a3a23d560b6e70c06ac23ba81c4406584",
+      "facts": {
+        "dc_rows": 8,
+        "unique_codes": [
+          0
+        ],
+        "required_code_set": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ]
+      },
+      "checks": 34,
+      "failures": [
+        "PLAN_SCHEDULE_ARITHMETIC"
+      ],
+      "exception": null,
+      "reproduced": false
+    },
+    {
+      "case": "published_record_reader_accepts_rc99_as_PASS",
+      "test_level": "function-level, not end-to-end export",
+      "facts": {
+        "gate": "offline_checks",
+        "command": "python offline_check.py",
+        "rc": "99",
+        "expected_rc": "0",
+        "verdict_state": "PASS",
+        "verdict": "counterfeit status contradicted by its rc"
+      },
+      "exception": null,
+      "reproduced": true
+    },
+    {
+      "case": "pull_down_positive_sign_inverted",
+      "reproduced": false,
+      "kind": "KCL derivation and source inspection; not native simulation",
+      "facts": {
+        "candidate_probe_nodes_in_order": [
+          "clamp_node",
+          "data_out"
+        ],
+        "physical_positive_sink_path": [
+          "clamp_node",
+          "data_out",
+          "DUT",
+          "vss"
+        ],
+        "probe_raw_current_at_positive_sink": "positive",
+        "required_conversion_if_original_orientation_kept": "I_sink = -Ip_branch",
+        "accepted_D7B_opposite_orientation_present": true,
+        "all_case_probe_orientation_strings": [
+          "iprobe Ip_branch (clamp_node data_out), positive terminal first: a positive reading IS the branch sinking current out of data_out"
+        ],
+        "all_case_sign_convention_strings": [
+          "I_sink = Ip_branch with no negation and no abs(); Q = integral of I_sink over the declared window, positive charge accumulating during the conducting window; the off-window tail is integrated as its own negative area and never cancels against it to claim a shut branch; declared before any run, not chosen after a sign"
+        ]
+      }
+    }
+  ],
+  "all_gaps_reproduced": false,
+  "spectre_launches": 0,
+  "rtl_simulations": 0,
+  "oa_writes": 0
+}
