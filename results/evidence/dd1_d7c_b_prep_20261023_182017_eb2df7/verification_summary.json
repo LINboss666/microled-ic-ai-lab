@@ -1,0 +1,163 @@
+{
+ "base_r2": "3e4703f1763223024f442c0826e95055782bca13",
+ "branch": "poc/data-pam-d7c-b-prep",
+ "cases_in_schedule": 15,
+ "contract_state": "PROPOSED_FOR_REVIEW",
+ "csv_read_back": [
+  {
+   "file": "commands.csv",
+   "result": "columns and keys verified, no CR byte",
+   "rows": 24
+  },
+  {
+   "file": "counterexamples.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "frozen_comparison.csv",
+   "result": "columns and keys verified, no CR byte",
+   "rows": 7
+  },
+  {
+   "file": "git_checks.csv",
+   "result": "columns and keys verified, no CR byte",
+   "rows": 3
+  },
+  {
+   "file": "instrument_T.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "instrument_fixed.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "instrument_remaining_H.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "instrument_remaining_R2.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "instrument_remaining_fixed.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "offline_checks.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "selftest.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "selftest_this_tree.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "source_identity.csv",
+   "result": "columns and keys verified, no CR byte",
+   "rows": 72
+  },
+  {
+   "file": "synthetic_cases.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  }
+ ],
+ "deck_directory": "spectre/dd1_d7c_b_prep",
+ "decks": 15,
+ "development_base": "272d6de6d2f2fc8a82d5038d73d6b3e4c656f683",
+ "electrical_results": "NONE: every number in this record is text, arithmetic, table shape or Git identity; the synthetic measurement results are labelled SYNTHETIC_NOT_MEASURED",
+ "frozen_enforced_mismatches": 0,
+ "frozen_rows": 7,
+ "frozen_rows_enforced": 6,
+ "frozen_rows_informational": 1,
+ "frozen_violating_surfaces": [],
+ "gates": 24,
+ "gates_failed": [],
+ "gates_informational": [
+  "netlist_stats_scope"
+ ],
+ "generated_utc": "2026-10-23T18:28:33Z",
+ "identity_paths_rewritten_by_this_run": [
+  "reports/dd1_d7c_b_prep_report.md"
+ ],
+ "native_launches": 0,
+ "oa_writes": 0,
+ "paths_added_after_R2": [
+  "reports/agent_handoffs/DATA-7C-B-PREP.json",
+  "reports/agent_handoffs/DATA-7C-B-PREP.md",
+  "reports/dd1_d7c_b_prep_contract.md",
+  "reports/dd1_d7c_b_prep_report.md",
+  "reports/tasks/DATA-7C-B-PREP.md",
+  "results/evidence/dd1_d7c_b_prep_20261023_172056_48cc50/counterexamples.json",
+  "results/evidence/dd1_d7c_b_prep_20261023_172056_48cc50/instrument_T.json",
+  "results/evidence/dd1_d7c_b_prep_20261023_172056_48cc50/instrument_fixed.json",
+  "results/evidence/dd1_d7c_b_prep_20261023_172056_48cc50/instrument_remaining_H.json",
+  "results/evidence/dd1_d7c_b_prep_20261023_172056_48cc50/instrument_remaining_fixed.json",
+  "results/evidence/dd1_d7c_b_prep_20261023_172056_48cc50/offline_checks.json",
+  "results/evidence/dd1_d7c_b_prep_20261023_172056_48cc50/selftest.json",
+  "results/evidence/dd1_d7c_b_prep_20261023_172056_48cc50/synthetic_cases.json",
+  "scripts/dd1_d7c_b_prep_cases.py",
+  "scripts/dd1_d7c_b_prep_contract.py",
+  "scripts/dd1_d7c_b_prep_deckgen.py",
+  "scripts/dd1_d7c_b_prep_measure.py",
+  "scripts/dd1_d7c_b_prep_schedule.py",
+  "scripts/dd1_d7c_b_prep_verify.py",
+  "spectre/dd1_d7c_b_prep/DC-000.scs",
+  "spectre/dd1_d7c_b_prep/DC-001.scs",
+  "spectre/dd1_d7c_b_prep/DC-010.scs",
+  "spectre/dd1_d7c_b_prep/DC-011.scs",
+  "spectre/dd1_d7c_b_prep/DC-100.scs",
+  "spectre/dd1_d7c_b_prep/DC-101.scs",
+  "spectre/dd1_d7c_b_prep/DC-110.scs",
+  "spectre/dd1_d7c_b_prep/DC-111.scs",
+  "spectre/dd1_d7c_b_prep/RS-FULL.scs",
+  "spectre/dd1_d7c_b_prep/RS-LOW.scs",
+  "spectre/dd1_d7c_b_prep/RS-SWITCH.scs",
+  "spectre/dd1_d7c_b_prep/TR-120.scs",
+  "spectre/dd1_d7c_b_prep/TR-200.scs",
+  "spectre/dd1_d7c_b_prep/TR-LONG.scs",
+  "spectre/dd1_d7c_b_prep/TR-OFFCODE.scs",
+  "tests/dd1_d7c_b_prep/contract.json",
+  "tests/dd1_d7c_b_prep/pwl.csv",
+  "tests/dd1_d7c_b_prep/schedule.csv",
+  "tests/dd1_d7c_b_prep/windows.csv"
+ ],
+ "paths_modified_after_R2": [],
+ "paths_removed_after_R2": [],
+ "published_files_with_cr": [],
+ "published_record_recheck": {
+  "facts": {
+   "frozen_rows": 7,
+   "gates": 24,
+   "git_checks": 3,
+   "identity_rows": 72
+  },
+  "note": "judged over the bytes as published, before this summary line existed, and with no revision binding: this run rewrites the preparation report after measuring the tip, so the quoted digest of that one file is of the bytes it wrote. A reviewer who wants the Git binding re-runs it against the commit that publishes this record, which is the first revision where every quoted digest is also a blob: python scripts/dd1_d7c_a_r2_record_check.py --record results/evidence/<run_id> --git-ref <that commit> --source-root <work tree at that commit>",
+  "problems": [],
+  "verdict": "PASS"
+ },
+ "reviewed_tip_H": "da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb",
+ "reviewed_tip_T": "89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79",
+ "rtl_simulations": 0,
+ "superseded_publish_attempts": [
+  "results/evidence/dd1_d7c_b_prep_20261023_172056_48cc50",
+  "<review/scratch/aborted_attempt2_* and aborted_attempt3_*, kept whole outside the repository>"
+ ],
+ "synthetic_cases": 17,
+ "task_id": "DATA-7C-B-PREP",
+ "tip": "7e883b75c5db8c6090268ae05b26c5be43303e55",
+ "verdict": "PASS_WITH_DISCLOSED_INFORMATIONAL_GATES"
+}
