@@ -403,6 +403,11 @@ def handoff_check():
                             'of its own bytes, so the entry can only ever be false'
                             % entry.get('path'))
             continue
+        if str(entry.get('path', '')) in RENDERED_BY_THIS_RUN:
+            problems.append('%s is digested by the handoff, but this run rewrites that file after the '
+                            'handoff is written, so the digest cannot describe the delivered bytes'
+                            % entry.get('path'))
+            continue
         target = os.path.join(ROOT, str(entry.get('path', '')).replace('/', os.sep))
         if not os.path.isfile(target):
             problems.append('source_identity names %s which is not on disk' % entry.get('path'))
