@@ -1,0 +1,438 @@
+{
+ "accepted_data7a_content_sha": "f68449672774ac9266ba9e4893024e4f3027dd9d",
+ "accepted_data7b_content_sha": "f9fd09b184a69a27cdb409205dfd4f4151408a23",
+ "base_sha": "272d6de6d2f2fc8a82d5038d73d6b3e4c656f683",
+ "boundaries": {
+  "force_push": "NO",
+  "gc_or_history_rewrite": "NO",
+  "historical_data7b_budget": "VIOLATED_59_OF_56_OVER_BY_3, disposition with the user, BUDGET_RESPECTED stays FAIL in that bundle",
+  "hooks_skipped": "NO",
+  "main_push_performed": "NO",
+  "merge_performed": "NO",
+  "next_native_stage_authorised": "NO",
+  "scope_vs_base": "additions only: 25 paths added, 0 modified, 0 deleted",
+  "soa_signoff": "NO"
+ },
+ "branch": "poc/data-pam-d7c-a",
+ "candidate": {
+  "branch_count": 8,
+  "branch_devices_total": 32,
+  "data_en_zero_behaviour": "all eight branches off; code 000 is one unit on, not black",
+  "decoder_mos": 112,
+  "files": [
+   {
+    "bytes": 3871,
+    "path": "spectre/dd1_d7c_a_gates.scs",
+    "role": "candidate netlist",
+    "sha256": "d2def4e657532b655941c2e42adf8534b7144544fa72ff2f41dfbd3374620faf"
+   },
+   {
+    "bytes": 4674,
+    "path": "spectre/dd1_d7c_a_pam_dec.scs",
+    "role": "candidate netlist",
+    "sha256": "9f6c8d7895d13aaf031eac8036bba7165e26a448c685beef8ab2d0a128627d24"
+   },
+   {
+    "bytes": 4114,
+    "path": "spectre/dd1_d7c_a_sink_unit.scs",
+    "role": "candidate netlist",
+    "sha256": "60e06aa3010a66442ac25ff408abc22f1aab93d6b5d3b24dbc15095ac66234af"
+   },
+   {
+    "bytes": 4029,
+    "path": "spectre/dd1_d7c_a_pam_top.scs",
+    "role": "candidate netlist",
+    "sha256": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24"
+   },
+   {
+    "bytes": 7688,
+    "path": "spectre/dd1_d7c_a_tb_draft.scs",
+    "role": "candidate netlist",
+    "sha256": "5ecae7da44d474aec5b2fdadc3591427d442ead610bc316a192ddcb64df62dc5"
+   }
+  ],
+  "fingers_m_unset": "m is not written on the four analog devices, so each is 1; the eight unit Mout widths sum to 20 um, the width of one accepted Mout",
+  "forbidden_shortcuts_not_used": "no behavioural current source, no code-dependent ideal IREF or VBIAS, no ideal complement in place of an inverter, no eight outputs called one channel",
+  "full_scale_estimated": "code 111 conducts all eight branches, total equals the reference itself; no fitted value",
+  "geometry_status": "GEOMETRY_NOT_VERIFIED (no PDK or guest file was read this round)",
+  "inherited_topology": "bias Mref, cascode Mcas, mirror Mout, DNW pass and bleed, exactly the accepted data_sink_1ch shape; only Mcas/Mout widths scale by 1/8, pass and bleed keep the accepted widths",
+  "interface_map": {
+   "controller data_en_b": "deliberately not reused: each branch inverts its own en",
+   "data_en": "accepted controller data_en (prepared only, not connected)",
+   "data_out": "the only output; every branch DATA_OUT lands on it",
+   "iref_in": "testbench 15 uA meter into the diode-connected reference, never an ideal VBIAS",
+   "pam_sel0/1/2": "controller pam_sel[2:0], bit0 weight 1, bit1 weight 2, bit2 weight 4",
+   "vcas": "inherited POC cascode bias 1.8 V",
+   "vdd18": "decoder domain only",
+   "vss": "shared return, explicitly grounded in the bench"
+  },
+  "levels_status": "POC_CANDIDATE_NOT_FORMAL_SPEC",
+  "output_port_count": 1,
+  "reference_current_uA": "15 (external, injected into the diode-connected Mref)",
+  "reference_devices": 1,
+  "scheme": "A: eight identical unit branches, conducting count = pam_sel + 1",
+  "subckt_instances": 58,
+  "top_expanded_mos": 145,
+  "unit_core_mos": 4,
+  "unit_target_uA_estimated": "1.875 = 15/8, ESTIMATED_MIRROR_RATIO_ONLY"
+ },
+ "completion_level": "CANDIDATE_MOS_NETLIST_WITH_OFFLINE_CHECKS",
+ "costs": {
+  "credentials_read": 0,
+  "native_preflight": 0,
+  "new_oa_writes": 0,
+  "new_rtl_simulations": 0,
+  "new_spectre_launches": 0,
+  "password_changed": 0,
+  "pdk_modified": 0,
+  "spectre_help_invocations": 0,
+  "ssh_or_vm": 0
+ },
+ "delivered_paths_added": [
+  "reports/agent_handoffs/DATA-7C-A.md",
+  "reports/dd1_d7c_a_native_test_plan.md",
+  "reports/dd1_d7c_a_pam_candidate.md",
+  "reports/tasks/DATA-7C-A.md",
+  "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/commands.csv",
+  "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/counterexamples.json",
+  "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/frozen_comparison.csv",
+  "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/git_checks.csv",
+  "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/offline_checks.json",
+  "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/source_identity.csv",
+  "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/verification_summary.json",
+  "scripts/dd1_d7c_a_deckgen.py",
+  "scripts/dd1_d7c_a_guards.py",
+  "scripts/dd1_d7c_a_netlist.py",
+  "scripts/dd1_d7c_a_offline_check.py",
+  "scripts/dd1_d7c_a_validate_handoff.py",
+  "scripts/dd1_d7c_a_verify.py",
+  "spectre/dd1_d7c_a_gates.scs",
+  "spectre/dd1_d7c_a_pam_dec.scs",
+  "spectre/dd1_d7c_a_pam_top.scs",
+  "spectre/dd1_d7c_a_sink_unit.scs",
+  "spectre/dd1_d7c_a_tb_draft.scs",
+  "tests/dd1_d7c_a/native_case_plan.csv",
+  "tests/dd1_d7c_a/pam_mask_golden.csv",
+  "tests/dd1_d7c_a/pam_request_refusal.csv"
+ ],
+ "evidence_dir": "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0",
+ "head_sha": "a9ba473232808d8171b74eddd70065e2e15495b2",
+ "head_sha_role": "recorded here at the time of writing: this is the commit that published the verification record, and the commit carrying this field is above it, so the branch value is read from the Git ref and never from this file",
+ "inherited_pending_maintenance": [
+  {
+   "id": "ARCHIVE_README_COUNT_AND_SOURCE_WORDING",
+   "owner": "the next DATA-7B maintenance round"
+  },
+  {
+   "done_right_here": "dd1_d7c_a_guards.py requires found == sorted(expected) with a non-empty expectation",
+   "id": "AUXILIARY_ASSERTIONS_CAN_BE_STRICTER",
+   "owner": "the next DATA-7B maintenance round"
+  },
+  {
+   "id": "CURRENT_RANGE_IS_10_COMMITS",
+   "owner": "every round: count commits at read-back time, not from an earlier table"
+  }
+ ],
+ "known_limitations": [
+  "the candidate netlist has never been through a simulator, so its Spectre syntax is NOT_VERIFIED; the hierarchical save form and type=pwl on decoder inputs are explicitly unproven on this build",
+  "the eight current levels are an estimate from an ideal 1:8 mirror; mismatch, output resistance, the pass-device bias drop and reference settling are unmeasured",
+  "geometry legality (wmin/lmin/fingers) was not checked against the PDK because reading guest or PDK files is outside this round",
+  "no LED I-V, no array RC, no on-chip driver impedance, no PVT corners: no optical, array or reliability conclusion is available",
+  "the decoder is a minimum-area-minded two-input-gate solution, not a library or a complete grey controller; storage, authorisation FSM and TCON stay with DATA-7A",
+  "DATA-7B-R3 non-blocking notes are inherited as pending maintenance and were not fixed here because fixing them would edit bytes inside the accepted version",
+  "the historical DATA-7B overrun (59 against 56) stays a violation; this round borrows or resets nothing from that account"
+ ],
+ "native_plan": {
+  "authorised_this_round": 0,
+  "breakdown": {
+   "dc": 8,
+   "refined_step": 3,
+   "transient": 4
+  },
+  "cases": 15,
+  "document": "reports/dd1_d7c_a_native_test_plan.md",
+  "draft_ceiling_including_debug": 36,
+  "draft_launch_units": 30,
+  "machine_table": "tests/dd1_d7c_a/native_case_plan.csv",
+  "status": "PREPARED_NOT_EXECUTED, all case results NOT_RUN, thresholds and the level table to be frozen by review and the user before any run"
+ },
+ "not_run": {
+  "array_layout_drc_lvs_pex": "NOT_RUN",
+  "corner_or_temperature_sweeps": "NOT_RUN",
+  "full_mos_gray_controller": "NOT_RUN",
+  "gray_lut": "NOT_RUN",
+  "led_iv_driver_impedance_array_rc": "NOT_DEFINED",
+  "native_netlist_syntax": "NOT_VERIFIED",
+  "optical_effective_bits": "NOT_VERIFIED",
+  "pam_8level_current_measured": "NOT_RUN",
+  "pam_level_values_formal_spec": "NOT_FROZEN",
+  "pwm_pam_current_integration": "NOT_RUN"
+ },
+ "offline_verification": {
+  "checks": 22,
+  "checks_failed": [],
+  "counterexample_rule": "found == sorted(expected) and expected must be non-empty; an empty new-failure set can never count as a detection (the vacuity left as a follow-up in DATA-7B-R3)",
+  "counterexamples": 10,
+  "gate_logic_source": "pull-up and pull-down graphs solved per cell, so a cell named nand2 is only a NAND if its transistors say so",
+  "golden_separation": "the 16 golden mask rows are hand-written from the task brief table in tests/dd1_d7c_a/pam_mask_golden.csv and are read, never generated, by the same code that evaluates the netlist",
+  "published_bytes_reverified": {
+   "checks": 22,
+   "checks_failed": [],
+   "guards_line": "D7C_A_GUARDS: PASS (10/10 injections named exactly; not hit: none)",
+   "guards_rc": 0,
+   "handoff_validator_line": "D7C_A_HANDOFF_CHECK: PASS (19 fields checked, 0 problems; evidence and remote truth are NOT verified here)",
+   "handoff_validator_rc": 0,
+   "injections_named_exactly": 10,
+   "injections_total": 10,
+   "note": "rc 0 here is a text and connectivity statement only; no electrical result exists in this round",
+   "offline_check_rc": 0,
+   "offline_line": "D7C_A_OFFLINE_CHECK: PASS (22 checks, failures: none)",
+   "why": "the authoritative record predates the handoff markdown and this JSON, so its claim polisher could not have seen them; this re-run covers the published bytes as they now stand"
+  },
+  "tools": [
+   {
+    "bytes": 15705,
+    "path": "scripts/dd1_d7c_a_netlist.py",
+    "role": "offline tool",
+    "sha256": "1539b35451dc3f3ec1c8d49ec5c8ba2f987587ff8e910e98e1b96b9ff59f3d8c"
+   },
+   {
+    "bytes": 28653,
+    "path": "scripts/dd1_d7c_a_offline_check.py",
+    "role": "offline tool",
+    "sha256": "d41c086e077e038621c486830333e7bc87050cab333b7e1cdde7d949d1297822"
+   },
+   {
+    "bytes": 10835,
+    "path": "scripts/dd1_d7c_a_guards.py",
+    "role": "offline tool",
+    "sha256": "4a8219944a9afae2b95a09b3e7b49aed838050d071cbb7e72babb7b810e76c45"
+   },
+   {
+    "bytes": 5131,
+    "path": "scripts/dd1_d7c_a_validate_handoff.py",
+    "role": "offline tool",
+    "sha256": "d3dd07d8f2dd9b127dfcd2300398c0483471c816b171288c7c0cd53dcf523999"
+   }
+  ],
+  "what_a_pass_means": "text, connectivity and derived logic only. No electrical PASS is available from any check in this round."
+ },
+ "payload_sha": "fdf291ffdb3334c7c4db73ba49055ecc3e7c23ec",
+ "remote_readback": {
+  "method_1_git_protocol": {
+   "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin",
+   "rc": 0,
+   "ref_lines": 22
+  },
+  "method_2_api": {
+   "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<ref>",
+   "rc": 0,
+   "refs_read": 5
+  },
+  "post_push": "PENDING (recorded by the commit after the push, read from the ref)",
+  "queried_utc": "2026-10-23T05:47:21Z (host UTC clock; local 2026-10-23 13:47)",
+  "ref_set_note": "5 refs are the per-object API reads; 22 lines is the full ref count from ls-remote. They are different queries and must always be quoted as such.",
+  "refs": {
+   "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+   "poc/data-pwm-d7b": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
+   "poc/data-pwm-d7b-r1": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
+   "poc/data-pwm-d7b-r2": "b3fe93c17de014cb16031438ce28c7152dd0020f",
+   "poc/data-pwm-d7b-r3": "272d6de6d2f2fc8a82d5038d73d6b3e4c656f683"
+  },
+  "status": "PRE_PUSH_BASE_VERIFIED"
+ },
+ "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
+ "schema_notes": "this round defines its own handoff shape because the DATA-7B validator is frozen this round and only knows DATA-7B fields; the field meanings are written here rather than changing a shared validator, and scripts/dd1_d7c_a_validate_handoff.py checks them plus the on-disk digests",
+ "schema_version": "1.0",
+ "scope": "ONE_OUTPUT_EIGHT_LEVEL_PAM_CANDIDATE_MOS_AND_OFFLINE_VERIFICATION",
+ "source_identity": {
+  "delivered": [
+   {
+    "bytes": 3871,
+    "path": "spectre/dd1_d7c_a_gates.scs",
+    "role": "delivered",
+    "sha256": "d2def4e657532b655941c2e42adf8534b7144544fa72ff2f41dfbd3374620faf"
+   },
+   {
+    "bytes": 4674,
+    "path": "spectre/dd1_d7c_a_pam_dec.scs",
+    "role": "delivered",
+    "sha256": "9f6c8d7895d13aaf031eac8036bba7165e26a448c685beef8ab2d0a128627d24"
+   },
+   {
+    "bytes": 4114,
+    "path": "spectre/dd1_d7c_a_sink_unit.scs",
+    "role": "delivered",
+    "sha256": "60e06aa3010a66442ac25ff408abc22f1aab93d6b5d3b24dbc15095ac66234af"
+   },
+   {
+    "bytes": 4029,
+    "path": "spectre/dd1_d7c_a_pam_top.scs",
+    "role": "delivered",
+    "sha256": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24"
+   },
+   {
+    "bytes": 7688,
+    "path": "spectre/dd1_d7c_a_tb_draft.scs",
+    "role": "delivered",
+    "sha256": "5ecae7da44d474aec5b2fdadc3591427d442ead610bc316a192ddcb64df62dc5"
+   },
+   {
+    "bytes": 1242,
+    "path": "tests/dd1_d7c_a/pam_mask_golden.csv",
+    "role": "delivered",
+    "sha256": "6ff91d98ea84d65c36cb9d139e3fdd87afbe5c567cbef017d9404a20b749ab25"
+   },
+   {
+    "bytes": 1166,
+    "path": "tests/dd1_d7c_a/pam_request_refusal.csv",
+    "role": "delivered",
+    "sha256": "efbc052240ed864d1827844ec08467e5a6f0a226e39cf3a2cee8d93d55d17807"
+   },
+   {
+    "bytes": 4514,
+    "path": "tests/dd1_d7c_a/native_case_plan.csv",
+    "role": "delivered",
+    "sha256": "bd9224461439fa5999394fe72885dfc7dbbfcb8fd47dbeee36847102ca484743"
+   },
+   {
+    "bytes": 15705,
+    "path": "scripts/dd1_d7c_a_netlist.py",
+    "role": "delivered",
+    "sha256": "1539b35451dc3f3ec1c8d49ec5c8ba2f987587ff8e910e98e1b96b9ff59f3d8c"
+   },
+   {
+    "bytes": 28653,
+    "path": "scripts/dd1_d7c_a_offline_check.py",
+    "role": "delivered",
+    "sha256": "d41c086e077e038621c486830333e7bc87050cab333b7e1cdde7d949d1297822"
+   },
+   {
+    "bytes": 10835,
+    "path": "scripts/dd1_d7c_a_guards.py",
+    "role": "delivered",
+    "sha256": "4a8219944a9afae2b95a09b3e7b49aed838050d071cbb7e72babb7b810e76c45"
+   },
+   {
+    "bytes": 4276,
+    "path": "scripts/dd1_d7c_a_deckgen.py",
+    "role": "delivered",
+    "sha256": "864f8889fb5c114cb944325deea0036a822cf3e295d73d452cba328fe36773bd"
+   },
+   {
+    "bytes": 22999,
+    "path": "scripts/dd1_d7c_a_verify.py",
+    "role": "delivered",
+    "sha256": "d7b46a3d4ae77d146958204953645083dbe8e4666b045bfc01f4366bdcfdd914"
+   },
+   {
+    "bytes": 5131,
+    "path": "scripts/dd1_d7c_a_validate_handoff.py",
+    "role": "delivered",
+    "sha256": "d3dd07d8f2dd9b127dfcd2300398c0483471c816b171288c7c0cd53dcf523999"
+   },
+   {
+    "bytes": 20917,
+    "path": "reports/tasks/DATA-7C-A.md",
+    "role": "delivered",
+    "sha256": "3b55cef702da35786d68b533c0af363b4e6419d62acc2cd9d94ee7bf6051f180"
+   },
+   {
+    "bytes": 26677,
+    "path": "reports/dd1_d7c_a_pam_candidate.md",
+    "role": "delivered",
+    "sha256": "1c047caaea2d1e5a2e206331d9d54f1db52fbc8a939c4843b24712233fb422dd"
+   },
+   {
+    "bytes": 11999,
+    "path": "reports/dd1_d7c_a_native_test_plan.md",
+    "role": "delivered",
+    "sha256": "aa4106260b49b30299b807c7051f076580bc79d64b2852704042709155ca5f1b"
+   }
+  ],
+  "note": "the accepted masters are read and instantiated, never edited; digests are recomputed from disk at generation time",
+  "read_only_inputs": [
+   {
+    "bytes": 1128,
+    "path": "spectre/dd1_d6_inv18.scs",
+    "role": "read-only input, unmodified",
+    "sha256": "04cd6833087511465aba06a3d2ba2f1ba71a49cce1ae962febff3b3eb1e4d79b"
+   },
+   {
+    "bytes": 182,
+    "path": "spectre/dd1_d6_bias_core.scs",
+    "role": "read-only input, unmodified",
+    "sha256": "4115e2d17a86fb92e7c222df085f1d1a82da14cb7640654d90f4e2589e9b31e7"
+   },
+   {
+    "bytes": 510,
+    "path": "spectre/dd1_d6_sink_core.scs",
+    "role": "read-only input, unmodified",
+    "sha256": "6cfe2338014a4b152833ef1974f197b0e4c65e963947f57f0cc8b79b73ee91db"
+   },
+   {
+    "bytes": 12982,
+    "path": "rtl/dd1_d7a_gray_ctrl.sv",
+    "role": "read-only input, unmodified",
+    "sha256": "6dbf464a49e49ad489188fa51920c30a3c89d6b3106046a4fefe558ef0a50c87"
+   },
+   {
+    "bytes": 16759,
+    "path": "reports/dd1_d7a_contract.md",
+    "role": "read-only input, unmodified",
+    "sha256": "37f55cb9f0783e2f184ad360f69ee07526f1aba5d39f6698388826b3b8652284"
+   },
+   {
+    "bytes": 25572,
+    "path": "reports/dd1_d7b_contract.md",
+    "role": "read-only input, unmodified",
+    "sha256": "44bea6ff4cfc4236002ad97b002f490295a93a0e5bc975f91930e443c9035478"
+   },
+   {
+    "bytes": 34198,
+    "path": "reports/tasks/DATA-7B.md",
+    "role": "read-only input, unmodified",
+    "sha256": "0f4db71f752aef5db9869fe097703a423266f433ee2e4040f621c7b0c6e21389"
+   },
+   {
+    "bytes": 10054,
+    "path": "reports/tasks/DATA-7B-R3.md",
+    "role": "read-only input, unmodified",
+    "sha256": "2eb933bc0d8ddd91f34f50bee269e35a0576d0fee8caaf681729e7d1d3defaa1"
+   },
+   {
+    "bytes": 25319,
+    "path": "reports/agent_handoffs/DATA-7B.md",
+    "role": "read-only input, unmodified",
+    "sha256": "76931b70302c077ea9f2a0f4e1d7be8a77ac706f2b48e7a88ff50fd1bb15106c"
+   },
+   {
+    "bytes": 12401,
+    "path": "reports/reviews/DATA-7B-R3/REVIEW_DATA7B_R3.md",
+    "role": "read-only input, unmodified",
+    "sha256": "58ec921bc8544cfd2828ddfcc3a7898a2eea6022e6887dc3b308063c7e1b9d45"
+   },
+   {
+    "bytes": 7821,
+    "path": "spec/system_requirements.md",
+    "role": "read-only input, unmodified",
+    "sha256": "7afa5de1d62a17d93000f0f698ce2af8e810d28632a046568d64c664e3cbc7ae"
+   },
+   {
+    "bytes": 14552,
+    "path": "AGENTS.md",
+    "role": "read-only input, unmodified",
+    "sha256": "74d686b287bafe8e0bdd245bd95ba2e6bc61aee3b329d9f8f031500635adfc13"
+   }
+  ]
+ },
+ "stop_reason": "AWAITING_INDEPENDENT_REVIEW_OF_CANDIDATE_AND_TEST_PLAN",
+ "task_book": {
+  "bytes": 20917,
+  "note": "byte-for-byte copy of the attachment the user supplied",
+  "path": "reports/tasks/DATA-7C-A.md",
+  "sha256": "3b55cef702da35786d68b533c0af363b4e6419d62acc2cd9d94ee7bf6051f180"
+ },
+ "task_id": "DATA-7C-A",
+ "worktree": "D:\\ic617_d7c_a"
+}
