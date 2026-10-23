@@ -17,11 +17,12 @@
 | 完成级别 | `PREPARED_FOR_INDEPENDENT_REVIEW_NO_NATIVE_RUN` |
 | 文件范围 | 相对 R2 **只新增**：修改 0、删除 0（记录 `frozen_comparison.csv` 的 enforced 行为 0 违例） |
 | 本轮成本 | Spectre **0**（含 `-h`）、RTL 仿真 **0**、OA 写入 **0**、动态 preflight **0**、SSH/VM **0**、凭据与 PDK/模型卡 **未读** |
-| 验证记录 | `results/evidence/dd1_d7c_b_prep_20261023_184337_1fb057/`（目录名在跑之前定下；`verification_summary.json` 的 `generated_utc` 才是真实生成时刻） |
+| 验证记录 | `results/evidence/dd1_d7c_b_prep_20261023_185017_03cccc/`（目录名在跑之前定下；`verification_summary.json` 的 `generated_utc` 才是真实生成时刻） |
 | 前一次尝试 | `results/evidence/dd1_d7c_b_prep_20261023_172056_48cc50/` 在 `git diff --check` 空输出处中断（`b'' or ''` 落到 str 上 `.decode`），只有 8 个子结果 JSON、无 `commands.csv`；原样保留并提交，不删不补 |
-| 再前两次尝试 | `…_174500_f2b6a7`（14 门全 PASS 后撞在同函数名字遮蔽，`'bool' object is not subscriptable`）与 `…_174846_39a012`（23 行门判定后 `source_identity.csv` 因交接文件被重复登记而 `read_table` 拒读、且缺 `record_line_endings` 强制门）都未成为记录；两份完整目录移到 Git 忽略的 `review/scratch/aborted_attempt{2,3}_…/`（10 与 15 个文件，字节未改），第三个的 `commands.csv` 里 `record_semantics=FAIL` 原文可查 |
-| 被摘要作废的一次 | `…_175526_9753e7` 是 24 门 0 失败的**通过**记录，但它测完 tip 之后 §8 复盘又被写进报告，于是它对报告的 digest 当场失真；整目录原样放在 `review/scratch/superseded_175526_…/`，改用语义正确的 run id 重发。本轮不给它 `results/evidence/` 位置，因为它一旦与自己的身份表矛盾就不该被当成记录读 |
-| 同样作废的两次 | `…_181422_958378`（渲染门把自己的依据写成"表不是时刻的函数"，超出证据）与 `…_182017_eb2df7`（交接把本报告 digest 成重写**前**的字节——正是 R1 被抓的那类自我矛盾）都 24 门 0 失败，都原样放在 `review/scratch/superseded_…/`；后一次的成因已改成规则做进 `handoff_check()`：交接不得 digest 自身两份，也不得 digest 被本运行改写的报告 |
+| 未成为记录的三次 | `…_174500_f2b6a7`（14 门全 PASS 后撞在同函数名字遮蔽）、`…_174846_39a012`（`source_identity.csv` 重复登记交接文件被 `read_table` 拒读、缺 `record_line_endings`）与一次用自动命名 `data_7c_b_prep_r…182052_659156` 起跑、被我叫停的发布：三份完整目录原样放在 Git 忽略的 `review/scratch/`（`aborted_attempt{2,3}_*`、`killed_autonamed_*`），字节未改 |
+| 已推送但被取代的记录 | `…_182017_eb2df7` 随 `043d797` 推到远端后才发现交接把本报告 digest 成重写**前**的字节（发布运行会重渲染报告，交接写在之前）。已推送的证据不删不改：它继续作为 tip `7e883b7` 的机器判读留在 `results/evidence/`，地位由本轮最终记录取代。把它移去 scratch 的动作在提交前被 `git status` 的 15 行 `D` 拦下，用 `git checkout --` 恢复——已提交的目录不是本轮可搬动的草稿 |
+| 本地提交后被取代的三次 | `…_175526_9753e7`（发布后才写 §8 复盘）、`…_181422_958378`（渲染门声称"表不是时刻的函数"，超出证据）与 `…_184337_1fb057`（因上一条更正又改了它 digest 的交接与报告）都 24 门 0 失败；前两份在成为记录之前已移到 `review/scratch/superseded_…/` 保住字节，第三份已随 `2a23133` 本地提交，故保留在 `results/evidence/` 不删。成因规则做进 `handoff_check()`：交接不得 digest 自身两份，也不得 digest 被本运行改写的报告 |
+
 
 | 停止状态 | `AWAITING_INDEPENDENT_REVIEW_OF_NATIVE_PREPARATION` |
 
