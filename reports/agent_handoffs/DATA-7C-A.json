@@ -70,7 +70,7 @@
   "spectre_help_invocations": 0,
   "ssh_or_vm": 0
  },
- "evidence_dir": "results/evidence/dd1_d7c_a_r2_20261023_134109_00c811",
+ "evidence_dir": "results/evidence/dd1_d7c_a_r2_20261023_135010_9e01e8",
  "evidence_serialisation": {
   "old_directory": {
    "path": "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0",
@@ -85,12 +85,13 @@
   "record_cites_itself": "NO: the record names tools and other files, never its own bytes; the archive digest is written only outside the archive",
   "shape_reader_kept": "dd1_d7c_a_offline_check.read_table stays shape-only by decision; the semantic rules live in the new reader",
   "superseded_intermediate_runs": [
-   "results/evidence/dd1_d7c_a_r2_20261023_132447_356235 (aborted, never committed: verify crashed at the render step because it still carried the first round's 16-column plan header inline while the delivered table has 25 columns. Its seven sub-result JSONs are kept on the execution machine under review/scratch/aborted_record_..., not deleted and not published; the published record is the run after the header came from the checker)"
+   "results/evidence/dd1_d7c_a_r2_20261023_132447_356235 (aborted before publishing: verify crashed at the render step because it still carried the first round's 16-column plan header inline while the delivered table has 25 columns. Its seven sub-result JSONs are kept on the execution machine under review/scratch/aborted_record_..., not deleted and not published; the header now comes from the checker's own schema)",
+   "results/evidence/dd1_d7c_a_r2_20261023_134109_00c811 (published complete, verdict FAIL, committed and kept: the new semantic layer refused its own record because it demanded \"no exception\" from every case of the baseline instrument JSON, where the exception IS the finding - the reviewed R1 defect was a non-finite value reaching an unhandled int(). The rule now treats a crash as the reproduction on the baseline copy and as a failure on the repaired copy. This is the gate working, not a record being hidden)"
   ],
   "superseded_runs_policy": "a run that crashed before publishing its tables is moved to the execution machine's scratch directory and named above, never deleted and never committed; the published directory is written once by a run that completed",
   "validated": "the record is read back from disk after publishing and the verdict turns FAIL if the recheck reports any problem"
  },
- "head_sha": "5d30d1d607f4a273b64e84951a23ceb928b281f7",
+ "head_sha": "79e247d03d8b6ba92e44186f7f6fba2af5f27f26",
  "head_sha_role": "the commit at generation time; the commits carrying this file and the record are above it, and their read-back is in remote_readback",
  "known_limitations": [
   "every result in this file is about text, connectivity, derived logic, table schemas, schedule arithmetic and Git identity; no electrical quantity was measured",
@@ -287,6 +288,7 @@
   "added_R2_over_H": [
    "reports/dd1_d7c_a_review_fix_r2.md",
    "reports/tasks/DATA-7C-A-R2.md",
+   "results/evidence/dd1_d7c_a_r2_20261023_134109_00c811/",
    "scripts/dd1_d7c_a_r2_plan.py",
    "scripts/dd1_d7c_a_r2_record_check.py",
    "scripts/dd1_d7c_a_r2_record_probes.py",
@@ -298,6 +300,7 @@
    "reports/agent_handoffs/DATA-7C-A.json",
    "reports/agent_handoffs/DATA-7C-A.md",
    "reports/dd1_d7c_a_native_test_plan.md",
+   "reports/dd1_d7c_a_pam_candidate.md",
    "reports/dd1_d7c_a_review_fix_r1.md",
    "scripts/dd1_d7c_a_guards.py",
    "scripts/dd1_d7c_a_offline_check.py",
@@ -309,7 +312,7 @@
   ],
   "removed_R2_over_H": []
  },
- "payload_sha": "5d30d1d607f4a273b64e84951a23ceb928b281f7",
+ "payload_sha": "79e247d03d8b6ba92e44186f7f6fba2af5f27f26",
  "remote_readback": {
   "ancestry": {
    "B_is_ancestor_of_T": true,
@@ -509,7 +512,7 @@
     "bytes": 67217,
     "path": "scripts/dd1_d7c_a_verify.py",
     "role": "delivered this round",
-    "sha256": "f004212b639c7921e5db69e66208b34f5136c5f6e7c6a8508ee80a28df5d699b"
+    "sha256": "2ba28be7416e83c98f2b9bf70282bf0342fefd8e518607824c3134de1b8f4e49"
    },
    {
     "bytes": 7768,
@@ -530,10 +533,10 @@
     "sha256": "555b35e002ba45271cf5a422eda11359c5b48896a1a8a05c4335369c17d83151"
    },
    {
-    "bytes": 22746,
+    "bytes": 23398,
     "path": "scripts/dd1_d7c_a_r2_record_check.py",
     "role": "delivered this round",
-    "sha256": "34499d241661fdae10809bcdb979bd26937c8f42242a204217555d5a5193ebe3"
+    "sha256": "bd207dbbb6acfd8ca9bf020f77e4a0e7f9b66baf7e0013fa898d182ab3fd3249"
    },
    {
     "bytes": 15127,
@@ -572,10 +575,10 @@
     "sha256": "60b2c672b72de208521d7ccedebac5283d8c179ef4a56165dd6f6ec91f5737b1"
    },
    {
-    "bytes": 18958,
+    "bytes": 30776,
     "path": "reports/dd1_d7c_a_review_fix_r2.md",
     "role": "delivered this round",
-    "sha256": "891d15b85e8e69ecd2b9b8407f80490dfa5a1e18963e16b06774a1e24c1fdb8d"
+    "sha256": "bd2e6f588ac1fc2208c2682bec5cc07d45c9b5b86a404e57d891c155b4334607"
    }
   ],
   "note": "digests recomputed from disk at generation time; this file carries no digest of itself or of the archive built from it. The report files are listed under rendered_reports without digests because the verification run rewrites their machine sections, so the authoritative digest of a report is the one the record takes after rendering. Candidate DUT digests are compared against the reviewed revision by the record, which is what proves they were not touched.",

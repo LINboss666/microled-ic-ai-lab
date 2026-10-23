@@ -357,3 +357,9 @@ R1 报告新增 §9 勘误：区间一律写全两端 SHA、时刻一律带 `Z`�
    25 列，检查器抛出 `ValueError`。修法是表头只从检查器声明的模式取（`read_input_table`），模式
    失配就直接拒绝发布；那半次的 7 份子结果 JSON 移到执行机 `review/scratch/aborted_record_…` 保留，
    不删不提交，并在交接 `superseded_intermediate_runs` 里点名。
+3. 第二次运行完整落盘，却被本轮自己的语义层判成 FAIL：新规则要求基线仪器 JSON 每一例"不得抛异常"，
+   可在基线那份里异常恰恰是被审缺陷本身（首轮非有限值走到未处理的 `int()`）。`record_semantics` 与
+   `published_record_recheck` 同时 FAIL、`DD1_7C_A_R2_VERIFY FAIL` rc=1。规则改为"基线副本里异常必须与
+   `reproduced=true` 同现才算证据，修复副本里任何异常都是缺陷"。那次运行
+   `results/evidence/dd1_d7c_a_r2_20261023_134109_00c811` **完整保留并提交**，它的 summary 就写着 FAIL；
+   交付记录是它之后的运行。本轮没有任何一次运行被写成 PASS。

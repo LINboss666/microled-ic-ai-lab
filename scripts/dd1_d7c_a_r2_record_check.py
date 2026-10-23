@@ -280,8 +280,17 @@ def json_semantics(directory, gate_rows, problems):
             open_cases = [r.get('case') for r in results if r.get('reproduced')]
             for case in results:
                 if case.get('exception'):
-                    problems.append('%s/%s raised instead of reporting: %s'
-                                    % (name, case.get('case'), str(case['exception'])[:80]))
+                    # on the baseline copy a crash is the finding itself: the reviewed defect was that
+                    # a non-finite value reached an unhandled int(). On the repaired copy nothing may
+                    # crash, because there the answer has to be a named refusal.
+                    if want_all:
+                        if not case.get('reproduced'):
+                            problems.append('%s/%s raised and did not even report the gap, so the '
+                                            'diagnostic proves nothing'
+                                            % (name, case.get('case')))
+                    else:
+                        problems.append('%s/%s raised instead of reporting: %s'
+                                        % (name, case.get('case'), str(case['exception'])[:80]))
             if want_all and len(open_cases) != 7:
                 problems.append('%s is the baseline copy but only %d of 7 gaps reproduce'
                                 % (name, len(open_cases)))

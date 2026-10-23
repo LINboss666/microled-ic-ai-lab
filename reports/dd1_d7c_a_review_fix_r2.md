@@ -166,21 +166,97 @@ R1 报告新增 §9 勘误表：登记两个区间的命令、返回码、时刻
 ### 9.1 门与命令
 
 <!-- BEGIN R2 GATES -->
+| 门 | 命令 | rc | 期望 | 判决 | 依据 |
+|---|---|---|---|---|---|
+| `reviewer_instrument_on_T` | `python D:\ic617_d7c_a_r2\review\MicroLED_DATA7C_A_R1_Review_20261023\r` | 0 | 0 | PASS | baseline_checks=22 baseline_failures=none all_reproduced=True cases_named=8/8 |
+| `reviewer_remaining_on_H` | `python D:\ic617_d7c_a_r2\review\MicroLED_DATA7C_A_R1_Review_20261023\r` | 0 | 0 | PASS | baseline_checks=30 baseline_failures=none all_gaps_reproduced=True cases=7/7 gap_state=reproduced=7 |
+| `reviewer_remaining_on_fixed_bytes` | `python D:\ic617_d7c_a_r2\review\MicroLED_DATA7C_A_R1_Review_20261023\r` | 1 | 1 | PASS | baseline_checks=34 baseline_failures=none all_gaps_reproduced=False cases=7/7 gap_state=closed=6; still reporting reproduced: published_record_reader_ |
+| `offline_checks` | `python dd1_d7c_a_offline_check.py --json <out>` | 0 | 0 | PASS | D7C_A_OFFLINE_CHECK: PASS (34 checks, failures: none) |
+| `counterexamples` | `python dd1_d7c_a_guards.py --json <out>` | 0 | 0 | PASS | D7C_A_GUARDS: PASS (65/65 named exactly; not hit: none) |
+| `record_tool_selftest` | `python dd1_d7c_a_r1_selftest.py --json <out>` | 0 | 0 | PASS | cases=9 verdict=PASS failures=none / D7C_A_R1_SELFTEST: PASS (9 cases, failures: none) |
+| `fresh_extraction_replay` | `git archive HEAD | tar -x, then run the suites there` | 0 | 0 | PASS | offline rc=0 D7C_A_OFFLINE_CHECK: PASS (34 checks, failures: none); guards rc=0 D7C_A_GUARDS: PASS (65/65 named exactly; not hit: none); handoff_valid |
+| `previous_record_reader_finds_its_own_staleness` | `git archive da6f5fc3f497 | tar -x, then python dd1_d7c_a_r2_record_che` | 0 | 0 | PASS | 9 semantic problems over 3 paths (DATA-7C-A.json,DATA-7C-A.md,dd1_d7c_a_review_fix_r1.md); paths outside the R1-disclosed three: 0 |
+| `handoff_structure` | `python dd1_d7c_a_validate_handoff.py reports/agent_handoffs/DATA-7C-A.` | 0 | 0 | PASS | D7C_A_HANDOFF_CHECK: PASS (19 base fields+5 repair fields, 0 problems; evidence and remote truth are NOT verified here) |
+| `native_entry_refused` | `python dd1_d7c_a_deckgen.py --probe <temp>` | 0 | 0 | PASS | DECKGEN_PROBE refused=True untouched=True reason=DATA-7C-A: this round authorises no native launch and no deck publication; NATIVE_AUTHORISED_THIS_ROU |
+| `provenance` | `python provenance_check.py` | 0 | 0 | PASS | SOURCE_PROVENANCE_CHECK: PASS |
+| `netlist_stats_scope_limit` | `python netlist_stats.py at the B extraction and at this tip` | 1/1 | INFORMATIONAL: single-cell scope, not a PASS | INFORMATIONAL_NOT_PASS | base problems 1 ['dd1_d7b_pwm_current.md:47 claims 29 devices']; tip problems 11; new 10 ['dd1_d7c_a_pam_candidate.md:130 claims 145 devices', 'dd1_d7 |
+| `history_safety` | `python precommit_safety_check.py --mode history` | 0 | 0 | PASS | SAFETY_GATE: PASS |
+| `reviewer_instrument_on_fixed_bytes` | `python D:\ic617_d7c_a_r2\review\MicroLED_DATA7C_A_R1_Review_20261023\r` | 1 | 1 | PASS | baseline_checks=34 baseline_failures=none all_reproduced=False cases_named=8/8 |
+| `frozen_surfaces` | `git ls-tree -r at B, T and HEAD plus a digest walk against the T extra` | 0 | 0 | PASS | enforced rows 24, violations none; git diff --check H..HEAD=0 T..HEAD=0 B..HEAD=0 |
+| `record_line_endings` | `scan every published file for CR and round-trip a comma-and-quote row ` | 0 | 0 | PASS | published files still carrying CR: none; the table writer emits LF (confirmed); the instrument writes its own JSON with platform newlines, so those tw |
+
+每条命令的完整文本与原始尾行见 `commands.csv`（本目录）；`INFORMATIONAL_NOT_PASS` 不是失败也不是通过，它是"这台工具的范围不支持这个结论"的记录。
 <!-- END R2 GATES -->
 
 ### 9.2 验收工具自测逐例
 
 <!-- BEGIN R2 SELFTEST -->
+| 自测例 | 判决 | 声明的期望 | 实测观察 |
+|---|---|---|---|
+| `frozen_gate_refuses_candidate_DUT_edit` | PASS | a modified DUT netline must fail the gate | state=FAIL verdict=enforced rows 24, violations ['four_candidate_DUT_netlists']; git diff --check H..HEAD=0 T..HEAD=0 B..HEAD=0 |
+| `frozen_gate_refuses_T_path_removal` | PASS | a removed T path must fail the gate | state=FAIL |
+| `frozen_gate_refuses_unallowed_addition` | PASS | a new path outside §9 must fail the gate | state=FAIL |
+| `frozen_gate_refuses_whitespace_errors` | PASS | git diff --check rc != 0 must fail the gate | state=FAIL |
+| `frozen_gate_counts_only_enforced_rows` | PASS | informational counts neither fail the gate nor hide a real violation | informational-only=PASS plus enforced=FAIL |
+| `frozen_surfaces_are_exact_paths` | PASS | the DUT/golden surfaces are exact paths and the deck draft is on the whitelist | dut paths=4 enforced=yes draft on whitelist=True enforced_edit_row=no |
+| `read_table_refuses_seven_shapes` | PASS | empty, header-only, ragged, extra-column, wrong-header, duplicate-key and blank-required a | all as expected |
+| `rows_write_round_trips_commas_and_quotes` | PASS | the standard-library writer and reader agree on awkward content, LF only | fields back identical=True cr_absent=True |
+| `T_published_tables_refused_by_the_strict_reader` | PASS | commands/git_checks/source_identity as delivered at T are refused line by line, while the  | the three ragged T tables are refused by name and the well-formed one is accepted |
+
+`scripts/dd1_d7c_a_r1_selftest.py` 的用例是**这一轮验收工具自己的反例**：冻结面闸在四种真违规下各必须 FAIL、在只有 informational 计数时必须 PASS、掺入一条 enforced 违规时必须再次 FAIL；严格读表器对七种破损形状逐一拒收，并且把 T 已交付的三张坏 CSV 从 Git 取回后逐一拒收、把形状本来就合法的 `frozen_comparison.csv` 接受。合计 9 例，失败：none。
 <!-- END R2 SELFTEST -->
 
 ### 9.3 审核方仪器逐例（T 与修复后字节）
 
 <!-- BEGIN R2 INSTRUMENT -->
+| 诊断 | 对 T（必须复现） | 对修复后字节（必须具名拒收） | 修复后新增失败 | 字节确变 |
+|---|---|---|---|---|
+| `top_pam_bits_swapped` | reproduced=True | reproduced=False | TOP_INTEGRATED_THERMO_16 | yes |
+| `top_enable_tied_high` | reproduced=True | reproduced=False | TOP_INTEGRATED_THERMO_16 | yes |
+| `reference_bound_to_vcas` | reproduced=True | reproduced=False | REFERENCE_NODE_IDENTITY,DNW_PASS_BODY_LOCAL | yes |
+| `duplicate_mos_instance` | reproduced=True | reproduced=False | NO_DUPLICATE_INSTANCES | yes |
+| `cascode_multiplicity_changed` | reproduced=True | reproduced=False | DEVICE_COUNT_SEPARATION,UNIT_CORE_ISOMORPHIC_TO_ACCEPTED | yes |
+| `report_total_borrowed_from_other_cell` | reproduced=True | reproduced=False | REPORT_CLAIMS_BOUND_TO_OBJECT | yes |
+| `golden_header_only` | reproduced=True | reproduced=False | INPUT_TABLE_SCHEMAS,GOLDEN_TABLE_SCHEMA,THERMO_GOLDEN_16,TOP_INTEGRATED_THERMO_16 | yes |
+| `active_transient_not_detected` | reproduced=True | reproduced=False | DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS | yes |
+
+同一件未修改的审核方仪器（`reviewer/probe_review_gaps.py`，摘要与包内 `MANIFEST.csv` 相同）分别对 T 的只读提取与对修复后字节运行：前者 `all_defects_reproduced=true`、后者 `false`，逐项失败集合见上；两次运行的 `baseline_checks` 与 `baseline_failures` 记在 `instrument_T.json` / `instrument_fixed.json`。逐项读，不看聚合 rc。
 <!-- END R2 INSTRUMENT -->
 
 ### 9.4 三张对照表与冻结面
 
 <!-- BEGIN R2 FROZEN -->
+| 比较 | 面 | 路径数 | 计数 | 前若干路径 | 本轮期望 | 计入闸 |
+|---|---|---:|---:|---|---|---|
+| B_tracked_paths | `data7b_r3_evidence_bundle` | 287 | 0 | - | `identical` | yes |
+| B_tracked_paths | `data7b_r1_evidence` | 284 | 0 | - | `identical` | yes |
+| B_tracked_paths | `data7b_main_line_evidence` | 805 | 0 | - | `identical` | yes |
+| B_tracked_paths | `data7b_r3_review_documents` | 5 | 0 | - | `identical` | yes |
+| B_tracked_paths | `case_and_golden_tables_D7B` | 3 | 0 | - | `identical` | yes |
+| B_tracked_paths | `accepted_D7A_rtl_and_tb` | 1 | 0 | - | `identical` | yes |
+| B_tracked_paths | `shared_safety_and_validation_tools` | 161 | 0 | - | `identical` | yes |
+| B_tracked_paths | `accepted_netlist_masters` | 206 | 0 | - | `identical` | yes |
+| B_tracked_paths | `every_B_tracked_path` | 2533 | 0 | - | `identical` | yes |
+| B_tracked_paths | `paths_removed_against_B` | 2533 | 0 | - | `none_removed` | yes |
+| T_frozen_surfaces | `four_candidate_DUT_netlists` | 4 | 0 | - | `identical` | yes |
+| T_frozen_surfaces | `golden_and_request_tables` | 2 | 0 | - | `identical` | yes |
+| T_frozen_surfaces | `tools_the_brief_freezes_this_round` | 3 | 0 | - | `identical` | yes |
+| T_frozen_surfaces | `previous_round_record_dirs` | 27 | 0 | - | `identical` | yes |
+| T_frozen_surfaces | `first_round_evidence_dir` | 7 | 0 | - | `identical` | yes |
+| T_frozen_surfaces | `first_round_task_book` | 2 | 0 | - | `identical` | yes |
+| T_frozen_surfaces | `read_only_inputs_named_by_the_brief` | 15 | 0 | - | `identical` | yes |
+| T_frozen_surfaces | `every_H_path_off_the_whitelist` | 2571 | 0 | - | `identical` | yes |
+| previous_tip_frozen_surfaces | `every_T_path_off_the_whitelist` | 2549 | 0 | - | `identical` | yes |
+| T_to_tip_whitelist | `whitelisted_paths_edited` | 12 | 11 | reports/agent_handoffs/DATA-7C-A.json; reports/agent_handoffs/DATA-7C-A.md; reports/dd1_d7c_a_native_test_plan | `editable` | no |
+| T_to_tip_whitelist | `T_paths_modified_off_whitelist` | 2571 | 0 | - | `none_modified` | yes |
+| T_to_tip_whitelist | `paths_removed_against_T` | 2583 | 0 | - | `none_removed` | yes |
+| T_to_tip_whitelist | `paths_added_not_allowed` | 6 | 0 | - | `only_allowed_new` | yes |
+| T_to_tip_whitelist | `paths_added_allowed` | 6 | 6 | reports/dd1_d7c_a_review_fix_r2.md; reports/tasks/DATA-7C-A-R2.md; scripts/dd1_d7c_a_r2_plan.py; scripts/dd1_d | `informational` | no |
+| working_tree_vs_H_extraction | `candidate_DUT_and_golden_tables_must_be_identical` | 6 | 0 | - | `identical` | yes |
+| working_tree_vs_T_extraction | `read_only_inputs_must_be_identical` | 15 | 0 | - | `identical` | yes |
+| working_tree_vs_H_extraction | `editable_files_actually_changed` | 11 | 0 | 9 of 11 edited | `informational` | no |
+
+三件事分开核，并且每一行都写明本轮的期望与是否计入闸：B 的全部 tracked 路径与本 tip 的 (mode, type, blob) 对照（期望 identical/none_removed）；T 的冻结面按 §9 的确切路径列出（四个候选 DUT、黄金与请求表、首轮证据目录与任务书、只读输入、以及"白名单之外的每一条 T 路径"）；T..tip 的白名单单独回答"改的是不是白名单内的、有没有删、新增的是不是允许的"。上一版本把 `spectre/`、`reports/` 整目录当冻结面扫，于是白名单内的 `dd1_d7c_a_tb_draft.scs` 与两份白名单报告被记成 11 条"失配"，而这张表当时没有任何闸使用它。现在 `whitelisted_paths_edited`、`paths_added_allowed` 与`editable_files_actually_changed` 三行明确是 informational（计入闸=no），其余 enforced 行的计数由 `frozen_surfaces` 闸求和并要求为 0。
 <!-- END R2 FROZEN -->
 
 ## 10 本轮自己造成的缺陷（按实登记，不等审核方来发现）
@@ -191,9 +267,10 @@ R1 报告新增 §9 勘误表：登记两个区间的命令、返回码、时刻
 | 七条 R1 期望集合与实测不符（`E10`/`E17`/`E18`/`E20`/`E24`/`E27`/`E34`） | 同上 | 逐条按"实际新增失败集合"改写并在条目里写原因；没有一条是靠放宽期望通过的。`E34` 是唯一一次**缩小**：`INPUT_TABLE_SCHEMAS` 的声明范围不含码字闭集，写清由谁拥有 | 否 |
 | `E33` 一度 `NOT_ATTEMPTED`：已发布的 `device_count_claims.csv` 有 11 个描述字段带着不必要的引号，标准 writer 复现不出逐字节相同的文本 | 新加的 writer 一致性规矩 | 该表在白名单内，用 `rows_write` 重写；逐格内容与改前**完全相同**，1,530 B → 1,508 B，只在报告与交接里说明 | 是（白名单内的合法修改，已登记） |
 | **我自己把刚修完的 D1 缺陷又写回去一次**：给交接 MD 追加 R2 一节后文末多出空行，`git diff --check H..HEAD` 立刻 rc=2 | 本轮的 `frozen_surfaces` 闸——这正是它该做的事 | 删回单个换行；`H..tip` 重新 rc=0。记录未发布，所以记录里没有一条假话 | 否；被闸拦住 |
-| 正式记录第一次运行到渲染步崩：`dd1_d7c_a_verify.py` 里还内联着首轮的 16 列计划表头，而交付表是 25 列 | 真实的 `ValueError` traceback（不是我读代码看出来的） | 表头改为取自检查器声明的同一份模式（`read_input_table(ROOT,'plan')`），模式失配就直接拒绝发布而不是渲染半句话；这同时消掉了一处"两处各写一遍 schema"的重复 | 部分：那次运行的 7 份子结果 JSON 未发布，已整体移到执行机 `review/scratch/aborted_record_dd1_d7c_a_r2_20261023_132447_356235`（不删、不提交），并在交接 `superseded_intermediate_runs` 里点名 |
+| 正式记录第一次运行到渲染步崩：`dd1_d7c_a_verify.py` 里还内联着首轮的 16 列计划表头，而交付表是 25 列 | 真实的 `ValueError` traceback，不是我读代码看出来的 | 表头改为取自检查器声明的同一份模式（`read_input_table(ROOT,'plan')`），模式失配就直接拒绝发布；同时消掉一处"两处各写一遍 schema"的重复。那半次的 7 份子结果 JSON 移到执行机 `review/scratch/aborted_record_dd1_d7c_a_r2_20261023_132447_356235` 保留（不删不提交），交接 `superseded_intermediate_runs` 里点名 | 否；那时还没有任何表格落盘 |
+| 新语义层把**自己的**记录判成 FAIL：它要求基线仪器 JSON 的每一例都"不得抛异常"，可在基线那份里，异常恰恰是被审缺陷本身（首轮的非有限值走到未处理的 `int()`） | `published_record_recheck` 与 `record_semantics` 同时 FAIL，`DD1_7C_A_R2_VERIFY FAIL ... failed: record_semantics`，rc=1；记录已经完整落盘，我没有把它抹掉 | 规则改成"基线副本里异常必须与 `reproduced=true` 同时出现才算证据；修复副本里任何异常都是缺陷"。那次运行 `results/evidence/dd1_d7c_a_r2_20261023_134109_00c811` **保留并提交**，它的 `verification_summary.json` 就是 FAIL；正式交付记录是它之后的第三次运行。交付的那份也仍会列出这两条作为"上一版本的记录"（`previous_round_record_dirs` 一类比较只冻旧目录，不删它们） | 否；FAIL 记录按原样入册 |
 
-两次崩溃都发生在写盘之前，`record_semantics` 与 `published_record_recheck` 因此从来没有对半成品说过 PASS。
+第一次崩在任何表格落盘之前，所以从未有过半成品被说成记录；第二次已完整落盘，并被自己的 `record_semantics` 与 `published_record_recheck` 判成 FAIL，FAIL 也是原样入册——本轮没有任何一次运行被写成 PASS。
 
 ## 11 下一步（仍由用户与独立复审决定，执行者不给 GO）
 

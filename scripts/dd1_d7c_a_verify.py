@@ -1055,7 +1055,7 @@ def main(argv):
     with io.open(os.path.join(out_dir, 'verification_summary.json'), 'wb') as handle:
         handle.write((json.dumps(summary, indent=1, sort_keys=True, ensure_ascii=False) + '\n')
                      .encode('utf-8'))
-    print('DD1_7C_A_R1_VERIFY %s -> %s (%d gates, failed: %s, csv read back: %d)'
+    print('DD1_7C_A_R2_VERIFY %s -> %s (%d gates, failed: %s, csv read back: %d)'
           % (summary['verdict'], out_dir.replace(os.sep, '/'), len(results),
              ','.join(failures) or 'none', len(read_back)))
     return 1 if failures else 0
