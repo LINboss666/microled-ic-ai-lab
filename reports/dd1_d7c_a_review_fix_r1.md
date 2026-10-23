@@ -377,3 +377,51 @@ NEXT_NATIVE_STAGE_AUTHORISED=NO
 SOA_SIGNOFF=NO
 STOP_REASON=AWAITING_INDEPENDENT_REVIEW
 ```
+
+## 8 推送、回读与审核包（本记录之后发生的事，单独登记）
+
+`results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08/` 的记录在本文件**当前这些字节之前**产生：
+记录里 `source_identity.csv` 对本报告的摘要是 `34938fcd605d3b6fa7598cafb8569091e56dc85b7c005af4e68e58917af13d4e`
+（37,771 B，即不含 §8 的版本），加上本节之后的字节是另一个摘要，两者差的就是本节本身。这不是矛盾，
+而是顺序：推送、回读与归档摘要在任何"对本文件取摘要的记录"之后才可能发生，任务书 §10.8 也不允许为
+把摘要写进自身而连续制造提交。权威身份以 Git blob 为准，一条命令即可复核：
+
+```text
+git cat-file blob "$(git rev-parse HEAD:reports/dd1_d7c_a_review_fix_r1.md)" | sha256sum
+```
+
+| 事件 | 时刻（本机 UTC） | 实测 |
+|---|---|---|
+| 推送 `poc/data-pam-d7c-a-r1`（首次，普通 push，无 force） | 区间 `2026-10-23T09:40:03Z ~ 09:42:58Z`（推送本身没单独计时，这是下界与上界，不是时间戳） | `pre-push` 钩子真实运行 `--mode history`：188 commits scanned、2836 objects、PDK/凭据/私钥/厂商模型各 0、`SAFETY_GATE: PASS`；`* [new branch]` rc=0；推的是 `79ce578`（committer `2026-10-23T17:39:07+08:00`） |
+| 追加推送（记录与重放门） | 区间 `2026-10-23T09:51:22Z ~ 09:54:45Z` | `79ce578..5f89605`，同样过 history 闸（2873 objects，四项计数全 0） |
+| 回读通道 1：Git protocol（按命令走代理） | `2026-10-23T09:54:45Z` | `ls-remote` rc=0；`poc/data-pam-d7c-a-r1 = 5f89605bac0b097218e1652bd3e0e61239ab36e9` |
+| 回读通道 2：GitHub API（直连） | 同一时刻 | `git/ref/heads/poc/data-pam-d7c-a-r1` rc=0，同一 full SHA |
+| 未动的 ref | 同上 | `poc/data-pam-d7c-a = 89b3dd8`（被审 tip，未动）、`main = 23e471c`（未动）、`poc/data-pwm-d7b-r3 = 272d6de`、`-r2 = b3fe93c`、`-r1 = e97f02e`、`poc/data-pwm-d7b = adcdf27` 全部与动工前一致 |
+| 本地=远端同一性 | 同上 | `git rev-parse HEAD` 与 `origin/poc/data-pam-d7c-a-r1` 相同；两侧 tree 同为 `72d64c3c460b887652b1311df7958f9416344555`（首个 tip） |
+| 载荷统计 | — | `T..tip`：修改 10 条（全部在 §9 白名单 12 条之内；`dd1_d7c_a_netlist.py`、`dd1_d7c_a_deckgen.py` 未改）、新增 14 条（3 条允许的确切新文件 + 本轮前缀自测脚本 + 10 条记录文件）、删除 0 条；tip 共 2,573 条路径 |
+| 审核包构建 | `2026-10-23T10:0xZ`（本提交信息带精确 UTC） | 全部字节由 `git cat-file blob` 从提交 `5f89605…` 取出，不取工作副本；清单 51 条（含生成的 `README.md`；`MANIFEST.json` 与 `verify_package.py` 不在清单内），`python verify_package.py` → `PACKAGE_SELF_CHECK: PASS (51 files listed, 0 unlisted)` rc=0 |
+| 归档身份（**记在包外**） | 同上 | `MicroLED_DATA7C_A_R1_Package_20261023.zip`：219,955 B、53 members、`zipfile.testzip()` 无坏项、SHA-256 `6c080dd14cb5f48be83395f1da4bd431436037895ec63d1a36f4ee78dc38b53c` |
+| 包内入口点在**任何仓库之外**实测 | 同上 | `offline 30 PASS rc=0`、`guards 29/29 PASS rc=0`、`handoff validator PASS rc=0`、`deckgen --probe 先拒绝且目录未动 rc=0`、`selftest NOT_RUN rc=2`（具名理由：七例要问 Git，包外没有仓库；这不是失败也不是通过） |
+
+包内不含审核方仪器（那是审核方的交付件）；交接 JSON 里有它的 SHA-256 与"本轮未改其一字节"的记录。
+本节的数字与归档摘要同时写进紧随其后的**包外元数据提交**信息里——归档的字节和摘要不能同时出现在
+归档内部，否则任何一次重打包都会让声明失效。
+
+### 8.1 记录之后改动的字节（逐条列明，不留暗账）
+
+正式记录 `source_identity.csv` 取的是**载荷提交**上的字节。下面三行是记录之后被本节与回读补丁改过
+的文件，改前摘要即记录里那一行，改后摘要用同一命令在最终 tip 上核对：
+
+| 文件 | 记录里的摘要（前 20 位） | 最终 tip 的摘要（前 20 位） | 变化原因 |
+|---|---|---|---|
+| `reports/dd1_d7c_a_review_fix_r1.md` | `34938fcd605d3b6fa759` | 由 `git cat-file blob` 现场核对 | 本节 §8 与 §8.1 |
+| `reports/agent_handoffs/DATA-7C-A.md` | `28c1030b95872f011be0` | 同上 | 记录目录改名与推送回读段 |
+| `reports/agent_handoffs/DATA-7C-A.json` | `0b8efc18914a265afdba` | 同上 | `remote_readback` 由 PENDING 换成本机实测的两通道回读 |
+
+这四份文档之外的东西——四个候选 DUT、五张表、六个脚本、自测脚本——在记录之后**一个字节都没动**：
+`frozen_surfaces` 的 enforced 行与 `four_candidate_DUT_netlists` 在最终 tip 上仍然 0 违例，
+`SOURCE_IDENTITY_VS_GIT_BLOB` 对 37 行逐条比 Git blob 也是 PASS。
+把这三行列出来而不是重跑一次记录，是因为重跑只会把"记录晚于文档"这个问题推到另一个文件上；
+任务书 §10.8 明确不许为把摘要写进自身而连续制造提交。
+
+

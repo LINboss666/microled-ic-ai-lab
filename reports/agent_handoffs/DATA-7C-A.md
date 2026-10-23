@@ -199,7 +199,41 @@ rc 与依据都在那一行，复制一份输出到本文件只会给"改动之�
 它的范围只是字段形状、`costs` 必须为 0、`not_run` 只允许诚实标记、以及本 JSON 里每条摘要与磁盘
 字节一致；它不证明远端真实、不证明任何电气结论。
 
-### 9.6 下一步（仍由用户与独立复审决定）
+### 9.6 推送与回读（实测，不含推断）
+
+推送是普通 push 新分支，两次都让仓库的 `pre-push` 钩子真实运行 `--mode history`
+（188 commits / 2836 objects，随后 2873 objects；PDK、凭据、私钥、厂商模型四项均为 0，
+`SAFETY_GATE: PASS`），无 force、无 `--no-verify`、未推 main、未合并。推送时刻没有单独计时，
+因此只给区间：首推落在 `09:40:03Z ~ 09:42:58Z`，第二次落在 `09:51:22Z ~ 09:54:45Z`（UTC）。
+`2026-10-23T09:54:45Z` 双通道回读同一组 ref，两路 full SHA 一致：
+
+| ref | Git protocol | GitHub API | 判定 |
+|---|---|---|---|
+| `poc/data-pam-d7c-a-r1` | `5f89605bac0b097218e1652bd3e0e61239ab36e9` | 同 | 本轮分支 tip |
+| `poc/data-pam-d7c-a` | `89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79` | 同 | 被审 tip **未动** |
+| `main` | `23e471cb936b421ee97e1250c3be06edf96f9937` | 同 | **未动** |
+| `poc/data-pwm-d7b-r3` | `272d6de6d2f2fc8a82d5038d73d6b3e4c656f683` | — | DATA-7B 线**未动** |
+
+本地 `HEAD` 与 `origin/poc/data-pam-d7c-a-r1` 同 SHA；`T..tip` 统计为修改 10 条（全部在 §9 白名单
+之内，`dd1_d7c_a_netlist.py` 与 `dd1_d7c_a_deckgen.py` 未改）、新增 14 条、删除 0 条，tip 共 2,573 条
+路径。这些数字由 `git ls-tree` 与 `git diff --name-status` 机械统计，不是照抄回执。
+
+### 9.7 审核包与它暴露的一个缺口
+
+包 `MicroLED_DATA7C_A_R1_Package_20261023.zip` 全部字节由 `git cat-file blob` 从提交取出；
+`verify_package.py` 自检查 `PASS (51 files listed, 0 unlisted)`。归档自身的字节数与 SHA-256
+**只记在包外**（包内声明会随任何一次重打包失效）。
+
+把包复制到**仓库之外**逐条跑入口点时暴露了一个真实缺口：交接 JSON 的 `read_only_inputs` 里有
+`spectre/dd1_d7b_pwm_stage.scs` 与 `AGENTS.md`，而打包器没把它们收进来，于是
+`dd1_d7c_a_validate_handoff.py` 在包里 `FAIL (2 problems: ... not on disk)`，rc=1。
+这不是校验器太严——它正确地拒绝了"摘要对得上但文件不在场"的包。修法是补齐这两条只读输入并重建包，
+同时让包自检忽略 `__pycache__`（那是 Python 跑过之后产生的，不是包内容）。
+修后在仓库外实测：`offline 30 PASS rc=0`、`guards 29/29 PASS rc=0`、`validator PASS rc=0`、
+`deckgen --probe` 先拒绝且目录未动 rc=0、`selftest NOT_RUN rc=2`（具名理由：九例中七例要问 Git，
+包外没有仓库；这既不算失败也不算通过）。
+
+### 9.8 下一步（仍由用户与独立复审决定）
 
 本轮不申请任何额度。若复审通过，仍需另行冻结：八档实际电流值与判据、`Q` 归一与取号复核、
 `Iunit` 用参考比还是实测支路均值、细步长配对判据、以及原生 30/36 草案额度。

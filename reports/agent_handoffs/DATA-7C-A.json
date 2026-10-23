@@ -85,7 +85,7 @@
   ],
   "writer": "stdlib csv.writer with LF terminators in dd1_d7c_a_offline_check.rows_write"
  },
- "head_sha": "8b70cdb4c0dd3134d79a0f43805423ab6b76226d",
+ "head_sha": "5f89605bac0b097218e1652bd3e0e61239ab36e9",
  "head_sha_role": "the commit at generation time; the commit carrying this field is above it, so the branch value is read from the Git ref and never from this file",
  "known_limitations": [
   "every result in this file is about text, connectivity, derived logic, table schemas and Git identity; no electrical quantity was measured",
@@ -550,8 +550,72 @@
    "rc": 0,
    "refs_read": 6
   },
-  "post_push": "PENDING (recorded by the commit after the push, from the ref)",
+  "post_push": {
+   "agreement": "both channels return the same full SHA for every ref read",
+   "channel_1_git_protocol": {
+    "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin <the four refs>",
+    "rc": 0
+   },
+   "channel_2_api": {
+    "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<ref> --jq .object.sha",
+    "rc": 0,
+    "refs_read": 4
+   },
+   "local_equals_remote": {
+    "local_tip": "5f89605bac0b097218e1652bd3e0e61239ab36e9",
+    "remote_tip": "5f89605bac0b097218e1652bd3e0e61239ab36e9",
+    "same": true
+   },
+   "queried_utc": "2026-10-23T09:54:45Z (host UTC)",
+   "refs": {
+    "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+    "poc/data-pam-d7c-a": "89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79",
+    "poc/data-pam-d7c-a-r1": "5f89605bac0b097218e1652bd3e0e61239ab36e9",
+    "poc/data-pwm-d7b-r3": "272d6de6d2f2fc8a82d5038d73d6b3e4c656f683"
+   },
+   "untouched": {
+    "data7b_refs_unchanged": [
+     "poc/data-pwm-d7b-r3 = 272d6de",
+     "poc/data-pwm-d7b-r2 = b3fe93c",
+     "poc/data-pwm-d7b-r1 = e97f02e",
+     "poc/data-pwm-d7b = adcdf27"
+    ],
+    "main_unchanged": true,
+    "reviewed_tip_branch_still_at_T": true
+   }
+  },
+  "pre_push": {
+   "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin",
+   "observed": {
+    "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+    "poc/data-pam-d7c-a": "89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79",
+    "poc/data-pam-d7c-a-r1": "ABSENT (this round creates it)"
+   },
+   "queried_utc": "2026-10-23T09:40:03Z (host UTC)",
+   "rc": 0,
+   "ref_lines": 23
+  },
   "provenance_of_counts": "6 is the number of refs read per object through the API; 23 is the total ref-line count from ls-remote; two different queries",
+  "push": [
+   {
+    "command": "git -c http.proxy=http://127.0.0.1:7892 push -u origin poc/data-pam-d7c-a-r1",
+    "forced": false,
+    "hook": "pre-push ran scripts/precommit_safety_check.py --mode history: 188 commits scanned, 2836 objects checked, PDK/credential/private-key/vendor-model all 0, SAFETY_GATE: PASS",
+    "pushed_tip": "79ce578 (committed 2026-10-23T17:39:07+08:00)",
+    "rc": 0,
+    "result": "* [new branch] poc/data-pam-d7c-a-r1 -> poc/data-pam-d7c-a-r1",
+    "window_utc": "between 2026-10-23T09:40:03Z (the pre-push ls-remote above) and 2026-10-23T09:42:58Z (the read-back below); the push itself was not separately timed, so this is an interval, not a timestamp"
+   },
+   {
+    "command": "git -c http.proxy=http://127.0.0.1:7892 push origin poc/data-pam-d7c-a-r1",
+    "forced": false,
+    "hook": "pre-push history again: 2873 objects, all four counts 0, SAFETY_GATE: PASS",
+    "pushed_tip": "5f89605 (committed 2026-10-23T17:51:22+08:00)",
+    "rc": 0,
+    "result": "79ce578..5f89605",
+    "window_utc": "between 2026-10-23T09:51:22Z (committer date of 5f89605) and 2026-10-23T09:54:45Z (the read-back below)"
+   }
+  ],
   "queried_utc": "2026-10-23T07:54:33Z (host UTC; local 2026-10-23 15:54)",
   "refs_read": {
    "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
@@ -561,7 +625,8 @@
    "poc/data-pwm-d7b-r2": "b3fe93c17de014cb16031438ce28c7152dd0020f",
    "poc/data-pwm-d7b-r3": "272d6de6d2f2fc8a82d5038d73d6b3e4c656f683"
   },
-  "status": "PRE_PUSH_REPAIR_BASELINE_VERIFIED"
+  "scope_note": "the 23 lines from ls-remote and the 4 refs read per object through the API are two different query sets; 5f89605 is the tip at the moment of the read-back, and the archive receipt commit that follows moves the branch tip while leaving the payload tip addressable",
+  "status": "PUSHED_AND_READ_BACK_ON_TWO_CHANNELS"
  },
  "repair_baseline_sha": "89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79",
  "repair_of": "DATA-7C-A",
