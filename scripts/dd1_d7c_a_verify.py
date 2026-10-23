@@ -885,15 +885,13 @@ def main(argv):
         if os.path.isfile(selftest_path):
             selftest_rows = json.loads(io.open(selftest_path, encoding='utf-8').read())
 
-        # render, then re-run both gates and require the render to be a fixed point
-        plan_rows = CHECK.read_table(os.path.join(ROOT, 'tests', 'dd1_d7c_a',
-                                                  'native_case_plan.csv'),
-                                     ['case_id', 'class', 'purpose', 'code', 'data_en_level_V',
-                                      'observe_nodes', 'measure_interval', 'reference_definition',
-                                      'failure_condition', 'segments', 'paired_case', 'refine_only',
-                                      'probe_orientation', 'sign_convention', 'draft_launch_units',
-                                      'result'], 'case_id',
-                                     optional=('segments', 'paired_case', 'refine_only'))
+        # render, then re-run both gates and require the render to be a fixed point. The plan table is
+        # read through the checker's own declared schema, so this file cannot disagree with the checker
+        # about how many columns the delivered table has.
+        _plan_spec, (plan_rows, plan_problems) = CHECK.read_input_table(ROOT, 'plan')
+        if plan_problems:
+            raise SystemExit('DD1_7C_A_R2_VERIFY_REFUSED the delivered plan table is refused by its '
+                             'own schema before anything is rendered: %s' % plan_problems[:3])
         passes = []
         for attempt in (1, 2, 3):
             render(ROOT, os.path.join(out_dir, 'offline_checks.json'),

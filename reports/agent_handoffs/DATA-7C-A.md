@@ -262,7 +262,7 @@ H = `da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb`（tree `913c8a343aa3debede5e46bc5
 | 工具自测 | `dd1_d7c_a_r1_selftest.py` 保持 H 字节，9 例 PASS；在无 Git 历史的提取里 `NOT_RUN` rc=2，语义层禁止把它写成 PASS |
 | 计划表 | 15 行 × 25 列，由 `scripts/dd1_d7c_a_r2_plan.py` 单一来源渲染；`PLAN_CHECK delivered_rows=15 schema_refusals=0 schedule_problems=0` |
 | 合成符号算术 | `scripts/dd1_d7c_a_r2_sign_check.py` 7 例 PASS，整数 fA × ns（电荷单位 1e-24 C），逐例带 `evidence_class=SYNTHETIC_NOT_MEASURED` |
-| 正式记录 | `results/evidence/dd1_d7c_a_r2_20261023_132447_356235/`，门与逐门 rc 看 `commands.csv`，比较表看 `frozen_comparison.csv`，三个区间看 `git_checks.csv`，七例/八例逐项看四份 `instrument*.json`；本文件不复制这些计数，避免同一事实出现第二个说法 |
+| 正式记录 | `results/evidence/dd1_d7c_a_r2_20261023_134109_00c811/`，门与逐门 rc 看 `commands.csv`，比较表看 `frozen_comparison.csv`，三个区间看 `git_checks.csv`，七例/八例逐项看四份 `instrument*.json`；本文件不复制这些计数，避免同一事实出现第二个说法 |
 | 候选 DUT 与被冻表 | 四个 `.scs`、`pam_mask_golden.csv`、`pam_request_refusal.csv`、`dd1_d7c_a_netlist.py`、`dd1_d7c_a_deckgen.py`、`dd1_d7c_a_r1_selftest.py` 与全部旧证据目录在 `H..tip` 上 blob 相同 |
 | 本轮改动的白名单文件 | `reports/dd1_d7c_a_review_fix_r1.md` 只作 EOF 修补与新增 §9 勘误；`tests/dd1_d7c_a/device_count_claims.csv` 把 11 个描述字段从多余引号里放出来（逐格内容与改前完全相同，只是改用 `rows_write` 的规范写法，1,530 B → 1,508 B），因为 `dd1_d7c_a_guards.py` 的 CSV 注入现在要求"标准 writer 能逐字节复现该表"，否则反例会把重排当成故障 |
 | 成本 | 原生启动 0、`spectre -h` 0、RTL 仿真 0、OA 写入 0、动态 preflight 0、SSH/VM 0、凭据与 PDK/模型卡读取 0；无 force、无 `--no-verify`、无 GC、无历史重写、未推 main、未合并、未登记接受版 |
@@ -348,3 +348,12 @@ R1 报告新增 §9 勘误：区间一律写全两端 SHA、时刻一律带 `Z`�
 "上面的数字已经发生"，不预告还没发生的数字。交接 JSON 的 `remote_readback.post_push.scope_of_this_field`
 同一条款。
 
+### 10.6 本轮自己造成的两个缺陷（都被自己的闸拦在发布之前）
+
+1. 交接 MD 追加 R2 一节时文末多出空行，`git diff --check H..HEAD` 立刻 rc=2——与本轮刚修掉的 D1 是
+   同一类缺陷，由 `frozen_surfaces` 闸发现，删回单个换行；发生时正式记录尚未写出，所以记录里没有
+   任何一条假话。
+2. 正式记录第一次运行在渲染步崩溃：`dd1_d7c_a_verify.py` 仍内联首轮的 16 列计划表头，而交付表是
+   25 列，检查器抛出 `ValueError`。修法是表头只从检查器声明的模式取（`read_input_table`），模式
+   失配就直接拒绝发布；那半次的 7 份子结果 JSON 移到执行机 `review/scratch/aborted_record_…` 保留，
+   不删不提交，并在交接 `superseded_intermediate_runs` 里点名。
