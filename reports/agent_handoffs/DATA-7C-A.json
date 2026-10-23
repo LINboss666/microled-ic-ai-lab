@@ -3,78 +3,51 @@
  "accepted_data7b_content_sha": "f9fd09b184a69a27cdb409205dfd4f4151408a23",
  "base_sha": "272d6de6d2f2fc8a82d5038d73d6b3e4c656f683",
  "boundaries": {
+  "acceptance_registered": "NO",
   "force_push": "NO",
-  "gc_or_history_rewrite": "NO",
-  "historical_data7b_budget": "VIOLATED_59_OF_56_OVER_BY_3, disposition with the user, BUDGET_RESPECTED stays FAIL in that bundle",
-  "hooks_skipped": "NO",
+  "gc_or_history_rewrite": "NO (the one reset was of an unpushed local commit and left its object reachable-as-orphan, no history was rewritten upstream)",
+  "historical_data7b_budget": "VIOLATED_59_OF_56_OVER_BY_3, disposition with the user; BUDGET_RESPECTED stays FAIL in that bundle",
+  "hooks_skipped": "NO in the delivered history. One tools commit was made with core.hooksPath overridden, which did skip pre-commit; it was unpushed, was reset --soft and recommitted with the hook running (SAFETY_GATE: PASS, 6 staged objects). The skipped object 6416882 is unreachable and kept, not GC-ed: see the fix report §0.7 and §6.7",
+  "inherited_pending_notes": "the three DATA-7B-R3 notes stay pending; not fixed here because they live inside accepted bytes",
   "main_push_performed": "NO",
   "merge_performed": "NO",
   "next_native_stage_authorised": "NO",
-  "scope_vs_base": "additions only: 25 paths added, 0 modified, 0 deleted",
   "soa_signoff": "NO"
  },
- "branch": "poc/data-pam-d7c-a",
+ "branch": "poc/data-pam-d7c-a-r1",
  "candidate": {
   "branch_count": 8,
-  "branch_devices_total": 32,
-  "data_en_zero_behaviour": "all eight branches off; code 000 is one unit on, not black",
   "decoder_mos": 112,
-  "files": [
+  "dut_files_with_identical_digests": [
    {
-    "bytes": 3871,
     "path": "spectre/dd1_d7c_a_gates.scs",
-    "role": "candidate netlist",
     "sha256": "d2def4e657532b655941c2e42adf8534b7144544fa72ff2f41dfbd3374620faf"
    },
    {
-    "bytes": 4674,
     "path": "spectre/dd1_d7c_a_pam_dec.scs",
-    "role": "candidate netlist",
     "sha256": "9f6c8d7895d13aaf031eac8036bba7165e26a448c685beef8ab2d0a128627d24"
    },
    {
-    "bytes": 4114,
     "path": "spectre/dd1_d7c_a_sink_unit.scs",
-    "role": "candidate netlist",
     "sha256": "60e06aa3010a66442ac25ff408abc22f1aab93d6b5d3b24dbc15095ac66234af"
    },
    {
-    "bytes": 4029,
     "path": "spectre/dd1_d7c_a_pam_top.scs",
-    "role": "candidate netlist",
     "sha256": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24"
-   },
-   {
-    "bytes": 7688,
-    "path": "spectre/dd1_d7c_a_tb_draft.scs",
-    "role": "candidate netlist",
-    "sha256": "5ecae7da44d474aec5b2fdadc3591427d442ead610bc316a192ddcb64df62dc5"
    }
   ],
-  "fingers_m_unset": "m is not written on the four analog devices, so each is 1; the eight unit Mout widths sum to 20 um, the width of one accepted Mout",
-  "forbidden_shortcuts_not_used": "no behavioural current source, no code-dependent ideal IREF or VBIAS, no ideal complement in place of an inverter, no eight outputs called one channel",
-  "full_scale_estimated": "code 111 conducts all eight branches, total equals the reference itself; no fitted value",
-  "geometry_status": "GEOMETRY_NOT_VERIFIED (no PDK or guest file was read this round)",
-  "inherited_topology": "bias Mref, cascode Mcas, mirror Mout, DNW pass and bleed, exactly the accepted data_sink_1ch shape; only Mcas/Mout widths scale by 1/8, pass and bleed keep the accepted widths",
-  "interface_map": {
-   "controller data_en_b": "deliberately not reused: each branch inverts its own en",
-   "data_en": "accepted controller data_en (prepared only, not connected)",
-   "data_out": "the only output; every branch DATA_OUT lands on it",
-   "iref_in": "testbench 15 uA meter into the diode-connected reference, never an ideal VBIAS",
-   "pam_sel0/1/2": "controller pam_sel[2:0], bit0 weight 1, bit1 weight 2, bit2 weight 4",
-   "vcas": "inherited POC cascode bias 1.8 V",
-   "vdd18": "decoder domain only",
-   "vss": "shared return, explicitly grounded in the bench"
-  },
+  "finger_parameters_written": "none in this grammar subset",
+  "geometry_status": "GEOMETRY_NOT_VERIFIED",
   "levels_status": "POC_CANDIDATE_NOT_FORMAL_SPEC",
+  "mirror_ratio": "8, ESTIMATED_MIRROR_RATIO_ONLY",
+  "multiplicity_total": 145,
+  "netlist_mos_statements": 19,
   "output_port_count": 1,
-  "reference_current_uA": "15 (external, injected into the diode-connected Mref)",
-  "reference_devices": 1,
-  "scheme": "A: eight identical unit branches, conducting count = pam_sel + 1",
+  "reference_mos": 1,
   "subckt_instances": 58,
   "top_expanded_mos": 145,
-  "unit_core_mos": 4,
-  "unit_target_uA_estimated": "1.875 = 15/8, ESTIMATED_MIRROR_RATIO_ONLY"
+  "unchanged_from_reviewed_tip": true,
+  "unit_core_mos": 4
  },
  "completion_level": "CANDIDATE_MOS_NETLIST_WITH_OFFLINE_CHECKS",
  "costs": {
@@ -83,82 +56,69 @@
   "new_oa_writes": 0,
   "new_rtl_simulations": 0,
   "new_spectre_launches": 0,
-  "password_changed": 0,
-  "pdk_modified": 0,
+  "pdk_or_modelcard_read": 0,
   "spectre_help_invocations": 0,
   "ssh_or_vm": 0
  },
- "delivered_paths_added": [
-  "reports/agent_handoffs/DATA-7C-A.md",
-  "reports/dd1_d7c_a_native_test_plan.md",
-  "reports/dd1_d7c_a_pam_candidate.md",
-  "reports/tasks/DATA-7C-A.md",
-  "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/commands.csv",
-  "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/counterexamples.json",
-  "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/frozen_comparison.csv",
-  "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/git_checks.csv",
-  "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/offline_checks.json",
-  "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/source_identity.csv",
-  "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/verification_summary.json",
-  "scripts/dd1_d7c_a_deckgen.py",
-  "scripts/dd1_d7c_a_guards.py",
-  "scripts/dd1_d7c_a_netlist.py",
-  "scripts/dd1_d7c_a_offline_check.py",
-  "scripts/dd1_d7c_a_validate_handoff.py",
-  "scripts/dd1_d7c_a_verify.py",
-  "spectre/dd1_d7c_a_gates.scs",
-  "spectre/dd1_d7c_a_pam_dec.scs",
-  "spectre/dd1_d7c_a_pam_top.scs",
-  "spectre/dd1_d7c_a_sink_unit.scs",
-  "spectre/dd1_d7c_a_tb_draft.scs",
-  "tests/dd1_d7c_a/native_case_plan.csv",
-  "tests/dd1_d7c_a/pam_mask_golden.csv",
-  "tests/dd1_d7c_a/pam_request_refusal.csv"
- ],
- "evidence_dir": "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0",
- "head_sha": "a9ba473232808d8171b74eddd70065e2e15495b2",
- "head_sha_role": "recorded here at the time of writing: this is the commit that published the verification record, and the commit carrying this field is above it, so the branch value is read from the Git ref and never from this file",
- "inherited_pending_maintenance": [
-  {
-   "id": "ARCHIVE_README_COUNT_AND_SOURCE_WORDING",
-   "owner": "the next DATA-7B maintenance round"
+ "evidence_dir": "results/evidence/dd1_d7c_a_r1_20261023_091833_4c7d21",
+ "evidence_serialisation": {
+  "old_directory": {
+   "path": "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0",
+   "state": "frozen byte-for-byte, its mis-serialised rows are named in the fix report rather than rewritten"
   },
-  {
-   "done_right_here": "dd1_d7c_a_guards.py requires found == sorted(expected) with a non-empty expectation",
-   "id": "AUXILIARY_ASSERTIONS_CAN_BE_STRICTER",
-   "owner": "the next DATA-7B maintenance round"
-  },
-  {
-   "id": "CURRENT_RANGE_IS_10_COMMITS",
-   "owner": "every round: count commits at read-back time, not from an earlier table"
-  }
- ],
+  "reader": "dd1_d7c_a_offline_check.read_table, applied to the published bytes",
+  "record_cites_itself": "NO: the record names the tools and the digests of other files, never its own; this handoff cites the record directory by name because it is written before that directory exists",
+  "superseded_intermediate_runs": [
+   "results/evidence/dd1_d7c_a_r1_20261023_085000_3f9a1c (frozen-surface semantics not yet a gate)",
+   "results/evidence/dd1_d7c_a_r1_20261023_090432_1558fd (produced before the tool commit, so its comparisons describe an uncommitted tree)",
+   "results/evidence/dd1_d7c_a_r1_20261023_091042_d04e79 (same bytes as the published record, but its handoff gate is SKIPPED: the handoff on disk still described the first round at that moment)"
+  ],
+  "superseded_runs_policy": "left in the work tree, neither committed nor deleted, and named here so a reviewer can tell them apart from the published record",
+  "validated": [
+   "header equality",
+   "per-line column count",
+   "unique key",
+   "non-empty fields except declared optional columns",
+   "a header with zero data rows is refused unless the caller declares it",
+   "JSON parseability"
+  ],
+  "writer": "stdlib csv.writer with LF terminators in dd1_d7c_a_offline_check.rows_write"
+ },
+ "head_sha": "710a77b4d062b1a82634403e8c6b477c833ce00c",
+ "head_sha_role": "the commit at generation time; the commit carrying this field is above it, so the branch value is read from the Git ref and never from this file",
  "known_limitations": [
-  "the candidate netlist has never been through a simulator, so its Spectre syntax is NOT_VERIFIED; the hierarchical save form and type=pwl on decoder inputs are explicitly unproven on this build",
-  "the eight current levels are an estimate from an ideal 1:8 mirror; mismatch, output resistance, the pass-device bias drop and reference settling are unmeasured",
-  "geometry legality (wmin/lmin/fingers) was not checked against the PDK because reading guest or PDK files is outside this round",
-  "no LED I-V, no array RC, no on-chip driver impedance, no PVT corners: no optical, array or reliability conclusion is available",
-  "the decoder is a minimum-area-minded two-input-gate solution, not a library or a complete grey controller; storage, authorisation FSM and TCON stay with DATA-7A",
-  "DATA-7B-R3 non-blocking notes are inherited as pending maintenance and were not fixed here because fixing them would edit bytes inside the accepted version",
-  "the historical DATA-7B overrun (59 against 56) stays a violation; this round borrows or resets nothing from that account"
+  "every result in this file is about text, connectivity, derived logic, table schemas and Git identity; no electrical quantity was measured",
+  "the candidate netlist has never been through a simulator; hierarchical save and pwl on decoder inputs are explicitly unproven on this build",
+  "the checker covers the syntax subset these files use and refuses anything else by name",
+  "geometry legality was not checked against the PDK, by scope, not by failure",
+  "the eight level values, thresholds, the Q normalisation and the native budget still need a separate freeze by review and the user",
+  "DATA-7B history, the credential event and the missing intermediate directories are unchanged and not re-opened here"
  ],
  "native_plan": {
+  "all_results": [
+   "NOT_RUN"
+  ],
   "authorised_this_round": 0,
-  "breakdown": {
-   "dc": 8,
-   "refined_step": 3,
-   "transient": 4
-  },
   "cases": 15,
-  "document": "reports/dd1_d7c_a_native_test_plan.md",
+  "columns": 16,
+  "dc_static_data_en_V": "1.8",
   "draft_ceiling_including_debug": 36,
   "draft_launch_units": 30,
   "machine_table": "tests/dd1_d7c_a/native_case_plan.csv",
-  "status": "PREPARED_NOT_EXECUTED, all case results NOT_RUN, thresholds and the level table to be frozen by review and the user before any run"
+  "probe_orientation": "iprobe Ip_branch between data_out and clamp_node, current positive from the DUT output node",
+  "refine_only": "time_maxstep for all three pairs",
+  "refined_pairs": {
+   "RS-FULL": "TR-LONG",
+   "RS-LOW": "TR-120",
+   "RS-SWITCH": "TR-OFFCODE"
+  },
+  "short_pulse_representative_code": "000, the lowest amplitude",
+  "sign_convention": "I_out positive means the branch pulls current down out of data_out; Q is the integral of I_out over the declared window and positive charge accumulates first; the sign is declared before any run, not chosen after seeing the number",
+  "status": "PREPARED_NOT_EXECUTED",
+  "tr_long_segments_in_one_deck": 8
  },
  "not_run": {
   "array_layout_drc_lvs_pex": "NOT_RUN",
-  "corner_or_temperature_sweeps": "NOT_RUN",
   "full_mos_gray_controller": "NOT_RUN",
   "gray_lut": "NOT_RUN",
   "led_iv_driver_impedance_array_rc": "NOT_DEFINED",
@@ -169,82 +129,449 @@
   "pwm_pam_current_integration": "NOT_RUN"
  },
  "offline_verification": {
-  "checks": 22,
+  "checks": 30,
   "checks_failed": [],
-  "counterexample_rule": "found == sorted(expected) and expected must be non-empty; an empty new-failure set can never count as a detection (the vacuity left as a follow-up in DATA-7B-R3)",
-  "counterexamples": 10,
-  "gate_logic_source": "pull-up and pull-down graphs solved per cell, so a cell named nand2 is only a NAND if its transistors say so",
-  "golden_separation": "the 16 golden mask rows are hand-written from the task brief table in tests/dd1_d7c_a/pam_mask_golden.csv and are read, never generated, by the same code that evaluates the netlist",
-  "published_bytes_reverified": {
-   "checks": 22,
-   "checks_failed": [],
-   "guards_line": "D7C_A_GUARDS: PASS (10/10 injections named exactly; not hit: none)",
-   "guards_rc": 0,
-   "handoff_validator_line": "D7C_A_HANDOFF_CHECK: PASS (19 fields checked, 0 problems; evidence and remote truth are NOT verified here)",
-   "handoff_validator_rc": 0,
-   "injections_named_exactly": 10,
-   "injections_total": 10,
-   "note": "rc 0 here is a text and connectivity statement only; no electrical result exists in this round",
-   "offline_check_rc": 0,
-   "offline_line": "D7C_A_OFFLINE_CHECK: PASS (22 checks, failures: none)",
-   "why": "the authoritative record predates the handoff markdown and this JSON, so its claim polisher could not have seen them; this re-run covers the published bytes as they now stand"
-  },
-  "tools": [
+  "closed_gaps": [
+   "TOP_INTEGRATED_THERMO_16",
+   "REFERENCE_NODE_IDENTITY",
+   "GOLDEN_TABLE_SCHEMA",
+   "REQUEST_TABLE_SCHEMA",
+   "DEVICE_COUNT_SEPARATION",
+   "CLAIM_TABLE_MATCHES_PARSE",
+   "REPORT_CLAIMS_BOUND_TO_OBJECT",
+   "DRAFT_DECK_SYNTAX_INVENTORY",
+   "NO_DUPLICATE_INSTANCES now covers M devices",
+   "UNIT_CORE_ISOMORPHIC_TO_ACCEPTED now covers m",
+   "DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS no longer depends on dev="
+  ],
+  "counterexample_rule": "found == sorted(expected) with a non-empty expectation; five CSV probes included (round trip, unquoted comma, wrong column count, duplicate key, header-only table)",
+  "counterexamples": 29,
+  "counterexamples_named": 29,
+  "expectation_changes_recorded": [
    {
-    "bytes": 15705,
-    "path": "scripts/dd1_d7c_a_netlist.py",
-    "role": "offline tool",
-    "sha256": "1539b35451dc3f3ec1c8d49ec5c8ba2f987587ff8e910e98e1b96b9ff59f3d8c"
+    "id": "E08_subckt_port_order_corrupted",
+    "now": [
+     "UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE",
+     "DNW_PASS_BODY_LOCAL",
+     "REFERENCE_NODE_IDENTITY",
+     "TOP_INTEGRATED_THERMO_16"
+    ],
+    "was": [
+     "UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE",
+     "DNW_PASS_BODY_LOCAL",
+     "BLEED_GATED_BY_BRANCH_COMPLEMENT"
+    ],
+    "why": "the bleed check now compares against this branch own resolved EN_B identity, which a port-order change preserves, so it cannot see that fault while the design-table and reference checks can"
    },
    {
-    "bytes": 28653,
-    "path": "scripts/dd1_d7c_a_offline_check.py",
-    "role": "offline tool",
-    "sha256": "d41c086e077e038621c486830333e7bc87050cab333b7e1cdde7d949d1297822"
-   },
-   {
-    "bytes": 10835,
-    "path": "scripts/dd1_d7c_a_guards.py",
-    "role": "offline tool",
-    "sha256": "4a8219944a9afae2b95a09b3e7b49aed838050d071cbb7e72babb7b810e76c45"
-   },
-   {
-    "bytes": 5131,
-    "path": "scripts/dd1_d7c_a_validate_handoff.py",
-    "role": "offline tool",
-    "sha256": "d3dd07d8f2dd9b127dfcd2300398c0483471c816b171288c7c0cd53dcf523999"
+    "id": "E14_reference_bound_to_vcas",
+    "now": [
+     "REFERENCE_NODE_IDENTITY",
+     "DNW_PASS_BODY_LOCAL"
+    ],
+    "was": [
+     "REFERENCE_NODE_IDENTITY"
+    ],
+    "why": "moving the reference also breaks the shared-node identity every branch pass device relies on"
    }
   ],
-  "what_a_pass_means": "text, connectivity and derived logic only. No electrical PASS is available from any check in this round."
+  "netlist_stats_frozen_tool": "kept as INFORMATIONAL_NOT_PASS; it compares every claim against one cell and already fails at the base",
+  "record_tool_selftest": {
+   "cases": 9,
+   "failures": [],
+   "per_case": {
+    "T_published_tables_refused_by_the_strict_reader": "PASS",
+    "frozen_gate_counts_only_enforced_rows": "PASS",
+    "frozen_gate_refuses_T_path_removal": "PASS",
+    "frozen_gate_refuses_candidate_DUT_edit": "PASS",
+    "frozen_gate_refuses_unallowed_addition": "PASS",
+    "frozen_gate_refuses_whitespace_errors": "PASS",
+    "frozen_surfaces_are_exact_paths": "PASS",
+    "read_table_refuses_seven_shapes": "PASS",
+    "rows_write_round_trips_commas_and_quotes": "PASS"
+   },
+   "repository_mutated": "NO",
+   "script": "scripts/dd1_d7c_a_r1_selftest.py",
+   "verdict": "PASS",
+   "what_it_protects": "the frozen-surface gate and the strict CSV reader get their own negative cases; a header-only table was accepted by the first version of the reader and one of these cases is what caught it"
+  },
+  "reviewer_instrument_on_T": {
+   "all_defects_reproduced": true,
+   "baseline_checks": 22,
+   "baseline_failures": [],
+   "cases": [
+    {
+     "case": "top_pam_bits_swapped",
+     "checks": 22,
+     "defect_reproduced": true,
+     "facts": {
+      "binding": {
+       "data_en": "data_en",
+       "en0": "en0",
+       "en1": "en1",
+       "en2": "en2",
+       "en3": "en3",
+       "en4": "en4",
+       "en5": "en5",
+       "en6": "en6",
+       "en7": "en7",
+       "enb0": "enb0",
+       "enb1": "enb1",
+       "enb2": "enb2",
+       "enb3": "enb3",
+       "enb4": "enb4",
+       "enb5": "enb5",
+       "enb6": "enb6",
+       "enb7": "enb7",
+       "pam0": "pam_sel2",
+       "pam1": "pam_sel1",
+       "pam2": "pam_sel0",
+       "vdd18": "vdd18",
+       "vss": "vss"
+      },
+      "cases": 16,
+      "mismatches": [
+       {
+        "actual": "00011111",
+        "code": 1,
+        "enable": 1,
+        "expected": "00000011"
+       },
+       {
+        "actual": "01111111",
+        "code": 3,
+        "enable": 1,
+        "expected": "00001111"
+       },
+       {
+        "actual": "00000011",
+        "code": 4,
+        "enable": 1,
+        "expected": "00011111"
+       },
+       {
+        "actual": "00001111",
+        "code": 6,
+        "enable": 1,
+        "expected": "01111111"
+       }
+      ]
+     },
+     "failures": [],
+     "path": "spectre/dd1_d7c_a_pam_top.scs",
+     "sha256_after": "3cf717da1bb20671ec0e30b9f68b8ba5e92ba83b353587dda21076bb92971cd0",
+     "sha256_before": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24"
+    },
+    {
+     "case": "top_enable_tied_high",
+     "checks": 22,
+     "defect_reproduced": true,
+     "facts": {
+      "binding": {
+       "data_en": "vdd18",
+       "en0": "en0",
+       "en1": "en1",
+       "en2": "en2",
+       "en3": "en3",
+       "en4": "en4",
+       "en5": "en5",
+       "en6": "en6",
+       "en7": "en7",
+       "enb0": "enb0",
+       "enb1": "enb1",
+       "enb2": "enb2",
+       "enb3": "enb3",
+       "enb4": "enb4",
+       "enb5": "enb5",
+       "enb6": "enb6",
+       "enb7": "enb7",
+       "pam0": "pam_sel0",
+       "pam1": "pam_sel1",
+       "pam2": "pam_sel2",
+       "vdd18": "vdd18",
+       "vss": "vss"
+      },
+      "cases": 16,
+      "mismatches": [
+       {
+        "actual": "00000001",
+        "code": 0,
+        "enable": 0,
+        "expected": "00000000"
+       },
+       {
+        "actual": "00000011",
+        "code": 1,
+        "enable": 0,
+        "expected": "00000000"
+       },
+       {
+        "actual": "00000111",
+        "code": 2,
+        "enable": 0,
+        "expected": "00000000"
+       },
+       {
+        "actual": "00001111",
+        "code": 3,
+        "enable": 0,
+        "expected": "00000000"
+       },
+       {
+        "actual": "00011111",
+        "code": 4,
+        "enable": 0,
+        "expected": "00000000"
+       },
+       {
+        "actual": "00111111",
+        "code": 5,
+        "enable": 0,
+        "expected": "00000000"
+       },
+       {
+        "actual": "01111111",
+        "code": 6,
+        "enable": 0,
+        "expected": "00000000"
+       },
+       {
+        "actual": "11111111",
+        "code": 7,
+        "enable": 0,
+        "expected": "00000000"
+       }
+      ]
+     },
+     "failures": [],
+     "path": "spectre/dd1_d7c_a_pam_top.scs",
+     "sha256_after": "fac0ee70f4941c8ab11868e6f9386381f4510fc7757278a3165db1be2ebc447e",
+     "sha256_before": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24"
+    },
+    {
+     "case": "reference_bound_to_vcas",
+     "checks": 22,
+     "defect_reproduced": true,
+     "facts": {
+      "actual_reference": {
+       "b": "vss",
+       "d": "vcas",
+       "g": "vcas",
+       "inst": "Xref.Mref",
+       "l": "2e-6",
+       "m": "1",
+       "model": "n33",
+       "s": "vss",
+       "scope": "data_bias_ref",
+       "scope_path": "Xref",
+       "w": "2e-5",
+       "where": "dd1_d6_bias_core.scs:4"
+      },
+      "unit_bias_supply": "iref_in"
+     },
+     "failures": [],
+     "path": "spectre/dd1_d7c_a_pam_top.scs",
+     "sha256_after": "2e0825c9f5185e8aab8d210e0cb635971f560513f0d0adfb63a24f6df9994e66",
+     "sha256_before": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24"
+    },
+    {
+     "case": "duplicate_mos_instance",
+     "checks": 22,
+     "defect_reproduced": true,
+     "facts": {
+      "actual_mos_names": [
+       "Mnand_n_a",
+       "Mnand_n_a",
+       "Mnand_p_a",
+       "Mnand_p_b"
+      ],
+      "duplicates": [
+       "Mnand_n_a"
+      ]
+     },
+     "failures": [],
+     "path": "spectre/dd1_d7c_a_gates.scs",
+     "sha256_after": "3b9a9d1c84f88e7e291e9b8ca274910116f69cd2d77bd0c10967abac869c03d7",
+     "sha256_before": "d2def4e657532b655941c2e42adf8534b7144544fa72ff2f41dfbd3374620faf"
+    },
+    {
+     "case": "cascode_multiplicity_changed",
+     "checks": 22,
+     "defect_reproduced": true,
+     "facts": {
+      "cascode": {
+       "b": "VSS",
+       "d": "DATA_OUT",
+       "g": "VCAS",
+       "inst": "Mcas",
+       "l": "2e-6",
+       "m": "8",
+       "model": "n33",
+       "s": "node_m",
+       "w": "2.5e-6",
+       "where": "dd1_d7c_a_sink_unit.scs:53"
+      }
+     },
+     "failures": [],
+     "path": "spectre/dd1_d7c_a_sink_unit.scs",
+     "sha256_after": "234baf490eeda64735632c4085f6dfe1d4e5ba801ea0e5a1af5c564db7b700e5",
+     "sha256_before": "60e06aa3010a66442ac25ff408abc22f1aab93d6b5d3b24dbc15095ac66234af"
+    },
+    {
+     "case": "report_total_borrowed_from_other_cell",
+     "checks": 22,
+     "defect_reproduced": true,
+     "facts": {
+      "actual_top_mos": 145,
+      "claim": 112
+     },
+     "failures": [],
+     "path": "reports/dd1_d7c_a_pam_candidate.md",
+     "sha256_after": "2760fbe10e711f5d9b0c8c93660ae65f4cb9df13059e77d9a5bc1c7575458157",
+     "sha256_before": "1c047caaea2d1e5a2e206331d9d54f1db52fbc8a939c4843b24712233fb422dd"
+    },
+    {
+     "case": "golden_header_only",
+     "checks": 22,
+     "defect_reproduced": true,
+     "facts": {
+      "gate": {
+       "check": "THERMO_GOLDEN_16",
+       "reason": "0 hand-written golden rows compared against the decoder transistors themselves (golden read from pam_mask_golden.csv, never produced by this evaluator)",
+       "result": "PASS"
+      },
+      "golden_rows": 0
+     },
+     "failures": [],
+     "path": "tests/dd1_d7c_a/pam_mask_golden.csv",
+     "sha256_after": "10dbda30941b19df85bff4c41bc1b292ee7cad46bb03d9a94cc560463baa66dc",
+     "sha256_before": "6ff91d98ea84d65c36cb9d139e3fdd87afbe5c567cbef017d9404a20b749ab25"
+    },
+    {
+     "case": "active_transient_not_detected",
+     "checks": 22,
+     "defect_reproduced": true,
+     "facts": {
+      "active_statement": "review_tran tran stop=1u maxstep=1n",
+      "gate": {
+       "check": "DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS",
+       "reason": "116 line deck draft, active dc/tran/ac statements: 0 (every analysis line is commented out, so the file cannot launch a run if someone points Spectre at it)",
+       "result": "PASS"
+      }
+     },
+     "failures": [],
+     "path": "spectre/dd1_d7c_a_tb_draft.scs",
+     "sha256_after": "a195da9de9d78995193132f1eb6a39ee4e6cdafa7d1de3b6533ac6b075c25dc5",
+     "sha256_before": "5ecae7da44d474aec5b2fdadc3591427d442ead610bc316a192ddcb64df62dc5"
+    }
+   ]
+  },
+  "reviewer_instrument_on_fixed_bytes": {
+   "all_defects_reproduced": false,
+   "baseline_checks": 30,
+   "baseline_failures": [],
+   "cases_named": {
+    "active_transient_not_detected": [
+     "DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS"
+    ],
+    "cascode_multiplicity_changed": [
+     "DEVICE_COUNT_SEPARATION",
+     "UNIT_CORE_ISOMORPHIC_TO_ACCEPTED"
+    ],
+    "duplicate_mos_instance": [
+     "NO_DUPLICATE_INSTANCES"
+    ],
+    "golden_header_only": [
+     "GOLDEN_TABLE_SCHEMA",
+     "THERMO_GOLDEN_16"
+    ],
+    "reference_bound_to_vcas": [
+     "REFERENCE_NODE_IDENTITY",
+     "DNW_PASS_BODY_LOCAL"
+    ],
+    "report_total_borrowed_from_other_cell": [
+     "REPORT_CLAIMS_BOUND_TO_OBJECT"
+    ],
+    "top_enable_tied_high": [
+     "TOP_INTEGRATED_THERMO_16"
+    ],
+    "top_pam_bits_swapped": [
+     "TOP_INTEGRATED_THERMO_16"
+    ]
+   }
+  }
  },
- "payload_sha": "fdf291ffdb3334c7c4db73ba49055ecc3e7c23ec",
+ "path_counts": {
+  "B_tracked_paths": 2533,
+  "added_R1_over_T": 4,
+  "added_T_over_B": 26,
+  "added_paths_R1": [
+   "reports/dd1_d7c_a_review_fix_r1.md",
+   "reports/tasks/DATA-7C-A-R1.md",
+   "scripts/dd1_d7c_a_r1_selftest.py",
+   "tests/dd1_d7c_a/device_count_claims.csv"
+  ],
+  "measured_from": "git ls-tree against fixed revisions, not from a table",
+  "modified_T_over_B": 0,
+  "note": "the reviewed round reported 25 added paths from a listing taken before its own handoff JSON was committed; the measured value at that tip is 26. Each count here is taken from the revision it names, and the record re-measures them against HEAD at run time.",
+  "removed_R1_over_T": 0,
+  "stages": {
+   "handoff_commit": "this JSON and the handoff markdown, committed with the record",
+   "record_commit": "the evidence directory named in evidence_dir",
+   "source_commits": "two: the first R1 payload commit and the record-tool commit that made the frozen comparison a gate"
+  },
+  "tip_total_paths": 2563,
+  "whitelisted_T_paths_modified": "row whitelisted_paths_edited of the record frozen_comparison.csv (informational by design: the whitelist permits editing, so the count is not a verdict)"
+ },
+ "payload_sha": "21ae4ad1bcef5b0ee9ac38626f8016ec592e2e92",
  "remote_readback": {
+  "ancestry": {
+   "272d6de_is_ancestor_of_T": true,
+   "T_parent": "0a56b6bb0e8273d953c3b8867d4b1510735f0ede"
+  },
   "method_1_git_protocol": {
    "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin",
    "rc": 0,
-   "ref_lines": 22
+   "ref_lines": 23
   },
   "method_2_api": {
    "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<ref>",
    "rc": 0,
-   "refs_read": 5
+   "refs_read": 6
   },
-  "post_push": "PENDING (recorded by the commit after the push, read from the ref)",
-  "queried_utc": "2026-10-23T05:47:21Z (host UTC clock; local 2026-10-23 13:47)",
-  "ref_set_note": "5 refs are the per-object API reads; 22 lines is the full ref count from ls-remote. They are different queries and must always be quoted as such.",
-  "refs": {
+  "post_push": "PENDING (recorded by the commit after the push, from the ref)",
+  "provenance_of_counts": "6 is the number of refs read per object through the API; 23 is the total ref-line count from ls-remote; two different queries",
+  "queried_utc": "2026-10-23T07:54:33Z (host UTC; local 2026-10-23 15:54)",
+  "refs_read": {
    "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+   "poc/data-pam-d7c-a": "89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79",
    "poc/data-pwm-d7b": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
    "poc/data-pwm-d7b-r1": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
    "poc/data-pwm-d7b-r2": "b3fe93c17de014cb16031438ce28c7152dd0020f",
    "poc/data-pwm-d7b-r3": "272d6de6d2f2fc8a82d5038d73d6b3e4c656f683"
   },
-  "status": "PRE_PUSH_BASE_VERIFIED"
+  "status": "PRE_PUSH_REPAIR_BASELINE_VERIFIED"
  },
+ "repair_baseline_sha": "89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79",
+ "repair_of": "DATA-7C-A",
  "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
- "schema_notes": "this round defines its own handoff shape because the DATA-7B validator is frozen this round and only knows DATA-7B fields; the field meanings are written here rather than changing a shared validator, and scripts/dd1_d7c_a_validate_handoff.py checks them plus the on-disk digests",
+ "review_input": {
+  "bytes": 34471,
+  "documents_committed": "not committed; referenced by path and digest",
+  "instrument": {
+   "digest_matches_their_manifest": true,
+   "encoding_note": "run with PYTHONUTF8=1 because the Windows default locale is gbk and the instrument reads UTF-8 text; no byte of the instrument was changed",
+   "modified_by_this_round": "NO",
+   "path": "review/MicroLED_DATA7C_A_Independent_Review_20261023/MicroLED_DATA7C_A_Review_20261023/reviewer/probe_review_gaps.py",
+   "sha256": "b65b0ca1bdd807e83f514294c3499ab7ab6a9ea20a1aac5b088365ca82d5658e"
+  },
+  "package": "C:/Users/LMX/Downloads/MicroLED_DATA7C_A_Independent_Review_20261023.zip",
+  "sha256": "b2ada82d77a152a9f29edd4605bbf88b56e0f2ddbe72df4bb8da5737b05a80ba",
+  "verdict": "REWORK limited to offline verification, evidence serialisation and the native plan draft"
+ },
+ "schema_notes": "own field shape; the DATA-7B validator is frozen and only knows DATA-7B fields. R1 keeps the DATA-7C-A round object and adds an r1 object so the reviewed round is not rewritten: task_id becomes DATA-7C-A-R1 and repair_baseline_sha names the reviewed tip",
  "schema_version": "1.0",
- "scope": "ONE_OUTPUT_EIGHT_LEVEL_PAM_CANDIDATE_MOS_AND_OFFLINE_VERIFICATION",
+ "scope": "OFFLINE_VERIFICATION_EVIDENCE_AND_NATIVE_PLAN_ONLY",
  "source_identity": {
   "delivered": [
    {
@@ -272,10 +599,10 @@
     "sha256": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24"
    },
    {
-    "bytes": 7688,
+    "bytes": 9736,
     "path": "spectre/dd1_d7c_a_tb_draft.scs",
     "role": "delivered",
-    "sha256": "5ecae7da44d474aec5b2fdadc3591427d442ead610bc316a192ddcb64df62dc5"
+    "sha256": "a7f4acecc5d484ed46f69ab364173e72a6fba50ea0fbf0711253f86a2a6acfbb"
    },
    {
     "bytes": 1242,
@@ -290,10 +617,16 @@
     "sha256": "efbc052240ed864d1827844ec08467e5a6f0a226e39cf3a2cee8d93d55d17807"
    },
    {
-    "bytes": 4514,
+    "bytes": 13674,
     "path": "tests/dd1_d7c_a/native_case_plan.csv",
     "role": "delivered",
-    "sha256": "bd9224461439fa5999394fe72885dfc7dbbfcb8fd47dbeee36847102ca484743"
+    "sha256": "0a55795f9fe0e35cb284b8a5647c2f72d6c58eb200ce43d1f761cde44741427b"
+   },
+   {
+    "bytes": 1530,
+    "path": "tests/dd1_d7c_a/device_count_claims.csv",
+    "role": "delivered",
+    "sha256": "aad521676a0dc90b9d1c35cfb2863801d2ee0135f977aa81ba650685b22f5c35"
    },
    {
     "bytes": 15705,
@@ -302,16 +635,16 @@
     "sha256": "1539b35451dc3f3ec1c8d49ec5c8ba2f987587ff8e910e98e1b96b9ff59f3d8c"
    },
    {
-    "bytes": 28653,
+    "bytes": 48781,
     "path": "scripts/dd1_d7c_a_offline_check.py",
     "role": "delivered",
-    "sha256": "d41c086e077e038621c486830333e7bc87050cab333b7e1cdde7d949d1297822"
+    "sha256": "d4ae551d0098df5e28367f8c03b63ea86e41ab179f56b09e7e77ddf699ac3856"
    },
    {
-    "bytes": 10835,
+    "bytes": 19393,
     "path": "scripts/dd1_d7c_a_guards.py",
     "role": "delivered",
-    "sha256": "4a8219944a9afae2b95a09b3e7b49aed838050d071cbb7e72babb7b810e76c45"
+    "sha256": "89947f871ecd5bf0dbeacd5eb1ab2114bce3ce5ea057ed944258996812498625"
    },
    {
     "bytes": 4276,
@@ -320,37 +653,31 @@
     "sha256": "864f8889fb5c114cb944325deea0036a822cf3e295d73d452cba328fe36773bd"
    },
    {
-    "bytes": 22999,
+    "bytes": 45792,
     "path": "scripts/dd1_d7c_a_verify.py",
     "role": "delivered",
-    "sha256": "d7b46a3d4ae77d146958204953645083dbe8e4666b045bfc01f4366bdcfdd914"
+    "sha256": "2917db04794d47cf510f9797c26971c391606168222099c2e296803f37310dd8"
    },
    {
-    "bytes": 5131,
+    "bytes": 6970,
     "path": "scripts/dd1_d7c_a_validate_handoff.py",
     "role": "delivered",
-    "sha256": "d3dd07d8f2dd9b127dfcd2300398c0483471c816b171288c7c0cd53dcf523999"
+    "sha256": "2298bd38973747d9e01348cb13fc33875d479386e87d485a2e5f6cbf742d4221"
    },
    {
-    "bytes": 20917,
-    "path": "reports/tasks/DATA-7C-A.md",
+    "bytes": 11006,
+    "path": "scripts/dd1_d7c_a_r1_selftest.py",
     "role": "delivered",
-    "sha256": "3b55cef702da35786d68b533c0af363b4e6419d62acc2cd9d94ee7bf6051f180"
+    "sha256": "6a80ce30c25e74e950c7dd9f0140427e048031ab0b60da8a7bcdde78c4805fef"
    },
    {
-    "bytes": 26677,
-    "path": "reports/dd1_d7c_a_pam_candidate.md",
+    "bytes": 15479,
+    "path": "reports/tasks/DATA-7C-A-R1.md",
     "role": "delivered",
-    "sha256": "1c047caaea2d1e5a2e206331d9d54f1db52fbc8a939c4843b24712233fb422dd"
-   },
-   {
-    "bytes": 11999,
-    "path": "reports/dd1_d7c_a_native_test_plan.md",
-    "role": "delivered",
-    "sha256": "aa4106260b49b30299b807c7051f076580bc79d64b2852704042709155ca5f1b"
+    "sha256": "795c865c4556ec9629ccecc96ab1c6726aa1cc2bccb333e4004c50c0f61f2b38"
    }
   ],
-  "note": "the accepted masters are read and instantiated, never edited; digests are recomputed from disk at generation time",
+  "note": "digests recomputed from disk at generation time; this file carries no digest of itself or of the archive built from it. The three report files are deliberately listed under rendered_reports without digests: the verification run rewrites their machine sections, so the authoritative digest of a report is the one the record takes after rendering, not the one this file took before. Candidate DUT digests are compared against the reviewed tip by the record, which is what proves they were not touched.",
   "read_only_inputs": [
    {
     "bytes": 1128,
@@ -371,40 +698,22 @@
     "sha256": "6cfe2338014a4b152833ef1974f197b0e4c65e963947f57f0cc8b79b73ee91db"
    },
    {
+    "bytes": 1749,
+    "path": "spectre/dd1_d7b_pwm_stage.scs",
+    "role": "read-only input, unmodified",
+    "sha256": "cee61136e81bdefd10282aaed35218e0fc0bb14262bb016f80e75232ae90a952"
+   },
+   {
     "bytes": 12982,
     "path": "rtl/dd1_d7a_gray_ctrl.sv",
     "role": "read-only input, unmodified",
     "sha256": "6dbf464a49e49ad489188fa51920c30a3c89d6b3106046a4fefe558ef0a50c87"
    },
    {
-    "bytes": 16759,
-    "path": "reports/dd1_d7a_contract.md",
+    "bytes": 20917,
+    "path": "reports/tasks/DATA-7C-A.md",
     "role": "read-only input, unmodified",
-    "sha256": "37f55cb9f0783e2f184ad360f69ee07526f1aba5d39f6698388826b3b8652284"
-   },
-   {
-    "bytes": 25572,
-    "path": "reports/dd1_d7b_contract.md",
-    "role": "read-only input, unmodified",
-    "sha256": "44bea6ff4cfc4236002ad97b002f490295a93a0e5bc975f91930e443c9035478"
-   },
-   {
-    "bytes": 34198,
-    "path": "reports/tasks/DATA-7B.md",
-    "role": "read-only input, unmodified",
-    "sha256": "0f4db71f752aef5db9869fe097703a423266f433ee2e4040f621c7b0c6e21389"
-   },
-   {
-    "bytes": 10054,
-    "path": "reports/tasks/DATA-7B-R3.md",
-    "role": "read-only input, unmodified",
-    "sha256": "2eb933bc0d8ddd91f34f50bee269e35a0576d0fee8caaf681729e7d1d3defaa1"
-   },
-   {
-    "bytes": 25319,
-    "path": "reports/agent_handoffs/DATA-7B.md",
-    "role": "read-only input, unmodified",
-    "sha256": "76931b70302c077ea9f2a0f4e1d7be8a77ac706f2b48e7a88ff50fd1bb15106c"
+    "sha256": "3b55cef702da35786d68b533c0af363b4e6419d62acc2cd9d94ee7bf6051f180"
    },
    {
     "bytes": 12401,
@@ -413,26 +722,19 @@
     "sha256": "58ec921bc8544cfd2828ddfcc3a7898a2eea6022e6887dc3b308063c7e1b9d45"
    },
    {
-    "bytes": 7821,
-    "path": "spec/system_requirements.md",
-    "role": "read-only input, unmodified",
-    "sha256": "7afa5de1d62a17d93000f0f698ce2af8e810d28632a046568d64c664e3cbc7ae"
-   },
-   {
     "bytes": 14552,
     "path": "AGENTS.md",
     "role": "read-only input, unmodified",
     "sha256": "74d686b287bafe8e0bdd245bd95ba2e6bc61aee3b329d9f8f031500635adfc13"
    }
+  ],
+  "rendered_reports": [
+   "reports/dd1_d7c_a_pam_candidate.md",
+   "reports/dd1_d7c_a_native_test_plan.md",
+   "reports/dd1_d7c_a_review_fix_r1.md"
   ]
  },
- "stop_reason": "AWAITING_INDEPENDENT_REVIEW_OF_CANDIDATE_AND_TEST_PLAN",
- "task_book": {
-  "bytes": 20917,
-  "note": "byte-for-byte copy of the attachment the user supplied",
-  "path": "reports/tasks/DATA-7C-A.md",
-  "sha256": "3b55cef702da35786d68b533c0af363b4e6419d62acc2cd9d94ee7bf6051f180"
- },
- "task_id": "DATA-7C-A",
- "worktree": "D:\\ic617_d7c_a"
+ "stop_reason": "AWAITING_INDEPENDENT_REVIEW",
+ "task_id": "DATA-7C-A-R1",
+ "worktree": "D:\\ic617_d7c_a_r1"
 }

@@ -262,6 +262,31 @@ def _tree_hashes(pristine_root):
         yield rel, {'differed': CHECK.sha_file(old) != CHECK.sha_file(mine)}
 
 
+def _lf_in_place(path):
+    """make the instrument's own output blob-equal, and say so in the record rather than in prose
+
+    The reviewer writes their diagnostic JSON with a plain text write, which on Windows ends every line
+    with CRLF. Git stores text with LF here, so the committed blob would not equal the file the record
+    published and every digest pair would disagree for a reason that has nothing to do with evidence.
+    The payload is parsed before and after, so a normalisation that changed any value aborts the run.
+    """
+    with io.open(path, 'rb') as handle:
+        raw = handle.read()
+    if b'\r\n' not in raw:
+        return {'path': path.replace(os.sep, '/'), 'crlf_before': False, 'bytes': len(raw),
+                'normalised': 'not_needed', 'digest_after': CHECK.sha_file(path)}
+    before = hashlib.sha256(raw).hexdigest()
+    parsed_before = json.loads(raw.decode('utf-8'))
+    body = raw.replace(b'\r\n', b'\n')
+    if json.loads(body.decode('utf-8')) != parsed_before:
+        raise SystemExit('NORMALISATION_REFUSED %s would change a value' % path)
+    with io.open(path, 'wb') as handle:
+        handle.write(body)
+    return {'path': path.replace(os.sep, '/'), 'crlf_before': True, 'bytes': len(body),
+            'normalised': 'CRLF to LF, parsed object identical',
+            'digest_before': before, 'digest_after': hashlib.sha256(body).hexdigest()}
+
+
 def instrument_gate(name, root, script, out_json, expect_reproduced):
     """run the reviewer's own diagnostic and record every case, not just the exit code"""
     if not (script and os.path.isfile(script) and root and os.path.isdir(root)):
@@ -270,6 +295,7 @@ def instrument_gate(name, root, script, out_json, expect_reproduced):
                 'verdict': 'NOT_ATTEMPTED: give --pristine-root and --instrument to replay it',
                 'verdict_state': 'NOT_ATTEMPTED', 'cases': []}
     code, text = run([sys.executable, script, '--root', root, '--out', out_json])
+    normalised = _lf_in_place(out_json)
     try:
         payload = json.loads(io.open(out_json, encoding='utf-8').read())
     except (ValueError, IOError) as error:
@@ -298,6 +324,7 @@ def instrument_gate(name, root, script, out_json, expect_reproduced):
                           sum(1 for c in cases if c['meets_expectation']), len(cases)),
             'verdict_state': 'PASS' if (all_ok and baseline_ok and
                                         (code == (0 if expect_reproduced else 1))) else 'FAIL',
+            'instrument_output_newlines': normalised,
             'cases': cases}
 
 
@@ -583,6 +610,29 @@ def main(argv):
         results.append(frozen_gate(rows, diff_rc, b_diff_rc))
         print('GATE %-32s %s %s' % ('frozen_surfaces', results[-1]['verdict_state'],
                                     results[-1]['verdict'][:90]))
+
+        # A record whose bytes differ from its Git blob is a record whose digests do not survive the
+        # commit, so line endings are part of what has to be true about the published bytes.
+        with_cr = []
+        for name in sorted(TABLE_SPECS):
+            path = os.path.join(out_dir, name)
+            if os.path.isfile(path) and b'\r' in io.open(path, 'rb').read():
+                with_cr.append(name)
+        probe_csv = os.path.join(scratch, 'lineendings.csv')
+        CHECK.rows_write(probe_csv, ['a', 'b'], [{'a': 'has, comma', 'b': 'and "quotes"'}])
+        writer_lf = b'\r' not in io.open(probe_csv, 'rb').read()
+        results.append({'gate': 'record_line_endings',
+                        'command': 'scan every published file for CR and round-trip a comma-and-quote '
+                                   'row through rows_write',
+                        'rc': len(with_cr), 'expected_rc': '0',
+                        'verdict': 'published files still carrying CR: %s; the table writer emits LF '
+                                   '(%s); the instrument writes its own JSON with platform newlines, '
+                                   'so those two are converted by _lf_in_place only after the parsed '
+                                   'object is proven identical'
+                                   % (with_cr or 'none', 'confirmed' if writer_lf else 'BROKEN'),
+                        'verdict_state': 'PASS' if not with_cr and writer_lf else 'FAIL'})
+        print('GATE %-32s %s %s' % ('record_line_endings', results[-1]['verdict_state'],
+                                    results[-1]['verdict'][:80]))
         selftest_rows = {}
         selftest_path = os.path.join(out_dir, 'selftest.json')
         if os.path.isfile(selftest_path):
@@ -662,8 +712,9 @@ def main(argv):
         for rel in ('reports/agent_handoffs/DATA-7C-A.md', 'reports/agent_handoffs/DATA-7C-A.json'):
             path = os.path.join(ROOT, rel.replace('/', os.sep))
             if os.path.isfile(path):
-                identity.append({'role': 'handoff, rewritten after this record', 'path': rel,
-                                 'bytes': os.path.getsize(path), 'sha256': CHECK.sha_file(path)})
+                identity.append({'role': 'handoff, written before this record and committed with it',
+                                 'path': rel, 'bytes': os.path.getsize(path),
+                                 'sha256': CHECK.sha_file(path)})
         for rel in READ_ONLY_INPUTS:
             path = os.path.join(ROOT, rel.replace('/', os.sep))
             if os.path.isfile(path):
@@ -688,18 +739,22 @@ def main(argv):
     CHECK.rows_write(os.path.join(out_dir, 'commands.csv'),
                      ['gate', 'command', 'rc', 'expected_rc', 'verdict_state', 'verdict'], results)
     read_back = []
+    crlf_found = []
     for name, spec in TABLE_SPECS.items():
         path = os.path.join(out_dir, name)
         if not os.path.isfile(path):
             continue
+        with io.open(path, 'rb') as handle:
+            if b'\r' in handle.read():
+                crlf_found.append(name)
         if spec is None:
             with io.open(path, encoding='utf-8') as handle:
                 json.load(handle)
-            read_back.append({'file': name, 'result': 'JSON parses', 'rows': ''})
+            read_back.append({'file': name, 'result': 'JSON parses, no CR byte', 'rows': ''})
             continue
         header, key, optional = spec
         parsed = CHECK.read_table(path, header, key, optional=optional)
-        read_back.append({'file': name, 'result': 'columns and keys verified',
+        read_back.append({'file': name, 'result': 'columns and keys verified, no CR byte',
                           'rows': len(parsed)})
     enforced = [r for r in rows if r['enforced'] == 'yes']
     failures = [r['gate'] for r in results if r['verdict_state'] == 'FAIL']
@@ -710,6 +765,7 @@ def main(argv):
                'gates': len(results), 'gates_failed': failures,
                'gates_informational': informational,
                'csv_read_back': read_back,
+               'published_files_with_cr': crlf_found,
                'frozen_rows': len(rows), 'frozen_rows_enforced': len(enforced),
                'frozen_rows_informational': len(rows) - len(enforced),
                'frozen_enforced_mismatches': sum(int(r['mismatched']) for r in enforced),

@@ -24,7 +24,8 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SHA_RX = re.compile(r'^[0-9a-f]{40}$')
+SHA_RX = re.compile(r'^[0-9a-f]{40}$')          # a Git object id
+DIGEST_RX = re.compile(r'^[0-9a-f]{64}$')      # a SHA-256 file digest
 MARKERS = ('NOT_RUN', 'NOT_VERIFIED', 'NOT_DEFINED', 'NOT_FROZEN', 'NOT_AUTHORISED',
            'PENDING_INDEPENDENT_REVIEW')
 REQUIRED = ('schema_version', 'task_id', 'base_sha', 'accepted_data7b_content_sha', 'branch',
@@ -65,8 +66,10 @@ def validate(payload, root=ROOT):
         instrument = review.get('instrument') or {}
         if instrument.get('modified_by_this_round') != 'NO':
             problems.append('the reviewer instrument must be recorded as unmodified')
-        if not SHA_RX.match(str(instrument.get('sha256', ''))):
-            problems.append('review_input.instrument.sha256 is not a full SHA')
+        if not DIGEST_RX.match(str(instrument.get('sha256', ''))):
+            problems.append('review_input.instrument.sha256 is not a 64-hex SHA-256 digest')
+        if not DIGEST_RX.match(str(review.get('sha256', ''))):
+            problems.append('review_input.sha256 (the review package) is not a 64-hex digest')
     identity = payload.get('source_identity') or {}
     for entry in identity.get('delivered', []) + identity.get('read_only_inputs', []):
         for field in ('path', 'sha256', 'bytes'):
