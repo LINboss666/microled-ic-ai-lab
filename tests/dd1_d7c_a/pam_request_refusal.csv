@@ -1,0 +1,17 @@
+case_id,raw_literal,kind,expected_refusal_code,note
+R01,X,string_literal,REQUEST_UNPARSED,SOFT_REFUSAL_NOT_ANALOG: no MOS branch can observe this value
+R02,Z,string_literal,REQUEST_UNPARSED,SOFT_REFUSAL_NOT_ANALOG
+R03,,empty_string,REQUEST_UNPARSED,an empty request is a refusal and not a default to code 0
+R04,abc,string_literal,REQUEST_UNPARSED,
+R05,-1,integer_out_of_range,REQUEST_OUT_OF_RANGE,
+R06,8,integer_out_of_range,REQUEST_OUT_OF_RANGE,one past the highest code
+R07,9,integer_out_of_range,REQUEST_OUT_OF_RANGE,
+R08,255,integer_out_of_range,REQUEST_OUT_OF_RANGE,an 8-bit grey code is not a 3-bit amplitude request
+R09,2.5,float_non_integer,REQUEST_NOT_INT,
+R10,3.0,float_integral_value,REQUEST_NOT_INT,the accepted domain is an int, so even an integral float is refused rather than silently coerced
+R11,nan,float_non_finite,REQUEST_NOT_FINITE,
+R12,inf,float_non_finite,REQUEST_NOT_FINITE,
+R13,-inf,float_non_finite,REQUEST_NOT_FINITE,
+R14,True,bool,REQUEST_NOT_INT,bool subclasses int in Python and is still not a PAM request
+R15,3,legal_int,ACCEPTED,the only accepted shape: an int in 0..7
+R16,0,legal_int,ACCEPTED,code 0 is one unit branch on, never 0 uA

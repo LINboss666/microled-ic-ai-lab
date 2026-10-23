@@ -1,0 +1,79 @@
+// dd1_d7c_a_gates.scs -- DATA-7C-A: static CMOS gate cells for the PAM amplitude decoder.
+//
+// CANDIDATE / NOT SIMULATED. Nothing here has been run in Spectre or any other simulator; the
+// topology is stated so an OFFLINE structure and connectivity check can read it, and so a reviewer
+// can disagree with one specific device instead of one specific sentence.
+//
+// Terminal order is Name ( d g s b ) ModelName, the order this project pinned down for the build
+// (AGENTS.md pit 17). Every cell is a full static-CMOS stage: a pull-up network of PMOS to vdd and a
+// pull-down network of NMOS to vss, both completing for every input combination, so no output node
+// is left floating and no cell relies on a stored charge. That is what the offline checker verifies
+// by solving the transistor graph, NOT by trusting the instance or subckt name -- a cell called
+// "nand2" is only a NAND if its series NMOS and parallel PMOS say so.
+//
+// The NOR shape (parallel NMOS pull-down, series PMOS pull-up with one internal node) is the same
+// shape the accepted sc1_scan_gate uses, which is why it is reused rather than re-invented; this file
+// does not modify that accepted cell, it adds a second, differently-pinned NOR next to it.
+//
+// Sizing: l=2e-7 (200n) with wn=2e-6 / wp=4e-6, m=1 finger, matching the accepted 1.8 V digital
+// masters (dd1_inv18, sc1_scan_gate). POC_ASSUMPTION: these are inherited digital gate sizes for a
+// 1.8 V control domain, not a drive-strength result; fan-out and settling are left to the native
+// plan (reports/dd1_d7c_a_native_test_plan.md) and are NOT_RUN here.
+
+// ---- inverter equivalent is NOT redefined here: the accepted dd1_inv18 is instantiated as-is.
+// That keeps one less new master in the loop and lets the checker compare a known-good cell against
+// the new cells with the same rules.
+
+subckt dd1_d7c_a_nand2 (a b z vdd vss)
+  parameters a input
+  parameters b input
+  parameters z output
+  parameters vdd inputOutput
+  parameters vss inputOutput
+  // pull-down: a and b in series from z to vss  -> z=0 only when both inputs are high
+  Mnand_n_a (nand2_mid a vss vss) n18 l=2e-7 w=2e-6 m=1
+  Mnand_n_b (z b nand2_mid vss) n18 l=2e-7 w=2e-6 m=1
+  // pull-up: two PMOS in parallel from vdd to z
+  Mnand_p_a (z a vdd vdd) p18 l=2e-7 w=4e-6 m=1
+  Mnand_p_b (z b vdd vdd) p18 l=2e-7 w=4e-6 m=1
+ends dd1_d7c_a_nand2
+
+subckt dd1_d7c_a_nor2 (a b z vdd vss)
+  parameters a input
+  parameters b input
+  parameters z output
+  parameters vdd inputOutput
+  parameters vss inputOutput
+  // pull-up: two PMOS in series from vdd to z, internal node nor2_mid
+  Mnor_p_a (nor2_mid a vdd vdd) p18 l=2e-7 w=4e-6 m=1
+  Mnor_p_b (z b nor2_mid vdd) p18 l=2e-7 w=4e-6 m=1
+  // pull-down: two NMOS in parallel from z to vss
+  Mnor_n_a (z a vss vss) n18 l=2e-7 w=2e-6 m=1
+  Mnor_n_b (z b vss vss) n18 l=2e-7 w=2e-6 m=1
+ends dd1_d7c_a_nor2
+
+// Positive-logic AND and OR are built from the two evaluated primitives plus the accepted inverter,
+// so there is exactly one place where a pull-up/pull-down shape is asserted, and it is checked there.
+// Net names carry the cell's own instance suffix: a parent that instantiates this cell twice keeps two
+// independent copies of these nodes, because Spectre scopes subckt internals per instance and the
+// offline checker refuses any of these names appearing as a parent-level net.
+
+subckt dd1_d7c_a_and2 (a b z vdd vss)
+  parameters a input
+  parameters b input
+  parameters z output
+  parameters vdd inputOutput
+  parameters vss inputOutput
+  Xnand (a b and2_n vdd vss) dd1_d7c_a_nand2
+  Xinv (and2_n z vdd vss) dd1_inv18
+ends dd1_d7c_a_and2
+
+subckt dd1_d7c_a_or2 (a b z vdd vss)
+  parameters a input
+  parameters b input
+  parameters z output
+  parameters vdd inputOutput
+  parameters vss inputOutput
+  Xnor (a b or2_n vdd vss) dd1_d7c_a_nor2
+  Xinv (or2_n z vdd vss) dd1_inv18
+ends dd1_d7c_a_or2

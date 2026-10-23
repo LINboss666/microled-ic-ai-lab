@@ -1,0 +1,104 @@
+// dd1_d7c_a_pam_dec.scs -- DATA-7C-A: 3-bit PAM request to thermometer enable, in real CMOS.
+//
+// CANDIDATE / NOT SIMULATED. This is an amplitude DECODER made of transistors: for branch j the
+// select is (pam_sel >= j) and the branch enable is (data_en AND select_j), with the branch's own
+// complementary enable taken from an inverter driven by that very en net. Nothing here is a Verilog-A
+// or behavioural source, and no ideal voltage source stands in for an inverted signal.
+//
+// Bit convention, fixed by the accepted DATA-7A controller (rtl/dd1_d7a_gray_ctrl.sv port pam_sel,
+// and the task brief table): pam2 is the MSB (weight 4), pam1 weight 2, pam0 weight 1. Branch 0 is
+// the basic unit current and is selected only together with data_en -- it is not permanently on,
+// because black is time code 0 or data_en=0, not a 0 uA amplitude level.
+//
+// Thermometer equations (ENGINEERING_DERIVATION from the eight-row table in the task brief, verified
+// offline against the hand-written golden mask in tests/dd1_d7c_a/pam_mask_golden.csv):
+//   select0 = 1                    realised by tying the branch-0 AND input to the vdd18 rail
+//   select1 = pam2 | pam1 | pam0   = pam2 | (pam1|pam0)
+//   select2 = pam2 | pam1
+//   select3 = pam2 | (pam1 & pam0)
+//   select4 = pam2
+//   select5 = pam2 & (pam1 | pam0)
+//   select6 = pam2 & pam1
+//   select7 = pam2 & pam1 & pam0   = pam2 & (pam1&pam0)
+// The two shared terms (pam1|pam0) and (pam1&pam0) are built once and fanned out, so the gate count
+// stays in the tens and the block is not a general-purpose processor.
+//
+// One important asymmetry: select5 is pam2 AND (pam1|pam0), and (pam1|pam0) is NOT the same net as
+// select1, which is pam2 OR (pam1|pam0). Reusing select1 where pam1|pam0 is meant would make pam=4
+// (100) light six branches instead of five. The golden table catches exactly that, and the counterface
+// in scripts/dd1_d7c_a_guards.py injects it.
+//
+// All cells are the ones defined in dd1_d7c_a_gates.scs plus the accepted dd1_inv18; the checker
+// derives each cell's logic from its pull-up/pull-down graph and composes those, never the name.
+
+subckt dd1_d7c_a_pam_dec (pam0 pam1 pam2 data_en en0 en1 en2 en3 en4 en5 en6 en7 enb0 enb1 enb2 enb3 enb4 enb5 enb6 enb7 vdd18 vss)
+  parameters pam0 input
+  parameters pam1 input
+  parameters pam2 input
+  parameters data_en input
+  parameters en0 output
+  parameters en1 output
+  parameters en2 output
+  parameters en3 output
+  parameters en4 output
+  parameters en5 output
+  parameters en6 output
+  parameters en7 output
+  parameters enb0 output
+  parameters enb1 output
+  parameters enb2 output
+  parameters enb3 output
+  parameters enb4 output
+  parameters enb5 output
+  parameters enb6 output
+  parameters enb7 output
+  parameters vdd18 inputOutput
+  parameters vss inputOutput
+
+  // ---- shared terms of the three low bits
+  Xterm_or10 (pam1 pam0 gor10 vdd18 vss) dd1_d7c_a_or2
+  Xterm_and10 (pam1 pam0 gand10 vdd18 vss) dd1_d7c_a_and2
+
+  // ---- thermometer select nets. select4 is pam2 itself (a wire, no gate) and select0 is the rail.
+  Xsel1 (pam2 gor10 sel1 vdd18 vss) dd1_d7c_a_or2
+  Xsel2 (pam2 pam1 sel2 vdd18 vss) dd1_d7c_a_or2
+  Xsel3 (pam2 gand10 sel3 vdd18 vss) dd1_d7c_a_or2
+  Xsel5 (pam2 gor10 sel5 vdd18 vss) dd1_d7c_a_and2
+  Xsel6 (pam2 pam1 sel6 vdd18 vss) dd1_d7c_a_and2
+  Xsel7 (pam2 gand10 sel7 vdd18 vss) dd1_d7c_a_and2
+
+  // ---- per-branch enable: nand(data_en, select) then a true inverter for en, then one more
+  // inverter driven by that same en net for enb. enb is therefore this branch's own inverting node,
+  // not the global data_en_b from the controller and not a shared buffer.
+  Xn0 (data_en vdd18 nn0 vdd18 vss) dd1_d7c_a_nand2
+  Xa0 (nn0 en0 vdd18 vss) dd1_inv18
+  Xb0 (en0 enb0 vdd18 vss) dd1_inv18
+
+  Xn1 (data_en sel1 nn1 vdd18 vss) dd1_d7c_a_nand2
+  Xa1 (nn1 en1 vdd18 vss) dd1_inv18
+  Xb1 (en1 enb1 vdd18 vss) dd1_inv18
+
+  Xn2 (data_en sel2 nn2 vdd18 vss) dd1_d7c_a_nand2
+  Xa2 (nn2 en2 vdd18 vss) dd1_inv18
+  Xb2 (en2 enb2 vdd18 vss) dd1_inv18
+
+  Xn3 (data_en sel3 nn3 vdd18 vss) dd1_d7c_a_nand2
+  Xa3 (nn3 en3 vdd18 vss) dd1_inv18
+  Xb3 (en3 enb3 vdd18 vss) dd1_inv18
+
+  Xn4 (data_en pam2 nn4 vdd18 vss) dd1_d7c_a_nand2
+  Xa4 (nn4 en4 vdd18 vss) dd1_inv18
+  Xb4 (en4 enb4 vdd18 vss) dd1_inv18
+
+  Xn5 (data_en sel5 nn5 vdd18 vss) dd1_d7c_a_nand2
+  Xa5 (nn5 en5 vdd18 vss) dd1_inv18
+  Xb5 (en5 enb5 vdd18 vss) dd1_inv18
+
+  Xn6 (data_en sel6 nn6 vdd18 vss) dd1_d7c_a_nand2
+  Xa6 (nn6 en6 vdd18 vss) dd1_inv18
+  Xb6 (en6 enb6 vdd18 vss) dd1_inv18
+
+  Xn7 (data_en sel7 nn7 vdd18 vss) dd1_d7c_a_nand2
+  Xa7 (nn7 en7 vdd18 vss) dd1_inv18
+  Xb7 (en7 enb7 vdd18 vss) dd1_inv18
+ends dd1_d7c_a_pam_dec

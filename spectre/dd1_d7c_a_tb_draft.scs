@@ -1,0 +1,113 @@
+// dd1_d7c_a_tb_draft.scs -- DATA-7C-A: draft deck for the eight-level PAM candidate. NOT RUN.
+//
+// WHAT THIS FILE IS: a reviewable draft of the next round's stimulus, written to the syntax this
+// project has already proven in spectre/current_probe_syntax.scs (isource, iprobe, vsource, the
+// "dc dev=... param=dc start= stop= step=" statement form, the ${QODER_PDK_LIB} include with
+// section=tt). Every electrical line in this file is NOT_RUN: this round launched no Spectre, no
+// ngspice, no Xyce, no Icarus, no Virtuoso and no OA write, and it did not run "spectre -h" either.
+// NATIVE_NETLIST_SYNTAX=NOT_VERIFIED therefore also covers this file, including the two constructs
+// this project has not yet exercised on this build:
+//   (a) hierarchical save of a subckt-internal net (Xu0.vbias_ch below) -- the proven forms are
+//       "save node" and "save Mout:drain", so this draft must be re-checked before any run;
+//   (b) type=pwl on a decoder input pin, used to give the enable a finite slope.
+//
+// WHAT IS DELIBERATELY SEPARATED (task brief section 6):
+//   - the reference that sets the amplitude scale is the testbench's own 15 uA source (Iref_in) into
+//     the diode-connected Mref, NOT an ideal VBIAS. The candidate's VBIAS node is iref_in and the
+//     eight local bias nodes are made inside the branches by their own pass devices.
+//   - every supply has an explicit ground return: Vss (vss 0) is a real 0 V source. AGENTS.md pit 19
+//     records what happens when it is missing: every NMOS path disappears and the whole board
+//     "looks like PMOS working".
+//   - the output clamp is an independent source (Vclamp), so a DC sweep of the output node does not
+//     fight the code sources. 1.2 V is the inherited POC clamp condition, not a final VLED/VSCAN.
+//   - nothing here includes or copies a PDK file, model card or licence. The include is the same
+//     environment variable the accepted decks use, so the path stays configurable per machine.
+//
+// HOW THE EIGHTEEN ELECTRICAL CASES MAP (see reports/dd1_d7c_a_native_test_plan.md and
+// tests/dd1_d7c_a/native_case_plan.csv for purpose, observe nodes, interval, reference and failure
+// condition of each): this is ONE template. The eight DC codes and the four transient codes differ
+// only in PAM0V/PAM1V/PAM2V, so the next round generates one deck per code by substituting those
+// three parameters -- it does not hand-edit eight copies. The refusal of that generator in this round
+// is scripts/dd1_d7c_a_offline_check.py gate NATIVE_ENTRY_REFUSED.
+
+simulator lang=spectre insensitive=yes
+
+// PDK path and model section come from the environment, exactly as the accepted decks do it.
+// Do not replace this with a copied model card.
+include "${QODER_PDK_LIB}" section=tt
+
+// ---- project netlists, in dependency order: gates, then the decoder, then the unit branch, then
+// the top. The accepted masters the new cells instantiate are included from their own frozen files,
+// which this round does not modify.
+include "${QODER_NETLIST_DIR}/dd1_d6_inv18.scs"
+include "${QODER_NETLIST_DIR}/dd1_d6_bias_core.scs"
+include "${QODER_NETLIST_DIR}/dd1_d7c_a_gates.scs"
+include "${QODER_NETLIST_DIR}/dd1_d7c_a_pam_dec.scs"
+include "${QODER_NETLIST_DIR}/dd1_d7c_a_sink_unit.scs"
+include "${QODER_NETLIST_DIR}/dd1_d7c_a_pam_top.scs"
+
+// ---- conditions inherited from the accepted single-channel POC. Each is a POC condition, none is a
+// final rating: VLED/VSCAN, SOA and the real eight current values are all still open.
+parameters VDDV=1.8           // 1.8 V logic domain for the decoder
+parameters VCASV=1.8          // cascode bias, accepted POC value
+parameters IREFU=15u          // external reference current into the diode-connected Mref
+parameters VCLAMPV=1.2        // output clamp, accepted POC condition
+parameters PAM0V=0            // bit0 (weight 1) -- substitute per code
+parameters PAM1V=0            // bit1 (weight 2)
+parameters PAM2V=0            // bit2 (weight 4)
+parameters DEV1V=1.8          // DATA_EN level while the window is open
+parameters TON=4u             // emission window length used by the long-pulse case (POC condition)
+parameters TWIDE=120n         // short-pulse representative code, Hybrid spacing at 100 Hz
+parameters TFINES=200n        // short-pulse representative code, Hybrid spacing at 60 Hz
+parameters TFRM=10u           // frame-ish spacing so the off window can hold a code change
+
+// ---- the device under test: one output, eight selectable branches
+Xdut (data_en pam0 pam1 pam2 iref_in vcas data_out vdd18 vss) dd1_d7c_a_pam_1ch
+
+// ---- testbench side: separate from the DUT, every node referenced to a real 0 V
+Iref_in (irefbus iref_in) isource dc=IREFU
+Viref (irefbus 0) vsource dc=0               // the reference current enters the shared bias node from
+                                             // a 0 V return, so the injection point stays explicit
+Vdd18 (vdd18 0) vsource dc=VDDV
+Vss   (vss 0)    vsource dc=0
+Vcas  (vcas 0)   vsource dc=VCASV
+Vclamp (clamp_node 0) vsource dc=VCLAMPV
+// Finite-slope enable written on one line: this project has not proven a continuation form, so the
+// draft does not rely on one. Timing values are POC conditions for review and the whole statement is
+// NOT_RUN. AGENTS.md pit 20: for type=pulse the platform counts from the END of the rise, which is
+// why the edges are written out here instead of using a pulse with a guessed width.
+Vdata_en (data_en 0) vsource type=pwl time={0 1.5*TON (1.5*TON+1n) (1.5*TON+1n+TON) (1.5*TON+2n+TON) 3*TON} value={0 0 DEV1V DEV1V 0 0}
+Vpam0 (pam0 0) vsource dc=PAM0V
+Vpam1 (pam1 0) vsource dc=PAM1V
+Vpam2 (pam2 0) vsource dc=PAM2V
+
+// ---- observation points. Branch-internal nodes are named through the instance path; that syntax is
+// flagged NOT_VERIFIED above and must be confirmed before the first run, and if the build refuses it
+// the fallback is to probe the eight local bias nodes by lifting them to the top level in a DRAFT
+// copy of the unit subckt -- never by editing the delivered candidate.
+Ip_branch (data_out clamp_node) iprobe
+// deck-level nodes only in this first line; everything below the Xdut path is hierarchical and is
+// therefore covered by the NOT_VERIFIED flag on the hierarchy save syntax
+save vdd18 vss iref_in vcas data_out clamp_node irefbus data_en pam0 pam1 pam2
+save Xdut.en0 Xdut.en1 Xdut.en2 Xdut.en3 Xdut.en4 Xdut.en5 Xdut.en6 Xdut.en7
+save Xdut.enb0 Xdut.enb1 Xdut.enb2 Xdut.enb3 Xdut.enb4 Xdut.enb5 Xdut.enb6 Xdut.enb7
+save Xdut.Xu0.vbias_ch Xdut.Xu1.vbias_ch Xdut.Xu2.vbias_ch Xdut.Xu3.vbias_ch
+save Xdut.Xu4.vbias_ch Xdut.Xu5.vbias_ch Xdut.Xu6.vbias_ch Xdut.Xu7.vbias_ch
+save Xdut.Xu0.node_m Xdut.Xu4.node_m
+// the accepted probe forms, copied from spectre/current_probe_syntax.scs: both a bare name and the
+// ":current" accessor were proven on this build, so the draft keeps both
+save Ip_branch Ip_branch:current
+
+// ---- analyses, all of them NOT_RUN in this round
+// DC: absolute current per code, unit branch current, monotonicity, decoded levels, reference and
+// local bias. One generated deck per code; the sweep is the clamp, so the "1.2 V point" is read out
+// of the sweep rather than assumed.
+// dc_case_NNNN   dc dev=Vclamp param=dc start=0.6 stop=1.5 step=0.1
+// the line is commented out on purpose: a run in this round would be an unauthorised launch.
+//
+// TRANSIENT: long pulse at code 7; 120 ns and 200 ns short pulses at a representative code; and the
+// DATA_EN-off plus code-change-only-while-off case (011 -> 100 and 000 -> 111 are the two switching
+// positions to check).
+// tran1 tran dev=... stop=4*TON maxstep=1n
+//
+// REFINED-STEP re-runs paired to their source case, differing ONLY in maxstep.
