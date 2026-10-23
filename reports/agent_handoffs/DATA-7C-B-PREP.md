@@ -17,8 +17,9 @@
 | 完成级别 | `PREPARED_FOR_INDEPENDENT_REVIEW_NO_NATIVE_RUN` |
 | 文件范围 | 相对 R2 **只新增**：修改 0、删除 0（记录 `frozen_comparison.csv` 的 enforced 行为 0 违例） |
 | 本轮成本 | Spectre **0**（含 `-h`）、RTL 仿真 **0**、OA 写入 **0**、动态 preflight **0**、SSH/VM **0**、凭据与 PDK/模型卡 **未读** |
-| 验证记录 | `results/evidence/dd1_d7c_b_prep_20261023_174500_f2b6a7/`（目录名在跑之前定下；`verification_summary.json` 的 `generated_utc` 才是真实生成时刻） |
+| 验证记录 | `results/evidence/dd1_d7c_b_prep_20261023_174846_39a012/`（目录名在跑之前定下；`verification_summary.json` 的 `generated_utc` 才是真实生成时刻） |
 | 前一次尝试 | `results/evidence/dd1_d7c_b_prep_20261023_172056_48cc50/` 在 `git diff --check` 空输出处中断（`b'' or ''` 落到 str 上 `.decode`），只有 8 个子结果 JSON、无 `commands.csv`；原样保留并提交，不删不补 |
+| 再前一次尝试 | `…_174500_f2b6a7` 修好四个门后又撞在同一个函数内的名字遮蔽（`extracted` 既是三棵树字典又被后面单次抽取覆写，`TypeError: 'bool' object is not subscriptable`）；它未成为记录，故整目录移到 Git 忽略的 `review/scratch/aborted_attempt2_…/`（10 个文件，字节未改），只留路径不外发摘要 |
 | 停止状态 | `AWAITING_INDEPENDENT_REVIEW_OF_NATIVE_PREPARATION` |
 
 ## 2 交付分层（不用一句"准备好了"吞掉未测项）

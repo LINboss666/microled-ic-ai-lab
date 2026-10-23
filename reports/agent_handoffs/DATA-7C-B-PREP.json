@@ -89,8 +89,8 @@
   "D4_tr_long_starts_conducting_at_t_zero",
   "D5_integration_window_is_narrower_than_the_platform"
  ],
- "evidence_dir": "results/evidence/dd1_d7c_b_prep_20261023_174500_f2b6a7",
- "head_sha": "7123fcbe588a5ab29d924cab47bda5098a1fc27e",
+ "evidence_dir": "results/evidence/dd1_d7c_b_prep_20261023_174846_39a012",
+ "head_sha": "3c1c983c29b1d34472c23c81b14852b69163f3f4",
  "head_sha_role": "the commit at generation time; the commit carrying this file and the record are above it, and the read-back of those is in remote_readback",
  "inherited_informational_items": [
   {
@@ -105,7 +105,7 @@
   "five documented differences against the delivered R2 bytes wait for the reviewer, and the R2 reports were not edited to make them look consistent",
   "the semantic layer that judges this record is the previous round's tool, so a rule specific to this round (deck/schedule shape) is judged by this round's own gates rather than by that reader",
   "DATA-7B history, the credential echo event and the superseded records of earlier rounds are unchanged and not re-opened here",
-  "the first record of this round aborted on a silent `git diff --check` (`b'' or ''` fell through to a str .decode()); it is kept committed with its eight sub-result JSONs and no commands.csv, and the same idiom still exists unmodified in the previous round's scripts/dd1_d7c_a_verify.py:152, which this round may not touch",
+  "the first record of this round aborted on a silent `git diff --check` (`b'' or ''` fell through to a str .decode()); it is kept committed with its eight sub-result JSONs and no commands.csv, a second attempt aborted on a name collision inside the same function and its ten partial files are kept under the ignored review/scratch/ rather than deleted, and the same idiom still exists unmodified in the previous round's scripts/dd1_d7c_a_verify.py:152, which this round may not touch",
   "one of the previous round's nine selftest cases builds its tables from the real comparison rows of whatever tree it runs in, so inside this round's tree the DATA-7C-A whitelist reports this round's own new paths as additions it never allowed; the gate reads that tool in a throw-away clone at R2 and keeps the in-tree reading beside it"
  ],
  "launch_plan": {
@@ -340,10 +340,10 @@
     "sha256": "4f118a2a438825c67c4c3059a9fe6f33f3fe27754c1745dc5f02bc87725898bb"
    },
    {
-    "bytes": 52687,
+    "bytes": 53220,
     "path": "scripts/dd1_d7c_b_prep_verify.py",
     "role": "delivered this round",
-    "sha256": "8af11f925a776667813774492aba5d8e43c226ba64ca63b1ccbeae36340b0c21"
+    "sha256": "00b8df06c0f3e4d8cfc7200171dcdf91ea939a4c280beb9e0466120404691aeb"
    },
    {
     "bytes": 4332,

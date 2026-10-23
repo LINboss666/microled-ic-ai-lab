@@ -49,6 +49,8 @@ REVIEWED_T = '89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79'
 # seven-gap instrument must reproduce all seven and the R1 record must be audited
 REVIEWED_H = 'da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb'
 R1_RECORD = 'results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08'
+# this round's own first publish attempt, kept committed exactly as it stopped
+SUPERSEDED_RECORD = 'results/evidence/dd1_d7c_b_prep_20261023_172056_48cc50'
 DEVELOPMENT_BASE = '272d6de6d2f2fc8a82d5038d73d6b3e4c656f683'
 BRANCH = 'poc/data-pam-d7c-b-prep'
 NEW_PREFIXES = ('scripts/dd1_d7c_b_prep_', 'tests/dd1_d7c_b_prep/', 'spectre/dd1_d7c_b_prep/',
@@ -248,6 +250,10 @@ def _clone_at(rev, directory):
     proves that by digesting `git for-each-ref` before and after.
     """
     common = git('rev-parse', '--git-common-dir').decode('utf-8', 'replace').strip()
+    # resolve a relative answer against the repository, never against whatever directory the record
+    # happened to be published from
+    if not re.match(r'^(?:[A-Za-z]:)?[\\/]', common):
+        common = os.path.join(ROOT, common)
     common = os.path.abspath(common).replace(os.sep, '/')
     code, text = run(['git', 'clone', '-s', '--no-checkout', 'file:///' + common, directory])
     if code != 0:
@@ -501,8 +507,8 @@ def main(argv):
         os.makedirs(t_dir)
         os.makedirs(h_dir)
         os.makedirs(r2_dir)
-        extracted = {'T': extract(REVIEWED_T, t_dir), 'H': extract(REVIEWED_H, h_dir),
-                     'R2': extract(BASE_R2, r2_dir)}
+        trees = {'T': extract(REVIEWED_T, t_dir), 'H': extract(REVIEWED_H, h_dir),
+                 'R2': extract(BASE_R2, r2_dir)}
         gap_script = os.path.join(REVIEW_DIR, 'probe_review_gaps.py')
         remain_script = os.path.join(REVIEW_DIR, 'probe_r1_remaining.py')
         first, payload_t = instrument_gate('reviewer_instrument_on_T', gap_script, t_dir,
@@ -516,11 +522,11 @@ def main(argv):
         # and six stay closed with only the declared one still reported on the inherited bytes (R2) and
         # on this round's bytes.
         third = A_VERIFY.remaining_instrument_gate(
-            'reviewer_remaining_on_H', remain_script if extracted['H'] else '', h_dir,
+            'reviewer_remaining_on_H', remain_script if trees['H'] else '', h_dir,
             os.path.join(out_dir, 'instrument_remaining_H.json'), False)
         results.append(third)
         base_row = A_VERIFY.remaining_instrument_gate(
-            'reviewer_remaining_on_R2_base', remain_script if extracted['R2'] else '', r2_dir,
+            'reviewer_remaining_on_R2_base', remain_script if trees['R2'] else '', r2_dir,
             os.path.join(out_dir, 'instrument_remaining_R2.json'), True)
         results.append(base_row)
         fourth = A_VERIFY.remaining_instrument_gate(
@@ -611,7 +617,7 @@ def main(argv):
                                                          ','.join(o.rsplit('/', 1)[-1]
                                                                   for o in offenders),
                                                          len(unexpected)),
-                        'verdict_state': 'PASS' if extracted['H'] and previous_problems and not
+                        'verdict_state': 'PASS' if trees['H'] and previous_problems and not
                         unexpected else 'FAIL'})
         print('GATE %-38s %s %s' % ('previous_record_reader_finds_its_own_staleness',
                                     results[-1]['verdict_state'], results[-1]['verdict'][:110]))
@@ -715,8 +721,10 @@ def main(argv):
                                               if p.startswith('spectre/dd1_d7c_a_')]:
             target = os.path.join(ROOT, rel.replace('/', os.sep))
             if os.path.isfile(target):
-                identity.append({'role': 'delivered this round' if rel in counts['added']
-                                 else 'frozen candidate netlist',
+                identity.append({'role': 'kept record of a superseded publish attempt'
+                                 if rel.startswith(SUPERSEDED_RECORD + '/') else
+                                 ('delivered this round' if rel in counts['added']
+                                  else 'frozen candidate netlist'),
                                  'path': rel, 'bytes': os.path.getsize(target),
                                  'sha256': CHECK.sha_file(target)})
         for rel in ('reports/agent_handoffs/DATA-7C-B-PREP.md',
