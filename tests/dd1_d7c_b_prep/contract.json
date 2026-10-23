@@ -1,0 +1,313 @@
+{
+ "base_r2_sha": "3e4703f1763223024f442c0826e95055782bca13",
+ "branch": "poc/data-pam-d7c-b-prep",
+ "clamp_sweep_points_V": [
+  0.6,
+  0.65,
+  0.7,
+  0.75,
+  0.8,
+  0.85,
+  0.9,
+  0.95,
+  1.0,
+  1.05,
+  1.1,
+  1.15,
+  1.2,
+  1.25,
+  1.3,
+  1.35,
+  1.4,
+  1.45,
+  1.5
+ ],
+ "conduction": {
+  "black_code_substitution": "forbidden",
+  "code_000_status": "LOWEST NON-ZERO LEVEL, not a black code",
+  "data_en_high": "conducting branches = pam_sel + 1",
+  "data_en_low": "all eight branches off"
+ },
+ "contract_state": "PROPOSED_FOR_REVIEW",
+ "device_geometry": {
+  "count_source": "parsed from the delivered netlists by scripts/netlist_stats.py, never retyped",
+  "mpass_mbleed": "NOT_RESIZED_THIS_ROUND",
+  "mref_w_l_um": [
+   20.0,
+   2.0
+  ],
+  "unit_mcas_mout_w_l_um": [
+   2.5,
+   2.0
+  ]
+ },
+ "differences_vs_R2": [
+  {
+   "conflict": "the delivered table and the delivered draft deck state different sweep steps for the same sweep, and the 0.1 V form also gives a different grid",
+   "id": "D1_clamp_sweep_step",
+   "status": "AWAITING_REVIEWER_DECISION",
+   "this_round_value": "0.05 V, with 1.20 V required to be an actual sweep point",
+   "where_r2_says_otherwise": [
+    "tests/dd1_d7c_a/native_case_plan.csv column segments: \"clamp sweep 0.6 V to 1.5 V in 0.05 V steps\"",
+    "spectre/dd1_d7c_a_tb_draft.scs:149: \"// dc_case_NNNN   dc dev=Vclamp param=dc start=0.6 stop=1.5 step=0.1\""
+   ],
+   "why": "the task book section 4 fixes 0.60-1.50 V at 0.05 V; 0.05 V is the finer of the two, so the 1.20 V point stays on the grid either way and no R2 claim becomes false"
+  },
+  {
+   "conflict": "the deck parameter TON is 4 us while the schedule source uses TON as 1000 ns, so the same symbol means two times that differ by a factor of four",
+   "id": "D2_ton_unit_is_four_microseconds_in_the_deck",
+   "status": "AWAITING_REVIEWER_DECISION",
+   "this_round_value": "every generated deck states absolute times in ns and never uses a bare TON; the deck keeps TON=4u only as an inherited comment, not as a timing symbol",
+   "where_r2_says_otherwise": [
+    "spectre/dd1_d7c_a_tb_draft.scs:63 \"parameters TON=4u // emission window length used by the long-pulse case (POC condition)\"",
+    "scripts/dd1_d7c_a_r2_plan.py:33 TON_NS = 1000 and the plan columns are written in TON"
+   ],
+   "why": "a deck whose \"1.0 TON\" means 4 us and a table whose \"1.0 TON\" means 1 us cannot be reviewed as the same stimulus"
+  },
+  {
+   "conflict": "the prose describes two pulses inside a 120 ns slot while the machine columns describe one 120 ns platform, and the 100 Hz pitch of a frame is not 120 ns at all",
+   "id": "D3_short_pulse_note_versus_platform",
+   "status": "AWAITING_REVIEWER_DECISION",
+   "this_round_value": "one platform per emission, 120 ns for TR-120 and 200 ns for TR-200, each stated as two absolute instants (t_rise_50, t_fall_50) plus the integration window inside it; the frame pitch is recorded separately as a 10 ms condition that the deck does not simulate",
+   "where_r2_says_otherwise": [
+    "scripts/dd1_d7c_a_r2_plan.py:69 SHORT_CASES note \"two pulses per 120 ns slot at the Hybrid 100 Hz pitch\"",
+    "tests/dd1_d7c_a/native_case_plan.csv columns platform_TON=0.12 / 0.20 for TR-120 / TR-200"
+   ],
+   "why": "section 5 requires that \"120 ns platform\" stop meaning two different pairs of instants"
+  },
+  {
+   "conflict": "the first platform begins at t=0 with the enable already high, so there is no rising edge to detect for the first window and an edge finder would have to invent one",
+   "id": "D4_tr_long_starts_conducting_at_t_zero",
+   "status": "RESOLVED_BY_THIS_ROUND_WITHIN_THE_ALLOWED_SHIFT",
+   "this_round_value": "a uniform 1 us initial-off lead is inserted (LEAD_OFF_NS=1000), every platform, code change, integration window and stop shifts by the same amount, and the offset is recorded per case in the schedule table",
+   "where_r2_says_otherwise": [
+    "tests/dd1_d7c_a/native_case_plan.csv TR-LONG stimulus_start_TON=0 and segments \"000@0-1\"",
+    "reports/dd1_d7c_a_native_test_plan.md: \"TR-LONG 在一个 deck 内排八个长发光窗\""
+   ],
+   "why": "section 5 asks for exactly this: the initial code settles before the first enable, and a level already high at t=0 is not a rising edge"
+  },
+  {
+   "conflict": "the declared window is 100 ns inside a 120 ns platform, which is right (the platform is inset by the 10 ns edges) but the prose calls both of them \"the 120 ns window\"",
+   "id": "D5_integration_window_is_narrower_than_the_platform",
+   "status": "RESOLVED_BY_THIS_ROUND_WITHIN_THE_ALLOWED_SHIFT",
+   "this_round_value": "platform start/stop, 50% enable edges, and the integration window are three separate named columns everywhere: platform_start_ns, platform_stop_ns, enable_rise_50_ns, enable_fall_50_ns, window_start_ns, window_stop_ns",
+   "where_r2_says_otherwise": [
+    "tests/dd1_d7c_a/native_case_plan.csv TR-120 window_TON=0.13-0.23 while platform_TON=0.12 starting at 0.12"
+   ],
+   "why": "the charge of a window is only comparable between a nominal and a refined run if the window is one pair of instants, not a length in prose"
+  }
+ ],
+ "frozen_candidate_dut": [
+  "spectre/dd1_d7c_a_gates.scs",
+  "spectre/dd1_d7c_a_pam_dec.scs",
+  "spectre/dd1_d7c_a_sink_unit.scs",
+  "spectre/dd1_d7c_a_pam_top.scs"
+ ],
+ "hand_arithmetic": [
+  "Iunit_nominal = 15e-6 A x (2.5/2)/(20/2) = 15e-6 x 0.125 = 1.875e-6 A",
+  "1.875 uA = 1.875e-6 A = 1.875e9 fA (multiply by 1e15 to go from A to fA)",
+  "I111 nominal = 8 x 1.875e-6 A = 1.5e-5 A = 15.000 uA, which is the shared reference itself",
+  "QLSB_nominal(120 ns) = 1.875e-6 A x 120e-9 s = 2.25e-13 C = 225 fC = 0.225 pC",
+  "QLSB_nominal(200 ns) = 1.875e-6 A x 200e-9 s = 3.75e-13 C = 375 fC = 0.375 pC",
+  "full scale band = 15 uA +/- 5% = 14.25 uA .. 15.75 uA = 1.425e-5 A .. 1.575e-5 A",
+  "unit deviation limit = 0.25 x Iunit_ref; with Iunit_ref = I111/8 = 15 uA / 8 = 1.875 uA that is 0.46875 uA",
+  "settle band = +/- 5% of the target of the code under test, hold at least 10 ns",
+  "shutoff leakage = max(abs(I_sink)) over the last 100 ns of each declared tail window <= 0.15 uA",
+  "1 TON = 1000 ns, so the nominal 120 ns and 200 ns platforms are 0.12 and 0.20 TON"
+ ],
+ "launch_budget": {
+  "authorised_this_round": 0,
+  "counts": "every launch counts, including -h, failures, aborts, crashes and debug; REQUESTED occupies the budget before the run and recovery never refunds it; preflight and DUT are counted separately",
+  "dut_runs": 15,
+  "preflight_runs": 15,
+  "status": "DRAFT_PROPOSAL_NOT_AUTHORISATION",
+  "syntax_debug_margin": 6,
+  "total_proposed": 36
+ },
+ "nominal_current_A_by_code": {
+  "000": 1.875e-06,
+  "001": 3.75e-06,
+  "010": 5.625e-06,
+  "011": 7.5e-06,
+  "100": 9.375000000000001e-06,
+  "101": 1.125e-05,
+  "110": 1.3125e-05,
+  "111": 1.5e-05
+ },
+ "nominal_current_identity": "ESTIMATED_MIRROR_RATIO_ONLY",
+ "not_run": [
+  "PAM_8LEVEL_CURRENT_MEASURED",
+  "PWM_PAM_CURRENT_INTEGRATION",
+  "FULL_MOS_GRAY_CONTROLLER",
+  "GRAY_LUT",
+  "SHUTOFF_LEAKAGE_MEASURED",
+  "CONVERGENCE_PAIR_MEASURED",
+  "DC_OPERATING_POINTS"
+ ],
+ "not_verified": [
+  "NATIVE_NETLIST_SYNTAX",
+  "HIERARCHICAL_SAVE_SYNTAX",
+  "PWL_SPELLING_ON_DECODER_INPUTS",
+  "MODEL_CARD_IDENTITY",
+  "GEOMETRY_LEGALITY_AGAINST_PDK"
+ ],
+ "probe": {
+  "abs_forbidden_on": [
+   "raw current",
+   "total charge"
+  ],
+  "definition": "I_sink = Ip_branch",
+  "instance": "Ip_branch",
+  "physical_positive_path": [
+   "clamp_node",
+   "data_out",
+   "the conducting branch",
+   "vss"
+  ],
+  "sign_rule": "I_sink = Ip_branch with no negation and no abs(); Q = integral of I_sink over the declared window, positive charge accumulating during the conducting window; the off-window tail is integrated as its own negative area and never cancels against it to claim a shut branch; declared before any run, not chosen after a sign",
+  "tail_sign": "a shutoff tail may be positive or negative; it is never pre-assumed to be a negative area",
+  "terminals": [
+   "clamp_node",
+   "data_out"
+  ]
+ },
+ "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
+ "results_column_state": "NOT_RUN for all fifteen cases; a synthetic number never enters an electrical result",
+ "reviewer_frozen": "NO",
+ "rules": {
+  "charge_error": {
+   "idc_substitution_forbidden": "a geometry-ratio estimate is never used as IDC(k)",
+   "limit_status": "PROPOSED_NOT_CLAIMED",
+   "lsb_definition": "QLSB = Iunit_nominal x Ttick, Ttick declared per case",
+   "nominal_ticks_s": [
+    1.2e-07,
+    2e-07
+   ],
+   "proposed_limit_in_LSB": 0.5,
+   "reported": [
+    "Q_window",
+    "Qexpected_nominal = Inominal(k) x T50",
+    "Qexpected_dc = IDC(k) x T50 or NOT_RUN"
+   ]
+  },
+  "clamp": {
+   "main_eval_V": 1.2,
+   "main_point_must_be_on_grid": true,
+   "status": "POC_CLAMP_CONDITION_NOT_LED_NOT_VLED_NOT_SOA",
+   "sweep_start_V": 0.6,
+   "sweep_step_V": 0.05,
+   "sweep_stop_V": 1.5
+  },
+  "convergence": {
+   "also_report": "absolute dQ in coulombs (and fC), per window",
+   "limit": 0.01,
+   "note": "CONVERGED without an absolute difference is refused as an answer",
+   "relative_measure": "abs(dQ) / QLSB",
+   "status_word_alone_is_not_a_pass": true
+  },
+  "eight_level_ratio": {
+   "abs_deviation_limit_in_units_of_iunit_ref": 0.25,
+   "iunit_ref_definition": "Iunit_ref = I111 / 8 from the SAME DC conditions",
+   "normalisation_rule": "a scaled-down array must not be rescued by normalisation: the eight-level ratio pass does not substitute the 15 uA absolute pass",
+   "per_code_statistic": "Ik - (k+1) * Iunit_ref for every code",
+   "strict_monotonic_required": true
+  },
+  "full_scale_absolute": {
+   "clamp_V": 1.2,
+   "code": "111",
+   "identity": "PROPOSED_FEASIBILITY_TARGET_NOT_SPEC",
+   "lower_A": 1.425e-05,
+   "target_A": 1.5e-05,
+   "tolerance_fraction": 0.05,
+   "upper_A": 1.575e-05
+  },
+  "launch_budget": {
+   "authorised_this_round": 0,
+   "counts": "every launch counts, including -h, failures, aborts, crashes and debug; REQUESTED occupies the budget before the run and recovery never refunds it; preflight and DUT are counted separately",
+   "dut_runs": 15,
+   "preflight_runs": 15,
+   "status": "DRAFT_PROPOSAL_NOT_AUTHORISATION",
+   "syntax_debug_margin": 6,
+   "total_proposed": 36
+  },
+  "process_corner": {
+   "corner": "TT",
+   "model_family": "SMIC18 models already used by the accepted POC",
+   "model_identity_status": "NOT_VERIFIED_THIS_ROUND",
+   "note": "no model card was opened this round; the exact local model identity is a check for the approved native stage",
+   "temperature_C": 27
+  },
+  "sampling": {
+   "finite_check": "every time and current must be finite; NaN or infinity is a named refusal",
+   "grid_forcing": "forbidden: adaptive native samples are not snapped to a ps grid",
+   "monotonic_time": "strictly increasing; equal or regressed time is a named refusal"
+  },
+  "settling": {
+   "band_fraction": 0.05,
+   "deadline": "the end of the declared window",
+   "edge_detection": "adjacent samples plus linear interpolation at 50% of the enable level; no real edge is a named refusal, never a fallback to the window end",
+   "hold_ns": 10.0,
+   "reference": "the target current of the code under test",
+   "statuses": [
+    "SETTLED_HELD",
+    "NOT_SETTLED_WITHIN_PULSE",
+    "LEFT_BAND_BEFORE_DEADLINE",
+    "NO_REAL_EDGE_FOUND",
+    "NOT_RUN"
+   ]
+  },
+  "shutoff_leakage": {
+   "cancellation_rule": "a tail whose positive and negative parts nearly cancel is NOT zero leakage; report Q, Qpos and the magnitude of Qneg separately",
+   "limit_A": 1.5e-07,
+   "signs_reported": "both",
+   "statistic": "max(abs(I_sink)) over the last 100 ns",
+   "tail_last_ns": 100.0
+  },
+  "supplies": {
+   "iref_A": 1.5e-05,
+   "note": "AGENTS.md pit 19: a vss that is not tied to a real 0 V source makes every NMOS path disappear and the board reads as if only PMOS worked",
+   "vcas_V": 1.8,
+   "vdd18_V": 1.8,
+   "vss_V": 0.0,
+   "vss_explicit_source": true
+  },
+  "time_step_pairing": {
+   "identity_fields": [
+    "pam_code",
+    "data_en_form",
+    "data_en_level_V",
+    "observe_nodes",
+    "measure_interval",
+    "reference_definition",
+    "failure_condition",
+    "probe_orientation",
+    "sign_convention",
+    "platform_TON",
+    "off_gap_TON",
+    "edge_TON",
+    "tail_TON",
+    "stimulus_start_TON"
+   ],
+   "nominal_maxstep_ns": 2.0,
+   "only_difference_allowed": "maxstep",
+   "refined_maxstep_ns": 0.1
+  }
+ },
+ "schedule": {
+  "lead_off_ns": 1000.0,
+  "shift_rule": "platform, code-change, integration window and stop all shift by the same recorded amount",
+  "source_relative_to": "scripts/dd1_d7c_a_r2_plan.py"
+ },
+ "schema_version": "1.0",
+ "single_source": "scripts/dd1_d7c_b_prep_contract.py emits this file; decks, schedule and reports render from it and from nothing else",
+ "task_id": "DATA-7C-B-PREP",
+ "units": {
+  "charge": "coulomb",
+  "current": "ampere",
+  "display_precision_rule": "a ns column with four decimals resolves at 0.1 ps, and every tolerance names its LSB and its quantisation term",
+  "lead_off_ns": 1000.0,
+  "time": "second",
+  "ton_ns": 1000.0
+ },
+ "user_approved": "NO"
+}

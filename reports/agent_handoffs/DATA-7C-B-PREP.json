@@ -1,0 +1,805 @@
+{
+ "accepted_data7a_content_sha": "f68449672774ac9266ba9e4893024e4f3027dd9d",
+ "accepted_data7b_content_sha": "f9fd09b184a69a27cdb409205dfd4f4151408a23",
+ "base_sha": "3e4703f1763223024f442c0826e95055782bca13",
+ "boundaries": {
+  "acceptance_registered": "NO",
+  "existing_paths_modified": 0,
+  "existing_paths_removed": 0,
+  "force_push": "NO",
+  "gc_or_history_rewrite": "NO",
+  "historical_data7b_budget": "VIOLATED_59_OF_56_OVER_BY_3 unchanged, disposition with the user; not borrowed, reset or offset here",
+  "hooks_skipped": "NO",
+  "main_push_performed": "NO",
+  "merge_performed": "NO",
+  "native_run_authorised": "NO",
+  "next_native_stage_authorised": "NO",
+  "r2_independent_acceptance": "NOT_GRANTED_BY_THIS_TASK",
+  "soa_signoff": "NO",
+  "whitelist": "only new paths under the six prefixes the task book allows"
+ },
+ "branch": "poc/data-pam-d7c-b-prep",
+ "circuit": {
+  "conduction": "data_en=1 -> pam_sel+1 branches on; data_en=0 -> all off; code 000 is the lowest non-zero level, never a black code",
+  "dut_files_unchanged": [
+   "spectre/dd1_d7c_a_gates.scs",
+   "spectre/dd1_d7c_a_pam_dec.scs",
+   "spectre/dd1_d7c_a_sink_unit.scs",
+   "spectre/dd1_d7c_a_pam_top.scs"
+  ],
+  "led_orientation_rule": "the LED N side goes to the data current sink and the scan PMOS high side goes to the LED P side; polarity is not swapped to unify row/column naming",
+  "nominal_identity": "ESTIMATED_MIRROR_RATIO_ONLY",
+  "nominal_unit_current_A": 1.875e-06,
+  "one_output": "data_out",
+  "shared_reference": "iref_in through the diode-connected Mref (20um/2um)",
+  "unit_branches": 8,
+  "unit_geometry": "Mcas and Mout 2.5um/2um"
+ },
+ "completion_level": "PREPARED_FOR_INDEPENDENT_REVIEW_NO_NATIVE_RUN",
+ "contract_reviewer_frozen": "NO",
+ "contract_state": "PROPOSED_FOR_REVIEW",
+ "costs": {
+  "credentials_read": 0,
+  "native_preflight": 0,
+  "new_oa_writes": 0,
+  "new_rtl_simulations": 0,
+  "new_spectre_launches": 0,
+  "pdk_or_modelcard_read": 0,
+  "spectre_help_invocations": 0,
+  "ssh_or_vm": 0
+ },
+ "deck_inventory": {
+  "all_results": "NOT_RUN",
+  "count": 15,
+  "coverage": {
+   "dc": 8,
+   "refined": 3,
+   "transient": 4
+  },
+  "decks": [
+   "DC-000.scs",
+   "DC-001.scs",
+   "DC-010.scs",
+   "DC-011.scs",
+   "DC-100.scs",
+   "DC-101.scs",
+   "DC-110.scs",
+   "DC-111.scs",
+   "RS-FULL.scs",
+   "RS-LOW.scs",
+   "RS-SWITCH.scs",
+   "TR-120.scs",
+   "TR-200.scs",
+   "TR-LONG.scs",
+   "TR-OFFCODE.scs"
+  ],
+  "directory": "spectre/dd1_d7c_b_prep",
+  "lead_off_ns": 1000.0,
+  "native_syntax_status": "NOT_VERIFIED (hierarchical save, type=pwl on decoder inputs)",
+  "pwl_points": 215,
+  "regeneration_proof": "scripts/dd1_d7c_b_prep_deckgen.py --to <scratch> rebuilds all 15 decks and compares them to the delivered bytes",
+  "schedule_rows": 15,
+  "single_source": "tests/dd1_d7c_b_prep/contract.json -> schedule.csv/pwl.csv -> decks",
+  "window_rows": 62
+ },
+ "differences_vs_R2": [
+  "D1_clamp_sweep_step",
+  "D2_ton_unit_is_four_microseconds_in_the_deck",
+  "D3_short_pulse_note_versus_platform",
+  "D4_tr_long_starts_conducting_at_t_zero",
+  "D5_integration_window_is_narrower_than_the_platform"
+ ],
+ "evidence_dir": "results/evidence/dd1_d7c_b_prep_20261023_172056_48cc50",
+ "head_sha": "3e4703f1763223024f442c0826e95055782bca13",
+ "head_sha_role": "the commit at generation time; the commit carrying this file and the record are above it, and the read-back of those is in remote_readback",
+ "inherited_informational_items": [
+  {
+   "finding": "DEVICE_COUNT_CHECK: FAIL, 11 PROBLEM lines, identical in a fresh extraction of the R2 baseline and on this tree, therefore inherited and disclosed as INFORMATIONAL_NOT_PASS rather than fixed here",
+   "tool": "scripts/netlist_stats.py"
+  }
+ ],
+ "known_limitations": [
+  "no electrical quantity in this file is measured; every result is text, arithmetic, table shape or Git identity",
+  "the decks have never been read by a simulator on this build; the pwl spelling on decoder inputs and the hierarchical saves are the two constructs still unproven",
+  "the contract values are the task book suggestions and stay PROPOSED_FOR_REVIEW; the executor may not move one after seeing a result",
+  "five documented differences against the delivered R2 bytes wait for the reviewer, and the R2 reports were not edited to make them look consistent",
+  "the semantic layer that judges this record is the previous round's tool, so a rule specific to this round (deck/schedule shape) is judged by this round's own gates rather than by that reader",
+  "DATA-7B history, the credential echo event and the superseded records of earlier rounds are unchanged and not re-opened here"
+ ],
+ "launch_plan": {
+  "accounting_discipline": "DATA-7B Account states (REQUESTED occupies before the run, recovery marks UNCERTAIN without refund); no new production ledger is implemented this round",
+  "authorised_this_round": 0,
+  "debug_margin": 6,
+  "dut_processes": 15,
+  "preflight_processes": 15,
+  "proposed_total": 36,
+  "status": "DRAFT_PROPOSAL_NOT_AUTHORISATION"
+ },
+ "measurement_evidence": {
+  "cases": 17,
+  "cases_script": "scripts/dd1_d7c_b_prep_cases.py",
+  "evidence_class": "SYNTHETIC_NOT_MEASURED",
+  "module": "scripts/dd1_d7c_b_prep_measure.py",
+  "negative_classes": 7,
+  "note": "this validates the measurement algorithm, not the circuit",
+  "probe": "Ip_branch (clamp_node data_out) iprobe, I_sink = Ip_branch, no abs() on raw current or total charge",
+  "reuses_accepted_core": "scripts/dd1_d7b_measure.py (interp_pair, clip_window, trapezoid, signed_areas, integrate, crossing, band_spans, sustained_in_band, turn_off, tail_segment_max_abs, float_samples, time_quantum_ps) kept at its accepted bytes",
+  "states": [
+   "SETTLED_HELD",
+   "NOT_SETTLED_WITHIN_PULSE",
+   "LEFT_BAND_BEFORE_DEADLINE",
+   "NO_REAL_EDGE_FOUND",
+   "NOT_RUN"
+  ]
+ },
+ "not_run": {
+  "array_rc_and_layout": "NOT_RUN",
+  "full_mos_gray_controller": "NOT_RUN",
+  "geometry_legality": "NOT_VERIFIED",
+  "gray_lut": "NOT_RUN",
+  "model_card_identity": "NOT_VERIFIED",
+  "native_netlist_syntax": "NOT_VERIFIED",
+  "optical_effective_bits": "NOT_VERIFIED",
+  "pam_8level_current_measured": "NOT_RUN",
+  "pwm_pam_current_integration": "NOT_RUN"
+ },
+ "remote_readback": {
+  "method_1_git_protocol": {
+   "absent": "refs/heads/poc/data-pam-d7c-b-prep, the branch this round creates",
+   "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin refs/heads/main refs/heads/poc/data-pam-d7c-a refs/heads/poc/data-pam-d7c-a-r1 refs/heads/poc/data-pam-d7c-a-r2 refs/heads/poc/data-pwm-d7b-r3 refs/heads/poc/data-pam-d7c-b-prep",
+   "queried_utc": "2026-10-23T16:50:38Z",
+   "rc": 0,
+   "ref_lines_returned": 5
+  },
+  "method_2_api": {
+   "absent": "heads/poc/data-pam-d7c-b-prep returned {\"status\":\"404\"} before the push, which is the correct answer and not a read-back failure",
+   "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<branch> --jq .object.sha",
+   "objects_read": "f9fd09b184a69a27cdb409205dfd4f4151408a23, f68449672774ac9266ba9e4893024e4f3027dd9d and the R2 tip each returned by full SHA from git/commits",
+   "queried_utc": "2026-10-23T16:50:58Z",
+   "rc": 0,
+   "refs_read": 5
+  },
+  "post_push": {
+   "note": "filled by a later generation of this file; the tip that carries the record is read back in the tree-identical metadata commit above it and in the receipt kept outside the package",
+   "state": "NOT_PERFORMED_YET"
+  },
+  "pre_push": {
+   "agreement": "both channels return the same full SHA for all five existing refs",
+   "baseline_matches_the_task_book": true,
+   "r2_branch_and_main_untouched": true,
+   "refs": {
+    "refs/heads/main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+    "refs/heads/poc/data-pam-d7c-a": "89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79",
+    "refs/heads/poc/data-pam-d7c-a-r1": "da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb",
+    "refs/heads/poc/data-pam-d7c-a-r2": "3e4703f1763223024f442c0826e95055782bca13",
+    "refs/heads/poc/data-pwm-d7b-r3": "272d6de6d2f2fc8a82d5038d73d6b3e4c656f683"
+   }
+  }
+ },
+ "repair_of": "DATA-7C-A-R2",
+ "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
+ "review_input": {
+  "documents_committed": "the review package is referenced by path and digest, not committed; the task book copy is committed byte for byte",
+  "instruments": [
+   {
+    "bytes": 8874,
+    "modified_by_this_round": "NO",
+    "path": "review/MicroLED_DATA7C_A_R1_Review_20261023/reviewer/probe_r1_remaining.py",
+    "role": "the seven remaining gaps of the R1 review; run against the R2 extraction as the baseline copy and against this tree as the repaired copy",
+    "sha256": "c23ec4ff687033e12de11d0e324333d7d91ed6e4d97fb1f340ff542732b14658"
+   },
+   {
+    "bytes": 7458,
+    "modified_by_this_round": "NO",
+    "path": "review/MicroLED_DATA7C_A_R1_Review_20261023/reviewer/probe_review_gaps.py",
+    "role": "the eight original gaps; re-run here only as a regression that R2 closed them",
+    "sha256": "b65b0ca1bdd807e83f514294c3499ab7ab6a9ea20a1aac5b088365ca82d5658e"
+   },
+   {
+    "bytes": 5778,
+    "modified_by_this_round": "NO",
+    "path": "review/MicroLED_DATA7C_A_R1_Review_20261023/reviewer/audit_r1_identity.py",
+    "role": "NOT RUN this round as well: it reads a clone at reviewer/repo and a prior-round task book path that exist only on the review machine",
+    "sha256": "ae088d4db6ed6ea9339db42ffd2b58d8fb2cb832705d5e15637d0cdeb382b4dc"
+   }
+  ],
+  "package_of_the_previous_review": "C:/Users/LMX/Downloads/MicroLED_DATA7C_A_R1_Independent_Review_20261023.zip"
+ },
+ "schema_version": "1.0",
+ "scope": "OFFLINE_NATIVE_PREPARATION_CONTRACT_DECKS_AND_MEASUREMENT_CODE_ONLY",
+ "source_identity": {
+  "delivered": [
+   {
+    "bytes": 11722,
+    "path": "reports/dd1_d7c_b_prep_contract.md",
+    "role": "delivered this round",
+    "sha256": "052fae14003a7b7e63949cf129a378f78c5e68ad482c9ed351036a5782237fff"
+   },
+   {
+    "bytes": 13344,
+    "path": "reports/dd1_d7c_b_prep_report.md",
+    "role": "delivered this round",
+    "sha256": "2f4bf55175c3b97d54845397c42e74631c83a0ccc31204f8b9e24454369a313e"
+   },
+   {
+    "bytes": 18448,
+    "path": "reports/tasks/DATA-7C-B-PREP.md",
+    "role": "delivered this round",
+    "sha256": "40a3eb148e038c4fb6ea4d5a7d48de4b2e9b22e6a34a685c34f912f2a3c8b126"
+   },
+   {
+    "bytes": 26991,
+    "path": "scripts/dd1_d7c_b_prep_cases.py",
+    "role": "delivered this round",
+    "sha256": "040492e3732d026054bdcc79954b693b0806f5797d6e6518400573ef5835de6d"
+   },
+   {
+    "bytes": 33735,
+    "path": "scripts/dd1_d7c_b_prep_contract.py",
+    "role": "delivered this round",
+    "sha256": "296b94f6c4549dbb94652924d5b7cfb9ad922556f4ceb14c765683f0ca270c1e"
+   },
+   {
+    "bytes": 20364,
+    "path": "scripts/dd1_d7c_b_prep_deckgen.py",
+    "role": "delivered this round",
+    "sha256": "507506f132317d3c27613c9513138f8b35fc0e1c63452cd9fd9f8f65fde36524"
+   },
+   {
+    "bytes": 17586,
+    "path": "scripts/dd1_d7c_b_prep_measure.py",
+    "role": "delivered this round",
+    "sha256": "b7f96c3d1e8692e5d749200259a113556ada16d3943d547223ea551375a9663c"
+   },
+   {
+    "bytes": 34463,
+    "path": "scripts/dd1_d7c_b_prep_schedule.py",
+    "role": "delivered this round",
+    "sha256": "4f118a2a438825c67c4c3059a9fe6f33f3fe27754c1745dc5f02bc87725898bb"
+   },
+   {
+    "bytes": 44964,
+    "path": "scripts/dd1_d7c_b_prep_verify.py",
+    "role": "delivered this round",
+    "sha256": "662745b678d3ba6101287a0e702acad12e91645c3d5f48dd8b54d46849e9a001"
+   },
+   {
+    "bytes": 4332,
+    "path": "spectre/dd1_d7c_b_prep/DC-000.scs",
+    "role": "delivered this round",
+    "sha256": "f24fe0cf330665905123ef749662870c7384482662fcc5cc051e4fe0ca72d368"
+   },
+   {
+    "bytes": 4331,
+    "path": "spectre/dd1_d7c_b_prep/DC-001.scs",
+    "role": "delivered this round",
+    "sha256": "1e6ab00300e54ce4d5770409401bcd3ce7047a6400e94c812110b8695ee40c0f"
+   },
+   {
+    "bytes": 4332,
+    "path": "spectre/dd1_d7c_b_prep/DC-010.scs",
+    "role": "delivered this round",
+    "sha256": "10de4ca1b939208910016baefaf9289e6dd276bebda438245a8c608d86c05532"
+   },
+   {
+    "bytes": 4330,
+    "path": "spectre/dd1_d7c_b_prep/DC-011.scs",
+    "role": "delivered this round",
+    "sha256": "4c33cd061152f8379e9ebbd61939d9a028bf6cb1aecad5c30084acd1da6807c4"
+   },
+   {
+    "bytes": 4332,
+    "path": "spectre/dd1_d7c_b_prep/DC-100.scs",
+    "role": "delivered this round",
+    "sha256": "ca387e0a8d9520f451a8a36de77ca86d7f99ab12ad80dd7e1c13b373f697dfb6"
+   },
+   {
+    "bytes": 4332,
+    "path": "spectre/dd1_d7c_b_prep/DC-101.scs",
+    "role": "delivered this round",
+    "sha256": "aa51117c54f4befb7494dd85c819deab53bba73d6437516db09aa90816d84937"
+   },
+   {
+    "bytes": 4333,
+    "path": "spectre/dd1_d7c_b_prep/DC-110.scs",
+    "role": "delivered this round",
+    "sha256": "4e39d176c41132e49772b0cf531f73ccd6c8875d7e9c4d907112ab4538d1fb9e"
+   },
+   {
+    "bytes": 4329,
+    "path": "spectre/dd1_d7c_b_prep/DC-111.scs",
+    "role": "delivered this round",
+    "sha256": "5def9c63f27a023c11029a414c83871add3615201abb2b1c6f7662abfdf6105a"
+   },
+   {
+    "bytes": 7376,
+    "path": "spectre/dd1_d7c_b_prep/RS-FULL.scs",
+    "role": "delivered this round",
+    "sha256": "c092abc53193a84a6bdde7fb3ab891525a2f8297be265aa30d7c734cb74be7d3"
+   },
+   {
+    "bytes": 5531,
+    "path": "spectre/dd1_d7c_b_prep/RS-LOW.scs",
+    "role": "delivered this round",
+    "sha256": "76204894c72d00d317f88c0508819545fd1ffa8f07ed02cea35c88442f4164e0"
+   },
+   {
+    "bytes": 6407,
+    "path": "spectre/dd1_d7c_b_prep/RS-SWITCH.scs",
+    "role": "delivered this round",
+    "sha256": "9408634e41204955e5b57c4743f9271cbd1886f05b84e7920e088d4fb93e4ccf"
+   },
+   {
+    "bytes": 5442,
+    "path": "spectre/dd1_d7c_b_prep/TR-120.scs",
+    "role": "delivered this round",
+    "sha256": "edba92ea3aeb1fa3abb87a5b9813281ebf5a8af561b6627421e90ac497eba33b"
+   },
+   {
+    "bytes": 5441,
+    "path": "spectre/dd1_d7c_b_prep/TR-200.scs",
+    "role": "delivered this round",
+    "sha256": "9361d4587e6f33d954c6ba765f63ce31e352e5050da17c86d1240edd145922c5"
+   },
+   {
+    "bytes": 7286,
+    "path": "spectre/dd1_d7c_b_prep/TR-LONG.scs",
+    "role": "delivered this round",
+    "sha256": "547deb878371982ce2ec79ece4494de4ccf1a5045217de4a0b469c9499b6bf1d"
+   },
+   {
+    "bytes": 6324,
+    "path": "spectre/dd1_d7c_b_prep/TR-OFFCODE.scs",
+    "role": "delivered this round",
+    "sha256": "174255530840808270023bc7115c6910b3b5e27876cba152f4386f33f64b2869"
+   },
+   {
+    "bytes": 13062,
+    "path": "tests/dd1_d7c_b_prep/contract.json",
+    "role": "delivered this round",
+    "sha256": "ded5c7b759146529eb2c123202c94ad468e90c85ec1432d555252002892095f9"
+   },
+   {
+    "bytes": 17290,
+    "path": "tests/dd1_d7c_b_prep/pwl.csv",
+    "role": "delivered this round",
+    "sha256": "059f21750e32e63779b762eea4deb16dd4929d155142f68cb1351f35603498cc"
+   },
+   {
+    "bytes": 10630,
+    "path": "tests/dd1_d7c_b_prep/schedule.csv",
+    "role": "delivered this round",
+    "sha256": "4c1e6a46097b5343006b6b7fad6cbc16838d62bd9a5a9a22a9a328c56011752c"
+   },
+   {
+    "bytes": 20825,
+    "path": "tests/dd1_d7c_b_prep/windows.csv",
+    "role": "delivered this round",
+    "sha256": "755f5e43b5f750a46a99f1f50934cbc74c3bb2a3111512c8a11499d2487fd3cc"
+   }
+  ],
+  "note": "digests recomputed from disk at generation time; this file carries no digest of itself or of the archive built from it. The record directory is named, not digested, because it is published after this file.",
+  "read_only_inputs": [
+   {
+    "bytes": 14552,
+    "path": "AGENTS.md",
+    "role": "read-only input, unmodified",
+    "sha256": "74d686b287bafe8e0bdd245bd95ba2e6bc61aee3b329d9f8f031500635adfc13"
+   },
+   {
+    "bytes": 29725,
+    "path": "reports/agent_handoffs/DATA-7C-A.json",
+    "role": "read-only input, unmodified",
+    "sha256": "3226d9187496482f8206c150c29f2e7266228fb71d8c94e6dd31d9e30aa33cdc"
+   },
+   {
+    "bytes": 30589,
+    "path": "reports/agent_handoffs/DATA-7C-A.md",
+    "role": "read-only input, unmodified",
+    "sha256": "35ae670a2b076bb9243ed623717b3c1ed8c7914e1dacaa7176702c7200cebac4"
+   },
+   {
+    "bytes": 16759,
+    "path": "reports/dd1_d7a_contract.md",
+    "role": "read-only input, unmodified",
+    "sha256": "37f55cb9f0783e2f184ad360f69ee07526f1aba5d39f6698388826b3b8652284"
+   },
+   {
+    "bytes": 25572,
+    "path": "reports/dd1_d7b_contract.md",
+    "role": "read-only input, unmodified",
+    "sha256": "44bea6ff4cfc4236002ad97b002f490295a93a0e5bc975f91930e443c9035478"
+   },
+   {
+    "bytes": 15479,
+    "path": "reports/tasks/DATA-7C-A-R1.md",
+    "role": "read-only input, unmodified",
+    "sha256": "795c865c4556ec9629ccecc96ab1c6726aa1cc2bccb333e4004c50c0f61f2b38"
+   },
+   {
+    "bytes": 14180,
+    "path": "reports/tasks/DATA-7C-A-R2.md",
+    "role": "read-only input, unmodified",
+    "sha256": "dcd29c277cc66ab01bbff28a45bf428d03aa6282c90e78686a268f6c09c228d4"
+   },
+   {
+    "bytes": 20917,
+    "path": "reports/tasks/DATA-7C-A.md",
+    "role": "read-only input, unmodified",
+    "sha256": "3b55cef702da35786d68b533c0af363b4e6419d62acc2cd9d94ee7bf6051f180"
+   },
+   {
+    "bytes": 3139,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/commands.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "2d5d86725f98e881f85e77c03967e6c0fcdc84ae7f141930a83c20452b8132aa"
+   },
+   {
+    "bytes": 27704,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/counterexamples.json",
+    "role": "read-only input, unmodified",
+    "sha256": "0c797adf3b0ae44485f5b2796a9dec2dbe62a9806ec66a4346d385cc1f20faed"
+   },
+   {
+    "bytes": 2027,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/frozen_comparison.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "f86095ebf7bf7a2483264dda87592f5d7d809fc31ec8cb762dda04cb07b19256"
+   },
+   {
+    "bytes": 309,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/git_checks.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "242d15f63f28209584069338173f8ff78ad192c4637f1cff60387397a7c09815"
+   },
+   {
+    "bytes": 8504,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/instrument_T.json",
+    "role": "read-only input, unmodified",
+    "sha256": "fd4a36bb6ddfd3769f5129579df08190fabca0bf579a08e46d6f72a8dd38b344"
+   },
+   {
+    "bytes": 9135,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/instrument_fixed.json",
+    "role": "read-only input, unmodified",
+    "sha256": "aba419f8983ef515edf052031ef0128ab176412989a2a8220ddb4cdac5af0f9d"
+   },
+   {
+    "bytes": 7574,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/offline_checks.json",
+    "role": "read-only input, unmodified",
+    "sha256": "3b1a7d8658e18fef3ada62e401e496cef7dc0dde342b17c4fd46b7496508d8e2"
+   },
+   {
+    "bytes": 2411,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/selftest.json",
+    "role": "read-only input, unmodified",
+    "sha256": "93953832b5b97c0e90856dbbbd16a42154000c99a4e51bc23bd758dbc646d866"
+   },
+   {
+    "bytes": 4590,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/source_identity.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "9ed3010970451e0de881d1690696f36ee2a51e9cf09386b670ddef1003dfd907"
+   },
+   {
+    "bytes": 1922,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/verification_summary.json",
+    "role": "read-only input, unmodified",
+    "sha256": "4aa7ac8bece8ec8a6e6ef36606a980435159280e7cc78a40a743dd78fabeb3f8"
+   },
+   {
+    "bytes": 3630,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08/commands.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "b27584ff11f54d0309de95dffed97642d5894915427bc2faf0cfa7b30ec3f590"
+   },
+   {
+    "bytes": 27704,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08/counterexamples.json",
+    "role": "read-only input, unmodified",
+    "sha256": "cf76de91d1e514cdc15daeaa90c00fb6c6d0fe3bc9e235b578e02ea4e109bb7e"
+   },
+   {
+    "bytes": 2097,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08/frozen_comparison.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "2da8da6c5cdea251ff8bab9ea49c134427145a4d8e7a18fae6026c9eb83d6d72"
+   },
+   {
+    "bytes": 309,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08/git_checks.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "242d15f63f28209584069338173f8ff78ad192c4637f1cff60387397a7c09815"
+   },
+   {
+    "bytes": 8504,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08/instrument_T.json",
+    "role": "read-only input, unmodified",
+    "sha256": "fd4a36bb6ddfd3769f5129579df08190fabca0bf579a08e46d6f72a8dd38b344"
+   },
+   {
+    "bytes": 9135,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08/instrument_fixed.json",
+    "role": "read-only input, unmodified",
+    "sha256": "aba419f8983ef515edf052031ef0128ab176412989a2a8220ddb4cdac5af0f9d"
+   },
+   {
+    "bytes": 7574,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08/offline_checks.json",
+    "role": "read-only input, unmodified",
+    "sha256": "3b1a7d8658e18fef3ada62e401e496cef7dc0dde342b17c4fd46b7496508d8e2"
+   },
+   {
+    "bytes": 2411,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08/selftest.json",
+    "role": "read-only input, unmodified",
+    "sha256": "93953832b5b97c0e90856dbbbd16a42154000c99a4e51bc23bd758dbc646d866"
+   },
+   {
+    "bytes": 4590,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08/source_identity.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "5c93a8675c114be6bb15862fcd8aacad4e372edb5447a1e025dc8e0eec39a0a4"
+   },
+   {
+    "bytes": 2694,
+    "path": "results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08/verification_summary.json",
+    "role": "read-only input, unmodified",
+    "sha256": "c760ee1afb144b96b428a6a90361c13754da7cfec291291d69ff8c658c6efb51"
+   },
+   {
+    "bytes": 1590,
+    "path": "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/commands.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "4b27a557db928dd48570073afddfb3caf6f249dd5289a661e199b3bf645d8704"
+   },
+   {
+    "bytes": 10170,
+    "path": "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/counterexamples.json",
+    "role": "read-only input, unmodified",
+    "sha256": "d2a731ae3ebf54b503339249d1a072c936872da19e9fcc0183d9ce71ba7a7d63"
+   },
+   {
+    "bytes": 364,
+    "path": "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/frozen_comparison.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "00cac605e183ff99707c5584efa550abbf713aab295b9008d2addf467b86269a"
+   },
+   {
+    "bytes": 180,
+    "path": "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/git_checks.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "16388fe418418c9e32bcdfab8dc401f7b6fedc2a897e37bd9080ac991dcc878c"
+   },
+   {
+    "bytes": 5183,
+    "path": "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/offline_checks.json",
+    "role": "read-only input, unmodified",
+    "sha256": "622736c01c09dbea28cd0351d5c8c10986764a7e67c7973c8cc318a75fbbd00d"
+   },
+   {
+    "bytes": 2954,
+    "path": "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/source_identity.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "ce423b917031fa4b6d734cb8d563b4e571b22f413f90bc76d0eb2ffa057d3e1f"
+   },
+   {
+    "bytes": 1831,
+    "path": "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0/verification_summary.json",
+    "role": "read-only input, unmodified",
+    "sha256": "aeb0598a061b4a65bea0aaf02fe7d3169e87806d123d8e67c057ca0a85b27064"
+   },
+   {
+    "bytes": 5188,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_134109_00c811/commands.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "c18d8971c48d62937699683ea59f96a45a4904bd2ce1c9599fb46faf080f5613"
+   },
+   {
+    "bytes": 54667,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_134109_00c811/counterexamples.json",
+    "role": "read-only input, unmodified",
+    "sha256": "fa27f5ac0c52f33d35f4072855a375219d9097a7703de03e44434e3a04348235"
+   },
+   {
+    "bytes": 2242,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_134109_00c811/frozen_comparison.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "c6e27bb82208fbc75bc80d8cf523cc4b6b5cca6adc4e9938dc95340b9dc244a8"
+   },
+   {
+    "bytes": 501,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_134109_00c811/git_checks.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "e566e04f9194d64f0ccc623a2a73f53b56175b28ff99122ecdacc90224d99955"
+   },
+   {
+    "bytes": 8504,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_134109_00c811/instrument_T.json",
+    "role": "read-only input, unmodified",
+    "sha256": "fd4a36bb6ddfd3769f5129579df08190fabca0bf579a08e46d6f72a8dd38b344"
+   },
+   {
+    "bytes": 9403,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_134109_00c811/instrument_fixed.json",
+    "role": "read-only input, unmodified",
+    "sha256": "3be9c2fe0baef9f319b42c263b6259145fedc14e4a3584d0f119c73380cb2adc"
+   },
+   {
+    "bytes": 4713,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_134109_00c811/instrument_remaining_H.json",
+    "role": "read-only input, unmodified",
+    "sha256": "a98108cc4a83a49d9beae947662612befc87ec2bfdf2bde68fbc7a55f868c740"
+   },
+   {
+    "bytes": 5157,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_134109_00c811/instrument_remaining_fixed.json",
+    "role": "read-only input, unmodified",
+    "sha256": "73a96218c0afd7585df21c9238968450a5403bd422340880f64bee72ece9e10d"
+   },
+   {
+    "bytes": 8738,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_134109_00c811/offline_checks.json",
+    "role": "read-only input, unmodified",
+    "sha256": "f5d2e3a6b1f9dcd6a0e708a0c34ab22ff90f25eaa342934a54cbccdd994f1c12"
+   },
+   {
+    "bytes": 2421,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_134109_00c811/selftest.json",
+    "role": "read-only input, unmodified",
+    "sha256": "851653c5789f10642f4d9c513ec96ef8d15fb059b1ed494ed3a961dde9303ab7"
+   },
+   {
+    "bytes": 5346,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_134109_00c811/source_identity.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "b4d82a5e0abf79f27a45b87ea6fc7c26e733e83cbf1fae495e12ee8926606cb7"
+   },
+   {
+    "bytes": 2846,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_134109_00c811/verification_summary.json",
+    "role": "read-only input, unmodified",
+    "sha256": "bfc761156409e4187fc9208f342c28940aacccbd8e7f4d9a88969c3c55466be6"
+   },
+   {
+    "bytes": 5011,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_135600_10e307/commands.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "1a6c546334edfb8e9ce46788fb3bcb5181f1a3f2c98f468f8f0a820f0af38cf5"
+   },
+   {
+    "bytes": 54667,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_135600_10e307/counterexamples.json",
+    "role": "read-only input, unmodified",
+    "sha256": "2fb3dea71c158c69db7573f3957e3da072e91c474921082485d59e9a28f91c7d"
+   },
+   {
+    "bytes": 2242,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_135600_10e307/frozen_comparison.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "c6e27bb82208fbc75bc80d8cf523cc4b6b5cca6adc4e9938dc95340b9dc244a8"
+   },
+   {
+    "bytes": 501,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_135600_10e307/git_checks.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "e566e04f9194d64f0ccc623a2a73f53b56175b28ff99122ecdacc90224d99955"
+   },
+   {
+    "bytes": 8504,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_135600_10e307/instrument_T.json",
+    "role": "read-only input, unmodified",
+    "sha256": "fd4a36bb6ddfd3769f5129579df08190fabca0bf579a08e46d6f72a8dd38b344"
+   },
+   {
+    "bytes": 9403,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_135600_10e307/instrument_fixed.json",
+    "role": "read-only input, unmodified",
+    "sha256": "00989acccf1129b9a89e768c5eb84fde622016e78bdb0ef5dafe936658f90283"
+   },
+   {
+    "bytes": 4713,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_135600_10e307/instrument_remaining_H.json",
+    "role": "read-only input, unmodified",
+    "sha256": "a98108cc4a83a49d9beae947662612befc87ec2bfdf2bde68fbc7a55f868c740"
+   },
+   {
+    "bytes": 5157,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_135600_10e307/instrument_remaining_fixed.json",
+    "role": "read-only input, unmodified",
+    "sha256": "73a96218c0afd7585df21c9238968450a5403bd422340880f64bee72ece9e10d"
+   },
+   {
+    "bytes": 8738,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_135600_10e307/offline_checks.json",
+    "role": "read-only input, unmodified",
+    "sha256": "f5d2e3a6b1f9dcd6a0e708a0c34ab22ff90f25eaa342934a54cbccdd994f1c12"
+   },
+   {
+    "bytes": 2421,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_135600_10e307/selftest.json",
+    "role": "read-only input, unmodified",
+    "sha256": "851653c5789f10642f4d9c513ec96ef8d15fb059b1ed494ed3a961dde9303ab7"
+   },
+   {
+    "bytes": 5346,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_135600_10e307/source_identity.csv",
+    "role": "read-only input, unmodified",
+    "sha256": "9956b63379db2cf06375f02855e3dc04e002ca014f77ca4d0c769c7a7b4f398e"
+   },
+   {
+    "bytes": 2678,
+    "path": "results/evidence/dd1_d7c_a_r2_20261023_135600_10e307/verification_summary.json",
+    "role": "read-only input, unmodified",
+    "sha256": "ce6150fef1e640810eadb1d03bea70ed16d1b02bad6acd271062b3df561b1260"
+   },
+   {
+    "bytes": 12982,
+    "path": "rtl/dd1_d7a_gray_ctrl.sv",
+    "role": "read-only input, unmodified",
+    "sha256": "6dbf464a49e49ad489188fa51920c30a3c89d6b3106046a4fefe558ef0a50c87"
+   },
+   {
+    "bytes": 7821,
+    "path": "spec/system_requirements.md",
+    "role": "read-only input, unmodified",
+    "sha256": "7afa5de1d62a17d93000f0f698ce2af8e810d28632a046568d64c664e3cbc7ae"
+   },
+   {
+    "bytes": 1259,
+    "path": "spectre/current_probe_syntax.scs",
+    "role": "read-only input, unmodified",
+    "sha256": "59e7bbbef10c4e989e4b8317871022ab4f3b1b02f1cc89e7db1c8858777be426"
+   },
+   {
+    "bytes": 182,
+    "path": "spectre/dd1_d6_bias_core.scs",
+    "role": "read-only input, unmodified",
+    "sha256": "4115e2d17a86fb92e7c222df085f1d1a82da14cb7640654d90f4e2589e9b31e7"
+   },
+   {
+    "bytes": 879,
+    "path": "spectre/dd1_d6_control.scs",
+    "role": "read-only input, unmodified",
+    "sha256": "e8c5a896aed129979cd5a60e5f12ecfe16b63a2721607efae1609d9750dfe240"
+   },
+   {
+    "bytes": 1128,
+    "path": "spectre/dd1_d6_inv18.scs",
+    "role": "read-only input, unmodified",
+    "sha256": "04cd6833087511465aba06a3d2ba2f1ba71a49cce1ae962febff3b3eb1e4d79b"
+   },
+   {
+    "bytes": 510,
+    "path": "spectre/dd1_d6_sink_core.scs",
+    "role": "read-only input, unmodified",
+    "sha256": "6cfe2338014a4b152833ef1974f197b0e4c65e963947f57f0cc8b79b73ee91db"
+   },
+   {
+    "bytes": 925,
+    "path": "spectre/dd1_d6_sink_unit.scs",
+    "role": "read-only input, unmodified",
+    "sha256": "8aefe2399f6e5195c262ddb82d239e6d0b5bcd228f6443cd285095276255a1cf"
+   },
+   {
+    "bytes": 978,
+    "path": "spectre/dd1_d6_top.scs",
+    "role": "read-only input, unmodified",
+    "sha256": "e38c17e9f40adb788ced532e7be4f886ed7c665a2ab77a5ca34541b0c6ddc86d"
+   }
+  ]
+ },
+ "stop_reason": "AWAITING_INDEPENDENT_REVIEW_OF_NATIVE_PREPARATION",
+ "task_book": {
+  "byte_identical_to_the_brief": true,
+  "bytes": 18448,
+  "line_endings": "LF, so the committed blob equals the source bytes",
+  "path": "reports/tasks/DATA-7C-B-PREP.md",
+  "sha256": "40a3eb148e038c4fb6ea4d5a7d48de4b2e9b22e6a34a685c34f912f2a3c8b126",
+  "source": "C:/Users/LMX/Downloads/TASK_DATA7C_B_PREP_20261023.md"
+ },
+ "task_id": "DATA-7C-B-PREP",
+ "user_approved": "NO",
+ "worktree": "D:\\ic617_d7c_b_prep"
+}
