@@ -1,0 +1,8 @@
+comparison,surface,paths_compared,mismatched,first_mismatches,expectation,enforced
+this_round,every_R2_tracked_path_vs_tip,2613,0,,identical,yes
+this_round,four_candidate_DUT_netlists,4,0,,identical,yes
+this_round,shared_tools_and_safety_rules,14,0,,identical,yes
+this_round,previous_round_record_dirs,51,0,,identical,yes
+this_round,paths_added_this_round,68,0,,only_allowed_new,yes
+this_round,paths_removed_or_modified_vs_R2,0,0,,none_removed,yes
+this_round,added_paths_listed_for_the_reviewer,68,0,reports/agent_handoffs/DATA-7C-B-PREP.json;reports/agent_handoffs/DATA-7C-B-PREP.md;reports/dd1_d7c_b_prep_contract.md,informational_listing,no

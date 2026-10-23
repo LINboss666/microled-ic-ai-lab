@@ -1,0 +1,4 @@
+gate,command,rc,lines,scope
+diff_check_R2_to_HEAD,git diff --check 3e4703f1763223024f442c0826e95055782bca13..HEAD,0,0,committed range from 3e4703f17632 to HEAD at 2026-10-23T19:00:40Z
+diff_check_T_to_HEAD,git diff --check 89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79..HEAD,0,0,committed range from 89b3dd8e244e to HEAD at 2026-10-23T19:00:40Z
+diff_check_base_to_HEAD,git diff --check 272d6de6d2f2fc8a82d5038d73d6b3e4c656f683..HEAD,0,0,committed range from 272d6de6d2f2 to HEAD at 2026-10-23T19:00:40Z
