@@ -77,6 +77,9 @@ OPEN_BY_DESIGN = A_VERIFY.REMAINING_OPEN_BY_DESIGN[0]
 # source_identity.csv may hold these twice, and the handoff may not hold them at all
 HANDOFF_SELF = ('reports/agent_handoffs/DATA-7C-B-PREP.json',
                 'reports/agent_handoffs/DATA-7C-B-PREP.md')
+# the preparation report is rendered by this run, after the tip has been measured, so the digest the
+# identity table quotes is of the bytes this run wrote; the blob at the tip is its pre-render form
+RENDERED_BY_THIS_RUN = ('reports/dd1_d7c_b_prep_report.md',)
 TABLE_SPECS = {
     'commands.csv': (['gate', 'command', 'rc', 'expected_rc', 'verdict_state', 'verdict'], 'gate', ()),
     'frozen_comparison.csv': (['comparison', 'surface', 'paths_compared', 'mismatched',
@@ -179,11 +182,23 @@ def comparisons(tip):
     return rows, counts
 
 
+def _shown(path):
+    """a path a reviewer can rebuild, never a host account name and never a range error
+
+    Repo-relative when the record lives in the repository; on Windows a temporary directory can sit on
+    another mount, where os.path.relpath raises rather than answers.
+    """
+    try:
+        return os.path.relpath(path, ROOT).replace(os.sep, '/')
+    except ValueError:
+        return '<out>/' + os.path.basename(path)
+
+
 def instrument_gate(name, script, root, out_json, expect, key, open_allowed=()):
     """run a reviewer instrument unmodified and read it item by item, never off the aggregate rc"""
     shown = '<extraction of %s>' % ('T' if root.endswith('T') else
                                     'R2' if root.endswith('R2') else 'this tree')
-    command = 'python %s --root %s --out <json>' % (os.path.relpath(script, ROOT), shown)
+    command = 'python %s --root %s --out <json>' % (_shown(script), shown)
     if not (os.path.isfile(script) and os.path.isdir(root)):
         return {'gate': name, 'command': command, 'rc': 'not_run', 'expected_rc': str(expect),
                 'verdict': 'NOT_ATTEMPTED: the instrument or its target tree is absent',
@@ -216,7 +231,7 @@ def instrument_gate(name, script, root, out_json, expect, key, open_allowed=()):
     state = 'PASS' if (code == expect and not bad and baseline_ok and cases and
                        payload.get('spectre_launches', 0) == 0) else 'FAIL'
     return {'gate': name, 'command': 'python %s --root %s --out %s'
-            % (os.path.relpath(script, ROOT), shown, os.path.relpath(out_json, ROOT)),
+            % (_shown(script), shown, _shown(out_json)),
             'rc': code, 'expected_rc': str(expect),
             'verdict': 'baseline_checks=%s baseline_failures=%s items=%d/%d expected_rc=%s %s%s'
                        % (payload.get('baseline_checks'), payload.get('baseline_failures') or 'none',
@@ -751,8 +766,11 @@ def main(argv):
             if os.path.isfile(target):
                 identity.append({'role': 'kept record of a superseded publish attempt'
                                  if rel.startswith(SUPERSEDED_RECORD + '/') else
-                                 ('delivered this round' if rel in counts['added']
-                                  else 'frozen candidate netlist'),
+                                 ('this run rewrote it after measuring the tip, so the digest is of '
+                                  'the bytes it wrote, not of the blob at %s' % tip[:12]
+                                  if rel in RENDERED_BY_THIS_RUN else
+                                  ('delivered this round' if rel in counts['added']
+                                   else 'frozen candidate netlist')),
                                  'path': rel, 'bytes': os.path.getsize(target),
                                  'sha256': CHECK.sha_file(target)})
         for rel in HANDOFF_SELF:
@@ -829,7 +847,13 @@ def main(argv):
     failures = [r['gate'] for r in results if r['verdict_state'] == 'FAIL']
     informational = [r['gate'] for r in results if r['verdict_state'] not in ('PASS', 'FAIL')]
     summary = {'task_id': TASK_ID, 'base_r2': BASE_R2, 'reviewed_tip_T': REVIEWED_T,
+               'reviewed_tip_H': REVIEWED_H,
                'development_base': DEVELOPMENT_BASE, 'branch': BRANCH, 'tip': tip,
+               'superseded_publish_attempts': [SUPERSEDED_RECORD,
+                                               '<review/scratch/aborted_attempt2_* and '
+                                               'aborted_attempt3_*, kept whole outside the repository>'],
+               'identity_paths_rewritten_by_this_run': [rel for rel in RENDERED_BY_THIS_RUN
+                                                        if rel in counts['added']],
                'contract_state': CONTRACT.CONTRACT_STATE,
                'generated_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
                'gates': len(results), 'gates_failed': failures,
@@ -849,13 +873,17 @@ def main(argv):
                'electrical_results': 'NONE: every number in this record is text, arithmetic, table '
                                      'shape or Git identity; the synthetic measurement results are '
                                      'labelled SYNTHETIC_NOT_MEASURED'}
-    recheck, recheck_facts = RECORD.check_record(out_dir, BASE_R2, summary_exists=False)
+    recheck, recheck_facts = RECORD.check_record(out_dir, summary_exists=False)
     summary['published_record_recheck'] = {
         'problems': recheck[:12], 'facts': recheck_facts,
         'verdict': 'PASS' if not recheck else 'FAIL',
-        'note': 'judged over the bytes as published, before this summary line existed; a reviewer '
-                're-runs it with: python scripts/dd1_d7c_a_r2_record_check.py --record '
-                'results/evidence/<run_id> --git-ref <tip> --source-root <worktree>'}
+        'note': 'judged over the bytes as published, before this summary line existed, and with no '
+                'revision binding: this run rewrites the preparation report after measuring the tip, '
+                'so the quoted digest of that one file is of the bytes it wrote. A reviewer who wants '
+                'the Git binding re-runs it against the commit that publishes this record, which is '
+                'the first revision where every quoted digest is also a blob: '
+                'python scripts/dd1_d7c_a_r2_record_check.py --record results/evidence/<run_id> '
+                '--git-ref <that commit> --source-root <work tree at that commit>'}
     print('GATE %-38s %s %s' % ('published_record_recheck',
                                 summary['published_record_recheck']['verdict'],
                                 (recheck[:1] or ['no semantic problem'])[0][:110]))

@@ -90,7 +90,7 @@
   "D5_integration_window_is_narrower_than_the_platform"
  ],
  "evidence_dir": "results/evidence/dd1_d7c_b_prep_20261023_175526_9753e7",
- "head_sha": "50cb9a3c09a11105f4d87bd21447e4b18824826c",
+ "head_sha": "18233e67cb1f48363dd9c27a6ac235f2ec07897a",
  "head_sha_role": "the commit at generation time; the commit carrying this file and the record are above it, and the read-back of those is in remote_readback",
  "inherited_informational_items": [
   {
@@ -250,10 +250,10 @@
     "sha256": "052fae14003a7b7e63949cf129a378f78c5e68ad482c9ed351036a5782237fff"
    },
    {
-    "bytes": 27557,
+    "bytes": 13348,
     "path": "reports/dd1_d7c_b_prep_report.md",
     "role": "delivered this round",
-    "sha256": "c98a07facd65d595fba8b29c6e34d60bc1bac3d159fc75442a644b7e79543f9f"
+    "sha256": "078e73ffe90cf1018c750ad5b7bf3b74e20466efa5ce8402a8b69ecf780130b6"
    },
    {
     "bytes": 18448,
@@ -340,10 +340,10 @@
     "sha256": "4f118a2a438825c67c4c3059a9fe6f33f3fe27754c1745dc5f02bc87725898bb"
    },
    {
-    "bytes": 55621,
+    "bytes": 57405,
     "path": "scripts/dd1_d7c_b_prep_verify.py",
     "role": "delivered this round",
-    "sha256": "dcaa60e05b92af560110658f12a7cc7c493a15c9102a05d7cec9e2ad33a96229"
+    "sha256": "7ae9d471809df53b829a102f430e963c4041afe6a503f72c3025c4ef6dcf2296"
    },
    {
     "bytes": 4332,
