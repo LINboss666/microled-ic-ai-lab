@@ -1,6 +1,6 @@
 # DATA-7B 交接（单通道固定电流 PWM 响应验证）
 
-日期 2026-10-21 交付，2026-10-22 由 **DATA-7B-R1** 更正工具、复算证据并修订本交接，2026-10-23 由 **DATA-7B-R2** 关闭预算权威、账本耐久与时间语义（§10），同日由 **DATA-7B-R3** 补账户非法状态拒收并更正交接残留值与解释（§11）。§1–§9 是 T/R1 的事实记录，§10 是 R2 的，均不抹去、不改写，只在其下追加更正。
+日期 2026-10-21 交付，2026-10-22 由 **DATA-7B-R1** 更正工具、复算证据并修订本交接，2026-10-23 由 **DATA-7B-R2** 关闭预算权威、账本耐久与时间语义（§10），同日由 **DATA-7B-R3** 补账户非法状态拒收并更正交接残留值与解释（§11），同日 R3 独立复审给出限定 GO 并按用户授权登记限定接受版本（§12）。§1–§9 是 T/R1 的事实记录，§10 是 R2 的，§11 是 R3 返修的，均不抹去、不改写，只在其下追加更正。
 任务书四份逐字节副本：`reports/tasks/DATA-7B.md`（SHA-256
 `0f4db71f752aef5db9869fe097703a423266f433ee2e4040f621c7b0c6e21389`，34,198 B）与
 `reports/tasks/DATA-7B-R1.md`（SHA-256
@@ -187,3 +187,66 @@ R3 关闭的唯一代码缺陷（F1）：`Account` 与复核器都只按已知�
 修法是在读入后、`recover()/_restamp()/flush()` 前对全部行做枚举并抛错（拒收时保留原字节），
 `counts()`/`_restamp()` 同样拒绝内存中被改坏的行，复核器新增 `ACCOUNT_STATES_VALID` 对所有行核对。
 R2 §10 与上文各节是 R2 时点的事实，不追改；本节与 `corrections_r3` 只登记更正关系。
+
+## 12 R3 独立复审结论与限定接受登记（2026-10-23，用户授权）
+
+复审材料身份：`MicroLED_DATA7B_R3_Independent_Review_20261023.zip`，41,310 B，SHA-256
+`02c8c1c06b75a424dea254377c418024de5e25127c1df485309eeca4db0d2586`，25 个文件（含 `MANIFEST.csv` 自身）。
+其中 5 份文档逐字节入库到 `reports/reviews/DATA-7B-R3/`（`REVIEW_DATA7B_R3.md` 12,401 B
+`58ec921b…`、`README.md` 2,275 B `ddd758ab…`、`review_summary.json` 1,583 B `e5f12881…`、
+`source_identity.json` 12,778 B `c10c46ba…`、`MANIFEST.csv` 2,245 B），入库前后摘要一致且原文件本就 LF-only，
+Git 未再做行尾归一化。审核方的 4 份 Python 与 `checks/` 原始输出**不入库**，只按 `MANIFEST.csv` 的行摘要引用——
+它们的原字节在审核方的 ZIP 与本机不入库的 `review/` 下。
+
+结论：`REVIEW_RECOMMENDATION=GO`（限定）、`F1_ACCOUNT_STATE_VALIDATION=CLOSED`、`F2_HANDOFF_AND_EXPLANATION=CLOSED`、
+`NEW_BLOCKING_FINDINGS=0`、不要求 R4；审核方同时声明 `ACCEPTANCE_REGISTRATION_PERFORMED=NO`、未合并、
+`NEXT_STAGE_AUTHORISED=NO`、`SOA_SIGNOFF=NO`，并把登记决定留给用户。
+
+审核方独立执行 13 条离线命令（`checks/summary.json` 每条 `rc == expected_rc`），且是在 Linux 运行时
+`/opt/codex/.../bin/python3` 上重放我的脚本，不是只在本机绿：run selftest 14 checks、R1 guards 8 组、
+R2 guards 14/14、R3 guards 8/8（`fixed` 与对未改 R2 工具的 `reproduce` 都跑）、R2 包复核 rc=1 且 44 项唯一失败
+`BUDGET_RESPECTED`、反例自测 16/16、审核方原仪器旧基线 rc=0（`defect_reproduced=true`）/最终 rc=1
+（`all_requirements_met=true`）、交接结构、ZIP 自检、provenance 434 files / 541 lines / 0 violations、历史安全闸。
+对我上传归档的实测：329,067 B、`325b71c46dbdefde6dcefdc79751ad041ac265c64aca79f0d30c66709481a1a6`、
+56 成员、清单 54 条、其中 53 个仓库成员与固定 tip 的 Git blob 全同；ZIP 构建 tree 与被审 tip tree 相同
+（`6a991f9e142d83a02a1d6a81c3773a7ecc2abc56`）。
+审核方还用自己的 ±5% 插值代码重算 23 个 `NOT_SETTLED_WITHIN_PULSE` 窗口，确认只有 3 条采样界定带内段不足 10 ns
+（P30-C001 8.610590 / 连续 9.092380；CVG-P30-C001 8.933460 / 9.037823；SLEW-P30-C001 4.175934 / 4.645542），
+并给出 P30-C002 38.610590 / 39.092892、P30-C255 7658.610590 / 7659.092892 ns——即 §11 与 R2 报告 §4 的因果勘误成立，
+判决不变；采样界定与连续插值两种口径不得混写。
+
+登记（被审 SHA 固定，记录本段的提交晚于它且只能从远端 ref 读）：
+
+```text
+ACCEPTED_VERSION   = f9fd09b184a69a27cdb409205dfd4f4151408a23   (poc/data-pwm-d7b-r3, reviewed tip)
+accepted_as        = DATA-7B 账本非法状态拒收 + 交接/解释勘误 + 既有冻结 TT 证据的可复核性收口；
+                     完成级别 RTL_TRACE_DRIVEN_MOS_OUTPUT_MEASURED_TT
+functional_lineage = P3 242f43fdd4c775d4e92ebddde548e65b75aec402 → 039a28a…（验证记录）
+                     → e69dee9…（文档与交接）→ 7d5a037…（归档摘要回执）→ f9fd09b…（仪器重放回执）
+archive            = 325b71c4… / 329,067 B / 56 成员，构建来源 e69dee9…（tree 与 f9fd09b 相同）
+main               = 23e471cb936b421ee97e1250c3be06edf96f9937   （未移动）
+merged_into_main   = NO, deliberately
+```
+
+不合并的实测理由：`git merge-base main f9fd09b` = `23e471c`（就是 main 自身），所以合并只快进；
+`git rev-list --count main..f9fd09b` = **98** 枚提交、`git diff --name-only main..f9fd09b` = **1,870** 个文件——
+除 DATA-7B 全链外还会带进 DATA-6、scan R2A…R3A / S3-* / S3C1…S3C4 与 DATA-7A，其中部分在自己的报告里仍是未接受状态。
+本次接受范围只到本分支的账本与文档收口，故登记 SHA 而把整合决策留给用户；squash 或 cherry-pick 既不缩小内容，又会丢掉被审 SHA。
+
+三条非阻断注记按用户决定**记入待办、本轮不改已冻结工具与脚本**（原文 `REVIEW_DATA7B_R3.md` §7）：
+
+1. `ARCHIVE_README_COUNT_AND_SOURCE_WORDING`：包内生成的 `README.md` 写"53 个文件……`README.md` 自身不在清单内"，
+   实际清单 54 条且**包含**生成的 README，53 是仓库成员数。根因在 `review/scratch/r3_build_package.py`
+   追加 README 之前就求值 `len(entries)`，且该句与 `verify_package.py` 的未列出集合口径不一致。
+2. `AUXILIARY_ASSERTIONS_CAN_BE_STRICTER`：`scripts/dd1_d7b_r3_guards.py:253` 判 `new == named`，
+   两者同为空时会空洞为真，应收紧为 `named == ['ACCOUNT_STATES_VALID']`；
+   `scripts/dd1_d7b_r3_verify.py:245` 的仪器门只按 `rc == 1` 判 PASS，未读诊断 JSON 的
+   `all_requirements_met` / `defect_reproduced` / `counterfeit.new_failures`。审核方明确本轮 GO 不建立在这些
+   辅助断言上（他们看到了实际新增 `ACCOUNT_STATES_VALID`、完整 JSON 为真、16 类反例各自点名）。
+3. `CURRENT_RANGE_IS_10_COMMITS`：`b3fe93c..f9fd09b` 是 10 枚提交；交付回执里的 9 是最后一枚空提交之前的计数。
+
+保持不变的历史事实：历史 59 次实际启动对固定授权 56 次、超支 3 次仍是
+`VIOLATED_NOT_RETROACTIVELY_AUTHORISED`，包内 `BUDGET_RESPECTED` 继续 FAIL 不加白名单；四个已删 R1 中间目录
+原字节不可得；凭据回显事件未解除；`data_en` 仍是理想 PWL 使能节点；23 个窗口的负发现保留；
+8 档 PAM、完整灰阶控制器、LUT、电流积分、片上驱动阻抗、CDC/skew、光学位数、阵列与版图/DRC/LVS/PEX
+均未因本次 GO 被完成或授权。

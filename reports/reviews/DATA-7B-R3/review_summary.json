@@ -1,0 +1,47 @@
+{
+  "review_date": "2026-10-23",
+  "review_recommendation": "GO",
+  "review_scope": "DATA7B_R3_ACCOUNT_REPAIR_AND_HANDOFF_CORRECTION_WITH_FROZEN_TT_EVIDENCE",
+  "reviewed_tip": "f9fd09b184a69a27cdb409205dfd4f4151408a23",
+  "base_sha": "b3fe93c17de014cb16031438ce28c7152dd0020f",
+  "F1": "CLOSED",
+  "F2": "CLOSED",
+  "new_blocking_findings": 0,
+  "acceptance_registration_performed": false,
+  "merge_performed": false,
+  "next_stage_authorised": false,
+  "soa_signoff": false,
+  "completion_level": "RTL_TRACE_DRIVEN_MOS_OUTPUT_MEASURED_TT",
+  "evidence_current_checks": 44,
+  "evidence_failures": [
+    "BUDGET_RESPECTED"
+  ],
+  "historical_budget": {
+    "actual": 59,
+    "authorised": 56,
+    "overrun": 3,
+    "status": "VIOLATED_NOT_RETROACTIVELY_AUTHORISED",
+    "user_disposition": "PENDING"
+  },
+  "credential_event_resolved": false,
+  "non_blocking_notes": [
+    "ARCHIVE_README_COUNT_AND_SOURCE_WORDING",
+    "AUXILIARY_ASSERTIONS_CAN_BE_STRICTER",
+    "CURRENT_RANGE_IS_10_COMMITS"
+  ],
+  "reviewer_commands_executed": 13,
+  "reviewer_native_spectre_launches": 0,
+  "reviewer_rtl_simulations": 0,
+  "reviewer_oa_writes": 0,
+  "remote_git_source_verified": true,
+  "remote_api_independently_verified_by_reviewer": false,
+  "uploaded_zip_exact_bytes_verified": true,
+  "uploaded_zip_sha256": "325b71c46dbdefde6dcefdc79751ad041ac265c64aca79f0d30c66709481a1a6",
+  "input_zip_repository_members_verified": 53,
+  "input_zip_generated_members": [
+    "README.md",
+    "MANIFEST.json",
+    "verify_package.py"
+  ],
+  "raw_native_psf_independently_generated_by_reviewer": false
+}

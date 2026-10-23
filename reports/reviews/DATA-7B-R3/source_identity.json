@@ -1,0 +1,400 @@
+{
+  "base": "b3fe93c17de014cb16031438ce28c7152dd0020f",
+  "tip": "f9fd09b184a69a27cdb409205dfd4f4151408a23",
+  "archive": {
+    "bytes": 329067,
+    "sha256": "325b71c46dbdefde6dcefdc79751ad041ac265c64aca79f0d30c66709481a1a6",
+    "crc_ok": true,
+    "members": 56,
+    "manifest_entries": 54,
+    "manifest_checks_all_pass": true,
+    "source_members_verified_against_tip": 53,
+    "generated_members": [
+      "README.md",
+      "MANIFEST.json",
+      "verify_package.py"
+    ],
+    "manifest_includes_generated_README": true,
+    "file_set_matches": true,
+    "errors": [],
+    "build_commit": "e69dee995f47032ffa8a08adc7912afd97eb5b03",
+    "build_tree": "6a991f9e142d83a02a1d6a81c3773a7ecc2abc56",
+    "tip_tree": "6a991f9e142d83a02a1d6a81c3773a7ecc2abc56",
+    "build_tree_equals_tip_tree": true
+  },
+  "frozen_surfaces": [
+    {
+      "surface": "development_B",
+      "paths": 1107,
+      "differences": []
+    },
+    {
+      "surface": "original_D7B_evidence",
+      "paths": 805,
+      "differences": []
+    },
+    {
+      "surface": "R1_evidence",
+      "paths": 284,
+      "differences": []
+    },
+    {
+      "surface": "R2_evidence",
+      "paths": 287,
+      "differences": []
+    },
+    {
+      "surface": "case_and_golden",
+      "paths": 3,
+      "differences": []
+    },
+    {
+      "surface": "measure_and_trace",
+      "paths": 3,
+      "differences": []
+    },
+    {
+      "surface": "shared_safety_and_native_tools",
+      "paths": 12,
+      "differences": []
+    }
+  ],
+  "modified_preexisting_paths": [
+    "reports/agent_handoffs/DATA-7B.json",
+    "reports/agent_handoffs/DATA-7B.md",
+    "reports/dd1_d7b_contract.md",
+    "reports/dd1_d7b_review_fix_r2.md",
+    "scripts/dd1_d7b_evidence_check.py",
+    "scripts/dd1_d7b_run.py"
+  ],
+  "added_paths": [
+    "reports/dd1_d7b_review_fix_r3.md",
+    "reports/tasks/DATA-7B-R3.md",
+    "results/evidence/dd1_d7b_r3_r20261022_174818_502025/account_states.csv",
+    "results/evidence/dd1_d7b_r3_r20261022_174818_502025/commands.csv",
+    "results/evidence/dd1_d7b_r3_r20261022_174818_502025/diagnostics/account_states_after.json",
+    "results/evidence/dd1_d7b_r3_r20261022_174818_502025/frozen_comparison.csv",
+    "results/evidence/dd1_d7b_r3_r20261022_174818_502025/git_checks.csv",
+    "results/evidence/dd1_d7b_r3_r20261022_174818_502025/tools_identity.csv",
+    "results/evidence/dd1_d7b_r3_r20261022_174818_502025/verification_input.csv",
+    "results/evidence/dd1_d7b_r3_r20261022_174818_502025/verification_summary.json",
+    "results/evidence/dd1_d7b_r3_r20261022_180059_efda9d/account_states.csv",
+    "results/evidence/dd1_d7b_r3_r20261022_180059_efda9d/commands.csv",
+    "results/evidence/dd1_d7b_r3_r20261022_180059_efda9d/diagnostics/account_states_after.json",
+    "results/evidence/dd1_d7b_r3_r20261022_180059_efda9d/frozen_comparison.csv",
+    "results/evidence/dd1_d7b_r3_r20261022_180059_efda9d/git_checks.csv",
+    "results/evidence/dd1_d7b_r3_r20261022_180059_efda9d/tools_identity.csv",
+    "results/evidence/dd1_d7b_r3_r20261022_180059_efda9d/verification_input.csv",
+    "results/evidence/dd1_d7b_r3_r20261022_180059_efda9d/verification_summary.json",
+    "scripts/dd1_d7b_r3_guards.py",
+    "scripts/dd1_d7b_r3_verify.py"
+  ],
+  "deleted_paths": [],
+  "commits_in_range": 10,
+  "documentation": {
+    "r2_manifest_entries": 286,
+    "r2_manifest_bytes": 21264382,
+    "r2_directory_files": 287,
+    "r2_directory_bytes": 21323343,
+    "r2_manifest_sha256": "1b7a74fc6d389cdde8fb4a3b31f045312409eae4bcd004356041110e70daa1cb",
+    "r2_manifest_content_errors": [],
+    "handoff_manifest_numbers_match": true,
+    "r2_exporter_identity_matches": true,
+    "r3_tool_identity_rows": 10,
+    "r3_tool_identity_errors": [],
+    "handoff_r3_tool_identity_errors": [],
+    "current_round_rtl_cost": 0,
+    "historical_R1_rtl_simulations": 17,
+    "current_rtl_field": 0,
+    "R1_new_current_series": 1,
+    "R2_new_current_series": 2,
+    "R3_existing_paths_modified": 6,
+    "R3_paths_added": 20
+  },
+  "settled_explanation": {
+    "not_settled_rows": 23,
+    "sample_bounded_under_10ns": [
+      {
+        "case_id": "D7B-P30-C001",
+        "window": "normal",
+        "sample_bounded_ns": 8.610590185047128,
+        "continuous_ns": 9.092379915407859,
+        "last_band_exit_ns": 3945.0,
+        "deadline_ns": 3945.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-CVG-P30-C001",
+        "window": "normal",
+        "sample_bounded_ns": 8.933460349014029,
+        "continuous_ns": 9.037823495906313,
+        "last_band_exit_ns": 3945.0,
+        "deadline_ns": 3945.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-SLEW-P30-C001",
+        "window": "normal",
+        "sample_bounded_ns": 4.175934388752561,
+        "continuous_ns": 4.645542183400598,
+        "last_band_exit_ns": 3941.232642699045,
+        "deadline_ns": 3945.0,
+        "exit_before_deadline_ns": 3.7673573009553367
+      }
+    ],
+    "all_rows": [
+      {
+        "case_id": "D7B-P30-C001",
+        "window": "normal",
+        "sample_bounded_ns": 8.610590185047128,
+        "continuous_ns": 9.092379915407859,
+        "last_band_exit_ns": 3945.0,
+        "deadline_ns": 3945.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-P30-C002",
+        "window": "normal",
+        "sample_bounded_ns": 38.61059018504759,
+        "continuous_ns": 39.092891980656425,
+        "last_band_exit_ns": 3975.0,
+        "deadline_ns": 3975.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-P30-C016",
+        "window": "normal",
+        "sample_bounded_ns": 458.61059018504807,
+        "continuous_ns": 459.09289225840473,
+        "last_band_exit_ns": 4395.0,
+        "deadline_ns": 4395.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-P30-C254",
+        "window": "normal",
+        "sample_bounded_ns": 7598.610590185047,
+        "continuous_ns": 7599.092892258404,
+        "last_band_exit_ns": 11535.0,
+        "deadline_ns": 11535.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-P30-C255",
+        "window": "normal",
+        "sample_bounded_ns": 7658.610590185047,
+        "continuous_ns": 7659.092892258404,
+        "last_band_exit_ns": 11595.0,
+        "deadline_ns": 11595.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-P50-C001",
+        "window": "normal",
+        "sample_bounded_ns": 28.610590185048526,
+        "continuous_ns": 29.092888851691967,
+        "last_band_exit_ns": 3965.0,
+        "deadline_ns": 3965.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-P50-C255",
+        "window": "normal",
+        "sample_bounded_ns": 12778.610590185046,
+        "continuous_ns": 12779.092892258406,
+        "last_band_exit_ns": 16715.0,
+        "deadline_ns": 16715.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-H120-C01",
+        "window": "normal",
+        "sample_bounded_ns": 98.61059018504713,
+        "continuous_ns": 99.09289225840382,
+        "last_band_exit_ns": 4035.0,
+        "deadline_ns": 4035.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-H120-C02",
+        "window": "normal",
+        "sample_bounded_ns": 218.61059018504758,
+        "continuous_ns": 219.09289225840382,
+        "last_band_exit_ns": 4155.0,
+        "deadline_ns": 4155.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-H120-C62",
+        "window": "normal",
+        "sample_bounded_ns": 7418.610590185047,
+        "continuous_ns": 7419.092892258404,
+        "last_band_exit_ns": 11355.0,
+        "deadline_ns": 11355.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-H120-C63",
+        "window": "normal",
+        "sample_bounded_ns": 7658.610590185047,
+        "continuous_ns": 7659.092892258404,
+        "last_band_exit_ns": 11595.0,
+        "deadline_ns": 11595.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-H200-C01",
+        "window": "normal",
+        "sample_bounded_ns": 178.61059018504713,
+        "continuous_ns": 179.09289225840382,
+        "last_band_exit_ns": 4115.0,
+        "deadline_ns": 4115.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-H200-C63",
+        "window": "normal",
+        "sample_bounded_ns": 12778.610590185046,
+        "continuous_ns": 12779.092892258406,
+        "last_band_exit_ns": 16715.0,
+        "deadline_ns": 16715.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-BLANK",
+        "window": "aborted",
+        "sample_bounded_ns": 113.61059018504852,
+        "continuous_ns": 114.09289225840476,
+        "last_band_exit_ns": 4050.0,
+        "deadline_ns": 4050.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-BLANK",
+        "window": "recovery",
+        "sample_bounded_ns": 459.11174633556976,
+        "continuous_ns": 459.4177028787192,
+        "last_band_exit_ns": 12615.0,
+        "deadline_ns": 12615.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-FAULT",
+        "window": "aborted",
+        "sample_bounded_ns": 113.61059018504852,
+        "continuous_ns": 114.09289225840476,
+        "last_band_exit_ns": 4050.0,
+        "deadline_ns": 4050.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-FAULT",
+        "window": "recovery",
+        "sample_bounded_ns": 459.11174633556976,
+        "continuous_ns": 459.4177028787192,
+        "last_band_exit_ns": 12615.0,
+        "deadline_ns": 12615.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-CVG-P30-C001",
+        "window": "normal",
+        "sample_bounded_ns": 8.933460349014029,
+        "continuous_ns": 9.037823495906313,
+        "last_band_exit_ns": 3945.0,
+        "deadline_ns": 3945.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-CVG-P30-C255",
+        "window": "normal",
+        "sample_bounded_ns": 7658.933460349014,
+        "continuous_ns": 7659.0383480013015,
+        "last_band_exit_ns": 11595.0,
+        "deadline_ns": 11595.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-CVG-H120-C01",
+        "window": "normal",
+        "sample_bounded_ns": 98.93346034901403,
+        "continuous_ns": 99.0383480012999,
+        "last_band_exit_ns": 4035.0,
+        "deadline_ns": 4035.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-CVG-BLANK",
+        "window": "aborted",
+        "sample_bounded_ns": 113.93346034901542,
+        "continuous_ns": 114.03834800130082,
+        "last_band_exit_ns": 4050.0,
+        "deadline_ns": 4050.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-CVG-BLANK",
+        "window": "recovery",
+        "sample_bounded_ns": 459.1708944526296,
+        "continuous_ns": 459.36916419330424,
+        "last_band_exit_ns": 12615.0,
+        "deadline_ns": 12615.0,
+        "exit_before_deadline_ns": 0.0
+      },
+      {
+        "case_id": "D7B-SLEW-P30-C001",
+        "window": "normal",
+        "sample_bounded_ns": 4.175934388752561,
+        "continuous_ns": 4.645542183400598,
+        "last_band_exit_ns": 3941.232642699045,
+        "deadline_ns": 3945.0,
+        "exit_before_deadline_ns": 3.7673573009553367
+      }
+    ]
+  },
+  "git_final_checks": [
+    {
+      "name": "remote_refs",
+      "command": [
+        "git",
+        "ls-remote",
+        "origin",
+        "refs/heads/main",
+        "refs/heads/poc/data-pwm-d7b",
+        "refs/heads/poc/data-pwm-d7b-r1",
+        "refs/heads/poc/data-pwm-d7b-r2",
+        "refs/heads/poc/data-pwm-d7b-r3"
+      ],
+      "rc": 0,
+      "stdout": "23e471cb936b421ee97e1250c3be06edf96f9937\trefs/heads/main\nadcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50\trefs/heads/poc/data-pwm-d7b\ne97f02ecf7c84d1e1a3fda214cec8eceadfa5f92\trefs/heads/poc/data-pwm-d7b-r1\nb3fe93c17de014cb16031438ce28c7152dd0020f\trefs/heads/poc/data-pwm-d7b-r2\nf9fd09b184a69a27cdb409205dfd4f4151408a23\trefs/heads/poc/data-pwm-d7b-r3\n",
+      "stderr": ""
+    },
+    {
+      "name": "diff_check",
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "b3fe93c17de014cb16031438ce28c7152dd0020f",
+        "f9fd09b184a69a27cdb409205dfd4f4151408a23"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "status",
+      "command": [
+        "git",
+        "status",
+        "--short"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "reviewer_native_launches": 0,
+  "reviewer_rtl_simulations": 0,
+  "reviewer_oa_writes": 0
+}

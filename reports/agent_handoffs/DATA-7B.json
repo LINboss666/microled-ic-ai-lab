@@ -1,4 +1,81 @@
 {
+ "acceptance_registration": {
+  "accepted_as": "the DATA-7B ledger-state refusal, the handoff/erratum corrections and the reviewability of the existing frozen TT evidence",
+  "accepted_branch": "poc/data-pwm-d7b-r3",
+  "accepted_sha": "f9fd09b184a69a27cdb409205dfd4f4151408a23",
+  "archive": {
+   "built_from": "e69dee995f47032ffa8a08adc7912afd97eb5b03",
+   "bytes": 329067,
+   "manifest_entries": 54,
+   "members": 56,
+   "sha256": "325b71c46dbdefde6dcefdc79751ad041ac265c64aca79f0d30c66709481a1a6",
+   "stated_in": "commit 7d5a037311205663a656e41256c08603902d70ed (empty, after the build), not inside the archive",
+   "tree_of_build_and_accepted_commit": "6a991f9e142d83a02a1d6a81c3773a7ecc2abc56"
+  },
+  "completion_level": "RTL_TRACE_DRIVEN_MOS_OUTPUT_MEASURED_TT",
+  "functional_lineage": {
+   "archive_receipt": "7d5a037311205663a656e41256c08603902d70ed",
+   "documents": "e69dee995f47032ffa8a08adc7912afd97eb5b03",
+   "instrument_replay_receipt": "f9fd09b184a69a27cdb409205dfd4f4151408a23",
+   "payload_p3": "242f43fdd4c775d4e92ebddde548e65b75aec402",
+   "verification_record": "039a28a35cab506beb498259025eb50c20964ce2"
+  },
+  "merge": {
+   "commits_main_to_accepted": 98,
+   "files_main_to_accepted": 1870,
+   "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+   "measured_merge_base_main_accepted": "23e471cb936b421ee97e1250c3be06edf96f9937",
+   "merged_into_main": "NO",
+   "reason": "merging would be a content fast-forward carrying DATA-6, the scan R2A…S3C4 line and DATA-7A as well, some of which is still open in its own reports; the accepted scope is only this branch, and squashing would lose the reviewed SHA"
+  },
+  "next_stage_authorised": "NO",
+  "non_blocking_findings_pending": [
+   {
+    "fix": "state 54 manifest entries including the generated README and 53 repository members",
+    "id": "ARCHIVE_README_COUNT_AND_SOURCE_WORDING",
+    "status": "PENDING_NEXT_MAINTENANCE",
+    "where": "review/scratch/r3_build_package.py (README template and len(entries) evaluated before README is appended)"
+   },
+   {
+    "fix": "require named == [ACCOUNT_STATES_VALID] and parse all_requirements_met, defect_reproduced and counterfeit.new_failures",
+    "id": "AUXILIARY_ASSERTIONS_CAN_BE_STRICTER",
+    "status": "PENDING_NEXT_MAINTENANCE",
+    "where": "scripts/dd1_d7b_r3_guards.py:253 (new == named is vacuously true when both are empty) and scripts/dd1_d7b_r3_verify.py:245 (instrument gate decided on rc only, JSON fields unread)"
+   },
+   {
+    "fix": "the reviewed range carries 10 commits; count it at read-back time, not from the earlier table",
+    "id": "CURRENT_RANGE_IS_10_COMMITS",
+    "status": "PENDING_NEXT_MAINTENANCE",
+    "where": "delivery receipt said 9 commits for b3fe93c..HEAD"
+   }
+  ],
+  "recording_commit": "later than the accepted SHA by construction; its value is read from the Git ref, never from this file",
+  "registered_by": "user authorisation on 2026-10-23, after the independent review",
+  "review_package": {
+   "bytes": 41310,
+   "documents_committed": [
+    "reports/reviews/DATA-7B-R3/REVIEW_DATA7B_R3.md",
+    "reports/reviews/DATA-7B-R3/README.md",
+    "reports/reviews/DATA-7B-R3/review_summary.json",
+    "reports/reviews/DATA-7B-R3/source_identity.json",
+    "reports/reviews/DATA-7B-R3/MANIFEST.csv"
+   ],
+   "files": 25,
+   "note": "the reviewer scripts and checks/ logs stay outside Git on purpose; MANIFEST.csv carries their digests so any single file can be verified when re-obtained",
+   "path": "C:/Users/LMX/Downloads/MicroLED_DATA7B_R3_Independent_Review_20261023.zip",
+   "reviewer_code_committed": false,
+   "sha256": "02c8c1c06b75a424dea254377c418024de5e25127c1df485309eeca4db0d2586"
+  },
+  "soa_signoff": "NO",
+  "unchanged_adverse_facts": [
+   "historical 59 launches against a fixed grant of 56 stays VIOLATED_NOT_RETROACTIVELY_AUTHORISED and BUDGET_RESPECTED stays FAIL in the delivered bundle",
+   "four deleted R1 intermediate directories are unrecoverable",
+   "the credential-echo event is not remediated",
+   "data_en is an ideal PWL enable node, so edge agreement is not on-chip driver latency",
+   "23 windows keep NOT_SETTLED_WITHIN_PULSE",
+   "PAM, the full gray controller, LUT, current integration, driver impedance, CDC/skew, optical bits, array, layout/DRC/LVS/PEX are not completed or authorised"
+  ]
+ },
  "accepted_data7a_content": "f68449672774ac9266ba9e4893024e4f3027dd9d",
  "base_sha": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
  "branch": "poc/data-pwm-d7b-r2",
@@ -229,6 +306,79 @@
    "paths_added": 20,
    "paths_deleted": 0
   },
+  "independent_review": {
+   "f1_account_state_validation": "CLOSED",
+   "f2_handoff_and_explanation": "CLOSED",
+   "new_blocking_findings": 0,
+   "r4_requested": false,
+   "recommendation": "GO",
+   "review_date": "2026-10-23",
+   "reviewed_tip": "f9fd09b184a69a27cdb409205dfd4f4151408a23",
+   "reviewer_archive_verification": {
+    "build_commit": "e69dee995f47032ffa8a08adc7912afd97eb5b03",
+    "build_tree_equals_tip_tree": true,
+    "bytes": 329067,
+    "generated_members": [
+     "README.md",
+     "MANIFEST.json",
+     "verify_package.py"
+    ],
+    "manifest_entries": 54,
+    "members": 56,
+    "repository_members_equal_to_tip_blobs": 53,
+    "sha256": "325b71c46dbdefde6dcefdc79751ad041ac265c64aca79f0d30c66709481a1a6",
+    "tree": "6a991f9e142d83a02a1d6a81c3773a7ecc2abc56"
+   },
+   "reviewer_commands": {
+    "every_rc_matches_expectation": true,
+    "executed": 13,
+    "includes": [
+     "run selftest 14 checks",
+     "R1 guards 8 groups",
+     "R2 guards 14/14",
+     "R3 guards fixed 8/8 and reproduce-on-unmodified-R2 8/8",
+     "R2 bundle rc=1 44 checks only BUDGET_RESPECTED",
+     "evidence selftest 16/16",
+     "reviewer instrument rc=0 base / rc=1 fixed",
+     "handoff structure",
+     "package self-check",
+     "provenance 434 files 0 violations",
+     "history safety gate"
+    ],
+    "log": "checks/summary.json in the review archive (not committed; digest kept in MANIFEST.csv)",
+    "runtime": "Linux /opt/codex/.../bin/python3 over the reviewer clone, not this Windows host"
+   },
+   "reviewer_costs": {
+    "native_spectre_launches": 0,
+    "oa_writes": 0,
+    "rtl_simulations": 0
+   },
+   "reviewer_recompute_of_not_settled": {
+    "agrees_with": "the R3 erratum: only three windows are short, the verdicts are unchanged",
+    "method": "independent interpolation under the contract Ical +/-5%, not the project measure core",
+    "not_settled_rows": 23,
+    "sample_bounded_under_10ns": [
+     [
+      "D7B-P30-C001",
+      8.610590185047128,
+      9.092379915407859
+     ],
+     [
+      "D7B-CVG-P30-C001",
+      8.933460349014029,
+      9.037823495906313
+     ],
+     [
+      "D7B-SLEW-P30-C001",
+      4.175934388752561,
+      4.645542183400598
+     ]
+    ],
+    "units_note": "sample-bounded and continuous columns are different quantities and must not be mixed in one sentence"
+   },
+   "reviewer_registration": "NO (left to the user)",
+   "scope": "DATA7B_R3_ACCOUNT_REPAIR_AND_HANDOFF_CORRECTION_WITH_FROZEN_TT_EVIDENCE"
+  },
   "payload_sha": "242f43fdd4c775d4e92ebddde548e65b75aec402",
   "recorded_tip_at_readback": "039a28a35cab506beb498259025eb50c20964ce2",
   "reviewer_package": {
@@ -248,6 +398,7 @@
    ]
   },
   "scope": "reject illegal account states in Account and the re-checker, and correct the handoff and report text; no circuit, measurement, sample or verdict change",
+  "stop_reason_after_registration": "LIMITED_ACCEPTANCE_REGISTERED; integration and next stage still awaiting a user decision",
   "task_id": "DATA-7B-R3",
   "validation_tools": {
    "scripts/dd1_d7b_evidence_check.py": "fbeda532111d9c1c3f56d8b3a54d085542a04cea558e62656bd5d0cb23802d77",
@@ -297,6 +448,111 @@
   "note": "the commit carrying this note sits above the recorded tip; its own SHA and this branch's current value are read from the remote ref, never from this file",
   "payload_p3_is_ancestor_of_tip": true,
   "queried_utc": "2026-10-23",
+  "r3_readings": [
+   {
+    "after_push": "f2fcae4..7d5a037",
+    "both_channels_agree": true,
+    "channels": [
+     {
+      "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin",
+      "rc": 0,
+      "ref_lines": 22,
+      "refs": {
+       "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+       "poc/data-pwm-d7b": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
+       "poc/data-pwm-d7b-r1": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
+       "poc/data-pwm-d7b-r2": "b3fe93c17de014cb16031438ce28c7152dd0020f",
+       "poc/data-pwm-d7b-r3": "7d5a037311205663a656e41256c08603902d70ed"
+      }
+     },
+     {
+      "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<ref>",
+      "rc": 0,
+      "refs": {
+       "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+       "poc/data-pwm-d7b": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
+       "poc/data-pwm-d7b-r1": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
+       "poc/data-pwm-d7b-r2": "b3fe93c17de014cb16031438ce28c7152dd0020f",
+       "poc/data-pwm-d7b-r3": "7d5a037311205663a656e41256c08603902d70ed"
+      },
+      "refs_read": 5
+     }
+    ],
+    "note": "the archive digest commit; both channels returned this value for the same object",
+    "nothing_else_moved": true,
+    "poc/data-pwm-d7b-r3": "7d5a037311205663a656e41256c08603902d70ed",
+    "queried_utc": "2026-10-22T18:23:37Z (local 2026-10-23 02:23)"
+   },
+   {
+    "after_push": "7d5a037..66b7c19",
+    "both_channels_agree": true,
+    "channels": [
+     {
+      "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin",
+      "rc": 0,
+      "ref_lines": 22,
+      "refs": {
+       "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+       "poc/data-pwm-d7b": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
+       "poc/data-pwm-d7b-r1": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
+       "poc/data-pwm-d7b-r2": "b3fe93c17de014cb16031438ce28c7152dd0020f",
+       "poc/data-pwm-d7b-r3": "66b7c19add0e459b08ea19f5ad3a148a7080cc2f"
+      }
+     },
+     {
+      "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<ref>",
+      "rc": 0,
+      "refs": {
+       "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+       "poc/data-pwm-d7b": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
+       "poc/data-pwm-d7b-r1": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
+       "poc/data-pwm-d7b-r2": "b3fe93c17de014cb16031438ce28c7152dd0020f",
+       "poc/data-pwm-d7b-r3": "66b7c19add0e459b08ea19f5ad3a148a7080cc2f"
+      },
+      "refs_read": 5
+     }
+    ],
+    "note": "read-back of the branch after the first receipt commit",
+    "nothing_else_moved": true,
+    "poc/data-pwm-d7b-r3": "66b7c19add0e459b08ea19f5ad3a148a7080cc2f",
+    "queried_utc": "2026-10-22T18:27:19Z (local 2026-10-23 02:27)"
+   },
+   {
+    "after_push": "66b7c19..f9fd09b",
+    "both_channels_agree": true,
+    "channels": [
+     {
+      "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin",
+      "rc": 0,
+      "ref_lines": 22,
+      "refs": {
+       "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+       "poc/data-pwm-d7b": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
+       "poc/data-pwm-d7b-r1": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
+       "poc/data-pwm-d7b-r2": "b3fe93c17de014cb16031438ce28c7152dd0020f",
+       "poc/data-pwm-d7b-r3": "f9fd09b184a69a27cdb409205dfd4f4151408a23"
+      }
+     },
+     {
+      "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<ref>",
+      "rc": 0,
+      "refs": {
+       "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+       "poc/data-pwm-d7b": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
+       "poc/data-pwm-d7b-r1": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
+       "poc/data-pwm-d7b-r2": "b3fe93c17de014cb16031438ce28c7152dd0020f",
+       "poc/data-pwm-d7b-r3": "f9fd09b184a69a27cdb409205dfd4f4151408a23"
+      },
+      "refs_read": 5
+     }
+    ],
+    "note": "the value later registered as the limited accepted version, and the value the reviewer independently fixed with their own git ls-remote",
+    "nothing_else_moved": true,
+    "poc/data-pwm-d7b-r3": "f9fd09b184a69a27cdb409205dfd4f4151408a23",
+    "queried_utc": "2026-10-22T18:31:15Z (local 2026-10-23 02:31)"
+   }
+  ],
+  "r3_readings_note": "each reading is a statement about one instant and is kept with its own time; the reading that covers the commit carrying this field cannot be recorded inside that commit, so the current value of the branch is taken from the remote ref",
   "recorded_tip": "039a28a35cab506beb498259025eb50c20964ce2",
   "refs": {
    "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
@@ -304,6 +560,15 @@
    "poc/data-pwm-d7b-r1": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
    "poc/data-pwm-d7b-r2": "b3fe93c17de014cb16031438ce28c7152dd0020f",
    "poc/data-pwm-d7b-r3": "039a28a35cab506beb498259025eb50c20964ce2"
+  },
+  "reviewer_side_readback": {
+   "command": "git ls-remote origin refs/heads/main ... refs/heads/poc/data-pwm-d7b-r3",
+   "poc/data-pwm-d7b-r3": "f9fd09b184a69a27cdb409205dfd4f4151408a23",
+   "rc": 0,
+   "ref_lines": 22,
+   "reviewer_api_channel_used": false,
+   "reviewer_note": "the reviewer states they did not complete a GitHub API/HTML second channel, so the two-channel claim stays attributed to this executor",
+   "source": "source_identity.json git_final_checks in the review archive"
   },
   "status": "BOTH_CHANNELS_AGREE"
  },
