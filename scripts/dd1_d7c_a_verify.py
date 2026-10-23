@@ -45,7 +45,10 @@ TIP_UNDER_REVIEW = '89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79'
 DEVELOPMENT_BASE = '272d6de6d2f2fc8a82d5038d73d6b3e4c656f683'
 BRANCH = 'poc/data-pam-d7c-a-r1'
 
-# surfaces that must be identical, expressed per comparison
+# §9 of the repair brief, read as exact paths. A whole directory is never called frozen when part of
+# it is on the whitelist: the first version of this script swept spectre/ and reports/, counted the
+# whitelisted deck draft and the two whitelisted reports as frozen-surface mismatches, and had no gate
+# that used the numbers at all.
 B_SURFACES = [
     ('data7b_r3_evidence_bundle', 'results/evidence/dd1_d7b_r2_r20261022_160652_e880be'),
     ('data7b_r1_evidence', 'results/evidence/dd1_d7b_r1_r20261022_123825_8e1294'),
@@ -56,17 +59,31 @@ B_SURFACES = [
     ('shared_safety_and_validation_tools', 'scripts'),
     ('accepted_netlist_masters', 'spectre'),
 ]
-T_SURFACES = [
-    ('candidate_DUT_netlists_unchanged', 'spectre'),
-    ('first_round_reports_and_handoff', 'reports'),
-    ('first_round_evidence_dir', 'results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0'),
+WHITELIST_MODIFIED = [
+    'scripts/dd1_d7c_a_netlist.py', 'scripts/dd1_d7c_a_offline_check.py',
+    'scripts/dd1_d7c_a_guards.py', 'scripts/dd1_d7c_a_verify.py',
+    'scripts/dd1_d7c_a_validate_handoff.py', 'scripts/dd1_d7c_a_deckgen.py',
+    'reports/dd1_d7c_a_pam_candidate.md', 'reports/dd1_d7c_a_native_test_plan.md',
+    'reports/agent_handoffs/DATA-7C-A.md', 'reports/agent_handoffs/DATA-7C-A.json',
+    'tests/dd1_d7c_a/native_case_plan.csv', 'spectre/dd1_d7c_a_tb_draft.scs',
 ]
+# §9 also lists what this round may add. The evidence directory is a new unique run id, so it is
+# matched by prefix; anything else that appears is a violation rather than a surprise.
+ALLOWED_NEW_EXACT = ['reports/tasks/DATA-7C-A-R1.md', 'reports/dd1_d7c_a_review_fix_r1.md',
+                     'tests/dd1_d7c_a/device_count_claims.csv']
+ALLOWED_NEW_PREFIX = ['results/evidence/dd1_d7c_a_r1_', 'scripts/dd1_d7c_a_r1_']
+FIRST_ROUND_EVIDENCE = 'results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0'
+FIRST_ROUND_UNTOUCHED = ['reports/tasks/DATA-7C-A.md']
+# dd1_d7c_a_r1_selftest.py declares its cases in one list; this number has to agree with it, so adding
+# a case on one side without the other makes the gate fail instead of quietly shrinking the suite.
+SELFTEST_CASES = 9
 DELIVERED = ['spectre/dd1_d7c_a_gates.scs', 'spectre/dd1_d7c_a_pam_dec.scs',
              'spectre/dd1_d7c_a_sink_unit.scs', 'spectre/dd1_d7c_a_pam_top.scs',
              CHECK.DECK_DRAFT] + CHECK.INPUT_TABLES + [
                  'scripts/dd1_d7c_a_netlist.py', 'scripts/dd1_d7c_a_offline_check.py',
                  'scripts/dd1_d7c_a_guards.py', 'scripts/dd1_d7c_a_deckgen.py',
                  'scripts/dd1_d7c_a_verify.py', 'scripts/dd1_d7c_a_validate_handoff.py',
+                 'scripts/dd1_d7c_a_r1_selftest.py',
                  'reports/tasks/DATA-7C-A-R1.md', 'reports/dd1_d7c_a_pam_candidate.md',
                  'reports/dd1_d7c_a_native_test_plan.md', 'reports/dd1_d7c_a_review_fix_r1.md']
 READ_ONLY_INPUTS = ['spectre/dd1_d6_inv18.scs', 'spectre/dd1_d6_bias_core.scs',
@@ -82,13 +99,15 @@ TABLE_SPECS = {
     'commands.csv': (['gate', 'command', 'rc', 'expected_rc', 'verdict_state', 'verdict'], 'gate',
                      ()),
     'frozen_comparison.csv': (['comparison', 'surface', 'paths_compared', 'mismatched',
-                               'first_mismatches'], None, ('first_mismatches',)),
+                               'first_mismatches', 'expectation', 'enforced'], 'surface',
+                              ('first_mismatches',)),
     'git_checks.csv': (['gate', 'command', 'rc', 'lines', 'scope'], 'gate', ()),
     'source_identity.csv': (['role', 'path', 'bytes', 'sha256'], 'path', ()),
     'instrument_T.json': None,
     'instrument_fixed.json': None,
     'offline_checks.json': None,
     'counterexamples.json': None,
+    'selftest.json': None,
     'verification_summary.json': None,
 }
 
@@ -115,45 +134,72 @@ def full_index(rev):
     return index
 
 
+ENFORCED_EXPECTATIONS = ('identical', 'none_removed', 'none_modified', 'only_allowed_new')
+
+
+def _row(comparison, surface, paths, base_index, head_index, expectation, kind='differs'):
+    """one named question over exact paths, with what this round expects written next to the number"""
+    paths = list(paths)
+    allowed_new = set(ALLOWED_NEW_EXACT)
+
+    def is_allowed(p):
+        return p in allowed_new or any(p.startswith(pre) for pre in ALLOWED_NEW_PREFIX)
+
+    if kind == 'removed':
+        bad = [p for p in paths if p not in head_index]
+    elif kind == 'not_allowed':
+        bad = [p for p in paths if not is_allowed(p)]
+    elif kind == 'listed':
+        bad = list(paths)
+    else:
+        bad = [p for p in paths if head_index.get(p) != base_index.get(p)]
+    return {'comparison': comparison, 'surface': surface, 'paths_compared': len(paths),
+            'mismatched': len(bad), 'first_mismatches': '; '.join(sorted(bad)[:4]) or '-',
+            'expectation': expectation,
+            'enforced': 'yes' if expectation in ENFORCED_EXPECTATIONS else 'no'}
+
+
 def comparisons(pristine_root):
     """three separate questions, reported apart rather than collapsed into one green mark"""
     rows = []
     b_index, head_index = full_index(DEVELOPMENT_BASE), full_index('HEAD')
     b_paths = sorted(b_index)
     for label, prefix in B_SURFACES:
-        wanted = [p for p in b_paths if p.startswith(prefix + '/')]
-        diff = [p for p in wanted if head_index.get(p) != b_index.get(p)]
-        rows.append({'comparison': 'B_tracked_paths', 'surface': label,
-                     'paths_compared': len(wanted), 'mismatched': len(diff),
-                     'first_mismatches': '; '.join(diff[:4]) or '-'})
-    rows.append({'comparison': 'B_tracked_paths', 'surface': 'every_B_tracked_path',
-                 'paths_compared': len(b_paths),
-                 'mismatched': sum(1 for p in b_paths if head_index.get(p) != b_index.get(p)),
-                 'first_mismatches': '-'})
-    rows.append({'comparison': 'B_tracked_paths', 'surface': 'paths_removed_against_B',
-                 'paths_compared': len(b_paths),
-                 'mismatched': sum(1 for p in b_paths if p not in head_index),
-                 'first_mismatches': '-'})
+        rows.append(_row('B_tracked_paths', label,
+                         [p for p in b_paths if p.startswith(prefix + '/')], b_index, head_index,
+                         'identical'))
+    rows.append(_row('B_tracked_paths', 'every_B_tracked_path', b_paths, b_index, head_index,
+                     'identical'))
+    rows.append(_row('B_tracked_paths', 'paths_removed_against_B', b_paths, b_index, head_index,
+                     'none_removed', kind='removed'))
     t_index = full_index(TIP_UNDER_REVIEW)
     t_paths = sorted(t_index)
-    for label, prefix in T_SURFACES:
-        wanted = [p for p in t_paths if p.startswith(prefix + '/')]
-        diff = [p for p in wanted if head_index.get(p) != t_index.get(p)]
-        rows.append({'comparison': 'T_frozen_surfaces', 'surface': label,
-                     'paths_compared': len(wanted), 'mismatched': len(diff),
-                     'first_mismatches': '; '.join(diff[:4]) or '-'})
-    changed_t = [p for p in t_paths if head_index.get(p) != t_index.get(p)]
+    whitelisted = [p for p in t_paths if p in WHITELIST_MODIFIED]
+    off_whitelist = [p for p in t_paths if p not in WHITELIST_MODIFIED]
+    rows.append(_row('T_frozen_surfaces', 'four_candidate_DUT_netlists', CANDIDATE_DUT, t_index,
+                     head_index, 'identical'))
+    rows.append(_row('T_frozen_surfaces', 'golden_and_request_tables', GOLDEN_FROZEN, t_index,
+                     head_index, 'identical'))
+    rows.append(_row('T_frozen_surfaces', 'first_round_evidence_dir',
+                     [p for p in t_paths if p.startswith(FIRST_ROUND_EVIDENCE + '/')], t_index,
+                     head_index, 'identical'))
+    rows.append(_row('T_frozen_surfaces', 'first_round_task_book', FIRST_ROUND_UNTOUCHED, t_index,
+                     head_index, 'identical'))
+    rows.append(_row('T_frozen_surfaces', 'read_only_inputs_named_by_the_brief', READ_ONLY_INPUTS,
+                     t_index, head_index, 'identical'))
+    rows.append(_row('T_frozen_surfaces', 'every_T_path_off_the_whitelist', off_whitelist, t_index,
+                     head_index, 'identical'))
+    rows.append(_row('T_to_tip_whitelist', 'whitelisted_paths_edited', whitelisted, t_index,
+                     head_index, 'editable'))
+    rows.append(_row('T_to_tip_whitelist', 'T_paths_modified_off_whitelist', off_whitelist, t_index,
+                     head_index, 'none_modified'))
+    rows.append(_row('T_to_tip_whitelist', 'paths_removed_against_T', t_paths, t_index, head_index,
+                     'none_removed', kind='removed'))
     added_t = sorted(set(head_index) - set(t_index))
-    removed_t = sorted(set(t_index) - set(head_index))
-    rows.append({'comparison': 'T_to_tip_whitelist', 'surface': 'T_paths_modified',
-                 'paths_compared': len(t_paths), 'mismatched': len(changed_t),
-                 'first_mismatches': '; '.join(changed_t[:6]) or '-'})
-    rows.append({'comparison': 'T_to_tip_whitelist', 'surface': 'paths_removed_against_T',
-                 'paths_compared': len(t_paths), 'mismatched': len(removed_t),
-                 'first_mismatches': '; '.join(removed_t[:6]) or '-'})
-    rows.append({'comparison': 'T_to_tip_whitelist', 'surface': 'paths_added_after_T',
-                 'paths_compared': len(added_t), 'mismatched': 0,
-                 'first_mismatches': '; '.join(added_t[:6]) or '-'})
+    rows.append(_row('T_to_tip_whitelist', 'paths_added_not_allowed', added_t, t_index, head_index,
+                     'only_allowed_new', kind='not_allowed'))
+    rows.append(_row('T_to_tip_whitelist', 'paths_added_allowed', added_t, t_index, head_index,
+                     'informational', kind='listed'))
     # the reviewed tip's own byte-level identity, against a pristine extraction rather than Git alone
     dut_changed, inputs_changed, edited = [], [], []
     if pristine_root and os.path.isdir(pristine_root):
@@ -169,17 +215,33 @@ def comparisons(pristine_root):
     rows.append({'comparison': 'working_tree_vs_T_extraction',
                  'surface': 'candidate_DUT_and_golden_tables_must_be_identical',
                  'paths_compared': len(CANDIDATE_DUT) + len(GOLDEN_FROZEN),
-                 'mismatched': len(dut_changed), 'first_mismatches': '; '.join(dut_changed[:6]) or '-'})
+                 'mismatched': len(dut_changed), 'first_mismatches': '; '.join(dut_changed[:4]) or
+                 '-', 'expectation': 'identical', 'enforced': 'yes'})
     rows.append({'comparison': 'working_tree_vs_T_extraction',
                  'surface': 'read_only_inputs_must_be_identical',
                  'paths_compared': len(READ_ONLY_INPUTS), 'mismatched': len(inputs_changed),
-                 'first_mismatches': '; '.join(inputs_changed[:6]) or '-'})
+                 'first_mismatches': '; '.join(inputs_changed[:4]) or '-',
+                 'expectation': 'identical', 'enforced': 'yes'})
     rows.append({'comparison': 'working_tree_vs_T_extraction',
                  'surface': 'editable_files_actually_changed',
                  'paths_compared': len(EDITABLE_EXPECTED_TO_CHANGE),
-                 'mismatched': 0, 'first_mismatches': '%d of %d edited (informational)'
-                                 % (len(edited), len(EDITABLE_EXPECTED_TO_CHANGE))})
+                 'mismatched': 0, 'first_mismatches': '%d of %d edited'
+                                 % (len(edited), len(EDITABLE_EXPECTED_TO_CHANGE)),
+                 'expectation': 'informational', 'enforced': 'no'})
     return rows, added_t
+
+
+def frozen_gate(rows, diff_rc, b_diff_rc):
+    """the comparison numbers are only a gate once the expectation column decides which ones count"""
+    enforced = [r for r in rows if r['enforced'] == 'yes']
+    hits = [r['surface'] for r in enforced if int(r['mismatched']) > 0]
+    return {'gate': 'frozen_surfaces',
+            'command': 'git ls-tree -r at B, T and HEAD plus a digest walk against the T extraction; '
+                       'rows marked informational are excluded from the count',
+            'rc': sum(int(r['mismatched']) for r in enforced), 'expected_rc': '0',
+            'verdict': 'enforced rows %d, violations %s; git diff --check T..HEAD=%d B..HEAD=%d'
+                       % (len(enforced), hits or 'none', diff_rc, b_diff_rc),
+            'verdict_state': 'PASS' if not hits and diff_rc == 0 and b_diff_rc == 0 else 'FAIL'}
 
 
 CANDIDATE_DUT = list(CHECK.CANDIDATE_FILES)
@@ -306,7 +368,7 @@ def _splice(path, begin, end, lines):
         handle.write((head + begin + '\n' + '\n'.join(lines) + '\n' + end + tail).encode('utf-8'))
 
 
-def render_fix(root, results, rows, instrument_rows, gate_rows):
+def render_fix(root, results, rows, instrument_rows, selftest_rows):
     """three machine-written sections in the fix report: gates, instrument, frozen surfaces"""
     lines = ['| 门 | 命令 | rc | 期望 | 判决 | 依据 |', '|---|---|---|---|---|---|']
     for row in results:
@@ -318,6 +380,22 @@ def render_fix(root, results, rows, instrument_rows, gate_rows):
                  '不是失败也不是通过，它是"这台工具的范围不支持这个结论"的记录。')
     _splice(os.path.join(root, 'reports', 'dd1_d7c_a_review_fix_r1.md'),
             '<!-- BEGIN R1 GATES -->', '<!-- END R1 GATES -->', lines)
+    if selftest_rows:
+        slines = ['| 自测例 | 判决 | 声明的期望 | 实测观察 |', '|---|---|---|---|']
+        for row in selftest_rows['results']:
+            slines.append('| `%s` | %s | %s | %s |'
+                          % (row['case'], row['state'],
+                             str(row['expectation'])[:90].replace('|', '/'),
+                             str(row['observed'])[:150].replace('|', '/')))
+        slines.append('')
+        slines.append('`scripts/dd1_d7c_a_r1_selftest.py` 的用例是**这一轮验收工具自己的反例**：'
+                      '冻结面闸在四种真违规下各必须 FAIL、在只有 informational 计数时必须 PASS、'
+                      '掺入一条 enforced 违规时必须再次 FAIL；严格读表器对七种破损形状逐一拒收，'
+                      '并且把 T 已交付的三张坏 CSV 从 Git 取回后逐一拒收、把形状本来就合法的 '
+                      '`frozen_comparison.csv` 接受。合计 %d 例，失败：%s。'
+                      % (selftest_rows['cases'], ', '.join(selftest_rows['failures']) or 'none'))
+        _splice(os.path.join(root, 'reports', 'dd1_d7c_a_review_fix_r1.md'),
+                '<!-- BEGIN R1 SELFTEST -->', '<!-- END R1 SELFTEST -->', slines)
     ilines = ['| 诊断 | 对 T（必须复现） | 对修复后字节（必须具名拒收） | 修复后新增失败 | 字节确变 |',
               '|---|---|---|---|---|']
     by_t = dict((c['case'], c) for c in instrument_rows['on_T'])
@@ -336,15 +414,23 @@ def render_fix(root, results, rows, instrument_rows, gate_rows):
                   '`instrument_T.json` / `instrument_fixed.json`。逐项读，不看聚合 rc。')
     _splice(os.path.join(root, 'reports', 'dd1_d7c_a_review_fix_r1.md'),
             '<!-- BEGIN R1 INSTRUMENT -->', '<!-- END R1 INSTRUMENT -->', ilines)
-    flines = ['| 比较 | 面 | 路径数 | 不一致 | 前若干不一致 |', '|---|---|---:|---:|---|']
+    flines = ['| 比较 | 面 | 路径数 | 计数 | 前若干路径 | 本轮期望 | 计入闸 |',
+              '|---|---|---:|---:|---|---|---|']
     for row in rows:
-        flines.append('| %s | `%s` | %s | %s | %s |'
+        flines.append('| %s | `%s` | %s | %s | %s | `%s` | %s |'
                       % (row['comparison'], row['surface'], row['paths_compared'],
-                         row['mismatched'], str(row['first_mismatches'])[:120].replace('|', '/')))
+                         row['mismatched'], str(row['first_mismatches'])[:110].replace('|', '/'),
+                         row['expectation'], row['enforced']))
     flines.append('')
-    flines.append('三件事分开核：B 的全部 tracked 路径与本 tip 的 (mode, blob) 对照；T 的冻结面'
-                  '（四个候选 DUT 文件所在目录、首轮报告与交接、首轮证据目录）对照；以及 T..tip 的'
-                  '路径白名单（修改/删除/新增各列一张数）。另加一份与工作树对 T 提取件的逐文件摘要对照。')
+    flines.append('三件事分开核，并且每一行都写明本轮的期望与是否计入闸：B 的全部 tracked 路径与本 '
+                  'tip 的 (mode, type, blob) 对照（期望 identical/none_removed）；T 的冻结面按 §9 的'
+                  '确切路径列出（四个候选 DUT、黄金与请求表、首轮证据目录与任务书、只读输入、以及'
+                  '"白名单之外的每一条 T 路径"）；T..tip 的白名单单独回答"改的是不是白名单内的、有没有'
+                  '删、新增的是不是允许的"。上一版本把 `spectre/`、`reports/` 整目录当冻结面扫，于是'
+                  '白名单内的 `dd1_d7c_a_tb_draft.scs` 与两份白名单报告被记成 11 条"失配"，而这张表'
+                  '当时没有任何闸使用它。现在 `whitelisted_paths_edited`、`paths_added_allowed` 与'
+                  '`editable_files_actually_changed` 三行明确是 informational（计入闸=no），其余 enforced '
+                  '行的计数由 `frozen_surfaces` 闸求和并要求为 0。')
     _splice(os.path.join(root, 'reports', 'dd1_d7c_a_review_fix_r1.md'),
             '<!-- BEGIN R1 FROZEN -->', '<!-- END R1 FROZEN -->', flines)
 
@@ -386,6 +472,27 @@ def main(argv):
                              text))
         print('GATE %-32s %s %s' % ('counterexamples', results[-1]['verdict_state'],
                                     results[-1]['verdict'][:90]))
+
+        code, text = run([sys.executable, os.path.join(HERE, 'dd1_d7c_a_r1_selftest.py'),
+                          '--json', os.path.join(out_dir, 'selftest.json')])
+        row = _gate('record_tool_selftest', 'python dd1_d7c_a_r1_selftest.py --json <out>', code,
+                    '0', text)
+        # rc alone is not the evidence: the JSON has to carry every declared case and no failure
+        try:
+            selftest = json.loads(io.open(os.path.join(out_dir, 'selftest.json'),
+                                          encoding='utf-8').read())
+            row['verdict'] = 'cases=%d verdict=%s failures=%s | %s' % (
+                selftest['cases'], selftest['verdict'], selftest['failures'] or 'none',
+                row['verdict'])
+            if selftest['failures'] or selftest['verdict'] != 'PASS' or \
+                    selftest['cases'] != SELFTEST_CASES:
+                row['verdict_state'] = 'FAIL'
+        except (ValueError, KeyError, IOError) as error:
+            row['verdict'] = 'selftest JSON unreadable: %s' % str(error)[:120]
+            row['verdict_state'] = 'FAIL'
+        results.append(row)
+        print('GATE %-32s %s %s' % ('record_tool_selftest', row['verdict_state'],
+                                    row['verdict'][:90]))
 
         handoff = os.path.join(ROOT, 'reports', 'agent_handoffs', 'DATA-7C-A.json')
         handoff_payload = {}
@@ -466,6 +573,21 @@ def main(argv):
         print('GATE %-32s %s %s' % (second['gate'], second['verdict_state'],
                                     second['verdict'][:90]))
 
+        # the frozen comparisons and the two committed-range whitespace checks are inputs to the
+        # rendered report, so they are computed before rendering and refreshed inside the loop
+        diff_rc = subprocess.call(['git', '-C', ROOT, 'diff', '--check',
+                                   '%s..HEAD' % TIP_UNDER_REVIEW])
+        b_diff_rc = subprocess.call(['git', '-C', ROOT, 'diff', '--check',
+                                     '%s..HEAD' % DEVELOPMENT_BASE])
+        rows, added_t = comparisons(pristine)
+        results.append(frozen_gate(rows, diff_rc, b_diff_rc))
+        print('GATE %-32s %s %s' % ('frozen_surfaces', results[-1]['verdict_state'],
+                                    results[-1]['verdict'][:90]))
+        selftest_rows = {}
+        selftest_path = os.path.join(out_dir, 'selftest.json')
+        if os.path.isfile(selftest_path):
+            selftest_rows = json.loads(io.open(selftest_path, encoding='utf-8').read())
+
         # render, then re-run both gates and require the render to be a fixed point
         plan_rows = CHECK.read_table(os.path.join(ROOT, 'tests', 'dd1_d7c_a',
                                                   'native_case_plan.csv'),
@@ -479,8 +601,9 @@ def main(argv):
         for attempt in (1, 2, 3):
             render(ROOT, os.path.join(out_dir, 'offline_checks.json'),
                    os.path.join(out_dir, 'counterexamples.json'), plan_rows)
-            render_fix(ROOT, results, comparisons(pristine)[0],
-                       {'on_T': first.get('cases', []), 'on_fixed': second.get('cases', [])}, None)
+            render_fix(ROOT, results, rows,
+                       {'on_T': first.get('cases', []), 'on_fixed': second.get('cases', [])},
+                       selftest_rows)
             watched = ('dd1_d7c_a_pam_candidate.md', 'dd1_d7c_a_native_test_plan.md',
                        'dd1_d7c_a_review_fix_r1.md')
             before = [CHECK.sha_file(os.path.join(ROOT, 'reports', w)) for w in watched]
@@ -490,8 +613,9 @@ def main(argv):
                           '--json', os.path.join(out_dir, 'counterexamples.json')])
             render(ROOT, os.path.join(out_dir, 'offline_checks.json'),
                    os.path.join(out_dir, 'counterexamples.json'), plan_rows)
-            render_fix(ROOT, results, comparisons(pristine)[0],
-                       {'on_T': first.get('cases', []), 'on_fixed': second.get('cases', [])}, None)
+            render_fix(ROOT, results, rows,
+                       {'on_T': first.get('cases', []), 'on_fixed': second.get('cases', [])},
+                       selftest_rows)
             after = [CHECK.sha_file(os.path.join(ROOT, 'reports', w)) for w in watched]
             passes.append({'attempt': attempt, 'offline_rc': rc2, 'guards_rc': rc3,
                            'reports_stable': before == after})
@@ -508,14 +632,9 @@ def main(argv):
                         'verdict_state': 'PASS' if stable else 'FAIL'})
         print('GATE %-32s %s' % ('render_fixed_point', results[-1]['verdict_state']))
 
-        rows, added_t = comparisons(pristine)
         CHECK.rows_write(os.path.join(out_dir, 'frozen_comparison.csv'),
                          ['comparison', 'surface', 'paths_compared', 'mismatched',
-                          'first_mismatches'], rows)
-        diff_rc = subprocess.call(['git', '-C', ROOT, 'diff', '--check',
-                                   '%s..HEAD' % TIP_UNDER_REVIEW])
-        b_diff_rc = subprocess.call(['git', '-C', ROOT, 'diff', '--check',
-                                     '%s..HEAD' % DEVELOPMENT_BASE])
+                          'first_mismatches', 'expectation', 'enforced'], rows)
         CHECK.rows_write(os.path.join(out_dir, 'git_checks.csv'),
                          ['gate', 'command', 'rc', 'lines', 'scope'],
                          [{'gate': 'diff_check_T_to_HEAD',
@@ -526,11 +645,12 @@ def main(argv):
                            'command': 'git diff --check %s..HEAD' % DEVELOPMENT_BASE,
                            'rc': b_diff_rc, 'lines': 'see rc',
                            'scope': 'committed range over the development base as well'}])
-        must_match = [r for r in rows if 'informational' not in str(r['first_mismatches'])]
+        enforced = [r for r in rows if r['enforced'] == 'yes']
         removed_row = [r for r in rows if r['surface'] == 'paths_removed_against_T']
-        print('FROZEN rows=%d must_match_mismatches=%d added_after_T=%d removed_vs_T=%d '
-              'diff T=%d B=%d'
-              % (len(rows), sum(r['mismatched'] for r in must_match), len(added_t),
+        print('FROZEN rows=%d enforced=%d enforced_mismatches=%d informational_rows=%d '
+              'added_after_T=%d removed_vs_T=%d diff T=%d B=%d'
+              % (len(rows), len(enforced), sum(int(r['mismatched']) for r in enforced),
+                 len(rows) - len(enforced), len(added_t),
                  removed_row[0]['mismatched'] if removed_row else -1, diff_rc, b_diff_rc))
 
         identity = []
@@ -581,6 +701,7 @@ def main(argv):
         parsed = CHECK.read_table(path, header, key, optional=optional)
         read_back.append({'file': name, 'result': 'columns and keys verified',
                           'rows': len(parsed)})
+    enforced = [r for r in rows if r['enforced'] == 'yes']
     failures = [r['gate'] for r in results if r['verdict_state'] == 'FAIL']
     informational = [r['gate'] for r in results if r['verdict_state'] not in ('PASS', 'FAIL')]
     summary = {'task_id': TASK_ID, 'reviewed_tip': TIP_UNDER_REVIEW, 'development_base':
@@ -589,13 +710,12 @@ def main(argv):
                'gates': len(results), 'gates_failed': failures,
                'gates_informational': informational,
                'csv_read_back': read_back,
-               'frozen_comparisons': len(rows) if 'rows' in dir() else 0,
-               'frozen_mismatches': sum(r['mismatched'] for r in rows
-                                        if 'informational' not in str(r['first_mismatches'])
-                                        ) if 'rows' in dir() else 0,
-               'frozen_rows': rows if 'rows' in dir() else [],
-               'paths_added_after_T': len(added_t) if 'added_t' in dir() else 0,
-               'added_paths_after_T': added_t if 'added_t' in dir() else [],
+               'frozen_rows': len(rows), 'frozen_rows_enforced': len(enforced),
+               'frozen_rows_informational': len(rows) - len(enforced),
+               'frozen_enforced_mismatches': sum(int(r['mismatched']) for r in enforced),
+               'frozen_violating_surfaces': [r['surface'] for r in enforced
+                                             if int(r['mismatched']) > 0],
+               'paths_added_after_T': len(added_t), 'added_paths_after_T': added_t,
                'native_launches': 0, 'rtl_simulations': 0, 'oa_writes': 0,
                'electrical_results': 'NONE: every result here is about text, connectivity, logic '
                                      'derived from transistors, table schemas and Git identity'}

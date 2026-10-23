@@ -266,7 +266,8 @@ def csv_probes(scratch):
     cases = [('C1_round_trip_ok', good, True),
              ('C2_unquoted_comma_row', None, False),
              ('C3_wrong_column_count', None, False),
-             ('C4_duplicate_key', None, False)]
+             ('C4_duplicate_key', None, False),
+             ('C5_header_only', None, False)]
     for name, rows, expect_ok in cases:
         path = os.path.join(scratch, name + '.csv')
         if name == 'C1_round_trip_ok':
@@ -278,6 +279,11 @@ def csv_probes(scratch):
         elif name == 'C3_wrong_column_count':
             with io.open(path, 'wb') as handle:
                 handle.write((','.join(spec[1]) + '\n' + 'a,b,c\n').encode('utf-8'))
+        elif name == 'C5_header_only':
+            # the shape the review pointed at: a header and nothing else, which a naive reader calls
+            # "zero mismatches, therefore tested"
+            with io.open(path, 'wb') as handle:
+                handle.write((','.join(spec[1]) + '\n').encode('utf-8'))
         else:
             CHECK.rows_write(path, spec[1], good + good)
         try:

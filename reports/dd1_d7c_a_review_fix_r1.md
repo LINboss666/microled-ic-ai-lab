@@ -39,6 +39,11 @@
    修好的表发布在**新目录**（见 §5），坏表不删不改，只在本报告里指出坏在哪一行。
 5. 未做：PAM/LUT/阵列/版图/TCON、PDK/模型卡/许可证/凭据读取、VM/SSH、GC、历史重写、force、跳 hooks、
    合并、推 main、登记接受版、进入下一阶段。DATA-7B 的三条非阻断待办仍未动。
+6. **被取代的中间运行**：`results/evidence/dd1_d7c_a_r1_20261023_085000_3f9a1c/`（未提交、未纳入交付）
+   是本报告 §6.5 所述冻结面语义修好**之前**的一次完整运行。它的仪器/离线/反例/渲染四类门是有效的，
+   但 `frozen_comparison.csv` 把白名单内的编辑当成 11 条失配，且没有任何闸使用这张表，因此它的
+   `DD1_7C_A_R1_VERIFY PASS_WITH_DISCLOSED_INFORMATIONAL_GATES` 结论不可复用。按"已发布产物不删"
+   的既有规矩，该目录原样留在工作树里（不提交、不删除），正式记录发布在**新的 run_id**目录。
 
 ## 1 F1：顶层连线没进功能验证
 
@@ -95,10 +100,18 @@ multiplicity 合计（145，因 `m` 全部未书写）与逐模型有效宽度�
   禁止原生运行由入口授权闸保证（`NATIVE_ENTRY_REFUSED`：4 种环境组合、先拒绝再返回、目录摘要与哨兵不变）。
 - CSV：`rows_write()` 改为标准库 `csv.writer`（LF、真实引用），并新增 `read_table()` 严格反读；
   发布后从**将要交付的字节**逐表核表头、每行列数、唯一键、非空列与 JSON 可解析。
-  往返与破损四条探针：C1 正常往返；C2 未引用逗号（7 列 vs 声明 6 列）拒收；C3 列数不足拒收；
-  C4 键重复拒收——即使坏表的摘要自洽，schema 也必须拒（反例集合在 §5 表内）。
+  往返与破损五条探针：C1 正常往返；C2 未引用逗号（7 列 vs 声明 6 列）拒收；C3 列数不足拒收；
+  C4 键重复拒收；**C5 只剩表头**（0 数据行）拒收——即使坏表的摘要自洽，schema 也必须拒
+  （反例集合在 §5 表内）。
+- C5 是这一轮**自己发现**的第二个同类洞：`read_table()` 第一版把"只有表头"读成 0 行并返回成功，
+  正是审核方对黄金表指出的"空遍历不算测过"在读表侧的重演。加 `allow_empty`（默认 False）后，
+  九例记录工具自测（`scripts/dd1_d7c_a_r1_selftest.py`）第一次跑就把它打成 FAIL，改后才全绿；
+  这条按实登记在 §6.6。
 - 旧目录不改写：T 的坏行按审核方清单在本报告与 `source_identity.csv` 里指名，
-  修好的表在新 run_id 目录发布。
+  修好的表在新 run_id 目录发布。`selftest` 里有一例专门把 T 已交付的
+  `commands.csv`/`git_checks.csv`/`source_identity.csv` 从 Git 取回喂给严格读取器——三张都必须被
+  逐行具名拒收，而 T 的 `frozen_comparison.csv`（形状本来就合法）必须被接受，两个方向都核，
+  避免"读表器只会报错"这种假严格。
 
 ## 4 F4：15 例计划的自相矛盾已消除
 
@@ -126,15 +139,17 @@ multiplicity 合计（145，因 `m` 全部未书写）与逐模型有效宽度�
 <!-- BEGIN R1 GATES -->
 | 门 | 命令 | rc | 期望 | 判决 | 依据 |
 |---|---|---|---|---|---|
-| `reviewer_instrument_on_T` | `python  --root  --out <json>` | not_run | 0 | NOT_ATTEMPTED | NOT_ATTEMPTED: give --pristine-root and --instrument to replay it |
+| `reviewer_instrument_on_T` | `python D:\ic617_d7c_a_r1\review\MicroLED_DATA7C_A_Independent_Review_2` | 0 | 0 | PASS | baseline_checks=22 baseline_failures=none all_reproduced=True cases_named=8/8 |
 | `offline_checks` | `python dd1_d7c_a_offline_check.py --json <out>` | 0 | 0 | PASS | D7C_A_OFFLINE_CHECK: PASS (30 checks, failures: none) |
-| `counterexamples` | `python dd1_d7c_a_guards.py --json <out>` | 0 | 0 | PASS | D7C_A_GUARDS: PASS (28/28 named exactly; not hit: none) |
+| `counterexamples` | `python dd1_d7c_a_guards.py --json <out>` | 0 | 0 | PASS | D7C_A_GUARDS: PASS (29/29 named exactly; not hit: none) |
+| `record_tool_selftest` | `python dd1_d7c_a_r1_selftest.py --json <out>` | 0 | 0 | PASS | cases=9 verdict=PASS failures=none / D7C_A_R1_SELFTEST: PASS (9 cases, failures: none) |
 | `handoff_structure` | `python dd1_d7c_a_validate_handoff.py reports/agent_handoffs/DATA-7C-A.` | skipped | 0 once the handoff carries task_id DATA-7C-A-R1 | SKIPPED_WITH_REASON | SKIPPED at the record commit: the handoff on disk still describes task_id=DATA-7C-A |
 | `native_entry_refused` | `python dd1_d7c_a_deckgen.py --probe <temp>` | 0 | 0 | PASS | DECKGEN_PROBE refused=True untouched=True reason=DATA-7C-A: this round authorises no native launch and no deck publication; NATIVE_AUTHORISED_THIS_ROU |
 | `provenance` | `python provenance_check.py` | 0 | 0 | PASS | SOURCE_PROVENANCE_CHECK: PASS |
 | `netlist_stats_scope_limit` | `python netlist_stats.py at the B extraction and at this tip` | 1/1 | INFORMATIONAL: single-cell scope, not a PASS | INFORMATIONAL_NOT_PASS | base problems 1 ['dd1_d7b_pwm_current.md:47 claims 29 devices']; tip problems 11; new 10 ['dd1_d7c_a_pam_candidate.md:130 claims 145 devices', 'dd1_d7 |
 | `history_safety` | `python precommit_safety_check.py --mode history` | 0 | 0 | PASS | SAFETY_GATE: PASS |
-| `reviewer_instrument_on_fixed_bytes` | `python  --root D:\ic617_d7c_a_r1 --out <json>` | not_run | 1 | NOT_ATTEMPTED | NOT_ATTEMPTED: give --pristine-root and --instrument to replay it |
+| `reviewer_instrument_on_fixed_bytes` | `python D:\ic617_d7c_a_r1\review\MicroLED_DATA7C_A_Independent_Review_2` | 1 | 1 | PASS | baseline_checks=30 baseline_failures=none all_reproduced=False cases_named=8/8 |
+| `frozen_surfaces` | `git ls-tree -r at B, T and HEAD plus a digest walk against the T extra` | 0 | 0 | PASS | enforced rows 21, violations none; git diff --check T..HEAD=0 B..HEAD=0 |
 
 每条命令的完整文本与原始尾行见 `commands.csv`（本目录）；`INFORMATIONAL_NOT_PASS` 不是失败也不是通过，它是"这台工具的范围不支持这个结论"的记录。
 <!-- END R1 GATES -->
@@ -142,35 +157,78 @@ multiplicity 合计（145，因 `m` 全部未书写）与逐模型有效宽度�
 <!-- BEGIN R1 INSTRUMENT -->
 | 诊断 | 对 T（必须复现） | 对修复后字节（必须具名拒收） | 修复后新增失败 | 字节确变 |
 |---|---|---|---|---|
+| `top_pam_bits_swapped` | reproduced=True | reproduced=False | TOP_INTEGRATED_THERMO_16 | yes |
+| `top_enable_tied_high` | reproduced=True | reproduced=False | TOP_INTEGRATED_THERMO_16 | yes |
+| `reference_bound_to_vcas` | reproduced=True | reproduced=False | REFERENCE_NODE_IDENTITY,DNW_PASS_BODY_LOCAL | yes |
+| `duplicate_mos_instance` | reproduced=True | reproduced=False | NO_DUPLICATE_INSTANCES | yes |
+| `cascode_multiplicity_changed` | reproduced=True | reproduced=False | DEVICE_COUNT_SEPARATION,UNIT_CORE_ISOMORPHIC_TO_ACCEPTED | yes |
+| `report_total_borrowed_from_other_cell` | reproduced=True | reproduced=False | REPORT_CLAIMS_BOUND_TO_OBJECT | yes |
+| `golden_header_only` | reproduced=True | reproduced=False | GOLDEN_TABLE_SCHEMA,THERMO_GOLDEN_16 | yes |
+| `active_transient_not_detected` | reproduced=True | reproduced=False | DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS | yes |
 
 同一件未修改的审核方仪器（`reviewer/probe_review_gaps.py`，摘要与包内 `MANIFEST.csv` 相同）分别对 T 的只读提取与对修复后字节运行：前者 `all_defects_reproduced=true`、后者 `false`，逐项失败集合见上；两次运行的 `baseline_checks` 与 `baseline_failures` 记在 `instrument_T.json` / `instrument_fixed.json`。逐项读，不看聚合 rc。
 <!-- END R1 INSTRUMENT -->
 
 <!-- BEGIN R1 FROZEN -->
-| 比较 | 面 | 路径数 | 不一致 | 前若干不一致 |
-|---|---|---:|---:|---|
-| B_tracked_paths | `data7b_r3_evidence_bundle` | 287 | 0 | - |
-| B_tracked_paths | `data7b_r1_evidence` | 284 | 0 | - |
-| B_tracked_paths | `data7b_main_line_evidence` | 805 | 0 | - |
-| B_tracked_paths | `data7b_r3_review_documents` | 5 | 0 | - |
-| B_tracked_paths | `case_and_golden_tables_D7B` | 3 | 0 | - |
-| B_tracked_paths | `accepted_D7A_rtl_and_tb` | 1 | 0 | - |
-| B_tracked_paths | `shared_safety_and_validation_tools` | 161 | 0 | - |
-| B_tracked_paths | `accepted_netlist_masters` | 206 | 0 | - |
-| B_tracked_paths | `every_B_tracked_path` | 2533 | 0 | - |
-| B_tracked_paths | `paths_removed_against_B` | 2533 | 0 | - |
-| T_frozen_surfaces | `candidate_DUT_netlists_unchanged` | 211 | 0 | - |
-| T_frozen_surfaces | `first_round_reports_and_handoff` | 81 | 0 | - |
-| T_frozen_surfaces | `first_round_evidence_dir` | 7 | 0 | - |
-| T_to_tip_whitelist | `T_paths_modified` | 2559 | 0 | - |
-| T_to_tip_whitelist | `paths_removed_against_T` | 2559 | 0 | - |
-| T_to_tip_whitelist | `paths_added_after_T` | 0 | 0 | - |
-| working_tree_vs_T_extraction | `candidate_DUT_and_golden_tables_must_be_identical` | 6 | 0 | - |
-| working_tree_vs_T_extraction | `read_only_inputs_must_be_identical` | 15 | 0 | - |
-| working_tree_vs_T_extraction | `editable_files_actually_changed` | 11 | 0 | 0 of 11 edited (informational) |
+| 比较 | 面 | 路径数 | 计数 | 前若干路径 | 本轮期望 | 计入闸 |
+|---|---|---:|---:|---|---|---|
+| B_tracked_paths | `data7b_r3_evidence_bundle` | 287 | 0 | - | `identical` | yes |
+| B_tracked_paths | `data7b_r1_evidence` | 284 | 0 | - | `identical` | yes |
+| B_tracked_paths | `data7b_main_line_evidence` | 805 | 0 | - | `identical` | yes |
+| B_tracked_paths | `data7b_r3_review_documents` | 5 | 0 | - | `identical` | yes |
+| B_tracked_paths | `case_and_golden_tables_D7B` | 3 | 0 | - | `identical` | yes |
+| B_tracked_paths | `accepted_D7A_rtl_and_tb` | 1 | 0 | - | `identical` | yes |
+| B_tracked_paths | `shared_safety_and_validation_tools` | 161 | 0 | - | `identical` | yes |
+| B_tracked_paths | `accepted_netlist_masters` | 206 | 0 | - | `identical` | yes |
+| B_tracked_paths | `every_B_tracked_path` | 2533 | 0 | - | `identical` | yes |
+| B_tracked_paths | `paths_removed_against_B` | 2533 | 0 | - | `none_removed` | yes |
+| T_frozen_surfaces | `four_candidate_DUT_netlists` | 4 | 0 | - | `identical` | yes |
+| T_frozen_surfaces | `golden_and_request_tables` | 2 | 0 | - | `identical` | yes |
+| T_frozen_surfaces | `first_round_evidence_dir` | 7 | 0 | - | `identical` | yes |
+| T_frozen_surfaces | `first_round_task_book` | 1 | 0 | - | `identical` | yes |
+| T_frozen_surfaces | `read_only_inputs_named_by_the_brief` | 15 | 0 | - | `identical` | yes |
+| T_frozen_surfaces | `every_T_path_off_the_whitelist` | 2547 | 0 | - | `identical` | yes |
+| T_to_tip_whitelist | `whitelisted_paths_edited` | 12 | 8 | reports/dd1_d7c_a_native_test_plan.md; reports/dd1_d7c_a_pam_candidate.md; scripts/dd1_d7c_a_guards.py; script | `editable` | no |
+| T_to_tip_whitelist | `T_paths_modified_off_whitelist` | 2547 | 0 | - | `none_modified` | yes |
+| T_to_tip_whitelist | `paths_removed_against_T` | 2559 | 0 | - | `none_removed` | yes |
+| T_to_tip_whitelist | `paths_added_not_allowed` | 3 | 0 | - | `only_allowed_new` | yes |
+| T_to_tip_whitelist | `paths_added_allowed` | 3 | 3 | reports/dd1_d7c_a_review_fix_r1.md; reports/tasks/DATA-7C-A-R1.md; tests/dd1_d7c_a/device_count_claims.csv | `informational` | no |
+| working_tree_vs_T_extraction | `candidate_DUT_and_golden_tables_must_be_identical` | 6 | 0 | - | `identical` | yes |
+| working_tree_vs_T_extraction | `read_only_inputs_must_be_identical` | 15 | 0 | - | `identical` | yes |
+| working_tree_vs_T_extraction | `editable_files_actually_changed` | 11 | 0 | 8 of 11 edited | `informational` | no |
 
-三件事分开核：B 的全部 tracked 路径与本 tip 的 (mode, blob) 对照；T 的冻结面（四个候选 DUT 文件所在目录、首轮报告与交接、首轮证据目录）对照；以及 T..tip 的路径白名单（修改/删除/新增各列一张数）。另加一份与工作树对 T 提取件的逐文件摘要对照。
+三件事分开核，并且每一行都写明本轮的期望与是否计入闸：B 的全部 tracked 路径与本 tip 的 (mode, type, blob) 对照（期望 identical/none_removed）；T 的冻结面按 §9 的确切路径列出（四个候选 DUT、黄金与请求表、首轮证据目录与任务书、只读输入、以及"白名单之外的每一条 T 路径"）；T..tip 的白名单单独回答"改的是不是白名单内的、有没有删、新增的是不是允许的"。上一版本把 `spectre/`、`reports/` 整目录当冻结面扫，于是白名单内的 `dd1_d7c_a_tb_draft.scs` 与两份白名单报告被记成 11 条"失配"，而这张表当时没有任何闸使用它。现在 `whitelisted_paths_edited`、`paths_added_allowed` 与`editable_files_actually_changed` 三行明确是 informational（计入闸=no），其余 enforced 行的计数由 `frozen_surfaces` 闸求和并要求为 0。
 <!-- END R1 FROZEN -->
+
+### 5.1 本轮新增的两道闸
+
+- `record_tool_selftest`：运行 `scripts/dd1_d7c_a_r1_selftest.py`，9 例（数量由 `verify.py` 里的
+  `SELFTEST_CASES` 双向绑定，单边加例会 FAIL 而不是悄悄少跑）。判据不是进程 rc：JSON 的
+  `cases`/`verdict`/`failures` 三个字段都要符合声明才算过。用例覆盖冻结闸的四个方向
+  （改候选 DUT、删 T 路径、加 §9 之外新路径、`git diff --check` 非 0 各必须让闸 FAIL；
+  纯 informational 计数不 FAIL，但同一张表里掺入真违规仍必须 FAIL）、冻结面是**确切路径**而非目录、
+  `read_table` 的七种破损形状、含逗号与引号字段的真实往返，以及把 T 已交付的三张坏表读回必须拒收。
+- `frozen_surfaces`：把上面那张比较表变成闸。只统计 `enforced=yes` 的 21 行并要求总和为 0，
+  同时并入 `git diff --check T..HEAD` 与 `B..HEAD` 两个 rc。`whitelisted_paths_edited`（本轮实际
+  改了白名单里的哪几条）、`paths_added_allowed` 与 `editable_files_actually_changed` 明确是
+  informational：计数照实写、`enforced=no`、不参与判决，也不再冒充"失配"。逐行结果由机器写入下面
+  这张表（`selftest.json`）。
+
+<!-- BEGIN R1 SELFTEST -->
+| 自测例 | 判决 | 声明的期望 | 实测观察 |
+|---|---|---|---|
+| `frozen_gate_refuses_candidate_DUT_edit` | PASS | a modified DUT netline must fail the gate | state=FAIL verdict=enforced rows 21, violations ['four_candidate_DUT_netlists']; git diff --check T..HEAD=0 B..HEAD=0 |
+| `frozen_gate_refuses_T_path_removal` | PASS | a removed T path must fail the gate | state=FAIL |
+| `frozen_gate_refuses_unallowed_addition` | PASS | a new path outside §9 must fail the gate | state=FAIL |
+| `frozen_gate_refuses_whitespace_errors` | PASS | git diff --check rc != 0 must fail the gate | state=FAIL |
+| `frozen_gate_counts_only_enforced_rows` | PASS | informational counts neither fail the gate nor hide a real violation | informational-only=PASS plus enforced=FAIL |
+| `frozen_surfaces_are_exact_paths` | PASS | the DUT/golden surfaces are exact paths and the deck draft is on the whitelist | dut paths=4 enforced=yes draft on whitelist=True enforced_edit_row=no |
+| `read_table_refuses_seven_shapes` | PASS | empty, header-only, ragged, extra-column, wrong-header, duplicate-key and blank-required a | all as expected |
+| `rows_write_round_trips_commas_and_quotes` | PASS | the standard-library writer and reader agree on awkward content, LF only | fields back identical=True cr_absent=True |
+| `T_published_tables_refused_by_the_strict_reader` | PASS | commands/git_checks/source_identity as delivered at T are refused line by line, while the  | the three ragged T tables are refused by name and the well-formed one is accepted |
+
+`scripts/dd1_d7c_a_r1_selftest.py` 的用例是**这一轮验收工具自己的反例**：冻结面闸在四种真违规下各必须 FAIL、在只有 informational 计数时必须 PASS、掺入一条 enforced 违规时必须再次 FAIL；严格读表器对七种破损形状逐一拒收，并且把 T 已交付的三张坏 CSV 从 Git 取回后逐一拒收、把形状本来就合法的 `frozen_comparison.csv` 接受。合计 9 例，失败：none。
+<!-- END R1 SELFTEST -->
 
 ## 6 本轮我自己造成的缺陷（按实登记）
 
@@ -183,6 +241,24 @@ multiplicity 合计（145，因 `m` 全部未书写）与逐模型有效宽度�
    我在自己新写的表上重犯了一次，改由 `csv.writer` 从数据结构生成才通过。
 4. 仪器在 Windows 上因 gbk 默认编码解码失败（不是代码问题）；我没有改仪器，而是用 `PYTHONUTF8=1`
    运行并把这一点连同"运行前后摘要不变"记进 §0.3。
+5. **冻结面按目录扫、并且没有闸使用它**（§0.6 的那次运行暴露）。`dd1_d7c_a_verify.py` 第一版把
+   `spectre/`、`reports/` 两个整目录列成"T 冻结面"，于是白名单内**允许**改的
+   `dd1_d7c_a_tb_draft.scs` 与两份白名单报告被记成 3 条失配，加上 `T_paths_modified` 的 8 条，
+   打印出 `must_match_mismatches=11`；同时这张表只写盘不进 `commands.csv`，没有任何门使用它——
+   数值错了也不会 FAIL。这与审核方点名的"没有 mismatch 不等于成功"是同一类毛病，发生在我自己
+   这轮的验收工具里。修法：按任务书 §9 的**确切路径**列冻结面（四个候选 DUT、黄金/请求表、首轮
+   证据目录 7 条、首轮任务书 1 条、只读输入 15 条，外加"白名单之外的每一条 T 路径"2,547 条），
+   每行加 `expectation`/`enforced` 两列，并新增真正的 `frozen_surfaces` 闸：只对 `enforced=yes`
+   的行求和并要求 0，同时并入 `git diff --check T..HEAD` 与 `B..HEAD` 的 rc。白名单内实际改了几条、
+   新增了哪几条，仍如实列出但记为 informational，不再冒充失配。修后由同一脚本重跑，
+   `enforced rows 21, violations none`。
+6. **严格读表器自己也漏了"只剩表头"**。`read_table()` 会拒空文件、错表头、错列数、重复键与必填空
+   格，但"表头 + 零行"它读成 0 行并返回成功——和审核方点名的黄金表空遍历是同一形状，只是发生在
+   读侧。这条不是我看代码看出来的，是新加的 9 例自测第一次运行就把 `read_table_refuses_seven_shapes`
+   打成 FAIL（实测 `header_only: accepted 0 rows`）才暴露。修法：`allow_empty` 参数默认 False，
+   报错文本带表头与路径；同时给反例集加 C5。改完自测 9/9、反例 29/29 通过。
+   教训记下来：只验证"检查器能不能拒收坏输入"不够，还得验证它**拒收的是哪一种坏**，
+   否则一个新形状就会退化成旧的空遍历。
 
 ## 7 未解与下一步
 

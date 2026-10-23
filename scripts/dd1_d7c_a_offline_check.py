@@ -110,11 +110,13 @@ def rows_write(path, header, rows):
     return path
 
 
-def read_table(path, header, unique_key=None, optional=()):
+def read_table(path, header, unique_key=None, optional=(), allow_empty=False):
     """read a published table back strictly and refuse anything that does not match its schema
 
     Empty is refused everywhere except in the columns a caller declares genuinely optional, so
-    "paired_case is empty for a DC row" is legal while "a whole column went missing" is not.
+    "paired_case is empty for a DC row" is legal while "a whole column went missing" is not. A table
+    that is nothing but its header is refused too: that is the shape the review pointed at when a
+    golden table with zero rows still reported "16 combinations tested".
     """
     if not os.path.isfile(path):
         raise ValueError('%s is missing' % path)
@@ -124,6 +126,9 @@ def read_table(path, header, unique_key=None, optional=()):
         raise ValueError('%s is empty, which is not a table with zero rows' % path)
     if rows[0] != list(header):
         raise ValueError('%s header is %s, expected %s' % (path, rows[0], list(header)))
+    if len(rows) == 1 and not allow_empty:
+        raise ValueError('%s declares the header %s and has no data rows at all'
+                         % (path, ','.join(header)))
     parsed = []
     seen = set()
     for number, row in enumerate(rows[1:], 2):

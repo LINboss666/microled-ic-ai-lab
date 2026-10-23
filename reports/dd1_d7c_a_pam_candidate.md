@@ -295,6 +295,7 @@ select4 = pam2                          select0 = 1（接 vdd18 轨）
 | `C2_unquoted_comma_row` | HIT | - | CSV_SCHEMA | - | - |
 | `C3_wrong_column_count` | HIT | - | CSV_SCHEMA | - | - |
 | `C4_duplicate_key` | HIT | - | CSV_SCHEMA | - | - |
+| `C5_header_only` | HIT | - | CSV_SCHEMA | - | - |
 
 基线（未注入）失败集合：none；规则：`found == sorted(expected)` 且 expected 非空。E09/E17/E19 一类注入对象就是承载本表的文件或表本身，其改前改后摘要只出现在 `counterexamples.json`：把摘要写进被注入的文件会让每次渲染都不同。
 <!-- END 7C GUARDS -->
