@@ -497,13 +497,22 @@ def render_report(out_dir, results, rows, git_rows, counts, schedule_rows, case_
                                                   row['scope']))
     flines.append('')
     flines.append('R2 的全部 %d 条跟踪路径逐条比 (mode, type, blob)；四份候选 DUT、共享工具、安全闸脚本'
-                  '与全部旧证据目录各成一行为 enforced；本轮新增 %d 条路径由 §9 的白名单前缀允许，'
-                  '删除与修改计数为 0。' % (counts['base'], len(counts['added'])))
+                  '与全部旧证据目录各成一行为 enforced；本轮新增 %d 条路径全部落在任务书 §9 允许的'
+                  '新路径前缀里，删除与修改计数为 0。' % (counts['base'], len(counts['added'])))
     _splice(report, '<!-- BEGIN 7CB FROZEN -->', '<!-- END 7CB FROZEN -->', flines)
     return report
 
 
 def main(argv):
+    if '--handoff-check' in argv:
+        """judge the delivered handoff alone, without publishing anything: the row in commands.csv
+        cites this entry point, so it has to exist for the reviewer"""
+        problems = handoff_check()
+        print('D7C_B_PREP_HANDOFF %s %s' % ('PASS' if not problems else 'FAIL',
+                                            '; '.join(problems[:4]) if problems else
+                                            'fields, digests against disk, zero costs, no self-listing '
+                                            'and no forbidden claim'))
+        return 0 if not problems else 1
     out_dir = ''
     if '--out' in argv:
         out_dir = os.path.abspath(argv[argv.index('--out') + 1])
@@ -752,9 +761,15 @@ def main(argv):
                         'command': 'python dd1_d7c_b_prep_verify.py (renders the four tables twice '
                                    'and compares)', 'rc': 0 if middle == after else 1,
                         'expected_rc': '0',
-                        'verdict': 'first render changed the report by %d bytes, the second changed it '
-                                   'by %d bytes; the tables are a function of the sources, not of the '
-                                   'moment' % (len(middle) - len(before), len(after) - len(middle)),
+                        'verdict': 'the first render rewrote the report (%s; length %+d bytes), the '
+                                   'second left it byte-identical (%s; length %+d bytes): the fixed '
+                                   'point is judged inside one run, so the tables are a function of '
+                                   'the sources *and of the moment this run measured them* -- the '
+                                   'git-range rows carry a UTC stamp for that reason'
+                                   % ('changed bytes' if middle != before else 'no change',
+                                      len(middle) - len(before),
+                                      'changed bytes' if after != middle else 'no change',
+                                      len(after) - len(middle)),
                         'verdict_state': 'PASS' if middle == after else 'FAIL'})
         print('GATE %-38s %s %s' % ('report_render_fixed_point', results[-1]['verdict_state'],
                                     results[-1]['verdict'][:110]))

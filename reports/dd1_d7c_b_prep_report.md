@@ -173,6 +173,16 @@ C06 非均匀样点边界插值等于手算 `1.375e-13 C`；C08 的 NaN、重复
   tip 之后写进报告的，于是它 `source_identity.csv` 里对本报告的摘要当场变成假语句。与其提交一份
   自己会打脸的记录，不如整目录原样移到 `review/scratch/superseded_175526_…/`，用新的 run id 重发一次
   ——这正是 R1 因为"记录引用了它发布之后又写的文件"被抓到的同一件事，本轮不能靠事后注释补救。
+  同一个理由又发生了一次：`…_181422_958378` 也是 24 门 0 失败，但发完之后才发现
+  `report_render_fixed_point` 把自己的依据写成"表是源的函数、不是时刻的函数"——第一次渲染确实
+  改了字节（长度差恰好为 0 让人误读成"没改"），而 git 区间行本来就带 UTC 时刻，这句话超出了证据；
+  改成"固定点在一次运行内判定，表同时是时刻的函数"之后，那份记录对 `scripts/dd1_d7c_b_prep_verify.py`
+  与报告的摘要再次失真，于是同样原样移到 `review/scratch/superseded_181422_…/`。
+* `commands.csv` 里 `handoff_structure` 那行把入口写成 `python dd1_d7c_b_prep_verify.py
+  --handoff-check`，可这个 flag 当时并不存在——记录引用了一个审核者照着敲就会失败的命令，比写错一个
+  数字更糟。现在它真存在：只判交接、什么都不发布，`rc=0/1` 由同一套 `handoff_check()` 决定。
+  另有一次被中途叫停的自动命名发布（`data_7c_b_prep_r20261023_182052_659156`，用了小写连字符的
+  目录名而不是交接里约定的 run id），它从未成为记录，字节整目录放在 `review/scratch/killed_autonamed_…/`。
 
 ## 9 机器写入的表（由 `scripts/dd1_d7c_b_prep_verify.py` 从记录渲染）
 
