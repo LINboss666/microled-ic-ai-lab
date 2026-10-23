@@ -70,7 +70,7 @@
   "spectre_help_invocations": 0,
   "ssh_or_vm": 0
  },
- "evidence_dir": "results/evidence/dd1_d7c_a_r2_20261023_135010_9e01e8",
+ "evidence_dir": "results/evidence/dd1_d7c_a_r2_20261023_135600_10e307",
  "evidence_serialisation": {
   "old_directory": {
    "path": "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0",
@@ -86,12 +86,13 @@
   "shape_reader_kept": "dd1_d7c_a_offline_check.read_table stays shape-only by decision; the semantic rules live in the new reader",
   "superseded_intermediate_runs": [
    "results/evidence/dd1_d7c_a_r2_20261023_132447_356235 (aborted before publishing: verify crashed at the render step because it still carried the first round's 16-column plan header inline while the delivered table has 25 columns. Its seven sub-result JSONs are kept on the execution machine under review/scratch/aborted_record_..., not deleted and not published; the header now comes from the checker's own schema)",
-   "results/evidence/dd1_d7c_a_r2_20261023_134109_00c811 (published complete, verdict FAIL, committed and kept: the new semantic layer refused its own record because it demanded \"no exception\" from every case of the baseline instrument JSON, where the exception IS the finding - the reviewed R1 defect was a non-finite value reaching an unhandled int(). The rule now treats a crash as the reproduction on the baseline copy and as a failure on the repaired copy. This is the gate working, not a record being hidden)"
+   "results/evidence/dd1_d7c_a_r2_20261023_134109_00c811 (published complete, verdict FAIL, committed and kept: the new semantic layer refused its own record because it demanded \"no exception\" from every case of the baseline instrument JSON, where the exception IS the finding - the reviewed R1 defect was a non-finite value reaching an unhandled int(). The rule now treats a crash as the reproduction on the baseline copy and as a failure on the repaired copy. This is the gate working, not a record being hidden)",
+   "results/evidence/dd1_d7c_a_r2_20261023_135010_9e01e8 (complete and internally consistent, but not delivered: its commands.csv cited the machine temp directory by absolute path, which names the local account. The displayed paths are now masked as <temp>/... the way the deckgen row already was, and the run after that masking is the delivered record. This directory is kept whole on the execution machine under review/scratch/, not deleted)"
   ],
-  "superseded_runs_policy": "a run that crashed before publishing its tables is moved to the execution machine's scratch directory and named above, never deleted and never committed; the published directory is written once by a run that completed",
+  "superseded_runs_policy": "a run that crashed before publishing its tables, or published a table this round should not put in Git, is kept whole on the execution machine under review/scratch/ and named above: never deleted, never committed. The delivered directory is the one run that completed and passed its own post-publish recheck",
   "validated": "the record is read back from disk after publishing and the verdict turns FAIL if the recheck reports any problem"
  },
- "head_sha": "79e247d03d8b6ba92e44186f7f6fba2af5f27f26",
+ "head_sha": "74df5f3028ca5a1b6ea53723e136e1c047747e4c",
  "head_sha_role": "the commit at generation time; the commits carrying this file and the record are above it, and their read-back is in remote_readback",
  "known_limitations": [
   "every result in this file is about text, connectivity, derived logic, table schemas, schedule arithmetic and Git identity; no electrical quantity was measured",
@@ -312,7 +313,7 @@
   ],
   "removed_R2_over_H": []
  },
- "payload_sha": "79e247d03d8b6ba92e44186f7f6fba2af5f27f26",
+ "payload_sha": "74df5f3028ca5a1b6ea53723e136e1c047747e4c",
  "remote_readback": {
   "ancestry": {
    "B_is_ancestor_of_T": true,
@@ -509,10 +510,10 @@
     "sha256": "864f8889fb5c114cb944325deea0036a822cf3e295d73d452cba328fe36773bd"
    },
    {
-    "bytes": 67217,
+    "bytes": 67702,
     "path": "scripts/dd1_d7c_a_verify.py",
     "role": "delivered this round",
-    "sha256": "2ba28be7416e83c98f2b9bf70282bf0342fefd8e518607824c3134de1b8f4e49"
+    "sha256": "577c7b39997e94479e2cc183eddd7c779ff46041281c077569287292ea32d696"
    },
    {
     "bytes": 7768,
@@ -575,10 +576,10 @@
     "sha256": "60b2c672b72de208521d7ccedebac5283d8c179ef4a56165dd6f6ec91f5737b1"
    },
    {
-    "bytes": 30776,
+    "bytes": 31448,
     "path": "reports/dd1_d7c_a_review_fix_r2.md",
     "role": "delivered this round",
-    "sha256": "bd2e6f588ac1fc2208c2682bec5cc07d45c9b5b86a404e57d891c155b4334607"
+    "sha256": "175eaa7183a4661f6e4b0c4303ee33c4b3d3e84740ff681b61702595b7ae8212"
    }
   ],
   "note": "digests recomputed from disk at generation time; this file carries no digest of itself or of the archive built from it. The report files are listed under rendered_reports without digests because the verification run rewrites their machine sections, so the authoritative digest of a report is the one the record takes after rendering. Candidate DUT digests are compared against the reviewed revision by the record, which is what proves they were not touched.",

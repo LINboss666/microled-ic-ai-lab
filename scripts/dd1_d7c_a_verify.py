@@ -331,7 +331,7 @@ def _lf_in_place(path):
 def instrument_gate(name, root, script, out_json, expect_reproduced):
     """run the reviewer's own diagnostic and record every case, not just the exit code"""
     if not (script and os.path.isfile(script) and root and os.path.isdir(root)):
-        return {'gate': name, 'command': 'python %s --root %s --out <json>' % (script, root),
+        return {'gate': name, 'command': 'python %s --root %s --out <json>' % (script, shown_path(root)),
                 'rc': 'not_run', 'expected_rc': str(0 if expect_reproduced else 1),
                 'verdict': 'NOT_ATTEMPTED: give --pristine-root and --instrument to replay it',
                 'verdict_state': 'NOT_ATTEMPTED', 'cases': []}
@@ -340,7 +340,7 @@ def instrument_gate(name, root, script, out_json, expect_reproduced):
     try:
         payload = json.loads(io.open(out_json, encoding='utf-8').read())
     except (ValueError, IOError) as error:
-        return {'gate': name, 'command': 'python %s --root %s --out %s' % (script, root, out_json),
+        return {'gate': name, 'command': 'python %s --root %s --out %s' % (script, shown_path(root), out_json),
                 'rc': code, 'expected_rc': str(0 if expect_reproduced else 1),
                 'verdict': 'instrument produced no readable JSON: %s' % str(error)[:120],
                 'verdict_state': 'FAIL', 'cases': []}
@@ -357,7 +357,7 @@ def instrument_gate(name, root, script, out_json, expect_reproduced):
         cases[-1]['meets_expectation'] = bool(ok)
     all_ok = bool(cases) and all(c['meets_expectation'] for c in cases)
     baseline_ok = payload.get('baseline_failures') == []
-    return {'gate': name, 'command': 'python %s --root %s --out %s' % (script, root, out_json),
+    return {'gate': name, 'command': 'python %s --root %s --out %s' % (script, shown_path(root), out_json),
             'rc': code, 'expected_rc': str(0 if expect_reproduced else 1),
             'verdict': 'baseline_checks=%s baseline_failures=%s all_reproduced=%s cases_named=%d/%d'
                        % (payload.get('baseline_checks'), payload.get('baseline_failures') or 'none',
@@ -377,6 +377,16 @@ def extract_rev(rev, directory):
     return tar.wait() == 0 and archive.wait() == 0
 
 
+def shown_path(path):
+    """mask the machine-specific temp prefix the way the deckgen row already does, so the published
+    table cites a path a reviewer can rebuild rather than one that only exists on this host"""
+    text = str(path).replace(os.sep, '/')
+    temp = tempfile.gettempdir().replace(os.sep, '/')
+    if temp and text.startswith(temp):
+        return '<temp>' + text[len(temp):]
+    return text
+
+
 def remaining_instrument_gate(name, script, root, out_json, repaired):
     """the reviewer's seven-gap instrument, read case by case
 
@@ -387,7 +397,7 @@ def remaining_instrument_gate(name, script, root, out_json, repaired):
     """
     expected_rc = '1' if repaired else '0'
     if not (script and os.path.isfile(script) and root and os.path.isdir(root)):
-        return {'gate': name, 'command': 'python %s --root %s --out <json>' % (script, root),
+        return {'gate': name, 'command': 'python %s --root %s --out <json>' % (script, shown_path(root)),
                 'rc': 'not_run', 'expected_rc': expected_rc,
                 'verdict': 'NOT_ATTEMPTED: give --remaining-instrument and an H extraction to replay it',
                 'verdict_state': 'NOT_ATTEMPTED', 'cases': []}
@@ -396,7 +406,7 @@ def remaining_instrument_gate(name, script, root, out_json, repaired):
     try:
         payload = json.loads(io.open(out_json, encoding='utf-8').read())
     except (ValueError, IOError) as error:
-        return {'gate': name, 'command': 'python %s --root %s --out %s' % (script, root, out_json),
+        return {'gate': name, 'command': 'python %s --root %s --out %s' % (script, shown_path(root), out_json),
                 'rc': code, 'expected_rc': expected_rc,
                 'verdict': 'instrument produced no readable JSON: %s' % str(error)[:120],
                 'verdict_state': 'FAIL', 'cases': []}
@@ -424,7 +434,7 @@ def remaining_instrument_gate(name, script, root, out_json, repaired):
         good = shape_ok and all_met and len(still_open) == REMAINING_CASES
     verdict_state = 'PASS' if (good and code == (1 if repaired else 0)) else 'FAIL'
     return {'gate': name,
-            'command': 'python %s --root %s --out %s' % (script, root, out_json),
+            'command': 'python %s --root %s --out %s' % (script, shown_path(root), out_json),
             'rc': code, 'expected_rc': expected_rc,
             'verdict': 'baseline_checks=%s baseline_failures=%s all_gaps_reproduced=%s cases=%d/%d '
                        'gap_state=%s%s'
