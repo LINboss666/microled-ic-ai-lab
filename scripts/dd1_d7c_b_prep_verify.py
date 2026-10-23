@@ -73,6 +73,10 @@ PREVIOUS_RECORDS = ['results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0',
                     'results/evidence/dd1_d7c_a_r2_20261023_135600_10e307']
 REVIEW_DIR = os.path.join(ROOT, 'review', 'MicroLED_DATA7C_A_R1_Review_20261023', 'reviewer')
 OPEN_BY_DESIGN = A_VERIFY.REMAINING_OPEN_BY_DESIGN[0]
+# a file cannot carry a digest of its own bytes: neither the handoff's identity list nor the record's
+# source_identity.csv may hold these twice, and the handoff may not hold them at all
+HANDOFF_SELF = ('reports/agent_handoffs/DATA-7C-B-PREP.json',
+                'reports/agent_handoffs/DATA-7C-B-PREP.md')
 TABLE_SPECS = {
     'commands.csv': (['gate', 'command', 'rc', 'expected_rc', 'verdict_state', 'verdict'], 'gate', ()),
     'frozen_comparison.csv': (['comparison', 'surface', 'paths_compared', 'mismatched',
@@ -379,8 +383,7 @@ def handoff_check():
             problems.append('costs.%s must be an integer 0, found %r' % (key, value))
     for entry in (payload.get('source_identity') or {}).get('delivered', []) + \
             (payload.get('source_identity') or {}).get('read_only_inputs', []):
-        if str(entry.get('path', '')) in ('reports/agent_handoffs/DATA-7C-B-PREP.json',
-                                          'reports/agent_handoffs/DATA-7C-B-PREP.md'):
+        if str(entry.get('path', '')) in HANDOFF_SELF:
             problems.append('%s is listed inside the handoff it lives in: a file cannot carry a digest '
                             'of its own bytes, so the entry can only ever be false'
                             % entry.get('path'))
@@ -693,6 +696,31 @@ def main(argv):
         print('GATE %-38s %s %s' % ('frozen_surfaces', results[-1]['verdict_state'],
                                     results[-1]['verdict'][:110]))
 
+        # line endings of the bytes this record publishes, judged by a gate rather than by prose: the
+        # reviewer's own instruments write platform newlines, and only the final summary scan sees
+        # every file, so this row covers what exists at this point and the summary re-scans the rest
+        with_cr = []
+        for name in sorted(TABLE_SPECS):
+            path = os.path.join(out_dir, name)
+            if os.path.isfile(path) and b'\r' in io.open(path, 'rb').read():
+                with_cr.append(name)
+        probe_csv = os.path.join(scratch, 'lineendings.csv')
+        CHECK.rows_write(probe_csv, ['a', 'b'], [{'a': 'has, comma', 'b': 'and "quotes"'}])
+        writer_lf = b'\r' not in io.open(probe_csv, 'rb').read()
+        results.append({'gate': 'record_line_endings',
+                        'command': 'scan every published file for CR and round-trip a comma-and-quote '
+                                   'row through rows_write',
+                        'rc': len(with_cr), 'expected_rc': '0',
+                        'verdict': 'published files still carrying CR: %s; the table writer emits LF '
+                                   '(%s); the instruments write their own JSON with platform newlines, '
+                                   'so those are converted by _lf_in_place only after the parsed object '
+                                   'is proven identical, and the summary re-scans every published file '
+                                   'once the tables are written'
+                                   % (with_cr or 'none', 'confirmed' if writer_lf else 'BROKEN'),
+                        'verdict_state': 'PASS' if not with_cr and writer_lf else 'FAIL'})
+        print('GATE %-38s %s %s' % ('record_line_endings', results[-1]['verdict_state'],
+                                    results[-1]['verdict'][:110]))
+
         case_rows = json.loads(io.open(os.path.join(out_dir, 'synthetic_cases.json'),
                                        encoding='utf-8').read())['results']
         before = io.open(os.path.join(ROOT, 'reports', 'dd1_d7c_b_prep_report.md'),
@@ -717,8 +745,8 @@ def main(argv):
                                     results[-1]['verdict'][:110]))
 
         identity = []
-        for rel in sorted(counts['added']) + [p for p in sorted(blob_index(tip))
-                                              if p.startswith('spectre/dd1_d7c_a_')]:
+        for rel in [p for p in sorted(counts['added']) if p not in HANDOFF_SELF] + \
+                [p for p in sorted(blob_index(tip)) if p.startswith('spectre/dd1_d7c_a_')]:
             target = os.path.join(ROOT, rel.replace('/', os.sep))
             if os.path.isfile(target):
                 identity.append({'role': 'kept record of a superseded publish attempt'
@@ -727,8 +755,7 @@ def main(argv):
                                   else 'frozen candidate netlist'),
                                  'path': rel, 'bytes': os.path.getsize(target),
                                  'sha256': CHECK.sha_file(target)})
-        for rel in ('reports/agent_handoffs/DATA-7C-B-PREP.md',
-                    'reports/agent_handoffs/DATA-7C-B-PREP.json'):
+        for rel in HANDOFF_SELF:
             target = os.path.join(ROOT, rel.replace('/', os.sep))
             if os.path.isfile(target):
                 identity.append({'role': 'handoff, written before this record and committed with it',
@@ -770,6 +797,12 @@ def main(argv):
         results.extend(pending[len(results):])
         print('GATE %-38s %s %s' % ('record_semantics', verdict_state,
                                     pending[-1]['verdict'][:110]))
+        duplicated = sorted(set(row['path'] for row in identity
+                                if [r['path'] for r in identity].count(row['path']) > 1))
+        if duplicated:
+            raise SystemExit('D7C_B_PREP_VERIFY_REFUSED source_identity would publish %s twice, and a '
+                             'key that repeats cannot be read back by the shape reader the reviewer '
+                             'uses' % ','.join(duplicated))
         CHECK.rows_write(os.path.join(out_dir, 'source_identity.csv'), RECORD.IDENTITY_HEADER,
                          identity)
     finally:
