@@ -90,7 +90,7 @@
   "D5_integration_window_is_narrower_than_the_platform"
  ],
  "evidence_dir": "results/evidence/dd1_d7c_b_prep_20261023_172056_48cc50",
- "head_sha": "3e4703f1763223024f442c0826e95055782bca13",
+ "head_sha": "2153ae018c9cfd38f9644ecd5423a2499bde90cf",
  "head_sha_role": "the commit at generation time; the commit carrying this file and the record are above it, and the read-back of those is in remote_readback",
  "inherited_informational_items": [
   {
@@ -160,8 +160,40 @@
    "refs_read": 5
   },
   "post_push": {
-   "note": "filled by a later generation of this file; the tip that carries the record is read back in the tree-identical metadata commit above it and in the receipt kept outside the package",
-   "state": "NOT_PERFORMED_YET"
+   "agreement": "both channels return the same full SHA for all six refs",
+   "channel_1_git_protocol": {
+    "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin refs/heads/main refs/heads/poc/data-pam-d7c-a refs/heads/poc/data-pam-d7c-a-r1 refs/heads/poc/data-pam-d7c-a-r2 refs/heads/poc/data-pam-d7c-b-prep refs/heads/poc/data-pwm-d7b-r3",
+    "queried_utc": "2026-10-23T17:25:20Z",
+    "rc": 0
+   },
+   "channel_2_api": {
+    "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<branch> --jq .object.sha",
+    "queried_utc": "2026-10-23T17:25:25Z",
+    "rc": 0,
+    "refs_read": 6
+   },
+   "command": "git -c http.proxy=http://127.0.0.1:7892 push -u origin poc/data-pam-d7c-b-prep",
+   "forced": false,
+   "hooks_bypassed": false,
+   "local_equals_remote": {
+    "local_tip": "2153ae018c9cfd38f9644ecd5423a2499bde90cf",
+    "remote_tip": "2153ae018c9cfd38f9644ecd5423a2499bde90cf",
+    "same": true
+   },
+   "payload_commit": "2153ae018c9cfd38f9644ecd5423a2499bde90cf",
+   "pre_push_hook": "the repository pre-push hook ran the safety gate over history: PDK, credential, private-key and vendor-model tracked-file counts all 0, SAFETY_GATE: PASS",
+   "pushed_utc_window": "2026-10-23T17:22:12Z .. 2026-10-23T17:25:11Z (host UTC)",
+   "rc": 0,
+   "refs": {
+    "refs/heads/main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+    "refs/heads/poc/data-pam-d7c-a": "89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79",
+    "refs/heads/poc/data-pam-d7c-a-r1": "da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb",
+    "refs/heads/poc/data-pam-d7c-a-r2": "3e4703f1763223024f442c0826e95055782bca13",
+    "refs/heads/poc/data-pam-d7c-b-prep": "2153ae018c9cfd38f9644ecd5423a2499bde90cf",
+    "refs/heads/poc/data-pwm-d7b-r3": "272d6de6d2f2fc8a82d5038d73d6b3e4c656f683"
+   },
+   "scope_of_this_field": "this is the read-back of the payload commit. The record commit and the tree-identical metadata commit above it are newer than this file, so their tip is read back in the metadata commit message and in the receipt kept outside the package; this file does not predict a SHA it cannot know yet",
+   "untouched": "R2, the R1 branch, the reviewed A branch, main and the DATA-7B line all still read their previous values"
   },
   "pre_push": {
    "agreement": "both channels return the same full SHA for all five existing refs",
@@ -210,16 +242,28 @@
  "source_identity": {
   "delivered": [
    {
+    "bytes": 31599,
+    "path": "reports/agent_handoffs/DATA-7C-B-PREP.json",
+    "role": "delivered this round",
+    "sha256": "9485f2b503a56ce6cc576786ec3596a982721d80ba5eecb5ccecdb4055b68562"
+   },
+   {
+    "bytes": 6391,
+    "path": "reports/agent_handoffs/DATA-7C-B-PREP.md",
+    "role": "delivered this round",
+    "sha256": "9960c25933472372935196cfcfc22b7c47316c9c98d5b6fdccecc180c3b9b7d7"
+   },
+   {
     "bytes": 11722,
     "path": "reports/dd1_d7c_b_prep_contract.md",
     "role": "delivered this round",
     "sha256": "052fae14003a7b7e63949cf129a378f78c5e68ad482c9ed351036a5782237fff"
    },
    {
-    "bytes": 13344,
+    "bytes": 13348,
     "path": "reports/dd1_d7c_b_prep_report.md",
     "role": "delivered this round",
-    "sha256": "2f4bf55175c3b97d54845397c42e74631c83a0ccc31204f8b9e24454369a313e"
+    "sha256": "078e73ffe90cf1018c750ad5b7bf3b74e20466efa5ce8402a8b69ecf780130b6"
    },
    {
     "bytes": 18448,
