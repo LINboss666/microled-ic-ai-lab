@@ -17,9 +17,10 @@
 | 完成级别 | `PREPARED_FOR_INDEPENDENT_REVIEW_NO_NATIVE_RUN` |
 | 文件范围 | 相对 R2 **只新增**：修改 0、删除 0（记录 `frozen_comparison.csv` 的 enforced 行为 0 违例） |
 | 本轮成本 | Spectre **0**（含 `-h`）、RTL 仿真 **0**、OA 写入 **0**、动态 preflight **0**、SSH/VM **0**、凭据与 PDK/模型卡 **未读** |
-| 验证记录 | `results/evidence/dd1_d7c_b_prep_20261023_175526_9753e7/`（目录名在跑之前定下；`verification_summary.json` 的 `generated_utc` 才是真实生成时刻） |
+| 验证记录 | `results/evidence/dd1_d7c_b_prep_20261023_181422_958378/`（目录名在跑之前定下；`verification_summary.json` 的 `generated_utc` 才是真实生成时刻） |
 | 前一次尝试 | `results/evidence/dd1_d7c_b_prep_20261023_172056_48cc50/` 在 `git diff --check` 空输出处中断（`b'' or ''` 落到 str 上 `.decode`），只有 8 个子结果 JSON、无 `commands.csv`；原样保留并提交，不删不补 |
 | 再前两次尝试 | `…_174500_f2b6a7`（14 门全 PASS 后撞在同函数名字遮蔽，`'bool' object is not subscriptable`）与 `…_174846_39a012`（23 行门判定后 `source_identity.csv` 因交接文件被重复登记而 `read_table` 拒读、且缺 `record_line_endings` 强制门）都未成为记录；两份完整目录移到 Git 忽略的 `review/scratch/aborted_attempt{2,3}_…/`（10 与 15 个文件，字节未改），第三个的 `commands.csv` 里 `record_semantics=FAIL` 原文可查 |
+| 被摘要作废的一次 | `…_175526_9753e7` 是 24 门 0 失败的**通过**记录，但它测完 tip 之后 §8 复盘又被写进报告，于是它对报告的 digest 当场失真；整目录原样放在 `review/scratch/superseded_175526_…/`，改用语义正确的 run id 重发。本轮不给它 `results/evidence/` 位置，因为它一旦与自己的身份表矛盾就不该被当成记录读 |
 | 停止状态 | `AWAITING_INDEPENDENT_REVIEW_OF_NATIVE_PREPARATION` |
 
 ## 2 交付分层（不用一句"准备好了"吞掉未测项）

@@ -151,27 +151,130 @@ C06 非均匀样点边界插值等于手算 `1.375e-13 C`；C08 的 NaN、重复
   全部由本轮自己的 `--emit/--check` 拒发布或 `D7C_B_PREP_CASES` 报 MISS 暴露，未进入已发布记录。
 * deck 审计最初用子串判断探针端序，被注释里引用的正确字符串"掩护"过一次；C03 报 MISS 之后改成
   只匹配非注释语句行。这同样是"检查器自己看不见自己的错"这一类，记在这里而不是删掉。
+* 第一次发布跑完 19 行门判定后有**四行是错的，而且错法一样**：门名承诺的是 `da6f5fc`（R1 tip），
+  代码喂给它的却是 R2 抽取树。`reviewer_remaining_on_H` 因此在已闭合六个缺口的字节上要求七个缺口
+  全部复现（实测 1/7）；`previous_record_reader` 用 R2 字节审 R1 记录，把 12 条路径报成问题，而 R1
+  自己披露的只有 3 条；`record_tool_selftest` 的九个用例里有一个用"所在树的真实比较行"构造干净表，
+  在本轮树里 DATA-7C-A 白名单把这 30 条新路径当成违规，于是永远不可能干净；`handoff_structure`
+  拒绝的是一个不可能成立的摘要——交接文件把自己列进了自己的 digest 表。
+  前三个改法是**把参照树指对并复用上一轮自己的门函数**（`remaining_instrument_gate` 未改一字），
+  第四个是把那两个文件从交接的身份表里拿出来、并让检查器拒绝"自我登记"这件事本身；
+  `record_tool_selftest` 额外要求把树内失败逐条归因（本轮白名单确实允许这 30 条、工具字节与
+  R2 相同、源仓 `for-each-ref` 摘要前后一致），否则仍算失败——不允许用"换个上下文跑就绿"糊过去。
+* 发布本身撞了三次，都留了原样字节：`…_172056_48cc50`（已提交，8 个子结果 JSON、无 `commands.csv`）
+  在 `git diff --check` **空输出**处崩——`communicate()[0] or ''` 把 `b''` 变成 str 再 `.decode`；
+  `…_174500_f2b6a7`（14 门全 PASS）崩在同一函数里的名字遮蔽，`extracted` 既是三棵树字典又被后面
+  单次抽取覆写成 bool；`…_174846_39a012`（23 行门判定）被自己的回读闸拦下——`source_identity.csv`
+  把两份交接文件各登记两次（`read_table` 按主键拒读），同时缺 `record_line_endings` 这一强制门名。
+  后两份未成为记录，整目录放在 Git 忽略的 `review/scratch/aborted_attempt{2,3}_…/`，一个字没改。
+  同一个 `or ''` 写法在上一轮的 `scripts/dd1_d7c_a_verify.py:152` 里仍然存在，本轮按 §2 不动共享
+  工具，只把位置和后果写在这里。
+* 修完四门后第一次真正发布（`…_175526_9753e7`，24 门 0 失败）**没有**被提交：本节的复盘是在它测完
+  tip 之后写进报告的，于是它 `source_identity.csv` 里对本报告的摘要当场变成假语句。与其提交一份
+  自己会打脸的记录，不如整目录原样移到 `review/scratch/superseded_175526_…/`，用新的 run id 重发一次
+  ——这正是 R1 因为"记录引用了它发布之后又写的文件"被抓到的同一件事，本轮不能靠事后注释补救。
 
 ## 9 机器写入的表（由 `scripts/dd1_d7c_b_prep_verify.py` 从记录渲染）
 
 ### 9.1 门与命令
 
 <!-- BEGIN 7CB GATES -->
+| 门 | 命令 | rc | 期望 | 判决 | 依据 |
+|---|---|---|---|---|---|
+| `reviewer_instrument_on_T` | `python review/MicroLED_DATA7C_A_R1_Review_20261023/reviewer/probe_review` | 0 | 0 | PASS | baseline_checks=22 baseline_failures=none items=8/8 expected_rc=0 all_defects_reproduced=True; still reporting reproduced: top_pam_bits_swapped,top_en |
+| `reviewer_instrument_on_fixed_bytes` | `python review/MicroLED_DATA7C_A_R1_Review_20261023/reviewer/probe_review` | 1 | 1 | PASS | baseline_checks=34 baseline_failures=none items=8/8 expected_rc=1 all_defects_reproduced=False |
+| `reviewer_remaining_on_H` | `python D:\ic617_d7c_b_prep\review\MicroLED_DATA7C_A_R1_Review_20261023\r` | 0 | 0 | PASS | baseline_checks=30 baseline_failures=none all_gaps_reproduced=True cases=7/7 gap_state=reproduced=7 |
+| `reviewer_remaining_on_R2_base` | `python D:\ic617_d7c_b_prep\review\MicroLED_DATA7C_A_R1_Review_20261023\r` | 1 | 1 | PASS | baseline_checks=34 baseline_failures=none all_gaps_reproduced=False cases=7/7 gap_state=closed=6; still reporting reproduced: published_record_reader_ |
+| `reviewer_remaining_on_fixed_bytes` | `python D:\ic617_d7c_b_prep\review\MicroLED_DATA7C_A_R1_Review_20261023\r` | 1 | 1 | PASS | baseline_checks=34 baseline_failures=none all_gaps_reproduced=False cases=7/7 gap_state=closed=6; still reporting reproduced: published_record_reader_ |
+| `offline_checks` | `python dd1_d7c_a_offline_check.py --json <out>` | 0 | 0 | PASS | D7C_A_OFFLINE_CHECK: PASS (34 checks, failures: none) |
+| `counterexamples` | `python dd1_d7c_a_guards.py --json <out>` | 0 | 0 | PASS | D7C_A_GUARDS: PASS (65/65 named exactly; not hit: none) |
+| `record_tool_selftest` | `python dd1_d7c_a_r1_selftest.py --json <out>/selftest.json run in a thro` | 0 | 0 | PASS | clone_at_R2 PASS (9 cases, failures: none); this_tree rc=1 FAIL, failing cases frozen_gate_counts_only_enforced_rows, other 8 cases PASS, all 38 paths |
+| `synthetic_measure_cases` | `python dd1_d7c_b_prep_cases.py --json <out>` | 0 | 0 | PASS | D7C_B_PREP_CASES: PASS (17/17 named exactly, failures: none, evidence SYNTHETIC_NOT_MEASURED) |
+| `contract_selfcheck` | `python dd1_d7c_b_prep_contract.py --check` | 0 | 0 | PASS | D7C_B_CONTRACT_CHECK: PASS (state=PROPOSED_FOR_REVIEW sweep_points=19 markdown_rows=13 problems=0) |
+| `schedule_check` | `python dd1_d7c_b_prep_schedule.py --check` | 0 | 0 | PASS | D7C_B_SCHEDULE_CHECK: PASS (rows=15 windows=62 pwl=215 problems=0) |
+| `deck_check` | `python dd1_d7c_b_prep_deckgen.py --check` | 0 | 0 | PASS | D7C_B_DECKGEN_CHECK: PASS (15 decks, problems=0) |
+| `deck_regenerated_from_sources` | `python dd1_d7c_b_prep_deckgen.py --to <scratch>` | 0 | 0 | PASS | D7C_B_DECKGEN_REGENERATED 15 decks in a scratch tree, comparison problems=0 |
+| `fresh_extraction_replay` | `git archive 375e2dce1363 / tar -x, then run the suites there` | 0 | 0 | PASS | contract_check rc=0 D7C_B_CONTRACT_CHECK: PASS (state=PROPOSED_FOR_REVIEW sweep_points=19 markdown_rows=13 problems=0); schedule_check rc=0 D7C_B_SCHE |
+| `previous_record_reader_finds_its_own_staleness` | `git archive da6f5fc3f497 / tar -x, then python scripts/dd1_d7c_a_r2_reco` | 0 | 0 | PASS | 9 semantic problems over 3 paths (DATA-7C-A.json,DATA-7C-A.md,dd1_d7c_a_review_fix_r1.md); paths outside the three R1 disclosed: 0 |
+| `handoff_structure` | `python dd1_d7c_b_prep_verify.py --handoff-check (in process)` | 0 | 0 | PASS | fields, digests against disk, zero costs, markers and forbidden claims all checked |
+| `native_entry_refused` | `python dd1_d7c_a_deckgen.py --probe <temp>` | 0 | 0 | PASS | DECKGEN_PROBE refused=True untouched=True reason=DATA-7C-A: this round authorises no native launch and no deck publication; NATIVE_AUTHORISED_THIS_ROU |
+| `provenance` | `python scripts/provenance_check.py` | 0 | 0 | PASS | SOURCE_PROVENANCE_CHECK: PASS |
+| `netlist_stats_scope` | `python scripts/netlist_stats.py --check` | 1 | INFORMATIONAL: this tool counts MOS lines, it does not judge this round | INFORMATIONAL_NOT_PASS | DEVICE_COUNT_CHECK: FAIL |
+| `history_safety` | `python scripts/precommit_safety_check.py --mode history` | 0 | 0 | PASS | SAFETY_GATE: PASS |
+| `frozen_surfaces` | `git ls-tree -r, blob and mode comparison over explicit path lists, plus ` | 0 | 0 | PASS | enforced rows 6, violations 0, informational rows 1, added 38, removed 0, modified 0; git diff --check R2..HEAD=0 T..HEAD=0 base..HEAD=0 |
+| `record_line_endings` | `scan every published file for CR and round-trip a comma-and-quote row th` | 0 | 0 | PASS | published files still carrying CR: none; the table writer emits LF (confirmed); the instruments write their own JSON with platform newlines, so those  |
+
+渲染发生在 `375e2dce1363` 之后、`record_semantics` 与 `published_record_recheck` 判定之前；最后两门的最终值与每条命令的完整文本在 `commands.csv`。本表不含本轮记录的摘要，摘要写在本目录的 `verification_summary.json`（它写于本文件之后，故不进摘要）。
 <!-- END 7CB GATES -->
 
 ### 9.2 15 例清单
 
 <!-- BEGIN 7CB DECKS -->
+| 用例 | 类别 | 码 | 使能形态 | 平台 / 窗 / 尾 / 漏流子窗 (ns) | 换码 | stop | maxstep | 配对 | 进程 DUT+preflight | 结果 |
+|---|---|---|---|---|---|---:|---:|---|---|---|
+| `DC-000` | dc_sweep | `000` | static_dc | dc_no_time_window / dc_no_time_window / dc_no_time_window / dc_no_time_window | static_from_t0 | dc_no_time_window | not_applicable_dc_analysis | - | 1+1 | NOT_RUN |
+| `DC-001` | dc_sweep | `001` | static_dc | dc_no_time_window / dc_no_time_window / dc_no_time_window / dc_no_time_window | static_from_t0 | dc_no_time_window | not_applicable_dc_analysis | - | 1+1 | NOT_RUN |
+| `DC-010` | dc_sweep | `010` | static_dc | dc_no_time_window / dc_no_time_window / dc_no_time_window / dc_no_time_window | static_from_t0 | dc_no_time_window | not_applicable_dc_analysis | - | 1+1 | NOT_RUN |
+| `DC-011` | dc_sweep | `011` | static_dc | dc_no_time_window / dc_no_time_window / dc_no_time_window / dc_no_time_window | static_from_t0 | dc_no_time_window | not_applicable_dc_analysis | - | 1+1 | NOT_RUN |
+| `DC-100` | dc_sweep | `100` | static_dc | dc_no_time_window / dc_no_time_window / dc_no_time_window / dc_no_time_window | static_from_t0 | dc_no_time_window | not_applicable_dc_analysis | - | 1+1 | NOT_RUN |
+| `DC-101` | dc_sweep | `101` | static_dc | dc_no_time_window / dc_no_time_window / dc_no_time_window / dc_no_time_window | static_from_t0 | dc_no_time_window | not_applicable_dc_analysis | - | 1+1 | NOT_RUN |
+| `DC-110` | dc_sweep | `110` | static_dc | dc_no_time_window / dc_no_time_window / dc_no_time_window / dc_no_time_window | static_from_t0 | dc_no_time_window | not_applicable_dc_analysis | - | 1+1 | NOT_RUN |
+| `DC-111` | dc_sweep | `111` | static_dc | dc_no_time_window / dc_no_time_window / dc_no_time_window / dc_no_time_window | static_from_t0 | dc_no_time_window | not_applicable_dc_analysis | - | 1+1 | NOT_RUN |
+| `TR-LONG` | transient | `000..111` | pwl_per_platform | 1000.000;2500.000;4000.000;5500.000;7000.000;8500.000;10000.000;11500.000 / 1050.000;2550.000;4050.000;5550.000;7050.000;8550.000;10050.000;11550.000 / 2000.000;3500.000;5000.000;6500.000;8000.000;9500.000;11000.000;12500.000 / 2400.000;3900.000;5400.000;6900.000;8400.000;9900.000;11400.000;12900.000 | 750.000;2250.000;3750.000;5250.000;6750.000;8250.000;9750.000;11250.000 | 13500.000 | 2.000 | - | 1+1 | NOT_RUN |
+| `TR-120` | transient | `000` | pwl_single_platform | 1120.000 / 1130.000 / 1240.000 / 1380.000 | static_from_t0 | 1480.000 | 2.000 | - | 1+1 | NOT_RUN |
+| `TR-200` | transient | `000` | pwl_single_platform | 1120.000 / 1130.000 / 1320.000 / 1460.000 | static_from_t0 | 1560.000 | 2.000 | - | 1+1 | NOT_RUN |
+| `TR-OFFCODE` | transient | `011,100,000,111` | pwl_four_platforms | 1000.000;1600.000;2200.000;2800.000 / 1020.000;1620.000;2220.000;2820.000 / 1300.000;1900.000;2500.000;3100.000 / 1500.000;2100.000;2700.000;3300.000 | 850.000;1450.000;2050.000;2650.000 | 3400.000 | 2.000 | - | 1+1 | NOT_RUN |
+| `RS-FULL` | refined_step | `000..111` | pwl_per_platform | 1000.000;2500.000;4000.000;5500.000;7000.000;8500.000;10000.000;11500.000 / 1050.000;2550.000;4050.000;5550.000;7050.000;8550.000;10050.000;11550.000 / 2000.000;3500.000;5000.000;6500.000;8000.000;9500.000;11000.000;12500.000 / 2400.000;3900.000;5400.000;6900.000;8400.000;9900.000;11400.000;12900.000 | 750.000;2250.000;3750.000;5250.000;6750.000;8250.000;9750.000;11250.000 | 13500.000 | 0.100 | TR-LONG | 1+1 | NOT_RUN |
+| `RS-LOW` | refined_step | `000` | pwl_single_platform | 1120.000 / 1130.000 / 1240.000 / 1380.000 | static_from_t0 | 1480.000 | 0.100 | TR-120 | 1+1 | NOT_RUN |
+| `RS-SWITCH` | refined_step | `011,100,000,111` | pwl_four_platforms | 1000.000;1600.000;2200.000;2800.000 / 1020.000;1620.000;2220.000;2820.000 / 1300.000;1900.000;2500.000;3100.000 / 1500.000;2100.000;2700.000;3300.000 | 850.000;1450.000;2050.000;2650.000 | 3400.000 | 0.100 | TR-OFFCODE | 1+1 | NOT_RUN |
+
+文本由 `spectre/dd1_d7c_b_prep/DC-000.scs` 承载，逐例一份；`--to <scratch>` 重新生成一次并与交付字节比较（门 `deck_regenerated_from_sources`）。
 <!-- END 7CB DECKS -->
 
 ### 9.3 合成正反例逐例
 
 <!-- BEGIN 7CB CASES -->
+| 例 | 类型 | 判决 | 观察到的依据 | 说明 |
+|---|---|---|---|---|
+| `C01_positive_sink_charge` | POSITIVE | HIT | Q=1.875e-13 C over 100 ns at 1.875 uA, sign SINK_POSITIVE_AS_DECLARED | a 100 ns window at one unit current integrates to the hand-computed charge and reads positive |
+| `C02_reversed_probe_refused` | NEGATIVE | HIT | the same physics on reversed terminals gives Q=-1.875e-13 C; abs() would have made it look identical to the positive cas | turning the ammeter around cannot be rescued by abs() |
+| `C03_deck_probe_order_named` | NEGATIVE | HIT | line 74 became (data_out clamp_node) and the deck audit answered: TR-120.scs writes the probe as "Ip_branch (data_out cl | a deck written with the terminals swapped is refused by the deck audit |
+| `C04_cancelling_tail_fails` | NEGATIVE | HIT | net Q=0 C looks like a shut branch, the magnitude test still says 0.5 uA against a 0.15 uA limit | a tail whose positive and negative halves cancel is not zero leakage |
+| `C05_quiet_tail_passes` | POSITIVE | HIT | max(abs(I))=0.01 uA at 1380 ns inside the last 100 ns, under the 0.15 uA limit | a quiet tail passes and names its sample instant |
+| `C06_nonuniform_pencil_check` | POSITIVE | HIT | Q=1.375e-13 C, boundaries interpolated onto the enclosing pairs | interpolated boundaries over unequal spacing match the arithmetic done by hand |
+| `C07_adaptive_precision` | POSITIVE | HIT | kept 1.99902e+06 ps (quantum 50000 ps), which is the bound a reviewer needs beside the number | a printed simulator time is kept at its own precision with its display quantum reported |
+| `C08_garbage_named` | NEGATIVE | HIT | four bad sample shapes and one edge-less window all refused by name | NaN, a repeated time, a backwards time, an empty list and a missing edge each refuse by name |
+| `C09_left_band_before_deadline` | NEGATIVE | HIT | left the band at 1201.55 ns, held only None ns, deadline 1230 ns | entering the band and leaving early is not a settled window |
+| `C10_settled_held` | POSITIVE | HIT | in band from the edge to the deadline, held 100 ns | staying in band to the deadline is the settled case |
+| `C11_halved_array` | NEGATIVE | HIT | half current gives worst deviation 0 units of Iunit_ref, absolute 7.5 uA against the band 14.25-15.75 uA | eight levels at half current pass the ratio and fail the absolute target |
+| `C12_code_000_not_black` | NEGATIVE | HIT | code 000 = 1 branch, and a ladder missing it is refused by name | the lowest code is one conducting branch and cannot be dropped from the ladder |
+| `C13_refined_lost_history` | NEGATIVE | HIT | the schedule refused it: RS-FULL differs from TR-LONG outside the time step: code_change_ns,enable_fall_50_ns,enable_ris | a refined case that dropped the seven earlier platforms is not the same conditions |
+| `C14_refined_changed_supply` | NEGATIVE | HIT | the schedule refused it: RS-LOW differs from TR-120 outside the time step: data_en_level_V | a refined case that also moved the enable level is refused |
+| `C15_refined_lost_transition` | NEGATIVE | HIT | the schedule refused it: RS-SWITCH differs from TR-OFFCODE outside the time step: code_change_ns | a refined case that dropped one code change is a different experiment |
+| `C16_convergence_absolute` | NEGATIVE | HIT | delta Q=10 fC = 0.0444444 QLSB against a 0.01 limit; moving the window by 10 ns refuses the comparison | convergence always carries an absolute difference, and a moved window refuses the comparison |
+| `C17_two_charge_expectations` | POSITIVE | HIT | nominal 1.875e-13 C vs DC NOT_RUN; QLSB 2.25e-13 C, error 0 LSB | nominal and DC expectations stay apart and the missing DC point is NOT_RUN, never a geometry guess |
+
+每一例都是手算合成样点（`SYNTHETIC_NOT_MEASURED`）：验的是测量算法，不是电路性能；负例先证明注入的事实存在，再要求规则点名拒收，空期望对空结果不算检出。
 <!-- END 7CB CASES -->
 
 ### 9.4 冻结面与 Git 区间
 
 <!-- BEGIN 7CB FROZEN -->
+| 比较 | 面 | 路径数 | 计数 | 前若干 | 期望 | 计入闸 |
+|---|---|---:|---:|---|---|---|
+| this_round | `every_R2_tracked_path_vs_tip` | 2613 | 0 |  | `identical` | yes |
+| this_round | `four_candidate_DUT_netlists` | 4 | 0 |  | `identical` | yes |
+| this_round | `shared_tools_and_safety_rules` | 14 | 0 |  | `identical` | yes |
+| this_round | `previous_round_record_dirs` | 51 | 0 |  | `identical` | yes |
+| this_round | `paths_added_this_round` | 38 | 0 |  | `only_allowed_new` | yes |
+| this_round | `paths_removed_or_modified_vs_R2` | 0 | 0 |  | `none_removed` | yes |
+| this_round | `added_paths_listed_for_the_reviewer` | 38 | 0 | reports/agent_handoffs/DATA-7C-B-PREP.json;reports/agent_handoffs/DATA-7C-B-PREP.md;report | `informational_listing` | no |
+
+* `git diff --check 3e4703f1763223024f442c0826e95055782bca13..HEAD` → rc=0，0，committed range from 3e4703f17632 to HEAD at 2026-10-23T18:12:56Z
+* `git diff --check 89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79..HEAD` → rc=0，0，committed range from 89b3dd8e244e to HEAD at 2026-10-23T18:12:56Z
+* `git diff --check 272d6de6d2f2fc8a82d5038d73d6b3e4c656f683..HEAD` → rc=0，0，committed range from 272d6de6d2f2 to HEAD at 2026-10-23T18:12:56Z
+
+R2 的全部 2613 条跟踪路径逐条比 (mode, type, blob)；四份候选 DUT、共享工具、安全闸脚本与全部旧证据目录各成一行为 enforced；本轮新增 38 条路径由 §9 的白名单前缀允许，删除与修改计数为 0。
 <!-- END 7CB FROZEN -->
 
 ## 10 停止状态
