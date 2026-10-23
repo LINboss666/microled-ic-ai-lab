@@ -173,6 +173,7 @@ multiplicity 合计（145，因 `m` 全部未书写）与逐模型有效宽度�
 | `offline_checks` | `python dd1_d7c_a_offline_check.py --json <out>` | 0 | 0 | PASS | D7C_A_OFFLINE_CHECK: PASS (30 checks, failures: none) |
 | `counterexamples` | `python dd1_d7c_a_guards.py --json <out>` | 0 | 0 | PASS | D7C_A_GUARDS: PASS (29/29 named exactly; not hit: none) |
 | `record_tool_selftest` | `python dd1_d7c_a_r1_selftest.py --json <out>` | 0 | 0 | PASS | cases=9 verdict=PASS failures=none / D7C_A_R1_SELFTEST: PASS (9 cases, failures: none) |
+| `fresh_extraction_replay` | `git archive HEAD | tar -x, then run the suites there` | 0 | 0 | PASS | offline rc=0 D7C_A_OFFLINE_CHECK: PASS (30 checks, failures: none); guards rc=0 D7C_A_GUARDS: PASS (29/29 named exactly; not hit: none); handoff_valid |
 | `handoff_structure` | `python dd1_d7c_a_validate_handoff.py reports/agent_handoffs/DATA-7C-A.` | 0 | 0 | PASS | D7C_A_HANDOFF_CHECK: PASS (19 base fields+5 repair fields, 0 problems; evidence and remote truth are NOT verified here) |
 | `native_entry_refused` | `python dd1_d7c_a_deckgen.py --probe <temp>` | 0 | 0 | PASS | DECKGEN_PROBE refused=True untouched=True reason=DATA-7C-A: this round authorises no native launch and no deck publication; NATIVE_AUTHORISED_THIS_ROU |
 | `provenance` | `python provenance_check.py` | 0 | 0 | PASS | SOURCE_PROVENANCE_CHECK: PASS |
@@ -222,8 +223,8 @@ multiplicity 合计（145，因 `m` 全部未书写）与逐模型有效宽度�
 | T_to_tip_whitelist | `whitelisted_paths_edited` | 12 | 10 | reports/agent_handoffs/DATA-7C-A.json; reports/agent_handoffs/DATA-7C-A.md; reports/dd1_d7c_a_native_test_plan | `editable` | no |
 | T_to_tip_whitelist | `T_paths_modified_off_whitelist` | 2547 | 0 | - | `none_modified` | yes |
 | T_to_tip_whitelist | `paths_removed_against_T` | 2559 | 0 | - | `none_removed` | yes |
-| T_to_tip_whitelist | `paths_added_not_allowed` | 4 | 0 | - | `only_allowed_new` | yes |
-| T_to_tip_whitelist | `paths_added_allowed` | 4 | 4 | reports/dd1_d7c_a_review_fix_r1.md; reports/tasks/DATA-7C-A-R1.md; scripts/dd1_d7c_a_r1_selftest.py; tests/dd1 | `informational` | no |
+| T_to_tip_whitelist | `paths_added_not_allowed` | 14 | 0 | - | `only_allowed_new` | yes |
+| T_to_tip_whitelist | `paths_added_allowed` | 14 | 14 | reports/dd1_d7c_a_review_fix_r1.md; reports/tasks/DATA-7C-A-R1.md; results/evidence/dd1_d7c_a_r1_20261023_0934 | `informational` | no |
 | working_tree_vs_T_extraction | `candidate_DUT_and_golden_tables_must_be_identical` | 6 | 0 | - | `identical` | yes |
 | working_tree_vs_T_extraction | `read_only_inputs_must_be_identical` | 15 | 0 | - | `identical` | yes |
 | working_tree_vs_T_extraction | `editable_files_actually_changed` | 11 | 0 | 9 of 11 edited | `informational` | no |
