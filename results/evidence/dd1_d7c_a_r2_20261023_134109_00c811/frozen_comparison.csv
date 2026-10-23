@@ -1,0 +1,28 @@
+comparison,surface,paths_compared,mismatched,first_mismatches,expectation,enforced
+B_tracked_paths,data7b_r3_evidence_bundle,287,0,-,identical,yes
+B_tracked_paths,data7b_r1_evidence,284,0,-,identical,yes
+B_tracked_paths,data7b_main_line_evidence,805,0,-,identical,yes
+B_tracked_paths,data7b_r3_review_documents,5,0,-,identical,yes
+B_tracked_paths,case_and_golden_tables_D7B,3,0,-,identical,yes
+B_tracked_paths,accepted_D7A_rtl_and_tb,1,0,-,identical,yes
+B_tracked_paths,shared_safety_and_validation_tools,161,0,-,identical,yes
+B_tracked_paths,accepted_netlist_masters,206,0,-,identical,yes
+B_tracked_paths,every_B_tracked_path,2533,0,-,identical,yes
+B_tracked_paths,paths_removed_against_B,2533,0,-,none_removed,yes
+T_frozen_surfaces,four_candidate_DUT_netlists,4,0,-,identical,yes
+T_frozen_surfaces,golden_and_request_tables,2,0,-,identical,yes
+T_frozen_surfaces,tools_the_brief_freezes_this_round,3,0,-,identical,yes
+T_frozen_surfaces,previous_round_record_dirs,27,0,-,identical,yes
+T_frozen_surfaces,first_round_evidence_dir,7,0,-,identical,yes
+T_frozen_surfaces,first_round_task_book,2,0,-,identical,yes
+T_frozen_surfaces,read_only_inputs_named_by_the_brief,15,0,-,identical,yes
+T_frozen_surfaces,every_H_path_off_the_whitelist,2571,0,-,identical,yes
+previous_tip_frozen_surfaces,every_T_path_off_the_whitelist,2549,0,-,identical,yes
+T_to_tip_whitelist,whitelisted_paths_edited,12,11,reports/agent_handoffs/DATA-7C-A.json; reports/agent_handoffs/DATA-7C-A.md; reports/dd1_d7c_a_native_test_plan.md; reports/dd1_d7c_a_review_fix_r1.md,editable,no
+T_to_tip_whitelist,T_paths_modified_off_whitelist,2571,0,-,none_modified,yes
+T_to_tip_whitelist,paths_removed_against_T,2583,0,-,none_removed,yes
+T_to_tip_whitelist,paths_added_not_allowed,6,0,-,only_allowed_new,yes
+T_to_tip_whitelist,paths_added_allowed,6,6,reports/dd1_d7c_a_review_fix_r2.md; reports/tasks/DATA-7C-A-R2.md; scripts/dd1_d7c_a_r2_plan.py; scripts/dd1_d7c_a_r2_record_check.py,informational,no
+working_tree_vs_H_extraction,candidate_DUT_and_golden_tables_must_be_identical,6,0,-,identical,yes
+working_tree_vs_T_extraction,read_only_inputs_must_be_identical,15,0,-,identical,yes
+working_tree_vs_H_extraction,editable_files_actually_changed,11,0,9 of 11 edited,informational,no

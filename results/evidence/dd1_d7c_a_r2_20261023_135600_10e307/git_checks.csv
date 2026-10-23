@@ -1,0 +1,4 @@
+gate,command,rc,lines,scope
+diff_check_H_to_HEAD,git diff --check da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb..HEAD,0,see rc,the range this round actually adds: R1 tip (H) to the committed tip
+diff_check_T_to_HEAD,git diff --check 89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79..HEAD,0,see rc,"the originally reviewed tip (T) to the committed tip, both rounds included"
+diff_check_B_to_HEAD,git diff --check 272d6de6d2f2fc8a82d5038d73d6b3e4c656f683..HEAD,0,see rc,the development base (B) to the committed tip

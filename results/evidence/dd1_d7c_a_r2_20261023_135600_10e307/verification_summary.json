@@ -1,0 +1,100 @@
+{
+ "added_paths_after_T": [
+  "reports/dd1_d7c_a_review_fix_r2.md",
+  "reports/tasks/DATA-7C-A-R2.md",
+  "scripts/dd1_d7c_a_r2_plan.py",
+  "scripts/dd1_d7c_a_r2_record_check.py",
+  "scripts/dd1_d7c_a_r2_record_probes.py",
+  "scripts/dd1_d7c_a_r2_sign_check.py"
+ ],
+ "branch": "poc/data-pam-d7c-a-r2",
+ "csv_read_back": [
+  {
+   "file": "commands.csv",
+   "result": "columns and keys verified, no CR byte",
+   "rows": 18
+  },
+  {
+   "file": "frozen_comparison.csv",
+   "result": "columns and keys verified, no CR byte",
+   "rows": 27
+  },
+  {
+   "file": "git_checks.csv",
+   "result": "columns and keys verified, no CR byte",
+   "rows": 3
+  },
+  {
+   "file": "source_identity.csv",
+   "result": "columns and keys verified, no CR byte",
+   "rows": 43
+  },
+  {
+   "file": "instrument_T.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "instrument_fixed.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "instrument_remaining_H.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "instrument_remaining_fixed.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "offline_checks.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "counterexamples.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "selftest.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  }
+ ],
+ "development_base": "272d6de6d2f2fc8a82d5038d73d6b3e4c656f683",
+ "electrical_results": "NONE: every result here is about text, connectivity, logic derived from transistors, table schemas and Git identity",
+ "frozen_enforced_mismatches": 0,
+ "frozen_rows": 27,
+ "frozen_rows_enforced": 24,
+ "frozen_rows_informational": 3,
+ "frozen_violating_surfaces": [],
+ "gates": 18,
+ "gates_failed": [],
+ "gates_informational": [
+  "netlist_stats_scope_limit"
+ ],
+ "generated_utc": "2026-10-23T14:01:54Z",
+ "native_launches": 0,
+ "oa_writes": 0,
+ "paths_added_after_T": 6,
+ "published_files_with_cr": [],
+ "published_record_recheck": {
+  "facts": {
+   "frozen_rows": 27,
+   "gates": 18,
+   "git_checks": 3,
+   "identity_rows": 43
+  },
+  "note": "judged over the bytes as published, before this summary line existed; the same rules over the completed directory, including this summary and the Git blobs, are what a reviewer re-runs: python scripts/dd1_d7c_a_r2_record_check.py --record results/evidence/<run_id> --git-ref <tip>",
+  "problems": [],
+  "verdict": "PASS"
+ },
+ "reviewed_tip": "da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb",
+ "rtl_simulations": 0,
+ "task_id": "DATA-7C-A-R2",
+ "verdict": "PASS_WITH_DISCLOSED_INFORMATIONAL_GATES"
+}

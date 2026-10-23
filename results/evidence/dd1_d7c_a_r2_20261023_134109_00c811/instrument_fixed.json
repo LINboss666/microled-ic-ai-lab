@@ -1,0 +1,322 @@
+{
+  "diagnostic_rc_convention": "0=all declared defects reproduced; 1=one or more no longer reproduce",
+  "baseline_checks": 34,
+  "baseline_failures": [],
+  "baseline_top_logic": {
+    "cases": 16,
+    "mismatches": [],
+    "binding": {
+      "pam0": "pam_sel0",
+      "pam1": "pam_sel1",
+      "pam2": "pam_sel2",
+      "data_en": "data_en",
+      "en0": "en0",
+      "en1": "en1",
+      "en2": "en2",
+      "en3": "en3",
+      "en4": "en4",
+      "en5": "en5",
+      "en6": "en6",
+      "en7": "en7",
+      "enb0": "enb0",
+      "enb1": "enb1",
+      "enb2": "enb2",
+      "enb3": "enb3",
+      "enb4": "enb4",
+      "enb5": "enb5",
+      "enb6": "enb6",
+      "enb7": "enb7",
+      "vdd18": "vdd18",
+      "vss": "vss"
+    }
+  },
+  "cases": [
+    {
+      "case": "top_pam_bits_swapped",
+      "path": "spectre/dd1_d7c_a_pam_top.scs",
+      "sha256_before": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24",
+      "sha256_after": "3cf717da1bb20671ec0e30b9f68b8ba5e92ba83b353587dda21076bb92971cd0",
+      "checks": 34,
+      "failures": [
+        "TOP_INTEGRATED_THERMO_16"
+      ],
+      "defect_reproduced": false,
+      "facts": {
+        "cases": 16,
+        "mismatches": [
+          {
+            "enable": 1,
+            "code": 1,
+            "actual": "00011111",
+            "expected": "00000011"
+          },
+          {
+            "enable": 1,
+            "code": 3,
+            "actual": "01111111",
+            "expected": "00001111"
+          },
+          {
+            "enable": 1,
+            "code": 4,
+            "actual": "00000011",
+            "expected": "00011111"
+          },
+          {
+            "enable": 1,
+            "code": 6,
+            "actual": "00001111",
+            "expected": "01111111"
+          }
+        ],
+        "binding": {
+          "pam0": "pam_sel2",
+          "pam1": "pam_sel1",
+          "pam2": "pam_sel0",
+          "data_en": "data_en",
+          "en0": "en0",
+          "en1": "en1",
+          "en2": "en2",
+          "en3": "en3",
+          "en4": "en4",
+          "en5": "en5",
+          "en6": "en6",
+          "en7": "en7",
+          "enb0": "enb0",
+          "enb1": "enb1",
+          "enb2": "enb2",
+          "enb3": "enb3",
+          "enb4": "enb4",
+          "enb5": "enb5",
+          "enb6": "enb6",
+          "enb7": "enb7",
+          "vdd18": "vdd18",
+          "vss": "vss"
+        }
+      }
+    },
+    {
+      "case": "top_enable_tied_high",
+      "path": "spectre/dd1_d7c_a_pam_top.scs",
+      "sha256_before": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24",
+      "sha256_after": "fac0ee70f4941c8ab11868e6f9386381f4510fc7757278a3165db1be2ebc447e",
+      "checks": 34,
+      "failures": [
+        "TOP_INTEGRATED_THERMO_16"
+      ],
+      "defect_reproduced": false,
+      "facts": {
+        "cases": 16,
+        "mismatches": [
+          {
+            "enable": 0,
+            "code": 0,
+            "actual": "00000001",
+            "expected": "00000000"
+          },
+          {
+            "enable": 0,
+            "code": 1,
+            "actual": "00000011",
+            "expected": "00000000"
+          },
+          {
+            "enable": 0,
+            "code": 2,
+            "actual": "00000111",
+            "expected": "00000000"
+          },
+          {
+            "enable": 0,
+            "code": 3,
+            "actual": "00001111",
+            "expected": "00000000"
+          },
+          {
+            "enable": 0,
+            "code": 4,
+            "actual": "00011111",
+            "expected": "00000000"
+          },
+          {
+            "enable": 0,
+            "code": 5,
+            "actual": "00111111",
+            "expected": "00000000"
+          },
+          {
+            "enable": 0,
+            "code": 6,
+            "actual": "01111111",
+            "expected": "00000000"
+          },
+          {
+            "enable": 0,
+            "code": 7,
+            "actual": "11111111",
+            "expected": "00000000"
+          }
+        ],
+        "binding": {
+          "pam0": "pam_sel0",
+          "pam1": "pam_sel1",
+          "pam2": "pam_sel2",
+          "data_en": "vdd18",
+          "en0": "en0",
+          "en1": "en1",
+          "en2": "en2",
+          "en3": "en3",
+          "en4": "en4",
+          "en5": "en5",
+          "en6": "en6",
+          "en7": "en7",
+          "enb0": "enb0",
+          "enb1": "enb1",
+          "enb2": "enb2",
+          "enb3": "enb3",
+          "enb4": "enb4",
+          "enb5": "enb5",
+          "enb6": "enb6",
+          "enb7": "enb7",
+          "vdd18": "vdd18",
+          "vss": "vss"
+        }
+      }
+    },
+    {
+      "case": "reference_bound_to_vcas",
+      "path": "spectre/dd1_d7c_a_pam_top.scs",
+      "sha256_before": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24",
+      "sha256_after": "2e0825c9f5185e8aab8d210e0cb635971f560513f0d0adfb63a24f6df9994e66",
+      "checks": 34,
+      "failures": [
+        "REFERENCE_NODE_IDENTITY",
+        "DNW_PASS_BODY_LOCAL"
+      ],
+      "defect_reproduced": false,
+      "facts": {
+        "actual_reference": {
+          "inst": "Xref.Mref",
+          "scope": "data_bias_ref",
+          "scope_path": "Xref",
+          "model": "n33",
+          "d": "vcas",
+          "g": "vcas",
+          "s": "vss",
+          "b": "vss",
+          "l": "2e-6",
+          "w": "2e-5",
+          "m": "1",
+          "where": "dd1_d6_bias_core.scs:4"
+        },
+        "unit_bias_supply": "iref_in"
+      }
+    },
+    {
+      "case": "duplicate_mos_instance",
+      "path": "spectre/dd1_d7c_a_gates.scs",
+      "sha256_before": "d2def4e657532b655941c2e42adf8534b7144544fa72ff2f41dfbd3374620faf",
+      "sha256_after": "3b9a9d1c84f88e7e291e9b8ca274910116f69cd2d77bd0c10967abac869c03d7",
+      "checks": 34,
+      "failures": [
+        "NO_DUPLICATE_INSTANCES"
+      ],
+      "defect_reproduced": false,
+      "facts": {
+        "actual_mos_names": [
+          "Mnand_n_a",
+          "Mnand_n_a",
+          "Mnand_p_a",
+          "Mnand_p_b"
+        ],
+        "duplicates": [
+          "Mnand_n_a"
+        ]
+      }
+    },
+    {
+      "case": "cascode_multiplicity_changed",
+      "path": "spectre/dd1_d7c_a_sink_unit.scs",
+      "sha256_before": "60e06aa3010a66442ac25ff408abc22f1aab93d6b5d3b24dbc15095ac66234af",
+      "sha256_after": "234baf490eeda64735632c4085f6dfe1d4e5ba801ea0e5a1af5c564db7b700e5",
+      "checks": 34,
+      "failures": [
+        "DEVICE_COUNT_SEPARATION",
+        "UNIT_CORE_ISOMORPHIC_TO_ACCEPTED"
+      ],
+      "defect_reproduced": false,
+      "facts": {
+        "cascode": {
+          "inst": "Mcas",
+          "model": "n33",
+          "d": "DATA_OUT",
+          "g": "VCAS",
+          "s": "node_m",
+          "b": "VSS",
+          "l": "2e-6",
+          "w": "2.5e-6",
+          "m": "8",
+          "where": "dd1_d7c_a_sink_unit.scs:53"
+        }
+      }
+    },
+    {
+      "case": "report_total_borrowed_from_other_cell",
+      "path": "reports/dd1_d7c_a_pam_candidate.md",
+      "sha256_before": "d4f170b0c2baeadd7d2f51f149c68d9219d37bbba19621659a9978f499b1070d",
+      "sha256_after": "a6e7dbf29f5cb85f3a64e772a69efb9b65cb07d712c1289570c749d2a92a00ae",
+      "checks": 34,
+      "failures": [
+        "REPORT_CLAIMS_BOUND_TO_OBJECT"
+      ],
+      "defect_reproduced": false,
+      "facts": {
+        "claim": 112,
+        "actual_top_mos": 145
+      }
+    },
+    {
+      "case": "golden_header_only",
+      "path": "tests/dd1_d7c_a/pam_mask_golden.csv",
+      "sha256_before": "6ff91d98ea84d65c36cb9d139e3fdd87afbe5c567cbef017d9404a20b749ab25",
+      "sha256_after": "10dbda30941b19df85bff4c41bc1b292ee7cad46bb03d9a94cc560463baa66dc",
+      "checks": 34,
+      "failures": [
+        "INPUT_TABLE_SCHEMAS",
+        "GOLDEN_TABLE_SCHEMA",
+        "THERMO_GOLDEN_16",
+        "TOP_INTEGRATED_THERMO_16"
+      ],
+      "defect_reproduced": false,
+      "facts": {
+        "golden_rows": 0,
+        "gate": {
+          "check": "THERMO_GOLDEN_16",
+          "result": "FAIL",
+          "reason": "0 hand-written golden rows compared against the decoder transistors themselves, never generated by this evaluator; golden mask table has 0 data rows, the schema declares exactly 16; golden mask table is missing the key (0, 1) the contract requires; golden mask table is missing the key (0, 7) the contract requires"
+        }
+      }
+    },
+    {
+      "case": "active_transient_not_detected",
+      "path": "spectre/dd1_d7c_a_tb_draft.scs",
+      "sha256_before": "d4ad6f72d23416f09482402f5b253e3aa8395610e166e0de04060c60539613c0",
+      "sha256_after": "f826fac13dc6284d400312568cd5ce381801ec1a487aa663d74c971d15bcd7f0",
+      "checks": 34,
+      "failures": [
+        "DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS"
+      ],
+      "defect_reproduced": false,
+      "facts": {
+        "active_statement": "review_tran tran stop=1u maxstep=1n",
+        "gate": {
+          "check": "DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS",
+          "result": "FAIL",
+          "reason": "40 active (non-comment) lines in the deck draft, analysis statements recognised by the keyword position with or without dev=: 1; found line 159: review_tran tran stop=1u maxstep=1n. This states only that the draft carries no analysis to run; it is not a claim that pointing Spectre at the file would not start a process -- that is guarded by the entry authorisation above."
+        }
+      }
+    }
+  ],
+  "all_defects_reproduced": false,
+  "native_launches": 0
+}
