@@ -327,4 +327,24 @@ R1 报告新增 §9 勘误：区间一律写全两端 SHA、时刻一律带 `Z`�
 `poc/data-pam-d7c-a-r1=da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb`、
 `poc/data-pwm-d7b-r3=272d6de6d2f2fc8a82d5038d73d6b3e4c656f683` 四值两路一致；
 `poc/data-pam-d7c-a-r2` 在 Git protocol 里无该行、在 API 里 404，这是本轮尚未推送的正确答案，
-不是读回失败。推送本身与推送后的逐 ref 回读记在下面的 10.5，本小节先不预告未发生的数字。
+不是读回失败。推送本身在 `2026-10-23T13:32:03Z ~ 13:34:57Z`（UTC）执行：
+`git -c http.proxy=http://127.0.0.1:7892 push -u origin poc/data-pam-d7c-a-r2`，rc=0，普通新建分支，
+无 force、无 `--no-verify`；仓库 `pre-push` 钩子真实跑完 `--mode history`，PDK、凭据、私钥、厂商模型
+四项 tracked 计数均为 0，`SAFETY_GATE: PASS`。载荷提交 `5676f232159cd2a3bdf78550ad7b288ebccc6ab6`。
+
+### 10.5 推送后的逐 ref 回读（实测）
+
+| ref | Git protocol（`2026-10-23T13:35:18Z`） | GitHub API（`2026-10-23T13:35:25Z`） | 判定 |
+|---|---|---|---|
+| `poc/data-pam-d7c-a-r2` | `5676f232159cd2a3bdf78550ad7b288ebccc6ab6` | 同 | 本轮分支 tip = 载荷提交 |
+| `poc/data-pam-d7c-a-r1` | `da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb` | 同 | 被审 R1 tip **未动** |
+| `poc/data-pam-d7c-a` | `89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79` | 同 | 被审 tip **未动** |
+| `main` | `23e471cb936b421ee97e1250c3be06edf96f9937` | 同 | **未动** |
+| `poc/data-pwm-d7b-r3` | `272d6de6d2f2fc8a82d5038d73d6b3e4c656f683` | 同 | DATA-7B 线**未动** |
+
+本地 `HEAD` 与 `origin/poc/data-pam-d7c-a-r2` 同 SHA，两通道五个 ref 逐字一致。
+正式记录目录与渲染后的报告在这之后才落到磁盘上，因此记录提交与它之上那枚 tree-identical 元数据提交
+的最终 tip **不写在本文件里**：那两个字段的实测值记在元数据提交信息与包外回执里，本文件只保证
+"上面的数字已经发生"，不预告还没发生的数字。交接 JSON 的 `remote_readback.post_push.scope_of_this_field`
+同一条款。
+

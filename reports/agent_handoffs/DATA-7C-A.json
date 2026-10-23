@@ -88,7 +88,7 @@
   "superseded_runs_policy": "no R2 trial record was published inside results/evidence; the trials ran against scratch directories, so nothing in the delivered evidence directory is superseded",
   "validated": "the record is read back from disk after publishing and the verdict turns FAIL if the recheck reports any problem"
  },
- "head_sha": "da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb",
+ "head_sha": "5676f232159cd2a3bdf78550ad7b288ebccc6ab6",
  "head_sha_role": "the commit at generation time; the commits carrying this file and the record are above it, and their read-back is in remote_readback",
  "known_limitations": [
   "every result in this file is about text, connectivity, derived logic, table schemas, schedule arithmetic and Git identity; no electrical quantity was measured",
@@ -293,6 +293,8 @@
   "added_T_over_B": 26,
   "measured_from": "git ls-tree -r <rev> --name-only counts, and git diff --name-status H for what this round changes",
   "modified_R2_over_H": [
+   "reports/agent_handoffs/DATA-7C-A.json",
+   "reports/agent_handoffs/DATA-7C-A.md",
    "reports/dd1_d7c_a_native_test_plan.md",
    "reports/dd1_d7c_a_review_fix_r1.md",
    "scripts/dd1_d7c_a_guards.py",
@@ -305,7 +307,7 @@
   ],
   "removed_R2_over_H": []
  },
- "payload_sha": "da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb",
+ "payload_sha": "5676f232159cd2a3bdf78550ad7b288ebccc6ab6",
  "remote_readback": {
   "ancestry": {
    "B_is_ancestor_of_T": true,
@@ -329,8 +331,38 @@
    "refs_read": 4
   },
   "post_push": {
-   "note": "filled by the commit after this one; the branch tip that carries the record is read back in the tree-identical metadata commit above it and in the receipt outside the package",
-   "state": "NOT_PERFORMED_YET"
+   "agreement": "both channels return the same full SHA for all five refs",
+   "channel_1_git_protocol": {
+    "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin refs/heads/main refs/heads/poc/data-pam-d7c-a refs/heads/poc/data-pam-d7c-a-r1 refs/heads/poc/data-pam-d7c-a-r2 refs/heads/poc/data-pwm-d7b-r3",
+    "queried_utc": "2026-10-23T13:35:18Z",
+    "rc": 0
+   },
+   "channel_2_api": {
+    "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<branch> --jq .object.sha",
+    "queried_utc": "2026-10-23T13:35:25Z",
+    "rc": 0,
+    "refs_read": 5
+   },
+   "command": "git -c http.proxy=http://127.0.0.1:7892 push -u origin poc/data-pam-d7c-a-r2",
+   "forced": false,
+   "hooks_bypassed": false,
+   "local_equals_remote": {
+    "local_tip": "5676f232159cd2a3bdf78550ad7b288ebccc6ab6",
+    "remote_tip": "5676f232159cd2a3bdf78550ad7b288ebccc6ab6",
+    "same": true
+   },
+   "pre_push_hook": "pre-push ran the repository safety gate (--mode history): PDK, credential, private-key and vendor-model tracked-file counts all 0, SAFETY_GATE: PASS",
+   "pushed_utc_window": "2026-10-23T13:32:03Z .. 2026-10-23T13:34:57Z (host UTC)",
+   "rc": 0,
+   "refs": {
+    "refs/heads/main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+    "refs/heads/poc/data-pam-d7c-a": "89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79",
+    "refs/heads/poc/data-pam-d7c-a-r1": "da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb",
+    "refs/heads/poc/data-pam-d7c-a-r2": "5676f232159cd2a3bdf78550ad7b288ebccc6ab6",
+    "refs/heads/poc/data-pwm-d7b-r3": "272d6de6d2f2fc8a82d5038d73d6b3e4c656f683"
+   },
+   "scope_of_this_field": "this is the read-back of the payload commit. The record commit and the tree-identical metadata commit above it are newer than this file, so their tip is read back in the metadata commit message and in the receipt kept outside the package; this file does not predict a SHA it cannot know yet.",
+   "untouched": "main, the reviewed tip branch and the R1 branch all still read their previous values"
   },
   "pre_push": {
    "agreement": "both channels return the same full SHA for all four refs that exist",
@@ -472,10 +504,10 @@
     "sha256": "864f8889fb5c114cb944325deea0036a822cf3e295d73d452cba328fe36773bd"
    },
    {
-    "bytes": 66691,
+    "bytes": 67426,
     "path": "scripts/dd1_d7c_a_verify.py",
     "role": "delivered this round",
-    "sha256": "70cb4551a9f875087d9051dfa12f8b03cecbc89a5c8388d7ec74373fea1ec291"
+    "sha256": "417d06991fc5e540b8850ca100b0a97009e180765362e0d111b5977684da8859"
    },
    {
     "bytes": 7768,
