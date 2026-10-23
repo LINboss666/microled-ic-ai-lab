@@ -1,0 +1,58 @@
+{
+ "added_paths": [
+  "reports/agent_handoffs/DATA-7C-A.md",
+  "reports/dd1_d7c_a_native_test_plan.md",
+  "reports/dd1_d7c_a_pam_candidate.md",
+  "reports/tasks/DATA-7C-A.md",
+  "scripts/dd1_d7c_a_deckgen.py",
+  "scripts/dd1_d7c_a_guards.py",
+  "scripts/dd1_d7c_a_netlist.py",
+  "scripts/dd1_d7c_a_offline_check.py",
+  "scripts/dd1_d7c_a_validate_handoff.py",
+  "scripts/dd1_d7c_a_verify.py",
+  "spectre/dd1_d7c_a_gates.scs",
+  "spectre/dd1_d7c_a_pam_dec.scs",
+  "spectre/dd1_d7c_a_pam_top.scs",
+  "spectre/dd1_d7c_a_sink_unit.scs",
+  "spectre/dd1_d7c_a_tb_draft.scs",
+  "tests/dd1_d7c_a/native_case_plan.csv",
+  "tests/dd1_d7c_a/pam_mask_golden.csv",
+  "tests/dd1_d7c_a/pam_request_refusal.csv"
+ ],
+ "base_sha": "272d6de6d2f2fc8a82d5038d73d6b3e4c656f683",
+ "branch": "poc/data-pam-d7c-a",
+ "electrical_results": "NONE: every result in this directory is about text, connectivity, logic derived from transistors, and Git identity",
+ "frozen_mismatches": 0,
+ "frozen_surfaces": 9,
+ "gates": 7,
+ "gates_failed": [],
+ "gates_informational": [
+  "netlist_stats_scope_limit"
+ ],
+ "generated_utc": "2026-10-23T06:34:19Z",
+ "native_launches": 0,
+ "oa_writes": 0,
+ "paths_added_vs_base": 18,
+ "paths_modified_vs_base": 0,
+ "paths_removed_vs_base": 0,
+ "removed_paths": [],
+ "render_passes": [
+  {
+   "attempt": 1,
+   "guards_rc": 0,
+   "offline_rc": 0,
+   "report_sha_after": [
+    "1c047caaea2d1e5a2e206331d9d54f1db52fbc8a939c4843b24712233fb422dd",
+    "aa4106260b49b30299b807c7051f076580bc79d64b2852704042709155ca5f1b"
+   ],
+   "report_sha_before": [
+    "1c047caaea2d1e5a2e206331d9d54f1db52fbc8a939c4843b24712233fb422dd",
+    "aa4106260b49b30299b807c7051f076580bc79d64b2852704042709155ca5f1b"
+   ],
+   "reports_stable": true
+  }
+ ],
+ "rtl_simulations": 0,
+ "task_id": "DATA-7C-A",
+ "verdict": "PASS_WITH_DISCLOSED_INFORMATIONAL_GATES"
+}

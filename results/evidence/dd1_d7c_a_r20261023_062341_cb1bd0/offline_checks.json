@@ -1,0 +1,116 @@
+{
+ "checks": [
+  {
+   "check": "NETLIST_SUBSET_PARSED",
+   "reason": "7 files parsed, 10 subckt definitions, 145 expanded MOS at dd1_d7c_a_pam_1ch, unsupported statements 0; source digests dd1_d6_bias_=4115e2d1,dd1_d6_inv18=04cd6833,dd1_d6_sink_=6cfe2338,dd1_d7c_a_ga=d2def4e6,dd1_d7c_a_pa=9f6c8d78,dd1_d7c_a_pa=f46a2be5,dd1_d7c_a_si=60e06aa3",
+   "result": "PASS"
+  },
+  {
+   "check": "SUBCKT_MASTERS_DEFINED",
+   "reason": "58 subckt instances all resolve; device models n18,n33,n33_dnw_4t_ckt,p18 against whitelist n18,p18,n33,n33_dnw_4t_ckt",
+   "result": "PASS"
+  },
+  {
+   "check": "INSTANCE_PORT_COUNTS",
+   "reason": "58 instance bindings, each with exactly its master port count and order (no mismatch)",
+   "result": "PASS"
+  },
+  {
+   "check": "NO_DUPLICATE_INSTANCES",
+   "reason": "58 unique (scope,instance) pairs",
+   "result": "PASS"
+  },
+  {
+   "check": "TOP_HAS_ONE_OUTPUT_PORT",
+   "reason": "output ports of dd1_d7c_a_pam_1ch: ['data_out'] (this is not eight channels)",
+   "result": "PASS"
+  },
+  {
+   "check": "ALL_BRANCHES_ON_COMMON_OUTPUT",
+   "reason": "8 unit branches instantiated, DATA_OUT of every one on net data_out",
+   "result": "PASS"
+  },
+  {
+   "check": "UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE",
+   "reason": "all 8 branches bind EN/EN_B to their own enable pair, VBIAS_SHARED to the shared reference node, VCAS to vcas, DATA_OUT to the one output",
+   "result": "PASS"
+  },
+  {
+   "check": "LOCAL_NODES_NOT_SHARED",
+   "reason": "vbias_ch/node_m exist only inside instance scopes (branch 0 holds 2 local net(s)), no local name at top level, shared rails only iref_in/vcas/data_out/vdd18/vss; cross-branch overlap 0",
+   "result": "PASS"
+  },
+  {
+   "check": "DNW_PASS_BODY_LOCAL",
+   "reason": "all 8 Mpass_local: drain on the shared reference iref_in, gate on this branch en, source AND DNW body on this branch vbias_ch, never vss",
+   "result": "PASS"
+  },
+  {
+   "check": "BLEED_GATED_BY_BRANCH_COMPLEMENT",
+   "reason": "all 8 Mbleed_local discharge vbias_ch to vss and are gated by this branch enb",
+   "result": "PASS"
+  },
+  {
+   "check": "MAIN_PATH_DATA_OUT_CAS_MOUT_VSS",
+   "reason": "main path DATA_OUT -> Mcas -> node_m -> Mout -> vss, gate of Mout is the local bias, gate of Mcas is vcas",
+   "result": "PASS"
+  },
+  {
+   "check": "THERMO_GOLDEN_16",
+   "reason": "16 hand-written golden rows compared against the decoder transistors themselves (golden read from pam_mask_golden.csv, never produced by this evaluator)",
+   "result": "PASS"
+  },
+  {
+   "check": "GATE_LOGIC_DERIVED_FROM_TRANSISTORS",
+   "reason": "pull-up/pull-down graphs give dd1_d7c_a_and2=0001; dd1_d7c_a_nand2=1110; dd1_d7c_a_nor2=1000; dd1_d7c_a_or2=0111; dd1_inv18=10 against hand-written boolean algebra ",
+   "result": "PASS"
+  },
+  {
+   "check": "EN_ENB_PAIR_PER_BRANCH",
+   "reason": "every branch enb is one dd1_inv18 driven by that branch own en, and 16x8 pairs evaluate as exact complements",
+   "result": "PASS"
+  },
+  {
+   "check": "MIRROR_RATIO_ESTIMATED_ONLY",
+   "reason": "reference Mref W=2e-5 L=2e-6 over unit Mout W=2.5e-6 L=2e-6 gives 8, tagged ESTIMATED_MIRROR_RATIO_ONLY: no short-channel, output-resistance, body-effect or matching behaviour is claimed",
+   "result": "PASS"
+  },
+  {
+   "check": "UNIT_CORE_ISOMORPHIC_TO_ACCEPTED",
+   "reason": "device by device dd1_d7c_a_sink_unit matches data_sink_1ch in model, L and D/G/S/B role; only Mcas and Mout widths scale by 1/8, Mpass_local and Mbleed_local keep the accepted widths",
+   "result": "PASS"
+  },
+  {
+   "check": "DEVICE_COUNTS_DERIVED",
+   "reason": "subckt instances 58; expanded MOS: data_bias_ref=1 data_sink_1ch=4 dd1_d7c_a_and2=6 dd1_d7c_a_nand2=4 dd1_d7c_a_nor2=4 dd1_d7c_a_or2=6 dd1_d7c_a_pam_1ch=145 dd1_d7c_a_pam_dec=112 dd1_d7c_a_sink_unit=4 dd1_inv18=2; branch devices 8 x 4 = 32; summed unit Mout effective width 2.000e-05 m (m unset, so 8 x 2.5 um = 20 um, the width of one accepted Mout); the shared reference is counted once at the top, not per branch",
+   "result": "PASS"
+  },
+  {
+   "check": "REPORT_CLAIM_COUNTS_MATCH",
+   "reason": "every N MOS / N 管 / N transistors claim in the 7 new documents equals a total parsed from the netlist",
+   "result": "PASS"
+  },
+  {
+   "check": "REQUEST_REFUSAL_TABLE",
+   "reason": "16 request shapes tried: X/Z, empty, non-numeric, -1, 8, 9, 255, 2.5, 3.0, nan, inf, -inf, bool and the two legal codes ",
+   "result": "PASS"
+  },
+  {
+   "check": "NATIVE_ENTRY_REFUSED",
+   "reason": "4 environment combinations, entry refused in each before writing, directory digest unchanged and sentinel still present",
+   "result": "PASS"
+  },
+  {
+   "check": "DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS",
+   "reason": "114 line deck draft, active dc/tran/ac statements: 0 (every analysis line is commented out, so the file cannot launch a run if someone points Spectre at it)",
+   "result": "PASS"
+  },
+  {
+   "check": "NATIVE_PLAN_SHAPE",
+   "reason": "15 planned cases [('dc_sweep', 8), ('refined_step', 3), ('transient', 4)], draft launch units 30 (plus 6 debug = the 36 draft ceiling, which is a proposal and NOT an authorisation in this round), all result=NOT_RUN",
+   "result": "PASS"
+  }
+ ],
+ "failures": [],
+ "root": "D:/ic617_d7c_a"
+}

@@ -1,0 +1,2 @@
+gate,command,rc,lines,scope
+diff_check_base_to_head,git diff --check 272d6de6d2f2fc8a82d5038d73d6b3e4c656f683..HEAD,0,0,committed range only, an untracked worktree is not evidence

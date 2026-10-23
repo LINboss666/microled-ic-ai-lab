@@ -1,0 +1,265 @@
+{
+ "baseline_failures": [],
+ "injections": [
+  {
+   "detail": "new failures exactly THERMO_GOLDEN_16",
+   "digest_after": "c510872165be007a54132cab5ed53fc27b4edeeea8365a11a899dc99137da016",
+   "digest_before": "9f6c8d7895d13aaf031eac8036bba7165e26a448c685beef8ab2d0a128627d24",
+   "expected": [
+    "THERMO_GOLDEN_16"
+   ],
+   "file": "spectre/dd1_d7c_a_pam_dec.scs",
+   "found": [
+    "THERMO_GOLDEN_16"
+   ],
+   "injection": "E01_pam_bit_order_swapped",
+   "lines_changed": [
+    [
+     89,
+     "Xn4 (data_en pam1 nn4 vdd18 vss) dd1_d7c_a_nand2"
+    ]
+   ],
+   "meaning": "bit2 wired where bit1 belongs on the always-selected branch 4 mask gate",
+   "offender_evidence": "16 hand-written golden rows compared against the decoder transistors themselves (golden read from pam_mask_golden.csv, n",
+   "verdict": "HIT"
+  },
+  {
+   "detail": "new failures exactly THERMO_GOLDEN_16",
+   "digest_after": "5b9b044f9e78a4af812347637fb7035c7a1d789856f53b6509400a11f6227a6e",
+   "digest_before": "9f6c8d7895d13aaf031eac8036bba7165e26a448c685beef8ab2d0a128627d24",
+   "expected": [
+    "THERMO_GOLDEN_16"
+   ],
+   "file": "spectre/dd1_d7c_a_pam_dec.scs",
+   "found": [
+    "THERMO_GOLDEN_16"
+   ],
+   "injection": "E02_thermometer_threshold_off_one",
+   "lines_changed": [
+    [
+     65,
+     "Xsel3 (pam2 gor10 sel3 vdd18 vss) dd1_d7c_a_or2"
+    ]
+   ],
+   "meaning": "select3 threshold one code too low: pam=010 would light four branches",
+   "offender_evidence": "16 hand-written golden rows compared against the decoder transistors themselves (golden read from pam_mask_golden.csv, n",
+   "verdict": "HIT"
+  },
+  {
+   "detail": "new failures exactly THERMO_GOLDEN_16",
+   "digest_after": "f44cbb24699a9e131ee97c5e7ed84b57c7786ed1825372576c7f628a2735ce66",
+   "digest_before": "9f6c8d7895d13aaf031eac8036bba7165e26a448c685beef8ab2d0a128627d24",
+   "expected": [
+    "THERMO_GOLDEN_16"
+   ],
+   "file": "spectre/dd1_d7c_a_pam_dec.scs",
+   "found": [
+    "THERMO_GOLDEN_16"
+   ],
+   "injection": "E03_branch_ignores_global_data_en",
+   "lines_changed": [
+    [
+     81,
+     "Xn2 (vdd18 sel2 nn2 vdd18 vss) dd1_d7c_a_nand2"
+    ]
+   ],
+   "meaning": "branch 2 enabled without DATA_EN, so the eight off rows are wrong",
+   "offender_evidence": "16 hand-written golden rows compared against the decoder transistors themselves (golden read from pam_mask_golden.csv, n",
+   "verdict": "HIT"
+  },
+  {
+   "detail": "new failures exactly ALL_BRANCHES_ON_COMMON_OUTPUT",
+   "digest_after": "610a51a78bdaaaed34eed2a4a1e68bef6d2bc4d4020bb2b6f31a02bc7f4cf2e8",
+   "digest_before": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24",
+   "expected": [
+    "ALL_BRANCHES_ON_COMMON_OUTPUT"
+   ],
+   "file": "spectre/dd1_d7c_a_pam_top.scs",
+   "found": [
+    "ALL_BRANCHES_ON_COMMON_OUTPUT"
+   ],
+   "injection": "E04_branch_left_the_common_output",
+   "lines_changed": [
+    [
+     58,
+     "Xu7 (en7 enb7 iref_in vcas data_out_dangling vss) dd1_d7c_a_sink_unit"
+    ]
+   ],
+   "meaning": "one branch drains a private net: eight outputs dressed as one",
+   "offender_evidence": "8 unit branches instantiated, DATA_OUT of every one on net data_out; off-net: Xu7",
+   "verdict": "HIT"
+  },
+  {
+   "detail": "new failures exactly MIRROR_RATIO_ESTIMATED_ONLY",
+   "digest_after": "867d777e24d4813a8cd48af67bb7d6bb59a5bd1387d24fde3315e63cb00691ef",
+   "digest_before": "4115e2d17a86fb92e7c222df085f1d1a82da14cb7640654d90f4e2589e9b31e7",
+   "expected": [
+    "MIRROR_RATIO_ESTIMATED_ONLY"
+   ],
+   "file": "spectre/dd1_d6_bias_core.scs",
+   "found": [
+    "MIRROR_RATIO_ESTIMATED_ONLY"
+   ],
+   "injection": "E05_shared_reference_ratio_wrong",
+   "lines_changed": [
+    [
+     4,
+     "Mref (VBIAS_SHARED VBIAS_SHARED VSS VSS) n33 l=2e-6 w=2.5e-6"
+    ]
+   ],
+   "meaning": "reference copied to unit width, so the 1:8 estimate silently became 1:1",
+   "offender_evidence": "reference Mref W=2.5e-6 L=2e-6 over unit Mout W=2.5e-6 L=2e-6 gives 1, tagged ESTIMATED_MIRROR_RATIO_ONLY: no short-chan",
+   "verdict": "HIT"
+  },
+  {
+   "detail": "new failures exactly DNW_PASS_BODY_LOCAL,UNIT_CORE_ISOMORPHIC_TO_ACCEPTED",
+   "digest_after": "6145d47043419b57c53499e51285c0e8ff215d67fe134be1977350fa8ab65ff3",
+   "digest_before": "60e06aa3010a66442ac25ff408abc22f1aab93d6b5d3b24dbc15095ac66234af",
+   "expected": [
+    "DNW_PASS_BODY_LOCAL",
+    "UNIT_CORE_ISOMORPHIC_TO_ACCEPTED"
+   ],
+   "file": "spectre/dd1_d7c_a_sink_unit.scs",
+   "found": [
+    "DNW_PASS_BODY_LOCAL",
+    "UNIT_CORE_ISOMORPHIC_TO_ACCEPTED"
+   ],
+   "injection": "E06_dnw_pass_body_tied_to_vss",
+   "lines_changed": [
+    [
+     55,
+     "Mpass_local (VBIAS_SHARED EN vbias_ch VSS) n33_dnw_4t_ckt l=2e-6 w=5e-6"
+    ]
+   ],
+   "meaning": "the DNW body pulled to the rail instead of its own source node, which is both a body-rule break and a departure from the accepted core",
+   "offender_evidence": "all 8 Mpass_local: drain on the shared reference iref_in, gate on this branch en, source AND DNW body on this branch vbi || device by device dd1_d7c_a_sink_unit matches data_sink_1ch in model, L and D/G/S/B role; only Mcas and Mout widths scale",
+   "verdict": "HIT"
+  },
+  {
+   "detail": "new failures exactly EN_ENB_PAIR_PER_BRANCH",
+   "digest_after": "bed8351b95021050a13d1cbef2fe504c9e7ef52fa18c38750a63e31fadf252e7",
+   "digest_before": "9f6c8d7895d13aaf031eac8036bba7165e26a448c685beef8ab2d0a128627d24",
+   "expected": [
+    "EN_ENB_PAIR_PER_BRANCH"
+   ],
+   "file": "spectre/dd1_d7c_a_pam_dec.scs",
+   "found": [
+    "EN_ENB_PAIR_PER_BRANCH"
+   ],
+   "injection": "E07_enb_tied_to_a_constant",
+   "lines_changed": [
+    [
+     103,
+     "Xb7 (vdd18 enb7 vdd18 vss) dd1_inv18"
+    ]
+   ],
+   "meaning": "branch 7 bleed device stops following its own enable",
+   "offender_evidence": "every branch enb is one dd1_inv18 driven by that branch own en, and 16x8 pairs evaluate as exact complements; enb7 drive",
+   "verdict": "HIT"
+  },
+  {
+   "detail": "new failures exactly BLEED_GATED_BY_BRANCH_COMPLEMENT,DNW_PASS_BODY_LOCAL,UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE",
+   "digest_after": "d759c761d17fde50d50d57a24674ba2b859539f0b27d9fc5dc88bf891a80e30e",
+   "digest_before": "60e06aa3010a66442ac25ff408abc22f1aab93d6b5d3b24dbc15095ac66234af",
+   "expected": [
+    "BLEED_GATED_BY_BRANCH_COMPLEMENT",
+    "DNW_PASS_BODY_LOCAL",
+    "UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE"
+   ],
+   "file": "spectre/dd1_d7c_a_sink_unit.scs",
+   "found": [
+    "BLEED_GATED_BY_BRANCH_COMPLEMENT",
+    "DNW_PASS_BODY_LOCAL",
+    "UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE"
+   ],
+   "injection": "E08_subckt_port_order_corrupted",
+   "lines_changed": [
+    [
+     45,
+     "subckt dd1_d7c_a_sink_unit (EN VBIAS_SHARED EN_B VCAS DATA_OUT VSS)"
+    ]
+   ],
+   "meaning": "declaration order changed under positional bindings",
+   "offender_evidence": "all 8 Mbleed_local discharge vbias_ch to vss and are gated by this branch enb; offenders Xu0. Mbleed_local d=Xu0/vbias_c || all 8 Mpass_local: drain on the shared reference iref_in, gate on this branch en, source AND DNW body on this branch vbi",
+   "verdict": "HIT"
+  },
+  {
+   "detail": "new failures exactly REPORT_CLAIM_COUNTS_MATCH",
+   "digest_after": "a6ef760138e30383ff9aa16e8c6a318c153b5fd4855c54c65f3cfe177ae8f708",
+   "digest_before": "1c047caaea2d1e5a2e206331d9d54f1db52fbc8a939c4843b24712233fb422dd",
+   "expected": [
+    "REPORT_CLAIM_COUNTS_MATCH"
+   ],
+   "file": "reports/dd1_d7c_a_pam_candidate.md",
+   "found": [
+    "REPORT_CLAIM_COUNTS_MATCH"
+   ],
+   "injection": "E09_stale_device_count_in_report",
+   "lines_changed": [
+    [
+     127,
+     "dd1_d7c_a_pam_1ch            154 MOS（展开）  唯一输出 data_out"
+    ]
+   ],
+   "meaning": "a prose device count that no parse of the netlist produces",
+   "offender_evidence": "every N MOS / N 管 / N transistors claim in the 7 new documents equals a total parsed from the netlist; reports/dd1_d7c_a",
+   "verdict": "HIT"
+  },
+  {
+   "detail": "new failures exactly ALL_BRANCHES_ON_COMMON_OUTPUT,BLEED_GATED_BY_BRANCH_COMPLEMENT,DEVICE_COUNTS_DERIVED,DNW_PASS_BODY_LOCAL,EN_ENB_PAIR_PER_BRANCH,GATE_LOGIC_DERIVED_FROM_TRANSISTORS,INSTANCE_PORT_COUNTS,LOCAL_NODES_NOT_SHARED,MAIN_PATH_DATA_OUT_CAS_MOUT_VSS,NETLIST_SUBSET_PARSED,NO_DUPLICATE_INSTANCES,SUBCKT_MASTERS_DEFINED,THERMO_GOLDEN_16,TOP_HAS_ONE_OUTPUT_PORT",
+   "digest_after": "775c38e57363c0e418a94c2e3fc278e490eaef4c0cf1c4ce84ed05a7f071d247",
+   "digest_before": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24",
+   "expected": [
+    "ALL_BRANCHES_ON_COMMON_OUTPUT",
+    "BLEED_GATED_BY_BRANCH_COMPLEMENT",
+    "DEVICE_COUNTS_DERIVED",
+    "DNW_PASS_BODY_LOCAL",
+    "EN_ENB_PAIR_PER_BRANCH",
+    "GATE_LOGIC_DERIVED_FROM_TRANSISTORS",
+    "INSTANCE_PORT_COUNTS",
+    "LOCAL_NODES_NOT_SHARED",
+    "MAIN_PATH_DATA_OUT_CAS_MOUT_VSS",
+    "NETLIST_SUBSET_PARSED",
+    "NO_DUPLICATE_INSTANCES",
+    "SUBCKT_MASTERS_DEFINED",
+    "THERMO_GOLDEN_16",
+    "TOP_HAS_ONE_OUTPUT_PORT"
+   ],
+   "file": "spectre/dd1_d7c_a_pam_top.scs",
+   "found": [
+    "ALL_BRANCHES_ON_COMMON_OUTPUT",
+    "BLEED_GATED_BY_BRANCH_COMPLEMENT",
+    "DEVICE_COUNTS_DERIVED",
+    "DNW_PASS_BODY_LOCAL",
+    "EN_ENB_PAIR_PER_BRANCH",
+    "GATE_LOGIC_DERIVED_FROM_TRANSISTORS",
+    "INSTANCE_PORT_COUNTS",
+    "LOCAL_NODES_NOT_SHARED",
+    "MAIN_PATH_DATA_OUT_CAS_MOUT_VSS",
+    "NETLIST_SUBSET_PARSED",
+    "NO_DUPLICATE_INSTANCES",
+    "SUBCKT_MASTERS_DEFINED",
+    "THERMO_GOLDEN_16",
+    "TOP_HAS_ONE_OUTPUT_PORT"
+   ],
+   "injection": "E10_unsupported_syntax_refused",
+   "lines_changed": [
+    [
+     49,
+     "Rload (iref_in vss) resistor r=1k"
+    ],
+    [
+     50,
+     "Xref (iref_in vss) data_bias_ref"
+    ],
+    [
+     51,
+     "Xdec (pam_sel0 pam_sel1 pam_sel2 data_en en0 en1 en2 en3 en4 en5 en6 en7 enb0 enb1 enb2 enb3 enb4 enb5 enb6 enb7 vdd18 v"
+    ]
+   ],
+   "meaning": "grammar outside the documented subset is refused by name, never skipped",
+   "offender_evidence": "not evaluated: the netlist set did not load (UNSUPPORTED_SYNTAX in dd1_d7c_a_pam_top.scs: UNSUPPORTED_STATEMENT(dd1_d7c_ || not evaluated: the netlist set did not load (UNSUPPORTED_SYNTAX in dd1_d7c_a_pam_top.scs: UNSUPPORTED_STATEMENT(dd1_d7c_",
+   "verdict": "HIT"
+  }
+ ]
+}

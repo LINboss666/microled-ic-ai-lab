@@ -1,0 +1,8 @@
+gate,command,rc,expected_rc,verdict_state,verdict
+offline_checks,python dd1_d7c_a_offline_check.py --json <out>,0,0,PASS,D7C_A_OFFLINE_CHECK: PASS (22 checks, failures: none)
+counterexamples,python dd1_d7c_a_guards.py --json <out>,0,0,PASS,D7C_A_GUARDS: PASS (10/10 injections named exactly; not hit: none)
+native_entry_refused,python dd1_d7c_a_deckgen.py --probe <temp dir>,0,0,PASS,DECKGEN_PROBE refused=True untouched=True reason=DATA-7C-A: this round authorises no native launch and no deck publication; NATIVE_AUTHORISED_THIS_ROUND is False and the
+provenance,python provenance_check.py,0,0,PASS,SOURCE_PROVENANCE_CHECK: PASS
+netlist_stats_scope_limit,python netlist_stats.py at the base extraction and at this tip,1/1,INFORMATIONAL: pre-existing single-cell scope, not a PASS,INFORMATIONAL_NOT_PASS,base problems 1 ['dd1_d7b_pwm_current.md:47 claims 29 devices']; tip problems 12; of the tip problems 1 are pre-existing and 11 are this round claims about cells other than the tool default (C2MOS 18 devices): ['dd1_d7c_a_pam_candidate.md:127 claims 145 devices', 'dd1_d7c_a_pam_candidate.md:128 claims 1 devices', 'dd1_d7c_a_pam_candidate.md:129 claims 112 devices', 'dd1_d7c_a_pam_candidate.md:130 claims 6 devices', 'dd1_d7c_a_pam_candidate.md:131 claims 6 devices', 'dd1_d7c_a_pam_candidate.md:136 claims 32 devices']
+history_safety,python precommit_safety_check.py --mode history,0,0,PASS,SAFETY_GATE: PASS
+render_fixed_point,re-run the two gates after rendering, then render again and compare the two report digests,1,the last pass is stable with both gates rc=0,PASS,passes [1]
