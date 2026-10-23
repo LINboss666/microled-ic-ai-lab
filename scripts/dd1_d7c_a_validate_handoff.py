@@ -31,6 +31,11 @@ REQUIRED = ('schema_version', 'task_id', 'base_sha', 'accepted_data7b_content_sh
             'repository', 'scope', 'completion_level', 'source_identity', 'candidate',
             'offline_verification', 'native_plan', 'costs', 'boundaries', 'not_run',
             'stop_reason', 'known_limitations', 'remote_readback', 'head_sha_role')
+# a repair round names the tip it repairs, and the review it answers, instead of editing the
+# first round's fields into the shape of a passing answer
+REPAIR_REQUIRED = ('repair_of', 'repair_baseline_sha', 'review_input', 'evidence_dir',
+                   'path_counts')
+TASK_IDS = ('DATA-7C-A', 'DATA-7C-A-R1')
 ELECTRICAL_FORBIDDEN = ('PAM_IMPLEMENTED=PASS', 'CURRENT_MEASURED=PASS', 'MEASURED_PASS')
 
 
@@ -48,8 +53,20 @@ def validate(payload, root=ROOT):
         value = payload.get(key, '')
         if not SHA_RX.match(str(value)):
             problems.append('%s is not a full 40-hex SHA: %r' % (key, value))
-    if payload.get('task_id') != 'DATA-7C-A':
-        problems.append('task_id must be DATA-7C-A, found %r' % payload.get('task_id'))
+    if payload.get('task_id') not in TASK_IDS:
+        problems.append('task_id must be one of %s, found %r' % (TASK_IDS, payload.get('task_id')))
+    if str(payload.get('task_id', '')).endswith('-R1'):
+        for key in REPAIR_REQUIRED:
+            if key not in payload:
+                problems.append('a repair round must carry %s' % key)
+        if not SHA_RX.match(str(payload.get('repair_baseline_sha', ''))):
+            problems.append('repair_baseline_sha is not a full 40-hex SHA')
+        review = payload.get('review_input') or {}
+        instrument = review.get('instrument') or {}
+        if instrument.get('modified_by_this_round') != 'NO':
+            problems.append('the reviewer instrument must be recorded as unmodified')
+        if not SHA_RX.match(str(instrument.get('sha256', ''))):
+            problems.append('review_input.instrument.sha256 is not a full SHA')
     identity = payload.get('source_identity') or {}
     for entry in identity.get('delivered', []) + identity.get('read_only_inputs', []):
         for field in ('path', 'sha256', 'bytes'):
@@ -79,6 +96,10 @@ def validate(payload, root=ROOT):
     for forbidden in ELECTRICAL_FORBIDDEN:
         if forbidden in blob:
             problems.append('the handoff contains the forbidden electrical claim %r' % forbidden)
+    if (payload.get('native_plan') or {}).get('cases') != 15:
+        problems.append('native_plan.cases must stay 15 while nothing is authorised')
+    if (payload.get('native_plan') or {}).get('authorised_this_round') != 0:
+        problems.append('native_plan.authorised_this_round must be 0')
     if (payload.get('candidate') or {}).get('levels_status') != 'POC_CANDIDATE_NOT_FORMAL_SPEC':
         problems.append('candidate.levels_status must stay POC_CANDIDATE_NOT_FORMAL_SPEC')
     if not payload.get('known_limitations'):
@@ -93,8 +114,11 @@ def main(argv):
     problems = validate(payload)
     for line in problems[:20]:
         print('  PROBLEM ' + line)
-    print('D7C_A_HANDOFF_CHECK: %s (%d fields checked, %d problems; evidence and remote truth are '
-          'NOT verified here)' % ('PASS' if not problems else 'FAIL', len(REQUIRED), len(problems)))
+    print('D7C_A_HANDOFF_CHECK: %s (%d base fields%s, %d problems; evidence and remote truth are '
+          'NOT verified here)' % ('PASS' if not problems else 'FAIL', len(REQUIRED),
+                                  '+%d repair fields' % len(REPAIR_REQUIRED)
+                                  if str(payload.get('task_id', '')).endswith('-R1') else '',
+                                  len(problems)))
     return 1 if problems else 0
 
 

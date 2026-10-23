@@ -74,7 +74,7 @@
 `DATA_EN=0` 时八条全部关断。第 0 支路只在发光使能时构成基础电流，**不是永久导通**；
 黑色由时间码 0 或 `DATA_EN=0` 控制，不把码 000 写成 0 µA。
 端点：最小 1 单位，满档 8 单位 = 参考本身；步长 1 单位；
-DNL 结构性为 0（同尺寸单位支路），代价是**全部靠译码与匹配**，不做器件加权。
+八条支路同尺寸，因此免去权重匹配与进位切换；理想权重精确时 DNL 可以为 0，但**实测 DNL 由失配决定**，本轮没有失配数据，不作零 DNL 断言。代价是器件数与译码规模翻倍，且完全依赖译码正确性。
 
 ### 2.2 候选 B：同一 A 电流表的"基础 1 单位 + 二进制 1/2/4 单位"四支路
 
@@ -85,13 +85,16 @@ DNL 结构性为 0（同尺寸单位支路），代价是**全部靠译码与匹
 | 维度 | 候选 B 相对 A |
 |---|---|
 | 支路数 | 4 条（A 为 8 条），面积与布线少 |
-| 权重器件 | 4 单位支路的 `Mout` 需 4× 单位宽度（20 µm 级或 m=4 多指），A 全是同尺寸 |
+| 权重器件 | 4 单位支路的 `Mout` 需 4 × 2.5 µm = **10 µm**（或等价 multiplicity），2 单位为 5 µm；A 全是同尺寸 2.5 µm |
 | 进位切换 | 码 011→100 一类边界要**同时**断开 1+2 与接通 4：单次换码瞬间可能只剩基础 1 单位或出现 1+2+4 重叠，电流毛刺与电荷误差不由理想表决定 |
-| 器件匹配 | 加权管的失配贡献按权重放大（4 单位支路的相对失配约为单位管的 1/2），DNL 结构性非零 |
+| 器件匹配 | 加权管与单位管的**失配贡献随权重放大**（4 单位支路的绝对失配大于单位支路），但这需要器件误差模型才能给出 DNL 数值；本轮没有 PDK 失配数据，只作定性说明 |
 | 偏置负载 | 共享参考节点上的 pass 管少一半，但每支路局部偏置节点数也少一半，换码瞬态不同 |
 | 译码 | 需 3→4 位二进制展开而非温度计，逻辑少但关键路径在进位 |
 
-本轮**不搭 B 的完整网表**，只把它的权重/进位/匹配/偏置负载写明，供审核方决定是否值得为面积换掉 DNL=0 的结构。
+一句话口径：**理想权重精确时，温度计与二进制加权都可以有 DNL = 0**；温度计的优势是免去权重匹配与
+进位切换，不是"结构性零 DNL 的证明"。没有失配与工艺角数据之前，本文件不作"二进制必然非零 DNL"的断言。
+
+本轮**不搭 B 的完整网表**，只把它的权重/进位/匹配/偏置负载写明，供审核方决定是否值得用面积换掉温度计结构。
 
 ### 2.3 候选 C：常规 0…7 单位、满档 15 µA
 
@@ -133,7 +136,7 @@ dd1_d7c_a_pam_1ch            145 MOS（展开）  唯一输出 data_out
 │   ├─ Xsel5/Xsel6/Xsel7        dd1_d7c_a_and2  select5/6/7      select4 = pam2（直接连线）
 │   └─ Xn<j>/Xa<j>/Xb<j>        nand2 + inv + inv  ×8   en<j> = data_en & select<j>，enb<j> = ~en<j>
 │       （select0 = vdd18 轨，第 0 支路的与门一个输入接轨，不是浮空、也不是理想常量源）
-└─ Xu0 … Xu7  dd1_d7c_a_sink_unit  4 MOS ×8 = 32 MOS   每条支路一个 DATA_OUT 端口，全部并到 data_out
+└─ Xu0 … Xu7  dd1_d7c_a_sink_unit  4 MOS 一条，八条支路共 32 只器件   每条支路一个 DATA_OUT 端口，全部并到 data_out
     ├─ Mpass_local  n33_dnw_4t_ckt (D=iref_in G=en<j> S=vbias_ch B=vbias_ch) W=5µm L=2µm   继承宽度
     ├─ Mbleed_local n33              (D=vbias_ch G=enb<j> S=vss B=vss)                     W=2µm L=2µm   继承宽度
     ├─ Mcas         n33              (D=data_out G=vcas S=node_m B=vss)                    W=2.5µm L=2µm 单位化
@@ -161,12 +164,16 @@ dd1_d7c_a_pam_1ch            145 MOS（展开）  唯一输出 data_out
 | `Mbleed_local` | 2 µm | 2 µm | 未设 | **不随电流除以 8**：缩小会拖慢 `vbias_ch` 放电，属待测项 |
 | 译码/使能管 | n18 2 µm / p18 4 µm | 0.2 µm | 1 | 继承 `dd1_inv18`/`sc1_scan_gate` 的 1.8 V 数字尺寸 |
 
-计数口径（全部由 `dd1_d7c_a_offline_check.py` 从网表解析得到，不是手填）：
+计数口径（全部由 `dd1_d7c_a_offline_check.py` 从网表解析得到，不是手填；机读版在
+`tests/dd1_d7c_a/device_count_claims.csv`，检查器 `CLAIM_TABLE_MATCHES_PARSE` 要求两者与解析三方一致）：
 子电路实例 58；`dd1_d7c_a_pam_1ch` **展开 145 MOS**；`dd1_d7c_a_pam_dec` 112 MOS；
-单位支路核 4 MOS × 8 = 32 MOS；共享参考 1 只（在顶层计一次，不在支路里重复计）；
-`m`（指）在四条模拟管上未写，即 `m=1`；八条单位 `Mout` 有效宽度合计 8 × 2.5 µm = 20 µm，
-与一只已接受 `Mout` 等宽——"八条 2.5 µm"与"一只 20 µm 打 8 指"的匹配/滞后/面积差异是**待审议项**，
-本轮不选后一种，也不声称哪一种更好。
+`dd1_d7c_a_sink_unit` 4 MOS 一条、八条支路合计 32 只器件；共享参考 `data_bias_ref` 1 MOS（在顶层计一次，
+不在支路里重复计）；
+`m` 在四条模拟管上**未书写**，按数值归一即为 `m=1`——它是 Spectre 的 multiplicity（同一器件描述重复几次），
+**不等于**版图上的分指（finger），本任务没有 finger 参数也没有测过它；八条单位 `Mout` 的有效宽度合计
+8 × 2.5 µm × 1 = 20 µm，与一只已接受 `Mout` 的 20 µm 等宽。"八条 2.5 µm 分立管"与"一只 20 µm 管"在匹配、
+寄生与面积上并不等价（后者还要看它的分指与接触孔布置，本轮无参数约定可言），哪一种更好是待审议项，
+本轮不选后一种，也不声称两种等效。
 
 镜像比 `Mref(W/L) / Mout(W/L) = 8` 一律标 `ESTIMATED_MIRROR_RATIO_ONLY`：短沟道效应、输出电阻、
 `Mpass_local` 上的局部偏置压降、参考负载与八管失配都未测，`GEOMETRY_NOT_VERIFIED`。
@@ -184,10 +191,13 @@ select3 = pam2 | (pam1 & pam0)          select7 = pam2 & (pam1 & pam0)
 select4 = pam2                          select0 = 1（接 vdd18 轨）
 ```
 
-一处容易写错、也是反例 E02 的对象：`select5` 的第二输入必须是 `gor10 = pam1|pam0`，
-**不是** `select1 = pam2|(pam1|pam0)`。若误用后者，码 100 会点亮 6 条支路而不是 5 条——
-16 行黄金表能抓住它，因为黄金表是手抄任务书表格（`tests/dd1_d7c_a/pam_mask_golden.csv`），
-不是由被测网表生成。
+两处容易写错，各有自己的反例，且都由 16 行手抄黄金表（`tests/dd1_d7c_a/pam_mask_golden.csv`，
+不是被测网表生成）抓住：
+
+- **E02** 把 `Xsel3` 的第二输入由 `gand10 = pam1&pam0` 换成 `gor10`，于是 `select3` 的阈值低了一档，
+  码 010 会点亮 4 条而不是 3 条。
+- **E11** 把 `Xsel5` 的第二输入由 `gor10 = pam1|pam0` 换成 `select1 = pam2|(pam1|pam0)`；因为 `select1`
+  已经含 `pam2`，`pam2 & select1 == pam2`，于是码 100 会点亮 6 条而不是 5 条。
 
 门级实现只用静态 CMOS：`dd1_d7c_a_nand2`（串联 NMOS + 并联 PMOS）、`dd1_d7c_a_nor2`
 （并联 NMOS + 串联 PMOS，与已接受 `sc1_scan_gate` 同形）、`dd1_d7c_a_and2/or2` = 上述单元 + 已接受
@@ -220,47 +230,73 @@ select4 = pam2                          select0 = 1（接 vdd18 轨）
 <!-- BEGIN 7C OFFLINE -->
 | 检查 | 结果 | 依据（截断到 180 字） |
 |---|---|---|
-| `NETLIST_SUBSET_PARSED` | PASS | 7 files parsed, 10 subckt definitions, 145 expanded MOS at dd1_d7c_a_pam_1ch, unsupported statements 0; source digests dd1_d6_bias_=4115e2d1,dd1_d6_inv18=04cd6833,dd1_d6_sink_=6cfe |
-| `SUBCKT_MASTERS_DEFINED` | PASS | 58 subckt instances all resolve; device models n18,n33,n33_dnw_4t_ckt,p18 against whitelist n18,p18,n33,n33_dnw_4t_ckt |
-| `INSTANCE_PORT_COUNTS` | PASS | 58 instance bindings, each with exactly its master port count and order (no mismatch) |
-| `NO_DUPLICATE_INSTANCES` | PASS | 58 unique (scope,instance) pairs |
+| `NO_DUPLICATE_INSTANCES` | PASS | 65 (cell,identifier) pairs across M devices and X instances in 10 definitions |
 | `TOP_HAS_ONE_OUTPUT_PORT` | PASS | output ports of dd1_d7c_a_pam_1ch: ['data_out'] (this is not eight channels) |
 | `ALL_BRANCHES_ON_COMMON_OUTPUT` | PASS | 8 unit branches instantiated, DATA_OUT of every one on net data_out |
-| `UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE` | PASS | all 8 branches bind EN/EN_B to their own enable pair, VBIAS_SHARED to the shared reference node, VCAS to vcas, DATA_OUT to the one output |
-| `LOCAL_NODES_NOT_SHARED` | PASS | vbias_ch/node_m exist only inside instance scopes (branch 0 holds 2 local net(s)), no local name at top level, shared rails only iref_in/vcas/data_out/vdd18/vss; cross-branch overl |
-| `DNW_PASS_BODY_LOCAL` | PASS | all 8 Mpass_local: drain on the shared reference iref_in, gate on this branch en, source AND DNW body on this branch vbias_ch, never vss |
-| `BLEED_GATED_BY_BRANCH_COMPLEMENT` | PASS | all 8 Mbleed_local discharge vbias_ch to vss and are gated by this branch enb |
-| `MAIN_PATH_DATA_OUT_CAS_MOUT_VSS` | PASS | main path DATA_OUT -> Mcas -> node_m -> Mout -> vss, gate of Mout is the local bias, gate of Mcas is vcas |
-| `THERMO_GOLDEN_16` | PASS | 16 hand-written golden rows compared against the decoder transistors themselves (golden read from pam_mask_golden.csv, never produced by this evaluator) |
-| `GATE_LOGIC_DERIVED_FROM_TRANSISTORS` | PASS | pull-up/pull-down graphs give dd1_d7c_a_and2=0001; dd1_d7c_a_nand2=1110; dd1_d7c_a_nor2=1000; dd1_d7c_a_or2=0111; dd1_inv18=10 against hand-written boolean algebra  |
+| `UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE` | PASS | all 8 branches bind EN/EN_B to their own enable pair, VBIAS_SHARED to the shared reference node, VCAS to vcas |
+| `LOCAL_NODES_NOT_SHARED` | PASS | vbias_ch/node_m exist only inside instance scopes (branch 0 holds 2 local net(s)), no local name at top level, cross-branch overlap 0 |
+| `REFERENCE_NODE_IDENTITY` | PASS | Xref expands to one diode-connected Mref whose D=G node is the net every unit pass device drains from (iref_in), with S=B=vss |
+| `NETLIST_SUBSET_PARSED` | PASS | 7 files parsed, 10 subckt definitions, 145 expanded devices at dd1_d7c_a_pam_1ch, unsupported statements 0; candidate digests dd1_d7c_a_ga=d2def4e6,dd1_d7c_a_pa=9f6c8d78,dd1_d7c_a_ |
+| `SUBCKT_MASTERS_DEFINED` | PASS | 58 subckt instances all resolve; models n18,n33,n33_dnw_4t_ckt,p18 against whitelist n18,p18,n33,n33_dnw_4t_ckt |
+| `INSTANCE_PORT_COUNTS` | PASS | 58 instance bindings, each with exactly its master port count and order |
+| `GOLDEN_TABLE_SCHEMA` | PASS | golden table has 16 rows over the 16 unique (enable,code) keys, masks of 8 characters of 0/1, en0..en7 consistent with the mask and branches_on equal to the popcount |
+| `THERMO_GOLDEN_16` | PASS | 16 hand-written golden rows compared against the decoder transistors themselves, never generated by this evaluator |
+| `TOP_INTEGRATED_THERMO_16` | PASS | 16 top-level enable/code combinations driven from the top pins, through the actual Xdec port binding, and read back at each branch EN/EN_B terminal (decoder port map {'pam0': 'pam_ |
+| `GATE_LOGIC_DERIVED_FROM_TRANSISTORS` | PASS | pull-up/pull-down graphs give dd1_d7c_a_and2=0001; dd1_d7c_a_nand2=1110; dd1_d7c_a_nor2=1000; dd1_d7c_a_or2=0111; dd1_inv18=10 against hand-written boolean algebra |
 | `EN_ENB_PAIR_PER_BRANCH` | PASS | every branch enb is one dd1_inv18 driven by that branch own en, and 16x8 pairs evaluate as exact complements |
+| `DNW_PASS_BODY_LOCAL` | PASS | all 8 Mpass_local: drain on the shared reference node, gate on this branch en, source AND DNW body on this branch vbias_ch, never vss |
+| `BLEED_GATED_BY_BRANCH_COMPLEMENT` | PASS | all 8 Mbleed_local discharge vbias_ch to vss and are gated by this branch enb |
+| `MAIN_PATH_DATA_OUT_CAS_MOUT_VSS` | PASS | main path DATA_OUT -> Mcas -> node_m -> Mout -> vss per branch, gate of Mout is the local bias, gate of Mcas is the branch VCAS terminal |
+| `DEVICE_COUNTS_DERIVED` | PASS | expanded MOS per cell data_bias_ref=1 data_sink_1ch=4 dd1_d7c_a_and2=6 dd1_d7c_a_nand2=4 dd1_d7c_a_nor2=4 dd1_d7c_a_or2=6 dd1_d7c_a_pam_1ch=145 dd1_d7c_a_pam_dec=112 dd1_d7c_a_sink |
+| `DEVICE_COUNT_SEPARATION` | PASS | netlist statements 19, expanded devices at the top 145, hierarchy subckt instances 58, multiplicity sum 145 (m is unset on every device, so it contributes one each), finger paramet |
 | `MIRROR_RATIO_ESTIMATED_ONLY` | PASS | reference Mref W=2e-5 L=2e-6 over unit Mout W=2.5e-6 L=2e-6 gives 8, tagged ESTIMATED_MIRROR_RATIO_ONLY: no short-channel, output-resistance, body-effect or matching behaviour is c |
-| `UNIT_CORE_ISOMORPHIC_TO_ACCEPTED` | PASS | device by device dd1_d7c_a_sink_unit matches data_sink_1ch in model, L and D/G/S/B role; only Mcas and Mout widths scale by 1/8, Mpass_local and Mbleed_local keep the accepted widt |
-| `DEVICE_COUNTS_DERIVED` | PASS | subckt instances 58; expanded MOS: data_bias_ref=1 data_sink_1ch=4 dd1_d7c_a_and2=6 dd1_d7c_a_nand2=4 dd1_d7c_a_nor2=4 dd1_d7c_a_or2=6 dd1_d7c_a_pam_1ch=145 dd1_d7c_a_pam_dec=112 d |
-| `REPORT_CLAIM_COUNTS_MATCH` | PASS | every N MOS / N 管 / N transistors claim in the 7 new documents equals a total parsed from the netlist |
-| `REQUEST_REFUSAL_TABLE` | PASS | 16 request shapes tried: X/Z, empty, non-numeric, -1, 8, 9, 255, 2.5, 3.0, nan, inf, -inf, bool and the two legal codes  |
-| `NATIVE_ENTRY_REFUSED` | PASS | 4 environment combinations, entry refused in each before writing, directory digest unchanged and sentinel still present |
-| `DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS` | PASS | 114 line deck draft, active dc/tran/ac statements: 0 (every analysis line is commented out, so the file cannot launch a run if someone points Spectre at it) |
-| `NATIVE_PLAN_SHAPE` | PASS | 15 planned cases [('dc_sweep', 8), ('refined_step', 3), ('transient', 4)], draft launch units 30 (plus 6 debug = the 36 draft ceiling, which is a proposal and NOT an authorisation  |
+| `UNIT_CORE_ISOMORPHIC_TO_ACCEPTED` | PASS | device by device dd1_d7c_a_sink_unit matches data_sink_1ch in model, L, multiplicity m and D/G/S/B role; only Mcas and Mout widths scale by 1/8, pass and bleed keep the accepted wi |
+| `CLAIM_TABLE_MATCHES_PARSE` | PASS | 17 object-bound claims (data_bias_ref,data_sink_1ch,dd1_d7c_a_and2,dd1_d7c_a_nand2,dd1_d7c_a_nor2,dd1_d7c_a_or2,dd1_d7c_a_pam_1ch,dd1_d7c_a_pam_dec,dd1_d7c_a_sink_unit,dd1_inv18) e |
+| `REPORT_CLAIMS_BOUND_TO_OBJECT` | PASS | every N MOS / N 管 / N transistors claim names the cell it counts and equals that cell-parsed total |
+| `REPORT_CLAIM_COUNTS_MATCH` | PASS | secondary membership test: no claim equals a total parsed from some cell |
+| `REQUEST_TABLE_SCHEMA` | PASS | 16 request rows with unique ids and codes from the closed set REQUEST_UNPARSED,REQUEST_OUT_OF_RANGE,REQUEST_NOT_INT,REQUEST_NOT_FINITE,ACCEPTED |
+| `REQUEST_REFUSAL_TABLE` | PASS | 16 request shapes tried, including X/Z, empty, non-numeric, out of range, non-integer, non-finite and bool; this is a software boundary and no MOS branch can see X/Z |
+| `NATIVE_ENTRY_REFUSED` | PASS | 4 environment combinations, entry refused in each before writing, directory digest unchanged and sentinel present |
+| `NATIVE_PLAN_SHAPE` | PASS | 15 planned cases [('dc_sweep', 8), ('refined_step', 3), ('transient', 4)], all result NOT_RUN, DC rows hold DATA_EN=1.8 V with a named code, TR-LONG carries eight segments in one d |
+| `DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS` | PASS | 39 active (non-comment) lines in the deck draft, analysis statements recognised by the keyword position with or without dev=: 0. This states only that the draft carries no analysis |
+| `DRAFT_DECK_SYNTAX_INVENTORY` | PASS | every active deck line classifies into simulator/include/parameters/save/source/probe/instance/analysis; unrecognised active statements would be refused by name |
 
-合计 22 项，失败：none。渲染来源 `offline_checks.json`（本目录）。
+合计 30 项，失败：none。渲染来源 `offline_checks.json`（本目录）。
 <!-- END 7C OFFLINE -->
 
 <!-- BEGIN 7C GUARDS -->
 | 反例 | 判决 | 注入文件 | 声明的新增失败集合 | 实测新增失败 | 字节改动证据 |
 |---|---|---|---|---|---|
-| `E01_pam_bit_order_swapped` | HIT | spectre/dd1_d7c_a_pam_dec.scs | THERMO_GOLDEN_16 | THERMO_GOLDEN_16 | 行改动 1，9f6c8d78->c5108721 |
-| `E02_thermometer_threshold_off_one` | HIT | spectre/dd1_d7c_a_pam_dec.scs | THERMO_GOLDEN_16 | THERMO_GOLDEN_16 | 行改动 1，9f6c8d78->5b9b044f |
-| `E03_branch_ignores_global_data_en` | HIT | spectre/dd1_d7c_a_pam_dec.scs | THERMO_GOLDEN_16 | THERMO_GOLDEN_16 | 行改动 1，9f6c8d78->f44cbb24 |
-| `E04_branch_left_the_common_output` | HIT | spectre/dd1_d7c_a_pam_top.scs | ALL_BRANCHES_ON_COMMON_OUTPUT | ALL_BRANCHES_ON_COMMON_OUTPUT | 行改动 1，f46a2be5->610a51a7 |
-| `E05_shared_reference_ratio_wrong` | HIT | spectre/dd1_d6_bias_core.scs | MIRROR_RATIO_ESTIMATED_ONLY | MIRROR_RATIO_ESTIMATED_ONLY | 行改动 1，4115e2d1->867d777e |
-| `E06_dnw_pass_body_tied_to_vss` | HIT | spectre/dd1_d7c_a_sink_unit.scs | DNW_PASS_BODY_LOCAL,UNIT_CORE_ISOMORPHIC_TO_ACCEPTED | DNW_PASS_BODY_LOCAL,UNIT_CORE_ISOMORPHIC_TO_ACCEPTED | 行改动 1，60e06aa3->6145d470 |
-| `E07_enb_tied_to_a_constant` | HIT | spectre/dd1_d7c_a_pam_dec.scs | EN_ENB_PAIR_PER_BRANCH | EN_ENB_PAIR_PER_BRANCH | 行改动 1，9f6c8d78->bed8351b |
-| `E08_subckt_port_order_corrupted` | HIT | spectre/dd1_d7c_a_sink_unit.scs | BLEED_GATED_BY_BRANCH_COMPLEMENT,DNW_PASS_BODY_LOCAL,UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE | BLEED_GATED_BY_BRANCH_COMPLEMENT,DNW_PASS_BODY_LOCAL,UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE | 行改动 1，60e06aa3->d759c761 |
-| `E09_stale_device_count_in_report` | HIT | reports/dd1_d7c_a_pam_candidate.md | REPORT_CLAIM_COUNTS_MATCH | REPORT_CLAIM_COUNTS_MATCH | 摘要见 `counterexamples.json`（注入对象是本报告，包内不写自身摘要） |
-| `E10_unsupported_syntax_refused` | HIT | spectre/dd1_d7c_a_pam_top.scs | ALL_BRANCHES_ON_COMMON_OUTPUT,BLEED_GATED_BY_BRANCH_COMPLEMENT,DEVICE_COUNTS_DERIVED,DNW_PASS_BODY_LOCAL,EN_ENB_PAIR_PER_BRANCH,GATE_LOGIC_DERIVED_FROM_TRANSISTORS,INSTANCE_PORT_COUNTS,LOCAL_NODES_NOT_SHARED,MAIN_PATH_DATA_OUT_CAS_MOUT_VSS,NETLIST_SUBSET_PARSED,NO_DUPLICATE_INSTANCES,SUBCKT_MASTERS_DEFINED,THERMO_GOLDEN_16,TOP_HAS_ONE_OUTPUT_PORT | ALL_BRANCHES_ON_COMMON_OUTPUT,BLEED_GATED_BY_BRANCH_COMPLEMENT,DEVICE_COUNTS_DERIVED,DNW_PASS_BODY_LOCAL,EN_ENB_PAIR_PER_BRANCH,GATE_LOGIC_DERIVED_FROM_TRANSISTORS,INSTANCE_PORT_COUNTS,LOCAL_NODES_NOT_SHARED,MAIN_PATH_DATA_OUT_CAS_MOUT_VSS,NETLIST_SUBSET_PARSED,NO_DUPLICATE_INSTANCES,SUBCKT_MASTERS_DEFINED,THERMO_GOLDEN_16,TOP_HAS_ONE_OUTPUT_PORT | 行改动 3，f46a2be5->775c38e5 |
+| `E01_pam_bit_order_swapped` | HIT | spectre/dd1_d7c_a_pam_dec.scs | THERMO_GOLDEN_16,TOP_INTEGRATED_THERMO_16 | THERMO_GOLDEN_16,TOP_INTEGRATED_THERMO_16 | 1 行改动，改前 9f6c8d78… |
+| `E02_thermometer_threshold_off_one` | HIT | spectre/dd1_d7c_a_pam_dec.scs | THERMO_GOLDEN_16,TOP_INTEGRATED_THERMO_16 | THERMO_GOLDEN_16,TOP_INTEGRATED_THERMO_16 | 1 行改动，改前 9f6c8d78… |
+| `E03_branch_ignores_global_data_en` | HIT | spectre/dd1_d7c_a_pam_dec.scs | THERMO_GOLDEN_16,TOP_INTEGRATED_THERMO_16 | THERMO_GOLDEN_16,TOP_INTEGRATED_THERMO_16 | 1 行改动，改前 9f6c8d78… |
+| `E04_branch_left_the_common_output` | HIT | spectre/dd1_d7c_a_pam_top.scs | ALL_BRANCHES_ON_COMMON_OUTPUT | ALL_BRANCHES_ON_COMMON_OUTPUT | 1 行改动，改前 f46a2be5… |
+| `E05_shared_reference_ratio_wrong` | HIT | spectre/dd1_d6_bias_core.scs | MIRROR_RATIO_ESTIMATED_ONLY | MIRROR_RATIO_ESTIMATED_ONLY | 1 行改动，改前 4115e2d1… |
+| `E06_dnw_pass_body_tied_to_vss` | HIT | spectre/dd1_d7c_a_sink_unit.scs | DNW_PASS_BODY_LOCAL,UNIT_CORE_ISOMORPHIC_TO_ACCEPTED | DNW_PASS_BODY_LOCAL,UNIT_CORE_ISOMORPHIC_TO_ACCEPTED | 1 行改动，改前 60e06aa3… |
+| `E07_enb_tied_to_a_constant` | HIT | spectre/dd1_d7c_a_pam_dec.scs | EN_ENB_PAIR_PER_BRANCH | EN_ENB_PAIR_PER_BRANCH | 1 行改动，改前 9f6c8d78… |
+| `E08_subckt_port_order_corrupted` | HIT | spectre/dd1_d7c_a_sink_unit.scs | DNW_PASS_BODY_LOCAL,REFERENCE_NODE_IDENTITY,TOP_INTEGRATED_THERMO_16,UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE | DNW_PASS_BODY_LOCAL,REFERENCE_NODE_IDENTITY,TOP_INTEGRATED_THERMO_16,UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE | 1 行改动，改前 60e06aa3… |
+| `E09_stale_device_count_in_report` | HIT | reports/dd1_d7c_a_pam_candidate.md | REPORT_CLAIMS_BOUND_TO_OBJECT | REPORT_CLAIMS_BOUND_TO_OBJECT | 摘要见 `counterexamples.json`（注入对象是本报告，包内不写自身摘要） |
+| `E10_unsupported_syntax_refused` | HIT | spectre/dd1_d7c_a_pam_top.scs | ALL_BRANCHES_ON_COMMON_OUTPUT,BLEED_GATED_BY_BRANCH_COMPLEMENT,CLAIM_TABLE_MATCHES_PARSE,DEVICE_COUNTS_DERIVED,DEVICE_COUNT_SEPARATION,DNW_PASS_BODY_LOCAL,EN_ENB_PAIR_PER_BRANCH,GATE_LOGIC_DERIVED_FROM_TRANSISTORS,GOLDEN_TABLE_SCHEMA,INSTANCE_PORT_COUNTS,LOCAL_NODES_NOT_SHARED,MAIN_PATH_DATA_OUT_CAS_MOUT_VSS,MIRROR_RATIO_ESTIMATED_ONLY,NETLIST_SUBSET_PARSED,NO_DUPLICATE_INSTANCES,REFERENCE_NODE_IDENTITY,REPORT_CLAIMS_BOUND_TO_OBJECT,REPORT_CLAIM_COUNTS_MATCH,SUBCKT_MASTERS_DEFINED,THERMO_GOLDEN_16,TOP_HAS_ONE_OUTPUT_PORT,TOP_INTEGRATED_THERMO_16,UNIT_CORE_ISOMORPHIC_TO_ACCEPTED,UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE | ALL_BRANCHES_ON_COMMON_OUTPUT,BLEED_GATED_BY_BRANCH_COMPLEMENT,CLAIM_TABLE_MATCHES_PARSE,DEVICE_COUNTS_DERIVED,DEVICE_COUNT_SEPARATION,DNW_PASS_BODY_LOCAL,EN_ENB_PAIR_PER_BRANCH,GATE_LOGIC_DERIVED_FROM_TRANSISTORS,GOLDEN_TABLE_SCHEMA,INSTANCE_PORT_COUNTS,LOCAL_NODES_NOT_SHARED,MAIN_PATH_DATA_OUT_CAS_MOUT_VSS,MIRROR_RATIO_ESTIMATED_ONLY,NETLIST_SUBSET_PARSED,NO_DUPLICATE_INSTANCES,REFERENCE_NODE_IDENTITY,REPORT_CLAIMS_BOUND_TO_OBJECT,REPORT_CLAIM_COUNTS_MATCH,SUBCKT_MASTERS_DEFINED,THERMO_GOLDEN_16,TOP_HAS_ONE_OUTPUT_PORT,TOP_INTEGRATED_THERMO_16,UNIT_CORE_ISOMORPHIC_TO_ACCEPTED,UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE | 3 行改动，改前 f46a2be5… |
+| `E11_select5_reuses_select1` | HIT | spectre/dd1_d7c_a_pam_dec.scs | THERMO_GOLDEN_16,TOP_INTEGRATED_THERMO_16 | THERMO_GOLDEN_16,TOP_INTEGRATED_THERMO_16 | 1 行改动，改前 9f6c8d78… |
+| `E12_top_pam_bits_swapped` | HIT | spectre/dd1_d7c_a_pam_top.scs | TOP_INTEGRATED_THERMO_16 | TOP_INTEGRATED_THERMO_16 | 1 行改动，改前 f46a2be5… |
+| `E13_top_enable_tied_high` | HIT | spectre/dd1_d7c_a_pam_top.scs | TOP_INTEGRATED_THERMO_16 | TOP_INTEGRATED_THERMO_16 | 1 行改动，改前 f46a2be5… |
+| `E14_reference_bound_to_vcas` | HIT | spectre/dd1_d7c_a_pam_top.scs | DNW_PASS_BODY_LOCAL,REFERENCE_NODE_IDENTITY | DNW_PASS_BODY_LOCAL,REFERENCE_NODE_IDENTITY | 1 行改动，改前 f46a2be5… |
+| `E15_duplicate_mos_instance` | HIT | spectre/dd1_d7c_a_gates.scs | NO_DUPLICATE_INSTANCES | NO_DUPLICATE_INSTANCES | 1 行改动，改前 d2def4e6… |
+| `E16_cascode_multiplicity_changed` | HIT | spectre/dd1_d7c_a_sink_unit.scs | DEVICE_COUNT_SEPARATION,UNIT_CORE_ISOMORPHIC_TO_ACCEPTED | DEVICE_COUNT_SEPARATION,UNIT_CORE_ISOMORPHIC_TO_ACCEPTED | 1 行改动，改前 60e06aa3… |
+| `E17_golden_header_only` | HIT | tests/dd1_d7c_a/pam_mask_golden.csv | GOLDEN_TABLE_SCHEMA,THERMO_GOLDEN_16 | GOLDEN_TABLE_SCHEMA,THERMO_GOLDEN_16 | 1 行改动，改前 6ff91d98… |
+| `E18_request_table_emptied` | HIT | tests/dd1_d7c_a/pam_request_refusal.csv | REQUEST_REFUSAL_TABLE,REQUEST_TABLE_SCHEMA | REQUEST_REFUSAL_TABLE,REQUEST_TABLE_SCHEMA | 1 行改动，改前 efbc0522… |
+| `E19_claim_table_stale` | HIT | tests/dd1_d7c_a/device_count_claims.csv | CLAIM_TABLE_MATCHES_PARSE | CLAIM_TABLE_MATCHES_PARSE | 1 行改动，改前 aad52167… |
+| `E20_plan_refines_more_than_time` | HIT | tests/dd1_d7c_a/native_case_plan.csv | NATIVE_PLAN_SHAPE | NATIVE_PLAN_SHAPE | 1 行改动，改前 0a55795f… |
+| `E21_active_tran_without_dev` | HIT | spectre/dd1_d7c_a_tb_draft.scs | DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS | DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS | 3 行改动，改前 a7f4acec… |
+| `E22_active_dc_with_dev` | HIT | spectre/dd1_d7c_a_tb_draft.scs | DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS | DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS | 3 行改动，改前 a7f4acec… |
+| `E23_unknown_active_deck_statement` | HIT | spectre/dd1_d7c_a_tb_draft.scs | DRAFT_DECK_SYNTAX_INVENTORY | DRAFT_DECK_SYNTAX_INVENTORY | 3 行改动，改前 a7f4acec… |
+| `E24_golden_key_duplicated` | HIT | tests/dd1_d7c_a/pam_mask_golden.csv | GOLDEN_TABLE_SCHEMA | GOLDEN_TABLE_SCHEMA | 2 行改动，改前 6ff91d98… |
+| `C1_round_trip_ok` | HIT | - | CSV_SCHEMA | - | - |
+| `C2_unquoted_comma_row` | HIT | - | CSV_SCHEMA | - | - |
+| `C3_wrong_column_count` | HIT | - | CSV_SCHEMA | - | - |
+| `C4_duplicate_key` | HIT | - | CSV_SCHEMA | - | - |
 
-基线（未注入）失败集合：none；规则：`found == sorted(expected)` 且 expected 非空，否则该探针不算检出。E09 的注入对象就是本报告，因此它的字节摘要只出现在 `counterexamples.json`，不写进报告——写进来就变成自指，本表也会因此每次渲染都不同（这正是渲染固定点检查要拦住的事）。
+基线（未注入）失败集合：none；规则：`found == sorted(expected)` 且 expected 非空。E09/E17/E19 一类注入对象就是承载本表的文件或表本身，其改前改后摘要只出现在 `counterexamples.json`：把摘要写进被注入的文件会让每次渲染都不同。
 <!-- END 7C GUARDS -->
 
 结果解读口径：22 项检查全部只谈文本、连接与逻辑；10 项反例每项要求"新增失败集合 = 事先声明的集合"，

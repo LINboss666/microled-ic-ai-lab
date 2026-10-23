@@ -17,43 +17,56 @@ bench 草稿见 `spectre/dd1_d7c_a_tb_draft.scs`，机读用例表见 `tests/dd1
 | 输出夹持独立 | `Vclamp (clamp_node 0) vsource dc=1.2`，串 `iprobe` 测支路总流 | 扫输出节点时不与码源打架；1.2 V 是继承的 POC 夹持条件 |
 | 零压降电流探针 | `Ip_branch (data_out clamp_node) iprobe` + `save Ip_branch Ip_branch:current` | `spectre/current_probe_syntax.scs` 已实测 `iprobe` 与 `:current` 形态可用 |
 | 路径可配置、不复制 PDK | `include "${QODER_PDK_LIB}" section=tt`、`include "${QODER_NETLIST_DIR}/…"` | 不导入模型卡/licence，也不把别人的库装进仓库 |
-| 分析语句全部注释 | 草稿里 `dc`/`tran` 行都以 `//` 起头 | 检查器 `DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS` 实测"活动分析语句 0"，就算有人指过去也起不来 |
-| 层级 `save` 语法未证 | `save Xdut.en0 …`、`save Xu0.vbias_ch …` 标 `NOT_VERIFIED` | 本仓库只实测过 `save 节点` 与 `save Mout:drain`；层级写法需在下一轮先以探针确认，不得改动已交付候选来"配合" |
+| 分析语句全部注释 | 草稿里 `dc`/`tran` 行都以 `//` 起头 | 检查器 `DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS` 实测"活动分析语句 0"。**这句话只说草稿里没有要跑的分析**，不保证有人对 Spectre 指点这个文件时进程不会起来；禁止原生运行由入口授权闸保证，不由注释保证 |
+| 分析语句识别不再依赖 `dev=` | 关键词出现在第二个位置即判定（`review_tran tran stop=1u maxstep=1n` 与 `... dc dev=V... param=dc ...` 两种形态各自是反例 E21/E22） | 审核方实测旧式只认 `dev=` 的写法会漏掉常见 tran 形式；越界的活动语句另由 `DRAFT_DECK_SYNTAX_INVENTORY` 具名拒收（E23） |
+| DC 与瞬态用不同的使能形态 | DC 例用静态 `Vdata_en_dc (data_en 0) vsource dc=DEV1V`；瞬态例用有限沿 `type=pwl`，两者由生成器按例二选一 | 绝对电流读数要求支路在整个测量期间导通；沿用起始为 0 的脉冲波形会让 DC 点在"全关"状态下测 |
+| 探针方向与取号先于运行声明 | `Ip_branch (data_out clamp_node) iprobe`，正值 = 电流从 DUT 输出节点流向夹持源；`Q = ∫ I_out dt` 在同一窗口内取正 | 符号与方向是本轮就定下的口径，不允许运行后看到负数再翻符号 |
+| 层级 `save` 语法未证 | `save Xdut.en0 …`、`save Xdut.Xu0.vbias_ch …` 标 `NOT_VERIFIED` | 本仓库只实测过 `save 节点` 与 `save Mout:drain`；层级写法需在下一轮先用探针确认，不得改动已交付候选来"配合" |
 
-每码一个 deck 的做法：把 8 个 DC 码和 4 个瞬态码的差异收敛到 `PAM0V/PAM1V/PAM2V` 三个参数，
-由下一轮的生成器按参数替换产出，不手抄 8 份副本。本轮该生成器
+每码一个 deck 的做法：8 个 DC 例之间的差异只有 `PAM0V/PAM1V/PAM2V` 三个码位参数与静态使能，
+瞬态例之间还差时间平台宽度；由下一轮的生成器按参数替换产出，不手抄 8 份副本。
+**只替换 PAM 三位不足以定义不同的瞬态波形**，所以每个瞬态例在机读表里逐行写自己的码、
+平台起止与关断尾窗。本轮该生成器
 `scripts/dd1_d7c_a_deckgen.py` 在 4 种环境组合下都**先拒绝再返回**，
 且不创建目录、不动正式产物（`NATIVE_ENTRY_REFUSED`，含哨兵文件与目录摘要不变）。
 
 ## 2 用例矩阵（机读表的渲染，不重复手填数字）
 
 <!-- BEGIN 7C PLAN -->
-| 用例 | 类别 | 目的 | 观察节点 | 测量区间 | 参考定义 | 失败条件 | 草案额度 | 结果 |
-|---|---|---|---|---|---|---|---:|---|
-| `DC-000` | dc_sweep | absolute current of the single unit branch and the decoded level set at the lowest code | clamp_node current (iprobe), iref_in, vdd18, vss, Xdut.en0..en7, the eight XuN.vbias_ch | whole clamp sweep; the 1.2 V point is read off the sweep, not assumed | Iref = 15 uA injected into the diode-connected Mref; theoretical unit = Iref x (2.5/2)/(20/2) | branch current outside the candidate tolerance band, or en0 low, or any other branch's local bias node charged | 2 | **NOT_RUN** |
-| `DC-001` | dc_sweep | second code: two unit branches on | clamp_node current, Xdut.en1, Xu1.vbias_ch | whole clamp sweep | same shared reference | mask not equal to the hand-written golden row G02, or non-monotonic step from DC-000 | 2 | **NOT_RUN** |
-| `DC-010` | dc_sweep | third code | clamp_node current, Xdut.en2 | whole clamp sweep | same shared reference | mask mismatch G03 or step error beyond the candidate DNL | 2 | **NOT_RUN** |
-| `DC-011` | dc_sweep | fourth code, the mid-point | clamp_node current, Xdut.en3 | whole clamp sweep | same shared reference | mask mismatch G04 | 2 | **NOT_RUN** |
-| `DC-100` | dc_sweep | fifth code; the case that breaks if select1 is reused where pam1|pam0 is meant | clamp_node current, Xdut.en4, Xdut.en5 | whole clamp sweep | same shared reference | more than five branches on, i.e. gor10 replaced by sel1 in Xsel5 | 2 | **NOT_RUN** |
-| `DC-101` | dc_sweep | sixth code | clamp_node current, Xdut.en5 | whole clamp sweep | same shared reference | mask mismatch G06 | 2 | **NOT_RUN** |
-| `DC-110` | dc_sweep | seventh code | clamp_node current, Xdut.en6 | whole clamp sweep | same shared reference | mask mismatch G07 | 2 | **NOT_RUN** |
-| `DC-111` | dc_sweep | full scale: eight branches, expected to equal the accepted 15 uA single-channel current | clamp_node current, iref_in, all eight local bias nodes | whole clamp sweep | full scale is the shared reference itself, so normalisation is against Iref and not against a fitted value | total below the candidate full-scale band, or one branch not contributing (a branch whose DATA_OUT is not on data_out) | 2 | **NOT_RUN** |
-| `TR-LONG` | transient | long pulse at code 111: delivered charge per window, settling into band, shutoff | clamp_node current, data_out, iref_in, XuN.vbias_ch of every branch | from before the enable rise to after the enable fall plus the tail; band entry and exit by adjacent-sample interpolation | theoretical Q = target current x window; also measured against the same case's own static current | never entering the band, entering after the window deadline, or a shutoff tail beyond the candidate leak limit | 2 | **NOT_RUN** |
-| `TR-120` | transient | 120 ns short pulse at a representative code (Hybrid spacing at 100 Hz) | clamp_node current, data_out, one local bias node per selected branch | the 120 ns platform, plus 200 ns after it | same | charge error per pulse beyond the candidate band; sampled-versus-interpolated edge disagreement larger than maxstep | 2 | **NOT_RUN** |
-| `TR-200` | transient | 200 ns short pulse at the same code (Hybrid spacing at 60 Hz) | same as TR-120 | the 200 ns platform, plus 400 ns after it | same | same, and the 120-to-200 charge ratio must stay inside the candidate linearity band | 2 | **NOT_RUN** |
-| `TR-OFFCODE` | transient | enable shutoff and code changes made only inside the off window: 011 to 100 and 000 to 111 | Xdut.en0..en7, the eight local bias nodes, clamp_node current | one off window plus the following emission window | same | a code changing while the output conducts, or a local bias node still charged at the start of the next window (bleed not working) | 2 | **NOT_RUN** |
-| `RS-LOW` | refined_step | same stimulus as DC-000 with a finer sweep step near the 1.2 V region | clamp_node current, Xu0.vbias_ch | 0.9 V to 1.5 V at the finer step | same as its paired case | a result that moves more than the candidate resolution between the two steps, i.e. the coarse step was not converged | 2 | **NOT_RUN** |
-| `RS-FULL` | refined_step | same stimulus as DC-111 with a finer sweep step | clamp_node current, all local bias nodes | 0.9 V to 1.5 V at the finer step | same as its paired case | full-scale value not reproduced within the candidate resolution | 2 | **NOT_RUN** |
-| `RS-SWITCH` | refined_step | same stimulus as TR-OFFCODE with a smaller maxstep | enable nets, local bias nodes, clamp_node current | same windows as the paired case | same as its paired case | a transient feature that appears only at one maxstep, i.e. not resolved; identical input edge timing does NOT prove the analog current converged | 2 | **NOT_RUN** |
+| 用例 | 类别 | 码与使能 | 观察节点 | 测量区间 | 参考定义 | 失败条件 | 分段/配对 | 细化对象 | 额度 | 结果 |
+|---|---|---|---|---|---|---|---|---|---:|---|
+| `DC-000` | dc_sweep | 0 (pam_sel=000, one branch) / DATA_EN=1.8 V | iprobe output current, data_out, iref_in, vdd18, vss, Xdut.en0..en7, Xdut.enb0..en7, the eight Xdut.XuN.vbias_ch nodes | clamp sweep 0.6 V to 1.5 V; the inherited 1.2 V point is read off the sweep | external reference Iref = 15u injected into the diode-connected Mref; theoretical unit current = 15u x (2.5/2)/(20/2) | en0 low, or any other branch conducting, or the branch current outside the candidate band, or a non-conducting branch whose local bias node is charged | one static operating point per sweep step | - | 2 | NOT_RUN |
+| `DC-001` | dc_sweep | 1 (pam_sel=001, two branches) / DATA_EN=1.8 V | iprobe output current, data_out, iref_in, vdd18, vss, Xdut.en0..en7, Xdut.enb0..en7, the eight Xdut.XuN.vbias_ch nodes | clamp sweep 0.6 V to 1.5 V; the inherited 1.2 V point is read off the sweep | external reference Iref = 15u injected into the diode-connected Mref; theoretical unit current = 15u x (2.5/2)/(20/2) | mask differs from golden row G02, or the step from DC-000 is not one unit within the candidate band | as DC-000 | - | 2 | NOT_RUN |
+| `DC-010` | dc_sweep | 2 (pam_sel=010, three branches) / DATA_EN=1.8 V | iprobe output current, data_out, iref_in, vdd18, vss, Xdut.en0..en7, Xdut.enb0..en7, the eight Xdut.XuN.vbias_ch nodes | clamp sweep 0.6 V to 1.5 V; the inherited 1.2 V point is read off the sweep | external reference Iref = 15u injected into the diode-connected Mref; theoretical unit current = 15u x (2.5/2)/(20/2) | mask differs from G03, or DNL beyond the candidate band | as DC-000 | - | 2 | NOT_RUN |
+| `DC-011` | dc_sweep | 3 (pam_sel=011, four branches) / DATA_EN=1.8 V | iprobe output current, data_out, iref_in, vdd18, vss, Xdut.en0..en7, Xdut.enb0..en7, the eight Xdut.XuN.vbias_ch nodes | clamp sweep 0.6 V to 1.5 V; the inherited 1.2 V point is read off the sweep | external reference Iref = 15u injected into the diode-connected Mref; theoretical unit current = 15u x (2.5/2)/(20/2) | mask differs from G04 | as DC-000 | - | 2 | NOT_RUN |
+| `DC-100` | dc_sweep | 4 (pam_sel=100, five branches) / DATA_EN=1.8 V | iprobe output current, data_out, iref_in, vdd18, vss, Xdut.en0..en7, Xdut.enb0..en7, the eight Xdut.XuN.vbias_ch nodes | clamp sweep 0.6 V to 1.5 V; the inherited 1.2 V point is read off the sweep | external reference Iref = 15u injected into the diode-connected Mref; theoretical unit current = 15u x (2.5/2)/(20/2) | more than five branches conducting, i.e. the gor10 term replaced by sel1 in the AND of branch 5 | as DC-000 | - | 2 | NOT_RUN |
+| `DC-101` | dc_sweep | 5 (pam_sel=101, six branches) / DATA_EN=1.8 V | iprobe output current, data_out, iref_in, vdd18, vss, Xdut.en0..en7, Xdut.enb0..en7, the eight Xdut.XuN.vbias_ch nodes | clamp sweep 0.6 V to 1.5 V; the inherited 1.2 V point is read off the sweep | external reference Iref = 15u injected into the diode-connected Mref; theoretical unit current = 15u x (2.5/2)/(20/2) | mask differs from G06 | as DC-000 | - | 2 | NOT_RUN |
+| `DC-110` | dc_sweep | 6 (pam_sel=110, seven branches) / DATA_EN=1.8 V | iprobe output current, data_out, iref_in, vdd18, vss, Xdut.en0..en7, Xdut.enb0..en7, the eight Xdut.XuN.vbias_ch nodes | clamp sweep 0.6 V to 1.5 V; the inherited 1.2 V point is read off the sweep | external reference Iref = 15u injected into the diode-connected Mref; theoretical unit current = 15u x (2.5/2)/(20/2) | mask differs from G07 | as DC-000 | - | 2 | NOT_RUN |
+| `DC-111` | dc_sweep | 7 (pam_sel=111, eight branches) / DATA_EN=1.8 V | iprobe output current, data_out, iref_in, vdd18, vss, Xdut.en0..en7, Xdut.enb0..en7, the eight Xdut.XuN.vbias_ch nodes | clamp sweep 0.6 V to 1.5 V; the inherited 1.2 V point is read off the sweep | external reference Iref = 15u injected into the diode-connected Mref; theoretical unit current = 15u x (2.5/2)/(20/2); full scale is the shared reference itself, so normalisation is against Iref and never against a fitted value | total below the candidate full-scale band, a branch contributing nothing (its output is not on data_out), or a branch still charging its local bias node | as DC-000 | - | 2 | NOT_RUN |
+| `TR-LONG` | transient | segments below: 000 001 010 011 100 101 110 111 / DATA_EN=1.8 V | iprobe output current, data_out, iref_in, each branch local bias node, the decoded enable nets | per segment: off gap, then the emission window, then the shutoff tail | external reference Iref = 15u injected into the diode-connected Mref; theoretical unit current = 15u x (2.5/2)/(20/2); theoretical Q per segment = target current x window length, and separately against that segment own measured static current | a segment whose charge or monotonic step fails the candidate band, or a code changing inside its own emission window | 000 at 1.5TON..2.5TON then 0.5TON off; 001 at 4TON..5TON off 0.5TON; 010 at 6.5TON..7.5TON off 0.5TON; 011 at 9TON..10TON off 0.5TON; 100 at 11.5TON..12.5TON off 0.5TON; 101 at 14TON..15TON off 0.5TON; 110 at 16.5TON..17.5TON off 0.5TON; 111 at 19TON..20TON off 0.5TON | - | 2 | NOT_RUN |
+| `TR-120` | transient | 0 (pam_sel=000, one branch) / DATA_EN=1.8 V | iprobe output current, data_out, Xdut.Xu0.vbias_ch, the seven other local bias nodes | platform 120 ns with finite rise and fall, plus a 200 ns shutoff tail after the platform | external reference Iref = 15u injected into the diode-connected Mref; theoretical unit current = 15u x (2.5/2)/(20/2); the pulse charge is compared to the target and separately to the DC-000 measured static current of the same branch | never entering the candidate band, entering after the window deadline, or a shutoff tail beyond the leak limit | one platform per run | - | 2 | NOT_RUN |
+| `TR-200` | transient | 0 (pam_sel=000, one branch) / DATA_EN=1.8 V | iprobe output current, data_out, Xdut.Xu0.vbias_ch | platform 200 ns with finite rise and fall, plus a 400 ns shutoff tail | external reference Iref = 15u injected into the diode-connected Mref; theoretical unit current = 15u x (2.5/2)/(20/2) | same as TR-120, and the 120 ns to 200 ns charge ratio must stay inside the candidate linearity band | one platform per run | - | 2 | NOT_RUN |
+| `TR-OFFCODE` | transient | 011 to 100 and 000 to 111, each transition inside the off window / DATA_EN=1.8 during the emission segments only V | Xdut.en0..en7, the eight local bias nodes, iprobe output current | one off window carrying the transition, then the following emission window, then its tail | external reference Iref = 15u injected into the diode-connected Mref; theoretical unit current = 15u x (2.5/2)/(20/2) | a code changing while the output conducts, or a local bias node still charged at the start of the next window, which would mean the bleed device is not discharging it | off 0..2TON with 011 to 100 at 1TON; emit 2TON..3TON; off 3TON..5TON with 000 to 111 at 4TON; emit 5TON..6TON | - | 2 | NOT_RUN |
+| `RS-LOW` | refined_step | 0 (as TR-120) / DATA_EN=1.8 V | as TR-120 | identical window to TR-120 | identical to TR-120 | a feature that moves when maxstep shrinks, i.e. the coarse step was not resolved; equal ideal input edges are not evidence that the analog current converged | paired with TR-120 | time_maxstep | 2 | NOT_RUN |
+| `RS-FULL` | refined_step | 7 (the last segment of TR-LONG) / DATA_EN=1.8 V | as the TR-LONG code 111 segment | identical window to that segment | identical to TR-LONG | full-scale charge not reproduced within the candidate resolution between the two steps | paired with TR-LONG | time_maxstep | 2 | NOT_RUN |
+| `RS-SWITCH` | refined_step | 011 to 100 and 000 to 111 (as TR-OFFCODE) / DATA_EN=1.8 during the emission segments only V | enable nets, local bias nodes, iprobe output current | identical windows to TR-OFFCODE | identical to TR-OFFCODE | a discharge or turn-on transient that exists at only one maxstep, i.e. unresolved | paired with TR-OFFCODE | time_maxstep | 2 | NOT_RUN |
 
-渲染来源：`tests/dd1_d7c_a/native_case_plan.csv`（15 行，草案额度合计 30，结果列全部为 `NOT_RUN`）。本表由 `scripts/dd1_d7c_a_verify.py` 写入，不手填。
+渲染来源：`tests/dd1_d7c_a/native_case_plan.csv`，15 例，草案额度合计 30；探针方向与取号在每一行相同且先于任何运行声明：`iprobe Ip_branch between data_out and clamp_node, current positive from the DUT output node`。
 <!-- END 7C PLAN -->
 
-判据要点：DC 逐码给绝对电流、单位支路电流、单调性、译码电平与参考/局部偏置；
-瞬态给八档长脉冲、120 ns 与 200 ns 短脉冲代表码、`DATA_EN` 关断与只在关态换码
-（`011→100`、`000→111` 两个换码位置要单独检查）；3 例细步长复测与其配对原案例
-（DC-000 / DC-111 / TR-OFFCODE）成对给出，只改 `maxstep`。
-**理想输入沿相同不等于模拟电流收敛**，细步长配对比对的是特征是否随 `maxstep` 移动。
+判据要点（与机读表逐行对应，渲染由 `native_case_plan.csv` 生成，不手填）：
+
+- **8 个 DC 例**：`pam_sel = 000…111` 每码一例，`DATA_EN` 取**静态** 1.8 V，参考固定 15 µA，
+  扫输出夹持 0.6–1.5 V 后读 1.2 V 点；读的是探针总流、逐码的分支电流与译码/参考/局部偏置节点。
+- **4 个瞬态例**：`TR-LONG` 在**一个 deck 内排八个长发光窗**（000…111 依次，窗口间留关态间隔，
+  换码只发生在关态）——八段仍算一例一次启动，不是只做码 111 却称"八档长脉冲"；
+  `TR-120` 与 `TR-200` 都用**最低档 000**（一条单位支路）分别取 120 ns 与 200 ns 平台，
+  使低电流短窗真的被覆盖，两例只差时间；`TR-OFFCODE` 检查关断与只在关窗期间的换码
+  （`011→100`、`000→111`），观察关断质量、局部偏置放电与下次导通。
+- **3 例时间细化配对**：`RS-LOW`↔`TR-120`（低档短窗）、`RS-FULL`↔`TR-LONG` 的码 111 段（满档长窗）、
+  `RS-SWITCH`↔`TR-OFFCODE`（关断/换码）。每对激励与条件完全相同、**只细化时间 `maxstep`**；
+  DC 的电压扫步长是另一回事，不用它冒充时间收敛判据。**理想输入沿相同不等于模拟电流收敛**，
+  配对比对的是特征是否随 `maxstep` 移动。
 
 ## 3 测量口径必须先分列（否则数字会互相掩盖）
 

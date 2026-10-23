@@ -76,7 +76,15 @@ Vclamp (clamp_node 0) vsource dc=VCLAMPV
 // draft does not rely on one. Timing values are POC conditions for review and the whole statement is
 // NOT_RUN. AGENTS.md pit 20: for type=pulse the platform counts from the END of the rise, which is
 // why the edges are written out here instead of using a pulse with a guessed width.
-Vdata_en (data_en 0) vsource type=pwl time={0 1.5*TON (1.5*TON+1n) (1.5*TON+1n+TON) (1.5*TON+2n+TON) 3*TON} value={0 0 DEV1V DEV1V 0 0}
+// Two enable forms, chosen by the case class, and they are not interchangeable:
+//   DC cases: DATA_EN must be a STATIC level, because an absolute-current reading at a code needs the
+//     branches conducting the whole time. That is the line marked dc_below, and a pwl that starts at 0
+//     would leave every DC point measured with the branches off.
+Vdata_en_dc (data_en 0) vsource dc=DEV1V
+//   TRANSIENT cases: finite-slope pulse, edges written out rather than a guessed pulse width.
+//Vdata_en_pulse (data_en 0) vsource type=pwl time={0 1.5*TON (1.5*TON+1n) (1.5*TON+1n+TON) (1.5*TON+2n+TON) 3*TON} value={0 0 DEV1V DEV1V 0 0}
+// The generator picks exactly one of the two per deck; both lines being active at once would short the
+// same node through two sources, and that is a wiring error the next round's inventory check would see.
 Vpam0 (pam0 0) vsource dc=PAM0V
 Vpam1 (pam1 0) vsource dc=PAM1V
 Vpam2 (pam2 0) vsource dc=PAM2V
@@ -98,6 +106,23 @@ save Xdut.Xu0.node_m Xdut.Xu4.node_m
 // ":current" accessor were proven on this build, so the draft keeps both
 save Ip_branch Ip_branch:current
 
+// ---- sign convention, fixed before any run
+// The iprobe sits as Ip_branch (data_out clamp_node): a positive reading is current leaving the DUT
+// output node into the clamp, i.e. the pull-down current of the selected branches. Q is the integral
+// of that same positive-sense current over the declared window. The orientation and the sign are part
+// of the deck, decided here, and must not be chosen after seeing whether the number comes out negative.
+//
+// ---- case inventory this template serves (tests/dd1_d7c_a/native_case_plan.csv is authoritative)
+//   8 DC cases: one per PAM code 000..111, static DATA_EN = DEV1V, Iref 15u, clamp swept.
+//   TR-LONG:  eight long emission windows in ONE deck (codes 000..111 in order, 0.5*TON off gap
+//     between them, code changes only inside the off gap) -- eight segments, still one case and one
+//     launch, not eight claims resting on a single code 111 run.
+//   TR-120 / TR-200: the LOWEST code 000 at the 100 Hz and 60 Hz Hybrid spacings, so the low-amplitude
+//     short window is actually exercised, and the two cases differ only in time.
+//   TR-OFFCODE: shutoff plus 011->100 and 000->111, both transitions inside the off window.
+//   RS-LOW / RS-FULL / RS-SWITCH: identical stimulus to TR-120, the TR-LONG code-111 segment and
+//     TR-OFFCODE, differing only in maxstep.
+//
 // ---- analyses, all of them NOT_RUN in this round
 // DC: absolute current per code, unit branch current, monotonicity, decoded levels, reference and
 // local bias. One generated deck per code; the sweep is the clamp, so the "1.2 V point" is read out
