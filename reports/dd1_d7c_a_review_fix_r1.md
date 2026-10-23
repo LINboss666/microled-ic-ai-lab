@@ -441,5 +441,14 @@ git cat-file blob "$(git rev-parse HEAD:reports/dd1_d7c_a_review_fix_r1.md)" | s
 `review/scratch/`（该目录被 `.gitignore` 排除，不入库），它的身份就是上面那三行数字，
 由它被取代的原因如上。最终交付包的 bytes / members / SHA-256 只写在包外的回执提交里。
 
+## 9 勘误（DATA-7C-A-R2 追加；上面各节登记的历史事实一字不改）
 
+任务书 §9 只允许本文件作 EOF 修补与明示勘误，本节就是那条勘误。上面 §0 到 §8 的叙述、数字与结论
+保持 R1 交付时的原样——包括那两个被废掉的包的身份，和跳过 `pre-commit` 的事件——它们不因本轮修补
+而消失。
 
+| 项 | R1 交付时的说法 | 实际状况与 R2 的处置 | 依据（区间两端写全 SHA，时刻为 UTC） |
+|---|---|---|---|
+| 行尾空白 | §8 记录了包内 `verify_package.py` 自检 PASS，但 R1 从未跑过 `git diff --check` | R1 tip 上本文件文末多出三个空行，`git diff --check` 报 `reports/dd1_d7c_a_review_fix_r1.md:443: new blank line at EOF`，两个区间的返回码都是 2 且**只有这一处**。R2 轮只删文末换行、保留一个换行收尾，正文一字未改；此后同一检查在 `H..本轮 tip` 上 rc=0 | `git diff --check 89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79..da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb` → rc=2；`git diff --check 272d6de6d2f2fc8a82d5038d73d6b3e4c656f683..da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb` → rc=2；两次复现于 2026-10-23T13:09:28Z，原始输出留在执行机 `review/scratch/d1_diff_check_T_to_H.txt` 与 `d1_diff_check_B_to_H.txt`（`.gitignore` 排除，不入库） |
+| 区间与时刻的措辞 | 正文用"本范围""记录之后"这类相对说法，个别时刻只写日期 | R2 起一律写成两端完整 SHA 的区间（`B..H`、`T..H`、`H..tip`），时刻一律带 `Z`；本轮三个区间的命令、返回码与行数逐行记在 R2 验证记录的 `git_checks.csv` 里，由该表的语义闸复核 | R2 记录目录 `git_checks.csv` 三行 + `dd1_d7c_a_r2_record_check.py` 的 `git` 范围规则 |
+| 本文件对自身身份的声明 | §8 已声明包内不写包自身的摘要 | 维持：本节也不写本文件、本目录或本包的字节数与摘要；任何一次重打包都会让那句话变成假话，R1 的 §8.2 就是实例 | 任务书 §8、§10.8 与本文件 §8 表"归档身份"行 |

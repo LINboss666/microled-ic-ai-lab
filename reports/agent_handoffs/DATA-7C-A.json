@@ -4,17 +4,27 @@
  "base_sha": "272d6de6d2f2fc8a82d5038d73d6b3e4c656f683",
  "boundaries": {
   "acceptance_registered": "NO",
+  "credentials_read": "NO (none needed offline)",
   "force_push": "NO",
-  "gc_or_history_rewrite": "NO (the one reset was of an unpushed local commit and left its object reachable-as-orphan, no history was rewritten upstream)",
-  "historical_data7b_budget": "VIOLATED_59_OF_56_OVER_BY_3, disposition with the user; BUDGET_RESPECTED stays FAIL in that bundle",
-  "hooks_skipped": "NO in the delivered history. One tools commit was made with core.hooksPath overridden, which did skip pre-commit; it was unpushed, was reset --soft and recommitted with the hook running (SAFETY_GATE: PASS, 6 staged objects). The skipped object 6416882 is unreachable and kept, not GC-ed: see the fix report §0.7 and §6.7",
-  "inherited_pending_notes": "the three DATA-7B-R3 notes stay pending; not fixed here because they live inside accepted bytes",
+  "frozen_this_round": "the four candidate DUT netlists, the golden and request tables, dd1_d7c_a_netlist.py, dd1_d7c_a_deckgen.py, dd1_d7c_a_r1_selftest.py and every older evidence directory",
+  "gc_or_history_rewrite": "NO",
+  "historical_data7b_budget": "VIOLATED_59_OF_56_OVER_BY_3 unchanged, disposition with the user",
+  "hooks_skipped": "NO this round; the R1 incident stays disclosed in the R1 report sections 0.7 and 6.7 and is not rewritten away",
   "main_push_performed": "NO",
   "merge_performed": "NO",
+  "native_preflight": "NOT_RUN, not authorised",
+  "new_oa_writes": 0,
+  "new_rtl_simulations": 0,
+  "new_spectre_launches": 0,
   "next_native_stage_authorised": "NO",
-  "soa_signoff": "NO"
+  "oa_writes": 0,
+  "pdk_or_model_card_read": "NO",
+  "soa_signoff": "NO",
+  "spectre_help_invocations": 0,
+  "ssh_or_vm_access": "NO",
+  "whitelist": "only the twelve section 9 paths modified, plus the R2 task book copy, the R2 report, four new dd1_d7c_a_r2_ prefixed scripts and the new record directory"
  },
- "branch": "poc/data-pam-d7c-a-r1",
+ "branch": "poc/data-pam-d7c-a-r2",
  "candidate": {
   "branch_count": 8,
   "decoder_mos": 112,
@@ -49,7 +59,7 @@
   "unchanged_from_reviewed_tip": true,
   "unit_core_mos": 4
  },
- "completion_level": "CANDIDATE_MOS_NETLIST_WITH_OFFLINE_CHECKS",
+ "completion_level": "R2_OFFLINE_REPAIR_OF_REVIEWED_GAPS_NO_NATIVE_RUN",
  "costs": {
   "credentials_read": 0,
   "native_preflight": 0,
@@ -60,62 +70,68 @@
   "spectre_help_invocations": 0,
   "ssh_or_vm": 0
  },
- "evidence_dir": "results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08",
+ "evidence_dir": "results/evidence/dd1_d7c_a_r2_20261023_132447_356235",
  "evidence_serialisation": {
   "old_directory": {
    "path": "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0",
-   "state": "frozen byte-for-byte, its mis-serialised rows are named in the fix report rather than rewritten"
+   "state": "frozen byte for byte; its mis-serialised rows are named in the first-round report rather than rewritten"
   },
-  "reader": "dd1_d7c_a_offline_check.read_table, applied to the published bytes",
-  "record_cites_itself": "NO: the record names the tools and the digests of other files, never its own; this handoff cites the record directory by name because it is written before that directory exists",
-  "superseded_intermediate_runs": [
-   "results/evidence/dd1_d7c_a_r1_20261023_085000_3f9a1c (frozen-surface semantics not yet a gate)",
-   "results/evidence/dd1_d7c_a_r1_20261023_090432_1558fd (produced before the tool commit, so its comparisons describe an uncommitted tree)",
-   "results/evidence/dd1_d7c_a_r1_20261023_091042_d04e79 (same bytes as a later record, but its handoff gate is SKIPPED: the handoff on disk still described the first round at that moment)",
-   "results/evidence/dd1_d7c_a_r1_20261023_091833_4c7d21 (handoff gate real and PASS, but published before the line-ending gate existed, so its two instrument JSONs are CRLF and would not equal their Git blobs; those files were converted to LF once to prove the parsed object survives the change, then restored byte-for-byte to the tool output, digests 16c66a2f0ae6fedd and 9832680b180ba35b)"
+  "previous_round_records_frozen": [
+   "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0",
+   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5",
+   "results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08"
   ],
-  "superseded_runs_policy": "left in the work tree, neither committed nor deleted, and named here so a reviewer can tell them apart from the published record",
-  "validated": [
-   "header equality",
-   "per-line column count",
-   "unique key",
-   "non-empty fields except declared optional columns",
-   "a header with zero data rows is refused unless the caller declares it",
-   "JSON parseability"
-  ],
-  "writer": "stdlib csv.writer with LF terminators in dd1_d7c_a_offline_check.rows_write"
+  "reader": "scripts/dd1_d7c_a_r2_record_check.py over the published tables, plus dd1_d7c_a_offline_check.strict_read for the input tables",
+  "record_cites_itself": "NO: the record names tools and other files, never its own bytes; the archive digest is written only outside the archive",
+  "shape_reader_kept": "dd1_d7c_a_offline_check.read_table stays shape-only by decision; the semantic rules live in the new reader",
+  "superseded_intermediate_runs": [],
+  "superseded_runs_policy": "no R2 trial record was published inside results/evidence; the trials ran against scratch directories, so nothing in the delivered evidence directory is superseded",
+  "validated": "the record is read back from disk after publishing and the verdict turns FAIL if the recheck reports any problem"
  },
- "head_sha": "5f89605bac0b097218e1652bd3e0e61239ab36e9",
- "head_sha_role": "the commit at generation time; the commit carrying this field is above it, so the branch value is read from the Git ref and never from this file",
+ "head_sha": "da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb",
+ "head_sha_role": "the commit at generation time; the commits carrying this file and the record are above it, and their read-back is in remote_readback",
  "known_limitations": [
-  "every result in this file is about text, connectivity, derived logic, table schemas and Git identity; no electrical quantity was measured",
-  "the candidate netlist has never been through a simulator; hierarchical save and pwl on decoder inputs are explicitly unproven on this build",
+  "every result in this file is about text, connectivity, derived logic, table schemas, schedule arithmetic and Git identity; no electrical quantity was measured",
+  "the candidate netlist has never been through a simulator; hierarchical save and pwl on decoder inputs remain unproven on this build",
   "the checker covers the syntax subset these files use and refuses anything else by name",
   "geometry legality was not checked against the PDK, by scope, not by failure",
   "the eight level values, thresholds, the Q normalisation and the native budget still need a separate freeze by review and the user",
-  "DATA-7B history, the credential event and the missing intermediate directories are unchanged and not re-opened here"
+  "the published-record semantic layer is proven against a fixture (14 tampers) and against the real R1 record (9 findings); the new rule over the remaining-gap instrument JSONs has no synthetic negative probe of its own yet, so a tampered remaining-gap JSON would be caught only by the published-record run itself",
+  "reviewer/audit_r1_identity.py was not run: its inputs are a clone at reviewer/repo and a prior-round task book path that exist only on the review machine",
+  "the credential echo event, the DATA-7B over-budget history and the superseded R1 record directories are unchanged and not re-opened here"
  ],
  "native_plan": {
   "all_results": [
    "NOT_RUN"
   ],
   "authorised_this_round": 0,
+  "budget_status": "DRAFT_PROPOSAL_ONLY, not authorisation",
+  "case_classes": {
+   "dc_sweep": 8,
+   "refined_step": 3,
+   "transient": 4
+  },
   "cases": 15,
-  "columns": 16,
+  "columns": 25,
   "dc_static_data_en_V": "1.8",
   "draft_ceiling_including_debug": 36,
   "draft_launch_units": 30,
   "machine_table": "tests/dd1_d7c_a/native_case_plan.csv",
-  "probe_orientation": "iprobe Ip_branch between data_out and clamp_node, current positive from the DUT output node",
-  "refine_only": "time_maxstep for all three pairs",
+  "probe_orientation": "iprobe Ip_branch (clamp_node data_out), positive terminal first: a positive reading IS the branch sinking current out of data_out",
+  "refine_only": "time_maxstep for all three pairs; the other 15 identity fields are equal",
   "refined_pairs": {
    "RS-FULL": "TR-LONG",
    "RS-LOW": "TR-120",
    "RS-SWITCH": "TR-OFFCODE"
   },
+  "schedule_single_source": "scripts/dd1_d7c_a_r2_plan.py",
   "short_pulse_representative_code": "000, the lowest amplitude",
-  "sign_convention": "I_out positive means the branch pulls current down out of data_out; Q is the integral of I_out over the declared window and positive charge accumulates first; the sign is declared before any run, not chosen after seeing the number",
+  "sign_convention": "I_sink = Ip_branch with no negation and no abs(); Q = integral of I_sink over the declared window, positive charge accumulating during the conducting window; the off-window tail is integrated as its own negative area and never cancels against it to claim a shut branch; declared before any run, not chosen after a sign",
   "status": "PREPARED_NOT_EXECUTED",
+  "tr_long_last_segment_end_TON": 11.5,
+  "tr_long_off_gap_TON": 0.5,
+  "tr_long_pitch_TON": 1.5,
+  "tr_long_platform_TON": 1.0,
   "tr_long_segments_in_one_deck": 8
  },
  "not_run": {
@@ -130,520 +146,247 @@
   "pwm_pam_current_integration": "NOT_RUN"
  },
  "offline_verification": {
-  "checks": 30,
-  "checks_failed": [],
-  "closed_gaps": [
-   "TOP_INTEGRATED_THERMO_16",
-   "REFERENCE_NODE_IDENTITY",
-   "GOLDEN_TABLE_SCHEMA",
-   "REQUEST_TABLE_SCHEMA",
-   "DEVICE_COUNT_SEPARATION",
-   "CLAIM_TABLE_MATCHES_PARSE",
-   "REPORT_CLAIMS_BOUND_TO_OBJECT",
-   "DRAFT_DECK_SYNTAX_INVENTORY",
-   "NO_DUPLICATE_INSTANCES now covers M devices",
-   "UNIT_CORE_ISOMORPHIC_TO_ACCEPTED now covers m",
-   "DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS no longer depends on dev="
+  "H_gaps_still_in_the_set": [],
+  "added_this_round": [
+   "TOP_SUPPLY_BINDINGS",
+   "INPUT_TABLE_SCHEMAS",
+   "PLAN_SCHEDULE_ARITHMETIC",
+   "DECK_PROBE_ORIENTATION_MATCHES_PLAN"
   ],
-  "counterexample_rule": "found == sorted(expected) with a non-empty expectation; five CSV probes included (round trip, unquoted comma, wrong column count, duplicate key, header-only table)",
-  "counterexamples": 29,
-  "counterexamples_named": 29,
+  "checks": 34,
+  "checks_at_H": 30,
+  "checks_failed": [],
+  "counterexample_ids_carried_over": "all 29 ids present at H still run; none renamed or dropped",
+  "counterexample_rule": "found == sorted(expected) with a non-empty expectation, on a tree whose unmutated copy passes every check; 39 injections, 14 published-record semantic probes, 5 CSV round-trip cases and 7 synthetic sign cases",
+  "counterexamples": 65,
+  "counterexamples_at_H": 29,
+  "counterexamples_named": 65,
   "expectation_changes_recorded": [
    {
-    "id": "E08_subckt_port_order_corrupted",
+    "id": "E10_unsupported_syntax_refused",
     "now": [
-     "UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE",
-     "DNW_PASS_BODY_LOCAL",
-     "REFERENCE_NODE_IDENTITY",
-     "TOP_INTEGRATED_THERMO_16"
+     "NETLIST_SUBSET_PARSED",
+     "(24 netlist-dependent gates)",
+     "DECK_PROBE_ORIENTATION_MATCHES_PLAN"
     ],
+    "reason": "a netlist load failure used to remove eight gates from the report; the report now carries all 34 rows and the deck gate refuses because its DUT output net is read through the top cell",
     "was": [
-     "UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE",
-     "DNW_PASS_BODY_LOCAL",
-     "BLEED_GATED_BY_BRANCH_COMPLEMENT"
-    ],
-    "why": "the bleed check now compares against this branch own resolved EN_B identity, which a port-order change preserves, so it cannot see that fault while the design-table and reference checks can"
+     "NETLIST_SUBSET_PARSED",
+     "(24 netlist-dependent gates)"
+    ]
    },
    {
-    "id": "E14_reference_bound_to_vcas",
+    "id": "E17_golden_header_only",
     "now": [
-     "REFERENCE_NODE_IDENTITY",
-     "DNW_PASS_BODY_LOCAL"
+     "GOLDEN_TABLE_SCHEMA",
+     "INPUT_TABLE_SCHEMAS",
+     "THERMO_GOLDEN_16",
+     "TOP_INTEGRATED_THERMO_16"
     ],
+    "reason": "the strict reader now refuses a header-only table at the schema layer and both golden gates say \"not evaluated\"",
     "was": [
-     "REFERENCE_NODE_IDENTITY"
-    ],
-    "why": "moving the reference also breaks the shared-node identity every branch pass device relies on"
-   }
-  ],
-  "netlist_stats_frozen_tool": "kept as INFORMATIONAL_NOT_PASS; it compares every claim against one cell and already fails at the base",
-  "record_tool_selftest": {
-   "cases": 9,
-   "failures": [],
-   "per_case": {
-    "T_published_tables_refused_by_the_strict_reader": "PASS",
-    "frozen_gate_counts_only_enforced_rows": "PASS",
-    "frozen_gate_refuses_T_path_removal": "PASS",
-    "frozen_gate_refuses_candidate_DUT_edit": "PASS",
-    "frozen_gate_refuses_unallowed_addition": "PASS",
-    "frozen_gate_refuses_whitespace_errors": "PASS",
-    "frozen_surfaces_are_exact_paths": "PASS",
-    "read_table_refuses_seven_shapes": "PASS",
-    "rows_write_round_trips_commas_and_quotes": "PASS"
-   },
-   "repository_mutated": "NO",
-   "script": "scripts/dd1_d7c_a_r1_selftest.py",
-   "verdict": "PASS",
-   "what_it_protects": "the frozen-surface gate and the strict CSV reader get their own negative cases; a header-only table was accepted by the first version of the reader and one of these cases is what caught it"
-  },
-  "reviewer_instrument_on_T": {
-   "all_defects_reproduced": true,
-   "baseline_checks": 22,
-   "baseline_failures": [],
-   "cases": [
-    {
-     "case": "top_pam_bits_swapped",
-     "checks": 22,
-     "defect_reproduced": true,
-     "facts": {
-      "binding": {
-       "data_en": "data_en",
-       "en0": "en0",
-       "en1": "en1",
-       "en2": "en2",
-       "en3": "en3",
-       "en4": "en4",
-       "en5": "en5",
-       "en6": "en6",
-       "en7": "en7",
-       "enb0": "enb0",
-       "enb1": "enb1",
-       "enb2": "enb2",
-       "enb3": "enb3",
-       "enb4": "enb4",
-       "enb5": "enb5",
-       "enb6": "enb6",
-       "enb7": "enb7",
-       "pam0": "pam_sel2",
-       "pam1": "pam_sel1",
-       "pam2": "pam_sel0",
-       "vdd18": "vdd18",
-       "vss": "vss"
-      },
-      "cases": 16,
-      "mismatches": [
-       {
-        "actual": "00011111",
-        "code": 1,
-        "enable": 1,
-        "expected": "00000011"
-       },
-       {
-        "actual": "01111111",
-        "code": 3,
-        "enable": 1,
-        "expected": "00001111"
-       },
-       {
-        "actual": "00000011",
-        "code": 4,
-        "enable": 1,
-        "expected": "00011111"
-       },
-       {
-        "actual": "00001111",
-        "code": 6,
-        "enable": 1,
-        "expected": "01111111"
-       }
-      ]
-     },
-     "failures": [],
-     "path": "spectre/dd1_d7c_a_pam_top.scs",
-     "sha256_after": "3cf717da1bb20671ec0e30b9f68b8ba5e92ba83b353587dda21076bb92971cd0",
-     "sha256_before": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24"
-    },
-    {
-     "case": "top_enable_tied_high",
-     "checks": 22,
-     "defect_reproduced": true,
-     "facts": {
-      "binding": {
-       "data_en": "vdd18",
-       "en0": "en0",
-       "en1": "en1",
-       "en2": "en2",
-       "en3": "en3",
-       "en4": "en4",
-       "en5": "en5",
-       "en6": "en6",
-       "en7": "en7",
-       "enb0": "enb0",
-       "enb1": "enb1",
-       "enb2": "enb2",
-       "enb3": "enb3",
-       "enb4": "enb4",
-       "enb5": "enb5",
-       "enb6": "enb6",
-       "enb7": "enb7",
-       "pam0": "pam_sel0",
-       "pam1": "pam_sel1",
-       "pam2": "pam_sel2",
-       "vdd18": "vdd18",
-       "vss": "vss"
-      },
-      "cases": 16,
-      "mismatches": [
-       {
-        "actual": "00000001",
-        "code": 0,
-        "enable": 0,
-        "expected": "00000000"
-       },
-       {
-        "actual": "00000011",
-        "code": 1,
-        "enable": 0,
-        "expected": "00000000"
-       },
-       {
-        "actual": "00000111",
-        "code": 2,
-        "enable": 0,
-        "expected": "00000000"
-       },
-       {
-        "actual": "00001111",
-        "code": 3,
-        "enable": 0,
-        "expected": "00000000"
-       },
-       {
-        "actual": "00011111",
-        "code": 4,
-        "enable": 0,
-        "expected": "00000000"
-       },
-       {
-        "actual": "00111111",
-        "code": 5,
-        "enable": 0,
-        "expected": "00000000"
-       },
-       {
-        "actual": "01111111",
-        "code": 6,
-        "enable": 0,
-        "expected": "00000000"
-       },
-       {
-        "actual": "11111111",
-        "code": 7,
-        "enable": 0,
-        "expected": "00000000"
-       }
-      ]
-     },
-     "failures": [],
-     "path": "spectre/dd1_d7c_a_pam_top.scs",
-     "sha256_after": "fac0ee70f4941c8ab11868e6f9386381f4510fc7757278a3165db1be2ebc447e",
-     "sha256_before": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24"
-    },
-    {
-     "case": "reference_bound_to_vcas",
-     "checks": 22,
-     "defect_reproduced": true,
-     "facts": {
-      "actual_reference": {
-       "b": "vss",
-       "d": "vcas",
-       "g": "vcas",
-       "inst": "Xref.Mref",
-       "l": "2e-6",
-       "m": "1",
-       "model": "n33",
-       "s": "vss",
-       "scope": "data_bias_ref",
-       "scope_path": "Xref",
-       "w": "2e-5",
-       "where": "dd1_d6_bias_core.scs:4"
-      },
-      "unit_bias_supply": "iref_in"
-     },
-     "failures": [],
-     "path": "spectre/dd1_d7c_a_pam_top.scs",
-     "sha256_after": "2e0825c9f5185e8aab8d210e0cb635971f560513f0d0adfb63a24f6df9994e66",
-     "sha256_before": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24"
-    },
-    {
-     "case": "duplicate_mos_instance",
-     "checks": 22,
-     "defect_reproduced": true,
-     "facts": {
-      "actual_mos_names": [
-       "Mnand_n_a",
-       "Mnand_n_a",
-       "Mnand_p_a",
-       "Mnand_p_b"
-      ],
-      "duplicates": [
-       "Mnand_n_a"
-      ]
-     },
-     "failures": [],
-     "path": "spectre/dd1_d7c_a_gates.scs",
-     "sha256_after": "3b9a9d1c84f88e7e291e9b8ca274910116f69cd2d77bd0c10967abac869c03d7",
-     "sha256_before": "d2def4e657532b655941c2e42adf8534b7144544fa72ff2f41dfbd3374620faf"
-    },
-    {
-     "case": "cascode_multiplicity_changed",
-     "checks": 22,
-     "defect_reproduced": true,
-     "facts": {
-      "cascode": {
-       "b": "VSS",
-       "d": "DATA_OUT",
-       "g": "VCAS",
-       "inst": "Mcas",
-       "l": "2e-6",
-       "m": "8",
-       "model": "n33",
-       "s": "node_m",
-       "w": "2.5e-6",
-       "where": "dd1_d7c_a_sink_unit.scs:53"
-      }
-     },
-     "failures": [],
-     "path": "spectre/dd1_d7c_a_sink_unit.scs",
-     "sha256_after": "234baf490eeda64735632c4085f6dfe1d4e5ba801ea0e5a1af5c564db7b700e5",
-     "sha256_before": "60e06aa3010a66442ac25ff408abc22f1aab93d6b5d3b24dbc15095ac66234af"
-    },
-    {
-     "case": "report_total_borrowed_from_other_cell",
-     "checks": 22,
-     "defect_reproduced": true,
-     "facts": {
-      "actual_top_mos": 145,
-      "claim": 112
-     },
-     "failures": [],
-     "path": "reports/dd1_d7c_a_pam_candidate.md",
-     "sha256_after": "2760fbe10e711f5d9b0c8c93660ae65f4cb9df13059e77d9a5bc1c7575458157",
-     "sha256_before": "1c047caaea2d1e5a2e206331d9d54f1db52fbc8a939c4843b24712233fb422dd"
-    },
-    {
-     "case": "golden_header_only",
-     "checks": 22,
-     "defect_reproduced": true,
-     "facts": {
-      "gate": {
-       "check": "THERMO_GOLDEN_16",
-       "reason": "0 hand-written golden rows compared against the decoder transistors themselves (golden read from pam_mask_golden.csv, never produced by this evaluator)",
-       "result": "PASS"
-      },
-      "golden_rows": 0
-     },
-     "failures": [],
-     "path": "tests/dd1_d7c_a/pam_mask_golden.csv",
-     "sha256_after": "10dbda30941b19df85bff4c41bc1b292ee7cad46bb03d9a94cc560463baa66dc",
-     "sha256_before": "6ff91d98ea84d65c36cb9d139e3fdd87afbe5c567cbef017d9404a20b749ab25"
-    },
-    {
-     "case": "active_transient_not_detected",
-     "checks": 22,
-     "defect_reproduced": true,
-     "facts": {
-      "active_statement": "review_tran tran stop=1u maxstep=1n",
-      "gate": {
-       "check": "DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS",
-       "reason": "116 line deck draft, active dc/tran/ac statements: 0 (every analysis line is commented out, so the file cannot launch a run if someone points Spectre at it)",
-       "result": "PASS"
-      }
-     },
-     "failures": [],
-     "path": "spectre/dd1_d7c_a_tb_draft.scs",
-     "sha256_after": "a195da9de9d78995193132f1eb6a39ee4e6cdafa7d1de3b6533ac6b075c25dc5",
-     "sha256_before": "5ecae7da44d474aec5b2fdadc3591427d442ead610bc316a192ddcb64df62dc5"
-    }
-   ]
-  },
-  "reviewer_instrument_on_fixed_bytes": {
-   "all_defects_reproduced": false,
-   "baseline_checks": 30,
-   "baseline_failures": [],
-   "cases_named": {
-    "active_transient_not_detected": [
-     "DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS"
-    ],
-    "cascode_multiplicity_changed": [
-     "DEVICE_COUNT_SEPARATION",
-     "UNIT_CORE_ISOMORPHIC_TO_ACCEPTED"
-    ],
-    "duplicate_mos_instance": [
-     "NO_DUPLICATE_INSTANCES"
-    ],
-    "golden_header_only": [
      "GOLDEN_TABLE_SCHEMA",
      "THERMO_GOLDEN_16"
+    ]
+   },
+   {
+    "id": "E18_request_table_emptied",
+    "now": [
+     "INPUT_TABLE_SCHEMAS",
+     "REQUEST_TABLE_SCHEMA",
+     "REQUEST_REFUSAL_TABLE"
     ],
-    "reference_bound_to_vcas": [
-     "REFERENCE_NODE_IDENTITY",
-     "DNW_PASS_BODY_LOCAL"
+    "reason": "same schema layer, same vacuity",
+    "was": [
+     "REQUEST_TABLE_SCHEMA",
+     "REQUEST_REFUSAL_TABLE"
+    ]
+   },
+   {
+    "id": "E20_plan_refines_more_than_time",
+    "now": [
+     "NATIVE_PLAN_SHAPE",
+     "PLAN_SCHEDULE_ARITHMETIC"
     ],
-    "report_total_borrowed_from_other_cell": [
-     "REPORT_CLAIMS_BOUND_TO_OBJECT"
-    ],
-    "top_enable_tied_high": [
+    "reason": "the refined pair is now a contract over 15 identity fields, so reclassifying RS-LOW breaks the pair as well as the shape",
+    "was": [
+     "NATIVE_PLAN_SHAPE"
+    ]
+   },
+   {
+    "id": "E24_golden_key_duplicated",
+    "now": [
+     "GOLDEN_TABLE_SCHEMA",
+     "INPUT_TABLE_SCHEMAS",
+     "THERMO_GOLDEN_16",
      "TOP_INTEGRATED_THERMO_16"
     ],
-    "top_pam_bits_swapped": [
-     "TOP_INTEGRATED_THERMO_16"
+    "reason": "the unique key is declared, so the duplicate is refused before any comparison",
+    "was": [
+     "GOLDEN_TABLE_SCHEMA"
+    ]
+   },
+   {
+    "id": "E27_branch_left_the_ground_rail",
+    "now": [
+     "TOP_SUPPLY_BINDINGS",
+     "UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE",
+     "MAIN_PATH_DATA_OUT_CAS_MOUT_VSS",
+     "BLEED_GATED_BY_BRANCH_COMPLEMENT"
+    ],
+    "reason": "the clearest F1 evidence: at H this fault moved one gate only, now the top nets reach the binding table, the sink path and the bleed gate",
+    "was": [
+     "TOP_SUPPLY_BINDINGS"
+    ]
+   },
+   {
+    "id": "E34_request_code_invented",
+    "now": [
+     "REQUEST_TABLE_SCHEMA",
+     "REQUEST_REFUSAL_TABLE"
+    ],
+    "reason": "the schema layer declares header/width/required/unique key/contract keys/integer domains only; a closed set of code words is a request contract owned by REQUEST_TABLE_SCHEMA, which names R05 and the invented value",
+    "was": [
+     "INPUT_TABLE_SCHEMAS",
+     "REQUEST_REFUSAL_TABLE",
+     "REQUEST_TABLE_SCHEMA"
     ]
    }
-  }
+  ],
+  "previous_round_record_audit": {
+   "meaning": "R1 disclosed these three files as edited after its record in its own section 8.1, but nothing could see it; the new reader sees it and the R2 record turns that into a gate",
+   "paths": [
+    "reports/dd1_d7c_a_review_fix_r1.md",
+    "reports/agent_handoffs/DATA-7C-A.md",
+    "reports/agent_handoffs/DATA-7C-A.json"
+   ],
+   "per_path": "three each: byte count, disk digest, blob digest at H",
+   "record": "results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08",
+   "semantic_problems": 9,
+   "source_root": "a fresh git archive extraction of H, so this round's own edits cannot be mistaken for R1 staleness"
+  },
+  "published_record_reader": "scripts/dd1_d7c_a_r2_record_check.py, also wired in as the pre-publish record_semantics gate and the post-publish published_record_recheck",
+  "record_semantic_probes": "14/14 HIT (R0 positive control accepts a clean fixture, R1..R13 each require a named refusal)",
+  "still_open": [
+   {
+    "case": "published_record_reader_accepts_rc99_as_PASS",
+    "enforced_by": "scripts/dd1_d7c_a_verify.py REMAINING_OPEN_BY_DESIGN: any other case still reproducing turns the gate FAIL",
+    "reason": "the diagnostic exercises the generic shape-only read_table(), which task book section 6 allows to stay shape-only; the refusal is the new semantic entry, proven by 14 named tampers and by the 9 real findings on the published R1 record",
+    "status": "STILL_REPORTS_REPRODUCED_BY_DECISION"
+   }
+  ],
+  "tool_selftest": "scripts/dd1_d7c_a_r1_selftest.py kept at its H bytes; 9 cases PASS on the delivered tree, and NOT_RUN with rc=2 in a fresh extraction without Git history, which the semantic layer refuses to report as PASS"
  },
  "path_counts": {
   "B_tracked_paths": 2533,
+  "H_tracked_paths": 2583,
+  "T_tracked_paths": 2559,
   "added_R1_over_T": 14,
-  "added_T_over_B": 26,
-  "added_paths_R1": [
-   "reports/dd1_d7c_a_review_fix_r1.md",
-   "reports/tasks/DATA-7C-A-R1.md",
-   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/commands.csv",
-   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/counterexamples.json",
-   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/frozen_comparison.csv",
-   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/git_checks.csv",
-   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/instrument_T.json",
-   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/instrument_fixed.json",
-   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/offline_checks.json",
-   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/selftest.json",
-   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/source_identity.csv",
-   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/verification_summary.json",
-   "scripts/dd1_d7c_a_r1_selftest.py",
-   "tests/dd1_d7c_a/device_count_claims.csv"
+  "added_R2_over_H": [
+   "reports/dd1_d7c_a_review_fix_r2.md",
+   "reports/tasks/DATA-7C-A-R2.md",
+   "scripts/dd1_d7c_a_r2_plan.py",
+   "scripts/dd1_d7c_a_r2_record_check.py",
+   "scripts/dd1_d7c_a_r2_record_probes.py",
+   "scripts/dd1_d7c_a_r2_sign_check.py"
   ],
-  "measured_from": "git ls-tree against fixed revisions, not from a table",
-  "modified_T_over_B": 0,
-  "note": "the reviewed round reported 25 added paths from a listing taken before its own handoff JSON was committed; the measured value at that tip is 26. Each count here is taken from the revision it names, and the record re-measures them against HEAD at run time.",
-  "removed_R1_over_T": 0,
-  "stages": {
-   "handoff_commit": "this JSON and the handoff markdown, committed with the record",
-   "record_commit": "the evidence directory named in evidence_dir",
-   "source_commits": "two: the first R1 payload commit and the record-tool commit that made the frozen comparison a gate"
-  },
-  "tip_total_paths": 2573,
-  "whitelisted_T_paths_modified": "row whitelisted_paths_edited of the record frozen_comparison.csv (informational by design: the whitelist permits editing, so the count is not a verdict)"
+  "added_T_over_B": 26,
+  "measured_from": "git ls-tree -r <rev> --name-only counts, and git diff --name-status H for what this round changes",
+  "modified_R2_over_H": [
+   "reports/dd1_d7c_a_native_test_plan.md",
+   "reports/dd1_d7c_a_review_fix_r1.md",
+   "scripts/dd1_d7c_a_guards.py",
+   "scripts/dd1_d7c_a_offline_check.py",
+   "scripts/dd1_d7c_a_validate_handoff.py",
+   "scripts/dd1_d7c_a_verify.py",
+   "spectre/dd1_d7c_a_tb_draft.scs",
+   "tests/dd1_d7c_a/device_count_claims.csv",
+   "tests/dd1_d7c_a/native_case_plan.csv"
+  ],
+  "removed_R2_over_H": []
  },
- "payload_sha": "21ae4ad1bcef5b0ee9ac38626f8016ec592e2e92",
+ "payload_sha": "da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb",
  "remote_readback": {
   "ancestry": {
-   "272d6de_is_ancestor_of_T": true,
-   "T_parent": "0a56b6bb0e8273d953c3b8867d4b1510735f0ede"
+   "B_is_ancestor_of_T": true,
+   "H_parent": "cb99d33386a7c83089271a4f3b9816c11362564d",
+   "H_tree": "913c8a343aa3debede5e46bc52cae3d7d978940d",
+   "T_is_ancestor_of_H": true,
+   "commits_H_over_T": 12
   },
   "method_1_git_protocol": {
-   "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin",
+   "absent": "refs/heads/poc/data-pam-d7c-a-r2, which is the branch this round creates",
+   "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin refs/heads/main refs/heads/poc/data-pam-d7c-a refs/heads/poc/data-pam-d7c-a-r1 refs/heads/poc/data-pwm-d7b-r3 refs/heads/poc/data-pam-d7c-a-r2",
+   "queried_utc": "2026-10-23T13:22:02Z",
    "rc": 0,
-   "ref_lines": 23
+   "ref_lines_returned": 4
   },
   "method_2_api": {
-   "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<ref>",
+   "absent": "heads/poc/data-pam-d7c-a-r2 returned {\"status\":\"404\"} before the push, which is the expected answer rather than a read-back failure",
+   "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<branch> --jq .object.sha",
+   "queried_utc": "2026-10-23T13:22:34Z",
    "rc": 0,
-   "refs_read": 6
+   "refs_read": 4
   },
   "post_push": {
-   "agreement": "both channels return the same full SHA for every ref read",
-   "channel_1_git_protocol": {
-    "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin <the four refs>",
-    "rc": 0
-   },
-   "channel_2_api": {
-    "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/<ref> --jq .object.sha",
-    "rc": 0,
-    "refs_read": 4
-   },
-   "local_equals_remote": {
-    "local_tip": "5f89605bac0b097218e1652bd3e0e61239ab36e9",
-    "remote_tip": "5f89605bac0b097218e1652bd3e0e61239ab36e9",
-    "same": true
-   },
-   "queried_utc": "2026-10-23T09:54:45Z (host UTC)",
-   "refs": {
-    "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
-    "poc/data-pam-d7c-a": "89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79",
-    "poc/data-pam-d7c-a-r1": "5f89605bac0b097218e1652bd3e0e61239ab36e9",
-    "poc/data-pwm-d7b-r3": "272d6de6d2f2fc8a82d5038d73d6b3e4c656f683"
-   },
-   "untouched": {
-    "data7b_refs_unchanged": [
-     "poc/data-pwm-d7b-r3 = 272d6de",
-     "poc/data-pwm-d7b-r2 = b3fe93c",
-     "poc/data-pwm-d7b-r1 = e97f02e",
-     "poc/data-pwm-d7b = adcdf27"
-    ],
-    "main_unchanged": true,
-    "reviewed_tip_branch_still_at_T": true
-   }
+   "note": "filled by the commit after this one; the branch tip that carries the record is read back in the tree-identical metadata commit above it and in the receipt outside the package",
+   "state": "NOT_PERFORMED_YET"
   },
   "pre_push": {
-   "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin",
-   "observed": {
-    "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
-    "poc/data-pam-d7c-a": "89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79",
-    "poc/data-pam-d7c-a-r1": "ABSENT (this round creates it)"
-   },
-   "queried_utc": "2026-10-23T09:40:03Z (host UTC)",
-   "rc": 0,
-   "ref_lines": 23
-  },
-  "provenance_of_counts": "6 is the number of refs read per object through the API; 23 is the total ref-line count from ls-remote; two different queries",
-  "push": [
-   {
-    "command": "git -c http.proxy=http://127.0.0.1:7892 push -u origin poc/data-pam-d7c-a-r1",
-    "forced": false,
-    "hook": "pre-push ran scripts/precommit_safety_check.py --mode history: 188 commits scanned, 2836 objects checked, PDK/credential/private-key/vendor-model all 0, SAFETY_GATE: PASS",
-    "pushed_tip": "79ce578 (committed 2026-10-23T17:39:07+08:00)",
-    "rc": 0,
-    "result": "* [new branch] poc/data-pam-d7c-a-r1 -> poc/data-pam-d7c-a-r1",
-    "window_utc": "between 2026-10-23T09:40:03Z (the pre-push ls-remote above) and 2026-10-23T09:42:58Z (the read-back below); the push itself was not separately timed, so this is an interval, not a timestamp"
-   },
-   {
-    "command": "git -c http.proxy=http://127.0.0.1:7892 push origin poc/data-pam-d7c-a-r1",
-    "forced": false,
-    "hook": "pre-push history again: 2873 objects, all four counts 0, SAFETY_GATE: PASS",
-    "pushed_tip": "5f89605 (committed 2026-10-23T17:51:22+08:00)",
-    "rc": 0,
-    "result": "79ce578..5f89605",
-    "window_utc": "between 2026-10-23T09:51:22Z (committer date of 5f89605) and 2026-10-23T09:54:45Z (the read-back below)"
+   "agreement": "both channels return the same full SHA for all four refs that exist",
+   "data7b_refs_in_place": true,
+   "main_unchanged": true,
+   "r1_branch_still_at_H": true,
+   "refs": {
+    "refs/heads/main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+    "refs/heads/poc/data-pam-d7c-a": "89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79",
+    "refs/heads/poc/data-pam-d7c-a-r1": "da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb",
+    "refs/heads/poc/data-pwm-d7b-r3": "272d6de6d2f2fc8a82d5038d73d6b3e4c656f683"
    }
-  ],
-  "queried_utc": "2026-10-23T07:54:33Z (host UTC; local 2026-10-23 15:54)",
-  "refs_read": {
-   "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
-   "poc/data-pam-d7c-a": "89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79",
-   "poc/data-pwm-d7b": "adcdf27769fa2d4b9e42dc4f9c5f8310e17d8c50",
-   "poc/data-pwm-d7b-r1": "e97f02ecf7c84d1e1a3fda214cec8eceadfa5f92",
-   "poc/data-pwm-d7b-r2": "b3fe93c17de014cb16031438ce28c7152dd0020f",
-   "poc/data-pwm-d7b-r3": "272d6de6d2f2fc8a82d5038d73d6b3e4c656f683"
   },
-  "scope_note": "the 23 lines from ls-remote and the 4 refs read per object through the API are two different query sets; 5f89605 is the tip at the moment of the read-back, and the archive receipt commit that follows moves the branch tip while leaving the payload tip addressable",
-  "status": "PUSHED_AND_READ_BACK_ON_TWO_CHANNELS"
+  "provenance_of_counts": "every count above comes from a command in this round, not from the previous handoff"
  },
- "repair_baseline_sha": "89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79",
- "repair_of": "DATA-7C-A",
+ "repair_baseline_sha": "da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb",
+ "repair_of": "DATA-7C-A-R1",
  "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
  "review_input": {
-  "bytes": 34471,
-  "documents_committed": "not committed; referenced by path and digest",
+  "bytes": 80010,
+  "documents_committed": "the review package and the R2 task book are referenced by path and digest; the task book copy is committed byte for byte",
   "instrument": {
-   "digest_matches_their_manifest": true,
-   "encoding_note": "run with PYTHONUTF8=1 because the Windows default locale is gbk and the instrument reads UTF-8 text; no byte of the instrument was changed",
+   "baseline_on_H": "30 checks, 7 of 7 reproduced, rc=0",
+   "bytes": 8874,
    "modified_by_this_round": "NO",
-   "path": "review/MicroLED_DATA7C_A_Independent_Review_20261023/MicroLED_DATA7C_A_Review_20261023/reviewer/probe_review_gaps.py",
-   "sha256": "b65b0ca1bdd807e83f514294c3499ab7ab6a9ea20a1aac5b088365ca82d5658e"
+   "path": "review/MicroLED_DATA7C_A_R1_Review_20261023/reviewer/probe_r1_remaining.py",
+   "role": "the seven remaining gaps; rc=0 means every gap reproduces, which is not acceptance",
+   "sha256": "c23ec4ff687033e12de11d0e324333d7d91ed6e4d97fb1f340ff542732b14658"
   },
-  "package": "C:/Users/LMX/Downloads/MicroLED_DATA7C_A_Independent_Review_20261023.zip",
-  "sha256": "b2ada82d77a152a9f29edd4605bbf88b56e0f2ddbe72df4bb8da5737b05a80ba",
-  "verdict": "REWORK limited to offline verification, evidence serialisation and the native plan draft"
+  "instruments": [
+   {
+    "bytes": 7458,
+    "modified_by_this_round": "NO",
+    "path": "review/MicroLED_DATA7C_A_R1_Review_20261023/reviewer/probe_review_gaps.py",
+    "role": "the eight original gaps; run against T (8 of 8 reproduce, 22 checks) and against H (not all, 30 checks) and against the delivered bytes (8 named refusals, 34 checks)",
+    "sha256": "b65b0ca1bdd807e83f514294c3499ab7ab6a9ea20a1aac5b088365ca82d5658e"
+   },
+   {
+    "bytes": 5778,
+    "modified_by_this_round": "NO",
+    "path": "review/MicroLED_DATA7C_A_R1_Review_20261023/reviewer/audit_r1_identity.py",
+    "role": "NOT RUN in this round: it reads a clone at reviewer/repo and a prior-round task book at a path that lives on the review machine, so running it here would fail for want of inputs rather than report identity. Its checks are reproduced here by scripts/dd1_d7c_a_verify.py (three ranges, blob equality) and by scripts/dd1_d7c_a_r2_record_check.py",
+    "sha256": "ae088d4db6ed6ea9339db42ffd2b58d8fb2cb832705d5e15637d0cdeb382b4dc"
+   }
+  ],
+  "members": 41,
+  "package": "C:/Users/LMX/Downloads/MicroLED_DATA7C_A_R1_Independent_Review_20261023.zip",
+  "sha256": "ff5f45b6ca19c2f376b8954ea9e9e8f24a48bc3e979572df5f22e9faa01e2f86",
+  "task_book": {
+   "byte_identical_to_the_brief": true,
+   "bytes": 14180,
+   "path": "reports/tasks/DATA-7C-A-R2.md",
+   "sha256": "dcd29c277cc66ab01bbff28a45bf428d03aa6282c90e78686a268f6c09c228d4",
+   "source": "C:/Users/LMX/Downloads/TASK_DATA7C_A_R2.md"
+  },
+  "verdict": "REWORK; the seven remaining gaps are F1 supply binding, F2 input schemas, F3 published-record semantics, F4 probe sign and schedule arithmetic, plus D1 whitespace and the function-level record reader case"
  },
  "schema_notes": "own field shape; the DATA-7B validator is frozen and only knows DATA-7B fields. R1 keeps the DATA-7C-A round object and adds an r1 object so the reviewed round is not rewritten: task_id becomes DATA-7C-A-R1 and repair_baseline_sha names the reviewed tip",
  "schema_version": "1.0",
@@ -653,107 +396,155 @@
    {
     "bytes": 3871,
     "path": "spectre/dd1_d7c_a_gates.scs",
-    "role": "delivered",
+    "role": "delivered this round",
     "sha256": "d2def4e657532b655941c2e42adf8534b7144544fa72ff2f41dfbd3374620faf"
    },
    {
     "bytes": 4674,
     "path": "spectre/dd1_d7c_a_pam_dec.scs",
-    "role": "delivered",
+    "role": "delivered this round",
     "sha256": "9f6c8d7895d13aaf031eac8036bba7165e26a448c685beef8ab2d0a128627d24"
    },
    {
     "bytes": 4114,
     "path": "spectre/dd1_d7c_a_sink_unit.scs",
-    "role": "delivered",
+    "role": "delivered this round",
     "sha256": "60e06aa3010a66442ac25ff408abc22f1aab93d6b5d3b24dbc15095ac66234af"
    },
    {
     "bytes": 4029,
     "path": "spectre/dd1_d7c_a_pam_top.scs",
-    "role": "delivered",
+    "role": "delivered this round",
     "sha256": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24"
    },
    {
-    "bytes": 9736,
+    "bytes": 11587,
     "path": "spectre/dd1_d7c_a_tb_draft.scs",
-    "role": "delivered",
-    "sha256": "a7f4acecc5d484ed46f69ab364173e72a6fba50ea0fbf0711253f86a2a6acfbb"
+    "role": "delivered this round",
+    "sha256": "d4ad6f72d23416f09482402f5b253e3aa8395610e166e0de04060c60539613c0"
    },
    {
     "bytes": 1242,
     "path": "tests/dd1_d7c_a/pam_mask_golden.csv",
-    "role": "delivered",
+    "role": "delivered this round",
     "sha256": "6ff91d98ea84d65c36cb9d139e3fdd87afbe5c567cbef017d9404a20b749ab25"
    },
    {
     "bytes": 1166,
     "path": "tests/dd1_d7c_a/pam_request_refusal.csv",
-    "role": "delivered",
+    "role": "delivered this round",
     "sha256": "efbc052240ed864d1827844ec08467e5a6f0a226e39cf3a2cee8d93d55d17807"
    },
    {
-    "bytes": 13674,
+    "bytes": 19369,
     "path": "tests/dd1_d7c_a/native_case_plan.csv",
-    "role": "delivered",
-    "sha256": "0a55795f9fe0e35cb284b8a5647c2f72d6c58eb200ce43d1f761cde44741427b"
+    "role": "delivered this round",
+    "sha256": "216c6eb79de748b3b753c999991e0952524bf14c7dc688c3ca3a48cf3f4ad6b5"
    },
    {
-    "bytes": 1530,
+    "bytes": 1508,
     "path": "tests/dd1_d7c_a/device_count_claims.csv",
-    "role": "delivered",
-    "sha256": "aad521676a0dc90b9d1c35cfb2863801d2ee0135f977aa81ba650685b22f5c35"
+    "role": "delivered this round",
+    "sha256": "cb4056b5bffe81a967d42e41e63defcd93ca9b7bd29f7067326f5395c47e3041"
    },
    {
     "bytes": 15705,
     "path": "scripts/dd1_d7c_a_netlist.py",
-    "role": "delivered",
+    "role": "delivered this round",
     "sha256": "1539b35451dc3f3ec1c8d49ec5c8ba2f987587ff8e910e98e1b96b9ff59f3d8c"
    },
    {
-    "bytes": 48781,
+    "bytes": 69458,
     "path": "scripts/dd1_d7c_a_offline_check.py",
-    "role": "delivered",
-    "sha256": "d4ae551d0098df5e28367f8c03b63ea86e41ab179f56b09e7e77ddf699ac3856"
+    "role": "delivered this round",
+    "sha256": "2a68b581d872c5076a07dbf930f5b9bc1f431cca603c0aba969a7fd7e8633a1f"
    },
    {
-    "bytes": 19393,
+    "bytes": 32282,
     "path": "scripts/dd1_d7c_a_guards.py",
-    "role": "delivered",
-    "sha256": "89947f871ecd5bf0dbeacd5eb1ab2114bce3ce5ea057ed944258996812498625"
+    "role": "delivered this round",
+    "sha256": "1d2e21c20929cb51fd2d54b971e26c4fc23ddf59473016e07d4da177cb62048a"
    },
    {
     "bytes": 4276,
     "path": "scripts/dd1_d7c_a_deckgen.py",
-    "role": "delivered",
+    "role": "delivered this round",
     "sha256": "864f8889fb5c114cb944325deea0036a822cf3e295d73d452cba328fe36773bd"
    },
    {
-    "bytes": 51923,
+    "bytes": 66691,
     "path": "scripts/dd1_d7c_a_verify.py",
-    "role": "delivered",
-    "sha256": "649d84735079a7fd5b98f29ff8ead55adfebee482b7382c24add1c17ccbdedc6"
+    "role": "delivered this round",
+    "sha256": "70cb4551a9f875087d9051dfa12f8b03cecbc89a5c8388d7ec74373fea1ec291"
    },
    {
-    "bytes": 6970,
+    "bytes": 7768,
     "path": "scripts/dd1_d7c_a_validate_handoff.py",
-    "role": "delivered",
-    "sha256": "2298bd38973747d9e01348cb13fc33875d479386e87d485a2e5f6cbf742d4221"
+    "role": "delivered this round",
+    "sha256": "c921b00ab875dbfaacde5539251508266c32d3a7c840c7cbb530880692f219b7"
    },
    {
     "bytes": 12341,
     "path": "scripts/dd1_d7c_a_r1_selftest.py",
-    "role": "delivered",
+    "role": "delivered this round",
     "sha256": "59ac73aaeb51666d4f60b3e99cdb3bf0ab9b81ab6e00102f92399df33f622c5a"
+   },
+   {
+    "bytes": 21786,
+    "path": "scripts/dd1_d7c_a_r2_plan.py",
+    "role": "delivered this round",
+    "sha256": "555b35e002ba45271cf5a422eda11359c5b48896a1a8a05c4335369c17d83151"
+   },
+   {
+    "bytes": 22746,
+    "path": "scripts/dd1_d7c_a_r2_record_check.py",
+    "role": "delivered this round",
+    "sha256": "34499d241661fdae10809bcdb979bd26937c8f42242a204217555d5a5193ebe3"
+   },
+   {
+    "bytes": 15127,
+    "path": "scripts/dd1_d7c_a_r2_record_probes.py",
+    "role": "delivered this round",
+    "sha256": "a67352df01ca69b7d47327a60b31abcc1ebc960b172663f6867fa74c060c5da4"
+   },
+   {
+    "bytes": 9791,
+    "path": "scripts/dd1_d7c_a_r2_sign_check.py",
+    "role": "delivered this round",
+    "sha256": "b1d828b17b98b80e7724a109b23620436bb760630449985f6cf818d17028978c"
+   },
+   {
+    "bytes": 20917,
+    "path": "reports/tasks/DATA-7C-A.md",
+    "role": "delivered this round",
+    "sha256": "3b55cef702da35786d68b533c0af363b4e6419d62acc2cd9d94ee7bf6051f180"
    },
    {
     "bytes": 15479,
     "path": "reports/tasks/DATA-7C-A-R1.md",
-    "role": "delivered",
+    "role": "delivered this round",
     "sha256": "795c865c4556ec9629ccecc96ab1c6726aa1cc2bccb333e4004c50c0f61f2b38"
+   },
+   {
+    "bytes": 14180,
+    "path": "reports/tasks/DATA-7C-A-R2.md",
+    "role": "delivered this round",
+    "sha256": "dcd29c277cc66ab01bbff28a45bf428d03aa6282c90e78686a268f6c09c228d4"
+   },
+   {
+    "bytes": 46419,
+    "path": "reports/dd1_d7c_a_review_fix_r1.md",
+    "role": "delivered this round",
+    "sha256": "60b2c672b72de208521d7ccedebac5283d8c179ef4a56165dd6f6ec91f5737b1"
+   },
+   {
+    "bytes": 15679,
+    "path": "reports/dd1_d7c_a_review_fix_r2.md",
+    "role": "delivered this round",
+    "sha256": "59912f684f5ac80ed0da92e948293fd4db11575a7fb14526568b7ef34f6da03d"
    }
   ],
-  "note": "digests recomputed from disk at generation time; this file carries no digest of itself or of the archive built from it. The three report files are deliberately listed under rendered_reports without digests: the verification run rewrites their machine sections, so the authoritative digest of a report is the one the record takes after rendering, not the one this file took before. Candidate DUT digests are compared against the reviewed tip by the record, which is what proves they were not touched.",
+  "note": "digests recomputed from disk at generation time; this file carries no digest of itself or of the archive built from it. The report files are listed under rendered_reports without digests because the verification run rewrites their machine sections, so the authoritative digest of a report is the one the record takes after rendering. Candidate DUT digests are compared against the reviewed revision by the record, which is what proves they were not touched.",
   "read_only_inputs": [
    {
     "bytes": 1128,
@@ -807,10 +598,20 @@
   "rendered_reports": [
    "reports/dd1_d7c_a_pam_candidate.md",
    "reports/dd1_d7c_a_native_test_plan.md",
-   "reports/dd1_d7c_a_review_fix_r1.md"
+   "reports/dd1_d7c_a_review_fix_r1.md",
+   "reports/dd1_d7c_a_review_fix_r2.md"
   ]
  },
  "stop_reason": "AWAITING_INDEPENDENT_REVIEW",
- "task_id": "DATA-7C-A-R1",
- "worktree": "D:\\ic617_d7c_a_r1"
+ "synthetic_sign_evidence": {
+  "arithmetic": "integer femtoampere samples times integer nanoseconds, so a charge is an exact integer in units of 1e-24 C and no float tolerance hides an error",
+  "cases": 7,
+  "claims": "sign identity, sign inversion, negative-area separation, KCL over the series path for all eight codes, zero window refused as evidence, and a third orientation refused instead of defaulted",
+  "evidence_class": "SYNTHETIC_NOT_MEASURED",
+  "script": "scripts/dd1_d7c_a_r2_sign_check.py",
+  "unit_current_FA": 1875,
+  "unit_current_status": "ESTIMATED_MIRROR_RATIO_ONLY, derived from 15 uA x (2.5/2)/(20/2), never measured"
+ },
+ "task_id": "DATA-7C-A-R2",
+ "worktree": "D:\\ic617_d7c_a_r2"
 }

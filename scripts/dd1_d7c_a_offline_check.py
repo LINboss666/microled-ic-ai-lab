@@ -82,6 +82,10 @@ DECK_STATEMENT_RX = {
     'instance': re.compile(r'^\s*[xX]\w*\s*\([^)]*\)\s*\w+\s*$', re.I),
 }
 GOLDEN_KEYS = set((e, c) for e in (0, 1) for c in range(8))
+THERMO_CODES = ('000', '001', '010', '011', '100', '101', '110', '111')
+IPROBE_RX = re.compile(r'^\s*(\w+)\s*\(\s*(\w+)\s+(\w+)\s*\)\s*iprobe\b', re.I)
+DUT_INSTANCE_RX = re.compile(r'^\s*Xdut\s*\(([^)]*)\)', re.I)
+VSOURCE_RX = re.compile(r'^\s*(\w+)\s*\(\s*(\w+)\s+(\w+)\s*\)\s*vsource\b(.*)$', re.I)
 REFUSAL_CODES = ('REQUEST_UNPARSED', 'REQUEST_OUT_OF_RANGE', 'REQUEST_NOT_INT',
                  'REQUEST_NOT_FINITE', 'ACCEPTED')
 
@@ -155,6 +159,214 @@ def read_rows(path):
         text = handle.read()
     rows = list(csv.DictReader(io.StringIO(text)))
     return rows, text
+
+
+# ---- strict reading of the tables these checks consume -------------------------------
+#
+# read_rows() above is a loose DictReader: a row with one cell too many loses the extra cell into
+# None, a header-only file yields zero rows without complaint, and a 'NaN' in a numeric column only
+# surfaces later as an unhandled int() crash. The review named exactly those three shapes, so every
+# real input table now goes through strict_read below, which reports refusals as data instead of
+# raising, and never hands a downstream loop a row it has not width- and domain-checked.
+
+INT_COLUMNS = {
+    'golden': {'data_en': (0, 1), 'pam_sel': tuple(range(8)), 'branches_on': tuple(range(9)),
+               'en0': (0, 1), 'en1': (0, 1), 'en2': (0, 1), 'en3': (0, 1), 'en4': (0, 1),
+               'en5': (0, 1), 'en6': (0, 1), 'en7': (0, 1)},
+    'claims': {'count': None},                       # any finite non-negative integer, range is
+}                                                   # whatever the parse says, checked elsewhere
+
+
+def strict_int(value, allowed):
+    """a finite base-10 integer, optionally inside an explicit set; never a float, NaN or blank"""
+    text = str(value).strip()
+    if not re.match(r'^-?\d+$', text):
+        return None
+    number = int(text)
+    if number < 0:
+        return None
+    if allowed is not None and number not in allowed:
+        return None
+    return number
+
+
+def strict_read(path, spec):
+    """read one input table against its declared schema; returns (rows, problems) and never raises"""
+    problems = []
+    if not os.path.isfile(path):
+        return [], ['%s is missing' % spec['label']]
+    with io.open(path, encoding='utf-8', newline='') as handle:
+        raw = list(csv.reader(handle))
+    header = spec['header']
+    if not raw:
+        return [], ['%s is an empty file, not a table with zero rows' % spec['label']]
+    if raw[0] != header:
+        return [], ['%s header is %s, the schema declares %s'
+                    % (spec['label'], raw[0], header)]
+    if len(raw) - 1 != spec['rows']:
+        problems.append('%s has %d data rows, the schema declares exactly %d'
+                        % (spec['label'], len(raw) - 1, spec['rows']))
+    rows = []
+    seen = {}
+    rejoined = []
+    free_text = spec.get('final_column_free_text')
+    for number, cells in enumerate(raw[1:], 2):
+        if free_text and header and header[-1] == free_text and len(cells) > len(header):
+            # The delivered, frozen request table writes its final note column as free text without
+            # quoting, so two of its rows carry a comma inside that note. Re-joining keeps every
+            # character of the note, still refuses a short row and any unexpected cell in an earlier
+            # column, and the row numbers are named in the check reason so the serialisation defect
+            # stays visible instead of being quietly tolerated.
+            cells = cells[:len(header) - 1] + [','.join(cells[len(header) - 1:])]
+            rejoined.append(number)
+            spec['_rejoined_free_text_lines'] = list(rejoined)
+        if len(cells) != len(header):
+            problems.append('%s line %d has %d cells, the header declares %d'
+                            % (spec['label'], number, len(cells), len(header)))
+            continue
+        record = dict(zip(header, cells))
+        record['_line'] = number
+        for column in header:
+            text = str(record[column]).strip()
+            if not text and column not in spec['optional']:
+                problems.append('%s line %d leaves %s empty' % (spec['label'], number, column))
+        for column, allowed in spec['ints'].items():
+            if column not in header:
+                problems.append('%s schema asks for column %s which the header does not declare'
+                                % (spec['label'], column))
+                continue
+            parsed = strict_int(record[column], allowed)
+            if parsed is None:
+                problems.append('%s line %d field %s is %r, which is not a finite integer%s'
+                                % (spec['label'], number, column, record[column],
+                                   '' if allowed is None else ' in %s' % (list(allowed),)))
+            else:
+                record[column] = parsed
+        if spec.get('mask_column'):
+            column = spec['mask_column']
+            mask = str(record.get(column, ''))
+            if len(mask) != spec['mask_length'] or set(mask) - set('01'):
+                problems.append('%s line %d field %s is %r, expected %d characters of 0/1'
+                                % (spec['label'], number, column, mask, spec['mask_length']))
+            else:
+                bits = [record.get('en%d' % j) for j in range(spec['mask_length'])]
+                if any(b is None for b in bits):
+                    problems.append('%s line %d cannot compare en0..en%d against %r because a bit '
+                                    'field was refused' % (spec['label'], number,
+                                                            spec['mask_length'] - 1, mask))
+                elif bits != [int(c) for c in mask[::-1]]:
+                    problems.append('%s line %d en0..en7 disagree with %s=%s'
+                                    % (spec['label'], number, column, mask))
+                elif record.get('branches_on') is not None and \
+                        record['branches_on'] != sum(bits):
+                    problems.append('%s line %d branches_on=%s but the mask has %d bits set'
+                                    % (spec['label'], number, record['branches_on'], sum(bits)))
+        key = tuple(record.get(k) for k in spec['unique'])
+        if any(part is None for part in key):
+            problems.append('%s line %d has an unusable key %s' % (spec['label'], number, key))
+        elif key in seen:
+            problems.append('%s repeats key %s (lines %d and %d)'
+                            % (spec['label'], key, seen[key], number))
+        else:
+            seen[key] = number
+        rows.append(record)
+    for key in spec.get('required_keys', ()):
+        if key not in seen:
+            problems.append('%s is missing the key %s the contract requires' % (spec['label'], key))
+    if spec.get('required_keys'):
+        for key in sorted(set(seen) - set(spec['required_keys'])):
+            problems.append('%s carries key %s, which the contract does not declare'
+                            % (spec['label'], key))
+    return rows, problems
+
+
+GOLDEN_HEADER = ['row_id', 'pam_sel', 'data_en', 'en0', 'en1', 'en2', 'en3', 'en4', 'en5', 'en6',
+                 'en7', 'unit_mask_7to0', 'branches_on', 'theoretical_target_uA', 'source']
+REQUEST_HEADER = ['case_id', 'raw_literal', 'kind', 'expected_refusal_code', 'note']
+CLAIMS_HEADER = ['object', 'count_kind', 'count', 'note']
+PLAN_HEADER = ['case_id', 'class', 'purpose', 'pam_code', 'code', 'data_en_form', 'data_en_level_V',
+               'stimulus_start_TON', 'platform_TON', 'edge_TON', 'off_gap_TON', 'tail_TON',
+               'window_TON', 'segments', 'maxstep_ns', 'observe_nodes', 'measure_interval',
+               'reference_definition', 'failure_condition', 'probe_orientation', 'sign_convention',
+               'paired_case', 'refine_only', 'draft_launch_units', 'result']
+CLAIM_KEYS = None                      # filled by load_claim_keys() so the list is read once
+
+
+def input_specs():
+    """the four delivered input tables and what each one is declared to contain"""
+    return {
+        'golden': {'label': 'golden mask table', 'header': GOLDEN_HEADER, 'rows': 16,
+                   'unique': ('data_en', 'pam_sel'), 'optional': (), 'ints': INT_COLUMNS['golden'],
+                   'mask_column': 'unit_mask_7to0', 'mask_length': 8,
+                   'path': 'tests/dd1_d7c_a/pam_mask_golden.csv',
+                   'required_keys': GOLDEN_KEYS},
+        'request': {'label': 'request refusal table', 'header': REQUEST_HEADER, 'rows': 16,
+                    'unique': ('case_id',),
+                    # the empty literal is itself a tested request, so that one cell is legitimately
+                    # empty; case_id, kind and expected code stay required
+                    'optional': ('note', 'raw_literal'), 'ints': {},
+                    'final_column_free_text': 'note',
+                    'path': 'tests/dd1_d7c_a/pam_request_refusal.csv'},
+        'claims': {'label': 'device count claims', 'header': CLAIMS_HEADER, 'rows': 17,
+                   'unique': ('object', 'count_kind'), 'optional': ('note',),
+                   'ints': INT_COLUMNS['claims'], 'path': 'tests/dd1_d7c_a/device_count_claims.csv',
+                   'required_keys': load_claim_keys()},
+        'plan': {'label': 'native case plan', 'header': PLAN_HEADER, 'rows': 15,
+                 'unique': ('case_id',),
+                 'optional': ('segments', 'paired_case', 'refine_only'),
+                 'ints': {'draft_launch_units': None}, 'path': 'tests/dd1_d7c_a/native_case_plan.csv'},
+    }
+
+
+def load_claim_keys():
+    """the seventeen (object, count_kind) pairs this project's contract declares, written by hand
+
+    They cannot be derived from the file being checked: a table trimmed to its header would then
+    "require" nothing and a zero-row read would look correct, which is the hole the review named as
+    claim_table_header_only_accepted. The list is the union of what R1 established and re-derived
+    from the parser: every cell whose expanded MOS total is quoted in a report (10 objects), the
+    cells whose own netlist statement lines are counted (5), and the two scopes where hierarchy
+    instances are counted (2). Seventeen keys, matching the seventeen delivered rows.
+    """
+    expanded = ('dd1_d7c_a_pam_1ch', 'dd1_d7c_a_pam_dec', 'dd1_d7c_a_sink_unit', 'data_bias_ref',
+                'data_sink_1ch', 'dd1_d7c_a_nand2', 'dd1_d7c_a_nor2', 'dd1_d7c_a_and2',
+                'dd1_d7c_a_or2', 'dd1_inv18')
+    statements = ('dd1_d7c_a_pam_1ch', 'dd1_d7c_a_pam_dec', 'dd1_d7c_a_sink_unit', 'data_bias_ref',
+                  'dd1_d7c_a_nand2')
+    instances = ('dd1_d7c_a_pam_1ch', 'dd1_d7c_a_pam_dec')
+    keys = [(cell, 'expanded_mos') for cell in expanded]
+    keys += [(cell, 'statements') for cell in statements]
+    keys += [(cell, 'subckt_instances') for cell in instances]
+    assert len(keys) == 17 and len(set(keys)) == 17, 'the contract key set itself went slack'
+    return keys
+
+
+def read_input_table(root, name, specs=None):
+    """strictly read one delivered input table; problems are data, never an exception"""
+    spec = (specs or input_specs())[name]
+    path = os.path.join(root, spec['path'].replace('/', os.sep))
+    return spec, strict_read(path, spec)
+
+
+def input_schema_checks(root, rep, specs):
+    """one named gate over the shape and value domains of every table these checks consume
+
+    Without it a malformed row is only noticed later, by whichever loop happens to call int() on it,
+    which is how a NaN in en0 became an unhandled ValueError instead of a refusal.
+    """
+    rows_by_name, problems_by_name, flat = {}, {}, []
+    inputs = {'rows': rows_by_name, 'problems': problems_by_name, 'specs': specs}
+    for name in sorted(specs):
+        spec, (rows, table_problems) = read_input_table(root, name, specs)
+        rows_by_name[name] = rows
+        problems_by_name[name] = table_problems
+        for message in table_problems:
+            flat.append('%s: %s' % (name, message))
+    rep.add('INPUT_TABLE_SCHEMAS', not flat,
+            'four delivered tables read with declared header, per-line width, required fields, '
+            'unique key, contract key set and finite integer domains%s'
+            % ('' if not flat else '; %d refusals: %s' % (len(flat), '; '.join(flat[:4]))))
+    return inputs
 
 
 class Report(object):
@@ -298,41 +510,57 @@ def main_checks(root, rep):
     return subs, devices, instances, top, top_ports, binding, branch_resolved, units, shared
 
 
+def supply_binding_problems(subs, top, top_ports):
+    """every instance terminal that this subset calls a supply rail must sit on that top rail
+
+    The first round proved the decoder's *logic* inputs were bound as the top says, then handed the
+    subcircuit ideal rails anyway: an Xdec whose vdd18 terminal is wired to vss still evaluated
+    sixteen combinations correctly, because the evaluator never asked where the real rails went. This
+    is the text-and-graph answer to that, not a simulation: the rails are the ports the top declares
+    as inputOutput, and the identity is read from the actual instance bindings.
+    """
+    rails = [p for p in top_ports if top['direction'].get(p) == 'inputOutput']
+    problems = []
+    if sorted(rails) != ['vdd18', 'vss']:
+        return ['top declares supply rails %s, this subset expects exactly vdd18 and vss'
+                % (','.join(rails) or 'none')]
+    ground = 'vss'
+    for entry in top['subs']:
+        master = subs.get(entry['master'])
+        if master is None:
+            problems.append('%s has no readable master cell' % entry['inst'])
+            continue
+        if len(entry['nets']) != len(master['ports']):
+            problems.append('%s binds %d nets to %d ports'
+                            % (entry['inst'], len(entry['nets']), len(master['ports'])))
+            continue
+        pairs = list(zip(master['ports'], entry['nets']))
+        for port, net in pairs:
+            if port in rails and net != port:
+                problems.append('%s binds its %s terminal to %s instead of the top rail %s'
+                                % (entry['inst'], port, net, port))
+        if not any(net == ground for _port, net in pairs):
+            problems.append('%s has no terminal on the ground rail %s' % (entry['inst'], ground))
+        tie_offs = [(port, net) for port, net in pairs if net in rails and port not in rails]
+        if len([1 for _p, net in pairs if net in rails]) < 1:
+            problems.append('%s reaches no top supply rail at all' % entry['inst'])
+    return problems
+
+
 def logic_checks(root, rep, subs, devices, instances, top, top_ports, binding, branch_resolved,
-                 units, shared_reference):
-    # ---- golden table schema first: an empty or partial table must not read as agreement
-    golden, _ = read_rows(os.path.join(root, 'tests', 'dd1_d7c_a', 'pam_mask_golden.csv'))
-    schema = []
-    keys = set()
-    if golden is None:
-        schema.append('golden table file missing')
-        golden = []
-    if len(golden) != 16:
-        schema.append('%d data rows, the schema is exactly 16 (2 enables x 8 codes)' % len(golden))
-    for row in golden:
-        try:
-            enable, code = int(row['data_en']), int(row['pam_sel'])
-        except (TypeError, ValueError, KeyError):
-            schema.append('%s has a non-integer enable or code' % row.get('row_id', '?'))
-            continue
-        if enable not in (0, 1) or code not in range(8):
-            schema.append('%s carries enable=%s code=%s outside {0,1} x {0..7}'
-                          % (row.get('row_id', '?'), enable, code))
-            continue
-        key = (enable, code)
-        if key in keys:
-            schema.append('duplicate key %s' % (key,))
-        keys.add(key)
-        mask = row.get('unit_mask_7to0', '')
-        if len(mask) != 8 or set(mask) - set('01'):
-            schema.append('%s mask %r is not 8 characters of 0/1' % (row.get('row_id', '?'), mask))
-            continue
-        bits = [int(row.get('en%d' % j, -1)) for j in range(8)]
-        if any(b not in (0, 1) for b in bits) or bits != [int(c) for c in mask[::-1]]:
-            schema.append('%s en0..en7 disagree with its own mask column' % row.get('row_id', '?'))
-        if int(row.get('branches_on', -1)) != sum(bits):
-            schema.append('%s branches_on %s != popcount %d'
-                          % (row.get('row_id', '?'), row.get('branches_on'), sum(bits)))
+                 units, shared_reference, inputs):
+    # ---- the rails first: an evaluation with ideal power is not evidence about the real binding
+    supply = supply_binding_problems(subs, top, top_ports)
+    rep.add('TOP_SUPPLY_BINDINGS', not supply,
+            '%d top-scope instances all keep their declared vdd18/vss terminals on those rails and '
+            'reach the ground rail%s'
+            % (len(top['subs']), '' if not supply else '; ' + '; '.join(supply[:4])))
+
+    # ---- golden table schema, straight from the strict reader: nothing here parses on its own
+    golden = inputs['rows']['golden']
+    schema = list(inputs['problems']['golden'])
+    keys = set((row['data_en'], row['pam_sel']) for row in golden
+               if isinstance(row.get('data_en'), int) and isinstance(row.get('pam_sel'), int))
     missing = sorted(GOLDEN_KEYS - keys)
     extra = sorted(keys - GOLDEN_KEYS)
     if missing:
@@ -340,14 +568,18 @@ def logic_checks(root, rep, subs, devices, instances, top, top_ports, binding, b
     if extra:
         schema.append('illegal keys %s' % extra[:4])
     rep.add('GOLDEN_TABLE_SCHEMA', not schema,
-            'golden table has %d rows over the 16 unique (enable,code) keys, masks of 8 characters of '
-            '0/1, en0..en7 consistent with the mask and branches_on equal to the popcount%s'
-            % (len(golden), '' if not schema else '; refusals: ' + '; '.join(schema[:4])))
+            'golden table has %d usable rows over the 16 unique (enable,code) keys, masks of 8 '
+            'characters of 0/1, en0..en7 consistent with the mask and branches_on equal to the '
+            'popcount%s' % (len(golden), '' if not schema else '; refusals: ' + '; '.join(schema[:4])))
 
     # ---- mask comparison, still driven by the hand-written rows
     mismatches = []
     for row in golden:
-        if (int(row['data_en']), int(row['pam_sel'])) not in GOLDEN_KEYS:
+        if not usable_golden(row):
+            mismatches.append('%s line %s: refused by the schema, not evaluated against the decoder'
+                              % (row.get('row_id', '?'), row.get('_line', '?')))
+            continue
+        if (row['data_en'], row['pam_sel']) not in GOLDEN_KEYS:
             continue
         given = decoder_inputs(subs, row)
         if given is None:
@@ -360,11 +592,11 @@ def logic_checks(root, rep, subs, devices, instances, top, top_ports, binding, b
         if got != want or shorts:
             mismatches.append('%s code%s en=%s golden=%s short=%s'
                               % (row['row_id'], row['pam_sel'], got, want, ','.join(shorts) or '-'))
-    rep.add('THERMO_GOLDEN_16', bool(golden) and not mismatches,
+    rep.add('THERMO_GOLDEN_16', bool(golden) and not mismatches and not schema,
             '%d hand-written golden rows compared against the decoder transistors themselves, never '
             'generated by this evaluator%s' % (len(golden),
-                                               '' if not mismatches else '; ' +
-                                               '; '.join(mismatches[:3])))
+                                               '' if (not mismatches and not schema) else '; ' +
+                                               '; '.join((mismatches + schema)[:3])))
 
     # ---- integration: the top's own pins, through the actual Xdec binding, back to the branches
     xdec = [i for i in top['subs'] if i['master'] == DECODER]
@@ -376,10 +608,14 @@ def logic_checks(root, rep, subs, devices, instances, top, top_ports, binding, b
         bind = dict(zip(subs[DECODER]['ports'], xdec[0]['nets']))
         rails = {'vdd18': 1, 'vss': 0}
         for row in golden:
-            if (int(row['data_en']), int(row['pam_sel'])) not in GOLDEN_KEYS:
+            if not usable_golden(row):
+                integ.append('%s line %s: refused by the schema, never evaluated'
+                             % (row.get('row_id', '?'), row.get('_line', '?')))
+                continue
+            if (row['data_en'], row['pam_sel']) not in GOLDEN_KEYS:
                 continue
             cells += 1
-            code, enable = int(row['pam_sel']), int(row['data_en'])
+            code, enable = row['pam_sel'], row['data_en']
             level = dict(rails, **{'data_en': enable, 'pam_sel0': code & 1,
                                    'pam_sel1': (code >> 1) & 1, 'pam_sel2': (code >> 2) & 1})
             given = {}
@@ -411,11 +647,11 @@ def logic_checks(root, rep, subs, devices, instances, top, top_ports, binding, b
                         branch_resolved['Xu%d' % index].get('EN_B') != want_b:
                     integ.append('Xu%d resolves EN to %s, expected %s'
                                  % (index, branch_resolved['Xu%d' % index].get('EN'), want_net))
-    rep.add('TOP_INTEGRATED_THERMO_16', not integ,
+    rep.add('TOP_INTEGRATED_THERMO_16', not integ and not schema,
             '%d top-level enable/code combinations driven from the top pins, through the actual Xdec '
             'port binding, and read back at each branch EN/EN_B terminal (decoder port map %s)%s'
-            % (cells, bind if len(xdec) == 1 else '-', '' if not integ else '; ' +
-               '; '.join(integ[:2])[:300]))
+            % (cells, bind if len(xdec) == 1 else '-', '' if not (integ or schema) else '; ' +
+               '; '.join((integ + schema)[:2])[:300]))
 
     # ---- gate cells derive to their claimed function, from transistors
     rep_gate = derive_gate_logic(rep, subs)
@@ -485,8 +721,19 @@ def logic_checks(root, rep, subs, devices, instances, top, top_ports, binding, b
     return rep_gate
 
 
+def usable_golden(row):
+    """a golden row may only be evaluated if the strict reader parsed every field it indexes"""
+    fields = ['data_en', 'pam_sel', 'branches_on'] + ['en%d' % j for j in range(8)]
+    if not all(isinstance(row.get(name), int) for name in fields):
+        return False
+    mask = str(row.get('unit_mask_7to0', ''))
+    return len(mask) == 8 and not set(mask) - set('01')
+
+
 def decoder_inputs(subs, row):
-    code, enable = int(row['pam_sel']), int(row['data_en'])
+    code, enable = row['pam_sel'], row['data_en']
+    if not (isinstance(code, int) and isinstance(enable, int)):
+        return None
     return {'pam0': code & 1, 'pam1': (code >> 1) & 1, 'pam2': (code >> 2) & 1,
             'data_en': enable}
 
@@ -528,7 +775,7 @@ def derive_gate_logic(rep, subs):
     return derived
 
 
-def counting_checks(rep, subs, devices, instances, root):
+def counting_checks(rep, subs, devices, instances, root, inputs):
     per_cell = dict((name, len(NL.expand(subs, name)[0])) for name in subs)
     statement_count = sum(len(subs[c]['mos']) for c in subs)
     multiplicity = sum(int(NL.resolve_symbol(subs[d['scope']], d['m'])) for d in devices)
@@ -607,16 +854,15 @@ def counting_checks(rep, subs, devices, instances, root):
                '; '.join(diffs[:4])))
 
     # ---- machine-readable device count claims, then the prose claims bound to their object
-    claims, _ = read_rows(os.path.join(root, 'tests', 'dd1_d7c_a', 'device_count_claims.csv'))
-    problems = []
-    if claims is None:
-        problems.append('claim table missing')
-        claims = []
+    claims = list(inputs['rows']['claims'])
+    problems = list(inputs['problems']['claims'])
     seen = set()
     for row in claims:
         obj, kind = row.get('object'), row.get('count_kind')
-        if not obj or not kind:
-            problems.append('claim row without object or count_kind: %s' % row)
+        count = row.get('count')
+        if not isinstance(count, int):
+            problems.append('claim %s/%s count %r was refused by the schema, not compared'
+                            % (obj, kind, count))
             continue
         if (obj, kind) in seen:
             problems.append('duplicate claim key %s/%s' % (obj, kind))
@@ -629,13 +875,14 @@ def counting_checks(rep, subs, devices, instances, root):
                   'subckt_instances': len(subs[obj]['subs'])}.get(kind)
         if actual is None:
             problems.append('unknown count_kind %s' % kind)
-        elif str(actual) != str(row.get('count')):
-            problems.append('%s %s is %d in the netlist, the claim table says %s'
-                            % (obj, kind, actual, row.get('count')))
+        elif actual != count:
+            problems.append('%s %s is %d in the netlist, the claim table says %d'
+                            % (obj, kind, actual, count))
     rep.add('CLAIM_TABLE_MATCHES_PARSE', not problems,
-            '%d object-bound claims (%s) each equal to the parsed value%s'
-            % (len(claims), ','.join(sorted(set(r.get('object', '') for r in claims)) or ['-']),
-               '' if not problems else '; ' + '; '.join(problems[:4])))
+            '%d object-bound claims (%s) each equal to the parsed value, over the %d keys the '
+            'contract declares%s'
+            % (len(claims), ','.join(sorted(set(str(r.get('object', '')) for r in claims)) or ['-']),
+               len(load_claim_keys()), '' if not problems else '; ' + '; '.join(problems[:4])))
     totals = dict((cell, len(NL.expand(subs, cell)[0])) for cell in subs)
     stale = []
     for rel in CLAIM_FILES:
@@ -690,27 +937,98 @@ def counting_checks(rep, subs, devices, instances, root):
     return per_cell
 
 
-def table_and_entry_checks(root, rep):
+def deck_probe_line(root):
+    """the single iprobe statement in the bench draft, as (name, terminal in, terminal out)"""
+    probes = [line for _number, line in deck_statements(os.path.join(root, DECK_DRAFT))
+              if IPROBE_RX.match(line)]
+    if len(probes) != 1:
+        return None
+    match = IPROBE_RX.match(probes[0])
+    return match.group(1), match.group(2), match.group(3)
+
+
+def deck_clamp_and_output(root):
+    """derive the two nodes a sinking branch moves current between, from the deck itself
+
+    The clamp is the grounded vsource whose dc parameter names the clamp level, and the DUT output is
+    the net the top's single declared output port binds to in the Xdut line. Neither node name is
+    typed into this checker, so a rename in the deck moves the requirement with it.
+    """
+    active = deck_statements(os.path.join(root, DECK_DRAFT))
+    clamp = None
+    for _number, line in active:
+        match = VSOURCE_RX.match(line)
+        if not match or 'VCLAMP' not in match.group(4).upper():
+            continue
+        nodes = (match.group(2), match.group(3))
+        if '0' in nodes:
+            clamp = nodes[0] if nodes[1] == '0' else nodes[1]
+    if clamp is None:
+        return None, None
+    dut = [line for _number, line in active if DUT_INSTANCE_RX.match(line)]
+    if len(dut) != 1:
+        return clamp, None
+    nets = DUT_INSTANCE_RX.match(dut[0]).group(1).split()
+    try:
+        subs, _ = load_subs(root)
+    except NL.NetlistError:
+        return clamp, None
+    ports, direction = subs[TOP]['ports'], subs[TOP]['direction']
+    if len(nets) != len(ports):
+        return clamp, None
+    outputs = [index for index, port in enumerate(ports)
+               if direction.get(port) in ('output', 'inout')]
+    if len(outputs) != 1:
+        return clamp, None
+    return clamp, nets[outputs[0]]
+
+
+def deck_probe_orientation_problems(root, plan):
+    """the deck's probe terminal order and the plan's declared positive direction must be one claim"""
+    problems = []
+    if len(plan) != 15:
+        return ['the plan did not read as fifteen rows, so its sign claim cannot be compared']
+    line = deck_probe_line(root)
+    if line is None:
+        return ['the bench draft does not contain exactly one iprobe statement']
+    name, first, second = line
+    clamp, output = deck_clamp_and_output(root)
+    if clamp is None or output is None:
+        return ['the probe nodes were not both identified (clamp=%s, dut_output=%s); the output net '
+                'is read through the top cell, so a netlist set that does not load is a missing '
+                'derivation, not an agreement' % (clamp, output)]
+    if (first, second) != (clamp, output):
+        problems.append('%s is written (%s %s) while a sinking branch moves current %s -> %s, so the '
+                        'declared positive reading would be the negative of the sink current'
+                        % (name, first, second, clamp, output))
+    quoted = ['%s (%s %s)' % (name, first, second)]
+    drift = [row.get('case_id') for row in plan
+             if quoted[0] not in str(row.get('probe_orientation', ''))]
+    if drift:
+        problems.append('%d plan rows do not quote the probe terminals as the deck writes them'
+                        % len(drift))
+    if not all('no abs()' in str(row.get('sign_convention', '')) for row in plan):
+        problems.append('a row drops the rule that the sign is declared and never taken by abs()')
+    return problems
+
+
+def table_and_entry_checks(root, rep, inputs):
     # ---- request refusal table schema plus the refusals themselves
-    rows, _ = read_rows(os.path.join(root, 'tests', 'dd1_d7c_a', 'pam_request_refusal.csv'))
-    schema = []
-    if rows is None:
-        schema.append('request table missing')
-        rows = []
-    if len(rows) != 16:
-        schema.append('%d rows, the schema is exactly 16' % len(rows))
-    ids = [r.get('case_id') for r in rows]
-    if len(set(ids)) != len(ids) or None in ids or '' in ids:
-        schema.append('case_id values are not %d unique non-empty ids' % len(rows))
+    rows = list(inputs['rows']['request'])
+    schema = list(inputs['problems']['request'])
     for row in rows:
         if row.get('expected_refusal_code') not in REFUSAL_CODES:
             schema.append('%s expects an unknown code %r' % (row.get('case_id'),
                                                              row.get('expected_refusal_code')))
+    loose = inputs['specs']['request'].get('_rejoined_free_text_lines', [])
     rep.add('REQUEST_TABLE_SCHEMA', not schema,
-            '%d request rows with unique ids and codes from the closed set %s%s'
+            '%d request rows with unique ids and codes from the closed set %s; %s%s'
             % (len(rows), ','.join(REFUSAL_CODES),
+               ('the frozen note column is unquoted free text, so lines %s were re-joined without '
+                'losing a character and are reported here rather than silently accepted'
+                % ','.join(str(n) for n in loose)) if loose else 'no row needed re-joining',
                '' if not schema else '; refusals: ' + '; '.join(schema[:3])))
-    wrong = []
+    wrong = list(schema)
     for row in rows:
         state, code = NL.validate_request(_coerce(row['raw_literal'], row['kind']))
         want = row['expected_refusal_code']
@@ -745,17 +1063,9 @@ def table_and_entry_checks(root, rep):
     finally:
         shutil.rmtree(probe_root, ignore_errors=True)
 
-    # ---- the plan table: shape, static enable, pairings and sign convention
-    plan, _ = read_rows(os.path.join(root, 'tests', 'dd1_d7c_a', 'native_case_plan.csv'))
-    problems = []
-    if plan is None:
-        problems.append('plan table missing')
-        plan = []
-    if len(plan) != 15:
-        problems.append('%d cases, the draft is 8 DC + 4 transient + 3 refined = 15' % len(plan))
-    ids = [r.get('case_id') for r in plan]
-    if len(set(ids)) != len(ids):
-        problems.append('case_id values are not unique')
+    # ---- the plan table: schema, code coverage, pairings, schedule arithmetic and sign
+    plan = list(inputs['rows']['plan'])
+    problems = list(inputs['problems']['plan'])
     counts = {}
     for row in plan:
         counts[row.get('class', '?')] = counts.get(row.get('class', '?'), 0) + 1
@@ -764,31 +1074,72 @@ def table_and_entry_checks(root, rep):
     for row in plan:
         if row.get('result') != 'NOT_RUN':
             problems.append('%s result is %s' % (row.get('case_id'), row.get('result')))
+        if row.get('class') == 'dc_sweep' and row.get('data_en_form') != 'static_dc':
+            problems.append('%s is not driven as a static DC point' % row.get('case_id'))
         if row.get('class') == 'dc_sweep' and row.get('data_en_level_V') != '1.8':
             problems.append('%s does not hold DATA_EN at the static 1.8 V' % row.get('case_id'))
-        if row.get('class') == 'dc_sweep' and not (row.get('code', '').strip()[:1] in '01234567'):
-            problems.append('%s does not name its PAM code as a leading digit' % row.get('case_id'))
-        if row.get('class') == 'refined_step':
-            if row.get('refine_only') != 'time_maxstep':
-                problems.append('%s refines %s, and refined cases must refine only the time step'
-                                % (row.get('case_id'), row.get('refine_only')))
-            if row.get('paired_case') not in ids:
-                problems.append('%s pairs with unknown case %s' % (row.get('case_id'),
-                                                                  row.get('paired_case')))
-    long_rows = [r for r in plan if r.get('case_id') == 'TR-LONG']
-    if not long_rows or len(long_rows[0].get('segments', '').split(';')) != 8:
-        problems.append('TR-LONG must list eight code segments in one deck, not claim eight levels '
-                        'while running code 111 only')
-    if sum(int(r.get('draft_launch_units', 0)) for r in plan) != 30:
-        problems.append('draft launch units must total 30 (15 DUT + 15 paired preflight)')
-    probe_dir = set(r.get('probe_orientation', '') for r in plan)
-    if probe_dir != {plan[0].get('probe_orientation', '')} or not plan[0].get('probe_orientation'):
-        problems.append('every case must declare the same probe orientation and sign convention')
+        if row.get('class') == 'refined_step' and row.get('refine_only') != 'time_maxstep':
+            problems.append('%s refines %s, and refined cases must refine only the time step'
+                            % (row.get('case_id'), row.get('refine_only')))
+    # eight DC rows must cover eight different codes, and each row must carry the code its own
+    # case_id names: "every row starts with a digit" plus "there are eight rows" together still let
+    # all eight hold code 000, which is the hole the review demonstrated.
+    dc = [r for r in plan if r.get('class') == 'dc_sweep']
+    claimed = {}
+    for row in dc:
+        code = str(row.get('pam_code', ''))
+        if not re.match(r'^[01]{3}$', code):
+            problems.append('%s pam_code %r is not a three-bit literal'
+                            % (row.get('case_id'), code))
+            continue
+        if code in claimed:
+            problems.append('code %s claimed by both %s and %s'
+                            % (code, claimed[code], row.get('case_id')))
+        claimed[code] = row.get('case_id')
+        if code != str(row.get('case_id', '')).split('-')[-1]:
+            problems.append('%s declares pam_code %s, which contradicts its own identifier'
+                            % (row.get('case_id'), code))
+    if sorted(claimed) != sorted(THERMO_CODES):
+        problems.append('the eight DC rows cover %s, not the thermometer set %s'
+                        % (','.join(sorted(claimed)), ','.join(sorted(THERMO_CODES))))
+    units = [strict_int(row.get('draft_launch_units'), None) for row in plan]
+    if any(unit is None or unit != 2 for unit in units):
+        problems.append('each case must cost two draft units (deck plus its own preflight), found %s'
+                        % units)
+    orientations = set(str(row.get('probe_orientation', '')) for row in plan)
+    signs = set(str(row.get('sign_convention', '')) for row in plan)
+    if len(orientations) != 1 or len(signs) != 1 or '' in orientations or '' in signs:
+        problems.append('all fifteen rows must declare one identical probe orientation and one sign '
+                        'convention (%d/%d distinct strings)' % (len(orientations), len(signs)))
     rep.add('NATIVE_PLAN_SHAPE', not problems,
-            '%d planned cases %s, all result NOT_RUN, DC rows hold DATA_EN=1.8 V with a named code, '
-            'TR-LONG carries eight segments in one deck, refined pairs differ only in maxstep, draft '
-            'units 30%s' % (len(plan), sorted(counts.items()),
-                            '' if not problems else '; ' + '; '.join(problems[:4])))
+            '%d planned cases %s, all result NOT_RUN, the eight DC rows are the eight codes named by '
+            'their own identifiers with DATA_EN held static at 1.8 V, draft cost 2 units per case'
+            '%s' % (len(plan), sorted(counts.items()),
+                    '' if not problems else '; ' + '; '.join(problems[:4])))
+    problems = []
+    if len(plan) == 15:
+        import dd1_d7c_a_r2_plan as SCHEDULE       # the one structured source of these numbers
+        problems = SCHEDULE.validate_schedule(plan)
+        bad_sign = [row.get('case_id') for row in plan
+                    if str(row.get('probe_orientation')) != SCHEDULE.PROBE_ORIENTATION or
+                    str(row.get('sign_convention')) != SCHEDULE.SIGN_CONVENTION]
+        if bad_sign:
+            problems.append('%s do not quote the source sign convention verbatim'
+                            % ','.join(sorted(bad_sign)))
+    else:
+        problems.append('%d rows read, the schedule contract needs fifteen before any window is '
+                        'judged' % len(plan))
+    rep.add('PLAN_SCHEDULE_ARITHMETIC', not problems,
+            'TR-LONG windows, gaps, platform widths, code-change placement, short-pulse flat parts, '
+            'refined-pair identity and DC code coverage recomputed from the delivered rows against '
+            'the single structured source%s'
+            % ('' if not problems else '; ' + '; '.join(problems[:4])))
+    deck_problems = deck_probe_orientation_problems(root, plan)
+    rep.add('DECK_PROBE_ORIENTATION_MATCHES_PLAN', not deck_problems,
+            'the iprobe line in the bench draft and the terminal order the plan declares agree, and '
+            'the first probe terminal is the one the positive sink current enters from (%s)%s'
+            % (' '.join(deck_probe_line(root)[1:3]) if deck_probe_line(root) else 'no single probe',
+               '' if not deck_problems else '; ' + '; '.join(deck_problems[:3])))
 
     # ---- deck draft: active analysis and statement inventory
     deck_path = os.path.join(root, DECK_DRAFT)
@@ -818,6 +1169,22 @@ def table_and_entry_checks(root, rep):
     return plan
 
 
+# the gates that read the loaded netlist graph, so a load failure has to name them as not evaluated
+# rather than let them vanish from the report. The guards suite imports this list instead of keeping
+# its own copy, so the two cannot drift apart.
+NETLIST_DEPENDENT_GATES = ('SUBCKT_MASTERS_DEFINED', 'INSTANCE_PORT_COUNTS', 'NO_DUPLICATE_INSTANCES',
+                           'TOP_HAS_ONE_OUTPUT_PORT', 'ALL_BRANCHES_ON_COMMON_OUTPUT',
+                           'UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE', 'LOCAL_NODES_NOT_SHARED',
+                           'REFERENCE_NODE_IDENTITY', 'DNW_PASS_BODY_LOCAL',
+                           'BLEED_GATED_BY_BRANCH_COMPLEMENT', 'MAIN_PATH_DATA_OUT_CAS_MOUT_VSS',
+                           'THERMO_GOLDEN_16', 'GOLDEN_TABLE_SCHEMA', 'TOP_INTEGRATED_THERMO_16',
+                           'TOP_SUPPLY_BINDINGS', 'EN_ENB_PAIR_PER_BRANCH',
+                           'GATE_LOGIC_DERIVED_FROM_TRANSISTORS', 'DEVICE_COUNTS_DERIVED',
+                           'DEVICE_COUNT_SEPARATION', 'MIRROR_RATIO_ESTIMATED_ONLY',
+                           'UNIT_CORE_ISOMORPHIC_TO_ACCEPTED', 'CLAIM_TABLE_MATCHES_PARSE',
+                           'REPORT_CLAIMS_BOUND_TO_OBJECT', 'REPORT_CLAIM_COUNTS_MATCH')
+
+
 def run_checks(root):
     rep = Report()
     digests = {}
@@ -827,22 +1194,18 @@ def run_checks(root):
             rep.add('NETLIST_SUBSET_PARSED', False, '%s is missing' % rel)
             return rep
         digests[rel] = sha_file(path)
+    specs = input_specs()
+    inputs = input_schema_checks(root, rep, specs)
     try:
         loaded = main_checks(root, rep)
     except NL.NetlistError as error:
         rep.add('NETLIST_SUBSET_PARSED', False, str(error)[:300])
-        for name in ('SUBCKT_MASTERS_DEFINED', 'INSTANCE_PORT_COUNTS', 'NO_DUPLICATE_INSTANCES',
-                     'TOP_HAS_ONE_OUTPUT_PORT', 'ALL_BRANCHES_ON_COMMON_OUTPUT',
-                     'UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE', 'LOCAL_NODES_NOT_SHARED',
-                     'REFERENCE_NODE_IDENTITY', 'DNW_PASS_BODY_LOCAL',
-                     'BLEED_GATED_BY_BRANCH_COMPLEMENT', 'MAIN_PATH_DATA_OUT_CAS_MOUT_VSS',
-                     'THERMO_GOLDEN_16', 'GOLDEN_TABLE_SCHEMA', 'TOP_INTEGRATED_THERMO_16',
-                     'EN_ENB_PAIR_PER_BRANCH', 'GATE_LOGIC_DERIVED_FROM_TRANSISTORS',
-                     'DEVICE_COUNTS_DERIVED', 'DEVICE_COUNT_SEPARATION', 'MIRROR_RATIO_ESTIMATED_ONLY',
-                     'UNIT_CORE_ISOMORPHIC_TO_ACCEPTED', 'CLAIM_TABLE_MATCHES_PARSE',
-                     'REPORT_CLAIMS_BOUND_TO_OBJECT', 'REPORT_CLAIM_COUNTS_MATCH'):
+        for name in NETLIST_DEPENDENT_GATES:
             rep.add(name, False, 'not evaluated: the netlist set did not load (%s)'
                     % str(error)[:80])
+        # the eight request/plan/deck gates read the delivered tables and the deck text, not the
+        # loaded netlist graph, so a load failure must not make them disappear from the report
+        table_and_entry_checks(root, rep, inputs)
         return rep
     (subs, devices, instances, top, top_ports, binding, branch_resolved, units,
      shared_reference) = loaded
@@ -864,9 +1227,9 @@ def run_checks(root):
             '%d instance bindings, each with exactly its master port count and order%s'
             % (len(instances), '' if not bad_counts else '; ' + ','.join(bad_counts[:3])))
     logic_checks(root, rep, subs, devices, instances, top, top_ports, binding, branch_resolved,
-                 units, shared_reference)
-    counting_checks(rep, subs, devices, instances, root)
-    table_and_entry_checks(root, rep)
+                 units, shared_reference, inputs)
+    counting_checks(rep, subs, devices, instances, root, inputs)
+    table_and_entry_checks(root, rep, inputs)
     return rep
 
 

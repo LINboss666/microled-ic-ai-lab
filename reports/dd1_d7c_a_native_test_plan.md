@@ -15,12 +15,12 @@ bench 草稿见 `spectre/dd1_d7c_a_tb_draft.scs`，机读用例表见 `tests/dd1
 | 测试台电源/参考与 DUT 分离 | `Iref_in`（`isource dc=IREFU`）注入 `iref_in`；`Vdd18/Vss/Vcas/Vclamp` 全在 deck 层 | 已接受 `dd1_d7b_pwm_stage.scs` 的口径：`iref_in` 是 bench 电流计注入二极管连接参考的节点，**不是理想 VBIAS** |
 | 供电显式接地 | `Vss (vss 0) vsource dc=0` | `AGENTS.md` 坑 19：`vss` 不接 0 时所有 NMOS 通路不存在，整版看起来"全是 PMOS 在工作" |
 | 输出夹持独立 | `Vclamp (clamp_node 0) vsource dc=1.2`，串 `iprobe` 测支路总流 | 扫输出节点时不与码源打架；1.2 V 是继承的 POC 夹持条件 |
-| 零压降电流探针 | `Ip_branch (data_out clamp_node) iprobe` + `save Ip_branch Ip_branch:current` | `spectre/current_probe_syntax.scs` 已实测 `iprobe` 与 `:current` 形态可用 |
+| 零压降电流探针 | `Ip_branch (clamp_node data_out) iprobe` + `save Ip_branch Ip_branch:current` | `spectre/current_probe_syntax.scs` 已实测 `iprobe` 与 `:current` 形态可用；端序按已接受 DATA-7B 的 `Ip_out (clamp data_out) iprobe` 写法 |
 | 路径可配置、不复制 PDK | `include "${QODER_PDK_LIB}" section=tt`、`include "${QODER_NETLIST_DIR}/…"` | 不导入模型卡/licence，也不把别人的库装进仓库 |
 | 分析语句全部注释 | 草稿里 `dc`/`tran` 行都以 `//` 起头 | 检查器 `DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS` 实测"活动分析语句 0"。**这句话只说草稿里没有要跑的分析**，不保证有人对 Spectre 指点这个文件时进程不会起来；禁止原生运行由入口授权闸保证，不由注释保证 |
 | 分析语句识别不再依赖 `dev=` | 关键词出现在第二个位置即判定（`review_tran tran stop=1u maxstep=1n` 与 `... dc dev=V... param=dc ...` 两种形态各自是反例 E21/E22） | 审核方实测旧式只认 `dev=` 的写法会漏掉常见 tran 形式；越界的活动语句另由 `DRAFT_DECK_SYNTAX_INVENTORY` 具名拒收（E23） |
 | DC 与瞬态用不同的使能形态 | DC 例用静态 `Vdata_en_dc (data_en 0) vsource dc=DEV1V`；瞬态例用有限沿 `type=pwl`，两者由生成器按例二选一 | 绝对电流读数要求支路在整个测量期间导通；沿用起始为 0 的脉冲波形会让 DC 点在"全关"状态下测 |
-| 探针方向与取号先于运行声明 | `Ip_branch (data_out clamp_node) iprobe`，正值 = 电流从 DUT 输出节点流向夹持源；`Q = ∫ I_out dt` 在同一窗口内取正 | 符号与方向是本轮就定下的口径，不允许运行后看到负数再翻符号 |
+| 探针方向与取号先于运行声明 | `Ip_branch (clamp_node data_out) iprobe`，首端是电流**进入**探针的节点，因此正值就是被选中支路把电流从 `data_out` 抽向 vss 的下拉电流；`I_sink = Ip_branch`，**不取负、不取 abs()**，`Q = ∫ I_sink dt` 只在导通窗口累积正面积，关断尾窗单独积其负面积 | 串联回路的物理正方向是 `clamp_node → data_out → 支路 → vss`；R1 把端序写成 `(data_out clamp_node)` 却把正值解释成同一件事，等于运行前就把符号定反。检查器闸 `DECK_PROBE_ORIENTATION_MATCHES_PLAN` 用 deck 与机读表两端同时核这条口径，反例 E39 把探针转回去必须具名失败；`scripts/dd1_d7c_a_r2_sign_check.py` 用手写的合成样点核这条算术（**SYNTHETIC_NOT_MEASURED**，不是测量结果） |
 | 层级 `save` 语法未证 | `save Xdut.en0 …`、`save Xdut.Xu0.vbias_ch …` 标 `NOT_VERIFIED` | 本仓库只实测过 `save 节点` 与 `save Mout:drain`；层级写法需在下一轮先用探针确认，不得改动已交付候选来"配合" |
 
 每码一个 deck 的做法：8 个 DC 例之间的差异只有 `PAM0V/PAM1V/PAM2V` 三个码位参数与静态使能，
@@ -51,7 +51,7 @@ bench 草稿见 `spectre/dd1_d7c_a_tb_draft.scs`，机读用例表见 `tests/dd1
 | `RS-FULL` | refined_step | 7 (the last segment of TR-LONG) / DATA_EN=1.8 V | as the TR-LONG code 111 segment | identical window to that segment | identical to TR-LONG | full-scale charge not reproduced within the candidate resolution between the two steps | paired with TR-LONG | time_maxstep | 2 | NOT_RUN |
 | `RS-SWITCH` | refined_step | 011 to 100 and 000 to 111 (as TR-OFFCODE) / DATA_EN=1.8 during the emission segments only V | enable nets, local bias nodes, iprobe output current | identical windows to TR-OFFCODE | identical to TR-OFFCODE | a discharge or turn-on transient that exists at only one maxstep, i.e. unresolved | paired with TR-OFFCODE | time_maxstep | 2 | NOT_RUN |
 
-渲染来源：`tests/dd1_d7c_a/native_case_plan.csv`，15 例，草案额度合计 30；探针方向与取号在每一行相同且先于任何运行声明：`iprobe Ip_branch between data_out and clamp_node, current positive from the DUT output node`。
+渲染来源：`tests/dd1_d7c_a/native_case_plan.csv`，15 例，草案额度合计 30；探针方向与取号在每一行相同且先于任何运行声明，逐字取自唯一结构化来源 `scripts/dd1_d7c_a_r2_plan.py`：`iprobe Ip_branch (clamp_node data_out), positive terminal first: a positive reading IS the branch sinking current out of data_out`。窗口、间隔与配对同一来源，改数字只能改那一处，`PLAN_SCHEDULE_ARITHMETIC` 再把它逐行核回机读表。
 <!-- END 7C PLAN -->
 
 判据要点（与机读表逐行对应，渲染由 `native_case_plan.csv` 生成，不手填）：

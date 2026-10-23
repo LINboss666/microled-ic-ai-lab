@@ -3,8 +3,17 @@
 """dd1_d7c_a_guards.py -- the counterexamples that prove the DATA-7C-A checks can actually fail.
 
 R1 revision: the independent review showed eight real faults that the ten originals did not reach, so
-this suite now covers them and every new gate. Twenty-four injections, each with a pre-declared,
-NON-EMPTY set of check names. A probe only counts as a detection when:
+this suite now covers them and every new gate.
+
+R2 revision: fifteen more injections (E25..E39) for the supply-binding, strict-input-schema, schedule
+arithmetic and probe-sign work; the suite now also runs the 14 published-record semantic probes of
+dd1_d7c_a_r2_record_probes.py, the 5 CSV round-trip cases and the 7 synthetic sign cases of
+dd1_d7c_a_r2_sign_check.py, so 65 named faults in all. Several R1 expectation sets grew because R2
+checks reach further than R1 did; each changed set carries its reason in its own meaning field rather
+than being relaxed.
+
+Every injection has a pre-declared, NON-EMPTY set of check names. A probe only counts as a detection
+when:
 
   1. the file bytes really changed, with the changed line recorded;
   2. the unmutated copy of the same tree passes every check, so nothing is credited to a checker that
@@ -53,18 +62,17 @@ REQUESTS = 'tests/dd1_d7c_a/pam_request_refusal.csv'
 PLAN = 'tests/dd1_d7c_a/native_case_plan.csv'
 CLAIMS = 'tests/dd1_d7c_a/device_count_claims.csv'
 
-# what the checker reports when the netlist set refuses to load at all
-LOAD_BLOCKED = ['NETLIST_SUBSET_PARSED', 'SUBCKT_MASTERS_DEFINED', 'INSTANCE_PORT_COUNTS',
-                'NO_DUPLICATE_INSTANCES', 'TOP_HAS_ONE_OUTPUT_PORT',
-                'ALL_BRANCHES_ON_COMMON_OUTPUT', 'UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE',
-                'LOCAL_NODES_NOT_SHARED', 'REFERENCE_NODE_IDENTITY', 'DNW_PASS_BODY_LOCAL',
-                'BLEED_GATED_BY_BRANCH_COMPLEMENT', 'MAIN_PATH_DATA_OUT_CAS_MOUT_VSS',
-                'THERMO_GOLDEN_16', 'GOLDEN_TABLE_SCHEMA', 'TOP_INTEGRATED_THERMO_16',
-                'EN_ENB_PAIR_PER_BRANCH', 'GATE_LOGIC_DERIVED_FROM_TRANSISTORS',
-                'DEVICE_COUNTS_DERIVED', 'DEVICE_COUNT_SEPARATION',
-                'MIRROR_RATIO_ESTIMATED_ONLY', 'UNIT_CORE_ISOMORPHIC_TO_ACCEPTED',
-                'CLAIM_TABLE_MATCHES_PARSE', 'REPORT_CLAIMS_BOUND_TO_OBJECT',
-                'REPORT_CLAIM_COUNTS_MATCH']
+# what the checker reports when the netlist set refuses to load at all: the load gate itself plus
+# every netlist-dependent gate, named "not evaluated" by scripts/dd1_d7c_a_offline_check.py.
+# INPUT_TABLE_SCHEMAS and the eight request/plan/deck gates are deliberately NOT here: they read the
+# delivered tables and the deck text, so a netlist load failure does not invalidate them and they
+# stay honestly green under E10 rather than being credited for nothing.
+LOAD_BLOCKED = ['NETLIST_SUBSET_PARSED'] + list(CHECK.NETLIST_DEPENDENT_GATES)
+
+
+# ---- R2: the seven gaps the independent review located, plus the record semantics itself.
+# Every expectation below is the exact new-failure set the delivered checker reports; the suite
+# refuses a probe whose expectation is empty, so none of these can be credited to an old failure.
 
 PAIR = ['THERMO_GOLDEN_16', 'TOP_INTEGRATED_THERMO_16']
 
@@ -116,8 +124,11 @@ INJECTIONS = [
     {'id': 'E10_unsupported_syntax_refused', 'file': TOPF,
      'old': '  Xref (iref_in vss) data_bias_ref',
      'new': '  Rload (iref_in vss) resistor r=1k\n  Xref (iref_in vss) data_bias_ref',
-     'expect': LOAD_BLOCKED,
-     'meaning': 'grammar outside the documented subset is refused by name, never skipped'},
+     'expect': LOAD_BLOCKED + ['DECK_PROBE_ORIENTATION_MATCHES_PLAN'],
+     'meaning': 'grammar outside the documented subset is refused by name, never skipped. In R2 the '
+                'report still carries all 34 gates after the load failure, and the deck-orientation '
+                'gate joins the failures because its DUT output net is read through the top cell: a '
+                'dependency it cannot resolve is stated as a missing derivation instead of passing'},
     # ---- the reviewer's own eight diagnostics, kept verbatim as faults
     {'id': 'E11_select5_reuses_select1', 'file': DEC,
      'old': 'Xsel5 (pam2 gor10 sel5 vdd18 vss)', 'new': 'Xsel5 (pam2 sel1 sel5 vdd18 vss)',
@@ -147,19 +158,27 @@ INJECTIONS = [
      'expect': ['UNIT_CORE_ISOMORPHIC_TO_ACCEPTED', 'DEVICE_COUNT_SEPARATION'],
      'meaning': 'an effective 20 um cascode presented as the accepted unit device'},
     {'id': 'E17_golden_header_only', 'file': GOLDEN, 'drop_rows': True,
-     'expect': ['GOLDEN_TABLE_SCHEMA', 'THERMO_GOLDEN_16'],
-     'meaning': 'an empty table is not agreement, it is a missing input'},
+     'expect': ['GOLDEN_TABLE_SCHEMA', 'INPUT_TABLE_SCHEMAS', 'THERMO_GOLDEN_16',
+                'TOP_INTEGRATED_THERMO_16'],
+     'meaning': 'an empty table is not agreement, it is a missing input. R2 grew this set from two '
+                'gates to four: the strict reader now refuses a header-only table at the schema layer, '
+                'and both golden evaluation gates then state "not evaluated" instead of reporting zero '
+                'mismatches'},
     {'id': 'E18_request_table_emptied', 'file': REQUESTS, 'drop_rows': True,
-     'expect': ['REQUEST_TABLE_SCHEMA', 'REQUEST_REFUSAL_TABLE'],
-     'meaning': 'the same vacuity on the refusal table: zero records cannot be sixteen tests'},
+     'expect': ['INPUT_TABLE_SCHEMAS', 'REQUEST_TABLE_SCHEMA', 'REQUEST_REFUSAL_TABLE'],
+     'meaning': 'the same vacuity on the refusal table: zero records cannot be sixteen tests. The '
+                'schema layer joins this set for the same reason as E17'},
     {'id': 'E19_claim_table_stale', 'file': CLAIMS,
      'old': 'dd1_d7c_a_pam_1ch,expanded_mos,145', 'new': 'dd1_d7c_a_pam_1ch,expanded_mos,150',
      'expect': ['CLAIM_TABLE_MATCHES_PARSE'],
      'meaning': 'a machine-readable claim that no longer matches the netlist it pins'},
     {'id': 'E20_plan_refines_more_than_time', 'file': PLAN,
      'old': 'RS-LOW,refined_step', 'new': 'RS-LOW,dc_sweep',
-     'expect': ['NATIVE_PLAN_SHAPE'],
-     'meaning': 'a paired convergence case reclassified would silently change what is compared'},
+     'expect': ['NATIVE_PLAN_SHAPE', 'PLAN_SCHEDULE_ARITHMETIC'],
+     'meaning': 'a paired convergence case reclassified would silently change what is compared. R2 '
+                'adds the schedule gate because the refined pair is now a contract: RS-LOW must be '
+                'the same stimulus as TR-120 with only maxstep different, so the classification and '
+                'the fifteen identity fields are both judged'},
     {'id': 'E21_active_tran_without_dev', 'file': DECK, 'append': 'review_tran tran stop=1u maxstep=1n',
      'expect': ['DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS'],
      'meaning': 'the plain tran form, which a dev=-only pattern never saw'},
@@ -172,9 +191,97 @@ INJECTIONS = [
      'expect': ['DRAFT_DECK_SYNTAX_INVENTORY'],
      'meaning': 'an active statement outside the supported subset is refused by name'},
     {'id': 'E24_golden_key_duplicated', 'file': GOLDEN, 'duplicate_last_row': True,
-     'expect': ['GOLDEN_TABLE_SCHEMA'],
-     'meaning': 'sixteen rows of which one key appears twice is fifteen cases, not sixteen'},
+     'expect': ['GOLDEN_TABLE_SCHEMA', 'INPUT_TABLE_SCHEMAS', 'THERMO_GOLDEN_16',
+                'TOP_INTEGRATED_THERMO_16'],
+     'meaning': 'sixteen rows of which one key appears twice is fifteen cases, not sixteen. R2 adds '
+                'the schema layer (the unique key is now declared, so the duplicate is refused before '
+                'any comparison) and the not-evaluated statement of both golden gates'},
 ]
+
+R2_INJECTIONS = [
+    {'id': 'E25_decoder_supply_shorted_to_vss', 'file': TOPF,
+     'old': 'enb7 vdd18 vss) dd1_d7c_a_pam_dec', 'new': 'enb7 vss vss) dd1_d7c_a_pam_dec',
+     'expect': ['TOP_SUPPLY_BINDINGS'],
+     'meaning': "the decoder's own vdd18 terminal lands on vss; the logic still evaluates because "
+                'the evaluator was handed ideal rails, which is exactly what the review named'},
+    {'id': 'E26_decoder_supply_swapped', 'file': TOPF,
+     'old': 'enb7 vdd18 vss) dd1_d7c_a_pam_dec', 'new': 'enb7 vss vdd18) dd1_d7c_a_pam_dec',
+     'expect': ['TOP_SUPPLY_BINDINGS'],
+     'meaning': 'the two supply terminals exchanged, so the decoder is powered backwards'},
+    {'id': 'E27_branch_left_the_ground_rail', 'file': TOPF,
+     'old': 'Xu2 (en2 enb2 iref_in vcas data_out vss) dd1_d7c_a_sink_unit',
+     'new': 'Xu2 (en2 enb2 iref_in vcas data_out vcas) dd1_d7c_a_sink_unit',
+     'expect': ['TOP_SUPPLY_BINDINGS', 'UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE',
+                'MAIN_PATH_DATA_OUT_CAS_MOUT_VSS', 'BLEED_GATED_BY_BRANCH_COMPLEMENT'],
+     'meaning': 'a branch reaches no vss at all, so its pull-down path does not exist. This is the '
+                'clearest F1 evidence: at H the same fault moved exactly one gate, while in R2 the '
+                'binding table, the data_out->cas->mout->vss path and the bleed gate all refuse it, '
+                'because the top-level nets now reach the connectivity checks instead of stopping at '
+                'the subckt'},
+    {'id': 'E28_decoder_supply_tied_to_a_logic_net', 'file': TOPF,
+     'old': 'enb7 vdd18 vss) dd1_d7c_a_pam_dec', 'new': 'enb7 en0 vss) dd1_d7c_a_pam_dec',
+     'expect': ['TOP_SUPPLY_BINDINGS'],
+     'meaning': 'the rail is driven by a decoded output instead of the supply port'},
+    {'id': 'E29_golden_row_extra_cell', 'file': GOLDEN, 'csv_extra_cell_by_key': ('row_id', 'G02'),
+     'expect': ['INPUT_TABLE_SCHEMAS', 'GOLDEN_TABLE_SCHEMA', 'THERMO_GOLDEN_16',
+                'TOP_INTEGRATED_THERMO_16'],
+     'meaning': 'an undeclared eighth bit of information appended to one golden row: the loose reader '
+                'dropped it silently, the strict reader refuses and no evaluation is credited'},
+    {'id': 'E30_golden_nonfinite_number', 'file': GOLDEN,
+     'csv_field_by_key': ('row_id', 'G02', 'en0', 'NaN'),
+     'expect': ['INPUT_TABLE_SCHEMAS', 'GOLDEN_TABLE_SCHEMA', 'THERMO_GOLDEN_16',
+                'TOP_INTEGRATED_THERMO_16'],
+     'meaning': 'a non-finite value in a bit column must come back as a named refusal, not as the '
+                'int() traceback the first version produced'},
+    {'id': 'E31_claims_header_only', 'file': CLAIMS, 'drop_rows': True,
+     'expect': ['INPUT_TABLE_SCHEMAS', 'CLAIM_TABLE_MATCHES_PARSE'],
+     'meaning': 'the count-claim table trimmed to its header: zero rows used to read as agreement, '
+                'now the seventeen contract keys are demanded'},
+    {'id': 'E32_claims_duplicate_key', 'file': CLAIMS, 'duplicate_last_row': True,
+     'expect': ['INPUT_TABLE_SCHEMAS', 'CLAIM_TABLE_MATCHES_PARSE'],
+     'meaning': 'one claim repeated and one contract key missing, which width-only checks cannot see'},
+    {'id': 'E33_claims_illegal_key', 'file': CLAIMS,
+     'csv_field_by_key': ('object', 'dd1_inv18', 'object', 'dd1_not_a_cell'),
+     'expect': ['INPUT_TABLE_SCHEMAS', 'CLAIM_TABLE_MATCHES_PARSE'],
+     'meaning': 'a claim about an object the contract never declared: extra keys are refused, not '
+                'absorbed'},
+    {'id': 'E34_request_code_invented', 'file': REQUESTS,
+     'csv_field_by_key': ('case_id', 'R05', 'expected_refusal_code', 'REQUEST_MADE_UP'),
+     'expect': ['REQUEST_TABLE_SCHEMA', 'REQUEST_REFUSAL_TABLE'],
+     'meaning': 'the expected-refusal column leaves the closed set, so both the schema and the '
+                'behaviour check must refuse it by row. INPUT_TABLE_SCHEMAS stays green here on '
+                'purpose: the declared scope of that layer is header, per-line width, required '
+                'fields, unique key, contract key set and integer domains, while a closed set of code '
+                'words is a request contract owned by REQUEST_TABLE_SCHEMA, which names R05 and the '
+                'invented value'},
+    {'id': 'E35_plan_all_dc_codes_zero', 'file': PLAN,
+     'csv_replace_matching': ('dc_sweep', 'pam_code', '000'),
+     'expect': ['NATIVE_PLAN_SHAPE', 'PLAN_SCHEDULE_ARITHMETIC'],
+     'meaning': "every DC row collapsed onto code 000 while keeping eight case_ids: the review's "
+                'demonstration that "eight rows" and "each starts with a digit" is not coverage'},
+    {'id': 'E36_plan_long_gap_contradicted', 'file': PLAN,
+     'csv_field_by_key': ('case_id', 'TR-LONG', 'off_gap_TON', '1.5'),
+     'expect': ['PLAN_SCHEDULE_ARITHMETIC'],
+     'meaning': 'the prose gap changed without the windows: arithmetic over the segment list is what '
+                'catches it, which is exactly the 0.5-versus-1.5 TON inconsistency the review found'},
+    {'id': 'E37_plan_refined_pair_stimulus_drift', 'file': PLAN,
+     'csv_field_by_key': ('case_id', 'RS-LOW', 'platform_TON', '0.5'),
+     'expect': ['PLAN_SCHEDULE_ARITHMETIC'],
+     'meaning': 'a refined case that changed the platform length, so it is no longer the same '
+                'conditions with a finer step'},
+    {'id': 'E38_plan_dc_units_washed', 'file': PLAN,
+     'csv_field_by_key': ('case_id', 'DC-010', 'draft_launch_units', '3'),
+     'expect': ['NATIVE_PLAN_SHAPE'],
+     'meaning': 'the draft cost accounting changed by one row, which the per-row rule sees and a '
+                'total-of-30 rule could have hidden'},
+    {'id': 'E39_deck_probe_terminals_reversed', 'file': DECK,
+     'old': 'Ip_branch (clamp_node data_out) iprobe',
+     'new': 'Ip_branch (data_out clamp_node) iprobe',
+     'expect': ['DECK_PROBE_ORIENTATION_MATCHES_PLAN'],
+     'meaning': 'the ammeter turned around while the plan still calls a positive reading the sink '
+                'current: the sign is then silently inverted'},
+]
+INJECTIONS += R2_INJECTIONS
 
 
 def stage(root, target):
@@ -190,6 +297,85 @@ def stage(root, target):
     return target
 
 
+def _csv_rows(text):
+    """parse a table the way the checker does; split(',') is wrong because fields are quoted"""
+    return [row for row in csv.reader(io.StringIO(text)) if row]
+
+
+def _csv_text(rows):
+    handle = io.StringIO()
+    csv.writer(handle, lineterminator='\n').writerows(rows)
+    return handle.getvalue()
+
+
+def _csv_mutate(text, injection):
+    """apply one structured CSV fault and return (mutated_text, problem)
+
+    Three rules keep the counterexample honest: the fault must land on the row and column the
+    injection names (exactly one row for the by-key forms); the standard writer must reproduce the
+    delivered bytes unchanged, otherwise the injection would be a reformat dressed as a fault; and
+    re-reading the written text must give back the intended cells.
+    """
+    rows = _csv_rows(text)
+    if len(rows) < 2:
+        return None, 'csv fault target parses to %d row(s), no header plus data' % len(rows)
+    header = rows[0]
+    if _csv_text(rows) != text:
+        return None, ('the standard csv writer does not reproduce this table byte for byte, so the '
+                      'injection would reformat more rows than it faults')
+
+    def column_at(column):
+        if column not in header:
+            return None, 'csv fault names column %s, the header declares %s' % (column, header)
+        return header.index(column), ''
+
+    if injection.get('csv_replace_matching'):
+        find, column, value = injection['csv_replace_matching']
+        at, problem = column_at(column)
+        if problem:
+            return None, problem
+        hits = 0
+        for row in rows[1:]:
+            if find in row:
+                row[at] = value
+                hits += 1
+        if not hits:
+            return None, 'csv_replace_matching found no row with the cell %s' % find
+    elif injection.get('csv_field_by_key'):
+        key_column, key_value, column, value = injection['csv_field_by_key']
+        at, problem = column_at(key_column)
+        if problem:
+            return None, problem
+        target, problem = column_at(column)
+        if problem:
+            return None, problem
+        hits = 0
+        for row in rows[1:]:
+            if row[at] == key_value:
+                row[target] = value
+                hits += 1
+        if hits != 1:
+            return None, 'csv_field_by_key matched %d rows for %s=%s, not one' % (
+                hits, key_column, key_value)
+    else:
+        key_column, key_value = injection['csv_extra_cell_by_key']
+        at, problem = column_at(key_column)
+        if problem:
+            return None, problem
+        hits = 0
+        for row in rows[1:]:
+            if row[at] == key_value:
+                row.append('UNDECLARED_CELL')
+                hits += 1
+        if hits != 1:
+            return None, 'csv_extra_cell_by_key matched %d rows for %s=%s, not one' % (
+                hits, key_column, key_value)
+    mutated = _csv_text(rows)
+    if _csv_rows(mutated) != rows:
+        return None, 'the injected cells do not survive writing and re-reading the table'
+    return mutated, ''
+
+
 def _mutate(path, injection):
     with io.open(path, 'rb') as handle:
         text = handle.read().decode('utf-8').replace('\r\n', '\n')
@@ -200,6 +386,11 @@ def _mutate(path, injection):
         non_empty = [i for i, line in enumerate(original) if line.strip()]
         last = non_empty[-1]
         mutated = '\n'.join(original[:last + 1] + [original[last]] + original[last + 1:])
+    elif injection.get('csv_replace_matching') or injection.get('csv_field_by_key') \
+            or injection.get('csv_extra_cell_by_key'):
+        mutated, problem = _csv_mutate(text, injection)
+        if problem:
+            return None, problem
     elif injection.get('append'):
         mutated = '\n'.join([line for line in original if line != '']) + '\n' + \
             injection['append'] + '\n'
@@ -328,6 +519,33 @@ def main(argv):
             row = probe(root, scratch, injection, base_failures)
             rows.append(row)
             print('%-40s %-5s %s' % (injection['id'], row['verdict'], row['detail'][:130]))
+        record_rows = []
+        try:
+            import dd1_d7c_a_r2_record_probes as RECORD_PROBES
+            record_rows = RECORD_PROBES.run()
+        except Exception as error:                       # noqa: BLE001 - a crash is a named MISS
+            record_rows = [{'probe': 'record_probes_crashed', 'verdict': 'MISS',
+                            'detail': '%s: %s' % (type(error).__name__, str(error)[:120]),
+                            'digest': 'n/a'}]
+        for row in record_rows:
+            rows.append({'injection': row['probe'], 'verdict': row['verdict'],
+                         'detail': row['detail'], 'expected': ['RECORD_SEMANTICS'], 'found': [],
+                         'digest_after': row['digest']})
+            print('%-40s %-5s %s' % (row['probe'], row['verdict'], row['detail'][:130]))
+        sign_rows = []
+        try:
+            import dd1_d7c_a_r2_sign_check as SIGN
+            sign_rows = SIGN.run(root)
+        except Exception as error:                       # noqa: BLE001 - a crash is a named MISS
+            sign_rows = [{'probe': 'sign_check_crashed', 'verdict': 'MISS',
+                          'detail': '%s: %s' % (type(error).__name__, str(error)[:120]),
+                          'digest': 'n/a'}]
+        for row in sign_rows:
+            rows.append({'injection': row['probe'], 'verdict': row['verdict'],
+                         'detail': row['detail'], 'expected': ['SYNTHETIC_SIGN'], 'found': [],
+                         'digest_after': row['digest'], 'evidence_class':
+                         row.get('evidence_class', 'SYNTHETIC_NOT_MEASURED')})
+            print('%-40s %-5s %s' % (row['probe'], row['verdict'], row['detail'][:130]))
         csv_rows = csv_probes(scratch)
         for row in csv_rows:
             rows.append({'injection': row['probe'], 'verdict': row['verdict'],

@@ -239,3 +239,92 @@ rc 与依据都在那一行，复制一份输出到本文件只会给"改动之�
 `Iunit` 用参考比还是实测支路均值、细步长配对判据、以及原生 30/36 草案额度。
 候选仍是文本层：`NATIVE_NETLIST_SYNTAX=NOT_VERIFIED`、`PAM_8LEVEL_CURRENT_MEASURED=NOT_RUN`。
 DATA-7B 的 59/56 超支、凭据回显事件、四个已删中间目录与三条非阻断待办均未在本轮解除。
+
+## 10 R2 修补轮（DATA-7C-A-R2，2026-10-23）
+
+上面 §1–§9 是首轮与 R1 的原话，**保留不改**。本轮基线是被审 R1 tip
+H = `da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb`（tree `913c8a343aa3debede5e46bc52cae3d7d978940d`，
+父 `cb99d33386a7c83089271a4f3b9816c11362564d`，`T..H` 共 12 个提交），分支
+`poc/data-pam-d7c-a-r2`，工作树 `D:\ic617_d7c_a_r2`。R1 分支保持在 H 不动。
+审核包 `MicroLED_DATA7C_A_R1_Independent_Review_20261023.zip`（80,010 B，SHA-256
+`ff5f45b6ca19c2f376b8954ea9e9e8f24a48bc3e979572df5f22e9faa01e2f86`，41 members，
+`REVIEW_RECOMMENDATION=REWORK`）；任务书逐字节副本 `reports/tasks/DATA-7C-A-R2.md`
+（14,180 B，SHA-256 `dcd29c277cc66ab01bbff28a45bf428d03aa6282c90e78686a268f6c09c228d4`）。
+机读字段在同一份 JSON 里：`task_id=DATA-7C-A-R2`、`repair_of=DATA-7C-A-R1`、
+`repair_baseline_sha=da6f5fc…`。
+
+| 项目 | R2 值 |
+|---|---|
+| 先复现 | 未修改的 `reviewer/probe_r1_remaining.py`（SHA-256 `c23ec4ff687033e12de11d0e324333d7d91ed6e4d97fb1f340ff542732b14658`）对 H 的只读提取：`baseline_checks=30`、七例 `reproduced=true` 全中、rc=0；`reviewer/probe_review_gaps.py`（`b65b0ca1bdd807e83f514294c3499ab7ab6a9ea20a1aac5b088365ca82d5658e`）对 T 是八例全复现（22 项检查），对 H 是七关一开（30 项） |
+| 七例修后 | 六例不再复现且各自具名拒收；`published_record_reader_accepts_rc99_as_PASS` 仍报复现，见本节末"仍开着一例" |
+| 检查面 | 离线 30 → **34 项全 PASS**（新增 `TOP_SUPPLY_BINDINGS`、`INPUT_TABLE_SCHEMAS`、`PLAN_SCHEDULE_ARITHMETIC`、`DECK_PROBE_ORIENTATION_MATCHES_PLAN`；H 的 30 项名字一个都没少，用 `offline_checks.json` 的 `check` 集合逐名比过） |
+| 反例族 | **65/65 named exactly**（39 注入 + 14 记录语义 + 5 CSV 往返 + 7 合成符号）；H 的 29 条 id 全部保留，七条期望集合变大，每条在自己条目里写原因 |
+| 工具自测 | `dd1_d7c_a_r1_selftest.py` 保持 H 字节，9 例 PASS；在无 Git 历史的提取里 `NOT_RUN` rc=2，语义层禁止把它写成 PASS |
+| 计划表 | 15 行 × 25 列，由 `scripts/dd1_d7c_a_r2_plan.py` 单一来源渲染；`PLAN_CHECK delivered_rows=15 schema_refusals=0 schedule_problems=0` |
+| 合成符号算术 | `scripts/dd1_d7c_a_r2_sign_check.py` 7 例 PASS，整数 fA × ns（电荷单位 1e-24 C），逐例带 `evidence_class=SYNTHETIC_NOT_MEASURED` |
+| 正式记录 | `results/evidence/dd1_d7c_a_r2_20261023_132447_356235/`，门与逐门 rc 看 `commands.csv`，比较表看 `frozen_comparison.csv`，三个区间看 `git_checks.csv`，七例/八例逐项看四份 `instrument*.json`；本文件不复制这些计数，避免同一事实出现第二个说法 |
+| 候选 DUT 与被冻表 | 四个 `.scs`、`pam_mask_golden.csv`、`pam_request_refusal.csv`、`dd1_d7c_a_netlist.py`、`dd1_d7c_a_deckgen.py`、`dd1_d7c_a_r1_selftest.py` 与全部旧证据目录在 `H..tip` 上 blob 相同 |
+| 本轮改动的白名单文件 | `reports/dd1_d7c_a_review_fix_r1.md` 只作 EOF 修补与新增 §9 勘误；`tests/dd1_d7c_a/device_count_claims.csv` 把 11 个描述字段从多余引号里放出来（逐格内容与改前完全相同，只是改用 `rows_write` 的规范写法，1,530 B → 1,508 B），因为 `dd1_d7c_a_guards.py` 的 CSV 注入现在要求"标准 writer 能逐字节复现该表"，否则反例会把重排当成故障 |
+| 成本 | 原生启动 0、`spectre -h` 0、RTL 仿真 0、OA 写入 0、动态 preflight 0、SSH/VM 0、凭据与 PDK/模型卡读取 0；无 force、无 `--no-verify`、无 GC、无历史重写、未推 main、未合并、未登记接受版 |
+| 停止点 | `AWAITING_INDEPENDENT_REVIEW` |
+
+### 10.1 四个缺口各自怎么关
+
+F1 顶层供电：新闸 `TOP_SUPPLY_BINDINGS` 先把顶层方向为 `inputOutput` 的轨道集合钉成 `vdd18`/`vss`，
+再逐实例要求"声明为轨道的端子必须落在同名轨道上"且"每个实例至少有一个端子落在地标上"；
+16 种正常组合的求值仍从真实顶层映射取输入。反例 `E25`–`E28` 分别是短到 vss、两端子对调、支路脱离地标、
+轨道被逻辑网驱动。`E27` 的失败集合从 1 个门涨到 4 个门（绑定表、`data_out→cas→mout→vss` 通路、
+bleed 门），这正是"顶层网真的进到连通性判定"的证据。DUT 源网表零改动，也没有引入通用 SPICE 仿真器。
+
+F2 输入表：`strict_read()` 按声明模式读四张表（表头逐字节相等、逐行宽度含多出的格、必填非空、
+整数域有限且属于允许集合、唯一键、契约对象键集合缺与多都拒），闸 `INPUT_TABLE_SCHEMAS` 站在
+`run_checks()` 最前面，下游六个门消费同一批严格行，模式失配时写"未求值"。DC 码与 `000..111` 双向对应，
+细化配对固定为 `RS-LOW↔TR-120`、`RS-FULL↔TR-LONG` 码 111 段、`RS-SWITCH↔TR-OFFCODE`。
+黄金/请求表是冻结件，字节未改；其两行未加引号的自由文本按声明的"末列自由文本回接"处理，
+并把哪几行被放宽写进 `REQUEST_TABLE_SCHEMA` 文本，不是静默容忍。反例 `E29`–`E38` 逐一具名。
+
+F3 发布记录：`scripts/dd1_d7c_a_r2_record_check.py` 把"表格自洽"升级成"语义自洽"——必经门集合、状态枚举、
+rc 与期望关系、`INFORMATIONAL_NOT_PASS` 必须写明 INFORMATIONAL、冻结行 `enforced` 与 `expectation` 一致且
+违例求和为 0、身份路径/字节/摘要/Git blob、子结果 JSON 与汇总互核。`dd1_d7c_a_verify.py` 在**写盘前**
+用同一套规则判即将发布的行（`record_semantics`），在**发布后**再对磁盘字节跑一次
+（`published_record_recheck`），有问题就把总结论判 FAIL。通用 `read_table()` 按任务书保持形状专用。
+14 条记录探针（`R0` 正控 + `R1`–`R13` 篡改）全部要求指定短语拒收。
+
+F4 符号与时序：deck 现在是 `Ip_branch (clamp_node data_out) iprobe`，`I_sink = Ip_branch`，不取负、
+不取 abs()，关断尾窗单独积负面积；口径同写在 deck 注释、机读表两列与单一来源常量里，
+`DECK_PROBE_ORIENTATION_MATCHES_PLAN` 与 `E39` 双向核它。TR-LONG 平台 1.0 TON、关态 0.5 TON、
+节距 1.5 TON、八段止于 11.5 TON 只写在 `dd1_d7c_a_r2_plan.py` 一处，`validate_schedule()` 先核八码覆盖、
+不重叠、间隔与声明相等、短脉冲平直段、配对 15 字段同一性、DC 码双向对应，才由同一来源渲染表与报告。
+15 = 8 DC + 4 瞬态 + 3 细化，全部 `NOT_RUN`；30/36 只是草案额度。旧"EIGHTEEN"与"瞬态只换三位 PAM 码"
+的开场白已清除。
+
+### 10.2 D1：空白、勘误与不再出现的说法
+
+2026-10-23T13:09:28Z 实测：`git diff --check 89b3dd8..da6f5fc` 与 `git diff --check 272d6de..da6f5fc`
+都 rc=2，唯一位置 `reports/dd1_d7c_a_review_fix_r1.md:443: new blank line at EOF`。本轮只删文末换行，
+R1 正文一字未改；同一检查在 `H..tip` 上 rc=0，三行区间证据在记录的 `git_checks.csv`。
+R1 报告新增 §9 勘误：区间一律写全两端 SHA、时刻一律带 `Z`；被废掉的两个包的身份与 R1 期间
+跳过 `pre-commit` 的事件都留在原处，不重写、不消失。本文件与两份报告都不写自身或本包的摘要——
+归档身份只写在包外的回执提交里。
+
+### 10.3 仍开着一例，以及本轮新增的一条限制
+
+`published_record_reader_accepts_rc99_as_PASS` 在修复后的字节上仍报 `reproduced=true`：该诊断打的是通用
+形状读表器本身，任务书 §6 允许它保持形状专用，拒收由新语义入口承担。这一例写死在
+`dd1_d7c_a_verify.py` 的 `REMAINING_OPEN_BY_DESIGN` 常量里，且**只有**这一例可以保持开着——其余六例
+若仍复现，`reviewer_remaining_on_fixed_bytes` 直接 FAIL；记录的 `instrument_remaining_fixed.json`
+与门文本还要互相点名，否则语义层报"仍有缺口未被说明"。
+新增限制：这条针对 remaining-gap 仪器 JSON 的新规则目前只有真实运行做它的考官，还没有专属的合成反例
+（`R1`–`R13` 覆盖的是其它规则）；已在 `known_limitations` 里登记。
+另：`reviewer/audit_r1_identity.py` 本轮**未运行**——它读 `reviewer/repo` 的克隆与审核机上那份
+前轮任务书路径，在这里跑只会因缺输入而失败而不是给出身份结论；它的等价检查由
+`dd1_d7c_a_verify.py`（三区间 + blob 逐路径比对）与 `dd1_d7c_a_r2_record_check.py` 承担。
+
+### 10.4 推送与回读
+
+推送前双通道实测（Git protocol 于 `2026-10-23T13:22:02Z`，GitHub API 于 `2026-10-23T13:22:34Z`）：`main=23e471cb936b421ee97e1250c3be06edf96f9937`、
+`poc/data-pam-d7c-a=89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79`、
+`poc/data-pam-d7c-a-r1=da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb`、
+`poc/data-pwm-d7b-r3=272d6de6d2f2fc8a82d5038d73d6b3e4c656f683` 四值两路一致；
+`poc/data-pam-d7c-a-r2` 在 Git protocol 里无该行、在 API 里 404，这是本轮尚未推送的正确答案，
+不是读回失败。推送本身与推送后的逐 ref 回读记在下面的 10.5，本小节先不预告未发生的数字。

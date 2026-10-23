@@ -1,18 +1,18 @@
 object,count_kind,count,note
-dd1_d7c_a_pam_1ch,expanded_mos,145,"top level after hierarchy expansion: 1 reference + 112 decode and enable + 8 x 4 branch devices"
+dd1_d7c_a_pam_1ch,expanded_mos,145,top level after hierarchy expansion: 1 reference + 112 decode and enable + 8 x 4 branch devices
 dd1_d7c_a_pam_dec,expanded_mos,112,"thermometer select network plus one NAND and two inverters per branch, summed through the cells it instantiates"
 dd1_d7c_a_sink_unit,expanded_mos,4,"one unit branch: pass, bleed, cascode, mirror"
 data_bias_ref,expanded_mos,1,"the shared diode-connected reference, counted once at the top"
 data_sink_1ch,expanded_mos,4,"the accepted core the unit branch is compared against, read-only"
-dd1_d7c_a_nand2,expanded_mos,4,"static CMOS two-input NAND"
-dd1_d7c_a_nor2,expanded_mos,4,"static CMOS two-input NOR"
-dd1_d7c_a_and2,expanded_mos,6,"NAND plus the accepted inverter"
-dd1_d7c_a_or2,expanded_mos,6,"NOR plus the accepted inverter"
+dd1_d7c_a_nand2,expanded_mos,4,static CMOS two-input NAND
+dd1_d7c_a_nor2,expanded_mos,4,static CMOS two-input NOR
+dd1_d7c_a_and2,expanded_mos,6,NAND plus the accepted inverter
+dd1_d7c_a_or2,expanded_mos,6,NOR plus the accepted inverter
 dd1_inv18,expanded_mos,2,"the accepted 1.8 V inverter master, unmodified"
-dd1_d7c_a_pam_1ch,statements,0,"the top cell writes no MOS line itself; every device arrives through an instance"
+dd1_d7c_a_pam_1ch,statements,0,the top cell writes no MOS line itself; every device arrives through an instance
 dd1_d7c_a_pam_dec,statements,0,"the decode layer is built from gate cells, not from hand-written transistors"
-dd1_d7c_a_sink_unit,statements,4,"four MOS lines in the unit branch cell"
-data_bias_ref,statements,1,"one MOS line in the accepted reference cell"
-dd1_d7c_a_nand2,statements,4,"four MOS lines in the NAND cell"
-dd1_d7c_a_pam_1ch,subckt_instances,10,"Xref + Xdec + eight branch instances at the top scope"
-dd1_d7c_a_pam_dec,subckt_instances,32,"2 shared terms + 6 select cells + 8 x (NAND + two inverters)"
+dd1_d7c_a_sink_unit,statements,4,four MOS lines in the unit branch cell
+data_bias_ref,statements,1,one MOS line in the accepted reference cell
+dd1_d7c_a_nand2,statements,4,four MOS lines in the NAND cell
+dd1_d7c_a_pam_1ch,subckt_instances,10,Xref + Xdec + eight branch instances at the top scope
+dd1_d7c_a_pam_dec,subckt_instances,32,2 shared terms + 6 select cells + 8 x (NAND + two inverters)

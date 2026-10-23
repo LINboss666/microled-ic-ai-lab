@@ -36,7 +36,8 @@ REQUIRED = ('schema_version', 'task_id', 'base_sha', 'accepted_data7b_content_sh
 # first round's fields into the shape of a passing answer
 REPAIR_REQUIRED = ('repair_of', 'repair_baseline_sha', 'review_input', 'evidence_dir',
                    'path_counts')
-TASK_IDS = ('DATA-7C-A', 'DATA-7C-A-R1')
+TASK_IDS = ('DATA-7C-A', 'DATA-7C-A-R1', 'DATA-7C-A-R2')
+REPAIR_RX = re.compile(r'^DATA-7C-A-R\d+$')
 ELECTRICAL_FORBIDDEN = ('PAM_IMPLEMENTED=PASS', 'CURRENT_MEASURED=PASS', 'MEASURED_PASS')
 
 
@@ -56,12 +57,15 @@ def validate(payload, root=ROOT):
             problems.append('%s is not a full 40-hex SHA: %r' % (key, value))
     if payload.get('task_id') not in TASK_IDS:
         problems.append('task_id must be one of %s, found %r' % (TASK_IDS, payload.get('task_id')))
-    if str(payload.get('task_id', '')).endswith('-R1'):
+    if REPAIR_RX.match(str(payload.get('task_id', ''))):
         for key in REPAIR_REQUIRED:
             if key not in payload:
                 problems.append('a repair round must carry %s' % key)
         if not SHA_RX.match(str(payload.get('repair_baseline_sha', ''))):
             problems.append('repair_baseline_sha is not a full 40-hex SHA')
+        if payload.get('repair_of') not in TASK_IDS:
+            problems.append('repair_of must name the round this one repairs, one of %s, found %r'
+                            % (','.join(TASK_IDS), payload.get('repair_of')))
         review = payload.get('review_input') or {}
         instrument = review.get('instrument') or {}
         if instrument.get('modified_by_this_round') != 'NO':
@@ -70,6 +74,13 @@ def validate(payload, root=ROOT):
             problems.append('review_input.instrument.sha256 is not a 64-hex SHA-256 digest')
         if not DIGEST_RX.match(str(review.get('sha256', ''))):
             problems.append('review_input.sha256 (the review package) is not a 64-hex digest')
+        # a later round may answer more than one instrument; each one has to be pinned the same way
+        for extra in review.get('instruments', []):
+            if extra.get('modified_by_this_round') != 'NO':
+                problems.append('instrument %s is recorded as modified by this round'
+                                % extra.get('path'))
+            if not DIGEST_RX.match(str(extra.get('sha256', ''))):
+                problems.append('instrument %s has no 64-hex digest' % extra.get('path'))
     identity = payload.get('source_identity') or {}
     for entry in identity.get('delivered', []) + identity.get('read_only_inputs', []):
         for field in ('path', 'sha256', 'bytes'):
@@ -120,7 +131,7 @@ def main(argv):
     print('D7C_A_HANDOFF_CHECK: %s (%d base fields%s, %d problems; evidence and remote truth are '
           'NOT verified here)' % ('PASS' if not problems else 'FAIL', len(REQUIRED),
                                   '+%d repair fields' % len(REPAIR_REQUIRED)
-                                  if str(payload.get('task_id', '')).endswith('-R1') else '',
+                                  if REPAIR_RX.match(str(payload.get('task_id', ''))) else '',
                                   len(problems)))
     return 1 if problems else 0
 
