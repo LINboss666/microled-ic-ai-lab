@@ -60,7 +60,7 @@
   "spectre_help_invocations": 0,
   "ssh_or_vm": 0
  },
- "evidence_dir": "results/evidence/dd1_d7c_a_r1_20261023_091833_4c7d21",
+ "evidence_dir": "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5",
  "evidence_serialisation": {
   "old_directory": {
    "path": "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0",
@@ -71,7 +71,8 @@
   "superseded_intermediate_runs": [
    "results/evidence/dd1_d7c_a_r1_20261023_085000_3f9a1c (frozen-surface semantics not yet a gate)",
    "results/evidence/dd1_d7c_a_r1_20261023_090432_1558fd (produced before the tool commit, so its comparisons describe an uncommitted tree)",
-   "results/evidence/dd1_d7c_a_r1_20261023_091042_d04e79 (same bytes as the published record, but its handoff gate is SKIPPED: the handoff on disk still described the first round at that moment)"
+   "results/evidence/dd1_d7c_a_r1_20261023_091042_d04e79 (same bytes as a later record, but its handoff gate is SKIPPED: the handoff on disk still described the first round at that moment)",
+   "results/evidence/dd1_d7c_a_r1_20261023_091833_4c7d21 (handoff gate real and PASS, but published before the line-ending gate existed, so its two instrument JSONs are CRLF and would not equal their Git blobs; those files were converted to LF once to prove the parsed object survives the change, then restored byte-for-byte to the tool output, digests 16c66a2f0ae6fedd and 9832680b180ba35b)"
   ],
   "superseded_runs_policy": "left in the work tree, neither committed nor deleted, and named here so a reviewer can tell them apart from the published record",
   "validated": [
@@ -84,7 +85,7 @@
   ],
   "writer": "stdlib csv.writer with LF terminators in dd1_d7c_a_offline_check.rows_write"
  },
- "head_sha": "710a77b4d062b1a82634403e8c6b477c833ce00c",
+ "head_sha": "6a56d84e3507e7feb67b6e9cdc51aa04f4a9235c",
  "head_sha_role": "the commit at generation time; the commit carrying this field is above it, so the branch value is read from the Git ref and never from this file",
  "known_limitations": [
   "every result in this file is about text, connectivity, derived logic, table schemas and Git identity; no electrical quantity was measured",
@@ -653,10 +654,10 @@
     "sha256": "864f8889fb5c114cb944325deea0036a822cf3e295d73d452cba328fe36773bd"
    },
    {
-    "bytes": 45792,
+    "bytes": 49139,
     "path": "scripts/dd1_d7c_a_verify.py",
     "role": "delivered",
-    "sha256": "2917db04794d47cf510f9797c26971c391606168222099c2e296803f37310dd8"
+    "sha256": "1002cca6ba48d73eec90bf9feb4c67c13c2d7e174ac1a7cdd2db26159e958d86"
    },
    {
     "bytes": 6970,

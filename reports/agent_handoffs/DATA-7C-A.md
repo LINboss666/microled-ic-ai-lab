@@ -125,7 +125,7 @@ DNW 体接 VSS、`EN_B` 接常量、子电路端口次序损坏、报告器件�
 |---|---|
 | 修补基线 T | `89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79`（分支 `poc/data-pam-d7c-a` 保持在 T，未动） |
 | 本轮分支 | `poc/data-pam-d7c-a-r1`，两枚载荷提交 `21ae4ad`（F1–F4 工具与文档）+ `710a77b`（冻结面成闸、空表拒收） |
-| 正式记录 | `results/evidence/dd1_d7c_a_r1_20261023_093159_006152/`：门清单与逐门 rc 看 `commands.csv`，比较表 24 行看 `frozen_comparison.csv`，八例逐项看两份 `instrument_*.json`；本文件不复制这些计数，避免同一事实出现第二个说法 |
+| 正式记录 | `results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/`：门清单与逐门 rc 看 `commands.csv`，比较表 24 行看 `frozen_comparison.csv`，八例逐项看两份 `instrument_*.json`；本文件不复制这些计数，避免同一事实出现第二个说法 |
 | 候选 DUT | 四个文件字节未改，摘要与 T 相同（`frozen_surfaces` 的 `four_candidate_DUT_netlists` enforced 行 = 0） |
 | 成本 | 原生启动 0、RTL 仿真 0、OA 写入 0；无 preflight、无 SSH/VM、未读凭据/PDK |
 | 停止点 | `AWAITING_INDEPENDENT_REVIEW`；不登记接受、不合并、不进入下一阶段 |
