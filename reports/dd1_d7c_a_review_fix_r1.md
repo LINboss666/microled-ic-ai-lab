@@ -399,8 +399,8 @@ git cat-file blob "$(git rev-parse HEAD:reports/dd1_d7c_a_review_fix_r1.md)" | s
 | 未动的 ref | 同上 | `poc/data-pam-d7c-a = 89b3dd8`（被审 tip，未动）、`main = 23e471c`（未动）、`poc/data-pwm-d7b-r3 = 272d6de`、`-r2 = b3fe93c`、`-r1 = e97f02e`、`poc/data-pwm-d7b = adcdf27` 全部与动工前一致 |
 | 本地=远端同一性 | 同上 | `git rev-parse HEAD` 与 `origin/poc/data-pam-d7c-a-r1` 相同；两侧 tree 同为 `72d64c3c460b887652b1311df7958f9416344555`（首个 tip） |
 | 载荷统计 | — | `T..tip`：修改 10 条（全部在 §9 白名单 12 条之内；`dd1_d7c_a_netlist.py`、`dd1_d7c_a_deckgen.py` 未改）、新增 14 条（3 条允许的确切新文件 + 本轮前缀自测脚本 + 10 条记录文件）、删除 0 条；tip 共 2,573 条路径 |
-| 审核包构建 | `2026-10-23T10:0xZ`（本提交信息带精确 UTC） | 全部字节由 `git cat-file blob` 从提交 `5f89605…` 取出，不取工作副本；清单 51 条（含生成的 `README.md`；`MANIFEST.json` 与 `verify_package.py` 不在清单内），`python verify_package.py` → `PACKAGE_SELF_CHECK: PASS (51 files listed, 0 unlisted)` rc=0 |
-| 归档身份（**记在包外**） | 同上 | `MicroLED_DATA7C_A_R1_Package_20261023.zip`：219,955 B、53 members、`zipfile.testzip()` 无坏项、SHA-256 `6c080dd14cb5f48be83395f1da4bd431436037895ec63d1a36f4ee78dc38b53c` |
+| 审核包构建 | `2026-10-23T10:00:55Z`（本机 UTC） | 全部字节由 `git cat-file blob` 从提交 `3775731…` 取出，不取工作副本；清单 51 条（含生成的 `README.md`；`MANIFEST.json` 与 `verify_package.py` 只在压缩成员里计，不在清单内），`python verify_package.py` → `PACKAGE_SELF_CHECK: PASS (51 files listed, 0 unlisted)` rc=0 |
+| 归档身份 | **不在本文件里** | 任务书 §10.8 与既有规矩一致：包内不得声明包自身的字节数与摘要，否则任何一次重打包都会让这句话变成假话。归档的 bytes / members / SHA-256 记在构建**之后**的包外回执提交里（见 §8.2），本文件只指向它 |
 | 包内入口点在**任何仓库之外**实测 | 同上 | `offline 30 PASS rc=0`、`guards 29/29 PASS rc=0`、`handoff validator PASS rc=0`、`deckgen --probe 先拒绝且目录未动 rc=0`、`selftest NOT_RUN rc=2`（具名理由：七例要问 Git，包外没有仓库；这不是失败也不是通过） |
 
 包内不含审核方仪器（那是审核方的交付件）；交接 JSON 里有它的 SHA-256 与"本轮未改其一字节"的记录。
@@ -419,9 +419,27 @@ git cat-file blob "$(git rev-parse HEAD:reports/dd1_d7c_a_review_fix_r1.md)" | s
 | `reports/agent_handoffs/DATA-7C-A.json` | `0b8efc18914a265afdba` | 同上 | `remote_readback` 由 PENDING 换成本机实测的两通道回读 |
 
 这四份文档之外的东西——四个候选 DUT、五张表、六个脚本、自测脚本——在记录之后**一个字节都没动**：
-`frozen_surfaces` 的 enforced 行与 `four_candidate_DUT_netlists` 在最终 tip 上仍然 0 违例，
+`frozen_surfaces` 的本 enforce 行与 `four_candidate_DUT_netlists` 在最终 tip 上仍然 0 违例，
 `SOURCE_IDENTITY_VS_GIT_BLOB` 对 37 行逐条比 Git blob 也是 PASS。
 把这三行列出来而不是重跑一次记录，是因为重跑只会把"记录晚于文档"这个问题推到另一个文件上；
 任务书 §10.8 明确不许为把摘要写进自身而连续制造提交。
+
+### 8.2 打包也返工过一次（按实登记）
+
+第一个包从 `5f89605` 构建：219,955 B、53 members、SHA-256
+`6c080dd14cb5f48be83395f1da4bd431436037895ec63d1a36f4ee78dc38b53c`。它被两个真实缺陷废掉：
+
+1. 交接 JSON 的 `read_only_inputs` 点了 `spectre/dd1_d7b_pwm_stage.scs` 与 `AGENTS.md`，打包器的
+   只读输入清单里没有，于是把包放到仓库之外跑 `dd1_d7c_a_validate_handoff.py` 得到
+   `FAIL (2 problems: … is not on disk)` rc=1。校验器是对的，包是错的。
+2. 那一版的本报告 §8 **在包内声明了包自身的摘要**。任何一次重打包都会让那句话变成假话——
+   第一个包恰好就证明了这一点：它携带的本节文字写着它自己的摘要，而它已被取代。
+
+第二个包从最终载荷提交构建，补进上面两条只读输入，清单自检忽略 `__pycache__`
+（跑过脚本后才会出现，不是包内容），本文件不再携带归档摘要。两个包的 members 都是 53、
+清单条目都是 51，差别在携带的文档字节与只读输入。第一个包的文件**没有删除**，留在执行机的
+`review/scratch/`（该目录被 `.gitignore` 排除，不入库），它的身份就是上面那三行数字，
+由它被取代的原因如上。最终交付包的 bytes / members / SHA-256 只写在包外的回执提交里。
+
 
 
