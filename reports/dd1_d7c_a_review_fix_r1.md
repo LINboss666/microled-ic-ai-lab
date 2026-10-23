@@ -39,8 +39,8 @@
    修好的表发布在**新目录**（见 §5），坏表不删不改，只在本报告里指出坏在哪一行。
 5. 未做：PAM/LUT/阵列/版图/TCON、PDK/模型卡/许可证/凭据读取、VM/SSH、GC、历史重写、force、跳 hooks、
    合并、推 main、登记接受版、进入下一阶段。DATA-7B 的三条非阻断待办仍未动。
-6. **被取代的中间运行**：本轮正式记录是 `results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/`。
-   在它之前有四次完整运行留在工作树里、**不提交也不删除**：
+6. **被取代的中间运行**：本轮正式记录是 `results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08/`。
+   在它之前有五次完整运行留在工作树里、**不提交也不删除**：
    - `results/evidence/dd1_d7c_a_r1_20261023_085000_3f9a1c/`：冻结面语义修好**之前**的运行。它的
      仪器/离线/反例/渲染四类门有效，但 `frozen_comparison.csv` 把白名单内的编辑当成 11 条失配，
      且没有任何闸使用这张表（见 §6.5），它的 `PASS_WITH_DISCLOSED_INFORMATIONAL_GATES` 不可复用。
@@ -53,8 +53,12 @@
      PASS 的一次；但它早于 §0.8 的行尾闸，两份仪器 JSON 还是 CRLF，与 Git blob 不会相等，所以作废。
      该目录里我曾手工把两份 JSON 转成 LF 做过一次验证，随后**按摘要逐字节还原**为工具原始输出
      （`16c66a2f0ae6…`、`9832680b180b…`），正式解法改由工具本身完成（§0.8）。
-   按"已发布产物不删、重导出用新 run_id"的既有规矩，四个目录原样保留在本地工作树，正式记录发布在
-   上面的新目录。
+   - `results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/`：13 门全绿、`record_line_endings` 也过，
+     但它发布时 `HEAD` 里的自测还没有 §6.10 的 Git 预检，且这道新门 `fresh_extraction_replay` 还不存在。
+     这个目录**已经提交并推送**（`79ce578`），因此它不是"丢弃"而是"被后续记录取代的历史一刻"——
+     保留在分支上，不删除、不改写；本轮正式记录是上面那个新目录。
+   按"已发布产物不删、重导出用新 run_id"的既有规矩，前四个目录原样保留在本地工作树（未提交），
+   正式记录发布在上面的新目录。
 7. **一次 hooks 绕过与纠正**：工具提交我第一次用了 `git -c core.hooksPath=`，这等于跳过仓库安装的
    `pre-commit`（`scripts/precommit_safety_check.py --mode staged`），违反"不跳 hooks"。该提交
    （`6416882`，本地、未推送）没有留下任何内容差异：我用 `git reset --soft HEAD~1` 退到暂存态后
@@ -272,6 +276,21 @@ JSON、`offline_checks.json`、`counterexamples.json`、`selftest.json`）；`co
 `published_files_with_cr` 字段里对**全部**落盘文件复核一次。也就是说这个属性有两处证据：门判决，
 和摘要里的最终扫描；两处都成立才算过。
 
+### 5.3 在**新鲜 Git 提取物**上重放（任务书 §10.6）
+
+这不是一句"我在本地跑过"，而是一道会真的失败的门：`fresh_extraction_replay` 把 `HEAD` 用
+`git archive` 解到临时目录，在**那个目录里**跑四套工具，并要求它们的 rc 落在声明的集合内：
+`offline 0`、`guards 0`、`handoff_validator 0`、`record_selftest 0 或 2`（2 是"这里没有 Git 历史"的
+具名拒收，见 §6.10）。判决按子套件逐个记，任一不在期望集合就 FAIL。
+
+它的价值在第一次试跑就体现了：门当时打印
+`record_selftest rc=1 … failures: frozen_gate_refuses_candidate_DUT_edit, …`，
+因为 `HEAD` 里提交的自测还没有 `repository_available()` 预检，在裸提取里是**崩栈**而不是拒收。
+把这种情况算成"本轮失败"不对，算成通过更不对——所以先改成具名 `NOT_RUN`（rc=2），再让这道门在
+期望集合里明确接受 2、同时仍不接受 1。也就是说这一门是先用一条**真实的失败**验证它有效，再交付的。
+提取物是 `HEAD`，即记录运行时的已提交载荷；记录目录本身由紧随其后的提交加入，因此不在该重放范围内，
+这一点在 `commands.csv` 的命令行文本里可见（`git archive <sha> | tar -x`）。
+
 ## 6 本轮我自己造成的缺陷（按实登记）
 
 1. 反例期望集合第一次跑就暴露两处不对：E08 的连带失败集合因新检查更贴近拓扑而变化（bleed 检查现在
@@ -316,6 +335,14 @@ JSON、`offline_checks.json`、`counterexamples.json`、`selftest.json`）；`co
    文档里写一句"这两个文件是 CRLF"，问题就会留到别人 `git add` 时才炸出来；现在的做法是让写入方
    （`_lf_in_place` + `record_line_endings` 闸）保证属性成立，并在保证不了的时候终止运行。
    同一教训与 §6.6 是一对：属性要由工具保证并检查，不能由散文声明。
+10. **自测在裸提取上崩栈而不是具名拒收**。§10.6 要求"用新鲜 Git 提取物重放离线检查"，一重放就暴露：
+    `dd1_d7c_a_r1_selftest.py` 的九例里有七例本质上是问 Git（T/HEAD 的 blob 对照），而
+    `git archive` 解出的目录没有 `.git`，于是它们以 `CalledProcessError` 的形式崩，打印 7 行
+    `fatal: not a git repository` 后给整轮 `FAIL`。把"这台机器上没仓库"记成"本轮缺陷没修好"是错的，
+    把它记成 PASS 更错。改法：`repository_available()` 先回读 `repair_baseline_sha` 与 `HEAD` 两个
+    提交对象，拿不到就 `NOT_RUN`、`failures=['GIT_HISTORY_UNAVAILABLE']`、**rc=2**（既不是 0 也不是
+    普通的 1），JSON 里写明原因。实测：工作树内 `rc=0 / 9 例 PASS`，裸提取内 `rc=2 / NOT_RUN`，
+    其余检查（30 项离线、29 项反例、交接校验）在裸提取里照样 `rc=0`。
 
 ## 7 未解与下一步
 

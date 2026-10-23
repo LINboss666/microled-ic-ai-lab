@@ -328,6 +328,52 @@ def instrument_gate(name, root, script, out_json, expect_reproduced):
             'cases': cases}
 
 
+def extraction_replay(name, base_rev, runner):
+    """replay a suite on a fresh git-archive extraction rather than on the working directory
+
+    The reviewed round reported results that only ever held in the developer's own tree. This asks a
+    different question: does a reviewer who checks out the committed payload get the same answer?
+    """
+    directory = tempfile.mkdtemp(prefix='dd1-d7c-a-extract-')
+    try:
+        archive = subprocess.Popen(['git', '-C', ROOT, 'archive', base_rev],
+                                   stdout=subprocess.PIPE)
+        tar = subprocess.Popen(['tar', '-x', '-C', directory], stdin=archive.stdout)
+        archive.stdout.close()
+        if tar.wait() != 0:
+            return {'gate': name, 'command': 'git archive %s | tar -x' % base_rev[:12], 'rc': 'abort',
+                    'expected_rc': 'extraction succeeds', 'verdict': 'EXTRACTION_FAILED',
+                    'verdict_state': 'FAIL'}
+        outcomes = runner(directory)
+        bad = [o for o in outcomes if not o['accepted']]
+        return {'gate': name, 'command': 'git archive %s | tar -x, then run the suites there'
+                                         % base_rev[:12],
+                'rc': len(bad), 'expected_rc': '0',
+                'verdict': '; '.join('%s rc=%s %s' % (o['suite'], o['rc'], o['note'])
+                                     for o in outcomes)[:400],
+                'verdict_state': 'FAIL' if bad else 'PASS'}
+    finally:
+        shutil.rmtree(directory, ignore_errors=True)
+
+
+def replay_in_extraction(directory):
+    """each suite is expected to answer the same way there as here, including the selftest refusal"""
+    plan = [('offline', 'dd1_d7c_a_offline_check.py', ('--json', 'out.json'), (0,)),
+            ('guards', 'dd1_d7c_a_guards.py', ('--json', 'out.json'), (0,)),
+            ('handoff_validator', 'dd1_d7c_a_validate_handoff.py',
+             ('reports/agent_handoffs/DATA-7C-A.json',), (0,)),
+            ('record_selftest', 'dd1_d7c_a_r1_selftest.py', ('--json', 'out.json'), (0, 2))]
+    out = []
+    for suite, script, args, accepted in plan:
+        cmd = [sys.executable, os.path.join(directory, 'scripts', script)] + \
+              [os.path.join(directory, a) if a.endswith('.json') and '/' not in a else a
+               for a in args]
+        code, text = run(cmd, cwd=directory)
+        tail = text.strip().split('\n')[-1][:110] if text.strip() else ''
+        out.append({'suite': suite, 'rc': code, 'accepted': code in accepted, 'note': tail})
+    return out
+
+
 def render(root, offline_json, guards_json, plan_rows):
     offline = json.loads(io.open(offline_json, encoding='utf-8').read())
     guards = json.loads(io.open(guards_json, encoding='utf-8').read())
@@ -520,6 +566,10 @@ def main(argv):
         results.append(row)
         print('GATE %-32s %s %s' % ('record_tool_selftest', row['verdict_state'],
                                     row['verdict'][:90]))
+
+        results.append(extraction_replay('fresh_extraction_replay', 'HEAD', replay_in_extraction))
+        print('GATE %-32s %s %s' % ('fresh_extraction_replay', results[-1]['verdict_state'],
+                                    results[-1]['verdict'][:110]))
 
         handoff = os.path.join(ROOT, 'reports', 'agent_handoffs', 'DATA-7C-A.json')
         handoff_payload = {}

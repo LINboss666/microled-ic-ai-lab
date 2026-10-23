@@ -199,10 +199,35 @@ CASES = [
 ]
 
 
+def repository_available():
+    """seven of these cases ask Git questions, so outside a work tree they must refuse, not crash"""
+    try:
+        V.git('rev-parse', '%s^{commit}' % V.TIP_UNDER_REVIEW)
+        V.git('rev-parse', 'HEAD')
+        return True
+    except Exception:                           # noqa: BLE001 - absence of a repo is the answer here
+        return False
+
+
 def main(argv):
     out = ''
     if '--json' in argv:
         out = os.path.abspath(argv[argv.index('--json') + 1])
+    if not repository_available():
+        message = ('NOT_RUN: this suite asks Git questions (frozen surfaces, the reviewed tip and '
+                   'HEAD are compared by blob), so it only runs inside the repository work tree. '
+                   'Replaying it from a bare git-archive extraction is not a failure of the round, '
+                   'and it is not a pass either.')
+        payload = {'selftest': 'DATA-7C-A-R1 record-tool negative tests', 'cases': 0,
+                   'failures': ['GIT_HISTORY_UNAVAILABLE'], 'verdict': 'NOT_RUN',
+                   'results': [], 'note': message, 'native_launches': 0,
+                   'repository_mutated': 'NO'}
+        if out:
+            with io.open(out, 'wb') as handle:
+                handle.write((json.dumps(payload, indent=1, sort_keys=True, ensure_ascii=False) + '\n')
+                             .encode('utf-8'))
+        print('D7C_A_R1_SELFTEST: %s' % message)
+        return 2
     report = []
     for name, fn, expectation in CASES:
         try:
