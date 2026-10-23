@@ -36,6 +36,7 @@ sys.path.insert(0, HERE)
 
 import dd1_d7c_a_offline_check as CHECK            # noqa: E402
 import dd1_d7c_a_r2_record_check as RECORD         # noqa: E402
+import dd1_d7c_a_verify as A_VERIFY                # noqa: E402  (the previous round's own gate layer)
 import dd1_d7c_b_prep_cases as CASES               # noqa: E402
 import dd1_d7c_b_prep_contract as CONTRACT         # noqa: E402
 import dd1_d7c_b_prep_deckgen as DECKGEN           # noqa: E402
@@ -44,6 +45,10 @@ import dd1_d7c_b_prep_schedule as SCHEDULE         # noqa: E402
 TASK_ID = 'DATA-7C-B-PREP'
 BASE_R2 = '3e4703f1763223024f442c0826e95055782bca13'
 REVIEWED_T = '89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79'
+# the revision the R1 review judged: the six closures live here, so this is the tree where the
+# seven-gap instrument must reproduce all seven and the R1 record must be audited
+REVIEWED_H = 'da6f5fc3f4977e0ab1447b8cd4982a68878a4bbb'
+R1_RECORD = 'results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08'
 DEVELOPMENT_BASE = '272d6de6d2f2fc8a82d5038d73d6b3e4c656f683'
 BRANCH = 'poc/data-pam-d7c-b-prep'
 NEW_PREFIXES = ('scripts/dd1_d7c_b_prep_', 'tests/dd1_d7c_b_prep/', 'spectre/dd1_d7c_b_prep/',
@@ -65,7 +70,7 @@ PREVIOUS_RECORDS = ['results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0',
                     'results/evidence/dd1_d7c_a_r2_20261023_134109_00c811',
                     'results/evidence/dd1_d7c_a_r2_20261023_135600_10e307']
 REVIEW_DIR = os.path.join(ROOT, 'review', 'MicroLED_DATA7C_A_R1_Review_20261023', 'reviewer')
-OPEN_BY_DESIGN = 'published_record_reader_accepts_rc99_as_PASS'
+OPEN_BY_DESIGN = A_VERIFY.REMAINING_OPEN_BY_DESIGN[0]
 TABLE_SPECS = {
     'commands.csv': (['gate', 'command', 'rc', 'expected_rc', 'verdict_state', 'verdict'], 'gate', ()),
     'frozen_comparison.csv': (['comparison', 'surface', 'paths_compared', 'mismatched',
@@ -74,8 +79,9 @@ TABLE_SPECS = {
     'git_checks.csv': (['gate', 'command', 'rc', 'lines', 'scope'], 'gate', ()),
     'source_identity.csv': (['role', 'path', 'bytes', 'sha256'], 'path', ()),
     'offline_checks.json': None, 'counterexamples.json': None, 'selftest.json': None,
-    'synthetic_cases.json': None, 'instrument_T.json': None, 'instrument_fixed.json': None,
-    'instrument_remaining_H.json': None, 'instrument_remaining_fixed.json': None,
+    'selftest_this_tree.json': None, 'synthetic_cases.json': None, 'instrument_T.json': None,
+    'instrument_fixed.json': None, 'instrument_remaining_H.json': None,
+    'instrument_remaining_R2.json': None, 'instrument_remaining_fixed.json': None,
     'verification_summary.json': None,
 }
 
@@ -86,7 +92,10 @@ def git(*args):
 
 def run(cmd, cwd=None):
     process = subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    text = (process.communicate()[0] or '').decode('utf-8', 'replace')
+    # `or b''`, not `or ''`: a command that succeeds in silence returns empty bytes, and the str
+    # literal would then blow up on .decode() -- which is exactly how the first run of this round
+    # aborted, on a clean `git diff --check`.
+    text = (process.communicate()[0] or b'').decode('utf-8', 'replace')
     return process.returncode, text
 
 
@@ -231,6 +240,92 @@ def _lf_in_place(path):
             'digest_after': hashlib.sha256(body).hexdigest()}
 
 
+def _clone_at(rev, directory):
+    """a throw-away work tree with history, so a tool that asks Git questions can be run where it applies
+
+    `git clone -s` reads this repository and writes only inside `directory`; it does not fetch over a
+    network, does not touch the source refs and does not repack the source objects. The gate below
+    proves that by digesting `git for-each-ref` before and after.
+    """
+    common = git('rev-parse', '--git-common-dir').decode('utf-8', 'replace').strip()
+    common = os.path.abspath(common).replace(os.sep, '/')
+    code, text = run(['git', 'clone', '-s', '--no-checkout', 'file:///' + common, directory])
+    if code != 0:
+        return False, text
+    code, text = run(['git', '-C', directory, 'checkout', '-q', '--detach', rev])
+    return code == 0, text
+
+
+def _refs_digest():
+    body = git('for-each-ref', '--sort=refname').decode('utf-8', 'replace')
+    return hashlib.sha256(body.encode('utf-8')).hexdigest()[:16]
+
+
+def record_selftest(out_dir, scratch):
+    """the previous round's record-tool selftest, read twice: where it applies, and where it does not
+
+    One of its nine cases, `frozen_gate_counts_only_enforced_rows`, builds its clean and dirty tables
+    from the *real* comparison rows of the tree it runs in. Inside this round's tree the DATA-7C-A
+    whitelist has never heard of the fifteen `dd1_d7c_b_prep` paths, so the row
+    `paths_added_not_allowed` is already carrying a count and the "clean" case cannot be clean. That is
+    a statement about the tree, not about the tool. So the gate measures both readings and passes only
+    when the clone-at-R2 reading is PASS and the in-tree failure is fully attributed to paths this
+    round's own brief allows -- an unattributed in-tree failure stays a failure.
+    """
+    command = ('python dd1_d7c_a_r1_selftest.py --json <out>/selftest.json run in a throw-away shared '
+               'clone of this repository checked out at %s, and again with --json '
+               '<out>/selftest_this_tree.json in this work tree' % BASE_R2[:12])
+    clone = os.path.join(scratch, 'clone_r2')
+    refs_before = _refs_digest()
+    ready, _text = _clone_at(BASE_R2, clone)
+    refs_after = _refs_digest()
+    if not ready:
+        return {'gate': 'record_tool_selftest', 'command': command, 'rc': 'abort', 'expected_rc': '0',
+                'verdict': 'NOT_ATTEMPTED: the throw-away clone at %s could not be prepared, so the '
+                           'selftest has no tree in which its own whitelist applies' % BASE_R2[:12],
+                'verdict_state': 'NOT_ATTEMPTED', 'source_refs_unchanged': refs_before == refs_after}
+    clone_json = os.path.join(out_dir, 'selftest.json')
+    tree_json = os.path.join(out_dir, 'selftest_this_tree.json')
+    clone_code, clone_text = run([sys.executable, os.path.join(clone, 'scripts',
+                                                              'dd1_d7c_a_r1_selftest.py'),
+                                  '--json', clone_json])
+    tree_code, _tree_text = run([sys.executable, os.path.join(HERE, 'dd1_d7c_a_r1_selftest.py'),
+                                 '--json', tree_json])
+    normalised = [_lf_in_place(clone_json), _lf_in_place(tree_json)]
+    clone_payload = json.loads(io.open(clone_json, encoding='utf-8').read())
+    tree_payload = json.loads(io.open(tree_json, encoding='utf-8').read())
+    # the same bytes run twice: the difference between the two readings can only be the tree
+    base_index, head_index = blob_index(BASE_R2), blob_index(git('rev-parse', 'HEAD').decode().strip())
+    same_tool = base_index.get('scripts/dd1_d7c_a_r1_selftest.py') == \
+        head_index.get('scripts/dd1_d7c_a_r1_selftest.py')
+    offenders = [r['case'] for r in tree_payload.get('results', []) if r['state'] != 'PASS']
+    passing_cases = len(tree_payload.get('results', [])) - len(offenders)
+    # attribution: which paths does the previous round's whitelist refuse inside this tree?
+    added = sorted(set(head_index) - set(blob_index(REVIEWED_T)))
+    refused = [p for p in added
+               if p not in A_VERIFY.ALLOWED_NEW_EXACT and
+               not any(p.startswith(pre) for pre in A_VERIFY.ALLOWED_NEW_PREFIX)]
+    allowed_here = [p for p in refused if p.startswith(NEW_PREFIXES) or p in NEW_EXACT]
+    attributed = (refused and len(refused) == len(allowed_here) and
+                  offenders == ['frozen_gate_counts_only_enforced_rows'])
+    good = (clone_code == 0 and clone_payload.get('verdict') == 'PASS' and same_tool and
+            attributed and refs_before == refs_after and
+            len(clone_payload.get('results', [])) == 9)
+    return {'gate': 'record_tool_selftest', 'command': command, 'rc': clone_code,
+            'expected_rc': '0',
+            'verdict': 'clone_at_R2 %s (%d cases, failures: %s); this_tree rc=%d %s, failing cases %s, '
+                       'other %d cases PASS, all %d paths the A-round whitelist refuses here are '
+                       'paths this round\'s brief allows=%s; same tool bytes=%s; source refs unchanged'
+                       '=%s; newlines normalised=%s'
+                       % (clone_payload.get('verdict'), len(clone_payload.get('results', [])),
+                          ','.join(clone_payload.get('failures', [])) or 'none', tree_code,
+                          tree_payload.get('verdict'), ','.join(offenders) or 'none', passing_cases,
+                          len(refused), bool(attributed) if refused else 'no refusal to attribute',
+                          same_tool, refs_before == refs_after,
+                          [n.get('crlf_before') for n in normalised]),
+            'verdict_state': 'PASS' if good else 'FAIL'}
+
+
 def replay_in_extraction(directory):
     plan = [('contract_check', 'dd1_d7c_b_prep_contract.py', ('--check',), (0,)),
             ('schedule_check', 'dd1_d7c_b_prep_schedule.py', ('--check',), (0,)),
@@ -278,6 +373,12 @@ def handoff_check():
             problems.append('costs.%s must be an integer 0, found %r' % (key, value))
     for entry in (payload.get('source_identity') or {}).get('delivered', []) + \
             (payload.get('source_identity') or {}).get('read_only_inputs', []):
+        if str(entry.get('path', '')) in ('reports/agent_handoffs/DATA-7C-B-PREP.json',
+                                          'reports/agent_handoffs/DATA-7C-B-PREP.md'):
+            problems.append('%s is listed inside the handoff it lives in: a file cannot carry a digest '
+                            'of its own bytes, so the entry can only ever be false'
+                            % entry.get('path'))
+            continue
         target = os.path.join(ROOT, str(entry.get('path', '')).replace('/', os.sep))
         if not os.path.isfile(target):
             problems.append('source_identity names %s which is not on disk' % entry.get('path'))
@@ -395,11 +496,13 @@ def main(argv):
     scratch = tempfile.mkdtemp(prefix='dd1-d7c-b-')
     try:
         t_dir = os.path.join(scratch, 'T')
+        h_dir = os.path.join(scratch, 'H')
         r2_dir = os.path.join(scratch, 'R2')
         os.makedirs(t_dir)
+        os.makedirs(h_dir)
         os.makedirs(r2_dir)
-        extract(REVIEWED_T, t_dir)
-        extract(BASE_R2, r2_dir)
+        extracted = {'T': extract(REVIEWED_T, t_dir), 'H': extract(REVIEWED_H, h_dir),
+                     'R2': extract(BASE_R2, r2_dir)}
         gap_script = os.path.join(REVIEW_DIR, 'probe_review_gaps.py')
         remain_script = os.path.join(REVIEW_DIR, 'probe_r1_remaining.py')
         first, payload_t = instrument_gate('reviewer_instrument_on_T', gap_script, t_dir,
@@ -408,12 +511,21 @@ def main(argv):
         second, payload_f = instrument_gate('reviewer_instrument_on_fixed_bytes', gap_script, ROOT,
                                            os.path.join(out_dir, 'instrument_fixed.json'), 1, 'cases')
         results.append(second)
-        third, _ = instrument_gate('reviewer_remaining_on_H', remain_script, r2_dir,
-                                   os.path.join(out_dir, 'instrument_remaining_H.json'), 0, 'results')
+        # the seven-gap instrument is run by the previous round's own gate function, unmodified, so the
+        # expectation per case is not re-invented here: all seven reproduce where they were found (H),
+        # and six stay closed with only the declared one still reported on the inherited bytes (R2) and
+        # on this round's bytes.
+        third = A_VERIFY.remaining_instrument_gate(
+            'reviewer_remaining_on_H', remain_script if extracted['H'] else '', h_dir,
+            os.path.join(out_dir, 'instrument_remaining_H.json'), False)
         results.append(third)
-        fourth, _ = instrument_gate('reviewer_remaining_on_fixed_bytes', remain_script, ROOT,
-                                    os.path.join(out_dir, 'instrument_remaining_fixed.json'), 1,
-                                    'results', open_allowed=(OPEN_BY_DESIGN,))
+        base_row = A_VERIFY.remaining_instrument_gate(
+            'reviewer_remaining_on_R2_base', remain_script if extracted['R2'] else '', r2_dir,
+            os.path.join(out_dir, 'instrument_remaining_R2.json'), True)
+        results.append(base_row)
+        fourth = A_VERIFY.remaining_instrument_gate(
+            'reviewer_remaining_on_fixed_bytes', remain_script, ROOT,
+            os.path.join(out_dir, 'instrument_remaining_fixed.json'), True)
         results.append(fourth)
         for row in results:
             print('GATE %-38s %s %s' % (row['gate'], row['verdict_state'], row['verdict'][:90]))
@@ -422,15 +534,16 @@ def main(argv):
                 ('offline_checks', 'dd1_d7c_a_offline_check.py',
                  ('--json', 'offline_checks.json'), '0'),
                 ('counterexamples', 'dd1_d7c_a_guards.py',
-                 ('--json', 'counterexamples.json'), '0'),
-                ('record_tool_selftest', 'dd1_d7c_a_r1_selftest.py',
-                 ('--json', 'selftest.json'), '0')):
+                 ('--json', 'counterexamples.json'), '0')):
             code, text = run([sys.executable, os.path.join(HERE, script)] +
                              [os.path.join(out_dir, a) if a.endswith('.json') and '/' not in a
                               else a for a in args])
             results.append(_gate(name, 'python %s --json <out>' % script, code, expected, text))
             print('GATE %-38s %s %s' % (name, results[-1]['verdict_state'],
                                         results[-1]['verdict'][:90]))
+        results.append(record_selftest(out_dir, scratch))
+        print('GATE %-38s %s %s' % ('record_tool_selftest', results[-1]['verdict_state'],
+                                    results[-1]['verdict'][:110]))
         code, text = run([sys.executable, os.path.join(HERE, 'dd1_d7c_b_prep_cases.py'),
                           '--json', os.path.join(out_dir, 'synthetic_cases.json')])
         results.append(_gate('synthetic_measure_cases',
@@ -478,24 +591,28 @@ def main(argv):
         print('GATE %-38s %s %s' % ('fresh_extraction_replay', results[-1]['verdict_state'],
                                     results[-1]['verdict'][:110]))
 
-        previous_problems, previous_facts = RECORD.check_record(
-            os.path.join(r2_dir, 'results', 'evidence', 'dd1_d7c_a_r1_20261023_094649_c80c08'),
-            BASE_R2, source_root=r2_dir)
+        # the R1 record quoted digests for three files it wrote after publishing, and R1 disclosed
+        # exactly those three. The claim under test is that the semantic reader finds that staleness
+        # and finds nothing outside the disclosed set, so the audit must run against the revision R1
+        # delivered (H) and the bytes of that revision -- not against a later tree, where every file
+        # the later round touched would look like a new offence.
+        previous_problems, _previous_facts = RECORD.check_record(
+            os.path.join(h_dir, R1_RECORD), REVIEWED_H, source_root=h_dir)
         offenders = sorted(set(str(p).split(' ')[0] for p in previous_problems))
-        unexpected = [o for o in offenders if o not in
-                      ('reports/dd1_d7c_a_review_fix_r1.md', 'reports/agent_handoffs/DATA-7C-A.md',
-                       'reports/agent_handoffs/DATA-7C-A.json')]
+        unexpected = [o for o in offenders if o not in A_VERIFY.PREVIOUS_RECORD_DISCLOSED]
         results.append({'gate': 'previous_record_reader_finds_its_own_staleness',
-                        'command': 'python dd1_d7c_a_r2_record_check.py --record '
-                                   'results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08 '
-                                   '--git-ref %s --source-root <that extraction>' % BASE_R2[:12],
+                        'command': 'git archive %s | tar -x, then python '
+                                   'scripts/dd1_d7c_a_r2_record_check.py --record %s --git-ref %s '
+                                   '--source-root <that extraction>'
+                                   % (REVIEWED_H[:12], R1_RECORD, REVIEWED_H[:12]),
                         'rc': len(unexpected), 'expected_rc': '0',
                         'verdict': '%d semantic problems over %d paths (%s); paths outside the three '
                                    'R1 disclosed: %d' % (len(previous_problems), len(offenders),
                                                          ','.join(o.rsplit('/', 1)[-1]
                                                                   for o in offenders),
                                                          len(unexpected)),
-                        'verdict_state': 'PASS' if previous_problems and not unexpected else 'FAIL'})
+                        'verdict_state': 'PASS' if extracted['H'] and previous_problems and not
+                        unexpected else 'FAIL'})
         print('GATE %-38s %s %s' % ('previous_record_reader_finds_its_own_staleness',
                                     results[-1]['verdict_state'], results[-1]['verdict'][:110]))
 
@@ -543,13 +660,10 @@ def main(argv):
         git_rows = []
         for label, other in (('diff_check_R2_to_HEAD', BASE_R2), ('diff_check_T_to_HEAD', REVIEWED_T),
                              ('diff_check_base_to_HEAD', DEVELOPMENT_BASE)):
-            process = subprocess.Popen(['git', '-C', ROOT, 'diff', '--check', '%s..HEAD' % other],
-                                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            body = (process.communicate()[0] or '').decode('utf-8', 'replace')
+            code, body = run(['git', '-C', ROOT, 'diff', '--check', '%s..HEAD' % other])
             git_rows.append({'gate': label,
                              'command': 'git diff --check %s..HEAD' % other,
-                             'rc': process.returncode, 'lines': len([b for b in body.split('\n')
-                                                                     if b.strip()]),
+                             'rc': code, 'lines': len([b for b in body.split('\n') if b.strip()]),
                              'scope': 'committed range from %s to HEAD at %s'
                                       % (other[:12],
                                          time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()))})
