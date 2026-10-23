@@ -60,7 +60,7 @@
   "spectre_help_invocations": 0,
   "ssh_or_vm": 0
  },
- "evidence_dir": "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5",
+ "evidence_dir": "results/evidence/dd1_d7c_a_r1_20261023_094649_c80c08",
  "evidence_serialisation": {
   "old_directory": {
    "path": "results/evidence/dd1_d7c_a_r20261023_062341_cb1bd0",
@@ -85,7 +85,7 @@
   ],
   "writer": "stdlib csv.writer with LF terminators in dd1_d7c_a_offline_check.rows_write"
  },
- "head_sha": "6a56d84e3507e7feb67b6e9cdc51aa04f4a9235c",
+ "head_sha": "8b70cdb4c0dd3134d79a0f43805423ab6b76226d",
  "head_sha_role": "the commit at generation time; the commit carrying this field is above it, so the branch value is read from the Git ref and never from this file",
  "known_limitations": [
   "every result in this file is about text, connectivity, derived logic, table schemas and Git identity; no electrical quantity was measured",
@@ -504,11 +504,21 @@
  },
  "path_counts": {
   "B_tracked_paths": 2533,
-  "added_R1_over_T": 4,
+  "added_R1_over_T": 14,
   "added_T_over_B": 26,
   "added_paths_R1": [
    "reports/dd1_d7c_a_review_fix_r1.md",
    "reports/tasks/DATA-7C-A-R1.md",
+   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/commands.csv",
+   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/counterexamples.json",
+   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/frozen_comparison.csv",
+   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/git_checks.csv",
+   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/instrument_T.json",
+   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/instrument_fixed.json",
+   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/offline_checks.json",
+   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/selftest.json",
+   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/source_identity.csv",
+   "results/evidence/dd1_d7c_a_r1_20261023_093439_d160e5/verification_summary.json",
    "scripts/dd1_d7c_a_r1_selftest.py",
    "tests/dd1_d7c_a/device_count_claims.csv"
   ],
@@ -521,7 +531,7 @@
    "record_commit": "the evidence directory named in evidence_dir",
    "source_commits": "two: the first R1 payload commit and the record-tool commit that made the frozen comparison a gate"
   },
-  "tip_total_paths": 2563,
+  "tip_total_paths": 2573,
   "whitelisted_T_paths_modified": "row whitelisted_paths_edited of the record frozen_comparison.csv (informational by design: the whitelist permits editing, so the count is not a verdict)"
  },
  "payload_sha": "21ae4ad1bcef5b0ee9ac38626f8016ec592e2e92",
@@ -654,10 +664,10 @@
     "sha256": "864f8889fb5c114cb944325deea0036a822cf3e295d73d452cba328fe36773bd"
    },
    {
-    "bytes": 49139,
+    "bytes": 51923,
     "path": "scripts/dd1_d7c_a_verify.py",
     "role": "delivered",
-    "sha256": "1002cca6ba48d73eec90bf9feb4c67c13c2d7e174ac1a7cdd2db26159e958d86"
+    "sha256": "649d84735079a7fd5b98f29ff8ead55adfebee482b7382c24add1c17ccbdedc6"
    },
    {
     "bytes": 6970,
@@ -666,10 +676,10 @@
     "sha256": "2298bd38973747d9e01348cb13fc33875d479386e87d485a2e5f6cbf742d4221"
    },
    {
-    "bytes": 11006,
+    "bytes": 12341,
     "path": "scripts/dd1_d7c_a_r1_selftest.py",
     "role": "delivered",
-    "sha256": "6a80ce30c25e74e950c7dd9f0140427e048031ab0b60da8a7bcdde78c4805fef"
+    "sha256": "59ac73aaeb51666d4f60b3e99cdb3bf0ab9b81ab6e00102f92399df33f622c5a"
    },
    {
     "bytes": 15479,
