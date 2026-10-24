@@ -1,0 +1,172 @@
+{
+ "base_prep": "dcef9b336f2222d6291d266858270f7448b6bb78",
+ "base_r1": "6778535e70b139812265eba490d0a1381a1fae5c",
+ "base_r2": "3e4703f1763223024f442c0826e95055782bca13",
+ "branch": "poc/data-pam-d7c-b-prep-r2",
+ "cases_in_schedule": 15,
+ "contract_state": "PROPOSED_FOR_REVIEW",
+ "credential_reads": 0,
+ "csv_read_back": [
+  {
+   "file": "commands.csv",
+   "result": "columns and keys verified, no CR byte",
+   "rows": 25
+  },
+  {
+   "file": "counterexamples.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "deck_read.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "frozen_comparison.csv",
+   "result": "columns and keys verified, no CR byte",
+   "rows": 11
+  },
+  {
+   "file": "git_checks.csv",
+   "result": "columns and keys verified, no CR byte",
+   "rows": 2
+  },
+  {
+   "file": "offline_checks.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "old_probe_r2.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "ranges.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "selftest.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "source_identity.csv",
+   "result": "columns and keys verified, no CR byte",
+   "rows": 87
+  },
+  {
+   "file": "synthetic_cases.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "tick_probe_R1.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "tick_probe_r2.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  }
+ ],
+ "deck_directory": "spectre/dd1_d7c_b_prep",
+ "decks": 15,
+ "editable_files": [
+  "scripts/dd1_d7c_b_prep_measure.py",
+  "scripts/dd1_d7c_b_prep_contract.py",
+  "scripts/dd1_d7c_b_prep_cases.py",
+  "tests/dd1_d7c_b_prep/contract.json",
+  "reports/dd1_d7c_b_prep_contract.md"
+ ],
+ "electrical_results": "NONE: every number in this record is text, arithmetic, table shape or Git identity; the synthetic measurement results are labelled SYNTHETIC_NOT_MEASURED",
+ "frozen_enforced_mismatches": 0,
+ "frozen_rows": 11,
+ "frozen_rows_enforced": 10,
+ "frozen_rows_informational": 1,
+ "frozen_violating_surfaces": [],
+ "gates": 25,
+ "gates_failed": [],
+ "gates_informational": [],
+ "generated_utc": "2026-10-24T11:22:16Z",
+ "guest_connections": 0,
+ "identity_paths_rewritten_by_this_run": [
+  "reports/dd1_d7c_b_prep_review_fix_r2.md"
+ ],
+ "native_launches": 0,
+ "native_preflights": 0,
+ "oa_writes": 0,
+ "paths_added_vs_R1": [
+  "reports/agent_handoffs/DATA-7C-B-PREP-R2.json",
+  "reports/agent_handoffs/DATA-7C-B-PREP-R2.md",
+  "reports/dd1_d7c_b_prep_review_fix_r2.md",
+  "reports/tasks/DATA-7C-B-PREP-R2.md",
+  "scripts/dd1_d7c_b_prep_r2_verify.py"
+ ],
+ "paths_modified_vs_R1": [
+  "reports/dd1_d7c_b_prep_contract.md",
+  "scripts/dd1_d7c_b_prep_cases.py",
+  "scripts/dd1_d7c_b_prep_contract.py",
+  "scripts/dd1_d7c_b_prep_measure.py",
+  "tests/dd1_d7c_b_prep/contract.json"
+ ],
+ "paths_removed_vs_R1": [],
+ "published_files_with_cr": [],
+ "published_record_recheck": {
+  "facts": {
+   "frozen_rows": 11,
+   "frozen_vocabulary_lines_replaced": 3,
+   "gates": 25,
+   "git_checks": 2,
+   "identity_rows": 87,
+   "mandatory_gates_r2": 23
+  },
+  "note": "judged over the bytes as published, before this summary existed, and with no revision binding: this run rewrites the R2 report after measuring the tip. A reviewer who wants the Git binding re-runs: python scripts/dd1_d7c_b_prep_r2_verify.py is the entry, or python scripts/dd1_d7c_a_r2_record_check.py --record results/evidence/<run_id> --git-ref <that commit> --source-root <work tree at that commit>, which will report the round-bound names this round renamed and nothing else",
+  "problems": [],
+  "verdict": "PASS"
+ },
+ "range_counts": {
+  "P..R1": {
+   "added": 23,
+   "changed": 26,
+   "commits": 5,
+   "deleted": 0,
+   "renamed": 0
+  },
+  "P..R1_at_R1_record": {
+   "added": 7,
+   "changed": 26,
+   "commits": 3,
+   "deleted": 0,
+   "renamed": 0
+  },
+  "R1..HEAD": {
+   "added": 5,
+   "changed": 5,
+   "commits": 3,
+   "deleted": 0,
+   "renamed": 0
+  }
+ },
+ "range_counts_note": "P..R1 is recomputed from the two real endpoints; the numbers the R1 record measured are kept in ranges.json as the moment they belong to, not as the final range",
+ "reference_tick_table": {
+  "RS-FULL": 1.2e-07,
+  "RS-LOW": 1.2e-07,
+  "RS-SWITCH": 1.2e-07,
+  "TR-120": 1.2e-07,
+  "TR-200": 2e-07,
+  "TR-LONG": 1.2e-07,
+  "TR-OFFCODE": 1.2e-07
+ },
+ "review_package": "MicroLED_DATA7C_B_PREP_R1_Independent_Review_20261024",
+ "review_verdict": "REWORK / REPAIR_SCOPE=TRANSIENT_Q_LSB_REFERENCE_ONLY / PREVIOUS_F1_TO_F4_DIAGNOSTICS=CLOSED / NATIVE_EXECUTION_AUTHORISED=NO",
+ "rtl_simulations": 0,
+ "synthetic_cases": 31,
+ "task_id": "DATA-7C-B-PREP-R2",
+ "tip": "d13f494028a9e924fcac64c985933597ea8cbf5a",
+ "verdict": "PASS",
+ "windows_declared": 143
+}

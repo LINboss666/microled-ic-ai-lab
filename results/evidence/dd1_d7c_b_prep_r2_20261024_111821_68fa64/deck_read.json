@@ -1,0 +1,164 @@
+{
+  "check_verdict": "PASS",
+  "counterexample_verdict": "PASS",
+  "counterexamples": [
+    {
+      "detail": "TR-LONG.scs: its own DATA_EN wave crosses half of the 1.8 V rail at 1075 ns, the row declares that edge at 1050 ns",
+      "family": "old_long_ramp",
+      "injected": "the first ramp now ends at 1150 ns instead of 1100 ns, so the copy crosses 0.9 V at 1075 ns while the table declares its 50% point at 1050 ns (measured by this reader, not assumed)",
+      "problem_count": 3,
+      "verdict": "HIT"
+    },
+    {
+      "detail": "TR-OFFCODE.scs measures leakage over 1850-1950 ns but its own DATA_EN is not 0 V across it: it holds 0 V at 1850 ns and 0.9 V at 1950 ns",
+      "family": "leak_window_over_next_rise",
+      "injected": "a leak window 1850-1950 ns in both tables, which the deck's own wave shows contains the next rising ramp start at 1930 ns",
+      "problem_count": 2,
+      "verdict": "HIT"
+    },
+    {
+      "detail": "delivered TR-LONG and TR-OFFCODE raise 0 edge or leakage refusals: []",
+      "family": "delivered_bytes_control",
+      "verdict": "HIT"
+    }
+  ],
+  "decks_read": 15,
+  "per_case": {
+    "DC-000": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 0,
+      "enable_vertices": 0,
+      "half_rail_crossings": 0,
+      "pwl_signals": []
+    },
+    "DC-001": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 0,
+      "enable_vertices": 0,
+      "half_rail_crossings": 0,
+      "pwl_signals": []
+    },
+    "DC-010": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 0,
+      "enable_vertices": 0,
+      "half_rail_crossings": 0,
+      "pwl_signals": []
+    },
+    "DC-011": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 0,
+      "enable_vertices": 0,
+      "half_rail_crossings": 0,
+      "pwl_signals": []
+    },
+    "DC-100": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 0,
+      "enable_vertices": 0,
+      "half_rail_crossings": 0,
+      "pwl_signals": []
+    },
+    "DC-101": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 0,
+      "enable_vertices": 0,
+      "half_rail_crossings": 0,
+      "pwl_signals": []
+    },
+    "DC-110": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 0,
+      "enable_vertices": 0,
+      "half_rail_crossings": 0,
+      "pwl_signals": []
+    },
+    "DC-111": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 0,
+      "enable_vertices": 0,
+      "half_rail_crossings": 0,
+      "pwl_signals": []
+    },
+    "RS-FULL": {
+      "code_segments_moving": 11,
+      "enable_rails_to_rail_ramps": 16,
+      "enable_vertices": 34,
+      "half_rail_crossings": 16,
+      "pwl_signals": [
+        "data_en",
+        "pam0",
+        "pam1",
+        "pam2"
+      ]
+    },
+    "RS-LOW": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 2,
+      "enable_vertices": 7,
+      "half_rail_crossings": 2,
+      "pwl_signals": [
+        "data_en"
+      ]
+    },
+    "RS-SWITCH": {
+      "code_segments_moving": 7,
+      "enable_rails_to_rail_ramps": 8,
+      "enable_vertices": 19,
+      "half_rail_crossings": 8,
+      "pwl_signals": [
+        "data_en",
+        "pam0",
+        "pam1",
+        "pam2"
+      ]
+    },
+    "TR-120": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 2,
+      "enable_vertices": 7,
+      "half_rail_crossings": 2,
+      "pwl_signals": [
+        "data_en"
+      ]
+    },
+    "TR-200": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 2,
+      "enable_vertices": 7,
+      "half_rail_crossings": 2,
+      "pwl_signals": [
+        "data_en"
+      ]
+    },
+    "TR-LONG": {
+      "code_segments_moving": 11,
+      "enable_rails_to_rail_ramps": 16,
+      "enable_vertices": 34,
+      "half_rail_crossings": 16,
+      "pwl_signals": [
+        "data_en",
+        "pam0",
+        "pam1",
+        "pam2"
+      ]
+    },
+    "TR-OFFCODE": {
+      "code_segments_moving": 7,
+      "enable_rails_to_rail_ramps": 8,
+      "enable_vertices": 19,
+      "half_rail_crossings": 8,
+      "pwl_signals": [
+        "data_en",
+        "pam0",
+        "pam1",
+        "pam2"
+      ]
+    }
+  },
+  "problems": [],
+  "reader": "dd1_d7c_b_prep_r1_deck_read.py",
+  "root": "D:\\ic617_d7c_b_prep_r2",
+  "rule": "the deck bytes are the evidence and the tables are claims tested against them; this module imports neither the generator nor the measurement core",
+  "verdict": "PASS"
+}

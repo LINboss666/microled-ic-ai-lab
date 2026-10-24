@@ -1,0 +1,12 @@
+comparison,surface,paths_compared,mismatched,first_mismatches,expectation,enforced
+r2,every_R1_path_outside_the_five_editable_files,2714,0,,identical,yes
+r2,four_candidate_DUT_netlists,4,0,,identical,yes
+r2,fifteen_delivered_decks,15,0,,identical,yes
+r2,schedule_windows_and_pwl_tables,3,0,,identical,yes
+r2,accepted_DATA7B_measurement_and_run_core,3,0,,identical,yes
+r2,shared_tools_safety_and_provenance,14,0,,identical,yes
+r2,R1_and_PREP_records_reports_and_handoffs,31,0,,identical,yes
+r2,earlier_task_books_and_reports,5,0,,identical,yes
+r2,paths_added_this_round,5,0,,only_allowed_new,yes
+r2,paths_removed_vs_R1,0,0,,none_removed,yes
+r2,paths_modified_vs_R1,5,0,reports/dd1_d7c_b_prep_contract.md;scripts/dd1_d7c_b_prep_cases.py;scripts/dd1_d7c_b_prep_contract.py,informational_listing,no
