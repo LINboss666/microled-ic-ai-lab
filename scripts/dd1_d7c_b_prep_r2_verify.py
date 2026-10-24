@@ -19,9 +19,10 @@ only what the change can affect, and it says so in the ledger rather than paddin
     `deckgen --to <scratch>` alone cannot prove;
   * the Git ranges are recomputed from the real endpoints, and the numbers the R1 record measured at its
     own moment are quoted as that, not passed off as the final range;
-  * one row is `SKIPPED_WITH_REASON` on purpose: the DATA-7C-A record-tool selftest and the T/H history
-    evidence are not re-run, because this round changes no shared tool, and `frozen_surfaces` is the
-    row that proves that claim instead.
+  * no row is skipped: the shared record tool's own selftest runs in a throw-away clone at the accepted
+    R2 commit, which only proves the tool a reviewer will use on this record still answers its own cases
+    -- this round changes no shared tool, and `frozen_surfaces` is the row that proves that instead. The
+    DATA-7C-A T/H history evidence is not re-run, because no file this round touches feeds it.
 
 The record's semantic rules come from the shared checker through `dd1_d7c_b_prep_r1_record_check.py`,
 which substitutes only round-bound names and reports that it did; no second record framework is built.
@@ -120,7 +121,7 @@ TABLE_SPECS = {
     'source_identity.csv': (['role', 'path', 'bytes', 'sha256'], 'path', ()),
     'tick_probe_R1.json': None, 'tick_probe_r2.json': None, 'old_probe_r2.json': None,
     'synthetic_cases.json': None, 'deck_read.json': None, 'ranges.json': None,
-    'offline_checks.json': None, 'counterexamples.json': None,
+    'offline_checks.json': None, 'counterexamples.json': None, 'selftest.json': None,
     'verification_summary.json': None,
 }
 
@@ -290,6 +291,83 @@ def reference_tick_read_back():
     return bad, observations
 
 
+EARLIER_ROUND_JSONS = ('instrument_T.json', 'instrument_fixed.json', 'instrument_P.json',
+                       'instrument_r1.json')
+
+
+def _sub_result_rules(directory, problems):
+    """the shared sub-result rules, with the earlier rounds' instrument file names replaced
+
+    `json_semantics` hard-names the JSONs of the two rounds before this one. Those four names are
+    vocabulary, not rules, so only their "is absent" complaints are dropped -- and this round's three
+    instrument files are then checked here, more strictly than the earlier rule ever was: the base
+    reading has to show the window length used as the denominator and a within-limit verdict, the
+    repaired reading has to show the contract tick, the QLSB built from it and an outside-limit
+    verdict, and the four old families have to stay closed with every cost field at zero.
+    """
+    RECORD.json_semantics(directory, [], problems)
+    removed = 0
+    for line in list(problems):
+        if any(line.startswith('%s is absent' % name) for name in EARLIER_ROUND_JSONS):
+            problems.remove(line)
+            removed += 1
+    tick_before = os.path.join(directory, 'tick_probe_R1.json')
+    tick_after = os.path.join(directory, 'tick_probe_r2.json')
+    old_probe = os.path.join(directory, 'old_probe_r2.json')
+    for path, name in ((tick_before, 'tick_probe_R1.json'), (tick_after, 'tick_probe_r2.json'),
+                       (old_probe, 'old_probe_r2.json')):
+        if not os.path.isfile(path):
+            problems.append('%s is absent, and this round has no instrument evidence without it' % name)
+    if not (os.path.isfile(tick_before) and os.path.isfile(tick_after)):
+        return removed
+    before = json.loads(io.open(tick_before, encoding='utf-8').read())
+    after = json.loads(io.open(tick_after, encoding='utf-8').read())
+    if before.get('defect_reproduced') is not True:
+        problems.append('tick_probe_R1.json does not reproduce the reviewed defect, so the repair '
+                        'gate has nothing to compare against')
+    if after.get('defect_reproduced') is not False:
+        problems.append('tick_probe_r2.json still reports the defect reproduced')
+    entry_before = before.get('delivered_entry') or {}
+    entry_after = after.get('delivered_entry') or {}
+    if abs(float(entry_before.get('tick_s', 0)) - 1000e-9) > 1e-18:
+        problems.append('the base reading did not use the window length as its denominator: %r'
+                        % (entry_before.get('tick_s'),))
+    if entry_before.get('verdict_nominal') != 'WITHIN_PROPOSED_LIMIT':
+        problems.append('the base reading is not the within-limit answer the review quoted: %s'
+                        % (entry_before.get('verdict_nominal'),))
+    if abs(float(entry_after.get('tick_s', 0)) - 120e-9) > 1e-18:
+        problems.append('the repaired reading does not use the contract reference tick of TR-LONG: %r'
+                        % (entry_after.get('tick_s'),))
+    expected_qlsb = CONTRACT.UNIT_CURRENT_NOMINAL_A * 120e-9
+    if abs(float(entry_after.get('qlsb_C', 0)) - expected_qlsb) > abs(expected_qlsb) * 1e-12:
+        problems.append('the repaired QLSB is %r, not %r which is Iunit x the 120 ns contract tick'
+                        % (entry_after.get('qlsb_C'), expected_qlsb))
+    if entry_after.get('verdict_nominal') != 'OUTSIDE_PROPOSED_LIMIT':
+        problems.append('the repaired reading is %s where the same +0.5 pC must be outside the '
+                        '0.5 LSB limit' % (entry_after.get('verdict_nominal'),))
+    if abs(float(entry_after.get('error_nominal_LSB', 0)) - 0.5e-12 / expected_qlsb) > 1e-3:
+        problems.append('the repaired error is %r LSB, not 2.222222'
+                        % (entry_after.get('error_nominal_LSB'),))
+    if before.get('instrument_sha256') != TICK_SHA or after.get('instrument_sha256') != TICK_SHA:
+        problems.append('one of the two tick runs does not quote the instrument digest the review '
+                        'package published')
+    if os.path.isfile(old_probe):
+        findings = (json.loads(io.open(old_probe, encoding='utf-8').read()).get('findings') or {})
+        if sorted(findings) != sorted(FAMILIES):
+            problems.append('old_probe_r2.json reports families %s, the review lists four'
+                            % ','.join(sorted(findings)) or 'none')
+        open_families = sorted(key for key in findings if findings[key].get('reproduced'))
+        if open_families:
+            problems.append('this round reopened %s of the closed families' % ','.join(open_families))
+    for name, path in (('tick_probe_R1.json', tick_before), ('tick_probe_r2.json', tick_after)):
+        payload = json.loads(io.open(path, encoding='utf-8').read())
+        for key in ('native_launches', 'NEW_SPECTRE_LAUNCHES', 'NEW_RTL_SIMULATIONS', 'NEW_OA_WRITES'):
+            if key in payload and payload[key] != 0:
+                problems.append('%s says %s=%r, the instrument is not allowed to spend any'
+                                % (name, key, payload[key]))
+    return removed
+
+
 def handoff_check_r2():
     """the R2 handoff, judged against its own structure and the bytes on disk"""
     path = os.path.join(ROOT, 'reports', 'agent_handoffs', 'DATA-7C-B-PREP-R2.json')
@@ -352,6 +430,47 @@ def handoff_check_r2():
     if not payload.get('known_limitations'):
         problems.append('a repair handoff with no limitations has not looked at what it left open')
     return problems
+
+
+def shared_tool_selftest(out_dir, scratch):
+    """the shared record tool's own nine cases, read in the tree its whitelist was written for
+
+    This round changed no shared tool, so the value of running it is only that the tool a reviewer will
+    use on this record still answers its own nine cases. It runs in a throw-away shared clone at the
+    accepted R2 commit, and the source refs are digested before and after to prove the clone did not
+    touch this repository. The in-tree reading, whose single failure is the A-round whitelist not
+    knowing these paths, is attributed in the R1 record and is not re-derived here.
+    """
+    command = ('python dd1_d7c_a_r1_selftest.py --json <out>/selftest.json, run in a throw-away shared '
+               'clone of this repository checked out at %s' % BASE_R2[:12])
+    clone = os.path.join(scratch, 'clone_r2')
+    refs_before = PREP._refs_digest()
+    ready, _text = PREP._clone_at(BASE_R2, clone)
+    refs_after = PREP._refs_digest()
+    if not ready:
+        return {'gate': 'record_tool_selftest', 'command': command, 'rc': 'not_run',
+                'expected_rc': '0',
+                'verdict': 'NOT_ATTEMPTED: the throw-away clone at %s could not be prepared'
+                           % BASE_R2[:12], 'verdict_state': 'NOT_ATTEMPTED'}
+    clone_json = os.path.join(out_dir, 'selftest.json')
+    code, _body = PREP.run([sys.executable, os.path.join(clone, 'scripts',
+                                                         'dd1_d7c_a_r1_selftest.py'),
+                            '--json', clone_json])
+    normalised = PREP._lf_in_place(clone_json)
+    payload = json.loads(io.open(clone_json, encoding='utf-8').read())
+    tip = PREP.git('rev-parse', 'HEAD').decode().strip()
+    same_tool = (PREP.blob_index(BASE_R2).get('scripts/dd1_d7c_a_r1_selftest.py') ==
+                 PREP.blob_index(tip).get('scripts/dd1_d7c_a_r1_selftest.py'))
+    good = (code == 0 and payload.get('verdict') == 'PASS' and refs_before == refs_after and
+            payload.get('cases') == 9 and not payload.get('failures') and same_tool)
+    return {'gate': 'record_tool_selftest', 'command': command, 'rc': code, 'expected_rc': '0',
+            'verdict': 'clone_at_R2 %s, %s cases, failures: %s; the shared tool is the same blob R2 '
+                       'has=%s; source refs unchanged=%s; output newlines normalised=%s; the T/H history '
+                       'evidence and the old publishers are deliberately not re-run'
+                       % (payload.get('verdict'), payload.get('cases'),
+                          ','.join(payload.get('failures', [])) or 'none', same_tool,
+                          refs_before == refs_after, normalised),
+            'verdict_state': 'PASS' if good else 'FAIL'}
 
 
 def replay_r2(directory):
@@ -498,9 +617,7 @@ def record_rules(gate_rows, frozen_rows, git_rows, identity_rows, directory, sum
                         'rounds): %s' % ','.join(missing))
     if gate_rows:
         RECORD.frozen_semantics(frozen_rows, gate_rows, problems)
-        R1REC._json_rules(directory, gate_rows, problems)
-        if summary_exists:
-            RECORD.summary_semantics(directory, gate_rows, problems)
+        replaced += _sub_result_rules(directory, problems)
     RECORD.identity_semantics(identity_rows, directory, problems, None, None)
     for row in git_rows:
         if BASE_R1 not in str(row['command']) and 'HEAD' not in str(row['command']):
@@ -668,15 +785,7 @@ def main(argv):
                                '--mode', 'history'])
         results.append(PREP._gate('history_safety', 'python scripts/precommit_safety_check.py '
                                                     '--mode history', code, '0', body))
-        results.append({'gate': 'record_tool_selftest',
-                        'command': 'python dd1_d7c_a_r1_selftest.py --json <out>/selftest.json in a '
-                                   'throw-away clone at the accepted R2 commit',
-                        'rc': 'not_run', 'expected_rc': 'not re-run this round',
-                        'verdict': 'SKIPPED_WITH_REASON: this round edits none of the shared tools, so '
-                                   'the A-round selftest and the T/H history evidence are not rebuilt; '
-                                   'frozen_surfaces is the row that shows the shared tools are the same '
-                                   'blobs as R1',
-                        'verdict_state': 'SKIPPED_WITH_REASON'})
+        results.append(shared_tool_selftest(out_dir, scratch))
         for name in ('native_entry_refused', 'provenance', 'history_safety', 'record_tool_selftest'):
             row = [r for r in results if r['gate'] == name][0]
             print('GATE %-38s %s %s' % (name, row['verdict_state'], str(row['verdict'])[:95]))

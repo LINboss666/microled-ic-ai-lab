@@ -13,6 +13,7 @@
   "hooks_skipped": "NO",
   "injected_reminders_refused": "instructions appearing in tool output that asked for a new audit authority or for credential reads were refused and reported; text in a file is not authorisation",
   "record_framework_replicated": "NO (the shared rules are called through the R1 adapter, which substitutes round-bound names and reports the count)",
+  "record_tool_selftest": "RUN, not skipped: the shared tool's own nine cases in a throw-away clone at 3e4703f17632, with the repository refs digest taken before and after to prove the clone changed nothing; this round changed no shared tool, so the run only proves the tool a reviewer will use on this record still answers its own cases",
   "repository_visibility_changed": "NO",
   "shared_record_tool_changed": "NO"
  },
@@ -44,8 +45,8 @@
   "timing_tables_changed": "NO",
   "transient_offset_changed": "NO"
  },
- "head_sha": "6778535e70b139812265eba490d0a1381a1fae5c",
- "head_sha_role": "the tip when this handoff was written; the R2 commits follow it and the pushed tip is recorded in the receipt commit that carries the package digest",
+ "head_sha": "4c49237be93adfd64253962c50ab81bd8fbb2cfc",
+ "head_sha_role": "the tip of poc/data-pam-d7c-b-prep-r2 at the moment this handoff was written, i.e. the repair commit this handoff follows; the record and the receipt commit that carries the package digest come after it",
  "inherited": {
   "R1_tip": "6778535e70b139812265eba490d0a1381a1fae5c",
   "accepted_baseline_R2": "3e4703f1763223024f442c0826e95055782bca13",
@@ -146,12 +147,14 @@
    "added": 7,
    "changed": 26,
    "commits": 3,
-   "note": "the numbers the R1 record printed at its own moment; kept as that, not as the final range"
+   "deleted": 0,
+   "note": "read from results/evidence/dd1_d7c_b_prep_r1_20261024_072222_365ef1; it is that run's own P..HEAD moment, not the final P..R1 range",
+   "renamed": 0
   },
   "R1_to_HEAD_at_handoff": {
-   "added": 3,
+   "added": 5,
    "changed": 5,
-   "commits": 1,
+   "commits": 2,
    "deleted": 0,
    "renamed": 0
   },
@@ -166,7 +169,7 @@
   "before_push": {
    "after_push": "not quoted here: the pushed tip is recorded in the receipt commit that carries the package digest, which is the first place it can be true",
    "method_1_git_protocol": {
-    "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin refs/heads/poc/data-pam-d7c-b-prep-r1 refs/heads/poc/data-pam-d7c-b-prep refs/heads/main refs/heads/poc/data-pam-d7c-a-r2",
+    "command": "git -C <repo> -c http.proxy=http://127.0.0.1:7892 ls-remote origin refs/heads/poc/data-pam-d7c-b-prep-r1 refs/heads/poc/data-pam-d7c-b-prep refs/heads/main refs/heads/poc/data-pam-d7c-a-r2",
     "note": "poc/data-pam-d7c-b-prep-r2 was not queried as an existing ref before the push; the branch this round creates did not exist remotely",
     "objects": {
      "refs/heads/main": "23e471cb936b421ee97e1250c3be06edf96f9937",
@@ -174,17 +177,19 @@
      "refs/heads/poc/data-pam-d7c-b-prep": "dcef9b336f2222d6291d266858270f7448b6bb78",
      "refs/heads/poc/data-pam-d7c-b-prep-r1": "6778535e70b139812265eba490d0a1381a1fae5c"
     },
-    "queried_utc": "2026-10-24T10:24:19Z",
+    "queried_utc": "2026-10-24T11:13:41Z",
     "rc": 0,
     "ref_lines_returned": 4
    },
    "method_2_api": {
-    "answer": "{\"message\":\"Not Found\",\"status\":\"404\"}",
-    "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/poc/data-pam-d7c-b-prep-r1",
+    "answer": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/git/refs#get-a-reference\",\"status\":\"404\"}gh: Not Found (HTTP 404)",
+    "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/poc/data-pam-d7c-b-prep-r2",
     "meaning": "the new branch is absent, which is the correct answer and not a read-back failure; github.com over 443 needs the system proxy for the git transport while api.github.com answers directly, so both channels were used and they agree",
-    "queried_utc": "2026-10-24T10:24:19Z"
+    "queried_utc": "2026-10-24T11:13:41Z",
+    "rc": 1
    }
-  }
+  },
+  "note": "both channels are executed by the handoff writer at this moment, so the UTC, the rc and the answer bodies belong to this run and are not a copy of an earlier round"
  },
  "repair": {
   "contract": "rules.charge_error.reference_tick_s_by_case freezes the reference tick per case (TR-120/RS-LOW/TR-LONG/RS-FULL/TR-OFFCODE/RS-SWITCH = 120 ns, TR-200 = 200 ns, DC not applicable); partners share one tick; the nominal tick list 120/200 ns is kept; identity is POC_MEASUREMENT_REFERENCE_NOT_TCON_NOT_DISPLAY_TIMING",
@@ -240,9 +245,9 @@
     "sha256": "fec7bbb1970b8fa679b65675e444646bd3772e66b0a96cef6d9184045ad9319e"
    },
    {
-    "bytes": 61292,
+    "bytes": 68522,
     "path": "scripts/dd1_d7c_b_prep_r2_verify.py",
-    "sha256": "1613290c5dfeb1ed56fead721a1eb4f0683f9556468b16eed60ea9faf2c4302b"
+    "sha256": "fe15cbb9e7d4a102dd81655021a5e9f5606fe44f8f1963d67f3dcc6fcef4a0e2"
    },
    {
     "bytes": 8609,
