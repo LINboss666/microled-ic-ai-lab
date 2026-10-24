@@ -1,7 +1,7 @@
 {
  "base_prep_sha": "dcef9b336f2222d6291d266858270f7448b6bb78",
  "base_r2_sha": "3e4703f1763223024f442c0826e95055782bca13",
- "branch": "poc/data-pam-d7c-b-prep-r1",
+ "branch": "poc/data-pam-d7c-b-prep-r2",
  "clamp_sweep_points_V": [
   0.6,
   0.65,
@@ -183,7 +183,7 @@
    "data_out"
   ]
  },
- "repair_task_id": "DATA-7C-B-PREP-R1",
+ "repair_task_id": "DATA-7C-B-PREP-R2",
  "repairs_r1": [
   {
    "defect": "the three-character code string was written left-to-right into pam0/pam1/pam2, so pam0 received the weight-4 bit, and the high level was 1.0 V instead of the 1.8 V logic domain; four DC codes (001, 011, 100, 110) carried another code's identity",
@@ -210,25 +210,57 @@
    "reviewer_fact": "REVIEW_DATA7C_B_PREP_20261024.md section 3 F4, checks/prep_probe.json F4.no_explicit_27C (all 15) and F4.unnamed_analysis_lines (all 15); the review states plainly that this is textual inconsistency with proven project syntax, not a reproduced native error"
   }
  ],
+ "repairs_r2": [
+  {
+   "defect": "measure_case() passed the full-enable window T50 as the QLSB tick as well, so a 1 us platform manufactured its own ruler: a +0.5 pC charge error on code 111 read as 0.266667 LSB and WITHIN_PROPOSED_LIMIT, where either nominal tick the contract already lists (120 ns, 200 ns) puts it at 2.222222 / 1.333333 LSB, outside the 0.5 limit",
+   "id": "T1_qlsb_denominator_is_the_window_not_a_tick",
+   "repair": "rules.charge_error.reference_tick_s_by_case freezes the reference tick per case, partners share one value, the eight DC cases have none, and reference_tick_for_case() refuses an unknown, missing, zero, negative or non-finite tick by name before any division instead of falling back to the window length; Qexpected keeps I x T50 and QLSB becomes Iunit_nominal x Ttick, and convergence now carries reference_tick_s in its pair context and refuses when that field disagrees with the denominator it divides by",
+   "reviewer_fact": "REVIEW_DATA7C_B_PREP_R1_20261024.md section 3, checks/tick_probe.json and checks/fresh_tick_probe.json both rc=0 with defect_reproduced=true: delivered tick 1e-06 s, qlsb 1.875e-12 C, error 0.266667 LSB WITHIN, independent references 2.222222 and 1.333333 LSB outside"
+  }
+ ],
  "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
  "results_column_state": "NOT_RUN for all fifteen cases; a synthetic number never enters an electrical result",
+ "review_of_r1": "MicroLED_DATA7C_B_PREP_R1_Independent_Review_20261024",
  "reviewer_frozen": "NO",
- "round": "R1",
+ "round": "R2",
  "rules": {
   "charge_error": {
+   "dc_cases": "not_applicable: a DC sweep has no time-domain QLSB",
+   "forbidden_denominators": [
+    "T50 of the window under test",
+    "the measured Q",
+    "the platform length itself",
+    "the current code nominal x T50"
+   ],
    "idc_substitution_forbidden": "a geometry-ratio estimate is never used as IDC(k)",
    "limit_status": "PROPOSED_NOT_CLAIMED",
-   "lsb_definition": "QLSB = Iunit_nominal x Ttick, Ttick declared per case",
+   "lsb_definition": "QLSB = Iunit_nominal x Ttick, with Ttick the case's own reference tick from reference_tick_s_by_case; the full-enable window T50 enters only the expected charge, never the denominator",
    "nominal_ticks_s": [
     1.2e-07,
     2e-07
    ],
    "proposed_limit_in_LSB": 0.5,
+   "reference_tick_identity": "POC_MEASUREMENT_REFERENCE_NOT_TCON_NOT_DISPLAY_TIMING",
+   "reference_tick_note": "this mapping exists to remove the ambiguity the review found; it is a measurement reference unit for the POC, it does not mean TCON or display timing is implemented, and it grants no native authority. Partners share one tick, and an unknown or missing case is a named refusal, never a fallback to the window length",
+   "reference_tick_s_by_case": {
+    "RS-FULL": 1.2e-07,
+    "RS-LOW": 1.2e-07,
+    "RS-SWITCH": 1.2e-07,
+    "TR-120": 1.2e-07,
+    "TR-200": 2e-07,
+    "TR-LONG": 1.2e-07,
+    "TR-OFFCODE": 1.2e-07
+   },
    "reported": [
     "Q_window",
     "Qexpected_nominal = Inominal(k) x T50",
-    "Qexpected_dc = IDC(k) x T50 or NOT_RUN"
-   ]
+    "Qexpected_dc = IDC(k) x T50 or NOT_RUN",
+    "reference_tick_s, qlsb_C, t50_s and where the tick came from"
+   ],
+   "two_times_must_not_be_confused": {
+    "T50": "fall50 - rise50 of this window, used for Qexpected = I x T50",
+    "Ttick": "the per-case reference tick below, used for QLSB only"
+   }
   },
   "clamp": {
    "main_eval_V": 1.2,
@@ -242,14 +274,16 @@
    "also_report": "absolute dQ in coulombs (and fC), per window",
    "limit": 0.01,
    "missing_context_is_a_refusal_not_a_match": true,
-   "note": "CONVERGED without an absolute difference is refused as an answer, and two sides that both lack every context field are not \"equal\" -- they are missing context, which is REFUSED_MISSING_CONTEXT",
+   "note": "CONVERGED without an absolute difference is refused as an answer, and two sides that both lack every context field are not \"equal\" -- they are missing context, which is REFUSED_MISSING_CONTEXT. R2 adds reference_tick_s to that list and requires it to equal the tick the function divides by, because two sides that both carry the window length as their reference would otherwise hide the unit drift together",
+   "reference_tick_must_match_the_denominator": true,
    "relative_measure": "abs(dQ) / QLSB",
    "required_context_fields": [
     "sign_rule",
     "threshold_V",
     "window_start_ps",
     "window_stop_ps",
-    "reference_current_A"
+    "reference_current_A",
+    "reference_tick_s"
    ],
    "status_word_alone_is_not_a_pass": true
   },

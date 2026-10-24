@@ -59,6 +59,22 @@ CODE_EDGE_NS = 2.0              # total width of a code-change edge: old value a
 TRANSIENT_OFFSET_NS = LEAD_OFF_NS + EDGE_NS     # 1050 ns, the same shift for every transient instant
 LOGIC_HIGH_V = 1.8              # the 1.8 V logic domain; a bit is a logical value, not a volt
 
+# R2 (the independent review of the R1 bytes) found one remaining blocker: the measurement entrance
+# divided the charge error by Iunit x T50, so a 1 us platform manufactured its own ruler and a +0.5 pC
+# error on code 111 read as 0.266667 LSB instead of 2.222222. The reference tick is therefore frozen per
+# case here, in the single machine-readable source: partners share one tick, the eight DC cases have no
+# time-domain QLSB at all, and the values are drawn from the nominal tick list the contract already
+# carried (120 ns and 200 ns). This is a POC measurement reference unit; it says nothing about TCON or
+# display timing and grants no native authority.
+REFERENCE_TICK_S_BY_CASE = {
+    'TR-120': 120e-9, 'RS-LOW': 120e-9,
+    'TR-200': 200e-9,
+    'TR-LONG': 120e-9, 'RS-FULL': 120e-9,
+    'TR-OFFCODE': 120e-9, 'RS-SWITCH': 120e-9,
+}
+REFERENCE_TICK_PARTNERS = (('TR-120', 'RS-LOW'), ('TR-LONG', 'RS-FULL'),
+                           ('TR-OFFCODE', 'RS-SWITCH'))
+
 HAND_ARITHMETIC = [
     'Iunit_nominal = 15e-6 A x (2.5/2)/(20/2) = 15e-6 x 0.125 = 1.875e-6 A',
     '1.875 uA = 1.875e-6 A = 1.875e9 fA (multiply by 1e15 to go from A to fA)',
@@ -164,15 +180,39 @@ RULES = {
                     'also_report': 'absolute dQ in coulombs (and fC), per window',
                     'status_word_alone_is_not_a_pass': True,
                     'required_context_fields': ['sign_rule', 'threshold_V', 'window_start_ps',
-                                               'window_stop_ps', 'reference_current_A'],
+                                               'window_stop_ps', 'reference_current_A',
+                                               'reference_tick_s'],
+                    'reference_tick_must_match_the_denominator': True,
                     'missing_context_is_a_refusal_not_a_match': True,
                     'note': 'CONVERGED without an absolute difference is refused as an answer, and two '
                             'sides that both lack every context field are not "equal" -- they are '
-                            'missing context, which is REFUSED_MISSING_CONTEXT'},
-    'charge_error': {'lsb_definition': 'QLSB = Iunit_nominal x Ttick, Ttick declared per case',
+                            'missing context, which is REFUSED_MISSING_CONTEXT. R2 adds '
+                            'reference_tick_s to that list and requires it to equal the tick the '
+                            'function divides by, because two sides that both carry the window length '
+                            'as their reference would otherwise hide the unit drift together'},
+    'charge_error': {'lsb_definition': 'QLSB = Iunit_nominal x Ttick, with Ttick the case\'s own '
+                                       'reference tick from reference_tick_s_by_case; the full-enable '
+                                       'window T50 enters only the expected charge, never the '
+                                       'denominator',
+                     'two_times_must_not_be_confused': {
+                         'T50': 'fall50 - rise50 of this window, used for Qexpected = I x T50',
+                         'Ttick': 'the per-case reference tick below, used for QLSB only'},
                      'nominal_ticks_s': [120e-9, 200e-9],
+                     'reference_tick_s_by_case': REFERENCE_TICK_S_BY_CASE,
+                     'reference_tick_identity': 'POC_MEASUREMENT_REFERENCE_NOT_TCON_NOT_DISPLAY_TIMING',
+                     'reference_tick_note': 'this mapping exists to remove the ambiguity the review '
+                                            'found; it is a measurement reference unit for the POC, it '
+                                            'does not mean TCON or display timing is implemented, and '
+                                            'it grants no native authority. Partners share one tick, '
+                                            'and an unknown or missing case is a named refusal, never '
+                                            'a fallback to the window length',
+                     'dc_cases': 'not_applicable: a DC sweep has no time-domain QLSB',
+                     'forbidden_denominators': ['T50 of the window under test', 'the measured Q',
+                                                'the platform length itself',
+                                                'the current code nominal x T50'],
                      'reported': ['Q_window', 'Qexpected_nominal = Inominal(k) x T50',
-                                  'Qexpected_dc = IDC(k) x T50 or NOT_RUN'],
+                                  'Qexpected_dc = IDC(k) x T50 or NOT_RUN',
+                                  'reference_tick_s, qlsb_C, t50_s and where the tick came from'],
                      'proposed_limit_in_LSB': 0.5,
                      'limit_status': 'PROPOSED_NOT_CLAIMED',
                      'idc_substitution_forbidden': 'a geometry-ratio estimate is never used as IDC(k)'},
@@ -331,6 +371,26 @@ REPAIRS_R1 = [
                       'not a reproduced native error'},
 ]
 
+# The review of the R1 bytes left exactly one blocker. It is recorded beside the four families because
+# the same two documents have to agree about what is closed and what is not.
+REPAIRS_R2 = [
+    {'id': 'T1_qlsb_denominator_is_the_window_not_a_tick',
+     'defect': 'measure_case() passed the full-enable window T50 as the QLSB tick as well, so a 1 us '
+               'platform manufactured its own ruler: a +0.5 pC charge error on code 111 read as '
+               '0.266667 LSB and WITHIN_PROPOSED_LIMIT, where either nominal tick the contract already '
+               'lists (120 ns, 200 ns) puts it at 2.222222 / 1.333333 LSB, outside the 0.5 limit',
+     'repair': 'rules.charge_error.reference_tick_s_by_case freezes the reference tick per case, '
+               'partners share one value, the eight DC cases have none, and reference_tick_for_case() '
+               'refuses an unknown, missing, zero, negative or non-finite tick by name before any '
+               'division instead of falling back to the window length; Qexpected keeps I x T50 and '
+               'QLSB becomes Iunit_nominal x Ttick, and convergence now carries reference_tick_s in its '
+               'pair context and refuses when that field disagrees with the denominator it divides by',
+     'reviewer_fact': 'REVIEW_DATA7C_B_PREP_R1_20261024.md section 3, checks/tick_probe.json and '
+                      'checks/fresh_tick_probe.json both rc=0 with defect_reproduced=true: delivered '
+                      'tick 1e-06 s, qlsb 1.875e-12 C, error 0.266667 LSB WITHIN, independent '
+                      'references 2.222222 and 1.333333 LSB outside'}
+]
+
 FROZEN_CANDIDATE_DUT = [
     'spectre/dd1_d7c_a_gates.scs', 'spectre/dd1_d7c_a_pam_dec.scs',
     'spectre/dd1_d7c_a_sink_unit.scs', 'spectre/dd1_d7c_a_pam_top.scs']
@@ -357,14 +417,15 @@ def contract():
     data = {
         'schema_version': '1.0',
         'task_id': TASK_ID,
-        'round': 'R1',
-        'repair_task_id': 'DATA-7C-B-PREP-R1',
+        'round': 'R2',
+        'repair_task_id': 'DATA-7C-B-PREP-R2',
+        'review_of_r1': 'MicroLED_DATA7C_B_PREP_R1_Independent_Review_20261024',
         'contract_state': CONTRACT_STATE,
         'user_approved': 'NO',
         'reviewer_frozen': 'NO',
         'base_r2_sha': BASE_R2,
         'base_prep_sha': BASE_PREP,
-        'branch': 'poc/data-pam-d7c-b-prep-r1',
+        'branch': 'poc/data-pam-d7c-b-prep-r2',
         'repository': 'https://github.com/LINboss666/microled-ic-ai-lab',
         'single_source': 'scripts/dd1_d7c_b_prep_contract.py emits this file; decks, schedule and '
                          'reports render from it and from nothing else',
@@ -406,6 +467,7 @@ def contract():
                                      '(weight 2), pam2 = bit 2 (weight 4); level = bit x 1.8 V',
                      'window_kinds': sorted(RULES['window_kinds'])},
         'repairs_r1': REPAIRS_R1,
+        'repairs_r2': REPAIRS_R2,
         'launch_budget': RULES['launch_budget'],
         'frozen_candidate_dut': FROZEN_CANDIDATE_DUT,
         'differences_vs_R2': DIFFERENCES_VS_R2,
@@ -524,6 +586,33 @@ def selfcheck(data):
              'F3_measurement_entry_wiring', 'F4_native_deck_known_contract']:
         problems.append('the repair list does not name the four families the review used, so a '
                         'repaired gap could be swapped for an unrelated change')
+    ticks = data['rules']['charge_error']['reference_tick_s_by_case']
+    transient_cases = ['TR-LONG', 'TR-120', 'TR-200', 'TR-OFFCODE', 'RS-FULL', 'RS-LOW',
+                       'RS-SWITCH']
+    if sorted(ticks) != sorted(transient_cases):
+        problems.append('the reference tick map covers %s, the schedule has these seven transient and '
+                        'refined cases and no others' % ','.join(sorted(ticks)))
+    for case, value in sorted(ticks.items()):
+        number = float(value)
+        if number != number or number in (float('inf'), float('-inf')) or number <= 0.0:
+            problems.append('the reference tick of %s is %r, which cannot divide anything'
+                            % (case, value))
+        elif number not in [float(x) for x in data['rules']['charge_error']['nominal_ticks_s']]:
+            problems.append('%s takes a %s s reference tick that is not one of the nominal ticks the '
+                            'contract lists' % (case, number))
+    for coarse, refined in REFERENCE_TICK_PARTNERS:
+        if ticks.get(coarse) != ticks.get(refined):
+            problems.append('%s and its refined partner %s do not share one reference tick, so the '
+                            'pair would be normalised on two different rulers' % (coarse, refined))
+    if abs(ticks.get('TR-200', 0.0) - 200e-9) > 1e-18:
+        problems.append('TR-200 is the case whose declared unit is 200 ns; a different value there '
+                        'means the map was written from the window, not from the contract')
+    if [item['id'] for item in data['repairs_r2']] != ['T1_qlsb_denominator_is_the_window_not_a_tick']:
+        problems.append('the R2 repair list does not name the single blocker the review of R1 left')
+    for item in data['repairs_r2']:
+        for field in ('id', 'defect', 'repair', 'reviewer_fact'):
+            if not item.get(field):
+                problems.append('the R2 entry has no %s, so it is a claim without a finding' % field)
     if not any(item['id'].startswith('D6') for item in data['differences_vs_R2']):
         problems.append('the 1050 ns offset decision is not recorded as a difference against the '
                         'delivered bytes; the reviewer has to see it, not infer it')
@@ -603,13 +692,14 @@ def render_markdown(data):
     a('| 收敛 | 同窗口 `abs(dQ)/QLSB <= %s` | 同时必须给出绝对差（C 与 fC）；只报 `CONVERGED` '
       '不算答案 |' % v['limit'])
     ch = r['charge_error']
-    a('| 电荷误差 | 以声明的 QLSB 报两种口径：对名义、对该档实测 DC | 候选建议限 %s LSB，'
-      '**只作为待审判据**，本轮不宣称已满足；无 DC 原生值时后一种为 `NOT_RUN`，不得用几何比冒充 |'
+    a('| 电荷误差 | `Qexpected_nominal=Inominal(k)×T50`、`Qexpected_dc=IDC(k)×T50`，误差以 '
+      '`QLSB=Iunit_nominal×Ttick` 报 | 候选建议限 %s LSB，**只作为待审判据**，本轮不宣称已满足；'
+      '无 DC 原生值时后一种为 `NOT_RUN`，不得用几何比冒充；T50 只做期望电荷，不做分母 |'
       % ch['proposed_limit_in_LSB'])
     se = r['settling']
     a('| 入带 | 目标电流 ±%s%%，持续至少 %s ns，deadline 为该窗自身末点 | 状态封闭集合 %s；'
       '曾入带但在 deadline 前离带必须报 `LEFT_BAND_BEFORE_DEADLINE` |'
-      % (se['band_fraction'], se['hold_ns'], ', '.join(se['statuses'])))
+      % (int(round(se['band_fraction'] * 100)), se['hold_ns'], ', '.join(se['statuses'])))
     sa = r['sampling']
     a('| 样点 | %s | %s；%s |' % (sa['finite_check'], sa['grid_forcing'], sa['monotonic_time']))
     a('')
@@ -658,14 +748,37 @@ def render_markdown(data):
         a('* **`%s`** — 缺陷：%s。修法：%s。审核事实：%s'
           % (item['id'], item['defect'], item['repair'], item['reviewer_fact']))
     a('')
+    a('### 1.1 R2 复审后仍开放的一项（本轮唯一修补目标）')
+    a('')
+    for item in data['repairs_r2']:
+        a('* **`%s`** — 缺陷：%s。修法：%s。审核事实：%s'
+          % (item['id'], item['defect'], item['repair'], item['reviewer_fact']))
+    a('')
+    a('#### 1.1.1 逐例参考 tick（`rules.charge_error.reference_tick_s_by_case`，唯一来源即此表）')
+    a('')
+    a('| case_id | 本轮 POC 参考 Ttick (ns) | QLSB = 1.875 µA × Ttick |')
+    a('|---|---:|---:|')
+    for case in sorted(ch['reference_tick_s_by_case']):
+        tick = float(ch['reference_tick_s_by_case'][case])
+        a('| `%s` | %g | %g C = %g fC = %g pC |' % (case, tick * 1e9,
+                                                     UNIT_CURRENT_NOMINAL_A * tick,
+                                                     UNIT_CURRENT_NOMINAL_A * tick * 1e15,
+                                                     UNIT_CURRENT_NOMINAL_A * tick * 1e12))
+    a('| DC 八例 | 不适用 | 时域 QLSB 不计算 |')
+    a('')
+    a('伙伴（`TR-120`↔`RS-LOW`、`TR-LONG`↔`RS-FULL`、`TR-OFFCODE`↔`RS-SWITCH`）共享同一参考 tick；'
+      '该映射是本轮为消除歧义提出的 **POC 测量参考单位**（`%s`），不表示 TCON 或显示帧时序已实现，'
+      '也不授予任何原生权限。1 µs 长平台与 300 ns 换码平台可以包含多个参考 tick，'
+      '这不把 Ttick 改成 T50。' % ch['reference_tick_identity'])
+    a('')
     a('## 2 名义电流阶梯（身份全部 %s）' % data['nominal_current_identity'])
     a('')
-    a('| PAM 码 | 导通支路数 | 名义电流 / µA | µA 的 SI 写法 |')
+    a('| PAM 码 | 导通支路数 | 名义电流 (µA) | 同一电流分别写成 A / fA / µA（每格带单位） |')
     a('|---|---:|---:|---|')
     for code in sorted(data['nominal_current_A_by_code']):
         value = data['nominal_current_A_by_code'][code]
-        a('| `%s` | %d | %g | %g = %g = %g |' % (code, int(code, 2) + 1, value * 1e6, value,
-                                                 value, value * 1e15))
+        a('| `%s` | %d | %.3f | %g A = %g fA = %g uA |'
+          % (code, int(code, 2) + 1, value * 1e6, value, value * 1e15, value))
     a('')
     a('代码位权：`pam_sel0`=bit0 权重 1，`pam_sel1`=bit1 权重 2，`pam_sel2`=bit2 权重 4；'
       '码 `000` 是**最低非零档**（一条支路），不得当黑码。')

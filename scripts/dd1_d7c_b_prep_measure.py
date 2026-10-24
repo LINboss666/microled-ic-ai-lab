@@ -103,6 +103,43 @@ def enable_edges(enable_ps, level_high_V, rise_hint_ps, fall_hint_ps, ctx='enabl
     return out
 
 
+def finite_or_none(value):
+    """float(value) when it is a real number, None for NaN, an infinity, a non-number or nothing"""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number != number or number in (float('inf'), float('-inf')):
+        return None
+    return number
+
+
+def reference_tick_for_case(case_id, contract_data=None):
+    """(seconds, source) for the QLSB denominator of this case, or a named refusal
+
+    R2 (the review of the R1 bytes) is the reason this exists: the entrance divided by
+    `Iunit x T50`, so a long platform manufactured its own ruler and an error over half a LSB read as
+    inside the limit. The reference tick is a property of the case as declared by the contract, never
+    of the window being measured, so there is nothing here to fall back to: an unknown case, a missing
+    map, or a zero, negative or non-finite value is refused by name before any division.
+    """
+    if contract_data is None:
+        contract_data = CONTRACT.contract()
+    rule = contract_data['rules']['charge_error']
+    table = rule.get('reference_tick_s_by_case') or {}
+    if case_id not in table:
+        raise Refuse('%s has no reference tick in '
+                     'rules.charge_error.reference_tick_s_by_case (%s). A DC case has no time-domain '
+                     'QLSB at all, and a transient one is refused rather than normalised on its own '
+                     'window length' % (case_id, ', '.join(sorted(table)) or 'the map is empty'))
+    tick = finite_or_none(table[case_id])
+    if tick is None or tick <= 0.0:
+        raise Refuse('%s declares a reference tick of %r, which is not a positive finite number of '
+                     'seconds, so no QLSB can be formed for it' % (case_id, table[case_id]))
+    return tick, ('rules.charge_error.reference_tick_s_by_case[%s] of the contract at %s'
+                  % (case_id, rule.get('reference_tick_identity', 'UNLABELLED')))
+
+
 def sign_check(charge, orientation=None):
     """the sign verdict on one emission window, decided on the signed number and never on abs()
 
@@ -218,11 +255,27 @@ def leakage(current_ps, tail_start_ps, tail_stop_ps, fall_hint_ps, evidence_clas
     return out
 
 
-def charge_errors(measured_q_C, nominal_A, t50_s, idc_A, tick_s, evidence_class=SYNTHETIC):
-    """both expectations, in coulombs and in the declared QLSB; a missing DC point stays NOT_RUN"""
-    qlsb = float(CONTRACT.UNIT_CURRENT_NOMINAL_A) * float(tick_s)
-    out = {'q_C': measured_q_C, 'qlsb_C': qlsb, 't50_s': t50_s, 'tick_s': tick_s,
-           'qexpected_nominal_C': float(nominal_A) * float(t50_s),
+def charge_errors(measured_q_C, nominal_A, t50_s, idc_A, tick_s, evidence_class=SYNTHETIC,
+                  tick_source=''):
+    """both expectations, in coulombs and in the case's own QLSB; a missing DC point stays NOT_RUN
+
+    Two different times arrive here and they must not be confused: `t50_s` is the full-enable window,
+    which scales the expected charge, and `tick_s` is the contract's reference tick for the case, which
+    scales the QLSB the error is reported in. The window length is never an acceptable denominator.
+    """
+    window = finite_or_none(t50_s)
+    tick = finite_or_none(tick_s)
+    if window is None or window <= 0.0:
+        raise Refuse('the full-enable window T50 is %r, which is not a positive finite number of '
+                     'seconds, so no expected charge exists' % (t50_s,))
+    if tick is None or tick <= 0.0:
+        raise Refuse('the reference tick is %r, which is not a positive finite number of seconds; '
+                     'the error is refused instead of being divided by the window length' % (tick_s,))
+    qlsb = float(CONTRACT.UNIT_CURRENT_NOMINAL_A) * tick
+    out = {'q_C': measured_q_C, 'qlsb_C': qlsb, 't50_s': window, 'tick_s': tick,
+           'tick_source': tick_source or 'passed by the caller, source not stated',
+           'qlsb_identity': 'Iunit_nominal x Ttick, never x T50 and never x the measured Q',
+           'qexpected_nominal_C': float(nominal_A) * window,
            'evidence_class': evidence_class}
     out['error_nominal_C'] = measured_q_C - out['qexpected_nominal_C']
     out['error_nominal_LSB'] = out['error_nominal_C'] / qlsb
@@ -235,7 +288,7 @@ def charge_errors(measured_q_C, nominal_A, t50_s, idc_A, tick_s, evidence_class=
                            'estimate is never substituted for IDC(k)')
     else:
         out['idc_status'] = 'AVAILABLE'
-        out['qexpected_dc_C'] = float(idc_A) * float(t50_s)
+        out['qexpected_dc_C'] = float(idc_A) * window
         out['error_dc_C'] = measured_q_C - out['qexpected_dc_C']
         out['error_dc_LSB'] = out['error_dc_C'] / qlsb
     limit = CONTRACT.contract()['rules']['charge_error']['proposed_limit_in_LSB']
@@ -298,8 +351,23 @@ def convergence(coarse, refined, tick_s, evidence_class=SYNTHETIC):
                if coarse.get(field) in (None, '') or refined.get(field) in (None, '')]
     drift = [field for field in context_fields if field not in missing
              and coarse.get(field) != refined.get(field)]
-    qlsb = float(CONTRACT.UNIT_CURRENT_NOMINAL_A) * float(tick_s)
     invalid = []
+    tick_argument = finite_or_none(tick_s)
+    tick_problems = []
+    if tick_argument is None or tick_argument <= 0.0:
+        tick_problems.append('the QLSB denominator is %r, not a positive finite number of seconds'
+                             % (tick_s,))
+    for side, label in ((coarse, 'coarse'), (refined, 'refined')):
+        declared = side.get('reference_tick_s')
+        number = finite_or_none(declared)
+        if number is None or number <= 0.0:
+            tick_problems.append('%s reference_tick_s=%r is not a positive finite number of seconds'
+                                 % (label, declared))
+        elif tick_argument is not None and abs(number - tick_argument) > 1e-18:
+            tick_problems.append('%s carries reference_tick_s=%s s while the comparison divides by '
+                                 '%s s, so the pair and its ruler disagree'
+                                 % (label, _fmt(number), _fmt(tick_argument)))
+    qlsb = float(CONTRACT.UNIT_CURRENT_NOMINAL_A) * (tick_argument or 0.0)
     for side, label in ((coarse, 'coarse'), (refined, 'refined')):
         start, stop = side.get('window_start_ps'), side.get('window_stop_ps')
         try:
@@ -318,27 +386,35 @@ def convergence(coarse, refined, tick_s, evidence_class=SYNTHETIC):
                 continue
             if number != number or number in (float('inf'), float('-inf')):
                 invalid.append('%s %s is not finite' % (label, field))
-    if missing or invalid:
+    unusable_denominator = bool([item for item in tick_problems if 'QLSB denominator' in item])
+    if unusable_denominator or missing or invalid or (tick_problems and not drift):
         return {'status': 'REFUSED_MISSING_CONTEXT', 'missing_context': missing,
-                'invalid_input': invalid, 'context_drift': drift, 'qlsb_C': qlsb,
+                'invalid_input': invalid, 'reference_tick_problems': tick_problems,
+                'context_drift': drift, 'qlsb_C': qlsb,
                 'limit': limit, 'absolute_difference_always_reported': True,
                 'evidence_class': evidence_class,
                 'refusal': ('both sides must carry the same named context (%s) and a finite, '
                             'increasing window before any difference is meaningful; here missing=%s, '
-                            'invalid=%s, so the comparison is refused instead of calling None equal '
-                            'to None' % (','.join(context_fields), ','.join(missing) or 'none',
-                                         ','.join(invalid) or 'none'))}
+                            'invalid=%s, reference tick=%s, so the comparison is refused instead of '
+                            'calling None equal to None'
+                            % (','.join(context_fields), ','.join(missing) or 'none',
+                               ','.join(invalid) or 'none',
+                               '; '.join(tick_problems) or 'ok'))}
     delta = float(refined['q']) - float(coarse['q'])
     relative = abs(delta) / qlsb
     return {'delta_q_C': delta, 'delta_q_fC': delta * 1e15, 'qlsb_C': qlsb,
+            'reference_tick_s': tick_argument,
             'abs_delta_over_qlsb': relative, 'limit': limit,
             'status': 'REFUSED_CONTEXT_CHANGED' if drift else
                       ('WITHIN_LIMIT' if relative <= limit else 'OUTSIDE_LIMIT'),
             'context_fields_checked': context_fields, 'context_drift': drift,
             'absolute_difference_always_reported': bool(rules['status_word_alone_is_not_a_pass']),
             'evidence_class': evidence_class,
-            'refusal': ('the refined run changed %s, so it is not the same window at a finer step'
-                        % ','.join(drift)) if drift else ''}
+            'refusal': ('the refined run changed %s, so it is not the same window at a finer step%s'
+                        % (','.join(drift),
+                           ('; the reference tick also disagrees with the denominator: %s'
+                            % '; '.join(tick_problems)) if tick_problems else '')
+                        ) if drift else ''}
 
 
 def _codes_for(row, contract_data):
@@ -374,7 +450,10 @@ def measure_case(row, windows, samples, evidence_class=SYNTHETIC, idc_A_by_code=
         return [{'case_id': row['case_id'], 'window_id': '%s#SWEEP' % row['case_id'],
                  'kind': 'dc_sweep_point', 'result': NOT_RUN,
                  'idc_status': (idc_A_by_code or {}).get(row['pam_code']) and 'AVAILABLE' or NOT_RUN,
-                 'note': 'needs a native DC operating point; no synthetic number stands in for it',
+                 'qlsb_status': 'NOT_APPLICABLE_DC_HAS_NO_TIME_DOMAIN',
+                 'reference_tick_s': None,
+                 'note': 'needs a native DC operating point; no synthetic number stands in for it, and '
+                         'a DC sweep is not normalised on any tick because it has no window',
                  'evidence_class': evidence_class}]
     codes = _codes_for(row, contract_data)
     starts = [float(v) for v in row['platform_start_ns'].split(';')]
@@ -431,9 +510,12 @@ def measure_case(row, windows, samples, evidence_class=SYNTHETIC, idc_A_by_code=
         entry['sign'] = sign_check(flat_charge, contract_data['probe']['terminals'])
         entry['settling'] = settling(samples['current'], edges['rise_50_ps'], nominal,
                                      ps(flat['stop_ns']), evidence_class)
+        tick_s, tick_source = reference_tick_for_case(row['case_id'], contract_data)
+        entry['reference_tick_s'] = tick_s
+        entry['reference_tick_source'] = tick_source
         entry['charge_error'] = charge_errors(
-            full_charge['q'], nominal, t50_s, (idc_A_by_code or {}).get(code), t50_s,
-            evidence_class)
+            full_charge['q'], nominal, t50_s, (idc_A_by_code or {}).get(code), tick_s,
+            evidence_class, tick_source)
         # the two names the independent instrument probes at the top level, kept beside the nested
         # dict rather than instead of it, so a reviewer reads the same number either way
         entry['error_nominal_LSB'] = entry['charge_error']['error_nominal_LSB']

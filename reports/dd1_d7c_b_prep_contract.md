@@ -1,7 +1,7 @@
 # DATA-7C-B-PREP 电气合同草案（状态 PROPOSED_FOR_REVIEW，不是 USER_APPROVED）
 
 机读来源：`tests/dd1_d7c_b_prep/contract.json`，由 `scripts/dd1_d7c_b_prep_contract.py` 生成；本文件由同一脚本渲染，任何一处手工改数都会让 `--check` 的固定点比较失败。
-基线 R2 = `3e4703f1763223024f442c0826e95055782bca13`，分支 `poc/data-pam-d7c-b-prep-r1`。本轮不运行任何仿真器：Spectre 0 次（含 `-h`）、RTL 仿真 0 次、OA 写入 0 次、动态 preflight 0 次；15 例结果列一律 `NOT_RUN`。
+基线 R2 = `3e4703f1763223024f442c0826e95055782bca13`，分支 `poc/data-pam-d7c-b-prep-r2`。本轮不运行任何仿真器：Spectre 0 次（含 `-h`）、RTL 仿真 0 次、OA 写入 0 次、动态 preflight 0 次；15 例结果列一律 `NOT_RUN`。
 
 ## 1 条件与建议判据
 
@@ -16,8 +16,8 @@
 | 关断漏流 | 每个关断尾窗末 100.0 ns 内 `max(abs(I_sink)) <= 1.5e-07 A` | 正负方向都报，不得把有正负反冲的尾段相消后写成零漏流；abs 只用于这条幅度判据，不用于总电荷 |
 | 细步长配对 | 普通 2.0 ns / 细化 0.1 ns | 完整激励历史相同，只改 maxstep；配对的 14 个字段必须逐字相等 |
 | 收敛 | 同窗口 `abs(dQ)/QLSB <= 0.01` | 同时必须给出绝对差（C 与 fC）；只报 `CONVERGED` 不算答案 |
-| 电荷误差 | 以声明的 QLSB 报两种口径：对名义、对该档实测 DC | 候选建议限 0.5 LSB，**只作为待审判据**，本轮不宣称已满足；无 DC 原生值时后一种为 `NOT_RUN`，不得用几何比冒充 |
-| 入带 | 目标电流 ±0.05%，持续至少 10.0 ns，deadline 为该窗自身末点 | 状态封闭集合 SETTLED_HELD, NOT_SETTLED_WITHIN_PULSE, LEFT_BAND_BEFORE_DEADLINE, NO_REAL_EDGE_FOUND, NOT_RUN；曾入带但在 deadline 前离带必须报 `LEFT_BAND_BEFORE_DEADLINE` |
+| 电荷误差 | `Qexpected_nominal=Inominal(k)×T50`、`Qexpected_dc=IDC(k)×T50`，误差以 `QLSB=Iunit_nominal×Ttick` 报 | 候选建议限 0.5 LSB，**只作为待审判据**，本轮不宣称已满足；无 DC 原生值时后一种为 `NOT_RUN`，不得用几何比冒充；T50 只做期望电荷，不做分母 |
+| 入带 | 目标电流 ±5%，持续至少 10.0 ns，deadline 为该窗自身末点 | 状态封闭集合 SETTLED_HELD, NOT_SETTLED_WITHIN_PULSE, LEFT_BAND_BEFORE_DEADLINE, NO_REAL_EDGE_FOUND, NOT_RUN；曾入带但在 deadline 前离带必须报 `LEFT_BAND_BEFORE_DEADLINE` |
 | 样点 | every time and current must be finite; NaN or infinity is a named refusal | forbidden: adaptive native samples are not snapped to a ps grid；strictly increasing; equal or regressed time is a named refusal |
 
 ## 1.1 R1 的激励时间模型（本轮按复审把这一节写进合同）
@@ -55,18 +55,37 @@
 * **`F3_measurement_entry_wiring`** — 缺陷：measure_case() handed the flat window bounds to the edge finder as the edge hint with a +/-5 ns search, so all eight TR-LONG windows answered NO_REAL_EDGE_FOUND; it took the first off_tail for every window and broke, so a 5 uA fault in a later tail was missed; it never called sign_check or charge_errors, and convergence accepted two sides with no context at all。修法：each emission window searches around its own rise50/fall50, reports the full-enable Q and the flat mean separately, keeps Qpos / signed Qneg / |Qneg|, calls sign_check and charge_errors, pairs window k with tail k, and refuses instead of falling back。审核事实：REVIEW_DATA7C_B_PREP_20261024.md section 3 F3, checks/prep_probe.json F3.entries (eight NO_REAL_EDGE_FOUND), F3.second_tail_independent_reference (ABOVE_LIMIT 5e-06 A while the main entry reported 0.0 A), F3.missing_pair_context_still_accepted=true
 * **`F4_native_deck_known_contract`** — 缺陷：fifteen decks wrote bare `dc dev=...` / `tran stop=...` analysis lines and no `simopt options temp=27`, while this project has already run named analysis instances and an explicit temperature; the PWL spelling also differed from the proven `type=pwl wave=[...]` form。修法：decks state simopt options temp=27, an instance-named analysis line, and PWL as wave=[t v ...] with whole-nanosecond n-suffixed times; the audit parses the effective statement instead of matching a substring, so a comment can no longer vouch for a deck。审核事实：REVIEW_DATA7C_B_PREP_20261024.md section 3 F4, checks/prep_probe.json F4.no_explicit_27C (all 15) and F4.unnamed_analysis_lines (all 15); the review states plainly that this is textual inconsistency with proven project syntax, not a reproduced native error
 
+### 1.1 R2 复审后仍开放的一项（本轮唯一修补目标）
+
+* **`T1_qlsb_denominator_is_the_window_not_a_tick`** — 缺陷：measure_case() passed the full-enable window T50 as the QLSB tick as well, so a 1 us platform manufactured its own ruler: a +0.5 pC charge error on code 111 read as 0.266667 LSB and WITHIN_PROPOSED_LIMIT, where either nominal tick the contract already lists (120 ns, 200 ns) puts it at 2.222222 / 1.333333 LSB, outside the 0.5 limit。修法：rules.charge_error.reference_tick_s_by_case freezes the reference tick per case, partners share one value, the eight DC cases have none, and reference_tick_for_case() refuses an unknown, missing, zero, negative or non-finite tick by name before any division instead of falling back to the window length; Qexpected keeps I x T50 and QLSB becomes Iunit_nominal x Ttick, and convergence now carries reference_tick_s in its pair context and refuses when that field disagrees with the denominator it divides by。审核事实：REVIEW_DATA7C_B_PREP_R1_20261024.md section 3, checks/tick_probe.json and checks/fresh_tick_probe.json both rc=0 with defect_reproduced=true: delivered tick 1e-06 s, qlsb 1.875e-12 C, error 0.266667 LSB WITHIN, independent references 2.222222 and 1.333333 LSB outside
+
+#### 1.1.1 逐例参考 tick（`rules.charge_error.reference_tick_s_by_case`，唯一来源即此表）
+
+| case_id | 本轮 POC 参考 Ttick (ns) | QLSB = 1.875 µA × Ttick |
+|---|---:|---:|
+| `RS-FULL` | 120 | 2.25e-13 C = 225 fC = 0.225 pC |
+| `RS-LOW` | 120 | 2.25e-13 C = 225 fC = 0.225 pC |
+| `RS-SWITCH` | 120 | 2.25e-13 C = 225 fC = 0.225 pC |
+| `TR-120` | 120 | 2.25e-13 C = 225 fC = 0.225 pC |
+| `TR-200` | 200 | 3.75e-13 C = 375 fC = 0.375 pC |
+| `TR-LONG` | 120 | 2.25e-13 C = 225 fC = 0.225 pC |
+| `TR-OFFCODE` | 120 | 2.25e-13 C = 225 fC = 0.225 pC |
+| DC 八例 | 不适用 | 时域 QLSB 不计算 |
+
+伙伴（`TR-120`↔`RS-LOW`、`TR-LONG`↔`RS-FULL`、`TR-OFFCODE`↔`RS-SWITCH`）共享同一参考 tick；该映射是本轮为消除歧义提出的 **POC 测量参考单位**（`POC_MEASUREMENT_REFERENCE_NOT_TCON_NOT_DISPLAY_TIMING`），不表示 TCON 或显示帧时序已实现，也不授予任何原生权限。1 µs 长平台与 300 ns 换码平台可以包含多个参考 tick，这不把 Ttick 改成 T50。
+
 ## 2 名义电流阶梯（身份全部 ESTIMATED_MIRROR_RATIO_ONLY）
 
-| PAM 码 | 导通支路数 | 名义电流 / µA | µA 的 SI 写法 |
+| PAM 码 | 导通支路数 | 名义电流 (µA) | 同一电流分别写成 A / fA / µA（每格带单位） |
 |---|---:|---:|---|
-| `000` | 1 | 1.875 | 1.875e-06 = 1.875e-06 = 1.875e+09 |
-| `001` | 2 | 3.75 | 3.75e-06 = 3.75e-06 = 3.75e+09 |
-| `010` | 3 | 5.625 | 5.625e-06 = 5.625e-06 = 5.625e+09 |
-| `011` | 4 | 7.5 | 7.5e-06 = 7.5e-06 = 7.5e+09 |
-| `100` | 5 | 9.375 | 9.375e-06 = 9.375e-06 = 9.375e+09 |
-| `101` | 6 | 11.25 | 1.125e-05 = 1.125e-05 = 1.125e+10 |
-| `110` | 7 | 13.125 | 1.3125e-05 = 1.3125e-05 = 1.3125e+10 |
-| `111` | 8 | 15 | 1.5e-05 = 1.5e-05 = 1.5e+10 |
+| `000` | 1 | 1.875 | 1.875e-06 A = 1.875e+09 fA = 1.875e-06 uA |
+| `001` | 2 | 3.750 | 3.75e-06 A = 3.75e+09 fA = 3.75e-06 uA |
+| `010` | 3 | 5.625 | 5.625e-06 A = 5.625e+09 fA = 5.625e-06 uA |
+| `011` | 4 | 7.500 | 7.5e-06 A = 7.5e+09 fA = 7.5e-06 uA |
+| `100` | 5 | 9.375 | 9.375e-06 A = 9.375e+09 fA = 9.375e-06 uA |
+| `101` | 6 | 11.250 | 1.125e-05 A = 1.125e+10 fA = 1.125e-05 uA |
+| `110` | 7 | 13.125 | 1.3125e-05 A = 1.3125e+10 fA = 1.3125e-05 uA |
+| `111` | 8 | 15.000 | 1.5e-05 A = 1.5e+10 fA = 1.5e-05 uA |
 
 代码位权：`pam_sel0`=bit0 权重 1，`pam_sel1`=bit1 权重 2，`pam_sel2`=bit2 权重 4；码 `000` 是**最低非零档**（一条支路），不得当黑码。
 

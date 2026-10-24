@@ -369,7 +369,10 @@ def c16_convergence_reports_an_absolute_difference():
     problems = []
     context = {'sign_rule': 'I_sink = Ip_branch', 'threshold_V': 0.9,
                'window_start_ps': MEASURE.ps(1130), 'window_stop_ps': MEASURE.ps(1230),
-               'reference_current_A': NOMINAL_000}
+               'reference_current_A': NOMINAL_000,
+               # R2 added this field to the pair context; the charges, the delta and the limit quoted
+               # below are the ones R1 already checked by hand and they did not move
+               'reference_tick_s': 120e-9}
     coarse = dict(context)
     coarse.update({'q': 1.875e-13})
     refined = dict(context)
@@ -586,7 +589,7 @@ def c21_convergence_refuses_a_context_it_cannot_read():
     fields = DATA['rules']['convergence']['required_context_fields']
     base = {'q': 2.15625e-13, 'delta_q': 0.0, 'flat_mean_A': 1.875e-6, 'sign_rule': 'I_sink = Ip_branch',
             'threshold_V': 0.9, 'window_start_ps': 1170000.0, 'window_stop_ps': 1290000.0,
-            'reference_current_A': NOMINAL_000}
+            'reference_current_A': NOMINAL_000, 'reference_tick_s': 120e-9}
     clean = MEASURE.convergence(base, dict(base), 120e-9)
     if clean['status'] != 'WITHIN_LIMIT':
         problems.append('a complete, identical pair should converge, it says %s (%s)'
@@ -713,6 +716,247 @@ def c25_the_reader_names_the_two_shapes_it_keeps():
                       % (len(named), len(results), ', '.join(named)))
 
 
+# ---- R2 cases: the reference tick is a property of the case, not of the window -------------------
+
+QLSB_BY_CASE = dict((case, float(CONTRACT.UNIT_CURRENT_NOMINAL_A) * float(tick))
+                    for case, tick in DATA['rules']['charge_error']['reference_tick_s_by_case'].items())
+TRANSIENT_ROWS = ('TR-LONG', 'TR-120', 'TR-200', 'TR-OFFCODE', 'RS-FULL', 'RS-LOW', 'RS-SWITCH')
+
+
+def _samples_for(row, extra_charge_by_index=None, leaks=None):
+    """hand samples for one delivered row, through the row's own enable
+
+    The branch is on for exactly its declared 50% window, so each emission charge is a rectangle a
+    pencil can do. `extra_charge_by_index` spreads an exact extra coulomb amount over one platform's
+    own window, which makes that window's charge error that amount to the picocoulomb and nothing else.
+    """
+    codes = _codes_of(row)
+    starts = _floats(row['full_window_start_ns'])
+    stops = _floats(row['full_window_stop_ns'])
+    tail_stops = _floats(row['tail_stop_ns'])
+    points = [(0.0, 0.0)]
+    for index, code in enumerate(codes):
+        nominal = DATA['nominal_current_A_by_code'][code]
+        extra = float((extra_charge_by_index or {}).get(index, 0.0))
+        window_s = (stops[index] - starts[index]) * 1e-9
+        height = nominal + (extra / window_s if extra else 0.0)
+        points.extend([(starts[index] - 1.0, 0.0), (starts[index], height),
+                       (stops[index], height), (stops[index] + 1.0, 0.0)])
+        leak = (leaks or {}).get(index)
+        if leak is not None:
+            points.extend([(tail_stops[index] - LEAK_NS, float(leak)),
+                           (tail_stops[index] - 0.001, float(leak))])
+    if points[-1][0] < float(row['stop_ns']):
+        points.append((float(row['stop_ns']), 0.0))
+    current = [(time_ns * 1000.0, value) for time_ns, value in points]
+    return {'enable': _enable_samples(row), 'current': current}
+
+
+def c26_half_picocoulomb_on_a_microsecond_platform_is_outside():
+    """the review's own counterexample, through the entrance: +0.5 pC on code 111 is 2.222222 LSB"""
+    by_case, windows, problems = _delivered()
+    if problems:
+        return problems, ''
+    row = by_case['TR-LONG']
+    entries = MEASURE.measure_case(row, windows, _samples_for(row, {7: 0.5e-12}))
+    last = entries[7]
+    _near('reference tick', last['reference_tick_s'], 120e-9, problems, 1e-18)
+    _near('QLSB', last['charge_error']['qlsb_C'], 2.25e-13, problems, TOL_WIDE)
+    _near('T50 of the window', last['charge_error']['t50_s'], 1000e-9, problems, 1e-18)
+    _near('expected nominal charge', last['charge_error']['qexpected_nominal_C'], 15e-12, problems,
+          TOL_WIDE)
+    _near('measured charge', last['q_full_C'], 15.5e-12, problems, TOL_WIDE)
+    _near('charge error', last['charge_error']['error_nominal_C'], 0.5e-12, problems, TOL_WIDE)
+    _near('error in QLSB', last['charge_error']['error_nominal_LSB'], 0.5e-12 / 2.25e-13, problems,
+          1e-6)
+    _want_status('verdict', last['charge_error']['verdict_nominal'], 'OUTSIDE_PROPOSED_LIMIT', problems)
+    if 'reference_tick_s_by_case' not in last['reference_tick_source']:
+        problems.append('the entry does not say where its ruler came from: %r'
+                        % (last['reference_tick_source'],))
+    others = [entry['window_id'] for entry in entries[:7]
+              if entry['charge_error']['verdict_nominal'] != 'WITHIN_PROPOSED_LIMIT']
+    if others:
+        problems.append('%s also moved off the limit, so the injection is not confined to the eighth '
+                        'platform' % ','.join(others))
+    return problems, ('TR-LONG code 111: T50 1 us stays the window, QLSB 0.225 pC comes from the 120 ns '
+                      'reference tick, error +0.5 pC = %g LSB, %s'
+                      % (last['charge_error']['error_nominal_LSB'],
+                         last['charge_error']['verdict_nominal']))
+
+
+def c27_qlsb_follows_the_case_and_not_the_window_or_the_code():
+    """TR-120 and TR-200 differ in ruler, TR-LONG keeps one ruler across its eight codes"""
+    by_case, windows, problems = _delivered()
+    if problems:
+        return problems, ''
+    observed = {}
+    for case_id in ('TR-120', 'TR-200', 'TR-LONG'):
+        row = by_case[case_id]
+        observed[case_id] = [(entry['code'], entry['charge_error']['qlsb_C'],
+                              entry['charge_error']['t50_s'])
+                             for entry in MEASURE.measure_case(row, windows, _samples_for(row))]
+    _near('TR-120 QLSB', observed['TR-120'][0][1], 2.25e-13, problems, TOL_WIDE)
+    _near('TR-200 QLSB', observed['TR-200'][0][1], 3.75e-13, problems, TOL_WIDE)
+    rulers = set(item[1] for item in observed['TR-LONG'])
+    if len(rulers) != 1:
+        problems.append('TR-LONG reports %d different QLSB values, but the ruler belongs to the case '
+                        'and not to the code under test' % len(rulers))
+    _near('TR-LONG QLSB', observed['TR-LONG'][0][1], 2.25e-13, problems, TOL_WIDE)
+    if len(set(item[0] for item in observed['TR-LONG'])) != 8:
+        problems.append('TR-LONG measured %d distinct codes, the row declares eight'
+                        % len(set(item[0] for item in observed['TR-LONG'])))
+    if abs(observed['TR-LONG'][0][2] - 1000e-9) > 1e-18:
+        problems.append('TR-LONG window is %s s, and a QLSB built on that number is the defect this '
+                        'case exists to keep closed' % (observed['TR-LONG'][0][2],))
+    return problems, ('TR-120 0.225 pC, TR-200 0.375 pC, TR-LONG eight codes all on 0.225 pC while its '
+                      'own window is 1 us (%d windows read)'
+                      % sum(len(items) for items in observed.values()))
+
+
+def c28_wider_window_moves_the_expectation_not_the_ruler():
+    """T50 scales Qexpected, the reference tick scales QLSB, and the entrance agrees"""
+    problems = []
+    nominal = NOMINAL_000
+    short = MEASURE.charge_errors(nominal * 120e-9, nominal, 120e-9, None, 120e-9, MEASURE.SYNTHETIC,
+                                  'synthetic window')
+    long_window = MEASURE.charge_errors(nominal * 1000e-9, nominal, 1000e-9, None, 120e-9,
+                                        MEASURE.SYNTHETIC, 'synthetic window')
+    _near('expected charge over 120 ns', short['qexpected_nominal_C'], nominal * 120e-9, problems,
+          TOL_WIDE)
+    _near('expected charge over 1 us', long_window['qexpected_nominal_C'], nominal * 1000e-9, problems,
+          TOL_WIDE)
+    if abs(short['qlsb_C'] - long_window['qlsb_C']) > 1e-30:
+        problems.append('the ruler moved with the window: %g C versus %g C'
+                        % (short['qlsb_C'], long_window['qlsb_C']))
+    _near('both QLSB', short['qlsb_C'], 2.25e-13, problems, TOL_WIDE)
+    if short['error_nominal_LSB'] != 0.0 or long_window['error_nominal_LSB'] != 0.0:
+        problems.append('an exact rectangle should read zero error, got %r and %r'
+                        % (short['error_nominal_LSB'], long_window['error_nominal_LSB']))
+    by_case, windows, unreadable = _delivered()
+    if unreadable:
+        return unreadable, ''
+    entry = MEASURE.measure_case(by_case['TR-LONG'], windows, _samples_for(by_case['TR-LONG']))[0]
+    _near('the entrance agrees on the ruler', entry['charge_error']['qlsb_C'], short['qlsb_C'],
+          problems, TOL_WIDE)
+    if abs(entry['charge_error']['t50_s'] - 1000e-9) > 1e-18:
+        problems.append('TR-LONG T50 came back as %r' % (entry['charge_error']['t50_s'],))
+    return problems, ('120 ns and 1 us windows of one code: expected %g C versus %g C, QLSB %g C both '
+                      'times, and the delivered entrance agrees'
+                      % (short['qexpected_nominal_C'], long_window['qexpected_nominal_C'],
+                         short['qlsb_C']))
+
+
+def c29_every_emission_window_carries_its_case_qlsb():
+    """all 27 emission windows of the delivered schedule, read back against the contract table"""
+    by_case, windows, problems = _delivered()
+    if problems:
+        return problems, ''
+    seen, wrong = 0, []
+    for case_id in TRANSIENT_ROWS:
+        if case_id not in by_case:
+            problems.append('%s is not in the delivered schedule' % case_id)
+            continue
+        row = by_case[case_id]
+        for entry in MEASURE.measure_case(row, windows, _samples_for(row)):
+            seen += 1
+            want = QLSB_BY_CASE[case_id]
+            if abs(entry['charge_error']['qlsb_C'] - want) > 1e-30:
+                wrong.append('%s %s gives QLSB %g, the contract table says %g'
+                             % (case_id, entry['window_id'], entry['charge_error']['qlsb_C'], want))
+            declared = float(DATA['rules']['charge_error']['reference_tick_s_by_case'][case_id])
+            if abs(entry['reference_tick_s'] - declared) > 1e-18:
+                wrong.append('%s reports reference tick %s, the table says %s'
+                             % (case_id, entry['reference_tick_s'], declared))
+    problems.extend(wrong[:4])
+    if seen != 27:
+        problems.append('%d emission windows were read, the schedule declares 27' % seen)
+    return problems, ('%d windows across %d transient and refined cases, every QLSB equal to '
+                      'Iunit x that case reference tick (%s)'
+                      % (seen, len(TRANSIENT_ROWS),
+                         ', '.join('%s=%g pC' % (case, QLSB_BY_CASE[case] * 1e12)
+                                   for case in ('TR-200', 'TR-LONG'))))
+
+
+def c30_a_bad_reference_tick_refuses_before_any_division():
+    """zero, negative, NaN, infinity, missing and unknown each name themselves instead of dividing"""
+    problems = []
+    bad = ((0.0, 'zero'), (-120e-9, 'negative'), (float('nan'), 'NaN'), (float('inf'), 'infinity'),
+           ('120e-9 as text', 'not a number'))
+    for value, label in bad:
+        data = json.loads(json.dumps(DATA))
+        data['rules']['charge_error']['reference_tick_s_by_case']['TR-120'] = value
+        try:
+            got = MEASURE.reference_tick_for_case('TR-120', data)
+            problems.append('a %s reference tick (%r) was accepted as %r' % (label, value, got))
+        except MEASURE.Refuse as error:
+            if 'TR-120' not in str(error):
+                problems.append('the refusal for the %s tick does not name the case: %s'
+                                % (label, str(error)[:90]))
+        except ZeroDivisionError as error:
+            problems.append('a %s reference tick reached a division first: %s' % (label, error))
+    data = json.loads(json.dumps(DATA))
+    del data['rules']['charge_error']['reference_tick_s_by_case']['TR-OFFCODE']
+    try:
+        got = MEASURE.reference_tick_for_case('TR-OFFCODE', data)
+        problems.append('a case with no entry fell back to something: %r' % (got,))
+    except MEASURE.Refuse as error:
+        if 'no reference tick' not in str(error):
+            problems.append('the missing-case refusal is not the named one: %s' % str(error)[:90])
+    try:
+        MEASURE.reference_tick_for_case('TR-404', DATA)
+        problems.append('an unknown case id was accepted')
+    except MEASURE.Refuse:
+        pass
+    by_case, windows, unreadable = _delivered()
+    if unreadable:
+        return unreadable, ''
+    dc = MEASURE.measure_case(by_case['DC-001'], windows, {'enable': [], 'current': []})[0]
+    _want_status('a DC case has no time-domain QLSB', dc['qlsb_status'],
+                 'NOT_APPLICABLE_DC_HAS_NO_TIME_DOMAIN', problems)
+    return problems, ('%d bad ticks each refused by name before the division, missing and unknown '
+                      'refuse too, and the DC row reports %s' % (len(bad), dc['qlsb_status']))
+
+
+def c31_convergence_divides_by_the_reference_tick_it_was_given():
+    """10 fC is 0.044444 QLSB at 120 ns; a denominator that disagrees with the pair is refused"""
+    problems = []
+    context = {'sign_rule': 'I_sink = Ip_branch', 'threshold_V': 0.9,
+               'window_start_ps': MEASURE.ps(1170), 'window_stop_ps': MEASURE.ps(1290),
+               'reference_current_A': NOMINAL_000, 'reference_tick_s': 120e-9}
+    coarse = dict(context, q=2.0e-13)
+    refined = dict(context, q=2.1e-13)
+    verdict = MEASURE.convergence(coarse, refined, 120e-9, MEASURE.SYNTHETIC)
+    _near('absolute delta', verdict['delta_q_C'], 1e-14, problems, TOL_WIDE)
+    _near('delta in QLSB at the 120 ns tick', verdict['abs_delta_over_qlsb'], 1e-14 / 2.25e-13,
+          problems, 1e-6)
+    _want_status('status', verdict['status'], 'OUTSIDE_LIMIT', problems)
+    _near('reference tick reported back', verdict['reference_tick_s'], 120e-9, problems, 1e-18)
+    washed = MEASURE.convergence(coarse, refined, 1000e-9, MEASURE.SYNTHETIC)
+    _want_status('a 1 us denominator under a 120 ns pair', washed['status'], 'REFUSED_MISSING_CONTEXT',
+                 problems)
+    if not washed.get('reference_tick_problems'):
+        problems.append('the 1 us denominator was accepted without naming the ruler disagreement')
+    both = MEASURE.convergence(dict(coarse, reference_tick_s=1000e-9),
+                               dict(refined, reference_tick_s=1000e-9), 1000e-9, MEASURE.SYNTHETIC)
+    if both['status'] not in ('OUTSIDE_LIMIT', 'WITHIN_LIMIT'):
+        problems.append('a pair that agrees on its own 1 us tick should be judged, not refused: %s'
+                        % (both['status'],))
+    _near('and it uses that tick', both['abs_delta_over_qlsb'], 1e-14 / (1.875e-6 * 1000e-9), problems,
+          1e-6)
+    zero = MEASURE.convergence(dict(coarse, reference_tick_s=0.0), dict(refined, reference_tick_s=0.0),
+                               0.0, MEASURE.SYNTHETIC)
+    _want_status('a zero denominator', zero['status'], 'REFUSED_MISSING_CONTEXT', problems)
+    drift = MEASURE.convergence(coarse, dict(refined, reference_tick_s=200e-9), 120e-9,
+                               MEASURE.SYNTHETIC)
+    _want_status('two sides carrying different ticks', drift['status'], 'REFUSED_CONTEXT_CHANGED',
+                 problems)
+    if 'reference_tick_s' not in str(drift['context_drift']):
+        problems.append('the drift verdict does not name the ruler field: %s'
+                        % (drift['context_drift'],))
+    return problems, ('10 fC over 120 ns is %g QLSB against a %g limit; a denominator that disagrees '
+                      'with the pair, a zero ruler and a drifted pair are each refused'
+                      % (verdict['abs_delta_over_qlsb'], verdict['limit']))
+
 def cases():
     return [('C01_positive_sink_charge', 'POSITIVE', 'a 100 ns window at one unit current integrates '
              'to the hand-computed charge and reads positive', c01_positive_sink_charge),
@@ -771,7 +1015,24 @@ def cases():
              'decks and finds nothing to report', c24_delivered_decks_read_clean),
             ('C25_reader_names_the_shapes', 'NEGATIVE', 'the old long ramp and leakage over the next '
              'rise are refused by name on temporary copies',
-             c25_the_reader_names_the_two_shapes_it_keeps)]
+             c25_the_reader_names_the_two_shapes_it_keeps),
+            ('C26_half_pC_is_outside', 'NEGATIVE', 'the review +0.5 pC on a 1 us platform reads '
+             '2.222222 QLSB and OUTSIDE_PROPOSED_LIMIT through the entrance',
+             c26_half_picocoulomb_on_a_microsecond_platform_is_outside),
+            ('C27_qlsb_follows_the_case', 'POSITIVE', 'one case keeps one ruler across its codes while '
+             'TR-200 keeps its own 200 ns ruler', c27_qlsb_follows_the_case_and_not_the_window_or_the_code),
+            ('C28_expectation_scales_with_t50', 'POSITIVE', 'a wider window moves the expected charge '
+             'and leaves the QLSB where the contract put it',
+             c28_wider_window_moves_the_expectation_not_the_ruler),
+            ('C29_all_27_windows_read_back', 'POSITIVE', 'every emission window of the delivered '
+             'schedule carries its own case QLSB from the contract map',
+             c29_every_emission_window_carries_its_case_qlsb),
+            ('C30_bad_tick_refuses_first', 'NEGATIVE', 'zero, negative, NaN, infinity, missing and '
+             'unknown ticks refuse by name before any division',
+             c30_a_bad_reference_tick_refuses_before_any_division),
+            ('C31_convergence_uses_the_reference_tick', 'NEGATIVE', 'convergence divides by the tick '
+             'the pair carries and refuses a denominator that disagrees with it',
+             c31_convergence_divides_by_the_reference_tick_it_was_given)]
 
 
 def run():
