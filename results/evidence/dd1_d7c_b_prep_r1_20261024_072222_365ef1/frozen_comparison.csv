@@ -1,0 +1,13 @@
+comparison,surface,paths_compared,mismatched,first_mismatches,expectation,enforced
+r1,every_P_path_outside_the_allowed_edit_surface,2670,0,,identical,yes
+r1,allowed_edit_surface_modified_this_round,26,0,reports/dd1_d7c_b_prep_contract.md;scripts/dd1_d7c_b_prep_cases.py;scripts/dd1_d7c_b_prep_contract.py,informational_listing,no
+r1,four_candidate_DUT_netlists,4,0,,identical,yes
+r1,accepted_DATA7B_measurement_and_run_core,3,0,,identical,yes
+r1,shared_tools_safety_and_provenance,14,0,,identical,yes
+r1,PREP_record_as_published,23,0,,identical,yes
+r1,earlier_round_record_dirs,51,0,,identical,yes
+r1,PREP_report_handoff_and_task_book,4,0,,identical,yes
+r1,R2_and_earlier_plan_and_decks,2,0,,identical,yes
+r1,paths_added_this_round,7,0,,only_allowed_new,yes
+r1,paths_removed_vs_P,0,0,,none_removed,yes
+r1,paths_modified_vs_P,26,0,reports/dd1_d7c_b_prep_contract.md;scripts/dd1_d7c_b_prep_cases.py;scripts/dd1_d7c_b_prep_contract.py,informational_listing,no

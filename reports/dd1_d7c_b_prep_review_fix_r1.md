@@ -143,24 +143,127 @@ summary/identity 五个，顺序与实现都不动），把"名字属于上一�
 除此之外的每一条共享规则原样生效，`frozen_surfaces` 那行证明共享模块与 PREP 字节逐字节相同。
 
 <!-- BEGIN 7CB_R1 GATES -->
+| 门 | 命令 | rc | 期望 | 判决 | 依据 |
+|---|---|---|---|---|---|
+| `reviewer_instrument_on_P_base` | `python probe_prep_gaps.py --root the P extraction --out instrument_P.jso` | 0 | 0 | PASS | four families read individually: 1_=reproduced;2_=reproduced;3_=reproduced;4_=reproduced; aggregate all_four=True expected True; instrument bytes sha2 |
+| `reviewer_instrument_on_r1_bytes` | `python probe_prep_gaps.py --root this tree --out instrument_r1.json` | 1 | 1 | PASS | four families read individually: 1_=closed;2_=closed;3_=closed;4_=closed; aggregate all_four=False expected False; instrument bytes sha256=d981ff190a6 |
+| `reviewer_instrument_bytes_unchanged` | `sha256 of review/MicroLED_DATA7C_B_PREP_Independent_Review_20261024/revi` | 0 | 0 | PASS | the instrument that judged the PREP bytes is the instrument that judged these; sha256=d981ff190a627ae70bb8e8a5656226b1b2a2d35e65b6539d99b13768dbe69b7c |
+| `deck_read_on_delivered_bytes` | `python dd1_d7c_b_prep_r1_deck_read.py --check --observe --json <out>` | 0 | 0 | PASS | D7C_B_PREP_R1_DECK_READ_OBSERVE: PASS ({"decks_read": 15, "half_rail_crossings_total": 54, "pam_changing_segments_total": 36, "pwl_signals_read": ["da |
+| `deck_read_negatives_named` | `python dd1_d7c_b_prep_r1_deck_read.py --counterexample` | 0 | 0 | PASS |   delivered_bytes_control        HIT   delivered TR-LONG and TR-OFFCODE raise 0 edge or leakage refusals: [] |
+| `deck_read_refuses_the_base_tree` | `python dd1_d7c_b_prep_r1_deck_read.py --check --root <P extraction>` | 1 | 1 | PASS |   PROBLEM the contract of this tree does not declare units.logic_high_V, units.edge_ns, units.transient_offset_ns, rules; the reader states what it ca |
+| `contract_selfcheck` | `python dd1_d7c_b_prep_contract.py --check` | 0 | 0 | PASS | D7C_B_CONTRACT_CHECK: PASS (state=PROPOSED_FOR_REVIEW sweep_points=19 markdown_rows=19 problems=0) |
+| `schedule_check` | `python dd1_d7c_b_prep_schedule.py --check` | 0 | 0 | PASS | D7C_B_SCHEDULE_CHECK: PASS (rows=15 windows=143 pwl=300 problems=0) |
+| `deck_check` | `python dd1_d7c_b_prep_deckgen.py --check` | 0 | 0 | PASS | D7C_B_DECKGEN_CHECK: PASS (15 decks, problems=0) |
+| `offline_checks` | `python dd1_d7c_a_offline_check.py --json` | 0 | 0 | PASS | D7C_A_OFFLINE_CHECK: PASS (34 checks, failures: none) |
+| `counterexamples` | `python dd1_d7c_a_guards.py --json` | 0 | 0 | PASS | D7C_A_GUARDS: PASS (65/65 named exactly; not hit: none) |
+| `deck_regenerated_from_sources` | `python dd1_d7c_b_prep_deckgen.py --to <scratch>` | 0 | 0 | PASS | D7C_B_DECKGEN_REGENERATED 15 decks in a scratch tree, comparison problems=0 |
+| `synthetic_measure_cases` | `python dd1_d7c_b_prep_cases.py --json <out>` | 0 | 0 | PASS | D7C_B_PREP_CASES: PASS (25/25 named exactly, failures: none, evidence SYNTHETIC_NOT_MEASURED) |
+| `record_tool_selftest` | `python dd1_d7c_a_r1_selftest.py --json <out>/selftest.json run in a thro` | 0 | 0 | PASS | clone_at_R2 PASS (9 cases, failures: none); this_tree rc=1 FAIL, failing cases frozen_gate_counts_only_enforced_rows, all 90 paths the A-round whiteli |
+| `fresh_extraction_replay` | `git archive 10f69053a192 / tar -x, then run every suite and the reviewer` | 0 | 0 | PASS | contract_check rc=0 D7C_B_CONTRACT_CHECK: PASS (state=PROPOSED_FOR_REVIEW sweep_points=19 markdown_rows=19 problems=0); schedule_check rc=0 D7C_B_SCHE |
+| `handoff_structure` | `python dd1_d7c_b_prep_r1_verify.py --handoff-check (in process)` | 0 | 0 | PASS | fields, digests against disk, four repairs, zero costs, markers and forbidden claims all checked |
+| `native_entry_refused` | `python dd1_d7c_a_deckgen.py --probe <temp>` | 0 | 0 | PASS | DECKGEN_PROBE refused=True untouched=True reason=DATA-7C-A: this round authorises no native launch and no deck publication; NATIVE_AUTHORISED_THIS_ROU |
+| `provenance` | `python scripts/provenance_check.py` | 0 | 0 | PASS | SOURCE_PROVENANCE_CHECK: PASS |
+| `history_safety` | `python scripts/precommit_safety_check.py --mode history` | 0 | 0 | PASS | SAFETY_GATE: PASS; counters={'PDK_TRACKED_FILES': '0', 'CREDENTIAL_TRACKED_FILES': '0'} |
+| `git_range_counts` | `git diff --name-status R2..P, git rev-list --count R2..P and the same ov` | 0 | 0 | PASS | R2..P added=83 changed=0 deleted=0 commits=15 (the PREP receipt stated 68 added, corrected here to 83); P..HEAD added=7 changed=26 deleted=0 commits=3 |
+| `frozen_surfaces` | `git ls-tree -r blob/mode comparison over explicit path lists, plus git d` | 0 | 0 | PASS | enforced rows 10, violations 0, informational 2; added vs P 7, removed 0, modified 26; git diff --check P..HEAD=0 R2..HEAD=0 T..HEAD=0 |
+| `record_line_endings` | `scan every published file for CR and round-trip a comma-and-quote row th` | 0 | 0 | PASS | published files still carrying CR: none; the table writer emits LF (confirmed); instrument JSONs are normalised only after the parsed object is proven |
+
+渲染发生在 `10f69053a192` 之后、`record_semantics` 与 `published_record_recheck` 判定之前；本表不含本轮记录的摘要（它写于本文件之后）。
 <!-- END 7CB_R1 GATES -->
 
 <!-- BEGIN 7CB_R1 REPAIRS -->
+| 族 | 评审读到的事实 | 本轮改法 | P 上复现 | R1 上复现 | R1 判据 |
+|---|---|---|---|---|---|
+| F1_PAM_bit_order_and_high_level | REVIEW_DATA7C_B_PREP_20261024.md section 3 F1, checks/prep_probe.json F1.dc_code_mismatche | value = int(code, 2); bit(k) = (value >> k) & 1; volts = bit * logic_high_V, used by the D | yes | no | deck_read 独立读回 8 码与三级电平 |
+| F2_PWL_and_window_physics | REVIEW_DATA7C_B_PREP_20261024.md section 3 F2, checks/prep_probe.json F2.PAM_ramps_over_em | a code change is old value at t-1 and new value at t+1 inside the pure-off window; windows | yes | no | deck_read 独立插值 50% 沿、码变段全低、漏流子窗 |
+| F3_measurement_entry_wiring | REVIEW_DATA7C_B_PREP_20261024.md section 3 F3, checks/prep_probe.json F3.entries (eight NO | each emission window searches around its own rise50/fall50, reports the full-enable Q and  | yes | no | 25 例合成正反例全走真实入口 |
+| F4_native_deck_known_contract | REVIEW_DATA7C_B_PREP_20261024.md section 3 F4, checks/prep_probe.json F4.no_explicit_27C ( | decks state simopt options temp=27, an instance-named analysis line, and PWL as wave=[t v  | yes | no | deck_read 按语句解析 temp/analysis/PWL/probe |
 <!-- END 7CB_R1 REPAIRS -->
 
 <!-- BEGIN 7CB_R1 DECKS -->
+| 例 | 类型 | 码 | 半沿 (ns) | 偏移 (ns) | 平台首 (ns) | 全窗 (ns) | 平坦 (ns) | 纯关 (ns) | 漏流子窗 | 换码 (ns) | stop | maxstep | 配对 | 结果 |
+|---|---|---|---:|---:|---|---|---|---|---|---|---:|---:|---|---|
+| `DC-000` | dc_sweep | `000` | 0.000 | 0.000 | dc_no_time_window | dc_no_time_window | dc_no_time_window-dc_no_time_window | dc_no_time_window | dc_no_time_window | static_from_t0 | dc_no_time_window | not_applicable_dc_analysis | - | NOT_RUN |
+| `DC-001` | dc_sweep | `001` | 0.000 | 0.000 | dc_no_time_window | dc_no_time_window | dc_no_time_window-dc_no_time_window | dc_no_time_window | dc_no_time_window | static_from_t0 | dc_no_time_window | not_applicable_dc_analysis | - | NOT_RUN |
+| `DC-010` | dc_sweep | `010` | 0.000 | 0.000 | dc_no_time_window | dc_no_time_window | dc_no_time_window-dc_no_time_window | dc_no_time_window | dc_no_time_window | static_from_t0 | dc_no_time_window | not_applicable_dc_analysis | - | NOT_RUN |
+| `DC-011` | dc_sweep | `011` | 0.000 | 0.000 | dc_no_time_window | dc_no_time_window | dc_no_time_window-dc_no_time_window | dc_no_time_window | dc_no_time_window | static_from_t0 | dc_no_time_window | not_applicable_dc_analysis | - | NOT_RUN |
+| `DC-100` | dc_sweep | `100` | 0.000 | 0.000 | dc_no_time_window | dc_no_time_window | dc_no_time_window-dc_no_time_window | dc_no_time_window | dc_no_time_window | static_from_t0 | dc_no_time_window | not_applicable_dc_analysis | - | NOT_RUN |
+| `DC-101` | dc_sweep | `101` | 0.000 | 0.000 | dc_no_time_window | dc_no_time_window | dc_no_time_window-dc_no_time_window | dc_no_time_window | dc_no_time_window | static_from_t0 | dc_no_time_window | not_applicable_dc_analysis | - | NOT_RUN |
+| `DC-110` | dc_sweep | `110` | 0.000 | 0.000 | dc_no_time_window | dc_no_time_window | dc_no_time_window-dc_no_time_window | dc_no_time_window | dc_no_time_window | static_from_t0 | dc_no_time_window | not_applicable_dc_analysis | - | NOT_RUN |
+| `DC-111` | dc_sweep | `111` | 0.000 | 0.000 | dc_no_time_window | dc_no_time_window | dc_no_time_window-dc_no_time_window | dc_no_time_window | dc_no_time_window | static_from_t0 | dc_no_time_window | not_applicable_dc_analysis | - | NOT_RUN |
+| `TR-LONG` | transient | `000..111` | 50.000 | 1050.000 | 1050.000 | 1050.000 | 1100.000-2000.000 | 2100.000 | 2400.000-2500.000;3900.000-4000.000;5400.000-5500.000;6900.000-7000.000;8400.000-8500.000;9900.000-10000.000;11400.000-11500.000;12950.000-13050.000 | static_from_t0;2300.000;3800.000;5300.000;6800.000;8300.000;9800.000;11300.000 | 13050.000 | 2.000 | - | NOT_RUN |
+| `TR-120` | transient | `000` | 10.000 | 1050.000 | 1170.000 | 1170.000 | 1180.000-1280.000 | 1300.000 | 1430.000-1530.000 | static_from_t0 | 1530.000 | 2.000 | - | NOT_RUN |
+| `TR-200` | transient | `000` | 10.000 | 1050.000 | 1170.000 | 1170.000 | 1180.000-1360.000 | 1380.000 | 1510.000-1610.000 | static_from_t0 | 1610.000 | 2.000 | - | NOT_RUN |
+| `TR-OFFCODE` | transient | `011,100,000,111` | 20.000 | 1050.000 | 1350.000 | 1350.000 | 1370.000-1630.000 | 1670.000 | 1830.000-1930.000;2430.000-2530.000;3030.000-3130.000;3650.000-3750.000 | static_from_t0;1800.000;2400.000;3000.000 | 3750.000 | 2.000 | - | NOT_RUN |
+| `RS-FULL` | refined_step | `000..111` | 50.000 | 1050.000 | 1050.000 | 1050.000 | 1100.000-2000.000 | 2100.000 | 2400.000-2500.000;3900.000-4000.000;5400.000-5500.000;6900.000-7000.000;8400.000-8500.000;9900.000-10000.000;11400.000-11500.000;12950.000-13050.000 | static_from_t0;2300.000;3800.000;5300.000;6800.000;8300.000;9800.000;11300.000 | 13050.000 | 0.100 | TR-LONG | NOT_RUN |
+| `RS-LOW` | refined_step | `000` | 10.000 | 1050.000 | 1170.000 | 1170.000 | 1180.000-1280.000 | 1300.000 | 1430.000-1530.000 | static_from_t0 | 1530.000 | 0.100 | TR-120 | NOT_RUN |
+| `RS-SWITCH` | refined_step | `011,100,000,111` | 20.000 | 1050.000 | 1350.000 | 1350.000 | 1370.000-1630.000 | 1670.000 | 1830.000-1930.000;2430.000-2530.000;3030.000-3130.000;3650.000-3750.000 | static_from_t0;1800.000;2400.000;3000.000 | 3750.000 | 0.100 | TR-OFFCODE | NOT_RUN |
 <!-- END 7CB_R1 DECKS -->
 
 <!-- BEGIN 7CB_R1 CASES -->
+| 例 | 类型 | 判决 | 观察到的依据 | 说明 |
+|---|---|---|---|---|
+| C01_positive_sink_charge | POSITIVE | HIT | Q=1.875e-13 C over 100 ns at 1.875 uA, sign SINK_POSITIVE_AS_DECLARED | a 100 ns window at one unit current integrates to the hand-computed charge and reads positive |
+| C02_reversed_probe_refused | NEGATIVE | HIT | the same physics on reversed terminals gives Q=-1.875e-13 C; abs() would have made it look identical to the positive cas | turning the ammeter around cannot be rescued by abs() |
+| C03_deck_probe_order_named | NEGATIVE | HIT | line 79 became (data_out clamp_node) and the deck audit answered: TR-120.scs writes the probe as "Ip_branch (data_out cl | a deck written with the terminals swapped is refused by the deck audit |
+| C04_cancelling_tail_fails | NEGATIVE | HIT | net Q=0 C looks like a shut branch, the magnitude test still says 0.5 uA against a 0.15 uA limit | a tail whose positive and negative halves cancel is not zero leakage |
+| C05_quiet_tail_passes | POSITIVE | HIT | max(abs(I))=0.01 uA at 1380 ns inside the last 100 ns, under the 0.15 uA limit | a quiet tail passes and names its sample instant |
+| C06_nonuniform_pencil_check | POSITIVE | HIT | Q=1.375e-13 C, boundaries interpolated onto the enclosing pairs | interpolated boundaries over unequal spacing match the arithmetic done by hand |
+| C07_adaptive_precision | POSITIVE | HIT | kept 1.99902e+06 ps (quantum 50000 ps), which is the bound a reviewer needs beside the number | a printed simulator time is kept at its own precision with its display quantum reported |
+| C08_garbage_named | NEGATIVE | HIT | four bad sample shapes and one edge-less window all refused by name | NaN, a repeated time, a backwards time, an empty list and a missing edge each refuse by name |
+| C09_left_band_before_deadline | NEGATIVE | HIT | left the band at 1201.55 ns, held only None ns, deadline 1230 ns | entering the band and leaving early is not a settled window |
+| C10_settled_held | POSITIVE | HIT | in band from the edge to the deadline, held 100 ns | staying in band to the deadline is the settled case |
+| C11_halved_array | NEGATIVE | HIT | half current gives worst deviation 0 units of Iunit_ref, absolute 7.5 uA against the band 14.25-15.75 uA | eight levels at half current pass the ratio and fail the absolute target |
+| C12_code_000_not_black | NEGATIVE | HIT | code 000 = 1 branch, and a ladder missing it is refused by name | the lowest code is one conducting branch and cannot be dropped from the ladder |
+| C13_refined_lost_history | NEGATIVE | HIT | the schedule refused it: RS-FULL writes off_window_ns 2100.000-2500.000;3600.000-4000.000;5100.000-5500.000;6600.000-700 | a refined case that dropped the seven earlier platforms is not the same conditions |
+| C14_refined_changed_supply | NEGATIVE | HIT | the schedule refused it: RS-LOW differs from TR-120 outside the time step: data_en_level_V | a refined case that also moved the enable level is refused |
+| C15_refined_lost_transition | NEGATIVE | HIT | the schedule refused it: RS-SWITCH declares 3 code-change entries for 4 platforms | a refined case that dropped one code change is a different experiment |
+| C16_convergence_absolute | NEGATIVE | HIT | delta Q=10 fC = 0.0444444 QLSB against a 0.01 limit; moving the window by 10 ns refuses the comparison | convergence always carries an absolute difference, and a moved window refuses the comparison |
+| C17_two_charge_expectations | POSITIVE | HIT | nominal 1.875e-13 C vs DC NOT_RUN; QLSB 2.25e-13 C, error 0 LSB | nominal and DC expectations stay apart and the missing DC point is NOT_RUN, never a geometry guess |
+| C18_leak_in_second_tail | POSITIVE | HIT | 8 codes, one 5 uA leak in platform 1: ABOVE_LIMIT at index [1] with max(abs(I)) = 5e-06 A over 100 ns, the other seven W | eight codes measured at once find the 5 uA leak in the second tail and nowhere else |
+| C19_full_versus_flat_window | POSITIVE | HIT | full 2.15625e-13 C over 120 ns of enable versus flat 1.875e-13 C over 100 ns of flat part; the difference 2.8125e-14 C i | the full-enable charge and the flat charge are different numbers, each matching its own pencil arithmetic |
+| C20_no_edge_refusal_left | POSITIVE | HIT | 27 windows over 7 transient cases measured through the entrance, edge refusals=0, edges off their declared instant=0 | every window of the delivered schedule finds its own interpolated 50% edges on the declared instant |
+| C21_missing_context_refused | NEGATIVE | HIT | 5 context fields each refused by name when both sides omitted them; the complete pair converges at WITHIN_LIMIT | convergence refuses when a side does not carry the named context, instead of calling None equal to None |
+| C22_leakage_window_refusals | NEGATIVE | HIT | a 10 ns tail refuses as REFUSED_LEAKAGE_OUTSIDE_PURE_OFF and an enable that reaches 1.8 V inside the window refuses as R | a leakage interval that reaches the pure-off start or a rising enable is refused, never shortened to fit |
+| C23_dc_expectation_via_entrance | NEGATIVE | HIT | nominal 2.25e-13 C (-0.0416667 LSB) with the DC column NOT_RUN; supplying IDC 2 uA makes the DC expectation 2.4e-13 C, a | through the entrance a missing native DC point stays NOT_RUN while the nominal error is computed |
+| C24_decks_read_clean | POSITIVE | HIT | 15 decks read from disk with the reader's own parser, problems=0 | the independent reader opens the fifteen delivered decks and finds nothing to report |
+| C25_reader_names_the_shapes | NEGATIVE | HIT | 3 of 3 shapes refused by name on temporary copies (old_long_ramp, leak_window_over_next_rise, delivered_bytes_control) | the old long ramp and leakage over the next rise are refused by name on temporary copies |
 <!-- END 7CB_R1 CASES -->
 
 <!-- BEGIN 7CB_R1 READ -->
+| 读数 | 值 |
+|---|---|
+| deck 数 | 15 |
+| 窗类型计数 | {"dc_sweep_point": 8, "emission": 27, "emission_flat": 27, "leak_last100": 27, "off_tail": 27, "pure_off": 27} |
+| PAM 变化段总数 | 36 |
+| 半轨交叉总数 | 54 |
+| 读到的 PWL 信号 | data_en, pam0, pam1, pam2 |
+
+独立读盘由 `scripts/dd1_d7c_b_prep_r1_deck_read.py` 完成：它自带解析器，不 import 生成器与测量核，位权按 `pam0=1/pam1=2/pam2=4` 的字面常量写死。空问题表是在 27 个 emission 窗与 36 个 PAM 变化段上量出来的，不是沉默。
 <!-- END 7CB_R1 READ -->
 
 <!-- BEGIN 7CB_R1 RANGES -->
+| 区间 | 新增 | 变更 | 删除 | 重命名 | 提交数 | 说明 |
+|---|---|---|---|---|---|---|
+| `3e4703f17632..dcef9b336f22` | 83 | 0 | 0 | 0 | 15 | 本轮基线区间，由 Git 重算；PREP 回执写的 68 新增在此更正为 83 |
+| `dcef9b336f22..HEAD` | 7 | 26 | 0 | 0 | 3 | R1 修补区间，度量于运行本入口时已提交的 HEAD=10f69053a192；记录目录本身在下一个提交里 |
 <!-- END 7CB_R1 RANGES -->
 
 <!-- BEGIN 7CB_R1 FROZEN -->
+| 比较 | 面 | 路径数 | 计数 | 前若干 | 期望 | 计入闸 |
+|---|---|---:|---:|---|---|---|
+| r1 | `every_P_path_outside_the_allowed_edit_surface` | 2670 | 0 |  | `identical` | yes |
+| r1 | `allowed_edit_surface_modified_this_round` | 26 | 0 | reports/dd1_d7c_b_prep_contract.md;scripts/dd1_d7c_b_prep_cases.py;scripts/dd1_d7c_b_prep_ | `informational_listing` | no |
+| r1 | `four_candidate_DUT_netlists` | 4 | 0 |  | `identical` | yes |
+| r1 | `accepted_DATA7B_measurement_and_run_core` | 3 | 0 |  | `identical` | yes |
+| r1 | `shared_tools_safety_and_provenance` | 14 | 0 |  | `identical` | yes |
+| r1 | `PREP_record_as_published` | 23 | 0 |  | `identical` | yes |
+| r1 | `earlier_round_record_dirs` | 51 | 0 |  | `identical` | yes |
+| r1 | `PREP_report_handoff_and_task_book` | 4 | 0 |  | `identical` | yes |
+| r1 | `R2_and_earlier_plan_and_decks` | 2 | 0 |  | `identical` | yes |
+| r1 | `paths_added_this_round` | 7 | 0 |  | `only_allowed_new` | yes |
+| r1 | `paths_removed_vs_P` | 0 | 0 |  | `none_removed` | yes |
+| r1 | `paths_modified_vs_P` | 26 | 0 | reports/dd1_d7c_b_prep_contract.md;scripts/dd1_d7c_b_prep_cases.py;scripts/dd1_d7c_b_prep_ | `informational_listing` | no |
 <!-- END 7CB_R1 FROZEN -->
 
 ## 10 已知失败、未做与限制（不写成通过）

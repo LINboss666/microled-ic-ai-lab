@@ -1,0 +1,160 @@
+{
+  "instrument": "probe_prep_gaps.py",
+  "source_root": "D:\\ic617_d7c_b_prep_r1",
+  "contract_identity": "PROPOSED_FOR_REVIEW",
+  "NEW_SPECTRE_LAUNCHES": 0,
+  "NEW_RTL_SIMULATIONS": 0,
+  "NEW_OA_WRITES": 0,
+  "findings": {
+    "F1_PAM_bit_order_and_high_level": {
+      "reproduced": false,
+      "dc_code_mismatches": [],
+      "nonrail_highs": [],
+      "interpretation": "decoded code is ideal bit-weight arithmetic; no analogue current is asserted"
+    },
+    "F2_PWL_and_window_physics": {
+      "reproduced": false,
+      "PAM_ramps_over_emission_count": 0,
+      "PAM_ramp_examples": [],
+      "enable_50_percent_errors": [],
+      "backwards_off_windows": [],
+      "leakage_windows_with_next_enable": []
+    },
+    "F3_measurement_entry_wiring": {
+      "reproduced": false,
+      "samples_identity": "SYNTHETIC_NOT_MEASURED",
+      "entries": [
+        {
+          "window_id": "TR-LONG#W0",
+          "rise_status": "FOUND",
+          "fall_status": "FOUND",
+          "leakage_interval_ps": [
+            2400000.0,
+            2500000.0
+          ],
+          "leakage_max_A": 0.0,
+          "has_full_enable_window_q": true,
+          "has_charge_error_result": true
+        },
+        {
+          "window_id": "TR-LONG#W1",
+          "rise_status": "FOUND",
+          "fall_status": "FOUND",
+          "leakage_interval_ps": [
+            3900000.0,
+            4000000.0
+          ],
+          "leakage_max_A": 5e-06,
+          "has_full_enable_window_q": true,
+          "has_charge_error_result": true
+        },
+        {
+          "window_id": "TR-LONG#W2",
+          "rise_status": "FOUND",
+          "fall_status": "FOUND",
+          "leakage_interval_ps": [
+            5400000.0,
+            5500000.0
+          ],
+          "leakage_max_A": 0.0,
+          "has_full_enable_window_q": true,
+          "has_charge_error_result": true
+        },
+        {
+          "window_id": "TR-LONG#W3",
+          "rise_status": "FOUND",
+          "fall_status": "FOUND",
+          "leakage_interval_ps": [
+            6900000.0,
+            7000000.0
+          ],
+          "leakage_max_A": 0.0,
+          "has_full_enable_window_q": true,
+          "has_charge_error_result": true
+        },
+        {
+          "window_id": "TR-LONG#W4",
+          "rise_status": "FOUND",
+          "fall_status": "FOUND",
+          "leakage_interval_ps": [
+            8400000.0,
+            8500000.0
+          ],
+          "leakage_max_A": 0.0,
+          "has_full_enable_window_q": true,
+          "has_charge_error_result": true
+        },
+        {
+          "window_id": "TR-LONG#W5",
+          "rise_status": "FOUND",
+          "fall_status": "FOUND",
+          "leakage_interval_ps": [
+            9900000.0,
+            10000000.0
+          ],
+          "leakage_max_A": 0.0,
+          "has_full_enable_window_q": true,
+          "has_charge_error_result": true
+        },
+        {
+          "window_id": "TR-LONG#W6",
+          "rise_status": "FOUND",
+          "fall_status": "FOUND",
+          "leakage_interval_ps": [
+            11400000.0,
+            11500000.0
+          ],
+          "leakage_max_A": 0.0,
+          "has_full_enable_window_q": true,
+          "has_charge_error_result": true
+        },
+        {
+          "window_id": "TR-LONG#W7",
+          "rise_status": "FOUND",
+          "fall_status": "FOUND",
+          "leakage_interval_ps": [
+            12950000.0,
+            13050000.0
+          ],
+          "leakage_max_A": 0.0,
+          "has_full_enable_window_q": true,
+          "has_charge_error_result": true
+        }
+      ],
+      "second_tail_independent_reference": {
+        "status": "ABOVE_LIMIT",
+        "max_A": 5e-06
+      },
+      "missing_pair_context_still_accepted": false,
+      "missing_pair_context_result": {
+        "status": "REFUSED_MISSING_CONTEXT",
+        "missing_context": [
+          "sign_rule",
+          "threshold_V",
+          "window_start_ps",
+          "window_stop_ps",
+          "reference_current_A"
+        ],
+        "invalid_input": [
+          "coarse window None..None",
+          "refined window None..None"
+        ],
+        "context_drift": [],
+        "qlsb_C": 2.2499999999999998e-13,
+        "limit": 0.01,
+        "absolute_difference_always_reported": true,
+        "evidence_class": "SYNTHETIC_NOT_MEASURED",
+        "refusal": "both sides must carry the same named context (sign_rule,threshold_V,window_start_ps,window_stop_ps,reference_current_A) and a finite, increasing window before any difference is meaningful; here missing=sign_rule,threshold_V,window_start_ps,window_stop_ps,reference_current_A, invalid=coarse window None..None,refined window None..None, so the comparison is refused instead of calling None equal to None"
+      },
+      "static_call_graph_fact": "measure_case does not call charge_errors or sign_check"
+    },
+    "F4_native_deck_known_contract": {
+      "reproduced": false,
+      "unnamed_analysis_lines": [],
+      "no_explicit_27C": [],
+      "native_syntax_verdict": "NOT_RUN; textual mismatch against already-proven project syntax, not a simulator result"
+    }
+  },
+  "all_four_families_reproduced": false,
+  "instrument_sha256": "d981ff190a627ae70bb8e8a5656226b1b2a2d35e65b6539d99b13768dbe69b7c"
+}

@@ -1,0 +1,67 @@
+{
+ "cases": 9,
+ "failures": [
+  "frozen_gate_counts_only_enforced_rows"
+ ],
+ "native_launches": 0,
+ "note": "in-memory rows and temporary CSV files only; nothing here starts a simulator, touches a VM, or edits the delivered tree",
+ "repository_mutated": "NO",
+ "results": [
+  {
+   "case": "frozen_gate_refuses_candidate_DUT_edit",
+   "expectation": "a modified DUT netline must fail the gate",
+   "observed": "state=FAIL verdict=enforced rows 24, violations ['four_candidate_DUT_netlists', 'paths_added_not_allowed']; git diff --check H..HEAD=0 T..H",
+   "state": "PASS"
+  },
+  {
+   "case": "frozen_gate_refuses_T_path_removal",
+   "expectation": "a removed T path must fail the gate",
+   "observed": "state=FAIL",
+   "state": "PASS"
+  },
+  {
+   "case": "frozen_gate_refuses_unallowed_addition",
+   "expectation": "a new path outside §9 must fail the gate",
+   "observed": "state=FAIL",
+   "state": "PASS"
+  },
+  {
+   "case": "frozen_gate_refuses_whitespace_errors",
+   "expectation": "git diff --check rc != 0 must fail the gate",
+   "observed": "state=FAIL",
+   "state": "PASS"
+  },
+  {
+   "case": "frozen_gate_counts_only_enforced_rows",
+   "expectation": "informational counts neither fail the gate nor hide a real violation",
+   "observed": "informational-only=FAIL plus enforced=FAIL",
+   "state": "FAIL"
+  },
+  {
+   "case": "frozen_surfaces_are_exact_paths",
+   "expectation": "the DUT/golden surfaces are exact paths and the deck draft is on the whitelist",
+   "observed": "dut paths=4 enforced=yes draft on whitelist=True enforced_edit_row=no",
+   "state": "PASS"
+  },
+  {
+   "case": "read_table_refuses_seven_shapes",
+   "expectation": "empty, header-only, ragged, extra-column, wrong-header, duplicate-key and blank-required are refused by name",
+   "observed": "all as expected",
+   "state": "PASS"
+  },
+  {
+   "case": "rows_write_round_trips_commas_and_quotes",
+   "expectation": "the standard-library writer and reader agree on awkward content, LF only",
+   "observed": "fields back identical=True cr_absent=True",
+   "state": "PASS"
+  },
+  {
+   "case": "T_published_tables_refused_by_the_strict_reader",
+   "expectation": "commands/git_checks/source_identity as delivered at T are refused line by line, while the well-formed frozen_comparison is accepted",
+   "observed": "the three ragged T tables are refused by name and the well-formed one is accepted",
+   "state": "PASS"
+  }
+ ],
+ "selftest": "DATA-7C-A-R1 record-tool negative tests",
+ "verdict": "FAIL"
+}

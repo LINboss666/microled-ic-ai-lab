@@ -1,0 +1,779 @@
+{
+  "instrument": "probe_prep_gaps.py",
+  "source_root": "C:\\Users\\LMX\\AppData\\Local\\Temp\\dd1-d7c-b-r1-gw70f62d\\P",
+  "contract_identity": "PROPOSED_FOR_REVIEW",
+  "NEW_SPECTRE_LAUNCHES": 0,
+  "NEW_RTL_SIMULATIONS": 0,
+  "NEW_OA_WRITES": 0,
+  "findings": {
+    "F1_PAM_bit_order_and_high_level": {
+      "reproduced": true,
+      "dc_code_mismatches": [
+        {
+          "case_id": "DC-001",
+          "expected_code": 1,
+          "source_levels_pam0_pam1_pam2_V": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "ideal_logic_code_if_1V_is_high": 4
+        },
+        {
+          "case_id": "DC-011",
+          "expected_code": 3,
+          "source_levels_pam0_pam1_pam2_V": [
+            0.0,
+            1.0,
+            1.0
+          ],
+          "ideal_logic_code_if_1V_is_high": 6
+        },
+        {
+          "case_id": "DC-100",
+          "expected_code": 4,
+          "source_levels_pam0_pam1_pam2_V": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "ideal_logic_code_if_1V_is_high": 1
+        },
+        {
+          "case_id": "DC-110",
+          "expected_code": 6,
+          "source_levels_pam0_pam1_pam2_V": [
+            1.0,
+            1.0,
+            0.0
+          ],
+          "ideal_logic_code_if_1V_is_high": 3
+        }
+      ],
+      "nonrail_highs": [
+        {
+          "case_id": "DC-001",
+          "node": "pam2",
+          "actual_V": 1.0,
+          "contract_logic_rail_V": 1.8
+        },
+        {
+          "case_id": "DC-010",
+          "node": "pam1",
+          "actual_V": 1.0,
+          "contract_logic_rail_V": 1.8
+        },
+        {
+          "case_id": "DC-011",
+          "node": "pam1",
+          "actual_V": 1.0,
+          "contract_logic_rail_V": 1.8
+        },
+        {
+          "case_id": "DC-011",
+          "node": "pam2",
+          "actual_V": 1.0,
+          "contract_logic_rail_V": 1.8
+        },
+        {
+          "case_id": "DC-100",
+          "node": "pam0",
+          "actual_V": 1.0,
+          "contract_logic_rail_V": 1.8
+        },
+        {
+          "case_id": "DC-101",
+          "node": "pam0",
+          "actual_V": 1.0,
+          "contract_logic_rail_V": 1.8
+        },
+        {
+          "case_id": "DC-101",
+          "node": "pam2",
+          "actual_V": 1.0,
+          "contract_logic_rail_V": 1.8
+        },
+        {
+          "case_id": "DC-110",
+          "node": "pam0",
+          "actual_V": 1.0,
+          "contract_logic_rail_V": 1.8
+        },
+        {
+          "case_id": "DC-110",
+          "node": "pam1",
+          "actual_V": 1.0,
+          "contract_logic_rail_V": 1.8
+        },
+        {
+          "case_id": "DC-111",
+          "node": "pam0",
+          "actual_V": 1.0,
+          "contract_logic_rail_V": 1.8
+        },
+        {
+          "case_id": "DC-111",
+          "node": "pam1",
+          "actual_V": 1.0,
+          "contract_logic_rail_V": 1.8
+        },
+        {
+          "case_id": "DC-111",
+          "node": "pam2",
+          "actual_V": 1.0,
+          "contract_logic_rail_V": 1.8
+        }
+      ],
+      "interpretation": "decoded code is ideal bit-weight arithmetic; no analogue current is asserted"
+    },
+    "F2_PWL_and_window_physics": {
+      "reproduced": true,
+      "PAM_ramps_over_emission_count": 36,
+      "PAM_ramp_examples": [
+        {
+          "case_id": "TR-LONG",
+          "node": "pam0",
+          "window_id": "TR-LONG#W3",
+          "overlap_ns": [
+            5550.0,
+            6450.0
+          ],
+          "values_at_overlap_V": [
+            0.2,
+            0.8
+          ]
+        },
+        {
+          "case_id": "TR-LONG",
+          "node": "pam1",
+          "window_id": "TR-LONG#W1",
+          "overlap_ns": [
+            2550.0,
+            3450.0
+          ],
+          "values_at_overlap_V": [
+            0.2,
+            0.8
+          ]
+        },
+        {
+          "case_id": "TR-LONG",
+          "node": "pam1",
+          "window_id": "TR-LONG#W3",
+          "overlap_ns": [
+            5550.0,
+            6450.0
+          ],
+          "values_at_overlap_V": [
+            0.8,
+            0.19999999999999996
+          ]
+        },
+        {
+          "case_id": "TR-LONG",
+          "node": "pam1",
+          "window_id": "TR-LONG#W5",
+          "overlap_ns": [
+            8550.0,
+            9450.0
+          ],
+          "values_at_overlap_V": [
+            0.2,
+            0.8
+          ]
+        },
+        {
+          "case_id": "TR-LONG",
+          "node": "pam2",
+          "window_id": "TR-LONG#W0",
+          "overlap_ns": [
+            1050.0,
+            1950.0
+          ],
+          "values_at_overlap_V": [
+            0.2,
+            0.8
+          ]
+        },
+        {
+          "case_id": "TR-LONG",
+          "node": "pam2",
+          "window_id": "TR-LONG#W1",
+          "overlap_ns": [
+            2550.0,
+            3450.0
+          ],
+          "values_at_overlap_V": [
+            0.8,
+            0.19999999999999996
+          ]
+        },
+        {
+          "case_id": "TR-LONG",
+          "node": "pam2",
+          "window_id": "TR-LONG#W2",
+          "overlap_ns": [
+            4050.0,
+            4950.0
+          ],
+          "values_at_overlap_V": [
+            0.2,
+            0.8
+          ]
+        },
+        {
+          "case_id": "TR-LONG",
+          "node": "pam2",
+          "window_id": "TR-LONG#W3",
+          "overlap_ns": [
+            5550.0,
+            6450.0
+          ],
+          "values_at_overlap_V": [
+            0.8,
+            0.19999999999999996
+          ]
+        }
+      ],
+      "enable_50_percent_errors": [
+        {
+          "case_id": "TR-LONG",
+          "index": 0,
+          "declared_ns": 1000.0,
+          "PWL_crossing_ns": 1025.0
+        },
+        {
+          "case_id": "TR-OFFCODE",
+          "index": 0,
+          "declared_ns": 1000.0,
+          "PWL_crossing_ns": 1010.0
+        },
+        {
+          "case_id": "RS-FULL",
+          "index": 0,
+          "declared_ns": 1000.0,
+          "PWL_crossing_ns": 1025.0
+        },
+        {
+          "case_id": "RS-SWITCH",
+          "index": 0,
+          "declared_ns": 1000.0,
+          "PWL_crossing_ns": 1010.0
+        }
+      ],
+      "backwards_off_windows": [
+        {
+          "case_id": "TR-LONG",
+          "declared_off_window_ns": "2500.000-2450.000"
+        },
+        {
+          "case_id": "TR-LONG",
+          "declared_off_window_ns": "4000.000-3950.000"
+        },
+        {
+          "case_id": "TR-LONG",
+          "declared_off_window_ns": "5500.000-5450.000"
+        },
+        {
+          "case_id": "TR-LONG",
+          "declared_off_window_ns": "7000.000-6950.000"
+        },
+        {
+          "case_id": "TR-LONG",
+          "declared_off_window_ns": "8500.000-8450.000"
+        },
+        {
+          "case_id": "TR-LONG",
+          "declared_off_window_ns": "10000.000-9950.000"
+        },
+        {
+          "case_id": "TR-LONG",
+          "declared_off_window_ns": "11500.000-11450.000"
+        },
+        {
+          "case_id": "TR-OFFCODE",
+          "declared_off_window_ns": "1600.000-1580.000"
+        },
+        {
+          "case_id": "TR-OFFCODE",
+          "declared_off_window_ns": "2200.000-2180.000"
+        },
+        {
+          "case_id": "TR-OFFCODE",
+          "declared_off_window_ns": "2800.000-2780.000"
+        },
+        {
+          "case_id": "RS-FULL",
+          "declared_off_window_ns": "2500.000-2450.000"
+        },
+        {
+          "case_id": "RS-FULL",
+          "declared_off_window_ns": "4000.000-3950.000"
+        },
+        {
+          "case_id": "RS-FULL",
+          "declared_off_window_ns": "5500.000-5450.000"
+        },
+        {
+          "case_id": "RS-FULL",
+          "declared_off_window_ns": "7000.000-6950.000"
+        },
+        {
+          "case_id": "RS-FULL",
+          "declared_off_window_ns": "8500.000-8450.000"
+        },
+        {
+          "case_id": "RS-FULL",
+          "declared_off_window_ns": "10000.000-9950.000"
+        },
+        {
+          "case_id": "RS-FULL",
+          "declared_off_window_ns": "11500.000-11450.000"
+        },
+        {
+          "case_id": "RS-SWITCH",
+          "declared_off_window_ns": "1600.000-1580.000"
+        },
+        {
+          "case_id": "RS-SWITCH",
+          "declared_off_window_ns": "2200.000-2180.000"
+        },
+        {
+          "case_id": "RS-SWITCH",
+          "declared_off_window_ns": "2800.000-2780.000"
+        }
+      ],
+      "leakage_windows_with_next_enable": [
+        {
+          "case_id": "TR-LONG",
+          "window_id": "TR-LONG#T0",
+          "last100_ns": [
+            2400.0,
+            2500.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "TR-LONG",
+          "window_id": "TR-LONG#T1",
+          "last100_ns": [
+            3900.0,
+            4000.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "TR-LONG",
+          "window_id": "TR-LONG#T2",
+          "last100_ns": [
+            5400.0,
+            5500.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "TR-LONG",
+          "window_id": "TR-LONG#T3",
+          "last100_ns": [
+            6900.0,
+            7000.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "TR-LONG",
+          "window_id": "TR-LONG#T4",
+          "last100_ns": [
+            8400.0,
+            8500.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "TR-LONG",
+          "window_id": "TR-LONG#T5",
+          "last100_ns": [
+            9900.0,
+            10000.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "TR-LONG",
+          "window_id": "TR-LONG#T6",
+          "last100_ns": [
+            11400.0,
+            11500.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "TR-OFFCODE",
+          "window_id": "TR-OFFCODE#T0",
+          "last100_ns": [
+            1500.0,
+            1600.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "TR-OFFCODE",
+          "window_id": "TR-OFFCODE#T1",
+          "last100_ns": [
+            2100.0,
+            2200.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "TR-OFFCODE",
+          "window_id": "TR-OFFCODE#T2",
+          "last100_ns": [
+            2700.0,
+            2800.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "RS-FULL",
+          "window_id": "RS-FULL#T0",
+          "last100_ns": [
+            2400.0,
+            2500.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "RS-FULL",
+          "window_id": "RS-FULL#T1",
+          "last100_ns": [
+            3900.0,
+            4000.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "RS-FULL",
+          "window_id": "RS-FULL#T2",
+          "last100_ns": [
+            5400.0,
+            5500.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "RS-FULL",
+          "window_id": "RS-FULL#T3",
+          "last100_ns": [
+            6900.0,
+            7000.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "RS-FULL",
+          "window_id": "RS-FULL#T4",
+          "last100_ns": [
+            8400.0,
+            8500.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "RS-FULL",
+          "window_id": "RS-FULL#T5",
+          "last100_ns": [
+            9900.0,
+            10000.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "RS-FULL",
+          "window_id": "RS-FULL#T6",
+          "last100_ns": [
+            11400.0,
+            11500.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "RS-SWITCH",
+          "window_id": "RS-SWITCH#T0",
+          "last100_ns": [
+            1500.0,
+            1600.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "RS-SWITCH",
+          "window_id": "RS-SWITCH#T1",
+          "last100_ns": [
+            2100.0,
+            2200.0
+          ],
+          "max_enable_V": 0.9
+        },
+        {
+          "case_id": "RS-SWITCH",
+          "window_id": "RS-SWITCH#T2",
+          "last100_ns": [
+            2700.0,
+            2800.0
+          ],
+          "max_enable_V": 0.9
+        }
+      ]
+    },
+    "F3_measurement_entry_wiring": {
+      "reproduced": true,
+      "samples_identity": "SYNTHETIC_NOT_MEASURED",
+      "entries": [
+        {
+          "window_id": "TR-LONG#W0",
+          "rise_status": "NO_REAL_EDGE_FOUND",
+          "fall_status": "NO_REAL_EDGE_FOUND",
+          "leakage_interval_ps": [
+            2400000.0,
+            2500000.0
+          ],
+          "leakage_max_A": 0.0,
+          "has_full_enable_window_q": false,
+          "has_charge_error_result": false
+        },
+        {
+          "window_id": "TR-LONG#W1",
+          "rise_status": "NO_REAL_EDGE_FOUND",
+          "fall_status": "NO_REAL_EDGE_FOUND",
+          "leakage_interval_ps": [
+            2400000.0,
+            2500000.0
+          ],
+          "leakage_max_A": 0.0,
+          "has_full_enable_window_q": false,
+          "has_charge_error_result": false
+        },
+        {
+          "window_id": "TR-LONG#W2",
+          "rise_status": "NO_REAL_EDGE_FOUND",
+          "fall_status": "NO_REAL_EDGE_FOUND",
+          "leakage_interval_ps": [
+            2400000.0,
+            2500000.0
+          ],
+          "leakage_max_A": 0.0,
+          "has_full_enable_window_q": false,
+          "has_charge_error_result": false
+        },
+        {
+          "window_id": "TR-LONG#W3",
+          "rise_status": "NO_REAL_EDGE_FOUND",
+          "fall_status": "NO_REAL_EDGE_FOUND",
+          "leakage_interval_ps": [
+            2400000.0,
+            2500000.0
+          ],
+          "leakage_max_A": 0.0,
+          "has_full_enable_window_q": false,
+          "has_charge_error_result": false
+        },
+        {
+          "window_id": "TR-LONG#W4",
+          "rise_status": "NO_REAL_EDGE_FOUND",
+          "fall_status": "NO_REAL_EDGE_FOUND",
+          "leakage_interval_ps": [
+            2400000.0,
+            2500000.0
+          ],
+          "leakage_max_A": 0.0,
+          "has_full_enable_window_q": false,
+          "has_charge_error_result": false
+        },
+        {
+          "window_id": "TR-LONG#W5",
+          "rise_status": "NO_REAL_EDGE_FOUND",
+          "fall_status": "NO_REAL_EDGE_FOUND",
+          "leakage_interval_ps": [
+            2400000.0,
+            2500000.0
+          ],
+          "leakage_max_A": 0.0,
+          "has_full_enable_window_q": false,
+          "has_charge_error_result": false
+        },
+        {
+          "window_id": "TR-LONG#W6",
+          "rise_status": "NO_REAL_EDGE_FOUND",
+          "fall_status": "NO_REAL_EDGE_FOUND",
+          "leakage_interval_ps": [
+            2400000.0,
+            2500000.0
+          ],
+          "leakage_max_A": 0.0,
+          "has_full_enable_window_q": false,
+          "has_charge_error_result": false
+        },
+        {
+          "window_id": "TR-LONG#W7",
+          "rise_status": "NO_REAL_EDGE_FOUND",
+          "fall_status": "NO_REAL_EDGE_FOUND",
+          "leakage_interval_ps": [
+            2400000.0,
+            2500000.0
+          ],
+          "leakage_max_A": 0.0,
+          "has_full_enable_window_q": false,
+          "has_charge_error_result": false
+        }
+      ],
+      "second_tail_independent_reference": {
+        "status": "ABOVE_LIMIT",
+        "max_A": 5e-06
+      },
+      "missing_pair_context_still_accepted": true,
+      "missing_pair_context_result": {
+        "delta_q_C": 0.0,
+        "delta_q_fC": 0.0,
+        "qlsb_C": 2.2499999999999998e-13,
+        "abs_delta_over_qlsb": 0.0,
+        "limit": 0.01,
+        "status": "WITHIN_LIMIT",
+        "context_drift": [],
+        "absolute_difference_always_reported": true,
+        "evidence_class": "SYNTHETIC_NOT_MEASURED"
+      },
+      "static_call_graph_fact": "measure_case does not call charge_errors or sign_check"
+    },
+    "F4_native_deck_known_contract": {
+      "reproduced": true,
+      "unnamed_analysis_lines": [
+        {
+          "case_id": "DC-000",
+          "actual": [
+            "dc dev=Vclamp param=dc start=0.600 stop=1.500 step=0.050"
+          ],
+          "repository_proven_form": "<instance> tran ... or <instance> dc ..."
+        },
+        {
+          "case_id": "DC-001",
+          "actual": [
+            "dc dev=Vclamp param=dc start=0.600 stop=1.500 step=0.050"
+          ],
+          "repository_proven_form": "<instance> tran ... or <instance> dc ..."
+        },
+        {
+          "case_id": "DC-010",
+          "actual": [
+            "dc dev=Vclamp param=dc start=0.600 stop=1.500 step=0.050"
+          ],
+          "repository_proven_form": "<instance> tran ... or <instance> dc ..."
+        },
+        {
+          "case_id": "DC-011",
+          "actual": [
+            "dc dev=Vclamp param=dc start=0.600 stop=1.500 step=0.050"
+          ],
+          "repository_proven_form": "<instance> tran ... or <instance> dc ..."
+        },
+        {
+          "case_id": "DC-100",
+          "actual": [
+            "dc dev=Vclamp param=dc start=0.600 stop=1.500 step=0.050"
+          ],
+          "repository_proven_form": "<instance> tran ... or <instance> dc ..."
+        },
+        {
+          "case_id": "DC-101",
+          "actual": [
+            "dc dev=Vclamp param=dc start=0.600 stop=1.500 step=0.050"
+          ],
+          "repository_proven_form": "<instance> tran ... or <instance> dc ..."
+        },
+        {
+          "case_id": "DC-110",
+          "actual": [
+            "dc dev=Vclamp param=dc start=0.600 stop=1.500 step=0.050"
+          ],
+          "repository_proven_form": "<instance> tran ... or <instance> dc ..."
+        },
+        {
+          "case_id": "DC-111",
+          "actual": [
+            "dc dev=Vclamp param=dc start=0.600 stop=1.500 step=0.050"
+          ],
+          "repository_proven_form": "<instance> tran ... or <instance> dc ..."
+        },
+        {
+          "case_id": "TR-LONG",
+          "actual": [
+            "tran stop=13500.000n maxstep=2.000n"
+          ],
+          "repository_proven_form": "<instance> tran ... or <instance> dc ..."
+        },
+        {
+          "case_id": "TR-120",
+          "actual": [
+            "tran stop=1480.000n maxstep=2.000n"
+          ],
+          "repository_proven_form": "<instance> tran ... or <instance> dc ..."
+        },
+        {
+          "case_id": "TR-200",
+          "actual": [
+            "tran stop=1560.000n maxstep=2.000n"
+          ],
+          "repository_proven_form": "<instance> tran ... or <instance> dc ..."
+        },
+        {
+          "case_id": "TR-OFFCODE",
+          "actual": [
+            "tran stop=3400.000n maxstep=2.000n"
+          ],
+          "repository_proven_form": "<instance> tran ... or <instance> dc ..."
+        },
+        {
+          "case_id": "RS-FULL",
+          "actual": [
+            "tran stop=13500.000n maxstep=0.100n"
+          ],
+          "repository_proven_form": "<instance> tran ... or <instance> dc ..."
+        },
+        {
+          "case_id": "RS-LOW",
+          "actual": [
+            "tran stop=1480.000n maxstep=0.100n"
+          ],
+          "repository_proven_form": "<instance> tran ... or <instance> dc ..."
+        },
+        {
+          "case_id": "RS-SWITCH",
+          "actual": [
+            "tran stop=3400.000n maxstep=0.100n"
+          ],
+          "repository_proven_form": "<instance> tran ... or <instance> dc ..."
+        }
+      ],
+      "no_explicit_27C": [
+        "DC-000",
+        "DC-001",
+        "DC-010",
+        "DC-011",
+        "DC-100",
+        "DC-101",
+        "DC-110",
+        "DC-111",
+        "TR-LONG",
+        "TR-120",
+        "TR-200",
+        "TR-OFFCODE",
+        "RS-FULL",
+        "RS-LOW",
+        "RS-SWITCH"
+      ],
+      "native_syntax_verdict": "NOT_RUN; textual mismatch against already-proven project syntax, not a simulator result"
+    }
+  },
+  "all_four_families_reproduced": true,
+  "instrument_sha256": "d981ff190a627ae70bb8e8a5656226b1b2a2d35e65b6539d99b13768dbe69b7c"
+}

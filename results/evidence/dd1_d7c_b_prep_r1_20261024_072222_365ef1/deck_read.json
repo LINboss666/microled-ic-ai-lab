@@ -1,0 +1,163 @@
+{
+  "check_verdict": "PASS",
+  "decks_read": 15,
+  "observation": {
+    "decks_read": 15,
+    "half_rail_crossings_total": 54,
+    "note": "an empty problem list over 27 emission windows and 36 PAM changing segments is a measurement, not a silence",
+    "pam_changing_segments_total": 36,
+    "pwl_signals_read": [
+      "data_en",
+      "pam0",
+      "pam1",
+      "pam2"
+    ],
+    "windows_by_kind": {
+      "dc_sweep_point": 8,
+      "emission": 27,
+      "emission_flat": 27,
+      "leak_last100": 27,
+      "off_tail": 27,
+      "pure_off": 27
+    }
+  },
+  "observation_verdict": "PASS",
+  "per_case": {
+    "DC-000": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 0,
+      "enable_vertices": 0,
+      "half_rail_crossings": 0,
+      "pwl_signals": []
+    },
+    "DC-001": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 0,
+      "enable_vertices": 0,
+      "half_rail_crossings": 0,
+      "pwl_signals": []
+    },
+    "DC-010": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 0,
+      "enable_vertices": 0,
+      "half_rail_crossings": 0,
+      "pwl_signals": []
+    },
+    "DC-011": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 0,
+      "enable_vertices": 0,
+      "half_rail_crossings": 0,
+      "pwl_signals": []
+    },
+    "DC-100": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 0,
+      "enable_vertices": 0,
+      "half_rail_crossings": 0,
+      "pwl_signals": []
+    },
+    "DC-101": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 0,
+      "enable_vertices": 0,
+      "half_rail_crossings": 0,
+      "pwl_signals": []
+    },
+    "DC-110": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 0,
+      "enable_vertices": 0,
+      "half_rail_crossings": 0,
+      "pwl_signals": []
+    },
+    "DC-111": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 0,
+      "enable_vertices": 0,
+      "half_rail_crossings": 0,
+      "pwl_signals": []
+    },
+    "RS-FULL": {
+      "code_segments_moving": 11,
+      "enable_rails_to_rail_ramps": 16,
+      "enable_vertices": 34,
+      "half_rail_crossings": 16,
+      "pwl_signals": [
+        "data_en",
+        "pam0",
+        "pam1",
+        "pam2"
+      ]
+    },
+    "RS-LOW": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 2,
+      "enable_vertices": 7,
+      "half_rail_crossings": 2,
+      "pwl_signals": [
+        "data_en"
+      ]
+    },
+    "RS-SWITCH": {
+      "code_segments_moving": 7,
+      "enable_rails_to_rail_ramps": 8,
+      "enable_vertices": 19,
+      "half_rail_crossings": 8,
+      "pwl_signals": [
+        "data_en",
+        "pam0",
+        "pam1",
+        "pam2"
+      ]
+    },
+    "TR-120": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 2,
+      "enable_vertices": 7,
+      "half_rail_crossings": 2,
+      "pwl_signals": [
+        "data_en"
+      ]
+    },
+    "TR-200": {
+      "code_segments_moving": 0,
+      "enable_rails_to_rail_ramps": 2,
+      "enable_vertices": 7,
+      "half_rail_crossings": 2,
+      "pwl_signals": [
+        "data_en"
+      ]
+    },
+    "TR-LONG": {
+      "code_segments_moving": 11,
+      "enable_rails_to_rail_ramps": 16,
+      "enable_vertices": 34,
+      "half_rail_crossings": 16,
+      "pwl_signals": [
+        "data_en",
+        "pam0",
+        "pam1",
+        "pam2"
+      ]
+    },
+    "TR-OFFCODE": {
+      "code_segments_moving": 7,
+      "enable_rails_to_rail_ramps": 8,
+      "enable_vertices": 19,
+      "half_rail_crossings": 8,
+      "pwl_signals": [
+        "data_en",
+        "pam0",
+        "pam1",
+        "pam2"
+      ]
+    }
+  },
+  "problems": [],
+  "reader": "dd1_d7c_b_prep_r1_deck_read.py",
+  "root": "D:\\ic617_d7c_b_prep_r1",
+  "rule": "the deck bytes are the evidence and the tables are claims tested against them; this module imports neither the generator nor the measurement core",
+  "verdict": "PASS"
+}

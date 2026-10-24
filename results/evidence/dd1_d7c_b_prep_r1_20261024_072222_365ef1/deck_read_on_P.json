@@ -1,0 +1,20 @@
+{
+  "check_verdict": "FAIL",
+  "decks_read": 15,
+  "per_case": {
+    "contract_fields_missing": [
+      "units.logic_high_V",
+      "units.edge_ns",
+      "units.transient_offset_ns",
+      "rules.enable_edges.code_change_edge_total_ns"
+    ],
+    "decks_present": 15
+  },
+  "problems": [
+    "the contract of this tree does not declare units.logic_high_V, units.edge_ns, units.transient_offset_ns, rules.enable_edges.code_change_edge_total_ns, so this reader has no expectation to read the decks against"
+  ],
+  "reader": "dd1_d7c_b_prep_r1_deck_read.py",
+  "root": "C:\\Users\\LMX\\AppData\\Local\\Temp\\dd1-d7c-b-r1-gw70f62d\\P",
+  "rule": "the deck bytes are the evidence and the tables are claims tested against them; this module imports neither the generator nor the measurement core",
+  "verdict": "FAIL"
+}

@@ -1,0 +1,183 @@
+{
+ "base_prep": "dcef9b336f2222d6291d266858270f7448b6bb78",
+ "base_r2": "3e4703f1763223024f442c0826e95055782bca13",
+ "branch": "poc/data-pam-d7c-b-prep-r1",
+ "cases_in_schedule": 15,
+ "contract_state": "PROPOSED_FOR_REVIEW",
+ "credential_reads": 0,
+ "csv_read_back": [
+  {
+   "file": "commands.csv",
+   "result": "columns and keys verified, no CR byte",
+   "rows": 24
+  },
+  {
+   "file": "counterexamples.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "deck_observe.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "deck_read.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "deck_read_on_P.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "frozen_comparison.csv",
+   "result": "columns and keys verified, no CR byte",
+   "rows": 12
+  },
+  {
+   "file": "git_checks.csv",
+   "result": "columns and keys verified, no CR byte",
+   "rows": 3
+  },
+  {
+   "file": "instrument_P.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "instrument_r1.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "offline_checks.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "ranges.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "selftest.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "selftest_this_tree.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  },
+  {
+   "file": "source_identity.csv",
+   "result": "columns and keys verified, no CR byte",
+   "rows": 133
+  },
+  {
+   "file": "synthetic_cases.json",
+   "result": "JSON parses, no CR byte",
+   "rows": ""
+  }
+ ],
+ "deck_directory": "spectre/dd1_d7c_b_prep",
+ "decks": 15,
+ "electrical_results": "NONE: every number in this record is text, arithmetic, table shape or Git identity; the synthetic measurement results are labelled SYNTHETIC_NOT_MEASURED",
+ "frozen_enforced_mismatches": 0,
+ "frozen_rows": 12,
+ "frozen_rows_enforced": 10,
+ "frozen_rows_informational": 2,
+ "frozen_violating_surfaces": [],
+ "gates": 24,
+ "gates_failed": [],
+ "gates_informational": [],
+ "generated_utc": "2026-10-24T07:26:26Z",
+ "guest_connections": 0,
+ "identity_paths_rewritten_by_this_run": [
+  "reports/dd1_d7c_b_prep_review_fix_r1.md"
+ ],
+ "native_launches": 0,
+ "native_preflights": 0,
+ "oa_writes": 0,
+ "paths_added_vs_P": [
+  "reports/agent_handoffs/DATA-7C-B-PREP-R1.json",
+  "reports/agent_handoffs/DATA-7C-B-PREP-R1.md",
+  "reports/dd1_d7c_b_prep_review_fix_r1.md",
+  "reports/tasks/DATA-7C-B-PREP-R1.md",
+  "scripts/dd1_d7c_b_prep_r1_deck_read.py",
+  "scripts/dd1_d7c_b_prep_r1_record_check.py",
+  "scripts/dd1_d7c_b_prep_r1_verify.py"
+ ],
+ "paths_modified_vs_P": [
+  "reports/dd1_d7c_b_prep_contract.md",
+  "scripts/dd1_d7c_b_prep_cases.py",
+  "scripts/dd1_d7c_b_prep_contract.py",
+  "scripts/dd1_d7c_b_prep_deckgen.py",
+  "scripts/dd1_d7c_b_prep_measure.py",
+  "scripts/dd1_d7c_b_prep_schedule.py",
+  "scripts/dd1_d7c_b_prep_verify.py",
+  "spectre/dd1_d7c_b_prep/DC-000.scs",
+  "spectre/dd1_d7c_b_prep/DC-001.scs",
+  "spectre/dd1_d7c_b_prep/DC-010.scs",
+  "spectre/dd1_d7c_b_prep/DC-011.scs",
+  "spectre/dd1_d7c_b_prep/DC-100.scs",
+  "spectre/dd1_d7c_b_prep/DC-101.scs",
+  "spectre/dd1_d7c_b_prep/DC-110.scs",
+  "spectre/dd1_d7c_b_prep/DC-111.scs",
+  "spectre/dd1_d7c_b_prep/RS-FULL.scs",
+  "spectre/dd1_d7c_b_prep/RS-LOW.scs",
+  "spectre/dd1_d7c_b_prep/RS-SWITCH.scs",
+  "spectre/dd1_d7c_b_prep/TR-120.scs",
+  "spectre/dd1_d7c_b_prep/TR-200.scs",
+  "spectre/dd1_d7c_b_prep/TR-LONG.scs",
+  "spectre/dd1_d7c_b_prep/TR-OFFCODE.scs",
+  "tests/dd1_d7c_b_prep/contract.json",
+  "tests/dd1_d7c_b_prep/pwl.csv",
+  "tests/dd1_d7c_b_prep/schedule.csv",
+  "tests/dd1_d7c_b_prep/windows.csv"
+ ],
+ "paths_removed_vs_P": [],
+ "published_files_with_cr": [],
+ "published_record_recheck": {
+  "facts": {
+   "frozen_mandatory_line_replaced": 1,
+   "frozen_rows": 12,
+   "gates": 24,
+   "git_checks": 3,
+   "identity_rows": 133,
+   "instrument_vocabulary_lines_replaced": 2,
+   "mandatory_gates_r1": 22
+  },
+  "note": "judged over the bytes as published, before this summary existed, and with no revision binding: this run rewrites the R1 report after measuring the tip. A reviewer who wants the Git binding re-runs: python scripts/dd1_d7c_a_r2_record_check.py --record results/evidence/<run_id> --git-ref <the commit that publishes it> --source-root <that work tree>",
+  "problems": [],
+  "verdict": "PASS"
+ },
+ "range_counts": {
+  "P..HEAD": {
+   "added": 7,
+   "changed": 26,
+   "commits": 3,
+   "deleted": 0,
+   "renamed": 0
+  },
+  "R2..P": {
+   "added": 83,
+   "changed": 0,
+   "commits": 15,
+   "deleted": 0,
+   "renamed": 0
+  }
+ },
+ "range_counts_correction": "the PREP receipt stated 68 added paths for R2..P; recomputed from Git as 83 added / 0 changed / 0 deleted over 15 commits",
+ "review_package": "MicroLED_DATA7C_B_PREP_Independent_Review_20261024",
+ "review_verdict": "REWORK / NO_GO_PENDING_OFFLINE_REPAIR / CANDIDATE_DUT_REDESIGN_REQUIRED=NO",
+ "reviewed_tip_T": "89b3dd8e244eaf14bd3bdb7d93b4c771a28fbb79",
+ "rtl_simulations": 0,
+ "synthetic_cases": 25,
+ "task_id": "DATA-7C-B-PREP-R1",
+ "tip": "10f69053a192b368fe7c94129455fead57058607",
+ "verdict": "PASS",
+ "windows_declared": 143
+}
