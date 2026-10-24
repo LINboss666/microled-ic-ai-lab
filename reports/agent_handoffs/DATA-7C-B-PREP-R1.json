@@ -198,9 +198,14 @@
     "sha256": "cc7a86b38b8cc4886ed98315f9b61e6d5d5c260d01ebe3fad0841d9d6545fee8"
    },
    {
-    "bytes": 56399,
+    "bytes": 58687,
     "path": "scripts/dd1_d7c_b_prep_r1_verify.py",
-    "sha256": "d211e5a4f7f5cd9a94de4248d35e14f430952d3a161f834b7bc9f1868a9bf2bc"
+    "sha256": "0c22ff57437e630267205eb9e0b387d00a2020045f2e123a0fea5c3f98c52220"
+   },
+   {
+    "bytes": 11662,
+    "path": "scripts/dd1_d7c_b_prep_r1_record_check.py",
+    "sha256": "ffa34401f8c15ebffeb56623f15277f5dcc7dcf2b63878ec0e80fc2bc9e4f2b1"
    },
    {
     "bytes": 21874,

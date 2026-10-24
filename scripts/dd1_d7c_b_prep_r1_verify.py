@@ -30,6 +30,7 @@ import json
 import os
 import shutil
 import sys
+import tempfile
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -43,6 +44,7 @@ import dd1_d7c_b_prep_cases as CASES                   # noqa: E402
 import dd1_d7c_b_prep_contract as CONTRACT             # noqa: E402
 import dd1_d7c_b_prep_deckgen as DECKGEN               # noqa: E402
 import dd1_d7c_b_prep_r1_deck_read as DECKREAD         # noqa: E402
+import dd1_d7c_b_prep_r1_record_check as R1REC          # noqa: E402  (the frozen rules, R1 words)
 import dd1_d7c_b_prep_schedule as SCHEDULE             # noqa: E402
 import dd1_d7c_b_prep_verify as PREP                   # noqa: E402  (mechanics only, shared)
 
@@ -94,6 +96,7 @@ TABLE_SPECS = {
     'source_identity.csv': (['role', 'path', 'bytes', 'sha256'], 'path', ()),
     'instrument_P.json': None, 'instrument_r1.json': None, 'synthetic_cases.json': None,
     'deck_read.json': None, 'deck_read_on_P.json': None, 'deck_observe.json': None,
+    'offline_checks.json': None, 'counterexamples.json': None,
     'selftest.json': None, 'selftest_this_tree.json': None, 'ranges.json': None,
     'verification_summary.json': None,
 }
@@ -152,12 +155,15 @@ def probe_gate(name, root, out_json, expect_reproduced):
             'verdict_state': state, 'families': items}, payload
 
 
-def deck_read_gate(name, arguments, out_json, expected_rc):
+def deck_read_gate(name, arguments, out_json, expected_rc, root=None):
     """the independent reader, run as a command so the reviewer can re-run it verbatim"""
-    command = 'python dd1_d7c_b_prep_r1_deck_read.py %s%s' % (
-        ' '.join('--%s' % flag for flag in arguments), ' --json <out>' if out_json else '')
+    shown = '' if root is None else ' --root <P extraction>'
+    command = 'python dd1_d7c_b_prep_r1_deck_read.py %s%s%s' % (
+        ' '.join('--%s' % flag for flag in arguments), shown, ' --json <out>' if out_json else '')
     argv = [sys.executable, os.path.join(HERE, 'dd1_d7c_b_prep_r1_deck_read.py')] + \
            ['--%s' % flag for flag in arguments]
+    if root is not None:
+        argv.extend(['--root', root])
     if out_json:
         argv.extend(['--json', out_json])
     code, text = PREP.run(argv)
@@ -187,6 +193,20 @@ def range_counts(from_rev, to_rev):
     return counts
 
 
+def expand_frozen(paths, p_paths):
+    """a record directory is not a blob: expand it to the files it tracks, and keep what is missing"""
+    expanded, empty = [], []
+    for path in paths:
+        if path.startswith('results/evidence/'):
+            hits = [found for found in p_paths if found.startswith(path + '/')]
+            if not hits:
+                empty.append(path)
+            expanded.extend(hits)
+        else:
+            expanded.append(path)
+    return expanded, empty
+
+
 def comparisons_r1(tip):
     """the frozen surfaces against the base the review judged, over explicit path lists"""
     base = PREP.blob_index(BASE_P)
@@ -201,12 +221,19 @@ def comparisons_r1(tip):
     unexpected_new = [path for path in added
                       if not path.startswith(NEW_PREFIXES) and path not in NEW_EXACT]
     rows = [PREP._compare('r1', 'every_P_path_outside_the_allowed_edit_surface', outside, base, head,
-                          'identical'),
-           PREP._compare('r1', 'allowed_edit_surface_modified_this_round',
-                         [path for path in editable if path in modified], base, head,
-                         'informational_listing')]
+                          'identical')]
+    rows.append({'comparison': 'r1', 'surface': 'allowed_edit_surface_modified_this_round',
+                 'paths_compared': len(modified), 'mismatched': 0,
+                 'first_mismatches': ';'.join(modified[:3]),
+                 'expectation': 'informational_listing', 'enforced': 'no'})
     for surface, paths in FROZEN_SURFACES:
-        rows.append(PREP._compare('r1', surface, paths, base, head, 'identical'))
+        expanded, empty = expand_frozen(paths, p_paths)
+        row = PREP._compare('r1', surface, expanded, base, head, 'identical')
+        if empty:
+            row['mismatched'] = int(row['mismatched']) + len(empty)
+            row['first_mismatches'] = ';'.join(['%s tracks no file at P' % path for path in empty]
+                                               + [row['first_mismatches']])
+        rows.append(row)
     rows.append({'comparison': 'r1', 'surface': 'paths_added_this_round',
                  'paths_compared': len(added), 'mismatched': len(unexpected_new),
                  'first_mismatches': ';'.join(unexpected_new[:3]),
@@ -228,22 +255,24 @@ def record_selftest_r1(out_dir, scratch):
     """the record tool's own selftest, read in the tree it was written for and again here
 
     Its `frozen_gate_counts_only_enforced_rows` case builds clean and dirty tables from the real
-    comparison rows of the tree it runs in, and the A-round whitelist has never heard of the paths
-    this round adds. So the gate measures both readings and passes only when the clone-at-P reading
-    is PASS and the in-tree failure is fully attributed to paths section 7 allows.
+    comparison rows of the tree it runs in, and the A-round whitelist has never heard of the paths the
+    PREP round added -- so P is not a clean tree for it either. The last tree where that selftest is
+    self-consistent is R2, which is also what the PREP round cloned; the gate measures both readings and
+    passes only when the clone-at-R2 reading is PASS and the in-tree failure is fully attributed to
+    paths section 7 allows.
     """
     command = ('python dd1_d7c_a_r1_selftest.py --json <out>/selftest.json run in a throw-away shared '
                'clone checked out at %s, and again with --json <out>/selftest_this_tree.json in this '
-               'work tree' % BASE_P[:12])
-    clone = os.path.join(scratch, 'clone_p')
+               'work tree' % BASE_R2[:12])
+    clone = os.path.join(scratch, 'clone_r2')
     refs_before = PREP._refs_digest()
-    ready, _text = PREP._clone_at(BASE_P, clone)
+    ready, _text = PREP._clone_at(BASE_R2, clone)
     refs_after = PREP._refs_digest()
     if not ready:
         return {'gate': 'record_tool_selftest', 'command': command, 'rc': 'abort',
                 'expected_rc': '0',
                 'verdict': 'NOT_ATTEMPTED: the throw-away clone at %s could not be prepared'
-                           % BASE_P[:12], 'verdict_state': 'NOT_ATTEMPTED'}
+                           % BASE_R2[:12], 'verdict_state': 'NOT_ATTEMPTED'}
     clone_json = os.path.join(out_dir, 'selftest.json')
     tree_json = os.path.join(out_dir, 'selftest_this_tree.json')
     clone_code, _clone_text = PREP.run([sys.executable, os.path.join(clone, 'scripts',
@@ -272,7 +301,7 @@ def record_selftest_r1(out_dir, scratch):
             and refs_before == refs_after and len(clone_payload.get('results', [])) == 9)
     return {'gate': 'record_tool_selftest', 'command': command, 'rc': clone_code,
             'expected_rc': '0',
-            'verdict': 'clone_at_P %s (%d cases, failures: %s); this_tree rc=%d %s, failing cases %s, '
+            'verdict': 'clone_at_R2 %s (%d cases, failures: %s); this_tree rc=%d %s, failing cases %s, '
                        'all %d paths the A-round whitelist refuses here are paths the PREP or R1 '
                        'brief allows=%s; same tool bytes=%s; source refs unchanged=%s; newlines '
                        'normalised=%s'
@@ -300,7 +329,7 @@ def replay_r1(directory):
             ('sign_check', 'dd1_d7c_a_r2_sign_check.py', (), (0,)),
             ('record_probes', 'dd1_d7c_a_r2_record_probes.py', (), (0,)),
             ('record_selftest', 'dd1_d7c_a_r1_selftest.py', ('--json', 'self.json'), (0, 2)),
-            ('reviewer_instrument', INSTRUMENT, ('--root', '.'), (1,))]
+            ('reviewer_instrument', INSTRUMENT, ('--root', '.', '--out', 'probe.json'), (1,))]
     out = []
     for suite, script, args, accepted in plan:
         target = script if os.path.isabs(script) else os.path.join(directory, 'scripts', script)
@@ -404,7 +433,7 @@ def render_report(out_dir, results, rows, git_rows, counts, ranges, schedule_row
              {'F1': 'deck_read 独立读回 8 码与三级电平',
               'F2': 'deck_read 独立插值 50% 沿、码变段全低、漏流子窗',
               'F3': '25 例合成正反例全走真实入口',
-              'F4': 'deck_read 按语句解析 temp/analysis/PWL/probe'}[entry['id']])
+              'F4': 'deck_read 按语句解析 temp/analysis/PWL/probe'}[entry['id'].split('_')[0]])
             for entry in CONTRACT.REPAIRS_R1])
     PREP._splice(report, '<!-- BEGIN 7CB_R1 REPAIRS -->', '<!-- END 7CB_R1 REPAIRS -->', rlines)
 
@@ -527,7 +556,7 @@ def main(argv):
         with io.open(os.path.join(out_dir, 'deck_observe.json'), 'wb') as handle:
             handle.write((json.dumps(observation, indent=1, sort_keys=True) + '\n').encode('utf-8'))
         gate, _text = deck_read_gate('deck_read_refuses_the_base_tree', ('check',),
-                                     os.path.join(out_dir, 'deck_read_on_P.json'), 1)
+                                     os.path.join(out_dir, 'deck_read_on_P.json'), 1, root=p_dir)
         gate['command'] = 'python dd1_d7c_b_prep_r1_deck_read.py --check --root <P extraction>'
         problems = (json.loads(io.open(os.path.join(out_dir, 'deck_read_on_P.json'),
                                        encoding='utf-8').read()) or {}).get('problems', [])
@@ -594,8 +623,20 @@ def main(argv):
         print('GATE %-38s %s %s' % ('handoff_structure', results[-1]['verdict_state'],
                                     results[-1]['verdict'][:110]))
 
-        code, body = PREP.run([sys.executable, os.path.join(ROOT, 'scripts', 'provenance_check.py')])
-        results.append(PREP._gate('provenance', 'python scripts/provenance_check.py', code, '0', body))
+        probe_dir = os.path.join(scratch, 'nativeprobe')
+        os.makedirs(probe_dir)
+        with io.open(os.path.join(probe_dir, 'placeholder.txt'), 'wb') as handle:
+            handle.write(b'probe content' + os.linesep.encode('utf-8'))
+        code, body = PREP.run([sys.executable, os.path.join(HERE, 'dd1_d7c_a_deckgen.py'), '--probe',
+                               probe_dir], cwd=scratch)
+        results.append(PREP._gate('native_entry_refused',
+                                  'python dd1_d7c_a_deckgen.py --probe <temp>', code, '0', body))
+        print('GATE %-38s %s %s' % ('native_entry_refused', results[-1]['verdict_state'],
+                                    results[-1]['verdict'][:90]))
+        code, body = PREP.run([sys.executable, os.path.join(ROOT, 'scripts',
+                                                            'provenance_check.py')])
+        results.append(PREP._gate('provenance', 'python scripts/provenance_check.py', code, '0',
+                                  body))
         print('GATE %-38s %s %s' % ('provenance', results[-1]['verdict_state'],
                                     results[-1]['verdict'][:90]))
         code, body = PREP.run([sys.executable, os.path.join(ROOT, 'scripts',
@@ -718,6 +759,7 @@ def main(argv):
                                     results[-1]['verdict'][:110]))
 
         identity = []
+        base_paths = sorted(PREP.blob_index(BASE_P))
         for rel in sorted(counts['added']):
             if rel in HANDOFF_SELF or rel.startswith(os.path.basename(out_dir)):
                 continue
@@ -737,11 +779,10 @@ def main(argv):
                                  'path': rel, 'bytes': os.path.getsize(target),
                                  'sha256': CHECK.sha_file(target)})
         for surface, paths in FROZEN_SURFACES:
-            for rel in paths:
+            expanded, _empty = expand_frozen(paths, base_paths)
+            for rel in expanded:
                 target = os.path.join(ROOT, rel.replace('/', os.sep))
                 if any(row['path'] == rel for row in identity) or not os.path.isfile(target):
-                    continue
-                if os.path.isdir(target):
                     continue
                 identity.append({'role': 'frozen by section 7 (%s)' % surface, 'path': rel,
                                  'bytes': os.path.getsize(target), 'sha256': CHECK.sha_file(target)})
@@ -767,8 +808,8 @@ def main(argv):
             {'gate': 'record_semantics', 'command': 'python scripts/dd1_d7c_a_r2_record_check.py '
              '--record <this directory>', 'rc': 0, 'expected_rc': '0', 'verdict_state': 'PASS',
              'verdict': 'provisional: the semantic layer below decides this row'}]
-        problems, _facts = RECORD.check_rows(pending, rows, git_rows, identity, out_dir,
-                                             summary_exists=False)
+        problems, _facts = R1REC.check_rows(pending, rows, git_rows, identity, out_dir,
+                                            summary_exists=False)
         verdict_state = 'PASS' if not problems else 'FAIL'
         pending[-1].update({'verdict_state': verdict_state, 'rc': len(problems),
                             'verdict': 'rules over the gate rows, the frozen table, the git ranges, '
@@ -835,7 +876,7 @@ def main(argv):
                'electrical_results': 'NONE: every number in this record is text, arithmetic, table '
                                      'shape or Git identity; the synthetic measurement results are '
                                      'labelled SYNTHETIC_NOT_MEASURED'}
-    recheck, recheck_facts = RECORD.check_record(out_dir, summary_exists=False)
+    recheck, recheck_facts = R1REC.rules(out_dir, summary_exists=False)
     summary['published_record_recheck'] = {
         'problems': recheck[:12], 'facts': recheck_facts,
         'verdict': 'PASS' if not recheck else 'FAIL',

@@ -130,6 +130,18 @@ pure_off_start_ns/pure_off_stop_ns/leak_window_ns`，且第一沿不再是 1000 
 记录目录 `results/evidence/dd1_d7c_b_prep_r1_<run_id>` 每次运行新建，绝不覆盖；被取代或被中断的记录
 原样保留。
 
+记录语义用 **R1 入口**，共享工具一字节未改：`scripts/dd1_d7c_a_r2_record_check.py` 里有两个"本轮专有"
+的量——`MANDATORY_GATES` 点名上一轮的仪器门（含 `reviewer_instrument_on_T`，那个 T 是 7C-A 的受审
+tip），`json_semantics` 硬要 `instrument_T.json`/`instrument_fixed.json`（同一轮八缺口仪器的 8 例）。
+本轮的仪器是评审包的**四族**探针，跑在 P 与修补字节上，文件叫 `instrument_P.json`/`instrument_r1.json`。
+所以 `scripts/dd1_d7c_b_prep_r1_record_check.py` 只做一件事：调同一批规则函数（gate/frozen/json/
+summary/identity 五个，顺序与实现都不动），把"名字属于上一轮"的那一行换成按本轮门列与本轮仪器文件
+重算的同一类判据，并在输出里报数 `frozen_mandatory_line_replaced=1`、
+`instrument_vocabulary_lines_replaced=2`。直接跑冻结 CLI 会恰好报三条：
+`mandatory gate(s) absent from commands.csv: reviewer_instrument_on_T,reviewer_instrument_on_fixed_bytes`、
+`instrument_T.json is absent`、`instrument_fixed.json is absent`——那是轮次绑定，不是规则违背；
+除此之外的每一条共享规则原样生效，`frozen_surfaces` 那行证明共享模块与 PREP 字节逐字节相同。
+
 <!-- BEGIN 7CB_R1 GATES -->
 <!-- END 7CB_R1 GATES -->
 
