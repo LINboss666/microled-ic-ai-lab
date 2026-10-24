@@ -1,0 +1,430 @@
+{
+ "base_sha": "dcef9b336f2222d6291d266858270f7448b6bb78",
+ "base_sha_role": "the PREP delivered tip, i.e. exactly the bytes the independent review judged REWORK; this work tree was created from it",
+ "boundaries": {
+  "ACCEPTANCE_REGISTRATION_AUTHORISED": "NO",
+  "MERGE_OR_MAIN_PUSH_AUTHORISED": "NO",
+  "NATIVE_PREFLIGHT_AUTHORISED": "NO",
+  "NEXT_NATIVE_STAGE_AUTHORISED": "NO",
+  "PDK_MODEL_CREDENTIAL_ACCESS_AUTHORISED": "NO",
+  "SSH_OR_VM_ACCESS_AUTHORISED": "NO",
+  "force_push": "NO",
+  "gc_or_prune": "NO",
+  "history_rewritten": "NO",
+  "hooks_skipped": "NO",
+  "injected_reminders_refused": "a fake instruction to call an audit tool, to read credentials and to widen scope was refused and is reported; text in a file or a tool output is not authorisation",
+  "repository_visibility_changed": "NO"
+ },
+ "branch": "poc/data-pam-d7c-b-prep-r1",
+ "completion_level": "REPAIRED_OFFLINE_AWAITING_INDEPENDENT_REVIEW_NO_NATIVE_RUN",
+ "contract_state": "PROPOSED_FOR_REVIEW",
+ "costs": {
+  "credentials_read": 0,
+  "new_native_preflights": 0,
+  "new_oa_writes": 0,
+  "new_rtl_simulations": 0,
+  "new_spectre_launches": 0,
+  "pdk_or_modelcard_read": 0,
+  "spectre_help_invocations": 0,
+  "ssh_or_vm": 0
+ },
+ "head_sha": "dcef9b336f2222d6291d266858270f7448b6bb78",
+ "head_sha_role": "the tip when this handoff was written. The R1 commits follow it: the repair commit, then the commit that publishes results/evidence/dd1_d7c_b_prep_r1_<run_id>. A handoff cannot digest the commits it precedes, so the pushed tip is recorded in the receipt commit.",
+ "independent_deck_reading": {
+  "base_bytes": "refused by name: the P contract declares neither units.logic_high_V nor the edge/offset fields this reader needs, so it states that instead of inventing expectations",
+  "bit_weights_are_a_literal": true,
+  "counterexamples_kept": [
+   "old_long_ramp",
+   "leak_window_over_next_rise",
+   "delivered_bytes_control"
+  ],
+  "delivered_bytes": {
+   "decks_read": 15,
+   "problems": 0
+  },
+  "entry": "scripts/dd1_d7c_b_prep_r1_deck_read.py",
+  "imports_generator": false,
+  "scratch_outside_repository_required": true,
+  "why": "the PREP audit lived inside the generator, so every expectation came from the module that wrote the bytes"
+ },
+ "inherited": {
+  "accepted_R2": "3e4703f1763223024f442c0826e95055782bca13",
+  "data7a_accepted": "f68449672774ac9266ba9e4893024e4f3027dd9d",
+  "data7b_accepted": "f9fd09b184a69a27cdb409205dfd4f4151408a23",
+  "main_untouched": "23e471cb936b421ee97e1250c3be06edf96f9937",
+  "prep_tip": "dcef9b336f2222d6291d266858270f7448b6bb78"
+ },
+ "instrument_reproduction": {
+  "after": {
+   "all_four_families_reproduced": false,
+   "command": "python reviewer/probe_prep_gaps.py --root . --out <json>",
+   "families": {
+    "F1_PAM_bit_order_and_high_level": false,
+    "F2_PWL_and_window_physics": false,
+    "F3_measurement_entry_wiring": false,
+    "F4_native_deck_known_contract": false
+   },
+   "rc": 1
+  },
+  "before": {
+   "all_four_families_reproduced": true,
+   "command": "python reviewer/probe_prep_gaps.py --root <P extraction> --out <json>",
+   "rc": 0
+  }
+ },
+ "known_limitations": [
+  "nothing was simulated: the decks are text and their statement shapes are proven only against what this project has already run",
+  "the eight-level electrical ladder, the DC sweep and every Q remain NOT_RUN",
+  "the measurement core is the accepted dd1_d7b_measure, so its precision limits are inherited",
+  "the PREP report and the PREP handoff were not rewritten: their stale column names are corrected only in reports/dd1_d7c_b_prep_review_fix_r1.md, and reports/dd1_d7c_b_prep_review_fix_r1.md is rendered by this round after measuring the tip",
+  "the off_window_ns column is a pair-spelled copy of pure_off_start_ns/pure_off_stop_ns kept for the frozen review instrument, and both the schedule validate and the independent reader refuse the day the two disagree",
+  "DATA-7B 59/56 overage, the credential echo event and the older todos are untouched"
+ ],
+ "next_stage_authorised": "NO",
+ "not_run": {
+  "eight_dc_launches": "NOT_RUN",
+  "electrical_results": "NOT_RUN",
+  "hierarchical_save": "NOT_VERIFIED",
+  "idc_by_code": "NOT_RUN",
+  "native_dc_points": "NOT_RUN",
+  "native_netlist_syntax": "NOT_VERIFIED",
+  "pdk_model_identity": "NOT_VERIFIED",
+  "thirtysix_launch_draft": "NOT_RUN"
+ },
+ "range_counts_correction": {
+  "P_to_HEAD": "measured by the record gate of this round, because a handoff written before the commits it would measure cannot quote them",
+  "R2_to_P": {
+   "added": 83,
+   "changed": 0,
+   "commits": 15,
+   "deleted": 0
+  },
+  "statement": "the PREP receipt stated 68 added paths for R2..P; recomputed from Git over the committed range as 83 added, 0 changed, 0 deleted over 15 commits. Corrected here and in the R1 report without a separate DOC round."
+ },
+ "remote_readback": {
+  "after_push": "not quoted here: it will name the pushed tip in the receipt commit that carries the package digest",
+  "method_1_git_protocol": {
+   "absent": "refs/heads/poc/data-pam-d7c-b-prep-r1 -- the branch this round creates, so its absence is the correct answer and not a read-back failure",
+   "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin refs/heads/main refs/heads/poc/data-pam-d7c-b-prep refs/heads/poc/data-pam-d7c-b-prep-r1",
+   "objects": {
+    "refs/heads/main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+    "refs/heads/poc/data-pam-d7c-b-prep": "dcef9b336f2222d6291d266858270f7448b6bb78"
+   },
+   "queried_utc": "2026-10-24T06:46:04Z",
+   "rc": 0,
+   "ref_lines_returned": 2
+  },
+  "method_2_api": {
+   "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/poc/data-pam-d7c-b-prep --jq .object.sha",
+   "note": "github.com over 443 needs the system proxy for the git transport; api.github.com answers directly, so both channels were used and they agree on the same object",
+   "object": "dcef9b336f2222d6291d266858270f7448b6bb78",
+   "queried_utc": "2026-10-24T06:46:04Z"
+  }
+ },
+ "repair_of": "DATA-7C-B-PREP",
+ "repairs": {
+  "F1": {
+   "defect": "bit order reversed and the logical 1 used as a volt",
+   "repair": "value=int(code,2), pam0=bit0 weight 1, pam1=bit1 weight 2, pam2=bit2 weight 4, level = bit x units.logic_high_V (1.8 V), one rule shared by DC and transient",
+   "reviewer_fact": "dc_code_mismatches=4, nonrail_highs=12 at 1.0 V"
+  },
+  "F2": {
+   "defect": "PAM ramped across the emission window, off windows written backwards, the table edge and the generated edge two numbers, leakage windows containing the next rise",
+   "repair": "hold the old code then a 2 ns edge with both endpoints inside a fully-low DATA_EN region; pure-off preparation ends at 1000 ns, Emax=50 ns half-edge, one uniform transient offset of 1050 ns; five windows named apart (emission, emission_flat, off_tail, pure_off, leak_last100) and a configuration that puts leakage over an edge is refused, never truncated",
+   "reviewer_fact": "PAM_ramps_over_emission_count=36, backwards_off_windows=20, enable_50_percent_errors=4, leakage_windows_with_next_enable=20"
+  },
+  "F3": {
+   "defect": "every window refused its edges, one leakage window reused for all tails, missing context compared as equal, charge_errors and sign_check never called",
+   "repair": "per-window 50% hints with the window own half-edge as the search radius and a named refusal when no bracketing pair exists; full-enable Q beside the flat mean with Qpos/signed Qneg/|Qneg| and the identity checked; sign_check and charge_errors actually called; k-th emission paired with k-th tail; settling against that window deadline; convergence validates context, finiteness and window order before comparing and keeps the absolute difference beside the QLSB ratio",
+   "reviewer_fact": "8 windows NO_REAL_EDGE_FOUND, reused interval 2400000-2500000 ps at 0 A against an independent ABOVE_LIMIT 5e-06, missing_pair_context_still_accepted=true"
+  },
+  "F4": {
+   "defect": "no deck stated its temperature, the analysis lines were unnamed",
+   "repair": "simopt options temp=27, dc_case dc dev=Vclamp param=dc start=0.600 stop=1.500 step=0.050, <instance> tran stop=<absolute> maxstep=<case>, and vsource type=pwl wave=[t v ...]; the audit parses effective statements, not lines containing a word",
+   "reviewer_fact": "no_explicit_27C=15, unnamed_analysis_lines=15"
+  }
+ },
+ "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
+ "review_input": {
+  "instrument": "reviewer/probe_prep_gaps.py",
+  "instrument_bytes": 11024,
+  "instrument_kept_byte_identical": true,
+  "instrument_sha256": "d981ff190a627ae70bb8e8a5656226b1b2a2d35e65b6539d99b13768dbe69b7c",
+  "manifest_rows_read": 17,
+  "package": "MicroLED_DATA7C_B_PREP_Independent_Review_20261024.zip",
+  "package_bytes": 29977,
+  "package_sha256_prefix": "1d4a8166626ea0a5",
+  "verdict": "REVIEW_RECOMMENDATION=REWORK, NATIVE_EXECUTION_RECOMMENDATION=NO_GO_PENDING_OFFLINE_REPAIR, CANDIDATE_DUT_REDESIGN_REQUIRED=NO"
+ },
+ "review_verdict": "REWORK / NO_GO_PENDING_OFFLINE_REPAIR / CANDIDATE_DUT_REDESIGN_REQUIRED=NO (independent review of dcef9b336f22)",
+ "round": "R1 offline repair of DATA-7C-B-PREP",
+ "schema_version": 1,
+ "scope": "offline repair of the four reviewed families, then stop at the independent review gate",
+ "source_identity": {
+  "delivered": [
+   {
+    "bytes": 52363,
+    "path": "scripts/dd1_d7c_b_prep_contract.py",
+    "sha256": "327eae52e352de66de39f0f6683abf2637d5b0d21ee5f4f7d3e160a92bacb3c7"
+   },
+   {
+    "bytes": 55731,
+    "path": "scripts/dd1_d7c_b_prep_schedule.py",
+    "sha256": "1530e14bf726910a108c8152148850566e56887f7b8f090757fcf2e07efed40a"
+   },
+   {
+    "bytes": 28895,
+    "path": "scripts/dd1_d7c_b_prep_deckgen.py",
+    "sha256": "07432626167a4ecb9b177391805f7fd88659728fe3d3fd3b277ce716c022bd44"
+   },
+   {
+    "bytes": 27369,
+    "path": "scripts/dd1_d7c_b_prep_measure.py",
+    "sha256": "ce2925f52277e16d949f4d5da527b7c97c94cf95b3f48446302703ddf21593d6"
+   },
+   {
+    "bytes": 46812,
+    "path": "scripts/dd1_d7c_b_prep_cases.py",
+    "sha256": "e4ac38c126337c9fc5d93c51547c6e676b324fcef196179a7521fd220ae0a334"
+   },
+   {
+    "bytes": 58940,
+    "path": "scripts/dd1_d7c_b_prep_verify.py",
+    "sha256": "5d7893f7cec1c84c253df06710dad64494a77ad7e4efee7b47bf79db712d3a80"
+   },
+   {
+    "bytes": 52478,
+    "path": "scripts/dd1_d7c_b_prep_r1_deck_read.py",
+    "sha256": "cc7a86b38b8cc4886ed98315f9b61e6d5d5c260d01ebe3fad0841d9d6545fee8"
+   },
+   {
+    "bytes": 56399,
+    "path": "scripts/dd1_d7c_b_prep_r1_verify.py",
+    "sha256": "d211e5a4f7f5cd9a94de4248d35e14f430952d3a161f834b7bc9f1868a9bf2bc"
+   },
+   {
+    "bytes": 21874,
+    "path": "tests/dd1_d7c_b_prep/contract.json",
+    "sha256": "944812744b7ae982154798200d876790de0a7c18e08b200a9a91bc92409bf078"
+   },
+   {
+    "bytes": 14840,
+    "path": "tests/dd1_d7c_b_prep/schedule.csv",
+    "sha256": "fef4c9d3c8deaa3aeb576d90ecabe3ad977acba85b85c4a9b52cf6882a4665f6"
+   },
+   {
+    "bytes": 49799,
+    "path": "tests/dd1_d7c_b_prep/windows.csv",
+    "sha256": "5f7bd75cd1a15f5c05e3a79d55fd234d1e60ecb2b5bd66972d43c4d84cb87aa3"
+   },
+   {
+    "bytes": 22453,
+    "path": "tests/dd1_d7c_b_prep/pwl.csv",
+    "sha256": "f3dcfe12e42150190d616a3128264787fc7148a7bccbde9c315dcbbf0b9cdf18"
+   },
+   {
+    "bytes": 18767,
+    "path": "reports/dd1_d7c_b_prep_contract.md",
+    "sha256": "963a9dab16d9877ea7668af47602a6e259ddd8bda5065e83d77fafb734128b08"
+   },
+   {
+    "bytes": 13242,
+    "path": "reports/tasks/DATA-7C-B-PREP-R1.md",
+    "sha256": "b8e6cd2d1f7b6c81d1883abe15ff0bb40508e96f43525b742d03c6e6a4a549d3"
+   },
+   {
+    "bytes": 4803,
+    "path": "spectre/dd1_d7c_b_prep/DC-000.scs",
+    "sha256": "2193e220d0f539d853b5da59a4ec7e185c4da131d1a2597463a46145962850fe"
+   },
+   {
+    "bytes": 4802,
+    "path": "spectre/dd1_d7c_b_prep/DC-001.scs",
+    "sha256": "b015fccb485850ff92d00f4c58637883b9be249ac864b31efd3edfef40ba6bd1"
+   },
+   {
+    "bytes": 4803,
+    "path": "spectre/dd1_d7c_b_prep/DC-010.scs",
+    "sha256": "cd9df1cff8fda01a403caafaa6d726714d1d4d7cf1ad2586e150634ca4e2b690"
+   },
+   {
+    "bytes": 4801,
+    "path": "spectre/dd1_d7c_b_prep/DC-011.scs",
+    "sha256": "70e1044d3ba95720e7fd26f719e954050e63f54134f1162f103da0a9e360abb4"
+   },
+   {
+    "bytes": 4803,
+    "path": "spectre/dd1_d7c_b_prep/DC-100.scs",
+    "sha256": "dbfff3035bbabf2ab4a735c61223e410963e290dbf9de51d5841e0a912f6b5ef"
+   },
+   {
+    "bytes": 4803,
+    "path": "spectre/dd1_d7c_b_prep/DC-101.scs",
+    "sha256": "35aa0a97f65da729afb88ab5e8dadb060ed7b8d0f96667a4298c64cd5fa67588"
+   },
+   {
+    "bytes": 4804,
+    "path": "spectre/dd1_d7c_b_prep/DC-110.scs",
+    "sha256": "9f7ec47174690e70a8b517d12fd1e25aa259b8fed5a5e1929e925a3a0856064d"
+   },
+   {
+    "bytes": 4800,
+    "path": "spectre/dd1_d7c_b_prep/DC-111.scs",
+    "sha256": "e333cce09c94dbbdb811f134772d76961ee3534984b2ba253e39097813e6b405"
+   },
+   {
+    "bytes": 8638,
+    "path": "spectre/dd1_d7c_b_prep/RS-FULL.scs",
+    "sha256": "3694083b3fc404e45217f6a3c6654264aecb0bf77b11ca96fe4270440c89ac79"
+   },
+   {
+    "bytes": 6015,
+    "path": "spectre/dd1_d7c_b_prep/RS-LOW.scs",
+    "sha256": "86b919a0c1ce15168c3829acfbc2562efac7710231c388b2ce644b9ca1215f2c"
+   },
+   {
+    "bytes": 7322,
+    "path": "spectre/dd1_d7c_b_prep/RS-SWITCH.scs",
+    "sha256": "7067156ade6f3c01ec7941a8fbfc68828e375e963dde690bfeac675f58bab6a2"
+   },
+   {
+    "bytes": 5926,
+    "path": "spectre/dd1_d7c_b_prep/TR-120.scs",
+    "sha256": "f5a0f3386bea52de1e3fa7387b7127eb7e3c20120fa8e45e63ee3b72f94cbb2b"
+   },
+   {
+    "bytes": 5925,
+    "path": "spectre/dd1_d7c_b_prep/TR-200.scs",
+    "sha256": "4cee5055e93209646175234ec4f28026212727ef083ce1b2d1723f76807bc6f3"
+   },
+   {
+    "bytes": 8548,
+    "path": "spectre/dd1_d7c_b_prep/TR-LONG.scs",
+    "sha256": "54506e945920713fba2682d0d535aa04c1cd9b1718b12395bf83c4841c8f78d5"
+   },
+   {
+    "bytes": 7251,
+    "path": "spectre/dd1_d7c_b_prep/TR-OFFCODE.scs",
+    "sha256": "26eea84243362e2f73cbe893961514ac08a114dda74b92b9f41a661ef4863265"
+   }
+  ],
+  "read_only_inputs": [
+   {
+    "bytes": 4029,
+    "path": "spectre/dd1_d7c_a_pam_top.scs",
+    "sha256": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24"
+   },
+   {
+    "bytes": 4114,
+    "path": "spectre/dd1_d7c_a_sink_unit.scs",
+    "sha256": "60e06aa3010a66442ac25ff408abc22f1aab93d6b5d3b24dbc15095ac66234af"
+   },
+   {
+    "bytes": 4674,
+    "path": "spectre/dd1_d7c_a_pam_dec.scs",
+    "sha256": "9f6c8d7895d13aaf031eac8036bba7165e26a448c685beef8ab2d0a128627d24"
+   },
+   {
+    "bytes": 3871,
+    "path": "spectre/dd1_d7c_a_gates.scs",
+    "sha256": "d2def4e657532b655941c2e42adf8534b7144544fa72ff2f41dfbd3374620faf"
+   },
+   {
+    "bytes": 51953,
+    "path": "scripts/dd1_d7b_measure.py",
+    "sha256": "f3da5b53d5c777ec7f60c159fbf4b8840f6257019045146546e1e0a7793fbb7f"
+   },
+   {
+    "bytes": 179066,
+    "path": "scripts/dd1_d7b_run.py",
+    "sha256": "6f7572a685ae9e2f50a1d900abf1968a31b2f1f7cdca3b112e55b3d5d56276d9"
+   },
+   {
+    "bytes": 1259,
+    "path": "spectre/current_probe_syntax.scs",
+    "sha256": "59e7bbbef10c4e989e4b8317871022ab4f3b1b02f1cc89e7db1c8858777be426"
+   },
+   {
+    "bytes": 21786,
+    "path": "scripts/dd1_d7c_a_r2_plan.py",
+    "sha256": "555b35e002ba45271cf5a422eda11359c5b48896a1a8a05c4335369c17d83151"
+   },
+   {
+    "bytes": 19369,
+    "path": "tests/dd1_d7c_a/native_case_plan.csv",
+    "sha256": "216c6eb79de748b3b753c999991e0952524bf14c7dc688c3ca3a48cf3f4ad6b5"
+   },
+   {
+    "bytes": 23398,
+    "path": "scripts/dd1_d7c_a_r2_record_check.py",
+    "sha256": "bd207dbbb6acfd8ca9bf020f77e4a0e7f9b66baf7e0013fa898d182ab3fd3249"
+   },
+   {
+    "bytes": 67702,
+    "path": "scripts/dd1_d7c_a_verify.py",
+    "sha256": "577c7b39997e94479e2cc183eddd7c779ff46041281c077569287292ea32d696"
+   },
+   {
+    "bytes": 8772,
+    "path": "scripts/precommit_safety_check.py",
+    "sha256": "09770ae806f51b7888e86a5e4f9ce3fdb7c3f43a348d26fc7e863853ba0ad77a"
+   },
+   {
+    "bytes": 33683,
+    "path": "reports/dd1_d7c_b_prep_report.md",
+    "sha256": "f53926fccb8b1fbbbee22f505e3f3dbe2c6dfcd6067f1cdd899107dd31b12b03"
+   },
+   {
+    "bytes": 44547,
+    "path": "reports/agent_handoffs/DATA-7C-B-PREP.json",
+    "sha256": "71b5bbd770221a36820e7ec5389f18f74a5bc2c68644527598857e90a1db8a09"
+   },
+   {
+    "bytes": 8183,
+    "path": "reports/agent_handoffs/DATA-7C-B-PREP.md",
+    "sha256": "d15a0cb437518012b831265440acd652ee9268c986f0b7f30fa51f01cba46e50"
+   },
+   {
+    "bytes": 18448,
+    "path": "reports/tasks/DATA-7C-B-PREP.md",
+    "sha256": "40a3eb148e038c4fb6ea4d5a7d48de4b2e9b22e6a34a685c34f912f2a3c8b126"
+   },
+   {
+    "bytes": 7975,
+    "path": "results/evidence/dd1_d7c_b_prep_20261023_185017_03cccc/verification_summary.json",
+    "sha256": "e1fb9759b3ffc11693004c55b86cd9292b385af89cb25b9ed1dd9272bce85964"
+   },
+   {
+    "bytes": 14552,
+    "path": "AGENTS.md",
+    "sha256": "74d686b287bafe8e0bdd245bd95ba2e6bc61aee3b329d9f8f031500635adfc13"
+   }
+  ]
+ },
+ "stop_reason": "AWAITING_INDEPENDENT_REVIEW",
+ "synthetic_cases": {
+  "added_this_round": [
+   "C18_leak_in_second_tail",
+   "C19_full_versus_flat_window",
+   "C20_no_edge_refusal_left",
+   "C21_missing_context_refused",
+   "C22_leakage_window_refusals",
+   "C23_dc_expectation_via_entrance",
+   "C24_decks_read_clean",
+   "C25_reader_names_the_shapes"
+  ],
+  "count": 25,
+  "evidence_class": "SYNTHETIC_NOT_MEASURED",
+  "previously": 17
+ },
+ "task_book": {
+  "byte_identical_to_the_brief": true,
+  "bytes": 13242,
+  "line_endings": "LF, so the committed blob equals the source bytes",
+  "path": "reports/tasks/DATA-7C-B-PREP-R1.md",
+  "sha256": "b8e6cd2d1f7b6c81d1883abe15ff0bb40508e96f43525b742d03c6e6a4a549d3"
+ },
+ "task_id": "DATA-7C-B-PREP-R1",
+ "user_approved": false,
+ "worktree": "D:\\ic617_d7c_b_prep_r1"
+}

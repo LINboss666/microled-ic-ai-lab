@@ -1,216 +1,301 @@
 case_id,signal,node,t_ns,value_V,role,result
+DC-000,DATA_EN,data_en,0.000,1.800,static_dc_level,NOT_RUN
+DC-000,PAM bit,pam0,0.000,0.000,static_dc_level,NOT_RUN
+DC-000,PAM bit,pam1,0.000,0.000,static_dc_level,NOT_RUN
+DC-000,PAM bit,pam2,0.000,0.000,static_dc_level,NOT_RUN
+DC-001,DATA_EN,data_en,0.000,1.800,static_dc_level,NOT_RUN
+DC-001,PAM bit,pam0,0.000,1.800,static_dc_level,NOT_RUN
+DC-001,PAM bit,pam1,0.000,0.000,static_dc_level,NOT_RUN
+DC-001,PAM bit,pam2,0.000,0.000,static_dc_level,NOT_RUN
+DC-010,DATA_EN,data_en,0.000,1.800,static_dc_level,NOT_RUN
+DC-010,PAM bit,pam0,0.000,0.000,static_dc_level,NOT_RUN
+DC-010,PAM bit,pam1,0.000,1.800,static_dc_level,NOT_RUN
+DC-010,PAM bit,pam2,0.000,0.000,static_dc_level,NOT_RUN
+DC-011,DATA_EN,data_en,0.000,1.800,static_dc_level,NOT_RUN
+DC-011,PAM bit,pam0,0.000,1.800,static_dc_level,NOT_RUN
+DC-011,PAM bit,pam1,0.000,1.800,static_dc_level,NOT_RUN
+DC-011,PAM bit,pam2,0.000,0.000,static_dc_level,NOT_RUN
+DC-100,DATA_EN,data_en,0.000,1.800,static_dc_level,NOT_RUN
+DC-100,PAM bit,pam0,0.000,0.000,static_dc_level,NOT_RUN
+DC-100,PAM bit,pam1,0.000,0.000,static_dc_level,NOT_RUN
+DC-100,PAM bit,pam2,0.000,1.800,static_dc_level,NOT_RUN
+DC-101,DATA_EN,data_en,0.000,1.800,static_dc_level,NOT_RUN
+DC-101,PAM bit,pam0,0.000,1.800,static_dc_level,NOT_RUN
+DC-101,PAM bit,pam1,0.000,0.000,static_dc_level,NOT_RUN
+DC-101,PAM bit,pam2,0.000,1.800,static_dc_level,NOT_RUN
+DC-110,DATA_EN,data_en,0.000,1.800,static_dc_level,NOT_RUN
+DC-110,PAM bit,pam0,0.000,0.000,static_dc_level,NOT_RUN
+DC-110,PAM bit,pam1,0.000,1.800,static_dc_level,NOT_RUN
+DC-110,PAM bit,pam2,0.000,1.800,static_dc_level,NOT_RUN
+DC-111,DATA_EN,data_en,0.000,1.800,static_dc_level,NOT_RUN
+DC-111,PAM bit,pam0,0.000,1.800,static_dc_level,NOT_RUN
+DC-111,PAM bit,pam1,0.000,1.800,static_dc_level,NOT_RUN
+DC-111,PAM bit,pam2,0.000,1.800,static_dc_level,NOT_RUN
 TR-LONG,DATA_EN,data_en,0.000,0.000,initial_off_start,NOT_RUN
-TR-LONG,DATA_EN,data_en,950.000,0.000,rise_start,NOT_RUN
-TR-LONG,DATA_EN,data_en,1000.000,0.000,lead_end,NOT_RUN
-TR-LONG,DATA_EN,data_en,1050.000,1.800,rise_end_50pct_plus_edge,NOT_RUN
-TR-LONG,DATA_EN,data_en,1950.000,1.800,fall_start_minus_edge,NOT_RUN
-TR-LONG,DATA_EN,data_en,2050.000,0.000,fall_end,NOT_RUN
-TR-LONG,DATA_EN,data_en,2450.000,0.000,rise_start,NOT_RUN
-TR-LONG,DATA_EN,data_en,2550.000,1.800,rise_end_50pct_plus_edge,NOT_RUN
-TR-LONG,DATA_EN,data_en,3450.000,1.800,fall_start_minus_edge,NOT_RUN
-TR-LONG,DATA_EN,data_en,3550.000,0.000,fall_end,NOT_RUN
-TR-LONG,DATA_EN,data_en,3950.000,0.000,rise_start,NOT_RUN
-TR-LONG,DATA_EN,data_en,4050.000,1.800,rise_end_50pct_plus_edge,NOT_RUN
-TR-LONG,DATA_EN,data_en,4950.000,1.800,fall_start_minus_edge,NOT_RUN
-TR-LONG,DATA_EN,data_en,5050.000,0.000,fall_end,NOT_RUN
-TR-LONG,DATA_EN,data_en,5450.000,0.000,rise_start,NOT_RUN
-TR-LONG,DATA_EN,data_en,5550.000,1.800,rise_end_50pct_plus_edge,NOT_RUN
-TR-LONG,DATA_EN,data_en,6450.000,1.800,fall_start_minus_edge,NOT_RUN
-TR-LONG,DATA_EN,data_en,6550.000,0.000,fall_end,NOT_RUN
-TR-LONG,DATA_EN,data_en,6950.000,0.000,rise_start,NOT_RUN
-TR-LONG,DATA_EN,data_en,7050.000,1.800,rise_end_50pct_plus_edge,NOT_RUN
-TR-LONG,DATA_EN,data_en,7950.000,1.800,fall_start_minus_edge,NOT_RUN
-TR-LONG,DATA_EN,data_en,8050.000,0.000,fall_end,NOT_RUN
-TR-LONG,DATA_EN,data_en,8450.000,0.000,rise_start,NOT_RUN
-TR-LONG,DATA_EN,data_en,8550.000,1.800,rise_end_50pct_plus_edge,NOT_RUN
-TR-LONG,DATA_EN,data_en,9450.000,1.800,fall_start_minus_edge,NOT_RUN
-TR-LONG,DATA_EN,data_en,9550.000,0.000,fall_end,NOT_RUN
-TR-LONG,DATA_EN,data_en,9950.000,0.000,rise_start,NOT_RUN
-TR-LONG,DATA_EN,data_en,10050.000,1.800,rise_end_50pct_plus_edge,NOT_RUN
-TR-LONG,DATA_EN,data_en,10950.000,1.800,fall_start_minus_edge,NOT_RUN
-TR-LONG,DATA_EN,data_en,11050.000,0.000,fall_end,NOT_RUN
-TR-LONG,DATA_EN,data_en,11450.000,0.000,rise_start,NOT_RUN
-TR-LONG,DATA_EN,data_en,11550.000,1.800,rise_end_50pct_plus_edge,NOT_RUN
-TR-LONG,DATA_EN,data_en,12450.000,1.800,fall_start_minus_edge,NOT_RUN
-TR-LONG,DATA_EN,data_en,12550.000,0.000,fall_end,NOT_RUN
-TR-LONG,PAM bit,pam0,0.000,0.000,initial_code_before_lead_1_of_9,NOT_RUN
-TR-LONG,PAM bit,pam0,750.000,0.000,code_change_in_off_window_2_of_9,NOT_RUN
-TR-LONG,PAM bit,pam0,2250.000,0.000,code_change_in_off_window_3_of_9,NOT_RUN
-TR-LONG,PAM bit,pam0,3750.000,0.000,code_change_in_off_window_4_of_9,NOT_RUN
-TR-LONG,PAM bit,pam0,5250.000,0.000,code_change_in_off_window_5_of_9,NOT_RUN
-TR-LONG,PAM bit,pam0,6750.000,1.000,code_change_in_off_window_6_of_9,NOT_RUN
-TR-LONG,PAM bit,pam0,8250.000,1.000,code_change_in_off_window_7_of_9,NOT_RUN
-TR-LONG,PAM bit,pam0,9750.000,1.000,code_change_in_off_window_8_of_9,NOT_RUN
-TR-LONG,PAM bit,pam0,11250.000,1.000,code_change_in_off_window_9_of_9,NOT_RUN
-TR-LONG,PAM bit,pam1,0.000,0.000,initial_code_before_lead_1_of_9,NOT_RUN
-TR-LONG,PAM bit,pam1,750.000,0.000,code_change_in_off_window_2_of_9,NOT_RUN
-TR-LONG,PAM bit,pam1,2250.000,0.000,code_change_in_off_window_3_of_9,NOT_RUN
-TR-LONG,PAM bit,pam1,3750.000,1.000,code_change_in_off_window_4_of_9,NOT_RUN
-TR-LONG,PAM bit,pam1,5250.000,1.000,code_change_in_off_window_5_of_9,NOT_RUN
-TR-LONG,PAM bit,pam1,6750.000,0.000,code_change_in_off_window_6_of_9,NOT_RUN
-TR-LONG,PAM bit,pam1,8250.000,0.000,code_change_in_off_window_7_of_9,NOT_RUN
-TR-LONG,PAM bit,pam1,9750.000,1.000,code_change_in_off_window_8_of_9,NOT_RUN
-TR-LONG,PAM bit,pam1,11250.000,1.000,code_change_in_off_window_9_of_9,NOT_RUN
-TR-LONG,PAM bit,pam2,0.000,0.000,initial_code_before_lead_1_of_9,NOT_RUN
-TR-LONG,PAM bit,pam2,750.000,0.000,code_change_in_off_window_2_of_9,NOT_RUN
-TR-LONG,PAM bit,pam2,2250.000,1.000,code_change_in_off_window_3_of_9,NOT_RUN
-TR-LONG,PAM bit,pam2,3750.000,0.000,code_change_in_off_window_4_of_9,NOT_RUN
-TR-LONG,PAM bit,pam2,5250.000,1.000,code_change_in_off_window_5_of_9,NOT_RUN
-TR-LONG,PAM bit,pam2,6750.000,0.000,code_change_in_off_window_6_of_9,NOT_RUN
-TR-LONG,PAM bit,pam2,8250.000,1.000,code_change_in_off_window_7_of_9,NOT_RUN
-TR-LONG,PAM bit,pam2,9750.000,0.000,code_change_in_off_window_8_of_9,NOT_RUN
-TR-LONG,PAM bit,pam2,11250.000,1.000,code_change_in_off_window_9_of_9,NOT_RUN
+TR-LONG,DATA_EN,data_en,1000.000,0.000,rise_start,NOT_RUN
+TR-LONG,DATA_EN,data_en,1100.000,1.800,rise_end,NOT_RUN
+TR-LONG,DATA_EN,data_en,2000.000,1.800,fall_start,NOT_RUN
+TR-LONG,DATA_EN,data_en,2100.000,0.000,fall_end,NOT_RUN
+TR-LONG,DATA_EN,data_en,2500.000,0.000,rise_start,NOT_RUN
+TR-LONG,DATA_EN,data_en,2600.000,1.800,rise_end,NOT_RUN
+TR-LONG,DATA_EN,data_en,3500.000,1.800,fall_start,NOT_RUN
+TR-LONG,DATA_EN,data_en,3600.000,0.000,fall_end,NOT_RUN
+TR-LONG,DATA_EN,data_en,4000.000,0.000,rise_start,NOT_RUN
+TR-LONG,DATA_EN,data_en,4100.000,1.800,rise_end,NOT_RUN
+TR-LONG,DATA_EN,data_en,5000.000,1.800,fall_start,NOT_RUN
+TR-LONG,DATA_EN,data_en,5100.000,0.000,fall_end,NOT_RUN
+TR-LONG,DATA_EN,data_en,5500.000,0.000,rise_start,NOT_RUN
+TR-LONG,DATA_EN,data_en,5600.000,1.800,rise_end,NOT_RUN
+TR-LONG,DATA_EN,data_en,6500.000,1.800,fall_start,NOT_RUN
+TR-LONG,DATA_EN,data_en,6600.000,0.000,fall_end,NOT_RUN
+TR-LONG,DATA_EN,data_en,7000.000,0.000,rise_start,NOT_RUN
+TR-LONG,DATA_EN,data_en,7100.000,1.800,rise_end,NOT_RUN
+TR-LONG,DATA_EN,data_en,8000.000,1.800,fall_start,NOT_RUN
+TR-LONG,DATA_EN,data_en,8100.000,0.000,fall_end,NOT_RUN
+TR-LONG,DATA_EN,data_en,8500.000,0.000,rise_start,NOT_RUN
+TR-LONG,DATA_EN,data_en,8600.000,1.800,rise_end,NOT_RUN
+TR-LONG,DATA_EN,data_en,9500.000,1.800,fall_start,NOT_RUN
+TR-LONG,DATA_EN,data_en,9600.000,0.000,fall_end,NOT_RUN
+TR-LONG,DATA_EN,data_en,10000.000,0.000,rise_start,NOT_RUN
+TR-LONG,DATA_EN,data_en,10100.000,1.800,rise_end,NOT_RUN
+TR-LONG,DATA_EN,data_en,11000.000,1.800,fall_start,NOT_RUN
+TR-LONG,DATA_EN,data_en,11100.000,0.000,fall_end,NOT_RUN
+TR-LONG,DATA_EN,data_en,11500.000,0.000,rise_start,NOT_RUN
+TR-LONG,DATA_EN,data_en,11600.000,1.800,rise_end,NOT_RUN
+TR-LONG,DATA_EN,data_en,12500.000,1.800,fall_start,NOT_RUN
+TR-LONG,DATA_EN,data_en,12600.000,0.000,fall_end,NOT_RUN
+TR-LONG,DATA_EN,data_en,13050.000,0.000,analysis_stop_hold,NOT_RUN
+TR-LONG,PAM bit,pam0,0.000,0.000,initial_code_at_t0_1_of_15,NOT_RUN
+TR-LONG,PAM bit,pam0,2299.000,0.000,hold_until_code_edge_2_of_15,NOT_RUN
+TR-LONG,PAM bit,pam0,2301.000,1.800,code_edge_settled_3_of_15,NOT_RUN
+TR-LONG,PAM bit,pam0,3799.000,1.800,hold_until_code_edge_4_of_15,NOT_RUN
+TR-LONG,PAM bit,pam0,3801.000,0.000,code_edge_settled_5_of_15,NOT_RUN
+TR-LONG,PAM bit,pam0,5299.000,0.000,hold_until_code_edge_6_of_15,NOT_RUN
+TR-LONG,PAM bit,pam0,5301.000,1.800,code_edge_settled_7_of_15,NOT_RUN
+TR-LONG,PAM bit,pam0,6799.000,1.800,hold_until_code_edge_8_of_15,NOT_RUN
+TR-LONG,PAM bit,pam0,6801.000,0.000,code_edge_settled_9_of_15,NOT_RUN
+TR-LONG,PAM bit,pam0,8299.000,0.000,hold_until_code_edge_10_of_15,NOT_RUN
+TR-LONG,PAM bit,pam0,8301.000,1.800,code_edge_settled_11_of_15,NOT_RUN
+TR-LONG,PAM bit,pam0,9799.000,1.800,hold_until_code_edge_12_of_15,NOT_RUN
+TR-LONG,PAM bit,pam0,9801.000,0.000,code_edge_settled_13_of_15,NOT_RUN
+TR-LONG,PAM bit,pam0,11299.000,0.000,hold_until_code_edge_14_of_15,NOT_RUN
+TR-LONG,PAM bit,pam0,11301.000,1.800,code_edge_settled_15_of_15,NOT_RUN
+TR-LONG,PAM bit,pam1,0.000,0.000,initial_code_at_t0_1_of_15,NOT_RUN
+TR-LONG,PAM bit,pam1,2299.000,0.000,hold_until_code_edge_2_of_15,NOT_RUN
+TR-LONG,PAM bit,pam1,2301.000,0.000,code_edge_settled_3_of_15,NOT_RUN
+TR-LONG,PAM bit,pam1,3799.000,0.000,hold_until_code_edge_4_of_15,NOT_RUN
+TR-LONG,PAM bit,pam1,3801.000,1.800,code_edge_settled_5_of_15,NOT_RUN
+TR-LONG,PAM bit,pam1,5299.000,1.800,hold_until_code_edge_6_of_15,NOT_RUN
+TR-LONG,PAM bit,pam1,5301.000,1.800,code_edge_settled_7_of_15,NOT_RUN
+TR-LONG,PAM bit,pam1,6799.000,1.800,hold_until_code_edge_8_of_15,NOT_RUN
+TR-LONG,PAM bit,pam1,6801.000,0.000,code_edge_settled_9_of_15,NOT_RUN
+TR-LONG,PAM bit,pam1,8299.000,0.000,hold_until_code_edge_10_of_15,NOT_RUN
+TR-LONG,PAM bit,pam1,8301.000,0.000,code_edge_settled_11_of_15,NOT_RUN
+TR-LONG,PAM bit,pam1,9799.000,0.000,hold_until_code_edge_12_of_15,NOT_RUN
+TR-LONG,PAM bit,pam1,9801.000,1.800,code_edge_settled_13_of_15,NOT_RUN
+TR-LONG,PAM bit,pam1,11299.000,1.800,hold_until_code_edge_14_of_15,NOT_RUN
+TR-LONG,PAM bit,pam1,11301.000,1.800,code_edge_settled_15_of_15,NOT_RUN
+TR-LONG,PAM bit,pam2,0.000,0.000,initial_code_at_t0_1_of_15,NOT_RUN
+TR-LONG,PAM bit,pam2,2299.000,0.000,hold_until_code_edge_2_of_15,NOT_RUN
+TR-LONG,PAM bit,pam2,2301.000,0.000,code_edge_settled_3_of_15,NOT_RUN
+TR-LONG,PAM bit,pam2,3799.000,0.000,hold_until_code_edge_4_of_15,NOT_RUN
+TR-LONG,PAM bit,pam2,3801.000,0.000,code_edge_settled_5_of_15,NOT_RUN
+TR-LONG,PAM bit,pam2,5299.000,0.000,hold_until_code_edge_6_of_15,NOT_RUN
+TR-LONG,PAM bit,pam2,5301.000,0.000,code_edge_settled_7_of_15,NOT_RUN
+TR-LONG,PAM bit,pam2,6799.000,0.000,hold_until_code_edge_8_of_15,NOT_RUN
+TR-LONG,PAM bit,pam2,6801.000,1.800,code_edge_settled_9_of_15,NOT_RUN
+TR-LONG,PAM bit,pam2,8299.000,1.800,hold_until_code_edge_10_of_15,NOT_RUN
+TR-LONG,PAM bit,pam2,8301.000,1.800,code_edge_settled_11_of_15,NOT_RUN
+TR-LONG,PAM bit,pam2,9799.000,1.800,hold_until_code_edge_12_of_15,NOT_RUN
+TR-LONG,PAM bit,pam2,9801.000,1.800,code_edge_settled_13_of_15,NOT_RUN
+TR-LONG,PAM bit,pam2,11299.000,1.800,hold_until_code_edge_14_of_15,NOT_RUN
+TR-LONG,PAM bit,pam2,11301.000,1.800,code_edge_settled_15_of_15,NOT_RUN
 TR-120,DATA_EN,data_en,0.000,0.000,initial_off_start,NOT_RUN
-TR-120,DATA_EN,data_en,1000.000,0.000,lead_end,NOT_RUN
-TR-120,DATA_EN,data_en,1110.000,0.000,rise_start,NOT_RUN
-TR-120,DATA_EN,data_en,1130.000,1.800,rise_end_50pct_plus_edge,NOT_RUN
-TR-120,DATA_EN,data_en,1230.000,1.800,fall_start_minus_edge,NOT_RUN
-TR-120,DATA_EN,data_en,1250.000,0.000,fall_end,NOT_RUN
+TR-120,DATA_EN,data_en,1000.000,0.000,pure_off_preparation_end,NOT_RUN
+TR-120,DATA_EN,data_en,1160.000,0.000,rise_start,NOT_RUN
+TR-120,DATA_EN,data_en,1180.000,1.800,rise_end,NOT_RUN
+TR-120,DATA_EN,data_en,1280.000,1.800,fall_start,NOT_RUN
+TR-120,DATA_EN,data_en,1300.000,0.000,fall_end,NOT_RUN
+TR-120,DATA_EN,data_en,1530.000,0.000,analysis_stop_hold,NOT_RUN
 TR-120,PAM bit,pam0,0.000,0.000,static_dc_level,NOT_RUN
 TR-120,PAM bit,pam1,0.000,0.000,static_dc_level,NOT_RUN
 TR-120,PAM bit,pam2,0.000,0.000,static_dc_level,NOT_RUN
 TR-200,DATA_EN,data_en,0.000,0.000,initial_off_start,NOT_RUN
-TR-200,DATA_EN,data_en,1000.000,0.000,lead_end,NOT_RUN
-TR-200,DATA_EN,data_en,1110.000,0.000,rise_start,NOT_RUN
-TR-200,DATA_EN,data_en,1130.000,1.800,rise_end_50pct_plus_edge,NOT_RUN
-TR-200,DATA_EN,data_en,1310.000,1.800,fall_start_minus_edge,NOT_RUN
-TR-200,DATA_EN,data_en,1330.000,0.000,fall_end,NOT_RUN
+TR-200,DATA_EN,data_en,1000.000,0.000,pure_off_preparation_end,NOT_RUN
+TR-200,DATA_EN,data_en,1160.000,0.000,rise_start,NOT_RUN
+TR-200,DATA_EN,data_en,1180.000,1.800,rise_end,NOT_RUN
+TR-200,DATA_EN,data_en,1360.000,1.800,fall_start,NOT_RUN
+TR-200,DATA_EN,data_en,1380.000,0.000,fall_end,NOT_RUN
+TR-200,DATA_EN,data_en,1610.000,0.000,analysis_stop_hold,NOT_RUN
 TR-200,PAM bit,pam0,0.000,0.000,static_dc_level,NOT_RUN
 TR-200,PAM bit,pam1,0.000,0.000,static_dc_level,NOT_RUN
 TR-200,PAM bit,pam2,0.000,0.000,static_dc_level,NOT_RUN
 TR-OFFCODE,DATA_EN,data_en,0.000,0.000,initial_off_start,NOT_RUN
-TR-OFFCODE,DATA_EN,data_en,980.000,0.000,rise_start,NOT_RUN
-TR-OFFCODE,DATA_EN,data_en,1000.000,0.000,lead_end,NOT_RUN
-TR-OFFCODE,DATA_EN,data_en,1020.000,1.800,rise_end_50pct_plus_edge,NOT_RUN
-TR-OFFCODE,DATA_EN,data_en,1280.000,1.800,fall_start_minus_edge,NOT_RUN
-TR-OFFCODE,DATA_EN,data_en,1320.000,0.000,fall_end,NOT_RUN
-TR-OFFCODE,DATA_EN,data_en,1580.000,0.000,rise_start,NOT_RUN
-TR-OFFCODE,DATA_EN,data_en,1620.000,1.800,rise_end_50pct_plus_edge,NOT_RUN
-TR-OFFCODE,DATA_EN,data_en,1880.000,1.800,fall_start_minus_edge,NOT_RUN
-TR-OFFCODE,DATA_EN,data_en,1920.000,0.000,fall_end,NOT_RUN
-TR-OFFCODE,DATA_EN,data_en,2180.000,0.000,rise_start,NOT_RUN
-TR-OFFCODE,DATA_EN,data_en,2220.000,1.800,rise_end_50pct_plus_edge,NOT_RUN
-TR-OFFCODE,DATA_EN,data_en,2480.000,1.800,fall_start_minus_edge,NOT_RUN
-TR-OFFCODE,DATA_EN,data_en,2520.000,0.000,fall_end,NOT_RUN
-TR-OFFCODE,DATA_EN,data_en,2780.000,0.000,rise_start,NOT_RUN
-TR-OFFCODE,DATA_EN,data_en,2820.000,1.800,rise_end_50pct_plus_edge,NOT_RUN
-TR-OFFCODE,DATA_EN,data_en,3080.000,1.800,fall_start_minus_edge,NOT_RUN
-TR-OFFCODE,DATA_EN,data_en,3120.000,0.000,fall_end,NOT_RUN
-TR-OFFCODE,PAM bit,pam0,0.000,0.000,initial_code_before_lead_1_of_5,NOT_RUN
-TR-OFFCODE,PAM bit,pam0,850.000,0.000,code_change_in_off_window_2_of_5,NOT_RUN
-TR-OFFCODE,PAM bit,pam0,1450.000,1.000,code_change_in_off_window_3_of_5,NOT_RUN
-TR-OFFCODE,PAM bit,pam0,2050.000,0.000,code_change_in_off_window_4_of_5,NOT_RUN
-TR-OFFCODE,PAM bit,pam0,2650.000,1.000,code_change_in_off_window_5_of_5,NOT_RUN
-TR-OFFCODE,PAM bit,pam1,0.000,1.000,initial_code_before_lead_1_of_5,NOT_RUN
-TR-OFFCODE,PAM bit,pam1,850.000,1.000,code_change_in_off_window_2_of_5,NOT_RUN
-TR-OFFCODE,PAM bit,pam1,1450.000,0.000,code_change_in_off_window_3_of_5,NOT_RUN
-TR-OFFCODE,PAM bit,pam1,2050.000,0.000,code_change_in_off_window_4_of_5,NOT_RUN
-TR-OFFCODE,PAM bit,pam1,2650.000,1.000,code_change_in_off_window_5_of_5,NOT_RUN
-TR-OFFCODE,PAM bit,pam2,0.000,1.000,initial_code_before_lead_1_of_5,NOT_RUN
-TR-OFFCODE,PAM bit,pam2,850.000,1.000,code_change_in_off_window_2_of_5,NOT_RUN
-TR-OFFCODE,PAM bit,pam2,1450.000,0.000,code_change_in_off_window_3_of_5,NOT_RUN
-TR-OFFCODE,PAM bit,pam2,2050.000,0.000,code_change_in_off_window_4_of_5,NOT_RUN
-TR-OFFCODE,PAM bit,pam2,2650.000,1.000,code_change_in_off_window_5_of_5,NOT_RUN
+TR-OFFCODE,DATA_EN,data_en,1000.000,0.000,pure_off_preparation_end,NOT_RUN
+TR-OFFCODE,DATA_EN,data_en,1330.000,0.000,rise_start,NOT_RUN
+TR-OFFCODE,DATA_EN,data_en,1370.000,1.800,rise_end,NOT_RUN
+TR-OFFCODE,DATA_EN,data_en,1630.000,1.800,fall_start,NOT_RUN
+TR-OFFCODE,DATA_EN,data_en,1670.000,0.000,fall_end,NOT_RUN
+TR-OFFCODE,DATA_EN,data_en,1930.000,0.000,rise_start,NOT_RUN
+TR-OFFCODE,DATA_EN,data_en,1970.000,1.800,rise_end,NOT_RUN
+TR-OFFCODE,DATA_EN,data_en,2230.000,1.800,fall_start,NOT_RUN
+TR-OFFCODE,DATA_EN,data_en,2270.000,0.000,fall_end,NOT_RUN
+TR-OFFCODE,DATA_EN,data_en,2530.000,0.000,rise_start,NOT_RUN
+TR-OFFCODE,DATA_EN,data_en,2570.000,1.800,rise_end,NOT_RUN
+TR-OFFCODE,DATA_EN,data_en,2830.000,1.800,fall_start,NOT_RUN
+TR-OFFCODE,DATA_EN,data_en,2870.000,0.000,fall_end,NOT_RUN
+TR-OFFCODE,DATA_EN,data_en,3130.000,0.000,rise_start,NOT_RUN
+TR-OFFCODE,DATA_EN,data_en,3170.000,1.800,rise_end,NOT_RUN
+TR-OFFCODE,DATA_EN,data_en,3430.000,1.800,fall_start,NOT_RUN
+TR-OFFCODE,DATA_EN,data_en,3470.000,0.000,fall_end,NOT_RUN
+TR-OFFCODE,DATA_EN,data_en,3750.000,0.000,analysis_stop_hold,NOT_RUN
+TR-OFFCODE,PAM bit,pam0,0.000,1.800,initial_code_at_t0_1_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam0,1799.000,1.800,hold_until_code_edge_2_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam0,1801.000,0.000,code_edge_settled_3_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam0,2399.000,0.000,hold_until_code_edge_4_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam0,2401.000,0.000,code_edge_settled_5_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam0,2999.000,0.000,hold_until_code_edge_6_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam0,3001.000,1.800,code_edge_settled_7_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam1,0.000,1.800,initial_code_at_t0_1_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam1,1799.000,1.800,hold_until_code_edge_2_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam1,1801.000,0.000,code_edge_settled_3_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam1,2399.000,0.000,hold_until_code_edge_4_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam1,2401.000,0.000,code_edge_settled_5_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam1,2999.000,0.000,hold_until_code_edge_6_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam1,3001.000,1.800,code_edge_settled_7_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam2,0.000,0.000,initial_code_at_t0_1_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam2,1799.000,0.000,hold_until_code_edge_2_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam2,1801.000,1.800,code_edge_settled_3_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam2,2399.000,1.800,hold_until_code_edge_4_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam2,2401.000,0.000,code_edge_settled_5_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam2,2999.000,0.000,hold_until_code_edge_6_of_7,NOT_RUN
+TR-OFFCODE,PAM bit,pam2,3001.000,1.800,code_edge_settled_7_of_7,NOT_RUN
 RS-FULL,DATA_EN,data_en,0.000,0.000,initial_off_start [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,950.000,0.000,rise_start [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,1000.000,0.000,lead_end [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,1050.000,1.800,rise_end_50pct_plus_edge [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,1950.000,1.800,fall_start_minus_edge [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,2050.000,0.000,fall_end [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,2450.000,0.000,rise_start [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,2550.000,1.800,rise_end_50pct_plus_edge [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,3450.000,1.800,fall_start_minus_edge [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,3550.000,0.000,fall_end [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,3950.000,0.000,rise_start [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,4050.000,1.800,rise_end_50pct_plus_edge [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,4950.000,1.800,fall_start_minus_edge [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,5050.000,0.000,fall_end [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,5450.000,0.000,rise_start [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,5550.000,1.800,rise_end_50pct_plus_edge [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,6450.000,1.800,fall_start_minus_edge [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,6550.000,0.000,fall_end [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,6950.000,0.000,rise_start [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,7050.000,1.800,rise_end_50pct_plus_edge [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,7950.000,1.800,fall_start_minus_edge [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,8050.000,0.000,fall_end [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,8450.000,0.000,rise_start [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,8550.000,1.800,rise_end_50pct_plus_edge [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,9450.000,1.800,fall_start_minus_edge [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,9550.000,0.000,fall_end [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,9950.000,0.000,rise_start [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,10050.000,1.800,rise_end_50pct_plus_edge [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,10950.000,1.800,fall_start_minus_edge [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,11050.000,0.000,fall_end [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,11450.000,0.000,rise_start [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,11550.000,1.800,rise_end_50pct_plus_edge [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,12450.000,1.800,fall_start_minus_edge [refined from TR-LONG],NOT_RUN
-RS-FULL,DATA_EN,data_en,12550.000,0.000,fall_end [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam0,0.000,0.000,initial_code_before_lead_1_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam0,750.000,0.000,code_change_in_off_window_2_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam0,2250.000,0.000,code_change_in_off_window_3_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam0,3750.000,0.000,code_change_in_off_window_4_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam0,5250.000,0.000,code_change_in_off_window_5_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam0,6750.000,1.000,code_change_in_off_window_6_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam0,8250.000,1.000,code_change_in_off_window_7_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam0,9750.000,1.000,code_change_in_off_window_8_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam0,11250.000,1.000,code_change_in_off_window_9_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam1,0.000,0.000,initial_code_before_lead_1_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam1,750.000,0.000,code_change_in_off_window_2_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam1,2250.000,0.000,code_change_in_off_window_3_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam1,3750.000,1.000,code_change_in_off_window_4_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam1,5250.000,1.000,code_change_in_off_window_5_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam1,6750.000,0.000,code_change_in_off_window_6_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam1,8250.000,0.000,code_change_in_off_window_7_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam1,9750.000,1.000,code_change_in_off_window_8_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam1,11250.000,1.000,code_change_in_off_window_9_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam2,0.000,0.000,initial_code_before_lead_1_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam2,750.000,0.000,code_change_in_off_window_2_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam2,2250.000,1.000,code_change_in_off_window_3_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam2,3750.000,0.000,code_change_in_off_window_4_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam2,5250.000,1.000,code_change_in_off_window_5_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam2,6750.000,0.000,code_change_in_off_window_6_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam2,8250.000,1.000,code_change_in_off_window_7_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam2,9750.000,0.000,code_change_in_off_window_8_of_9 [refined from TR-LONG],NOT_RUN
-RS-FULL,PAM bit,pam2,11250.000,1.000,code_change_in_off_window_9_of_9 [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,1000.000,0.000,rise_start [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,1100.000,1.800,rise_end [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,2000.000,1.800,fall_start [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,2100.000,0.000,fall_end [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,2500.000,0.000,rise_start [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,2600.000,1.800,rise_end [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,3500.000,1.800,fall_start [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,3600.000,0.000,fall_end [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,4000.000,0.000,rise_start [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,4100.000,1.800,rise_end [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,5000.000,1.800,fall_start [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,5100.000,0.000,fall_end [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,5500.000,0.000,rise_start [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,5600.000,1.800,rise_end [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,6500.000,1.800,fall_start [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,6600.000,0.000,fall_end [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,7000.000,0.000,rise_start [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,7100.000,1.800,rise_end [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,8000.000,1.800,fall_start [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,8100.000,0.000,fall_end [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,8500.000,0.000,rise_start [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,8600.000,1.800,rise_end [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,9500.000,1.800,fall_start [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,9600.000,0.000,fall_end [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,10000.000,0.000,rise_start [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,10100.000,1.800,rise_end [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,11000.000,1.800,fall_start [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,11100.000,0.000,fall_end [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,11500.000,0.000,rise_start [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,11600.000,1.800,rise_end [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,12500.000,1.800,fall_start [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,12600.000,0.000,fall_end [refined from TR-LONG],NOT_RUN
+RS-FULL,DATA_EN,data_en,13050.000,0.000,analysis_stop_hold [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam0,0.000,0.000,initial_code_at_t0_1_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam0,2299.000,0.000,hold_until_code_edge_2_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam0,2301.000,1.800,code_edge_settled_3_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam0,3799.000,1.800,hold_until_code_edge_4_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam0,3801.000,0.000,code_edge_settled_5_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam0,5299.000,0.000,hold_until_code_edge_6_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam0,5301.000,1.800,code_edge_settled_7_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam0,6799.000,1.800,hold_until_code_edge_8_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam0,6801.000,0.000,code_edge_settled_9_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam0,8299.000,0.000,hold_until_code_edge_10_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam0,8301.000,1.800,code_edge_settled_11_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam0,9799.000,1.800,hold_until_code_edge_12_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam0,9801.000,0.000,code_edge_settled_13_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam0,11299.000,0.000,hold_until_code_edge_14_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam0,11301.000,1.800,code_edge_settled_15_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam1,0.000,0.000,initial_code_at_t0_1_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam1,2299.000,0.000,hold_until_code_edge_2_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam1,2301.000,0.000,code_edge_settled_3_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam1,3799.000,0.000,hold_until_code_edge_4_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam1,3801.000,1.800,code_edge_settled_5_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam1,5299.000,1.800,hold_until_code_edge_6_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam1,5301.000,1.800,code_edge_settled_7_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam1,6799.000,1.800,hold_until_code_edge_8_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam1,6801.000,0.000,code_edge_settled_9_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam1,8299.000,0.000,hold_until_code_edge_10_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam1,8301.000,0.000,code_edge_settled_11_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam1,9799.000,0.000,hold_until_code_edge_12_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam1,9801.000,1.800,code_edge_settled_13_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam1,11299.000,1.800,hold_until_code_edge_14_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam1,11301.000,1.800,code_edge_settled_15_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam2,0.000,0.000,initial_code_at_t0_1_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam2,2299.000,0.000,hold_until_code_edge_2_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam2,2301.000,0.000,code_edge_settled_3_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam2,3799.000,0.000,hold_until_code_edge_4_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam2,3801.000,0.000,code_edge_settled_5_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam2,5299.000,0.000,hold_until_code_edge_6_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam2,5301.000,0.000,code_edge_settled_7_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam2,6799.000,0.000,hold_until_code_edge_8_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam2,6801.000,1.800,code_edge_settled_9_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam2,8299.000,1.800,hold_until_code_edge_10_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam2,8301.000,1.800,code_edge_settled_11_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam2,9799.000,1.800,hold_until_code_edge_12_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam2,9801.000,1.800,code_edge_settled_13_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam2,11299.000,1.800,hold_until_code_edge_14_of_15 [refined from TR-LONG],NOT_RUN
+RS-FULL,PAM bit,pam2,11301.000,1.800,code_edge_settled_15_of_15 [refined from TR-LONG],NOT_RUN
 RS-LOW,DATA_EN,data_en,0.000,0.000,initial_off_start [refined from TR-120],NOT_RUN
-RS-LOW,DATA_EN,data_en,1000.000,0.000,lead_end [refined from TR-120],NOT_RUN
-RS-LOW,DATA_EN,data_en,1110.000,0.000,rise_start [refined from TR-120],NOT_RUN
-RS-LOW,DATA_EN,data_en,1130.000,1.800,rise_end_50pct_plus_edge [refined from TR-120],NOT_RUN
-RS-LOW,DATA_EN,data_en,1230.000,1.800,fall_start_minus_edge [refined from TR-120],NOT_RUN
-RS-LOW,DATA_EN,data_en,1250.000,0.000,fall_end [refined from TR-120],NOT_RUN
+RS-LOW,DATA_EN,data_en,1000.000,0.000,pure_off_preparation_end [refined from TR-120],NOT_RUN
+RS-LOW,DATA_EN,data_en,1160.000,0.000,rise_start [refined from TR-120],NOT_RUN
+RS-LOW,DATA_EN,data_en,1180.000,1.800,rise_end [refined from TR-120],NOT_RUN
+RS-LOW,DATA_EN,data_en,1280.000,1.800,fall_start [refined from TR-120],NOT_RUN
+RS-LOW,DATA_EN,data_en,1300.000,0.000,fall_end [refined from TR-120],NOT_RUN
+RS-LOW,DATA_EN,data_en,1530.000,0.000,analysis_stop_hold [refined from TR-120],NOT_RUN
 RS-LOW,PAM bit,pam0,0.000,0.000,static_dc_level [refined from TR-120],NOT_RUN
 RS-LOW,PAM bit,pam1,0.000,0.000,static_dc_level [refined from TR-120],NOT_RUN
 RS-LOW,PAM bit,pam2,0.000,0.000,static_dc_level [refined from TR-120],NOT_RUN
 RS-SWITCH,DATA_EN,data_en,0.000,0.000,initial_off_start [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,DATA_EN,data_en,980.000,0.000,rise_start [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,DATA_EN,data_en,1000.000,0.000,lead_end [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,DATA_EN,data_en,1020.000,1.800,rise_end_50pct_plus_edge [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,DATA_EN,data_en,1280.000,1.800,fall_start_minus_edge [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,DATA_EN,data_en,1320.000,0.000,fall_end [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,DATA_EN,data_en,1580.000,0.000,rise_start [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,DATA_EN,data_en,1620.000,1.800,rise_end_50pct_plus_edge [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,DATA_EN,data_en,1880.000,1.800,fall_start_minus_edge [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,DATA_EN,data_en,1920.000,0.000,fall_end [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,DATA_EN,data_en,2180.000,0.000,rise_start [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,DATA_EN,data_en,2220.000,1.800,rise_end_50pct_plus_edge [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,DATA_EN,data_en,2480.000,1.800,fall_start_minus_edge [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,DATA_EN,data_en,2520.000,0.000,fall_end [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,DATA_EN,data_en,2780.000,0.000,rise_start [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,DATA_EN,data_en,2820.000,1.800,rise_end_50pct_plus_edge [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,DATA_EN,data_en,3080.000,1.800,fall_start_minus_edge [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,DATA_EN,data_en,3120.000,0.000,fall_end [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,PAM bit,pam0,0.000,0.000,initial_code_before_lead_1_of_5 [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,PAM bit,pam0,850.000,0.000,code_change_in_off_window_2_of_5 [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,PAM bit,pam0,1450.000,1.000,code_change_in_off_window_3_of_5 [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,PAM bit,pam0,2050.000,0.000,code_change_in_off_window_4_of_5 [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,PAM bit,pam0,2650.000,1.000,code_change_in_off_window_5_of_5 [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,PAM bit,pam1,0.000,1.000,initial_code_before_lead_1_of_5 [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,PAM bit,pam1,850.000,1.000,code_change_in_off_window_2_of_5 [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,PAM bit,pam1,1450.000,0.000,code_change_in_off_window_3_of_5 [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,PAM bit,pam1,2050.000,0.000,code_change_in_off_window_4_of_5 [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,PAM bit,pam1,2650.000,1.000,code_change_in_off_window_5_of_5 [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,PAM bit,pam2,0.000,1.000,initial_code_before_lead_1_of_5 [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,PAM bit,pam2,850.000,1.000,code_change_in_off_window_2_of_5 [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,PAM bit,pam2,1450.000,0.000,code_change_in_off_window_3_of_5 [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,PAM bit,pam2,2050.000,0.000,code_change_in_off_window_4_of_5 [refined from TR-OFFCODE],NOT_RUN
-RS-SWITCH,PAM bit,pam2,2650.000,1.000,code_change_in_off_window_5_of_5 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,DATA_EN,data_en,1000.000,0.000,pure_off_preparation_end [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,DATA_EN,data_en,1330.000,0.000,rise_start [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,DATA_EN,data_en,1370.000,1.800,rise_end [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,DATA_EN,data_en,1630.000,1.800,fall_start [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,DATA_EN,data_en,1670.000,0.000,fall_end [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,DATA_EN,data_en,1930.000,0.000,rise_start [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,DATA_EN,data_en,1970.000,1.800,rise_end [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,DATA_EN,data_en,2230.000,1.800,fall_start [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,DATA_EN,data_en,2270.000,0.000,fall_end [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,DATA_EN,data_en,2530.000,0.000,rise_start [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,DATA_EN,data_en,2570.000,1.800,rise_end [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,DATA_EN,data_en,2830.000,1.800,fall_start [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,DATA_EN,data_en,2870.000,0.000,fall_end [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,DATA_EN,data_en,3130.000,0.000,rise_start [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,DATA_EN,data_en,3170.000,1.800,rise_end [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,DATA_EN,data_en,3430.000,1.800,fall_start [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,DATA_EN,data_en,3470.000,0.000,fall_end [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,DATA_EN,data_en,3750.000,0.000,analysis_stop_hold [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam0,0.000,1.800,initial_code_at_t0_1_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam0,1799.000,1.800,hold_until_code_edge_2_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam0,1801.000,0.000,code_edge_settled_3_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam0,2399.000,0.000,hold_until_code_edge_4_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam0,2401.000,0.000,code_edge_settled_5_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam0,2999.000,0.000,hold_until_code_edge_6_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam0,3001.000,1.800,code_edge_settled_7_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam1,0.000,1.800,initial_code_at_t0_1_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam1,1799.000,1.800,hold_until_code_edge_2_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam1,1801.000,0.000,code_edge_settled_3_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam1,2399.000,0.000,hold_until_code_edge_4_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam1,2401.000,0.000,code_edge_settled_5_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam1,2999.000,0.000,hold_until_code_edge_6_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam1,3001.000,1.800,code_edge_settled_7_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam2,0.000,0.000,initial_code_at_t0_1_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam2,1799.000,0.000,hold_until_code_edge_2_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam2,1801.000,1.800,code_edge_settled_3_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam2,2399.000,1.800,hold_until_code_edge_4_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam2,2401.000,0.000,code_edge_settled_5_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam2,2999.000,0.000,hold_until_code_edge_6_of_7 [refined from TR-OFFCODE],NOT_RUN
+RS-SWITCH,PAM bit,pam2,3001.000,1.800,code_edge_settled_7_of_7 [refined from TR-OFFCODE],NOT_RUN

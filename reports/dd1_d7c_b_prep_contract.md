@@ -1,7 +1,7 @@
 # DATA-7C-B-PREP 电气合同草案（状态 PROPOSED_FOR_REVIEW，不是 USER_APPROVED）
 
 机读来源：`tests/dd1_d7c_b_prep/contract.json`，由 `scripts/dd1_d7c_b_prep_contract.py` 生成；本文件由同一脚本渲染，任何一处手工改数都会让 `--check` 的固定点比较失败。
-基线 R2 = `3e4703f1763223024f442c0826e95055782bca13`，分支 `poc/data-pam-d7c-b-prep`。本轮不运行任何仿真器：Spectre 0 次（含 `-h`）、RTL 仿真 0 次、OA 写入 0 次、动态 preflight 0 次；15 例结果列一律 `NOT_RUN`。
+基线 R2 = `3e4703f1763223024f442c0826e95055782bca13`，分支 `poc/data-pam-d7c-b-prep-r1`。本轮不运行任何仿真器：Spectre 0 次（含 `-h`）、RTL 仿真 0 次、OA 写入 0 次、动态 preflight 0 次；15 例结果列一律 `NOT_RUN`。
 
 ## 1 条件与建议判据
 
@@ -19,6 +19,41 @@
 | 电荷误差 | 以声明的 QLSB 报两种口径：对名义、对该档实测 DC | 候选建议限 0.5 LSB，**只作为待审判据**，本轮不宣称已满足；无 DC 原生值时后一种为 `NOT_RUN`，不得用几何比冒充 |
 | 入带 | 目标电流 ±0.05%，持续至少 10.0 ns，deadline 为该窗自身末点 | 状态封闭集合 SETTLED_HELD, NOT_SETTLED_WITHIN_PULSE, LEFT_BAND_BEFORE_DEADLINE, NO_REAL_EDGE_FOUND, NOT_RUN；曾入带但在 deadline 前离带必须报 `LEFT_BAND_BEFORE_DEADLINE` |
 | 样点 | every time and current must be finite; NaN or infinity is a named refusal | forbidden: adaptive native samples are not snapped to a ps grid；strictly increasing; equal or regressed time is a named refusal |
+
+## 1.1 R1 的激励时间模型（本轮按复审把这一节写进合同）
+
+| 量 | 值 | 为什么必须是这个值 |
+|---|---|---|
+| 纯关态预备结束 | 1000.0 ns | 使能在这一段全程为 0，初始码自 t=0 稳定 |
+| 半沿宽 Emax | 50.0 ns | 三个瞬态族的沿宽（TR-LONG 50、TR-120/200 10、TR-OFFCODE 20 ns）都不得超过它，否则表里的 50% 点与 PWL 的交点不是同一个数 |
+| 统一偏移 | 1050.0 ns | 每个瞬态时刻 = R2 相对时刻 + 这个数；首沿 50% 因此是 1050.0 ns，斜坡 1000.0→1100.0 ns，表与波形同一个数 |
+| 换码沿 | 总宽 2.0 ns（中心前 1.0 ns 写旧值、中心后 1.0 ns 写新值） | 两点都必须落在纯关态窗内；只写"上一次目标→下一次目标"会让 PWL 直线穿过发光窗，PREP 字节里正是 36 段这样的斜坡 |
+
+### 1.2 五种窗，各自有名字，不再混用
+
+| 种类 | 边界 | 用途 |
+|---|---|---|
+| `emission` | rise50 -> fall50 | the charge of the whole enable window, the number convergence compares |
+| `emission_flat` | rise_end -> fall_start | the flat-part mean current |
+| `off_tail` | this fall50 -> next rise_start, or the declared stop for the last platform | signed tail Q, never folded into the emission charge |
+| `pure_off` | fall_end -> next rise_start | the only region a code change or a leakage measurement may live in |
+| `leak_last100` | the last 100 ns of off_tail | the magnitude test max(abs(I_sink)) against the shutoff limit, and nothing else；必须完整位于 `pure_off` 内，不足 100.0 ns 就 `REFUSE_THE_CONFIGURATION, never truncate silently` |
+
+### 1.3 deck 必须写出的形式（来源是本项目已跑过的写法，不是本轮的猜测）
+
+* `temperature` ← `simopt options temp=27`
+* `dc_form` ← `dc_case dc dev=Vclamp param=dc start=0.6 stop=1.5 step=0.05`
+* `tran_form` ← `tran_case tran stop=<this case absolute ns> maxstep=<this case ns>`
+* `pwl_form` ← `Vname (node 0) vsource type=pwl wave=[t1 v1 t2 v2 ...]`
+* `pwl_time_suffix` ← `n, whole nanoseconds`
+* 已证出处：`spectre/current_probe_syntax.scs:35`, `scripts/dd1_d7b_run.py:239`, `scripts/dd1_d7b_run.py:288`。本轮没有运行仿真，所以这只是与已证文本的一致性，`NATIVE_NETLIST_SYNTAX` 仍为 `NOT_VERIFIED`，不许写成原生语法 PASS。
+
+## 1.4 R1 修补的四组（复审点名，逐组对着审核事实）
+
+* **`F1_PAM_bit_order_and_high_level`** — 缺陷：the three-character code string was written left-to-right into pam0/pam1/pam2, so pam0 received the weight-4 bit, and the high level was 1.0 V instead of the 1.8 V logic domain; four DC codes (001, 011, 100, 110) carried another code's identity。修法：value = int(code, 2); bit(k) = (value >> k) & 1; volts = bit * logic_high_V, used by the DC decks and the transient PWL alike, and read back from the delivered decks by an independent parser rather than from the generator。审核事实：REVIEW_DATA7C_B_PREP_20261024.md section 3 F1, checks/prep_probe.json F1.dc_code_mismatches (4 rows) and F1.nonrail_highs (12 rows)
+* **`F2_PWL_and_window_physics`** — 缺陷：each PAM bit was written as one point per change with no hold pair, so PWL interpolation ramped the bit straight through the emission windows (36 overlaps); the first enable ramp carried an extra (lead, 0) point (declared 1000 ns, real crossing 1025/1010 ns); 20 declared off windows ran backwards; 20 leakage windows contained the next DATA_EN rise up to 0.9 V。修法：a code change is old value at t-1 and new value at t+1 inside the pure-off window; windows are five named kinds (see rules.window_kinds) with start strictly less than stop; the leakage window must lie wholly inside the pure-off window or the configuration is refused; the 50 % edges are interpolated from the delivered PWL and must equal the table。审核事实：REVIEW_DATA7C_B_PREP_20261024.md section 3 F2, checks/prep_probe.json F2.PAM_ramps_over_emission_count=36, backwards_off_windows=20, leakage_windows_with_next_enable=20, enable_50_percent_errors
+* **`F3_measurement_entry_wiring`** — 缺陷：measure_case() handed the flat window bounds to the edge finder as the edge hint with a +/-5 ns search, so all eight TR-LONG windows answered NO_REAL_EDGE_FOUND; it took the first off_tail for every window and broke, so a 5 uA fault in a later tail was missed; it never called sign_check or charge_errors, and convergence accepted two sides with no context at all。修法：each emission window searches around its own rise50/fall50, reports the full-enable Q and the flat mean separately, keeps Qpos / signed Qneg / |Qneg|, calls sign_check and charge_errors, pairs window k with tail k, and refuses instead of falling back。审核事实：REVIEW_DATA7C_B_PREP_20261024.md section 3 F3, checks/prep_probe.json F3.entries (eight NO_REAL_EDGE_FOUND), F3.second_tail_independent_reference (ABOVE_LIMIT 5e-06 A while the main entry reported 0.0 A), F3.missing_pair_context_still_accepted=true
+* **`F4_native_deck_known_contract`** — 缺陷：fifteen decks wrote bare `dc dev=...` / `tran stop=...` analysis lines and no `simopt options temp=27`, while this project has already run named analysis instances and an explicit temperature; the PWL spelling also differed from the proven `type=pwl wave=[...]` form。修法：decks state simopt options temp=27, an instance-named analysis line, and PWL as wave=[t v ...] with whole-nanosecond n-suffixed times; the audit parses the effective statement instead of matching a substring, so a comment can no longer vouch for a deck。审核事实：REVIEW_DATA7C_B_PREP_20261024.md section 3 F4, checks/prep_probe.json F4.no_explicit_27C (all 15) and F4.unnamed_analysis_lines (all 15); the review states plainly that this is textual inconsistency with proven project syntax, not a reproduced native error
 
 ## 2 名义电流阶梯（身份全部 ESTIMATED_MIRROR_RATIO_ONLY）
 
@@ -60,7 +95,7 @@
 
 * 相对时刻唯一来源：scripts/dd1_d7c_a_r2_plan.py；本轮绝对时刻由 `scripts/dd1_d7c_b_prep_schedule.py` 计算并写入 `tests/dd1_d7c_b_prep/schedule.csv`。
 * 统一初始关断预备 `1000 ns`，`offset_applied_ns` 逐例记录；平台、换码点、积分窗、尾窗与 stop 同一偏移量平移，不逐例各说各话。
-* platform, code-change, integration window and stop all shift by the same recorded amount
+* platform, 50% edges, ramp endpoints, code change, integration window, tail, pure-off, leakage sub-window and stop all shift by the same 1050 ns; the pure-off preparation ends at 1000 ns and the first ramp starts there, so no hold point sits inside a ramp
 
 ## 5 与已交付 R2 字段的差异（保留建议值，等审核定夺）
 
@@ -70,7 +105,8 @@
 | `D2_ton_unit_is_four_microseconds_in_the_deck` | `spectre/dd1_d7c_a_tb_draft.scs:63 "parameters TON=4u // emission window length used by the long-pulse case (POC condition)"`<br>`scripts/dd1_d7c_a_r2_plan.py:33 TON_NS = 1000 and the plan columns are written in TON` | the deck parameter TON is 4 us while the schedule source uses TON as 1000 ns, so the same symbol means two times that differ by a factor of four | every generated deck states absolute times in ns and never uses a bare TON; the deck keeps TON=4u only as an inherited comment, not as a timing symbol | a deck whose "1.0 TON" means 4 us and a table whose "1.0 TON" means 1 us cannot be reviewed as the same stimulus | AWAITING_REVIEWER_DECISION |
 | `D3_short_pulse_note_versus_platform` | `scripts/dd1_d7c_a_r2_plan.py:69 SHORT_CASES note "two pulses per 120 ns slot at the Hybrid 100 Hz pitch"`<br>`tests/dd1_d7c_a/native_case_plan.csv columns platform_TON=0.12 / 0.20 for TR-120 / TR-200` | the prose describes two pulses inside a 120 ns slot while the machine columns describe one 120 ns platform, and the 100 Hz pitch of a frame is not 120 ns at all | one platform per emission, 120 ns for TR-120 and 200 ns for TR-200, each stated as two absolute instants (t_rise_50, t_fall_50) plus the integration window inside it; the frame pitch is recorded separately as a 10 ms condition that the deck does not simulate | section 5 requires that "120 ns platform" stop meaning two different pairs of instants | AWAITING_REVIEWER_DECISION |
 | `D4_tr_long_starts_conducting_at_t_zero` | `tests/dd1_d7c_a/native_case_plan.csv TR-LONG stimulus_start_TON=0 and segments "000@0-1"`<br>`reports/dd1_d7c_a_native_test_plan.md: "TR-LONG 在一个 deck 内排八个长发光窗"` | the first platform begins at t=0 with the enable already high, so there is no rising edge to detect for the first window and an edge finder would have to invent one | a uniform 1 us initial-off lead is inserted (LEAD_OFF_NS=1000), every platform, code change, integration window and stop shifts by the same amount, and the offset is recorded per case in the schedule table | section 5 asks for exactly this: the initial code settles before the first enable, and a level already high at t=0 is not a rising edge | RESOLVED_BY_THIS_ROUND_WITHIN_THE_ALLOWED_SHIFT |
-| `D5_integration_window_is_narrower_than_the_platform` | `tests/dd1_d7c_a/native_case_plan.csv TR-120 window_TON=0.13-0.23 while platform_TON=0.12 starting at 0.12` | the declared window is 100 ns inside a 120 ns platform, which is right (the platform is inset by the 10 ns edges) but the prose calls both of them "the 120 ns window" | platform start/stop, 50% enable edges, and the integration window are three separate named columns everywhere: platform_start_ns, platform_stop_ns, enable_rise_50_ns, enable_fall_50_ns, window_start_ns, window_stop_ns | the charge of a window is only comparable between a nominal and a refined run if the window is one pair of instants, not a length in prose | RESOLVED_BY_THIS_ROUND_WITHIN_THE_ALLOWED_SHIFT |
+| `D5_integration_window_is_narrower_than_the_platform` | `tests/dd1_d7c_a/native_case_plan.csv TR-120 window_TON=0.13-0.23 while platform_TON=0.12 starting at 0.12` | the declared window is 100 ns inside a 120 ns platform, which is right (the platform is inset by the 10 ns edges) but the prose calls both of them "the 120 ns window" | platform start/stop, 50% enable edges, and the integration window are separate named columns everywhere: platform_start_ns, platform_stop_ns, enable_rise_50_ns, enable_fall_50_ns, full_window_start_ns, full_window_stop_ns, flat_start_ns, flat_stop_ns | the charge of a window is only comparable between a nominal and a refined run if the window is one pair of instants, not a length in prose | RESOLVED_BY_THIS_ROUND_WITHIN_THE_ALLOWED_SHIFT |
+| `D6_transient_offset_is_1050_ns_not_1000_ns` | `tests/dd1_d7c_a/native_case_plan.csv TR-LONG stimulus_start_TON=0, platform_TON=1.0, edge_TON=0.05 (all relative)`<br>`tests/dd1_d7c_b_prep/schedule.csv as delivered at the PREP tip: lead_off_ns=1000.000 with the first enable ramp written 950 -> 1050 and declared at 1000.000` | R2 declares only relative times, so the absolute shift is this round's own choice, and the PREP bytes chose one number for the table (1000 ns) and another for the waveform it actually generated (1025 ns interpolated) | every transient instant is R2 relative time + 1050 ns; the pure-off preparation ends at 1000 ns, the first ramp is 1000 -> 1100 ns and its 50 % point is 1050 ns, which is the number the table and the deck now share | a window whose declared edge and generated edge differ by 25 ns is not the window the integration was planned on, and the reviewer read this off the delivered PWL | CORRECTED_BY_R1_WITHIN_THE_ALLOWED_SHIFT_NOT_A_CHANGE_TO_R2 |
 
 ## 6 启动额度草案（本轮授权仍为 0）
 

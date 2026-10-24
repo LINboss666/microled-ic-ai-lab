@@ -464,14 +464,15 @@ def render_report(out_dir, results, rows, git_rows, counts, schedule_rows, case_
                   '摘要写在本目录的 `verification_summary.json`（它写于本文件之后，故不进摘要）。'
                   % tip[:12])
     _splice(report, '<!-- BEGIN 7CB GATES -->', '<!-- END 7CB GATES -->', lines)
-    dlines = ['| 用例 | 类别 | 码 | 使能形态 | 平台 / 窗 / 尾 / 漏流子窗 (ns) | 换码 | stop | maxstep '
+    dlines = ['| 用例 | 类别 | 码 | 使能形态 | 平台 / 全窗 / 平坦 / 尾 / 漏流子窗 (ns) | 换码 | stop | maxstep '
               '| 配对 | 进程 DUT+preflight | 结果 |',
               '|---|---|---|---|---|---|---:|---:|---|---|---|']
     for row in schedule_rows:
-        dlines.append('| `%s` | %s | `%s` | %s | %s / %s / %s / %s | %s | %s | %s | %s | %s+%s | %s |'
+        dlines.append('| `%s` | %s | `%s` | %s | %s / %s / %s / %s / %s | %s | %s | %s | %s | %s+%s | %s |'
                       % (row['case_id'], row['class'], row['pam_code'], row['data_en_form'],
-                         row['platform_start_ns'], row['window_start_ns'], row['tail_start_ns'],
-                         row['leak_last100_start_ns'], row['code_change_ns'], row['stop_ns'],
+                         row['platform_start_ns'], row['full_window_start_ns'], row['flat_start_ns'],
+                         row['tail_start_ns'], row['leak_window_ns'], row['code_change_ns'],
+                         row['stop_ns'],
                          row['maxstep_ns'], row['paired_case'] or '-',
                          row['launch_processes_dut'], row['launch_processes_preflight'],
                          row['result']))

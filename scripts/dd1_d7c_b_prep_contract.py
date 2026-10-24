@@ -33,6 +33,9 @@ import dd1_d7c_a_r2_plan as R2PLAN             # noqa: E402  (the delivered rela
 CONTRACT_PATH = 'tests/dd1_d7c_b_prep/contract.json'
 TASK_ID = 'DATA-7C-B-PREP'
 BASE_R2 = '3e4703f1763223024f442c0826e95055782bca13'
+# the reviewed PREP tip this R1 round is based on, and the review that sent it back
+BASE_PREP = 'dcef9b336f2222d6291d266858270f7448b6bb78'
+REVIEW_ID = 'MicroLED_DATA7C_B_PREP_Independent_Review_20261024'
 CONTRACT_STATE = 'PROPOSED_FOR_REVIEW'
 
 # ---- units, with the hand arithmetic written next to the value ---------------------------------
@@ -46,7 +49,15 @@ UNIT_CURRENT_NOMINAL_A = 1.875e-6
 REFERENCE_CURRENT_A = 15e-6
 BRANCHES = 8
 TON_NS = float(R2PLAN.TON_NS)
-LEAD_OFF_NS = 1000.0            # section 5: one uniform 1 us initial-off preparation, shift recorded
+LEAD_OFF_NS = 1000.0            # the pure-off preparation ends here, and the enable stays low
+# R1 (the independent review of the PREP bytes) fixed the edge model: the PREP deck put a `(lead, 0)`
+# point inside the first ramp, so its interpolated 50 % crossing was 1025 ns while the table declared
+# 1000 ns. The repair below is the one the review allows: a named half-edge width, a uniform offset,
+# and no extra point inside a ramp.
+EDGE_NS = 50.0                  # Emax, the largest half-edge any transient may use
+CODE_EDGE_NS = 2.0              # total width of a code-change edge: old value at t-1, new at t+1
+TRANSIENT_OFFSET_NS = LEAD_OFF_NS + EDGE_NS     # 1050 ns, the same shift for every transient instant
+LOGIC_HIGH_V = 1.8              # the 1.8 V logic domain; a bit is a logical value, not a volt
 
 HAND_ARITHMETIC = [
     'Iunit_nominal = 15e-6 A x (2.5/2)/(20/2) = 15e-6 x 0.125 = 1.875e-6 A',
@@ -71,8 +82,45 @@ RULES = {
     'process_corner': {'corner': 'TT', 'temperature_C': 27,
                        'model_family': 'SMIC18 models already used by the accepted POC',
                        'model_identity_status': 'NOT_VERIFIED_THIS_ROUND',
+                       'deck_must_state_temperature': 'simopt options temp=27',
                        'note': 'no model card was opened this round; the exact local model identity is '
-                               'a check for the approved native stage'},
+                               'a check for the approved native stage. The declared 27 C is only a '
+                               'condition once every deck writes it as a statement: `simopt options '
+                               'temp=27` is the instantiation form the accepted DATA-7B bench uses, '
+                               'and a contract line is not a deck condition'},
+    'enable_edges': {'half_edge_max_ns': EDGE_NS, 'symmetric_about_50_percent': True,
+                     'uniform_transient_offset_ns': TRANSIENT_OFFSET_NS,
+                     'pure_off_prep_end_ns': LEAD_OFF_NS,
+                     'code_change_edge_total_ns': CODE_EDGE_NS,
+                     'code_change_must_sit_in': 'pure_off_window',
+                     'pwl_forbids_a_point_inside_a_ramp': True,
+                     'note': 'the first DATA_EN ramp of TR-LONG runs 1000 ns -> 1100 ns with its 50 % '
+                             'point at 1050 ns; writing a (1000, 0) hold point and then ramping to '
+                             '(1050, high) would put the crossing at 1025 ns while the table says '
+                             '1000 ns, which is the defect this rule exists to refuse'},
+    'window_kinds': {
+        'emission': {'bounds': 'rise50 -> fall50',
+                     'use': 'the charge of the whole enable window, the number convergence compares'},
+        'emission_flat': {'bounds': 'rise_end -> fall_start', 'use': 'the flat-part mean current'},
+        'off_tail': {'bounds': 'this fall50 -> next rise_start, or the declared stop for the '
+                               'last platform',
+                     'use': 'signed tail Q, never folded into the emission charge'},
+        'pure_off': {'bounds': 'fall_end -> next rise_start',
+                    'use': 'the only region a code change or a leakage measurement may live in'},
+        'leak_last100': {'bounds': 'the last 100 ns of off_tail',
+                         'use': 'the magnitude test max(abs(I_sink)) against the shutoff limit, and '
+                                'nothing else',
+                         'must_lie_inside': 'pure_off',
+                         'if_shorter': 'REFUSE_THE_CONFIGURATION, never truncate silently'}},
+    'window_kind_naming': {
+        'why_these_names': 'the emission and off_tail kinds keep the two words the independent review '
+                           'instrument selects on, and schedule.csv keeps off_window_ns as the '
+                           'pair-spelled copy of pure_off_start_ns/pure_off_stop_ns, so the reviewer '
+                           'can read the repaired bytes with its own unchanged tool; the five windows '
+                           'are still named apart, and both dd1_d7c_b_prep_schedule.validate and '
+                           'dd1_d7c_b_prep_r1_deck_read refuse the day the pair spelling and the two '
+                           'columns disagree',
+        'separately_named_count': 5},
     'supplies': {'vdd18_V': 1.8, 'vcas_V': 1.8, 'iref_A': REFERENCE_CURRENT_A, 'vss_V': 0.0,
                  'vss_explicit_source': True,
                  'note': 'AGENTS.md pit 19: a vss that is not tied to a real 0 V source makes every '
@@ -99,10 +147,28 @@ RULES = {
                           'refined_maxstep_ns': R2PLAN.MAXSTEP_FINE_NS,
                           'only_difference_allowed': 'maxstep',
                           'identity_fields': [field for field, _ in R2PLAN.PAIR_IDENTITY_FIELDS]},
+    'deck_syntax': {
+        'analysis_instance_name_required': True,
+        'temperature': 'simopt options temp=27',
+        'dc_form': 'dc_case dc dev=Vclamp param=dc start=0.6 stop=1.5 step=0.05',
+        'tran_form': 'tran_case tran stop=<this case absolute ns> maxstep=<this case ns>',
+        'pwl_form': 'Vname (node 0) vsource type=pwl wave=[t1 v1 t2 v2 ...]',
+        'pwl_time_suffix': 'n, whole nanoseconds',
+        'proven_by': ['spectre/current_probe_syntax.scs:35', 'scripts/dd1_d7b_run.py:239',
+                      'scripts/dd1_d7b_run.py:288'],
+        'status': 'TEXT_CONSISTENCY_WITH_PROVEN_PROJECT_FORM_ONLY',
+        'note': 'these are the spellings this project has already run on the build; adopting them is '
+                'not a native syntax verdict. NATIVE_NETLIST_SYNTAX stays NOT_VERIFIED until an '
+                'authorised launch reads the deck.'},
     'convergence': {'relative_measure': 'abs(dQ) / QLSB', 'limit': 0.01,
                     'also_report': 'absolute dQ in coulombs (and fC), per window',
                     'status_word_alone_is_not_a_pass': True,
-                    'note': 'CONVERGED without an absolute difference is refused as an answer'},
+                    'required_context_fields': ['sign_rule', 'threshold_V', 'window_start_ps',
+                                               'window_stop_ps', 'reference_current_A'],
+                    'missing_context_is_a_refusal_not_a_match': True,
+                    'note': 'CONVERGED without an absolute difference is refused as an answer, and two '
+                            'sides that both lack every context field are not "equal" -- they are '
+                            'missing context, which is REFUSED_MISSING_CONTEXT'},
     'charge_error': {'lsb_definition': 'QLSB = Iunit_nominal x Ttick, Ttick declared per case',
                      'nominal_ticks_s': [120e-9, 200e-9],
                      'reported': ['Q_window', 'Qexpected_nominal = Inominal(k) x T50',
@@ -187,12 +253,82 @@ DIFFERENCES_VS_R2 = [
          'starting at 0.12'],
      'conflict': 'the declared window is 100 ns inside a 120 ns platform, which is right (the platform '
                  'is inset by the 10 ns edges) but the prose calls both of them "the 120 ns window"',
-     'this_round_value': 'platform start/stop, 50% enable edges, and the integration window are three '
-                         'separate named columns everywhere: platform_start_ns, platform_stop_ns, '
-                         'enable_rise_50_ns, enable_fall_50_ns, window_start_ns, window_stop_ns',
+     'this_round_value': 'platform start/stop, 50% enable edges, and the integration window are separate '
+                         'named columns everywhere: platform_start_ns, platform_stop_ns, '
+                         'enable_rise_50_ns, enable_fall_50_ns, full_window_start_ns, '
+                         'full_window_stop_ns, flat_start_ns, flat_stop_ns',
      'why': 'the charge of a window is only comparable between a nominal and a refined run if the '
             'window is one pair of instants, not a length in prose',
      'status': 'RESOLVED_BY_THIS_ROUND_WITHIN_THE_ALLOWED_SHIFT'},
+    {'id': 'D6_transient_offset_is_1050_ns_not_1000_ns',
+     'where_r2_says_otherwise': [
+         'tests/dd1_d7c_a/native_case_plan.csv TR-LONG stimulus_start_TON=0, platform_TON=1.0, '
+         'edge_TON=0.05 (all relative)',
+         'tests/dd1_d7c_b_prep/schedule.csv as delivered at the PREP tip: lead_off_ns=1000.000 with '
+         'the first enable ramp written 950 -> 1050 and declared at 1000.000'],
+     'conflict': 'R2 declares only relative times, so the absolute shift is this round\'s own choice, '
+                 'and the PREP bytes chose one number for the table (1000 ns) and another for the '
+                 'waveform it actually generated (1025 ns interpolated)',
+     'this_round_value': 'every transient instant is R2 relative time + 1050 ns; the pure-off '
+                         'preparation ends at 1000 ns, the first ramp is 1000 -> 1100 ns and its 50 % '
+                         'point is 1050 ns, which is the number the table and the deck now share',
+     'why': 'a window whose declared edge and generated edge differ by 25 ns is not the window the '
+            'integration was planned on, and the reviewer read this off the delivered PWL',
+     'status': 'CORRECTED_BY_R1_WITHIN_THE_ALLOWED_SHIFT_NOT_A_CHANGE_TO_R2'},
+]
+
+# The independent review of the PREP bytes (2026-10-24, tip dcef9b3) named four families. They are
+# recorded here rather than only in prose, because the schedule, the decks and the measurement entry
+# all have to change together and one source has to say what "fixed" means.
+REPAIRS_R1 = [
+    {'id': 'F1_PAM_bit_order_and_high_level',
+     'defect': 'the three-character code string was written left-to-right into pam0/pam1/pam2, so '
+               'pam0 received the weight-4 bit, and the high level was 1.0 V instead of the 1.8 V '
+               'logic domain; four DC codes (001, 011, 100, 110) carried another code\'s identity',
+     'repair': 'value = int(code, 2); bit(k) = (value >> k) & 1; volts = bit * logic_high_V, used by '
+               'the DC decks and the transient PWL alike, and read back from the delivered decks by '
+               'an independent parser rather than from the generator',
+     'reviewer_fact': 'REVIEW_DATA7C_B_PREP_20261024.md section 3 F1, checks/prep_probe.json '
+                      'F1.dc_code_mismatches (4 rows) and F1.nonrail_highs (12 rows)'},
+    {'id': 'F2_PWL_and_window_physics',
+     'defect': 'each PAM bit was written as one point per change with no hold pair, so PWL '
+               'interpolation ramped the bit straight through the emission windows (36 overlaps); the '
+               'first enable ramp carried an extra (lead, 0) point (declared 1000 ns, real crossing '
+               '1025/1010 ns); 20 declared off windows ran backwards; 20 leakage windows contained the '
+               'next DATA_EN rise up to 0.9 V',
+     'repair': 'a code change is old value at t-1 and new value at t+1 inside the pure-off window; '
+               'windows are five named kinds (see rules.window_kinds) with start strictly less than '
+               'stop; the leakage window must lie wholly inside the pure-off window or the '
+               'configuration is refused; the 50 % edges are interpolated from the delivered PWL and '
+               'must equal the table',
+     'reviewer_fact': 'REVIEW_DATA7C_B_PREP_20261024.md section 3 F2, checks/prep_probe.json '
+                      'F2.PAM_ramps_over_emission_count=36, backwards_off_windows=20, '
+                      'leakage_windows_with_next_enable=20, enable_50_percent_errors'},
+    {'id': 'F3_measurement_entry_wiring',
+     'defect': 'measure_case() handed the flat window bounds to the edge finder as the edge hint with '
+               'a +/-5 ns search, so all eight TR-LONG windows answered NO_REAL_EDGE_FOUND; it took '
+               'the first off_tail for every window and broke, so a 5 uA fault in a later tail was '
+               'missed; it never called sign_check or charge_errors, and convergence accepted two '
+               'sides with no context at all',
+     'repair': 'each emission window searches around its own rise50/fall50, reports the full-enable '
+               'Q and the flat mean separately, keeps Qpos / signed Qneg / |Qneg|, calls sign_check '
+               'and charge_errors, pairs window k with tail k, and refuses instead of falling back',
+     'reviewer_fact': 'REVIEW_DATA7C_B_PREP_20261024.md section 3 F3, checks/prep_probe.json '
+                      'F3.entries (eight NO_REAL_EDGE_FOUND), F3.second_tail_independent_reference '
+                      '(ABOVE_LIMIT 5e-06 A while the main entry reported 0.0 A), '
+                      'F3.missing_pair_context_still_accepted=true'},
+    {'id': 'F4_native_deck_known_contract',
+     'defect': 'fifteen decks wrote bare `dc dev=...` / `tran stop=...` analysis lines and no '
+               '`simopt options temp=27`, while this project has already run named analysis instances '
+               'and an explicit temperature; the PWL spelling also differed from the proven '
+               '`type=pwl wave=[...]` form',
+     'repair': 'decks state simopt options temp=27, an instance-named analysis line, and PWL as '
+               'wave=[t v ...] with whole-nanosecond n-suffixed times; the audit parses the effective '
+               'statement instead of matching a substring, so a comment can no longer vouch for a deck',
+     'reviewer_fact': 'REVIEW_DATA7C_B_PREP_20261024.md section 3 F4, checks/prep_probe.json '
+                      'F4.no_explicit_27C (all 15) and F4.unnamed_analysis_lines (all 15); the review '
+                      'states plainly that this is textual inconsistency with proven project syntax, '
+                      'not a reproduced native error'},
 ]
 
 FROZEN_CANDIDATE_DUT = [
@@ -221,15 +357,20 @@ def contract():
     data = {
         'schema_version': '1.0',
         'task_id': TASK_ID,
+        'round': 'R1',
+        'repair_task_id': 'DATA-7C-B-PREP-R1',
         'contract_state': CONTRACT_STATE,
         'user_approved': 'NO',
         'reviewer_frozen': 'NO',
         'base_r2_sha': BASE_R2,
-        'branch': 'poc/data-pam-d7c-b-prep',
+        'base_prep_sha': BASE_PREP,
+        'branch': 'poc/data-pam-d7c-b-prep-r1',
         'repository': 'https://github.com/LINboss666/microled-ic-ai-lab',
         'single_source': 'scripts/dd1_d7c_b_prep_contract.py emits this file; decks, schedule and '
                          'reports render from it and from nothing else',
-        'units': {'ton_ns': TON_NS, 'lead_off_ns': LEAD_OFF_NS,
+        'units': {'ton_ns': TON_NS, 'lead_off_ns': LEAD_OFF_NS, 'edge_ns': EDGE_NS,
+                  'transient_offset_ns': TRANSIENT_OFFSET_NS, 'code_edge_ns': CODE_EDGE_NS,
+                  'logic_high_V': LOGIC_HIGH_V,
                   'current': 'ampere', 'time': 'second', 'charge': 'coulomb',
                   'display_precision_rule': 'a ns column with four decimals resolves at 0.1 ps, and '
                                             'every tolerance names its LSB and its quantisation term'},
@@ -255,9 +396,16 @@ def contract():
                   'tail_sign': 'a shutoff tail may be positive or negative; it is never pre-assumed '
                                'to be a negative area'},
         'schedule': {'source_relative_to': 'scripts/dd1_d7c_a_r2_plan.py',
-                     'lead_off_ns': LEAD_OFF_NS,
-                     'shift_rule': 'platform, code-change, integration window and stop all shift by '
-                                  'the same recorded amount'},
+                     'lead_off_ns': LEAD_OFF_NS, 'edge_ns': EDGE_NS,
+                     'offset_applied_to_every_transient_ns': TRANSIENT_OFFSET_NS,
+                     'shift_rule': 'platform, 50% edges, ramp endpoints, code change, integration '
+                                   'window, tail, pure-off, leakage sub-window and stop all shift by '
+                                   'the same 1050 ns; the pure-off preparation ends at 1000 ns and the '
+                                   'first ramp starts there, so no hold point sits inside a ramp',
+                     'pam_bit_rule': 'value = int(code, 2); pam0 = bit 0 (weight 1), pam1 = bit 1 '
+                                     '(weight 2), pam2 = bit 2 (weight 4); level = bit x 1.8 V',
+                     'window_kinds': sorted(RULES['window_kinds'])},
+        'repairs_r1': REPAIRS_R1,
         'launch_budget': RULES['launch_budget'],
         'frozen_candidate_dut': FROZEN_CANDIDATE_DUT,
         'differences_vs_R2': DIFFERENCES_VS_R2,
@@ -325,6 +473,60 @@ def selfcheck(data):
     if not data['differences_vs_R2']:
         problems.append('a round that found no difference in the delivered bytes should say why it '
                         'looked')
+    # ---- the R1 timing model, checked as arithmetic rather than trusted as prose -----------------
+    units = data['units']
+    edges = data['rules']['enable_edges']
+    if units['transient_offset_ns'] != units['lead_off_ns'] + units['edge_ns']:
+        problems.append('the transient offset %s ns is not the pure-off end %s ns plus the half-edge '
+                        '%s ns, which is the only way the first ramp can start where preparation ends'
+                        % (units['transient_offset_ns'], units['lead_off_ns'], units['edge_ns']))
+    if abs(units['logic_high_V'] - data['rules']['supplies']['vdd18_V']) > 1e-12:
+        problems.append('the logic high used by the PAM sources (%s V) is not the declared 1.8 V logic '
+                        'domain, so a bit is being turned into volts by some other rule'
+                        % units['logic_high_V'])
+    if units['edge_ns'] != edges['half_edge_max_ns']:
+        problems.append('the edge unit and the declared half-edge maximum disagree')
+    for name, ton in (('TR-LONG', R2PLAN.LONG_EDGE_TON),
+                      ('TR-120/TR-200', R2PLAN.SHORT_CASES[0][3]),
+                      ('TR-OFFCODE', R2PLAN.OFFCODE_CASE[3])):
+        if ton * TON_NS > units['edge_ns']:
+            problems.append('%s wants a %s ns half-edge, above the declared maximum %s ns'
+                            % (name, ton * TON_NS, units['edge_ns']))
+    if units['code_edge_ns'] >= min(R2PLAN.LONG_OFF_GAP_TON * TON_NS,
+                                    R2PLAN.SHORT_CASES[0][2] * TON_NS,
+                                    R2PLAN.OFFCODE_CASE[2] * TON_NS):
+        problems.append('a %s ns code edge cannot fit inside the smallest off gap this round uses'
+                        % units['code_edge_ns'])
+    kinds = data['rules']['window_kinds']
+    if sorted(kinds) != sorted(['emission', 'emission_flat', 'off_tail',
+                                'pure_off', 'leak_last100']):
+        problems.append('the window kinds are %s, the review asked for these five and no others'
+                        % ','.join(sorted(kinds)))
+    if kinds['leak_last100']['must_lie_inside'] != 'pure_off':
+        problems.append('the leakage sub-window is not required to sit inside the pure-off window, '
+                        'which is how a next enable can hide inside a previous tail')
+    syntax = data['rules']['deck_syntax']
+    declared = ' '.join(str(value) for value in syntax.values() if isinstance(value, str))
+    for key, needle in (('temp', 'simopt options temp=27'), ('pwl', 'type=pwl wave='),
+                        ('dc', ' dc dev=Vclamp param=dc'), ('tran', ' tran stop=')):
+        if needle not in declared:
+            problems.append('the deck syntax rule does not name the %s form the review cited' % key)
+    if len(data['repairs_r1']) != 4:
+        problems.append('the R1 repair list carries %d entries, the review named four families'
+                        % len(data['repairs_r1']))
+    for item in data['repairs_r1']:
+        for field in ('id', 'defect', 'repair', 'reviewer_fact'):
+            if not item.get(field):
+                problems.append('repair %s has no %s, so it is a claim without a finding behind it'
+                                % (item.get('id'), field))
+    if [item['id'] for item in data['repairs_r1']] != \
+            ['F1_PAM_bit_order_and_high_level', 'F2_PWL_and_window_physics',
+             'F3_measurement_entry_wiring', 'F4_native_deck_known_contract']:
+        problems.append('the repair list does not name the four families the review used, so a '
+                        'repaired gap could be swapped for an unrelated change')
+    if not any(item['id'].startswith('D6') for item in data['differences_vs_R2']):
+        problems.append('the 1050 ns offset decision is not recorded as a difference against the '
+                        'delivered bytes; the reviewer has to see it, not infer it')
     return problems
 
 
@@ -410,6 +612,51 @@ def render_markdown(data):
       % (se['band_fraction'], se['hold_ns'], ', '.join(se['statuses'])))
     sa = r['sampling']
     a('| 样点 | %s | %s；%s |' % (sa['finite_check'], sa['grid_forcing'], sa['monotonic_time']))
+    a('')
+    a('## 1.1 R1 的激励时间模型（本轮按复审把这一节写进合同）')
+    a('')
+    u = data['units']
+    a('| 量 | 值 | 为什么必须是这个值 |')
+    a('|---|---|---|')
+    a('| 纯关态预备结束 | %s ns | 使能在这一段全程为 0，初始码自 t=0 稳定 |' % u['lead_off_ns'])
+    a('| 半沿宽 Emax | %s ns | 三个瞬态族的沿宽（TR-LONG %g、TR-120/200 %g、TR-OFFCODE %g ns）都不得'
+      '超过它，否则表里的 50%% 点与 PWL 的交点不是同一个数 |'
+      % (u['edge_ns'], R2PLAN.LONG_EDGE_TON * TON_NS, R2PLAN.SHORT_CASES[0][3] * TON_NS,
+         R2PLAN.OFFCODE_CASE[3] * TON_NS))
+    a('| 统一偏移 | %s ns | 每个瞬态时刻 = R2 相对时刻 + 这个数；首沿 50%% 因此是 %s ns，斜坡 '
+      '%s→%s ns，表与波形同一个数 |'
+      % (u['transient_offset_ns'], u['transient_offset_ns'], u['lead_off_ns'],
+         u['lead_off_ns'] + 2 * u['edge_ns']))
+    a('| 换码沿 | 总宽 %s ns（中心前 %s ns 写旧值、中心后 %s ns 写新值） | 两点都必须落在纯关态窗内；'
+      '只写"上一次目标→下一次目标"会让 PWL 直线穿过发光窗，PREP 字节里正是 36 段这样的斜坡 |'
+      % (u['code_edge_ns'], u['code_edge_ns'] / 2, u['code_edge_ns'] / 2))
+    a('')
+    a('### 1.2 五种窗，各自有名字，不再混用')
+    a('')
+    a('| 种类 | 边界 | 用途 |')
+    a('|---|---|---|')
+    for name in ('emission', 'emission_flat', 'off_tail', 'pure_off',
+                 'leak_last100'):
+        kind = r['window_kinds'][name]
+        extra = ''
+        if name == 'leak_last100':
+            extra = '；必须完整位于 `%s` 内，不足 %s ns 就 `%s`' % (
+                kind['must_lie_inside'], r['shutoff_leakage']['tail_last_ns'], kind['if_shorter'])
+        a('| `%s` | %s | %s%s |' % (name, kind['bounds'], kind['use'], extra))
+    a('')
+    a('### 1.3 deck 必须写出的形式（来源是本项目已跑过的写法，不是本轮的猜测）')
+    a('')
+    for key in ('temperature', 'dc_form', 'tran_form', 'pwl_form', 'pwl_time_suffix'):
+        a('* `%s` ← `%s`' % (key, r['deck_syntax'][key]))
+    a('* 已证出处：%s。本轮没有运行仿真，所以这只是与已证文本的一致性，`NATIVE_NETLIST_SYNTAX` 仍为 '
+      '`NOT_VERIFIED`，不许写成原生语法 PASS。' % ', '.join('`%s`' % p for p in
+                                                             r['deck_syntax']['proven_by']))
+    a('')
+    a('## 1.4 R1 修补的四组（复审点名，逐组对着审核事实）')
+    a('')
+    for item in data['repairs_r1']:
+        a('* **`%s`** — 缺陷：%s。修法：%s。审核事实：%s'
+          % (item['id'], item['defect'], item['repair'], item['reviewer_fact']))
     a('')
     a('## 2 名义电流阶梯（身份全部 %s）' % data['nominal_current_identity'])
     a('')

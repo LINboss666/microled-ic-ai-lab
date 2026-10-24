@@ -22,7 +22,9 @@ import argparse
 import io
 import json
 import os
+import shutil
 import sys
+import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
@@ -31,6 +33,7 @@ import dd1_d7c_a_r2_plan as R2PLAN              # noqa: E402
 import dd1_d7c_b_prep_contract as CONTRACT      # noqa: E402
 import dd1_d7c_b_prep_deckgen as DECKGEN        # noqa: E402
 import dd1_d7c_b_prep_measure as MEASURE        # noqa: E402
+import dd1_d7c_b_prep_r1_deck_read as DECKREAD  # noqa: E402  (the independent deck reading)
 import dd1_d7c_b_prep_schedule as SCHEDULE      # noqa: E402
 
 U = 1e-6                                        # one microampere, in amperes
@@ -300,12 +303,20 @@ def c13_refined_pair_losing_its_history():
     partner = by_case['TR-LONG']
     mutated = dict(base)
     mutated['platform_start_ns'] = partner['platform_start_ns'].split(';')[-1]
-    mutated['window_start_ns'] = partner['window_start_ns'].split(';')[-1]
-    mutated['window_stop_ns'] = partner['window_stop_ns'].split(';')[-1]
+    mutated['full_window_start_ns'] = partner['full_window_start_ns'].split(';')[-1]
+    mutated['full_window_stop_ns'] = partner['full_window_stop_ns'].split(';')[-1]
+    mutated['flat_start_ns'] = partner['flat_start_ns'].split(';')[-1]
+    mutated['flat_stop_ns'] = partner['flat_stop_ns'].split(';')[-1]
+    mutated['rise_low_ns'] = partner['rise_low_ns'].split(';')[-1]
+    mutated['rise_high_ns'] = partner['rise_high_ns'].split(';')[-1]
+    mutated['fall_high_ns'] = partner['fall_high_ns'].split(';')[-1]
+    mutated['fall_low_ns'] = partner['fall_low_ns'].split(';')[-1]
     mutated['platform_stop_ns'] = partner['platform_stop_ns'].split(';')[-1]
     mutated['tail_start_ns'] = partner['tail_start_ns'].split(';')[-1]
     mutated['tail_stop_ns'] = partner['tail_stop_ns'].split(';')[-1]
-    mutated['leak_last100_start_ns'] = partner['leak_last100_start_ns'].split(';')[-1]
+    mutated['pure_off_start_ns'] = partner['pure_off_start_ns'].split(';')[-1]
+    mutated['pure_off_stop_ns'] = partner['pure_off_stop_ns'].split(';')[-1]
+    mutated['leak_window_ns'] = partner['leak_window_ns'].split(';')[-1]
     mutated['code_change_ns'] = partner['code_change_ns'].split(';')[-1]
     mutated['enable_rise_50_ns'] = partner['enable_rise_50_ns'].split(';')[-1]
     mutated['enable_fall_50_ns'] = partner['enable_fall_50_ns'].split(';')[-1]
@@ -393,6 +404,315 @@ def c17_charge_errors_keep_the_two_expectations_apart():
                          verdict['error_nominal_LSB']))
 
 
+# ---- R1 cases added through the real measurement entrance (task book section 5) ------------------
+
+RAIL_V = DATA['units']['logic_high_V']
+LEAK_NS = DATA['rules']['shutoff_leakage']['tail_last_ns']
+TOL_WIDE = 1e-21                                  # the same pencil arithmetic, for a longer window
+
+
+def _floats(cell):
+    return [float(part) for part in cell.split(';') if part]
+
+
+def _codes_of(row):
+    """the code sequence of a case, derived from its own table cell"""
+    code = row['pam_code']
+    if code == '000..111':
+        return sorted(DATA['nominal_current_A_by_code'])
+    return code.split(',')
+
+
+def _ramps(row):
+    """the four ramp endpoints of every platform, in nanoseconds, straight from the schedule row"""
+    return list(zip(_floats(row['rise_low_ns']), _floats(row['rise_high_ns']),
+                    _floats(row['fall_high_ns']), _floats(row['fall_low_ns'])))
+
+
+def _enable_samples(row):
+    """the enable as a finite-slope wave: low at the ramp start, rail at the ramp end"""
+    points = [(0.0, 0.0)]
+    for low, high, fall_high, fall_low in _ramps(row):
+        points.extend([(low, 0.0), (high, RAIL_V), (fall_high, RAIL_V), (fall_low, 0.0)])
+    return [(time_ns * 1000.0, value) for time_ns, value in points]
+
+
+def _current_samples(row, leaks=None):
+    """a branch that follows its own enable, plus hand-injected leak currents over named tails
+
+    The current is zero at the ramp start and nominal at the ramp end, so every integral below is a
+    trapezoid a pencil can do: the full-enable window keeps (T50 - 3/4 x edge) x I, the flat window
+    keeps (T50 - edge) x I. `leaks` maps a platform index to an amperes value that is present over
+    the last 100 ns of that platform's own off tail.
+    """
+    ramps = _ramps(row)
+    codes = _codes_of(row)
+    tail_stops = _floats(row['tail_stop_ns'])
+    points = [(0.0, 0.0)]
+    for index, code in enumerate(codes):
+        nominal = DATA['nominal_current_A_by_code'][code]
+        low, high, fall_high, fall_low = ramps[index]
+        points.extend([(low, 0.0), (high, nominal), (fall_high, nominal), (fall_low, 0.0)])
+        leak = (leaks or {}).get(index)
+        if leak is not None:
+            points.extend([(tail_stops[index] - LEAK_NS, float(leak)),
+                           (tail_stops[index] - 0.001, float(leak))])
+    if points[-1][0] < float(row['stop_ns']):
+        # the last off tail runs to the analysis stop, so the wave has to say what it does there
+        points.append((float(row['stop_ns']), 0.0))
+    return [(time_ns * 1000.0, value) for time_ns, value in points]
+
+
+def _delivered():
+    rows, windows, _pwl, problems = SCHEDULE.read_delivered()
+    if problems:
+        return None, None, problems
+    return dict((row['case_id'], row) for row in rows), windows, []
+
+
+def c18_leak_only_in_the_second_tail_is_found_there():
+    """eight codes measured at once: 5 uA in the second tail only, and it is the second one it names"""
+    by_case, windows, problems = _delivered()
+    if problems:
+        return problems, ''
+    row = by_case['TR-LONG']
+    leaks = {1: 5.0 * U}
+    samples = {'enable': _enable_samples(row), 'current': _current_samples(row, leaks)}
+    entries = MEASURE.measure_case(row, windows, samples)
+    codes = _codes_of(row)
+    if len(entries) != 8:
+        problems.append('TR-LONG declares eight platforms but the entrance returned %d entries'
+                        % len(entries))
+        return problems, ''
+    above = [entry['index'] for entry in entries
+             if entry['leakage']['status'] == 'ABOVE_LIMIT']
+    if above != [1]:
+        problems.append('the injected 5 uA leak reached %s, but it was written only into the tail of '
+                        'platform 1' % (above,))
+    for entry in entries:
+        if entry['index'] == 1:
+            continue
+        if entry['leakage']['status'] != 'WITHIN_LIMIT':
+            problems.append('platform %d reports %s although nothing was injected into its tail'
+                            % (entry['index'], entry['leakage']['status']))
+    _want_status('k-th emission pairs with the k-th tail',
+                 entries[1]['windows']['off_tail'], 'TR-LONG#T1', problems)
+    _want_status('the same entry names its own emission window',
+                 entries[1]['windows']['emission'], 'TR-LONG#W1', problems)
+    if entries[1]['leakage']['max_abs_A'] != 5.0 * U:
+        problems.append('the second tail reports max(abs(I)) = %r, the injection was 5e-06 A exactly'
+                        % (entries[1]['leakage']['max_abs_A'],))
+    if entries[1]['leakage']['window_valid'] != 'INSIDE_PURE_OFF':
+        problems.append('the second tail window is %s, so this is not the leakage rule but a window '
+                        'problem' % entries[1]['leakage']['window_valid'])
+    return problems, ('8 codes, one 5 uA leak in platform 1: ABOVE_LIMIT at index %s with max(abs(I)) '
+                      '= %g A over %g ns, the other seven WITHIN_LIMIT'
+                      % (above, entries[1]['leakage']['max_abs_A'],
+                         entries[1]['leakage']['window_length_ns']))
+
+
+def c19_full_enable_and_flat_windows_are_different_numbers():
+    """TR-120 on finite edges: the full-enable charge and the flat charge both match the pencil"""
+    by_case, windows, problems = _delivered()
+    if problems:
+        return problems, ''
+    row = by_case['TR-120']
+    samples = {'enable': _enable_samples(row), 'current': _current_samples(row)}
+    entries = MEASURE.measure_case(row, windows, samples)
+    if len(entries) != 1:
+        problems.append('TR-120 has one platform but the entrance returned %d entries' % len(entries))
+        return problems, ''
+    entry = entries[0]
+    if entry['result'] == MEASURE.REFUSE_NO_EDGE:
+        problems.append('TR-120 refused its own edges: %s' % entry['refusal'])
+        return problems, ''
+    # hand: T50 = 1170 -> 1290 = 120 ns, edge 20 ns. The full window keeps the flat 100 ns plus the
+    # two half-ramp trapezoids, each 10 ns long at an average of three quarters of the current:
+    # 1.875 uA x (100 + 2 x 10 x 0.75) ns = 1.875e-6 x 115e-9 = 2.15625e-13 C
+    _near('full-enable Q', entry['q_full_C'], 2.15625e-13, problems, TOL_WIDE)
+    # hand: the flat part is 1180 -> 1280 at the full current: 1.875 uA x 100 ns = 1.875e-13 C
+    _near('flat Q', entry['q_flat_C'], 1.875e-13, problems, TOL_WIDE)
+    if abs(entry['q_full_C'] - entry['q_flat_C']) < 1e-15:
+        problems.append('the two windows returned the same number, which means one of them was not '
+                        'the window the table declares')
+    _want_status('identity holds on the full window', entry['q_full_identity_holds'], True, problems)
+    _want_status('sign on the flat window', entry['sign']['status'], 'SINK_POSITIVE_AS_DECLARED',
+                 problems)
+    return problems, ('full %g C over 120 ns of enable versus flat %g C over 100 ns of flat part; '
+                      'the difference %g C is the two ramp trapezoids'
+                      % (entry['q_full_C'], entry['q_flat_C'],
+                         entry['q_full_C'] - entry['q_flat_C']))
+
+
+def c20_no_window_of_the_delivered_schedule_lacks_an_edge():
+    """the PREP entrance refused eight windows for want of an edge; none of them may still refuse"""
+    by_case, windows, problems = _delivered()
+    if problems:
+        return problems, ''
+    refused, total, mismatched = [], 0, []
+    transient_cases = 0
+    for case_id in sorted(by_case):
+        row = by_case[case_id]
+        if row['class'] == 'dc_sweep':
+            continue
+        transient_cases += 1
+        samples = {'enable': _enable_samples(row), 'current': _current_samples(row)}
+        for entry in MEASURE.measure_case(row, windows, samples):
+            total += 1
+            if entry['result'] == MEASURE.REFUSE_NO_EDGE:
+                refused.append('%s: %s' % (entry['window_id'], entry['refusal']))
+                continue
+            for column, key in (('enable_rise_50_ns', 'rise_50_ps'),
+                                ('enable_fall_50_ns', 'fall_50_ps')):
+                declared = _floats(row[column])[entry['index']] * 1000.0
+                if abs(entry['edges'][key] - declared) > 1e-3:
+                    mismatched.append('%s %s reads %s ps, the table declares %s ps'
+                                      % (entry['window_id'], key, entry['edges'][key], declared))
+    if refused:
+        problems.append('%d of %d windows still refuse their edges: %s'
+                        % (len(refused), total, refused[0][:120]))
+    if mismatched:
+        problems.append('%d edges do not land on the declared instant: %s'
+                        % (len(mismatched), mismatched[0][:120]))
+    return (problems if problems else []), ('%d windows over %d transient cases measured through the '
+                                            'entrance, edge refusals=%d, edges off their declared '
+                                            'instant=%d' % (total, transient_cases, len(refused),
+                                                             len(mismatched)))
+
+
+def c21_convergence_refuses_a_context_it_cannot_read():
+    """both sides must carry the named context: absent fields are a refusal, not an equal pair"""
+    problems = []
+    fields = DATA['rules']['convergence']['required_context_fields']
+    base = {'q': 2.15625e-13, 'delta_q': 0.0, 'flat_mean_A': 1.875e-6, 'sign_rule': 'I_sink = Ip_branch',
+            'threshold_V': 0.9, 'window_start_ps': 1170000.0, 'window_stop_ps': 1290000.0,
+            'reference_current_A': NOMINAL_000}
+    clean = MEASURE.convergence(base, dict(base), 120e-9)
+    if clean['status'] != 'WITHIN_LIMIT':
+        problems.append('a complete, identical pair should converge, it says %s (%s)'
+                        % (clean['status'], clean.get('refusal', '')))
+    for field in fields:
+        coarse, refined = dict(base), dict(base)
+        del coarse[field]
+        del refined[field]
+        verdict = MEASURE.convergence(coarse, refined, 120e-9)
+        _want_status('both sides without %s' % field, verdict['status'], 'REFUSED_MISSING_CONTEXT',
+                     problems)
+        if field not in verdict['missing_context']:
+            problems.append('%s was deleted from both sides and the refusal does not name it: %s'
+                            % (field, verdict['missing_context']))
+    backward = MEASURE.convergence(dict(base, window_start_ps=1290000.0, window_stop_ps=1170000.0),
+                                   dict(base), 120e-9)
+    _want_status('a backwards window', backward['status'], 'REFUSED_MISSING_CONTEXT', problems)
+    if not backward['invalid_input']:
+        problems.append('the backwards window was not named as an invalid input')
+    not_a_number = MEASURE.convergence(dict(base, q=float('nan')), dict(base), 120e-9)
+    _want_status('a NaN charge', not_a_number['status'], 'REFUSED_MISSING_CONTEXT', problems)
+    return problems, ('%s context fields each refused by name when both sides omitted them; the '
+                      'complete pair converges at %s' % (len(fields), clean['status']))
+
+
+def c22_leakage_window_reaching_an_edge_is_refused_not_truncated():
+    """a tail too short for a 100 ns sub-window, and an enable that rises inside it: both refuse"""
+    by_case, windows, problems = _delivered()
+    if problems:
+        return problems, ''
+    row = by_case['TR-120']
+    samples = {'enable': _enable_samples(row), 'current': _current_samples(row)}
+    short = []
+    for entry in windows:
+        copy = dict(entry)
+        if copy['case_id'] == 'TR-120' and copy['window_id'] == 'TR-120#T0':
+            copy['stop_ns'] = '1300.000'
+        short.append(copy)
+    entries = MEASURE.measure_case(row, short, samples)
+    fact = entries[0]['leakage']['window_start_ps'] < MEASURE.ps(1300.0)
+    if not fact:
+        problems.append('the injected short tail does not reach outside the pure-off window, so this '
+                        'case proves nothing (%s)' % entries[0]['leakage'])
+    _want_status('short tail outside pure-off', entries[0]['leakage']['window_valid'],
+                 'REFUSED_LEAKAGE_OUTSIDE_PURE_OFF', problems)
+    _want_status('and the entrance reports the refusal', entries[0]['result'],
+                 'REFUSED_LEAKAGE_OUTSIDE_PURE_OFF', problems)
+    # the enable rising inside the sub-window: a second platform whose ramp starts at 1450 ns, which
+    # is inside the leakage interval 1430-1530 ns of the first tail
+    early = sorted(list(samples['enable']) + [(1450000.0, 0.0), (1470000.0, RAIL_V),
+                                              (1570000.0, RAIL_V), (1590000.0, 0.0)])
+    rising = MEASURE.leakage(samples['current'], MEASURE.ps(1290.0), MEASURE.ps(1530.0),
+                             MEASURE.ps(1290.0), MEASURE.SYNTHETIC, enable_ps=early,
+                             pure_off_start_ps=MEASURE.ps(1300.0))
+    if not rising['enable_max_abs_V']:
+        problems.append('the injected rise did not reach the leakage interval, so a pass here would '
+                        'be an empty one')
+    _want_status('enable not low in the leakage window', rising['enable_valid'],
+                 'REFUSED_ENABLE_NOT_LOW', problems)
+    return problems, ('a 10 ns tail refuses as %s and an enable that reaches %g V inside the window '
+                      'refuses as %s, instead of being shortened to fit'
+                      % (entries[0]['leakage']['window_valid'], rising['enable_max_abs_V'],
+                         rising['enable_valid']))
+
+
+def c23_dc_expectation_stays_not_run_through_the_entrance():
+    """the entrance, not the helper: no IDC table means NOT_RUN, and a supplied one is its own number"""
+    by_case, windows, problems = _delivered()
+    if problems:
+        return problems, ''
+    row = by_case['TR-120']
+    samples = {'enable': _enable_samples(row), 'current': _current_samples(row)}
+    without = MEASURE.measure_case(row, windows, samples)[0]
+    _want_status('DC expectation without a native point',
+                 without['charge_error']['idc_status'], 'NOT_RUN', problems)
+    if without['charge_error']['qexpected_dc_C'] != 'NOT_RUN':
+        problems.append('a geometry guess would have stood in for IDC: %r'
+                        % (without['charge_error']['qexpected_dc_C'],))
+    _near('nominal expectation', without['charge_error']['qexpected_nominal_C'],
+          NOMINAL_000 * 120e-9, problems, TOL_WIDE)
+    with_dc = MEASURE.measure_case(row, windows, samples, idc_A_by_code={'000': 2.0e-6})[0]
+    _want_status('DC expectation with a native point', with_dc['charge_error']['idc_status'],
+                 'AVAILABLE', problems)
+    # hand: IDC 2 uA over the same 120 ns T50 is 2.4e-13 C, against the nominal 1.875 uA x 120 ns
+    _near('DC expectation value', with_dc['charge_error']['qexpected_dc_C'], 2.4e-13, problems,
+          TOL_WIDE)
+    if abs(without['charge_error']['error_nominal_LSB']
+           - with_dc['charge_error']['error_nominal_LSB']) > 1e-12:
+        problems.append('the nominal error moved when only the DC reference moved')
+    return problems, ('nominal %g C (%g LSB) with the DC column %s; supplying IDC 2 uA makes the DC '
+                      'expectation %g C, a different number reported beside it'
+                      % (without['charge_error']['qexpected_nominal_C'],
+                         without['charge_error']['error_nominal_LSB'],
+                         without['charge_error']['qexpected_dc_C'],
+                         with_dc['charge_error']['qexpected_dc_C']))
+
+
+def c24_delivered_decks_read_clean():
+    """the independent deck reader, on the bytes as delivered: fifteen decks, nothing to report"""
+    problems, per_case, count = DECKREAD.check_all(ROOT)
+    if count != 15:
+        problems.append('the reader opened %d decks, the schedule has 15 cases' % count)
+    if per_case.get('TR-LONG', {}).get('half_rail_crossings') != 16:
+        problems.append('TR-LONG does not show sixteen half-rail crossings (%s), which is the eight '
+                        'rise and eight fall edges its row declares'
+                        % per_case.get('TR-LONG', {}).get('half_rail_crossings'))
+    return problems, ('%d decks read from disk with the reader\'s own parser, problems=%d'
+                      % (count, len(problems)))
+
+
+def c25_the_reader_names_the_two_shapes_it_keeps():
+    """the old long ramp and leakage over the next rise, both on copies, both refused by name"""
+    scratch = os.path.join(tempfile.gettempdir(), 'd7c_b_prep_r1_cases_negative_scratch')
+    shutil.rmtree(scratch, ignore_errors=True)
+    results = DECKREAD.counterexamples(ROOT, scratch)
+    problems = ['%s did not name the injection: %s' % (item['family'], item['detail'])
+                for item in results if item['verdict'] != 'HIT']
+    if os.path.isdir(scratch):
+        problems.append('the scratch tree survived the run: %s' % scratch)
+    named = [item['family'] for item in results if item['verdict'] == 'HIT']
+    if 'delivered_bytes_control' not in named:
+        problems.append('the run did not show that the delivered bytes stay clean')
+    return problems, ('%d of %d shapes refused by name on temporary copies (%s)'
+                      % (len(named), len(results), ', '.join(named)))
+
+
 def cases():
     return [('C01_positive_sink_charge', 'POSITIVE', 'a 100 ns window at one unit current integrates '
              'to the hand-computed charge and reads positive', c01_positive_sink_charge),
@@ -429,7 +749,29 @@ def cases():
              c16_convergence_reports_an_absolute_difference),
             ('C17_two_charge_expectations', 'POSITIVE', 'nominal and DC expectations stay apart and '
              'the missing DC point is NOT_RUN, never a geometry guess',
-             c17_charge_errors_keep_the_two_expectations_apart)]
+             c17_charge_errors_keep_the_two_expectations_apart),
+            ('C18_leak_in_second_tail', 'POSITIVE', 'eight codes measured at once find the 5 uA leak '
+             'in the second tail and nowhere else', c18_leak_only_in_the_second_tail_is_found_there),
+            ('C19_full_versus_flat_window', 'POSITIVE', 'the full-enable charge and the flat charge '
+             'are different numbers, each matching its own pencil arithmetic',
+             c19_full_enable_and_flat_windows_are_different_numbers),
+            ('C20_no_edge_refusal_left', 'POSITIVE', 'every window of the delivered schedule finds '
+             'its own interpolated 50% edges on the declared instant',
+             c20_no_window_of_the_delivered_schedule_lacks_an_edge),
+            ('C21_missing_context_refused', 'NEGATIVE', 'convergence refuses when a side does not '
+             'carry the named context, instead of calling None equal to None',
+             c21_convergence_refuses_a_context_it_cannot_read),
+            ('C22_leakage_window_refusals', 'NEGATIVE', 'a leakage interval that reaches the pure-off '
+             'start or a rising enable is refused, never shortened to fit',
+             c22_leakage_window_reaching_an_edge_is_refused_not_truncated),
+            ('C23_dc_expectation_via_entrance', 'NEGATIVE', 'through the entrance a missing native DC '
+             'point stays NOT_RUN while the nominal error is computed',
+             c23_dc_expectation_stays_not_run_through_the_entrance),
+            ('C24_decks_read_clean', 'POSITIVE', 'the independent reader opens the fifteen delivered '
+             'decks and finds nothing to report', c24_delivered_decks_read_clean),
+            ('C25_reader_names_the_shapes', 'NEGATIVE', 'the old long ramp and leakage over the next '
+             'rise are refused by name on temporary copies',
+             c25_the_reader_names_the_two_shapes_it_keeps)]
 
 
 def run():

@@ -1,6 +1,7 @@
 {
+ "base_prep_sha": "dcef9b336f2222d6291d266858270f7448b6bb78",
  "base_r2_sha": "3e4703f1763223024f442c0826e95055782bca13",
- "branch": "poc/data-pam-d7c-b-prep",
+ "branch": "poc/data-pam-d7c-b-prep-r1",
  "clamp_sweep_points_V": [
   0.6,
   0.65,
@@ -90,11 +91,22 @@
    "conflict": "the declared window is 100 ns inside a 120 ns platform, which is right (the platform is inset by the 10 ns edges) but the prose calls both of them \"the 120 ns window\"",
    "id": "D5_integration_window_is_narrower_than_the_platform",
    "status": "RESOLVED_BY_THIS_ROUND_WITHIN_THE_ALLOWED_SHIFT",
-   "this_round_value": "platform start/stop, 50% enable edges, and the integration window are three separate named columns everywhere: platform_start_ns, platform_stop_ns, enable_rise_50_ns, enable_fall_50_ns, window_start_ns, window_stop_ns",
+   "this_round_value": "platform start/stop, 50% enable edges, and the integration window are separate named columns everywhere: platform_start_ns, platform_stop_ns, enable_rise_50_ns, enable_fall_50_ns, full_window_start_ns, full_window_stop_ns, flat_start_ns, flat_stop_ns",
    "where_r2_says_otherwise": [
     "tests/dd1_d7c_a/native_case_plan.csv TR-120 window_TON=0.13-0.23 while platform_TON=0.12 starting at 0.12"
    ],
    "why": "the charge of a window is only comparable between a nominal and a refined run if the window is one pair of instants, not a length in prose"
+  },
+  {
+   "conflict": "R2 declares only relative times, so the absolute shift is this round's own choice, and the PREP bytes chose one number for the table (1000 ns) and another for the waveform it actually generated (1025 ns interpolated)",
+   "id": "D6_transient_offset_is_1050_ns_not_1000_ns",
+   "status": "CORRECTED_BY_R1_WITHIN_THE_ALLOWED_SHIFT_NOT_A_CHANGE_TO_R2",
+   "this_round_value": "every transient instant is R2 relative time + 1050 ns; the pure-off preparation ends at 1000 ns, the first ramp is 1000 -> 1100 ns and its 50 % point is 1050 ns, which is the number the table and the deck now share",
+   "where_r2_says_otherwise": [
+    "tests/dd1_d7c_a/native_case_plan.csv TR-LONG stimulus_start_TON=0, platform_TON=1.0, edge_TON=0.05 (all relative)",
+    "tests/dd1_d7c_b_prep/schedule.csv as delivered at the PREP tip: lead_off_ns=1000.000 with the first enable ramp written 950 -> 1050 and declared at 1000.000"
+   ],
+   "why": "a window whose declared edge and generated edge differ by 25 ns is not the window the integration was planned on, and the reviewer read this off the delivered PWL"
   }
  ],
  "frozen_candidate_dut": [
@@ -171,9 +183,37 @@
    "data_out"
   ]
  },
+ "repair_task_id": "DATA-7C-B-PREP-R1",
+ "repairs_r1": [
+  {
+   "defect": "the three-character code string was written left-to-right into pam0/pam1/pam2, so pam0 received the weight-4 bit, and the high level was 1.0 V instead of the 1.8 V logic domain; four DC codes (001, 011, 100, 110) carried another code's identity",
+   "id": "F1_PAM_bit_order_and_high_level",
+   "repair": "value = int(code, 2); bit(k) = (value >> k) & 1; volts = bit * logic_high_V, used by the DC decks and the transient PWL alike, and read back from the delivered decks by an independent parser rather than from the generator",
+   "reviewer_fact": "REVIEW_DATA7C_B_PREP_20261024.md section 3 F1, checks/prep_probe.json F1.dc_code_mismatches (4 rows) and F1.nonrail_highs (12 rows)"
+  },
+  {
+   "defect": "each PAM bit was written as one point per change with no hold pair, so PWL interpolation ramped the bit straight through the emission windows (36 overlaps); the first enable ramp carried an extra (lead, 0) point (declared 1000 ns, real crossing 1025/1010 ns); 20 declared off windows ran backwards; 20 leakage windows contained the next DATA_EN rise up to 0.9 V",
+   "id": "F2_PWL_and_window_physics",
+   "repair": "a code change is old value at t-1 and new value at t+1 inside the pure-off window; windows are five named kinds (see rules.window_kinds) with start strictly less than stop; the leakage window must lie wholly inside the pure-off window or the configuration is refused; the 50 % edges are interpolated from the delivered PWL and must equal the table",
+   "reviewer_fact": "REVIEW_DATA7C_B_PREP_20261024.md section 3 F2, checks/prep_probe.json F2.PAM_ramps_over_emission_count=36, backwards_off_windows=20, leakage_windows_with_next_enable=20, enable_50_percent_errors"
+  },
+  {
+   "defect": "measure_case() handed the flat window bounds to the edge finder as the edge hint with a +/-5 ns search, so all eight TR-LONG windows answered NO_REAL_EDGE_FOUND; it took the first off_tail for every window and broke, so a 5 uA fault in a later tail was missed; it never called sign_check or charge_errors, and convergence accepted two sides with no context at all",
+   "id": "F3_measurement_entry_wiring",
+   "repair": "each emission window searches around its own rise50/fall50, reports the full-enable Q and the flat mean separately, keeps Qpos / signed Qneg / |Qneg|, calls sign_check and charge_errors, pairs window k with tail k, and refuses instead of falling back",
+   "reviewer_fact": "REVIEW_DATA7C_B_PREP_20261024.md section 3 F3, checks/prep_probe.json F3.entries (eight NO_REAL_EDGE_FOUND), F3.second_tail_independent_reference (ABOVE_LIMIT 5e-06 A while the main entry reported 0.0 A), F3.missing_pair_context_still_accepted=true"
+  },
+  {
+   "defect": "fifteen decks wrote bare `dc dev=...` / `tran stop=...` analysis lines and no `simopt options temp=27`, while this project has already run named analysis instances and an explicit temperature; the PWL spelling also differed from the proven `type=pwl wave=[...]` form",
+   "id": "F4_native_deck_known_contract",
+   "repair": "decks state simopt options temp=27, an instance-named analysis line, and PWL as wave=[t v ...] with whole-nanosecond n-suffixed times; the audit parses the effective statement instead of matching a substring, so a comment can no longer vouch for a deck",
+   "reviewer_fact": "REVIEW_DATA7C_B_PREP_20261024.md section 3 F4, checks/prep_probe.json F4.no_explicit_27C (all 15) and F4.unnamed_analysis_lines (all 15); the review states plainly that this is textual inconsistency with proven project syntax, not a reproduced native error"
+  }
+ ],
  "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
  "results_column_state": "NOT_RUN for all fifteen cases; a synthetic number never enters an electrical result",
  "reviewer_frozen": "NO",
+ "round": "R1",
  "rules": {
   "charge_error": {
    "idc_substitution_forbidden": "a geometry-ratio estimate is never used as IDC(k)",
@@ -201,9 +241,32 @@
   "convergence": {
    "also_report": "absolute dQ in coulombs (and fC), per window",
    "limit": 0.01,
-   "note": "CONVERGED without an absolute difference is refused as an answer",
+   "missing_context_is_a_refusal_not_a_match": true,
+   "note": "CONVERGED without an absolute difference is refused as an answer, and two sides that both lack every context field are not \"equal\" -- they are missing context, which is REFUSED_MISSING_CONTEXT",
    "relative_measure": "abs(dQ) / QLSB",
+   "required_context_fields": [
+    "sign_rule",
+    "threshold_V",
+    "window_start_ps",
+    "window_stop_ps",
+    "reference_current_A"
+   ],
    "status_word_alone_is_not_a_pass": true
+  },
+  "deck_syntax": {
+   "analysis_instance_name_required": true,
+   "dc_form": "dc_case dc dev=Vclamp param=dc start=0.6 stop=1.5 step=0.05",
+   "note": "these are the spellings this project has already run on the build; adopting them is not a native syntax verdict. NATIVE_NETLIST_SYNTAX stays NOT_VERIFIED until an authorised launch reads the deck.",
+   "proven_by": [
+    "spectre/current_probe_syntax.scs:35",
+    "scripts/dd1_d7b_run.py:239",
+    "scripts/dd1_d7b_run.py:288"
+   ],
+   "pwl_form": "Vname (node 0) vsource type=pwl wave=[t1 v1 t2 v2 ...]",
+   "pwl_time_suffix": "n, whole nanoseconds",
+   "status": "TEXT_CONSISTENCY_WITH_PROVEN_PROJECT_FORM_ONLY",
+   "temperature": "simopt options temp=27",
+   "tran_form": "tran_case tran stop=<this case absolute ns> maxstep=<this case ns>"
   },
   "eight_level_ratio": {
    "abs_deviation_limit_in_units_of_iunit_ref": 0.25,
@@ -211,6 +274,16 @@
    "normalisation_rule": "a scaled-down array must not be rescued by normalisation: the eight-level ratio pass does not substitute the 15 uA absolute pass",
    "per_code_statistic": "Ik - (k+1) * Iunit_ref for every code",
    "strict_monotonic_required": true
+  },
+  "enable_edges": {
+   "code_change_edge_total_ns": 2.0,
+   "code_change_must_sit_in": "pure_off_window",
+   "half_edge_max_ns": 50.0,
+   "note": "the first DATA_EN ramp of TR-LONG runs 1000 ns -> 1100 ns with its 50 % point at 1050 ns; writing a (1000, 0) hold point and then ramping to (1050, high) would put the crossing at 1025 ns while the table says 1000 ns, which is the defect this rule exists to refuse",
+   "pure_off_prep_end_ns": 1000.0,
+   "pwl_forbids_a_point_inside_a_ramp": true,
+   "symmetric_about_50_percent": true,
+   "uniform_transient_offset_ns": 1050.0
   },
   "full_scale_absolute": {
    "clamp_V": 1.2,
@@ -232,9 +305,10 @@
   },
   "process_corner": {
    "corner": "TT",
+   "deck_must_state_temperature": "simopt options temp=27",
    "model_family": "SMIC18 models already used by the accepted POC",
    "model_identity_status": "NOT_VERIFIED_THIS_ROUND",
-   "note": "no model card was opened this round; the exact local model identity is a check for the approved native stage",
+   "note": "no model card was opened this round; the exact local model identity is a check for the approved native stage. The declared 27 C is only a condition once every deck writes it as a statement: `simopt options temp=27` is the instantiation form the accepted DATA-7B bench uses, and a contract line is not a deck condition",
    "temperature_C": 27
   },
   "sampling": {
@@ -291,23 +365,65 @@
    "nominal_maxstep_ns": 2.0,
    "only_difference_allowed": "maxstep",
    "refined_maxstep_ns": 0.1
+  },
+  "window_kind_naming": {
+   "separately_named_count": 5,
+   "why_these_names": "the emission and off_tail kinds keep the two words the independent review instrument selects on, and schedule.csv keeps off_window_ns as the pair-spelled copy of pure_off_start_ns/pure_off_stop_ns, so the reviewer can read the repaired bytes with its own unchanged tool; the five windows are still named apart, and both dd1_d7c_b_prep_schedule.validate and dd1_d7c_b_prep_r1_deck_read refuse the day the pair spelling and the two columns disagree"
+  },
+  "window_kinds": {
+   "emission": {
+    "bounds": "rise50 -> fall50",
+    "use": "the charge of the whole enable window, the number convergence compares"
+   },
+   "emission_flat": {
+    "bounds": "rise_end -> fall_start",
+    "use": "the flat-part mean current"
+   },
+   "leak_last100": {
+    "bounds": "the last 100 ns of off_tail",
+    "if_shorter": "REFUSE_THE_CONFIGURATION, never truncate silently",
+    "must_lie_inside": "pure_off",
+    "use": "the magnitude test max(abs(I_sink)) against the shutoff limit, and nothing else"
+   },
+   "off_tail": {
+    "bounds": "this fall50 -> next rise_start, or the declared stop for the last platform",
+    "use": "signed tail Q, never folded into the emission charge"
+   },
+   "pure_off": {
+    "bounds": "fall_end -> next rise_start",
+    "use": "the only region a code change or a leakage measurement may live in"
+   }
   }
  },
  "schedule": {
+  "edge_ns": 50.0,
   "lead_off_ns": 1000.0,
-  "shift_rule": "platform, code-change, integration window and stop all shift by the same recorded amount",
-  "source_relative_to": "scripts/dd1_d7c_a_r2_plan.py"
+  "offset_applied_to_every_transient_ns": 1050.0,
+  "pam_bit_rule": "value = int(code, 2); pam0 = bit 0 (weight 1), pam1 = bit 1 (weight 2), pam2 = bit 2 (weight 4); level = bit x 1.8 V",
+  "shift_rule": "platform, 50% edges, ramp endpoints, code change, integration window, tail, pure-off, leakage sub-window and stop all shift by the same 1050 ns; the pure-off preparation ends at 1000 ns and the first ramp starts there, so no hold point sits inside a ramp",
+  "source_relative_to": "scripts/dd1_d7c_a_r2_plan.py",
+  "window_kinds": [
+   "emission",
+   "emission_flat",
+   "leak_last100",
+   "off_tail",
+   "pure_off"
+  ]
  },
  "schema_version": "1.0",
  "single_source": "scripts/dd1_d7c_b_prep_contract.py emits this file; decks, schedule and reports render from it and from nothing else",
  "task_id": "DATA-7C-B-PREP",
  "units": {
   "charge": "coulomb",
+  "code_edge_ns": 2.0,
   "current": "ampere",
   "display_precision_rule": "a ns column with four decimals resolves at 0.1 ps, and every tolerance names its LSB and its quantisation term",
+  "edge_ns": 50.0,
   "lead_off_ns": 1000.0,
+  "logic_high_V": 1.8,
   "time": "second",
-  "ton_ns": 1000.0
+  "ton_ns": 1000.0,
+  "transient_offset_ns": 1050.0
  },
  "user_approved": "NO"
 }
