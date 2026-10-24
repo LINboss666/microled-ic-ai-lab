@@ -931,12 +931,14 @@ def main(argv):
             if os.path.isfile(target):
                 identity.append({'role': 'R2 handoff, written before this record and committed with it',
                                  'path': rel, 'bytes': os.path.getsize(target), 'sha256': sha_of(target)})
-        for rel in (PREP.SHARED_TOOLS + [TICK_PROBE.replace(ROOT + os.sep, '').replace(os.sep, '/'),
-                                         OLD_PROBE.replace(ROOT + os.sep, '').replace(os.sep, '/')]):
+        # source_identity is the table the shared checker binds to Git blobs, so it lists only paths
+        # this repository tracks; the reviewer's two instruments live in the gate row and in their own
+        # result JSONs, which quote the digests the review package published
+        for rel in PREP.SHARED_TOOLS:
             if not os.path.isfile(os.path.join(ROOT, rel.replace('/', os.sep))) or \
                     any(row['path'] == rel for row in identity):
                 continue
-            identity.append({'role': 'tool or instrument this round reads', 'path': rel,
+            identity.append({'role': 'shared tool this round reads', 'path': rel,
                              'bytes': os.path.getsize(os.path.join(ROOT, rel.replace('/', os.sep))),
                              'sha256': sha_of(os.path.join(ROOT, rel.replace('/', os.sep)))})
         duplicated = sorted(set(row['path'] for row in identity

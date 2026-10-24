@@ -88,6 +88,14 @@
 承担），DATA-7C-A 的 T/H 历史证据不重跑，因为本轮没有任何输入喂给它。记录语义规则仍走共享检查器，
 只替换属于旧轮次的门名与仪器文件名并报出替换计数。
 
+本轮发布了两个记录目录，第一个不删不覆：`dd1_d7c_b_prep_r2_20261024_111821_68fa64` 用共享检查器做
+blob 绑定复核时报告两条 `… is in the record but not in HEAD`——它把审核方的两份仪器（`review/…` 下、
+本仓库不跟踪）写进了 `source_identity.csv`，而那张表按定义只列 Git 里的对象。仪器字节本来就由
+`reviewer_instrument_bytes_unchanged` 门、两份仪器自己的 `instrument_sha256` 与交接的
+`instruments_kept_unmodified` 承担，无需出现在绑定 Git 的身份表里。修掉的是本轮新入口的这一段，
+最终记录是它后面那个 `dd1_d7c_b_prep_r2_…` 目录；因此最终记录的"相对 R1 新增"会同时数到前一个记录目录
+的 15 个文件，这是发布顺序，不是改动面。
+
 <!-- BEGIN 7CB_R2 GATES -->
 | 门 | 命令 | rc | 期望 | 判决 | 依据 |
 |---|---|---|---|---|---|

@@ -45,7 +45,7 @@
   "timing_tables_changed": "NO",
   "transient_offset_changed": "NO"
  },
- "head_sha": "4c49237be93adfd64253962c50ab81bd8fbb2cfc",
+ "head_sha": "0d4a4f18e1b03c4991964cc30ccb2c7e3888f3ec",
  "head_sha_role": "the tip of poc/data-pam-d7c-b-prep-r2 at the moment this handoff was written, i.e. the repair commit this handoff follows; the record and the receipt commit that carries the package digest come after it",
  "inherited": {
   "R1_tip": "6778535e70b139812265eba490d0a1381a1fae5c",
@@ -152,9 +152,9 @@
    "renamed": 0
   },
   "R1_to_HEAD_at_handoff": {
-   "added": 5,
+   "added": 19,
    "changed": 5,
-   "commits": 2,
+   "commits": 4,
    "deleted": 0,
    "renamed": 0
   },
@@ -177,7 +177,7 @@
      "refs/heads/poc/data-pam-d7c-b-prep": "dcef9b336f2222d6291d266858270f7448b6bb78",
      "refs/heads/poc/data-pam-d7c-b-prep-r1": "6778535e70b139812265eba490d0a1381a1fae5c"
     },
-    "queried_utc": "2026-10-24T11:13:41Z",
+    "queried_utc": "2026-10-24T11:24:37Z",
     "rc": 0,
     "ref_lines_returned": 4
    },
@@ -185,7 +185,7 @@
     "answer": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/git/refs#get-a-reference\",\"status\":\"404\"}gh: Not Found (HTTP 404)",
     "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/poc/data-pam-d7c-b-prep-r2",
     "meaning": "the new branch is absent, which is the correct answer and not a read-back failure; github.com over 443 needs the system proxy for the git transport while api.github.com answers directly, so both channels were used and they agree",
-    "queried_utc": "2026-10-24T11:13:41Z",
+    "queried_utc": "2026-10-24T11:24:37Z",
     "rc": 1
    }
   },
@@ -245,9 +245,9 @@
     "sha256": "fec7bbb1970b8fa679b65675e444646bd3772e66b0a96cef6d9184045ad9319e"
    },
    {
-    "bytes": 68522,
+    "bytes": 68631,
     "path": "scripts/dd1_d7c_b_prep_r2_verify.py",
-    "sha256": "fe15cbb9e7d4a102dd81655021a5e9f5606fe44f8f1963d67f3dcc6fcef4a0e2"
+    "sha256": "132ee686f085e4cab2867085598d5d49718a516ac6226263819a301c6712fe91"
    },
    {
     "bytes": 8609,
