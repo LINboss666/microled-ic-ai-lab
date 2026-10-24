@@ -511,8 +511,8 @@ def main(argv):
                                                'listing and no forbidden claim'))
         return 0 if not problems else 1
     out_dir = os.path.abspath(arguments.out) if arguments.out else os.path.join(
-        ROOT, 'results', 'evidence', '%s_%s_%06x' % (
-            TASK_ID.lower().replace('-', '_'),
+        ROOT, 'results', 'evidence', 'dd1_%s_%s_%06x' % (
+            'd7c_b_prep_r1',
             time.strftime('%Y%m%d_%H%M%S', time.gmtime()),
             int(hashlib.sha256(os.urandom(8)).hexdigest()[:6], 16)))
     if os.path.isdir(out_dir):

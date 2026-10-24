@@ -198,9 +198,9 @@
     "sha256": "cc7a86b38b8cc4886ed98315f9b61e6d5d5c260d01ebe3fad0841d9d6545fee8"
    },
    {
-    "bytes": 58687,
+    "bytes": 58673,
     "path": "scripts/dd1_d7c_b_prep_r1_verify.py",
-    "sha256": "0c22ff57437e630267205eb9e0b387d00a2020045f2e123a0fea5c3f98c52220"
+    "sha256": "ad431df9a160b4d970d7673307b72b9d12bee291cef97f5c9e151538d107d8ff"
    },
    {
     "bytes": 11662,
