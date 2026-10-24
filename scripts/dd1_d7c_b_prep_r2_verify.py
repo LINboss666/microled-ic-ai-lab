@@ -84,7 +84,7 @@ NEW_PREFIXES = ('scripts/dd1_d7c_b_prep_r2_', 'results/evidence/dd1_d7c_b_prep_r
 NEW_EXACT = ['reports/tasks/DATA-7C-B-PREP-R2.md', R2_REPORT,
              'reports/agent_handoffs/DATA-7C-B-PREP-R2.md',
              'reports/agent_handoffs/DATA-7C-B-PREP-R2.json']
-DECKS = tuple('spectre/dd1_d7c_b_prep/%s.scs' % name for name in sorted(
+DECKS = tuple('spectre/dd1_d7c_b_prep/%s' % name for name in sorted(
     os.listdir(os.path.join(ROOT, 'spectre', 'dd1_d7c_b_prep'))) if name.endswith('.scs'))
 TIMING_TABLES = ('tests/dd1_d7c_b_prep/schedule.csv', 'tests/dd1_d7c_b_prep/windows.csv',
                  'tests/dd1_d7c_b_prep/pwl.csv')
@@ -365,8 +365,9 @@ def replay_r2(directory):
             ('deck_read_negatives', 'dd1_d7c_b_prep_r1_deck_read.py', ('--counterexample',), (0,)),
             ('offline', 'dd1_d7c_a_offline_check.py', ('--json', 'out.json'), (0,)),
             ('guards', 'dd1_d7c_a_guards.py', ('--json', 'out.json'), (0,)),
-            ('tick_probe_here', TICK_PROBE, ('--root', '.'), (1,)),
-            ('old_probe_here', OLD_PROBE, ('--root', '.'), (1,)),
+            ('tick_probe_here', TICK_PROBE, ('--root', '.', '--out', 'tick_in_extraction.json'),
+             (1,)),
+            ('old_probe_here', OLD_PROBE, ('--root', '.', '--out', 'old_in_extraction.json'), (1,)),
             ('selftest_needs_history', 'dd1_d7c_a_r1_selftest.py', ('--json', 'self.json'), (0, 2))]
     out = []
     for suite, script, args, accepted in plan:

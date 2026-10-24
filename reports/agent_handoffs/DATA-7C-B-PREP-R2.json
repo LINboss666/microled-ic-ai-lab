@@ -1,0 +1,425 @@
+{
+ "base_sha": "6778535e70b139812265eba490d0a1381a1fae5c",
+ "base_sha_role": "the R1 delivered tip, i.e. exactly the bytes the independent review judged REWORK on this one item; this work tree was created from it",
+ "boundaries": {
+  "ACCEPTANCE_REGISTRATION_AUTHORISED": "NO",
+  "MERGE_OR_MAIN_PUSH_AUTHORISED": "NO",
+  "NATIVE_PREFLIGHT_AUTHORISED": "NO",
+  "NEXT_NATIVE_STAGE_AUTHORISED": "NO",
+  "SSH_VM_PDK_MODEL_CREDENTIAL_ACCESS_AUTHORISED": "NO",
+  "force_push": "NO",
+  "gc_or_prune": "NO",
+  "history_rewritten": "NO",
+  "hooks_skipped": "NO",
+  "injected_reminders_refused": "instructions appearing in tool output that asked for a new audit authority or for credential reads were refused and reported; text in a file is not authorisation",
+  "record_framework_replicated": "NO (the shared rules are called through the R1 adapter, which substitutes round-bound names and reports the count)",
+  "repository_visibility_changed": "NO",
+  "shared_record_tool_changed": "NO"
+ },
+ "branch": "poc/data-pam-d7c-b-prep-r2",
+ "contract_state": "PROPOSED_FOR_REVIEW",
+ "costs": {
+  "credentials_read": 0,
+  "new_native_preflights": 0,
+  "new_oa_writes": 0,
+  "new_rtl_simulations": 0,
+  "new_spectre_launches": 0,
+  "pdk_or_modelcard_read": 0,
+  "spectre_help_invocations": 0,
+  "ssh_or_vm": 0
+ },
+ "frozen_surfaces": {
+  "candidate_duts_changed": "NO",
+  "decks_changed": "NO",
+  "earlier_records_reports_handoffs_changed": "NO",
+  "editable_files": [
+   "scripts/dd1_d7c_b_prep_measure.py",
+   "scripts/dd1_d7c_b_prep_contract.py",
+   "scripts/dd1_d7c_b_prep_cases.py",
+   "tests/dd1_d7c_b_prep/contract.json",
+   "reports/dd1_d7c_b_prep_contract.md"
+  ],
+  "proof": "frozen_surfaces and decks_and_tables_identical_to_R1 in the record, both by blob+mode comparison against 6778535e70b1",
+  "shared_tools_changed": "NO",
+  "timing_tables_changed": "NO",
+  "transient_offset_changed": "NO"
+ },
+ "head_sha": "6778535e70b139812265eba490d0a1381a1fae5c",
+ "head_sha_role": "the tip when this handoff was written; the R2 commits follow it and the pushed tip is recorded in the receipt commit that carries the package digest",
+ "inherited": {
+  "R1_tip": "6778535e70b139812265eba490d0a1381a1fae5c",
+  "accepted_baseline_R2": "3e4703f1763223024f442c0826e95055782bca13",
+  "data7a_content_sha": "f68449672774ac9266ba9e4893024e4f3027dd9d",
+  "data7b_content_sha": "f9fd09b184a69a27cdb409205dfd4f4151408a23",
+  "main_untouched": "23e471cb936b421ee97e1250c3be06edf96f9937",
+  "note": "inheriting a commit as the baseline is not an acceptance registration; this round has no authority to register anything as accepted",
+  "prep_P": "dcef9b336f2222d6291d266858270f7448b6bb78"
+ },
+ "instrument_readings": {
+  "old_probe_on_R2": {
+   "all_four_families_reproduced": false,
+   "command": "python reviewer/probe_prep_gaps.py --root . --out <json>",
+   "note": "the four closed families are re-checked every run so this round cannot reopen them by accident",
+   "rc": 1
+  },
+  "tick_probe_on_R1": {
+   "command": "python reviewer/probe_tick_normalisation.py --root <R1 archive copy> --out <json>",
+   "defect_reproduced": true,
+   "delivered_entry": {
+    "error_nominal_LSB": 0.2666666666666658,
+    "q_full_C": 1.5499999999999998e-11,
+    "qlsb_C": 1.875e-12,
+    "tick_s": 1e-06,
+    "verdict_nominal": "WITHIN_PROPOSED_LIMIT"
+   },
+   "independent_contract_references": [
+    {
+     "contract_tick_s": 1.2e-07,
+     "error_LSB": 2.2222222222222006,
+     "outside_half_LSB": true,
+     "qlsb_C": 2.2499999999999998e-13
+    },
+    {
+     "contract_tick_s": 2e-07,
+     "error_LSB": 1.3333333333333202,
+     "outside_half_LSB": true,
+     "qlsb_C": 3.75e-13
+    }
+   ],
+   "rc": 0
+  },
+  "tick_probe_on_R2": {
+   "command": "python reviewer/probe_tick_normalisation.py --root . --out <json>",
+   "defect_reproduced": false,
+   "note": "read the fields, not the rc: the entrance has to report the contract tick, the QLSB built from it, the unchanged T50 and an OUTSIDE_PROPOSED_LIMIT verdict",
+   "rc": 1
+  }
+ },
+ "instruments_kept_unmodified": [
+  {
+   "bytes": 4065,
+   "path": "reviewer/probe_tick_normalisation.py",
+   "sha256": "3b970d0fcff5d3f6582d467baf51f5af3eaa59a79d7355d8148023c6a56425ad",
+   "source": "as received in the R1 review package; the repository does not track review/",
+   "tracked_in_repository": false
+  },
+  {
+   "bytes": 11024,
+   "path": "reviewer/probe_prep_gaps.py",
+   "sha256": "d981ff190a627ae70bb8e8a5656226b1b2a2d35e65b6539d99b13768dbe69b7c",
+   "source": "as received in the R1 review package",
+   "tracked_in_repository": false
+  }
+ ],
+ "known_limitations": [
+  "nothing was simulated: no Spectre, no RTL, no OA write, no preflight, no guest connection",
+  "the reference tick is a POC measurement unit, not TCON or display timing, and it grants no native authority",
+  "eight-level currents, the DC sweep, Qexpected_dc and every convergence pair stay NOT_RUN",
+  "the measurement core is the accepted dd1_d7b_measure, so its precision limits are inherited",
+  "NATIVE_NETLIST_SYNTAX and hierarchical save stay NOT_VERIFIED; no model card was opened",
+  "OUTSIDE_PROPOSED_LIMIT appearing on synthetic windows after the unit fix is expected and is not an electrical failure of the MOS candidate",
+  "the R1 report and handoff were not rewritten; the acceptance-phrasing correction lives here",
+  "DATA-7B 59/56 overage, the credential echo event and the older todos are untouched"
+ ],
+ "next_stage_authorised": "NO",
+ "not_run": {
+  "acceptance_registration": "NOT_AUTHORISED",
+  "eight_dc_launches": "NOT_RUN",
+  "electrical_results": "NOT_RUN",
+  "hierarchical_save": "NOT_VERIFIED",
+  "idc_by_code": "NOT_RUN",
+  "native_dc_points": "NOT_RUN",
+  "native_netlist_syntax": "NOT_VERIFIED",
+  "pdk_model_identity": "NOT_VERIFIED",
+  "soa_signoff": "NOT_AUTHORISED",
+  "thirtysix_launch_draft": "NOT_RUN"
+ },
+ "range_counts": {
+  "P_to_R1": {
+   "added": 23,
+   "changed": 26,
+   "commits": 5,
+   "deleted": 0,
+   "renamed": 0
+  },
+  "R1_record_measured": {
+   "added": 7,
+   "changed": 26,
+   "commits": 3,
+   "note": "the numbers the R1 record printed at its own moment; kept as that, not as the final range"
+  },
+  "R1_to_HEAD_at_handoff": {
+   "added": 3,
+   "changed": 5,
+   "commits": 1,
+   "deleted": 0,
+   "renamed": 0
+  },
+  "review_recomputed_P_to_R1": {
+   "added": 23,
+   "changed": 26,
+   "commits": 5,
+   "deleted": 0
+  }
+ },
+ "remote_readback": {
+  "before_push": {
+   "after_push": "not quoted here: the pushed tip is recorded in the receipt commit that carries the package digest, which is the first place it can be true",
+   "method_1_git_protocol": {
+    "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin refs/heads/poc/data-pam-d7c-b-prep-r1 refs/heads/poc/data-pam-d7c-b-prep refs/heads/main refs/heads/poc/data-pam-d7c-a-r2",
+    "note": "poc/data-pam-d7c-b-prep-r2 was not queried as an existing ref before the push; the branch this round creates did not exist remotely",
+    "objects": {
+     "refs/heads/main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+     "refs/heads/poc/data-pam-d7c-a-r2": "3e4703f1763223024f442c0826e95055782bca13",
+     "refs/heads/poc/data-pam-d7c-b-prep": "dcef9b336f2222d6291d266858270f7448b6bb78",
+     "refs/heads/poc/data-pam-d7c-b-prep-r1": "6778535e70b139812265eba490d0a1381a1fae5c"
+    },
+    "queried_utc": "2026-10-24T10:24:19Z",
+    "rc": 0,
+    "ref_lines_returned": 4
+   },
+   "method_2_api": {
+    "answer": "{\"message\":\"Not Found\",\"status\":\"404\"}",
+    "command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/poc/data-pam-d7c-b-prep-r1",
+    "meaning": "the new branch is absent, which is the correct answer and not a read-back failure; github.com over 443 needs the system proxy for the git transport while api.github.com answers directly, so both channels were used and they agree",
+    "queried_utc": "2026-10-24T10:24:19Z"
+   }
+  }
+ },
+ "repair": {
+  "contract": "rules.charge_error.reference_tick_s_by_case freezes the reference tick per case (TR-120/RS-LOW/TR-LONG/RS-FULL/TR-OFFCODE/RS-SWITCH = 120 ns, TR-200 = 200 ns, DC not applicable); partners share one tick; the nominal tick list 120/200 ns is kept; identity is POC_MEASUREMENT_REFERENCE_NOT_TCON_NOT_DISPLAY_TIMING",
+  "convergence": "reference_tick_s joins the required pair context and must equal the denominator argument; a pair that agrees on a coarser tick is judged, a denominator that is not a positive finite number is refused, and a drift between the two sides keeps the REFUSED_CONTEXT_CHANGED verdict",
+  "defect": "measure_case() passed T50 as the QLSB tick too, so a 1 us platform manufactured its own ruler: +0.5 pC on code 111 read 0.266667 LSB and WITHIN_PROPOSED_LIMIT where either nominal tick the contract lists gives 2.222222 / 1.333333 LSB",
+  "entrance": "reference_tick_for_case() refuses an unknown case, a missing entry, and a zero, negative, non-finite or non-numeric tick by name before any division and never falls back to the window length; charge_errors() keeps T50 for Qexpected and the tick for QLSB and reports reference_tick_s, qlsb_C, t50_s and the map source",
+  "rendering": [
+   "the settling band renders 0.05 as +/-5% instead of +/-0.05% and the numeric tolerance is unchanged",
+   "the nominal current table labels A / fA / uA instead of joining bare numbers of different units with equals signs",
+   "the R1 report phrase inherited accepted R2 is corrected in this round report: no acceptance registration was authorised",
+   "P..R1 is recomputed from the two real endpoints and the R1 record numbers are kept as the moment they were measured"
+  ],
+  "reviewer_fact": "checks/tick_probe.json and checks/fresh_tick_probe.json both rc=0 with defect_reproduced=true; delivered tick 1e-06 s, qlsb 1.875e-12 C, error 0.266667 LSB WITHIN_PROPOSED_LIMIT, independent references 2.222222 and 1.333333 LSB outside the 0.5 limit"
+ },
+ "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
+ "review_input": {
+  "manifest_mismatches": 0,
+  "manifest_rows_checked": 29,
+  "package": "MicroLED_DATA7C_B_PREP_R1_Independent_Review_20261024.zip",
+  "package_bytes": 37295,
+  "package_sha256": "a040c2cb0246d7a411f135eca0021ffb12a508eb3818f1a327cdd9298c075298",
+  "verdict": "REWORK / REPAIR_SCOPE=TRANSIENT_Q_LSB_REFERENCE_ONLY / PREVIOUS_F1_TO_F4_DIAGNOSTICS=CLOSED / DC_BENCH_OFFLINE_PREPARATION=PASS / CANDIDATE_DUT_REDESIGN_REQUIRED=NO / NATIVE_EXECUTION_AUTHORISED=NO"
+ },
+ "review_verdict": "REWORK (single item: the QLSB denominator was the window length)",
+ "round": "R2 offline repair of the transient QLSB reference tick",
+ "schema_version": 1,
+ "scope": "the reference tick of the transient charge error, three rendering corrections, then stop",
+ "source_identity": {
+  "delivered": [
+   {
+    "bytes": 32297,
+    "path": "scripts/dd1_d7c_b_prep_measure.py",
+    "sha256": "5ff60229544492bd9de61fba41dbf04b7277681cfefe3030e1f032208236495d"
+   },
+   {
+    "bytes": 60864,
+    "path": "scripts/dd1_d7c_b_prep_contract.py",
+    "sha256": "edab66ccabaf2a7dd9d19ce6401bd3055d7bd7890110f22a5bde4864e1d23e09"
+   },
+   {
+    "bytes": 62914,
+    "path": "scripts/dd1_d7c_b_prep_cases.py",
+    "sha256": "fcdf5b98d95a50c45be3a590695387adcd0028fa55acc7598212cf865a8c2a64"
+   },
+   {
+    "bytes": 24746,
+    "path": "tests/dd1_d7c_b_prep/contract.json",
+    "sha256": "29861970b9bee33b70d17edc83302f320cf5e050284d4d0ecc9c199c4a151840"
+   },
+   {
+    "bytes": 21270,
+    "path": "reports/dd1_d7c_b_prep_contract.md",
+    "sha256": "fec7bbb1970b8fa679b65675e444646bd3772e66b0a96cef6d9184045ad9319e"
+   },
+   {
+    "bytes": 61292,
+    "path": "scripts/dd1_d7c_b_prep_r2_verify.py",
+    "sha256": "1613290c5dfeb1ed56fead721a1eb4f0683f9556468b16eed60ea9faf2c4302b"
+   },
+   {
+    "bytes": 8609,
+    "path": "reports/tasks/DATA-7C-B-PREP-R2.md",
+    "sha256": "cf876e96aad39fac087845adc13854f9a0effdce295865f72dc23567736807e9"
+   }
+  ],
+  "read_only_inputs": [
+   {
+    "bytes": 55731,
+    "path": "scripts/dd1_d7c_b_prep_schedule.py",
+    "sha256": "1530e14bf726910a108c8152148850566e56887f7b8f090757fcf2e07efed40a"
+   },
+   {
+    "bytes": 28895,
+    "path": "scripts/dd1_d7c_b_prep_deckgen.py",
+    "sha256": "07432626167a4ecb9b177391805f7fd88659728fe3d3fd3b277ce716c022bd44"
+   },
+   {
+    "bytes": 58940,
+    "path": "scripts/dd1_d7c_b_prep_verify.py",
+    "sha256": "5d7893f7cec1c84c253df06710dad64494a77ad7e4efee7b47bf79db712d3a80"
+   },
+   {
+    "bytes": 52478,
+    "path": "scripts/dd1_d7c_b_prep_r1_deck_read.py",
+    "sha256": "cc7a86b38b8cc4886ed98315f9b61e6d5d5c260d01ebe3fad0841d9d6545fee8"
+   },
+   {
+    "bytes": 11662,
+    "path": "scripts/dd1_d7c_b_prep_r1_record_check.py",
+    "sha256": "ffa34401f8c15ebffeb56623f15277f5dcc7dcf2b63878ec0e80fc2bc9e4f2b1"
+   },
+   {
+    "bytes": 51953,
+    "path": "scripts/dd1_d7b_measure.py",
+    "sha256": "f3da5b53d5c777ec7f60c159fbf4b8840f6257019045146546e1e0a7793fbb7f"
+   },
+   {
+    "bytes": 23398,
+    "path": "scripts/dd1_d7c_a_r2_record_check.py",
+    "sha256": "bd207dbbb6acfd8ca9bf020f77e4a0e7f9b66baf7e0013fa898d182ab3fd3249"
+   },
+   {
+    "bytes": 69458,
+    "path": "scripts/dd1_d7c_a_offline_check.py",
+    "sha256": "2a68b581d872c5076a07dbf930f5b9bc1f431cca603c0aba969a7fd7e8633a1f"
+   },
+   {
+    "bytes": 32282,
+    "path": "scripts/dd1_d7c_a_guards.py",
+    "sha256": "1d2e21c20929cb51fd2d54b971e26c4fc23ddf59473016e07d4da177cb62048a"
+   },
+   {
+    "bytes": 21786,
+    "path": "scripts/dd1_d7c_a_r2_plan.py",
+    "sha256": "555b35e002ba45271cf5a422eda11359c5b48896a1a8a05c4335369c17d83151"
+   },
+   {
+    "bytes": 8772,
+    "path": "scripts/precommit_safety_check.py",
+    "sha256": "09770ae806f51b7888e86a5e4f9ce3fdb7c3f43a348d26fc7e863853ba0ad77a"
+   },
+   {
+    "bytes": 9161,
+    "path": "scripts/provenance_check.py",
+    "sha256": "38600dc86acf6128ce35c666c633e77d49607e72cc03deb91633dbc565b0d07e"
+   },
+   {
+    "bytes": 1749,
+    "path": "spectre/dd1_d7b_pwm_stage.scs",
+    "sha256": "cee61136e81bdefd10282aaed35218e0fc0bb14262bb016f80e75232ae90a952"
+   },
+   {
+    "bytes": 4029,
+    "path": "spectre/dd1_d7c_a_pam_top.scs",
+    "sha256": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24"
+   },
+   {
+    "bytes": 4114,
+    "path": "spectre/dd1_d7c_a_sink_unit.scs",
+    "sha256": "60e06aa3010a66442ac25ff408abc22f1aab93d6b5d3b24dbc15095ac66234af"
+   },
+   {
+    "bytes": 4674,
+    "path": "spectre/dd1_d7c_a_pam_dec.scs",
+    "sha256": "9f6c8d7895d13aaf031eac8036bba7165e26a448c685beef8ab2d0a128627d24"
+   },
+   {
+    "bytes": 3871,
+    "path": "spectre/dd1_d7c_a_gates.scs",
+    "sha256": "d2def4e657532b655941c2e42adf8534b7144544fa72ff2f41dfbd3374620faf"
+   },
+   {
+    "bytes": 8548,
+    "path": "spectre/dd1_d7c_b_prep/TR-LONG.scs",
+    "sha256": "54506e945920713fba2682d0d535aa04c1cd9b1718b12395bf83c4841c8f78d5"
+   },
+   {
+    "bytes": 5926,
+    "path": "spectre/dd1_d7c_b_prep/TR-120.scs",
+    "sha256": "f5a0f3386bea52de1e3fa7387b7127eb7e3c20120fa8e45e63ee3b72f94cbb2b"
+   },
+   {
+    "bytes": 5925,
+    "path": "spectre/dd1_d7c_b_prep/TR-200.scs",
+    "sha256": "4cee5055e93209646175234ec4f28026212727ef083ce1b2d1723f76807bc6f3"
+   },
+   {
+    "bytes": 7251,
+    "path": "spectre/dd1_d7c_b_prep/TR-OFFCODE.scs",
+    "sha256": "26eea84243362e2f73cbe893961514ac08a114dda74b92b9f41a661ef4863265"
+   },
+   {
+    "bytes": 8638,
+    "path": "spectre/dd1_d7c_b_prep/RS-FULL.scs",
+    "sha256": "3694083b3fc404e45217f6a3c6654264aecb0bf77b11ca96fe4270440c89ac79"
+   },
+   {
+    "bytes": 6015,
+    "path": "spectre/dd1_d7c_b_prep/RS-LOW.scs",
+    "sha256": "86b919a0c1ce15168c3829acfbc2562efac7710231c388b2ce644b9ca1215f2c"
+   },
+   {
+    "bytes": 7322,
+    "path": "spectre/dd1_d7c_b_prep/RS-SWITCH.scs",
+    "sha256": "7067156ade6f3c01ec7941a8fbfc68828e375e963dde690bfeac675f58bab6a2"
+   },
+   {
+    "bytes": 4803,
+    "path": "spectre/dd1_d7c_b_prep/DC-000.scs",
+    "sha256": "2193e220d0f539d853b5da59a4ec7e185c4da131d1a2597463a46145962850fe"
+   },
+   {
+    "bytes": 14840,
+    "path": "tests/dd1_d7c_b_prep/schedule.csv",
+    "sha256": "fef4c9d3c8deaa3aeb576d90ecabe3ad977acba85b85c4a9b52cf6882a4665f6"
+   },
+   {
+    "bytes": 49799,
+    "path": "tests/dd1_d7c_b_prep/windows.csv",
+    "sha256": "5f7bd75cd1a15f5c05e3a79d55fd234d1e60ecb2b5bd66972d43c4d84cb87aa3"
+   },
+   {
+    "bytes": 22453,
+    "path": "tests/dd1_d7c_b_prep/pwl.csv",
+    "sha256": "f3dcfe12e42150190d616a3128264787fc7148a7bccbde9c315dcbbf0b9cdf18"
+   },
+   {
+    "bytes": 32842,
+    "path": "reports/dd1_d7c_b_prep_review_fix_r1.md",
+    "sha256": "2dfaffaf1a116b7c8e560670c8eb02570304f98aab5d238ad1fe54fe7f4458c1"
+   },
+   {
+    "bytes": 17854,
+    "path": "reports/agent_handoffs/DATA-7C-B-PREP-R1.json",
+    "sha256": "086597807f2737b7f642e40d570fbdc9cc5effc6474eabfcdc4431ae00bdaff4"
+   },
+   {
+    "bytes": 5260,
+    "path": "reports/agent_handoffs/DATA-7C-B-PREP-R1.md",
+    "sha256": "7c8607b37a066b9d41793a6cabc984de59ded6f83ab554a7734e31eba3c57e8d"
+   },
+   {
+    "bytes": 5321,
+    "path": "results/evidence/dd1_d7c_b_prep_r1_20261024_072222_365ef1/verification_summary.json",
+    "sha256": "db3afd3483ff48ce756733bd35470c9049a61618aefc29e612adddb4218e7e19"
+   },
+   {
+    "bytes": 14552,
+    "path": "AGENTS.md",
+    "sha256": "74d686b287bafe8e0bdd245bd95ba2e6bc61aee3b329d9f8f031500635adfc13"
+   }
+  ]
+ },
+ "stop_reason": "AWAITING_INDEPENDENT_REVIEW",
+ "task_id": "DATA-7C-B-PREP-R2",
+ "user_approved": false,
+ "worktree": "D:\\ic617_d7c_b_prep_r2"
+}
