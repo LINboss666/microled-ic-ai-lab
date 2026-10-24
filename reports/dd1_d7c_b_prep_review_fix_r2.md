@@ -88,13 +88,13 @@
 承担），DATA-7C-A 的 T/H 历史证据不重跑，因为本轮没有任何输入喂给它。记录语义规则仍走共享检查器，
 只替换属于旧轮次的门名与仪器文件名并报出替换计数。
 
-本轮发布了两个记录目录，第一个不删不覆：`dd1_d7c_b_prep_r2_20261024_111821_68fa64` 用共享检查器做
-blob 绑定复核时报告两条 `… is in the record but not in HEAD`——它把审核方的两份仪器（`review/…` 下、
-本仓库不跟踪）写进了 `source_identity.csv`，而那张表按定义只列 Git 里的对象。仪器字节本来就由
+本轮发布过程中产生的记录目录一个都不删、都不覆写；最终记录是 `results/evidence/` 下 `dd1_d7c_b_prep_r2_`
+前缀里 `generated_utc` 最晚的那个（它同时写着它度量的 `tip`）。第一个记录用共享检查器做 blob 绑定复核时
+报告两条 `… is in the record but not in HEAD`——它把审核方的两份仪器（`review/…` 下、本仓库不跟踪）写进了
+`source_identity.csv`，而那张表按定义只列 Git 里的对象。仪器字节本来就由
 `reviewer_instrument_bytes_unchanged` 门、两份仪器自己的 `instrument_sha256` 与交接的
-`instruments_kept_unmodified` 承担，无需出现在绑定 Git 的身份表里。修掉的是本轮新入口的这一段，
-最终记录是它后面那个 `dd1_d7c_b_prep_r2_…` 目录；因此最终记录的"相对 R1 新增"会同时数到前一个记录目录
-的 15 个文件，这是发布顺序，不是改动面。
+`instruments_kept_unmodified` 承担，不该出现在绑定 Git 的身份表里；修掉的是本轮新入口的这一段。
+因此最终记录的"相对 R1 新增"会数到更早那些记录目录里的全部文件，这是发布顺序，不是改动面。
 
 <!-- BEGIN 7CB_R2 GATES -->
 | 门 | 命令 | rc | 期望 | 判决 | 依据 |
@@ -113,17 +113,17 @@ blob 绑定复核时报告两条 `… is in the record but not in HEAD`——它
 | `deck_read_still_clean` | `python dd1_d7c_b_prep_r1_deck_read.py --check --counterexample --json ` | 0 | 0 | PASS |   delivered_bytes_control        HIT   delivered TR-LONG and TR-OFFCODE raise 0 edge or leakage refusals: [] |
 | `reference_tick_read_back` | `python -c reference_tick_read_back() in process: measure every transie` | 0 | 0 | PASS | 7 cases mapped, 27 windows read, 0 disagreements; DC cases refuse a tick by name; none |
 | `decks_and_tables_identical_to_R1` | `git ls-tree -r blob+mode comparison of the 15 decks and the three timi` | 0 | 0 | PASS | 15 decks + 3 tables compared, 0 differ; the reference tick is measurement metadata, so no stimulus, window or 1050 ns offset moved |
-| `fresh_extraction_replay` | `git archive d13f494028a9 / tar -x, then run every suite and both revie` | 0 | 0 | PASS | contract_check rc=0 D7C_B_CONTRACT_CHECK: PASS (state=PROPOSED_FOR_REVIEW sweep_points=19 markdown_rows=26 problems=0); schedule_check rc=0 D7C_B_SCHE |
+| `fresh_extraction_replay` | `git archive 344018c9449b / tar -x, then run every suite and both revie` | 0 | 0 | PASS | contract_check rc=0 D7C_B_CONTRACT_CHECK: PASS (state=PROPOSED_FOR_REVIEW sweep_points=19 markdown_rows=26 problems=0); schedule_check rc=0 D7C_B_SCHE |
 | `handoff_structure` | `python dd1_d7c_b_prep_r2_verify.py --handoff-check (in process)` | 0 | 0 | PASS | fields, digests against disk, five editable files, four repairs named, zero costs and no self-listing |
 | `native_entry_refused` | `python dd1_d7c_a_deckgen.py --probe <temp>` | 0 | 0 | PASS | DECKGEN_PROBE refused=True untouched=True reason=DATA-7C-A: this round authorises no native launch and no deck publication; NATIVE_AUTHORISED_THIS_ROU |
 | `provenance` | `python scripts/provenance_check.py` | 0 | 0 | PASS | SOURCE_PROVENANCE_CHECK: PASS |
 | `history_safety` | `python scripts/precommit_safety_check.py --mode history` | 0 | 0 | PASS | SAFETY_GATE: PASS |
 | `record_tool_selftest` | `python dd1_d7c_a_r1_selftest.py --json <out>/selftest.json, run in a t` | 0 | 0 | PASS | clone_at_R2 PASS, 9 cases, failures: none; the shared tool is the same blob R2 has=True; source refs unchanged=True; output newlines normalised={'crlf |
 | `git_range_counts` | `git diff --name-status and git rev-list --count over P..R1 and R1..HEA` | 0 | 0 | PASS | P..R1 23 added / 26 changed / 0 deleted / 5 commits, which is what the review of R1 recomputed (its own record measured 7 added over 3 commits at that |
-| `frozen_surfaces` | `git ls-tree -r blob and mode comparison over explicit path lists again` | 0 | 0 | PASS | enforced rows 10, violations 0, informational 1; added vs R1 5, removed 0, modified 5 (the five editable files); git diff --check max rc=0 |
+| `frozen_surfaces` | `git ls-tree -r blob and mode comparison over explicit path lists again` | 0 | 0 | PASS | enforced rows 10, violations 0, informational 1; added vs R1 19, removed 0, modified 5 (the five editable files); git diff --check max rc=0 |
 | `record_line_endings` | `scan every published file for CR and round-trip a comma-and-quote row ` | 0 | 0 | PASS | published files still carrying CR: none; the table writer emits LF (confirmed); instrument JSONs are normalised only after the parsed object is proven |
 
-渲染发生在 `d13f494028a9` 之后、`record_semantics` 与 `published_record_recheck` 判定之前；本表不含本轮记录的摘要。
+渲染发生在 `344018c9449b` 之后、`record_semantics` 与 `published_record_recheck` 判定之前；本表不含本轮记录的摘要。
 <!-- END 7CB_R2 GATES -->
 
 <!-- BEGIN 7CB_R2 TICK -->
@@ -195,7 +195,7 @@ DC 八例不在表内：合同规定其时域 QLSB 不适用，入口对该情�
 | 区间 | 新增 | 变更 | 删除 | 重命名 | 提交数 | 说明 |
 |---|---|---|---|---|---|---|
 | `dcef9b336f22..6778535e70b1`（P..R1，本轮基线区间） | 23 | 26 | 0 | 0 | 5 | 按实际两端 SHA 重算；R1 记录里那次测量（7 新增 / 3 提交）只属于它自己的时刻，不能当作最终范围 |
-| `6778535e70b1..HEAD`（R1..本轮） | 5 | 5 | 0 | 0 | 3 | 度量于运行本入口时已提交的 HEAD=d13f494028a9；记录目录本身在下一个提交里 |
+| `6778535e70b1..HEAD`（R1..本轮） | 19 | 5 | 0 | 0 | 5 | 度量于运行本入口时已提交的 HEAD=344018c9449b；记录目录本身在下一个提交里 |
 <!-- END 7CB_R2 RANGES -->
 
 <!-- BEGIN 7CB_R2 FROZEN -->
@@ -209,7 +209,7 @@ DC 八例不在表内：合同规定其时域 QLSB 不适用，入口对该情�
 | r2 | `shared_tools_safety_and_provenance` | 14 | 0 |  | `identical` | yes |
 | r2 | `R1_and_PREP_records_reports_and_handoffs` | 31 | 0 |  | `identical` | yes |
 | r2 | `earlier_task_books_and_reports` | 5 | 0 |  | `identical` | yes |
-| r2 | `paths_added_this_round` | 5 | 0 |  | `only_allowed_new` | yes |
+| r2 | `paths_added_this_round` | 19 | 0 |  | `only_allowed_new` | yes |
 | r2 | `paths_removed_vs_R1` | 0 | 0 |  | `none_removed` | yes |
 | r2 | `paths_modified_vs_R1` | 5 | 0 | reports/dd1_d7c_b_prep_contract.md;scripts/dd1_d7c_b_prep_cases.py;scripts/dd1_d7c_b_prep_ | `informational_listing` | no |
 <!-- END 7CB_R2 FROZEN -->
