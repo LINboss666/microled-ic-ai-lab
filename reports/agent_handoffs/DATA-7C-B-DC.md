@@ -65,7 +65,10 @@ DUT 跑的 deck 字节与交付 blob 相同（`deck_sha256` 逐行记在账本�
 
 未做瞬态、PWM/PAM 联合电荷、灰阶 LUT、完整控制器、阵列、版图、SOA；`OPTICAL_EFFECTIVE_BITS=NOT_VERIFIED`；
 区间只说明"在这 19 个已测点上 ±5% 成立"，不等于 LED/电极 RC 或 SOA 已验证；
-原生语法只对**实际跑过的**派生 DC deck 得到确认，不外推到全层级或瞬态；
+内部观察项按原生实际给出的列记录：`Xdut.en0..7`、`Xdut.enb0..7`、八支路 `vbias_ch` 与 `Xu0/Xu4.node_m`
+**都观察到了**，deck 另外请求的 `Ip_branch` 与 `Ip_branch:current` 两个别名此 build 以
+`Ip_branch:i / :in / :out` 交付，因此那两个名字记为 `NOT_OBSERVED（按所请求的名字）`，见
+`observed_signals.json`；原生语法只对**实际跑过的**派生 DC deck 得到确认，不外推到全层级或瞬态；
 旧轮次的 `--handoff-check` 在本轮必然 rc=1（它们绑的是各自那一轮的字节），这一点被写成一条具名门而不是被掩盖；
 `QODER_NETLIST_DIR` 在 guest 的 gitignore 环境文件里缺失，本轮按运行载荷导出而**没有**改那个文件；
 DATA-7B 59/56 超量、凭据回显事件与更早待办原样保留。

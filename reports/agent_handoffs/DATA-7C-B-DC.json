@@ -161,7 +161,7 @@
   "shared_tools_changed": "NO",
   "timing_tables_changed": "NO"
  },
- "head_sha": "62ea6355ef2db56daadc608a9ec688cb7b3c534f",
+ "head_sha": "6f3f96a689058851947fceccf951503c3c18a88f",
  "head_sha_role": "the tip when this handoff was written; the record commit and the receipt commit that carries the package digest come after it",
  "known_limitations": [
   "the measurement is DC at TT 27 C on one output channel; no transient, no PWM/PAM joint charge, no optical or array claim",
@@ -430,7 +430,7 @@
  "not_run": {
   "full_mos_gray_controller": "NOT_RUN",
   "gray_lut": "NOT_RUN",
-  "hierarchical_internal_observations": "OBSERVED where the build allowed them; NOT_OBSERVED is stated rather than assumed",
+  "hierarchical_internal_observed_under_other_names": "the deck saves Ip_branch and Ip_branch:current; this build delivers Ip_branch:i, Ip_branch:in, Ip_branch:out, so those two aliases are NOT_OBSERVED as named",
   "layout": "NOT_RUN",
   "optical_effective_bits": "NOT_VERIFIED",
   "pwm_pam_transient_integration": "NOT_RUN",
@@ -453,9 +453,9 @@
    "renamed": 0
   },
   "base_to_head_at_handoff": {
-   "added": 89,
+   "added": 102,
    "changed": 2,
-   "commits": 9,
+   "commits": 11,
    "deleted": 0,
    "renamed": 0
   }
@@ -501,14 +501,14 @@
     "sha256": "33e9f593ad516e2ea469bff8b09953a14942b9dc35cfe08655939bd8bbae9bf9"
    },
    {
-    "bytes": 9938,
+    "bytes": 12868,
     "path": "scripts/dd1_d7c_b_dc_matrix.py",
-    "sha256": "2613eee73f660531cfc98a928aef1405757ebbf60564e4a64e38ecfb1f7fb7e5"
+    "sha256": "10ec069e433acae79049d18d5cf5c5692caf7339baaecd340194840cfc8b42c7"
    },
    {
-    "bytes": 48351,
+    "bytes": 50300,
     "path": "scripts/dd1_d7c_b_dc_record.py",
-    "sha256": "7797883b17b22cc675ed316b65971064257a80595a21e2b973f2bd949369ca69"
+    "sha256": "81e5e5cbee0e56356f6439e46ce365923dfddf10e7cb9d7d37276e183e057356"
    },
    {
     "bytes": 4430,
@@ -564,6 +564,16 @@
     "bytes": 4693,
     "path": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/D001_label_attestation.json",
     "sha256": "be70ad39197c81817df3f36fea15489bd12d550e67ef6b2ab8b952112b8c381e"
+   },
+   {
+    "bytes": 2504,
+    "path": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/observed_signals.json",
+    "sha256": "9a294c6564f550289a16f99c81466c6c2c78f599fee3a5ee80861426e9b01d02"
+   },
+   {
+    "bytes": 3962,
+    "path": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/commands.csv",
+    "sha256": "1dd3585405030cd1b15a6eb87970d97074a35adbcf453d249a63b6da7cc68c58"
    }
   ],
   "read_only_inputs": [

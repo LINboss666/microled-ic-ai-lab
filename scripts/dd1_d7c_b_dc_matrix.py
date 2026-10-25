@@ -183,15 +183,62 @@ def plot(directory):
     return 0
 
 
+REQUESTED_SAVES = (['vdd18', 'vss', 'iref_in', 'vcas', 'data_out', 'clamp_node', 'irefbus',
+                   'data_en', 'pam0', 'pam1', 'pam2'] + ['Xdut.en%d' % index for index in range(8)]
+                  + ['Xdut.enb%d' % index for index in range(8)]
+                  + ['Xdut.Xu%d.vbias_ch' % index for index in range(8)]
+                  + ['Xdut.Xu0.node_m', 'Xdut.Xu4.node_m', 'Ip_branch', 'Ip_branch:current'])
+REQUIRED_SIGNALS = ('data_out', 'clamp_node', 'vdd18', 'vcas', 'data_en', 'pam0', 'pam1', 'pam2',
+                    'iref_in')
+
+
+def observe(directory):
+    """what the build actually delivered per case, so an optional internal observation that came back
+    under another name is stated instead of quietly assumed away"""
+    import sc1_read_psf as PSF
+    report = {'task_id': DC.TASK_ID, 'written_utc': DC.now(),
+              'rule': 'the deck asks for these signals; a name the answer does not carry is '
+                      'NOT_OBSERVED under that name, and the required set is never optional',
+              'cases': {}}
+    missing_required = []
+    for case_id in CASES:
+        raw = os.path.join(directory, 'r20261026_015212_376554_%s_dut.raw' % case_id)
+        if not os.path.isfile(raw):
+            report['cases'][case_id] = {'state': 'NO_RAW_ON_THIS_MACHINE'}
+            continue
+        groups, axis = PSF.parse(raw)
+        columns, _axis_values = PSF.as_columns(groups, axis)
+        delivered = sorted(columns)
+        absent = [name for name in REQUESTED_SAVES if name not in columns]
+        extra = [name for name in delivered if name not in REQUESTED_SAVES and name != axis]
+        report['cases'][case_id] = {'axis': axis, 'delivered': len(delivered),
+                                   'requested_but_not_delivered': absent,
+                                   'delivered_under_other_names': extra,
+                                   'required_present': all(name in columns for name in
+                                                           REQUIRED_SIGNALS)}
+        if not all(name in columns for name in REQUIRED_SIGNALS):
+            missing_required.append(case_id)
+    report['verdict'] = ('PASS' if not missing_required else 'FAIL')
+    report['required_signals_missing_in'] = missing_required
+    report['not_observed_overall'] = sorted(set(sum([report['cases'][case].get(
+        'requested_but_not_delivered', []) for case in CASES], [])))
+    target = os.path.join(directory, 'observed_signals.json')
+    io.open(target, 'wb').write((json.dumps(report, indent=1, sort_keys=True, ensure_ascii=False) + chr(10)).encode('utf-8'))
+    print('DC_OBSERVE %s cases=%d not_observed=%s required_missing=%s -> %s'
+          % (report['verdict'], len(CASES), ','.join(report['not_observed_overall']) or 'none',
+             ','.join(missing_required) or 'none', os.path.basename(target)))
+    return 0 if not missing_required else 1
+
+
 def main(argv):
     parser = argparse.ArgumentParser()
-    parser.add_argument('mode', choices=('merge', 'judge', 'plot', 'check'))
+    parser.add_argument('mode', choices=('merge', 'judge', 'plot', 'check', 'observe'))
     parser.add_argument('directory')
     arguments = parser.parse_args(argv)
     directory = os.path.abspath(arguments.directory)
     try:
-        return {'merge': merge, 'judge': judge, 'plot': plot, 'check': check}[arguments.mode](
-            directory)
+        return {'merge': merge, 'judge': judge, 'plot': plot, 'check': check,
+                'observe': observe}[arguments.mode](directory)
     except DC.Refuse as error:
         print('DC_MATRIX_REFUSED %s' % error)
         return 1

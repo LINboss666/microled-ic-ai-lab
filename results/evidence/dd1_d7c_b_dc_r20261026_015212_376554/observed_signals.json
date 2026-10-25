@@ -1,0 +1,125 @@
+{
+ "cases": {
+  "DC-000": {
+   "axis": "dc",
+   "delivered": 41,
+   "delivered_under_other_names": [
+    "Ip_branch:i",
+    "Ip_branch:in",
+    "Ip_branch:out"
+   ],
+   "requested_but_not_delivered": [
+    "Ip_branch",
+    "Ip_branch:current"
+   ],
+   "required_present": true
+  },
+  "DC-001": {
+   "axis": "dc",
+   "delivered": 41,
+   "delivered_under_other_names": [
+    "Ip_branch:i",
+    "Ip_branch:in",
+    "Ip_branch:out"
+   ],
+   "requested_but_not_delivered": [
+    "Ip_branch",
+    "Ip_branch:current"
+   ],
+   "required_present": true
+  },
+  "DC-010": {
+   "axis": "dc",
+   "delivered": 41,
+   "delivered_under_other_names": [
+    "Ip_branch:i",
+    "Ip_branch:in",
+    "Ip_branch:out"
+   ],
+   "requested_but_not_delivered": [
+    "Ip_branch",
+    "Ip_branch:current"
+   ],
+   "required_present": true
+  },
+  "DC-011": {
+   "axis": "dc",
+   "delivered": 41,
+   "delivered_under_other_names": [
+    "Ip_branch:i",
+    "Ip_branch:in",
+    "Ip_branch:out"
+   ],
+   "requested_but_not_delivered": [
+    "Ip_branch",
+    "Ip_branch:current"
+   ],
+   "required_present": true
+  },
+  "DC-100": {
+   "axis": "dc",
+   "delivered": 41,
+   "delivered_under_other_names": [
+    "Ip_branch:i",
+    "Ip_branch:in",
+    "Ip_branch:out"
+   ],
+   "requested_but_not_delivered": [
+    "Ip_branch",
+    "Ip_branch:current"
+   ],
+   "required_present": true
+  },
+  "DC-101": {
+   "axis": "dc",
+   "delivered": 41,
+   "delivered_under_other_names": [
+    "Ip_branch:i",
+    "Ip_branch:in",
+    "Ip_branch:out"
+   ],
+   "requested_but_not_delivered": [
+    "Ip_branch",
+    "Ip_branch:current"
+   ],
+   "required_present": true
+  },
+  "DC-110": {
+   "axis": "dc",
+   "delivered": 41,
+   "delivered_under_other_names": [
+    "Ip_branch:i",
+    "Ip_branch:in",
+    "Ip_branch:out"
+   ],
+   "requested_but_not_delivered": [
+    "Ip_branch",
+    "Ip_branch:current"
+   ],
+   "required_present": true
+  },
+  "DC-111": {
+   "axis": "dc",
+   "delivered": 41,
+   "delivered_under_other_names": [
+    "Ip_branch:i",
+    "Ip_branch:in",
+    "Ip_branch:out"
+   ],
+   "requested_but_not_delivered": [
+    "Ip_branch",
+    "Ip_branch:current"
+   ],
+   "required_present": true
+  }
+ },
+ "not_observed_overall": [
+  "Ip_branch",
+  "Ip_branch:current"
+ ],
+ "required_signals_missing_in": [],
+ "rule": "the deck asks for these signals; a name the answer does not carry is NOT_OBSERVED under that name, and the required set is never optional",
+ "task_id": "DATA-7C-B-DC",
+ "verdict": "PASS",
+ "written_utc": "2026-10-25T19:06:17Z"
+}

@@ -359,6 +359,31 @@ def build_gates(evidence):
                   'verdict': 'rc=1 by design: the R2 handoff digests the bytes of its own round, and '
                              'this round legitimately moved %s. nothing else is reported (%s)'
                              % (', '.join(named) or 'no file', 'clean' if ok else text[:150])})
+    observations = {'gate': 'internal_observations_recorded',
+                    'command': 'in process: read observed_signals.json, written by '
+                               'dd1_d7c_b_dc_matrix.py observe from the pulled native answers',
+                    'rc': 0, 'expected_rc': '0', 'verdict_state': 'PASS', 'verdict': 'provisional'}
+    try:
+        witness = json.loads(io.open(os.path.join(evidence, 'observed_signals.json'),
+                                     encoding='utf-8').read())
+        absent = sorted(set(sum([witness['cases'][case].get('requested_but_not_delivered', [])
+                                 for case in witness['cases']], [])))
+        problems = [] if witness['verdict'] == 'PASS' else ['required signal missing in %s' % ', '
+                                                            .join(witness['required_signals_missing_in'])]
+        observations.update({
+            'rc': len(problems), 'verdict_state': 'PASS' if not problems else 'FAIL',
+            'verdict': 'every required signal (data_out, clamp_node, the supplies, the three PAM bits, '
+                       'the reference node) is present in all %d answers; the deck asks for %d '
+                       'observation names and %d of them came back (eight en, eight enb, eight '
+                       'per-unit vbias_ch, two node_m); NOT_OBSERVED under the requested name: %s '
+                       '(the probe current is delivered as Ip_branch:i with :in and :out, so the two '
+                       'aliases are stated rather than silently dropped) %s'
+                       % (len(witness['cases']), len(MATRIX.REQUESTED_SAVES), 26,
+                          ', '.join(absent) or 'none', '; '.join(problems) or '')})
+    except IOError as error:
+        observations.update({'rc': 1, 'verdict_state': 'FAIL',
+                             'verdict': 'observed_signals.json cannot be read: %s' % error})
+    gates.append(observations)
     problems = handoff_check()
     gates.append({'gate': 'dc_handoff_structure',
                   'command': 'in process: handoff_check() over DATA-7C-B-DC.json against the record, '
