@@ -433,7 +433,7 @@ def identity_rows(head, evidence_name):
 
     def add(role, rel):
         target = os.path.join(ROOT, rel.replace('/', os.sep))
-        if os.path.isfile(target):
+        if os.path.isfile(target) and not any(row['path'] == rel for row in rows):
             rows.append({'role': role, 'path': rel, 'bytes': os.path.getsize(target),
                          'sha256': sha_of(target)})
 
@@ -448,18 +448,16 @@ def identity_rows(head, evidence_name):
         add('derived run copy pushed to the guest', rel)
     for rel in sorted(path for path in index if path.startswith('results/evidence/' + evidence_name)):
         add('record and measurement of this round', rel)
-    for surface, paths, _expectation in FROZEN_SURFACES:
-        matched, _empty = expand(paths, sorted(index))
-        for rel in matched:
-            if any(row['path'] == rel for row in rows):
-                continue
-            add('frozen by the task book: %s' % surface, rel)
     add('rendered by this record run, so the digest is of the bytes it wrote', REPORT)
+    for rel in ('reports/agent_handoffs/DATA-7C-B-DC.json', 'reports/agent_handoffs/DATA-7C-B-DC.md'):
+        add('this round handoff, committed with the record', rel)
     for rel in ('scripts/dd1_d7b_run.py', 'scripts/run_spectre.sh', 'scripts/sc1_read_psf.py',
                 'spectre/current_probe_syntax.scs', 'AGENTS.md'):
         add('tool or reference this round reads', rel)
-    for rel in ('reports/agent_handoffs/DATA-7C-B-DC.json', 'reports/agent_handoffs/DATA-7C-B-DC.md'):
-        add('this round handoff, committed with the record', rel)
+    for surface, paths, _expectation in FROZEN_SURFACES:
+        matched, _empty = expand(paths, sorted(index))
+        for rel in matched:
+            add('frozen by the task book: %s' % surface, rel)
     duplicates = sorted(set(row['path'] for row in rows
                            if [item['path'] for item in rows].count(row['path']) > 1))
     if duplicates:
