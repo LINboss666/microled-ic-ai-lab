@@ -257,9 +257,15 @@ class Account(object):
             if first != ','.join(ACCOUNT_HEADER):
                 raise Refuse('the account %s has header %r, this round writes %r'
                              % (os.path.basename(path), first[:60], ','.join(ACCOUNT_HEADER)))
-            self.rows = [dict(zip(ACCOUNT_HEADER, line.rstrip('\n').split(',')))
-                         for line in io.open(path, encoding='utf-8', newline='').read().split('\n')[1:]
-                         if line.strip()]
+            lines = [line for line in
+                     io.open(path, encoding='utf-8', newline='').read().split('\n')[1:] if line.strip()]
+            for number, line in enumerate(lines, 2):
+                cells = line.split(',')
+                if len(cells) != len(ACCOUNT_HEADER):
+                    raise Refuse('the account row on line %d carries %d fields, the header declares '
+                                 '%d; a field with a newline or a comma in it would be read as two rows'
+                                 % (number, len(cells), len(ACCOUNT_HEADER)))
+            self.rows = [dict(zip(ACCOUNT_HEADER, line.rstrip('\n').split(','))) for line in lines]
         self._check_ids()
 
     def _check_ids(self):
@@ -309,13 +315,21 @@ class Account(object):
         try:
             if row not in self.rows:
                 raise Refuse('settle names a launch that is not in the account')
+            single_line = ' | '.join((refusal or '').splitlines()).replace(',', ';')
             row.update({'state': state, 'ended_utc': now(), 'rc': rc, 'raw_sha256': raw_sha,
-                        'log_sha256': log_sha, 'refusal': (refusal or '')[:180].replace(',', ';')})
+                        'log_sha256': log_sha, 'refusal': single_line[:180]})
             self.flush()
         finally:
             os.remove(self.lock)
 
     def flush(self):
+        for row in self.rows:
+            for key in ACCOUNT_HEADER:
+                value = str(row.get(key, ''))
+                if any(marker in value for marker in (',', '\n', '\r')):
+                    raise Refuse('the %s field of %s carries a table delimiter (%r); the account '
+                                 'would be unreadable, so nothing is written'
+                                 % (key, row['launch_id'], value[:40]))
         B7B.write_rows(self.path, [[row.get(key, '') for key in ACCOUNT_HEADER] for row in self.rows],
                        list(ACCOUNT_HEADER))
         return self.path
@@ -954,6 +968,31 @@ def selftest():
                                    'done': 'spectre completes with 2 errors', 'datafile': '/x'})
            and not runner_says_ok({'rc': '2', 'errors': '0', 'done': 'x 0 error',
                                    'datafile': '/x'}))
+    multiline = Account(os.path.join(scratch, 'multiline.csv'), 3)
+    entry = multiline.reserve('DC-000', 'preflight', deck_sha, 'selftest')
+    multiline.settle(entry, 'FAILED', 0, refusal='line one\nline two, with a comma')
+    reread = Account(os.path.join(scratch, 'multiline.csv'), 3)
+    record('a_runner_tail_cannot_break_the_account_table',
+           reread.occupied() == 1 and reread.rows[0]['refusal'].startswith('line one | line two')
+           and ',' not in reread.rows[0]['refusal'], reread.rows[0]['refusal'][:60])
+    poisoned = os.path.join(scratch, 'poisoned.csv')
+    io.open(poisoned, 'wb').write((','.join(ACCOUNT_HEADER) + '\n' +
+                                   ','.join(['D001', TASK_ID, 'r', 'DC-000', 'dut', 'REQUESTED',
+                                             'x', '', '', '', '', '', 'has, a comma', '20',
+                                             '1']) + '\n').encode('utf-8'))
+    try:
+        Account(poisoned, 20)
+        record('a_row_split_by_an_extra_delimiter_is_refused_on_read', False, 'it opened')
+    except Refuse as error:
+        record('a_row_split_by_an_extra_delimiter_is_refused_on_read', 'fields' in str(error),
+               str(error)[:60])
+    try:
+        reopened.rows[0]['case_id'] = 'DC-000,DC-111'
+        reopened.flush()
+        record('a_field_carrying_a_comma_is_refused_before_write', False, 'it flushed')
+    except Refuse as error:
+        record('a_field_carrying_a_comma_is_refused_before_write', 'delimiter' in str(error),
+               str(error)[:60])
     ok_row = RENDER.nominal_unit_row('111', 8, 1.5e-05)
     record('the_uA_column_prints_microamperes',
            abs(RENDER.unit_field(ok_row, 'uA') - 15.0) < 1e-9)

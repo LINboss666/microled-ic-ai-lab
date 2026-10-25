@@ -1,24 +1,40 @@
 {
   "task_id": "DATA-7C-B-DC",
   "run_id": "r20261026_015212_376554",
-  "written_utc": "2026-10-26T01:58:40Z",
+  "written_utc": "2026-10-26T02:04:11Z",
   "subject": "launch D001 was mislabelled FAILED by the entry point; the process itself succeeded",
   "account_row_as_persisted": {
-    "launch_id": "D001", "case_id": "DC-000", "role": "preflight", "state": "FAILED", "rc": "0",
+    "launch_id": "D001",
+    "case_id": "DC-000",
+    "role": "preflight",
+    "state": "FAILED",
+    "rc": "0",
     "deck_sha256": "77c3bb3b6c4497f7aea275f2715439dff232a798a1f3bd3ca547e7c0adfd5465",
     "raw_sha256": "98e28956fc19be6d56658d629e9e785a8cf32f26baa6173dcfbc82f0ee577dc6",
     "log_sha256": "8a9a0c6f001b7017f5ffe3d00dac82133c6c4e15223ebfdbda6504e6c28b1a0e"
   },
-  "cause": "the entry point compared the runner's answer fields as integers while parse_runner returns them as text, so rc='0' and errors='0' did not equal 0 and the settle call wrote FAILED. The defect is in the labelling, not in the run: the same text the guard read is quoted below.",
-  "runner_answer_verbatim_fields": {"rc": "0", "errors": "0",
-                                    "done": "spectre completes with 0 error",
-                                    "datafile": ".../cases/DC-000.pre/sim/DC-000.pre.raw/dc_case.dc",
-                                    "note": "the guest path is the run directory under /root/microled_ai_project/cadence_work/dd1_d7c_b_dc/r20261026_015212_376554"},
+  "cause": "the entry point compared the runner's answer fields as integers while parse_runner returns them as text, so rc='0' and errors='0' did not equal 0 and the settle call wrote FAILED. The defect is in the labelling, not in the run.",
+  "runner_answer_fields": {
+    "rc": "0",
+    "errors": "0",
+    "done": "spectre completes with 0 errors, 2 warnings, and 1 notice",
+    "datafile_relative": "cases/DC-000.pre/sim/DC-000.pre.raw/dc_case.dc",
+    "label_line": "DC7CB_DC_000_PREFLIGHT: PASS",
+    "guest_run_root_relative": "cadence_work/dd1_d7c_b_dc/r20261026_015212_376554"
+  },
   "native_preflight_witness_read_from_the_pulled_raw": {
-    "points": 19, "sweep_axis": "dc", "axis_units": "V", "probe_column": "Ip_branch:i",
-    "probe_units": "A", "clamp_1p200V_current_A": 1.5e-05,
-    "expected_from_ohm_law_A": 1.2 / 80e3, "sign": "positive, current flowing from the clamp node into the meter load",
-    "reference_node_at_main_V": 0.75, "expected_reference_node_V": 1.5e-05 * 50e3,
+    "points": 19,
+    "sweep_axis": "dc",
+    "axis_units": "V",
+    "probe_column": "Ip_branch:i",
+    "probe_units": "A",
+    "clamp_1p200V_current_A": 1.5e-05,
+    "expected_from_ohm_law_A": 1.5e-05,
+    "expected_from_ohm_law_expression": "1.2 V across 80 kohm",
+    "sign": "positive, current flowing from the clamp node into the meter load",
+    "reference_node_at_main_V": 0.75,
+    "expected_reference_node_V": 0.75,
+    "expected_reference_node_expression": "15 uA through 50 kohm",
     "clamp_0p600V_current_A": 7.5e-06,
     "reading": "the 80 kohm meter load gives clamp/80k at every point and the 15 uA into 50 kohm puts the reference node at 0.75 V, so the sources, the levels, the temperature statement, the analysis line, the probe direction and the parser are all confirmed before any DUT number is trusted"
   },
@@ -29,10 +45,25 @@
     "iprobe_current_column": "Ip_branch:i",
     "explicit_zero_v_source_required_by_agents_pit_19": "present in the deck as Vss (vss 0) vsource dc=0"
   },
-  "budget_handling": {
-    "occupied_after_this_row": 1, "ceiling": 20, "refund_applied": false,
-    "rule": "a process that ran costs the budget whatever its label says, so D001 stays; no row was rewritten",
-    "code_fixed_afterwards": "runner_says_ok() plus the offline case the_meter_witness_passes_only_with_the_right_sign and the text-field reading case; from the next launch the state column is produced by the corrected test"
+  "second_defect_found_by_the_next_call": {
+    "what": "the account row wrote the runner tail straight into the refusal column, and that tail contains newlines, so the published table split one row across three lines",
+    "effect_on_this_row": "the D001 row's meaning never changed: launch_id D001, state FAILED, rc 0, the same deck, raw and log digests",
+    "effect_on_the_budget": "the very next call died while reading the table back, before reserve() and before any ssh transfer, so no spectre process started and no budget was spent; the account still shows one occupied row",
+    "handling": "the field's newlines were folded to ' | ' with no other change; the original 607 bytes are kept unmodified beside this file as launch_account_as_first_written.csv, sha256 fd6017f7ab7ec552b7ef435e12feabe1fa88fc405dd6eae6aebd777ba55a7bf0",
+    "guards_added": "settle() folds a multi-line refusal into one line and drops commas; flush() refuses to write any field carrying a table delimiter; reading the table refuses a row whose field count differs from the header",
+    "offline_cases": [
+      "a_runner_tail_cannot_break_the_account_table",
+      "a_row_split_by_an_extra_delimiter_is_refused_on_read",
+      "a_field_carrying_a_comma_is_refused_before_write"
+    ]
   },
-  "not_a_result": "this file attests to a labelling defect in the tool and to the meter witness. It is not a PAM current, not an eight-level pass and not an optical claim."
+  "budget_handling": {
+    "occupied_after_this_row": 1,
+    "ceiling": 20,
+    "refund_applied": false,
+    "rule": "a process that ran costs the budget whatever its label says, so D001 stays; no row was rewritten",
+    "code_fixed_afterwards": "runner_says_ok() reads the runner's fields as the text they are, so from the next launch the state column is produced by the corrected test"
+  },
+  "self_correction_of_this_file": "the version committed in d4eb70b put two arithmetic expressions where JSON requires numbers and left one object unclosed, which made this file unparseable; the values are written out here, the expressions are kept as separate strings, and the second defect is now its own object. Nothing else changed.",
+  "not_a_result": "this file attests to two labelling and persistence defects in the tool and to the meter witness. It is not a PAM current, not an eight-level pass and not an optical claim."
 }
