@@ -161,7 +161,7 @@
   "shared_tools_changed": "NO",
   "timing_tables_changed": "NO"
  },
- "head_sha": "d272235f453af8896c9e630eb34b2dd1b308cf26",
+ "head_sha": "62ea6355ef2db56daadc608a9ec688cb7b3c534f",
  "head_sha_role": "the tip when this handoff was written; the record commit and the receipt commit that carries the package digest come after it",
  "known_limitations": [
   "the measurement is DC at TT 27 C on one output channel; no transient, no PWM/PAM joint charge, no optical or array claim",
@@ -455,7 +455,7 @@
   "base_to_head_at_handoff": {
    "added": 89,
    "changed": 2,
-   "commits": 8,
+   "commits": 9,
    "deleted": 0,
    "renamed": 0
   }
@@ -506,9 +506,9 @@
     "sha256": "2613eee73f660531cfc98a928aef1405757ebbf60564e4a64e38ecfb1f7fb7e5"
    },
    {
-    "bytes": 43748,
+    "bytes": 48351,
     "path": "scripts/dd1_d7c_b_dc_record.py",
-    "sha256": "16a8c7e0f56866b201b2587495e9731089ae2319f13ec5443434762725cfb1d8"
+    "sha256": "7797883b17b22cc675ed316b65971064257a80595a21e2b973f2bd949369ca69"
    },
    {
     "bytes": 4430,

@@ -51,6 +51,7 @@ RECONCILE_HEADER = ('case_id', 'preflight_rows', 'dut_rows', 'confirmed', 'faile
                     'raw_present', 'log_present', 'note')
 ALLOWED_MODIFIED = ('scripts/dd1_d7c_b_prep_contract.py', 'reports/dd1_d7c_b_prep_contract.md')
 NEW_PREFIXES = ('scripts/dd1_d7c_b_dc_', 'spectre/dd1_d7c_b_dc/', 'tests/dd1_d7c_b_dc/',
+                'reports/dd1_d7c_b_dc_report.md',
                 'results/evidence/dd1_d7c_b_dc_', 'reports/agent_handoffs/DATA-7C-B-DC',
                 'reports/reviews/DATA-7C-B-PREP-R2-GO', 'reports/tasks/DATA-7C-B-DC.md')
 FROZEN_SURFACES = (
@@ -74,7 +75,7 @@ FROZEN_SURFACES = (
                                                 'scripts/provenance_check.py',
                                                 'scripts/precommit_safety_check.py'), 'identical'),
     ('preparation contract json', ('tests/dd1_d7c_b_prep/contract.json',), 'identical'),
-    ('earlier records, reports and handoffs', ('results/evidence/dd1_d7c_b_prep',
+    ('earlier records; reports and handoffs', ('results/evidence/dd1_d7c_b_prep',
                                                'results/evidence/dd1_d7c_b_prep_r1',
                                                'results/evidence/dd1_d7c_b_prep_r2',
                                                'results/evidence/dd1_d7b', 'reports/agent_handoffs',
@@ -83,6 +84,49 @@ FROZEN_SURFACES = (
 TABLE_SPECS = {'commands.csv': COMMANDS_HEADER, 'frozen_comparison.csv': FROZEN_HEADER,
                'git_checks.csv': GIT_HEADER, 'source_identity.csv': IDENTITY_HEADER,
                'launches_reconcile.csv': RECONCILE_HEADER}
+
+
+def rows_write(path, header, table):
+    """a published table is read back by splitting on commas, so no field may carry one"""
+    clean = [[str(row.get(key, '')).replace(',', ';').replace(chr(10), ' | ').replace(chr(13), '')
+              for key in header] for row in table]
+    B7B.write_rows(path, clean, list(header))
+    return path
+
+
+def frozen_gate(frozen):
+    enforced = [row for row in frozen if row['enforced'] == 'yes']
+    violations = sum(int(row['mismatched']) for row in enforced)
+    return {'gate': 'frozen_surfaces', 'command': 'in process: blob and mode comparison over explicit '
+            'path lists against the registered offline commit, plus the added, removed and modified '
+            'sets', 'rc': violations, 'expected_rc': '0',
+            'verdict_state': 'PASS' if violations == 0 else 'FAIL',
+            'verdict': 'enforced rows %d, violations %d, informational %d; details on the violating '
+                       'rows: %s' % (len(enforced), violations, len(frozen) - len(enforced),
+                                     '; '.join('%s=%s(%s)' % (row['surface'][:40], row['mismatched'],
+                                                              row['detail'][:60])
+                                               for row in enforced if int(row['mismatched'])) or 'none')}
+
+
+def tables_parse_gate(out_dir):
+    problems = []
+    for name, header in sorted(TABLE_SPECS.items()):
+        path = os.path.join(out_dir, name)
+        if not os.path.isfile(path):
+            problems.append('%s is absent' % name)
+            continue
+        for number, line in enumerate(io.open(path, encoding='utf-8', newline='').read().splitlines(),
+                                      1):
+            if len(line.split(',')) != len(header):
+                problems.append('%s line %d has %d fields, the header declares %d'
+                                % (name, number, len(line.split(',')), len(header)))
+    return {'gate': 'published_tables_have_no_buried_delimiters',
+            'command': 'in process: every line of every published table must split back into exactly '
+                       'the header field count', 'rc': len(problems), 'expected_rc': '0',
+            'verdict_state': 'PASS' if not problems else 'FAIL',
+            'verdict': ('; '.join(problems[:3]) if problems else
+                        '5 tables, every row re-splits to its header, commas and newlines are folded '
+                        'by rows_write before writing')}
 
 
 def now():
@@ -587,6 +631,7 @@ def main(argv):
     parser.add_argument('--evidence', default='')
     parser.add_argument('--draft', default='')
     parser.add_argument('--check-only', action='store_true')
+    parser.add_argument('--republish', action='store_true')
     arguments = parser.parse_args(argv)
     directory = os.path.join(ROOT, 'results', 'evidence')
     candidates = sorted(name for name in os.listdir(directory) if name.startswith(EVIDENCE_PREFIX))
@@ -602,6 +647,8 @@ def main(argv):
     results, reconcile, account = build_gates(evidence)
     payload['reconcile'] = reconcile
     frozen, _problems = frozen_rows(head)
+    results.append(frozen_gate(frozen))
+    failures = [row['gate'] for row in results if row['verdict_state'] != 'PASS']
     ranges = {'base_to_HEAD': range_counts(BASE, head),
               'P_to_R1_recomputed': range_counts('dcef9b336f2222d6291d266858270f7448b6bb78',
                                                  '6778535e70b139812265eba490d0a1381a1fae5c'),
@@ -614,7 +661,6 @@ def main(argv):
                          'lines': len([line for line in body.split('\n') if line.strip()]),
                          'scope': 'committed range %s to HEAD(%s) at %s'
                                   % (other[:12], head[:12], now())})
-    failures = [row['gate'] for row in results if row['verdict_state'] != 'PASS']
     if arguments.check_only:
         for row in results:
             print('GATE %-42s %s %s' % (row['gate'], row['verdict_state'],
@@ -625,8 +671,28 @@ def main(argv):
         return 0 if not failures else 1
     out_dir = os.path.abspath(arguments.draft) if arguments.draft else evidence
     if not arguments.draft and os.path.isfile(os.path.join(evidence, 'commands.csv')):
-        raise SystemExit('DC_RECORD_REFUSED %s already carries a published record; a published record '
-                         'is never overwritten, use --draft or a new measurement run' % evidence_name)
+        if not arguments.republish:
+            raise SystemExit('DC_RECORD_REFUSED %s already carries a published record; a published '
+                             'record is never silently overwritten. --republish moves the earlier '
+                             'tables aside, byte for byte, and writes a republish_note.json'
+                             % evidence_name)
+        archive = os.path.join(evidence, 'previous_publish_%s' % now().replace(':', '').replace('-', ''))
+        os.makedirs(archive)
+        kept = []
+        for name in sorted(os.listdir(evidence)):
+            if name in TABLE_SPECS or name == 'verification_summary.json':
+                shutil.move(os.path.join(evidence, name), os.path.join(archive, name))
+                kept.append({'path': name, 'sha256': sha_of(os.path.join(archive, name))})
+        io.open(os.path.join(evidence, 'republish_note.json'), 'wb').write(
+            (json.dumps({'moved_utc': now(), 'reason': 'the first publish of this record measured the '
+                             'same bytes but its gate list had no row over the frozen comparison, and '
+                             'the identity table had four paths twice; the tables were moved, not '
+                             'deleted, and their digests are listed here',
+                     'archived_into': os.path.basename(archive), 'files': kept,
+                     'report_rendered_by_the_first_publish': 'the report file was rewritten in place by '
+                                                            'this run, which is what its own identity '
+                                                            'row says it does'},
+                    indent=1, sort_keys=True, ensure_ascii=False).encode('utf-8') + b'\n'))
     if arguments.draft and not os.path.isdir(out_dir):
         os.makedirs(out_dir)
     report_path = os.path.join(ROOT, REPORT.replace('/', os.sep))
@@ -645,8 +711,8 @@ def main(argv):
                                ('git_checks.csv', GIT_HEADER, git_rows),
                                ('source_identity.csv', IDENTITY_HEADER, identity),
                                ('launches_reconcile.csv', RECONCILE_HEADER, reconcile)):
-        B7B.write_rows(os.path.join(out_dir, name),
-                       [[row.get(key, '') for key in header] for row in table], list(header))
+        rows_write(os.path.join(out_dir, name), header, table)
+    recheck = tables_parse_gate(out_dir)
     read_back = []
     for name, header in sorted(TABLE_SPECS.items()):
         path = os.path.join(out_dir, name)
@@ -669,7 +735,10 @@ def main(argv):
                'gates': len(results), 'gates_failed': failures,
                'gates_informational': [row['gate'] for row in results
                                        if row['verdict_state'] not in ('PASS', 'FAIL')],
-               'report_render_fixed_point': fixed_point, 'csv_read_back': read_back,
+               'report_render_fixed_point': fixed_point,
+               'published_tables_recheck': {'verdict': recheck['verdict_state'], 'rc': recheck['rc'],
+                                              'detail': recheck['verdict']},
+               'csv_read_back': read_back,
                'published_json': json_probe, 'identity_rows': len(identity),
                'frozen_rows': len(frozen),
                'frozen_enforced_mismatches': sum(int(row['mismatched']) for row in frozen
@@ -717,10 +786,14 @@ def main(argv):
             .encode('utf-8'))
     for row in results:
         print('GATE %-42s %s %s' % (row['gate'], row['verdict_state'], str(row['verdict'])[:100]))
-    print('DC_RECORD %s -> %s (%d gates, failed: %s, launches %d/%d, fixed point %s)'
-          % ('PASS' if not failures else 'FAIL', out_dir.replace(os.sep, '/'), len(results),
-             ','.join(failures) or 'none', account.occupied(), account.ceiling, fixed_point))
-    return 0 if not failures else 1
+    print('GATE %-42s %s %s' % (recheck['gate'], recheck['verdict_state'],
+                                        str(recheck['verdict'])[:100]))
+    clean = not failures and recheck['rc'] == 0 and fixed_point == 'PASS'
+    print('DC_RECORD %s -> %s (%d gates, failed: %s, launches %d/%d, fixed point %s, tables recheck %s)'
+          % ('PASS' if clean else 'FAIL', out_dir.replace(os.sep, '/'), len(results),
+             ','.join(failures) or 'none', account.occupied(), account.ceiling, fixed_point,
+             recheck['verdict_state']))
+    return 0 if clean else 1
 
 
 if __name__ == '__main__':
