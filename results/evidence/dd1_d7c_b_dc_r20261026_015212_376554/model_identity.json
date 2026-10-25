@@ -1,0 +1,46 @@
+{
+  "task_id": "DATA-7C-B-DC",
+  "run_id": "r20261026_015212_376554",
+  "checked_utc": "2026-10-26T01:52:12Z",
+  "how": "read-only over the existing SSH channel; no spectre process was started for this check, so no budget was spent",
+  "commands": [
+    "set -a; . $PROJ/spectre/pdk_local.env; set +a; sha256sum \"$QODER_PDK_LIB\"",
+    "grep -ciE '^[[:space:]]*\\.?(include|lib)' \"$QODER_PDK_LIB\"",
+    "for m in n18 p18 n33 n33_dnw_4t_ckt; do grep -rliE \"^[[:space:]]*\\.?model[[:space:]]+$m([[:space:]]|$)\" $(dirname \"$QODER_PDK_LIB\"); done",
+    "the lmin/lmax/wmin/wmax of each model block were read and compared in this session; the values are model-card content and are not copied into the repository, so only the verdicts are recorded"
+  ],
+  "model_library": {
+    "resolved_by": "the git-ignored spectre/pdk_local.env variable the frozen decks call QODER_PDK_LIB",
+    "sha256": "fc8d321752f2bacf530d5c5eb151f4e623086c174be8da3c19ee8d26e3dcf95f",
+    "lines": 8721,
+    "relative_include_or_lib_lines": 184,
+    "section_tt_declared": true,
+    "absolute_path_recorded": "NO"
+  },
+  "models_defined_in_the_reached_tree": {
+    "n18": {"files": 1, "exactly_once": true},
+    "p18": {"files": 1, "exactly_once": true},
+    "n33": {"files": 1, "exactly_once": true},
+    "n33_dnw_4t_ckt": {"files": 1, "exactly_once": true}
+  },
+  "sizes_used_by_the_candidate_closure": [
+    {"model": "n18", "L_m": 2e-07, "W_m": 2e-06, "within_card_limits": true},
+    {"model": "n18", "L_m": 2e-07, "W_m": 4e-06, "within_card_limits": true},
+    {"model": "p18", "L_m": 2e-07, "W_m": 4e-06, "within_card_limits": true},
+    {"model": "n33", "L_m": 2e-06, "W_m": 2.5e-06, "within_card_limits": true},
+    {"model": "n33", "L_m": 2e-06, "W_m": 2e-06, "within_card_limits": true},
+    {"model": "n33", "L_m": 2e-06, "W_m": 2e-05, "within_card_limits": true},
+    {"model": "n33_dnw_4t_ckt", "L_m": 2e-06, "W_m": 5e-06, "within_card_limits": true}
+  ],
+  "corner_and_temperature": {"corner": "TT", "section": "tt", "deck_statement": "simopt options temp=27",
+                            "temperature_is_a_deck_condition_not_a_contract_adjective": true},
+  "netlist_include_indirection": {
+    "env_file_keys_present": ["QODER_PDK_LIB", "QODER_SMIC", "QODER_TECH_ROOT", "QODER_TSMC"],
+    "QODER_NETLIST_DIR_in_the_env_file": "NO",
+    "handled_by": "the run payload exports QODER_NETLIST_DIR to this round's master directory before calling the guarded executor; the git-ignored env file was not edited",
+    "executor_refuses_unresolved_variables": "run_spectre.sh checks every ${QODER_...} the netlist references and exits 9 on an unresolved one, so an unset path can never reach spectre silently"
+  },
+  "meter_load_primitive_status": "the resistor primitive is used only in the derived preflight decks; it had not been run natively by any earlier round of this project, so the first preflight is what confirms it, and that process is counted against the 20",
+  "costs_of_this_check": {"spectre_launches": 0, "oa_writes": 0, "rtl_simulations": 0,
+                          "model_card_bytes_copied_into_the_repository": 0}
+}

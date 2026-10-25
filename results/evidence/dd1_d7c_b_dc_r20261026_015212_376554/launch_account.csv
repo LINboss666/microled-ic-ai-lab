@@ -1,0 +1,4 @@
+launch_id,task_id,run_id,case_id,role,state,requested_utc,ended_utc,rc,deck_sha256,raw_sha256,log_sha256,refusal,ceiling,occupied_after
+D001,DATA-7C-B-DC,r20261026_015212_376554,DC-000,preflight,FAILED,2026-10-25T17:52:44Z,2026-10-25T17:52:50Z,0,77c3bb3b6c4497f7aea275f2715439dff232a798a1f3bd3ca547e7c0adfd5465,98e28956fc19be6d56658d629e9e785a8cf32f26baa6173dcfbc82f0ee577dc6,8a9a0c6f001b7017f5ffe3d00dac82133c6c4e15223ebfdbda6504e6c28b1a0e,t: 1:52:43 AM; Mon Oct 26; 2026; with elapsed time (wall clock): 675 ms.
+spectre completes with 0 errors; 2 warnings; and 1 notice.
+DC7CB_DC_000_PREFLIGHT: PASS,20,1

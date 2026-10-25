@@ -70,7 +70,7 @@ ACCOUNT_HEADER = ('launch_id', 'task_id', 'run_id', 'case_id', 'role', 'state', 
                   'ended_utc', 'rc', 'deck_sha256', 'raw_sha256', 'log_sha256', 'refusal',
                   'ceiling', 'occupied_after')
 ROWS_HEADER = ('case_id', 'code', 'role', 'clamp_V', 'data_out_V', 'I_sink_A', 'I_sink_uA',
-               'vdd18_V', 'vcas_V', 'data_en_V', 'pam_bits', 'iref_A', 'corner', 'temp_C',
+               'vdd18_V', 'vcas_V', 'data_en_V', 'pam_bits', 'iref_source_A', 'iref_node_V', 'corner', 'temp_C',
                'deck_sha256', 'raw_sha256', 'run_id', 'launch_id', 'unit_clamp', 'unit_current')
 
 
@@ -359,6 +359,16 @@ def probe_column(cols):
                  % ','.join(sorted(cols))[:160])
 
 
+def iref_from_deck(deck_text):
+    """the reference current the deck itself injects, read out of the isource line, with its unit"""
+    for line in deck_text.splitlines():
+        found = re.match(r'^\s*\S+\s*\([^)]*\)\s*isource\s+dc=([0-9.eE+-]+)([numk]?)\s*$',
+                         line.strip())
+        if found:
+            return float(found.group(1)) * {'': 1.0, 'n': 1e-9, 'u': 1e-6, 'k': 1e3}[found.group(2)]
+    raise Refuse('the deck declares no isource line, so the reference condition cannot be named')
+
+
 def extract(raw_path, deck_sha, case_id, role, run_id, launch_id):
     """the 19 native rows, with units, sign and identity carried through; no nominal number is copied"""
     groups, axis = PSF.parse(raw_path)
@@ -385,6 +395,7 @@ def extract(raw_path, deck_sha, case_id, role, run_id, launch_id):
                      % (case_id, current, units.get(current)))
     if 'data_out' not in cols:
         raise Refuse('%s: the raw has no data_out column, so the measured point cannot be named' % case_id)
+    deck_text, _digest = delivered_deck(case_id)
     bits = ''.join(str(int(cols['pam%d' % index][0] > 0.9)) for index in (2, 1, 0)) \
         if all('pam%d' % index in cols for index in (0, 1, 2)) else 'NOT_OBSERVED'
     rows = []
@@ -400,8 +411,9 @@ def extract(raw_path, deck_sha, case_id, role, run_id, launch_id):
                                    else criteria()[0]['vcas_V']),
                'data_en_V': '%.3f' % (cols['data_en'][index] if 'data_en' in cols
                                       else criteria()[0]['vcas_V']),
-               'pam_bits': bits, 'iref_A': '%.3e' % (cols['iref_in'][index] if 'iref_in' in cols
-                                                     else criteria()[0]['iref_A']),
+               'pam_bits': bits,
+               'iref_source_A': '%.3e' % iref_from_deck(deck_text),
+               'iref_node_V': '%.6f' % (cols['iref_in'][index] if 'iref_in' in cols else float('nan')),
                'corner': criteria()[0]['corner'], 'temp_C': '27',
                'deck_sha256': deck_sha, 'raw_sha256': sha_file(raw_path), 'run_id': run_id,
                'launch_id': launch_id, 'unit_clamp': units.get(axis, ''),
@@ -425,6 +437,26 @@ def _finite(text):
 
 
 # ---- judgement -----------------------------------------------------------------------------------
+
+def preflight_witness(rows, deck_text, tolerance=0.02):
+    """the meter readings a preflight has to give: they witness the sources, the probe sign and the
+    parsing chain, and they are never reported as a PAM result"""
+    main = main_point(rows)
+    expected_load = criteria()[0]['clamp_main_eval_V'] / PREFLIGHT_LOAD_OHMS
+    expected_reference = iref_from_deck(deck_text) * PREFLIGHT_REF_OHMS
+    load = float(main['I_sink_A'])
+    node = float(main['iref_node_V'])
+    return {'clamp_V_of_main_point': float(main['clamp_V']), 'load_current_A': load,
+            'expected_load_current_A': expected_load,
+            'load_within_tolerance': abs(load - expected_load) <= tolerance * expected_load,
+            'reference_node_V': node, 'expected_reference_node_V': expected_reference,
+            'reference_within_tolerance': (node == node and
+                                           abs(node - expected_reference)
+                                           <= tolerance * expected_reference),
+            'sign_note': 'positive means current flowing from the clamp node into the meter load, so '
+                         'the probe and the parser agree on direction before any DUT is trusted',
+            'witness_not_result': 'these are ideal meter readings, not PAM DUT currents'}
+
 
 def band_of(pairs, target_A, main_V, step=0.05, fraction=0.05):
     """the largest continuous set of measured grid points, containing the evaluation point, whose current
@@ -609,6 +641,17 @@ def deck_source(case_id, role):
     return target
 
 
+def runner_says_ok(parsed):
+    """the runner prints its fields as text, so an answer of rc='0' errors='0' has to be read as numbers"""
+    try:
+        return (int(str(parsed.get('rc', 'x'))) == 0
+                and int(str(parsed.get('errors', 'x'))) == 0
+                and '0 error' in (parsed.get('done') or '')
+                and bool(parsed.get('datafile')))
+    except (TypeError, ValueError):
+        return False
+
+
 def launch(case_id, role, out_dir, run_id, timeout=600):
     """one spectre process, accounted before it starts; a refusal here writes nothing"""
     contract = dc_contract()
@@ -663,8 +706,7 @@ def launch(case_id, role, out_dir, run_id, timeout=600):
                 raw_sha = digest
             else:
                 log_sha = digest
-    state = 'CONFIRMED' if (rc == 0 and parsed.get('rc') == 0 and not parsed.get('errors')) \
-        else 'FAILED'
+    state = 'CONFIRMED' if (rc == 0 and runner_says_ok(parsed)) else 'FAILED'
     account.settle(row, state, rc, raw_sha=raw_sha, log_sha=log_sha,
                    refusal='' if state == 'CONFIRMED' else (text or '').strip()[-160:])
     return (0 if state == 'CONFIRMED' else 1), {'case_id': case_id, 'role': role, 'rc': rc,
@@ -689,7 +731,7 @@ def synthetic_psf(path, currents, drop=None, duplicate=False, no_probe=False, ax
                ('vdd18', [1.8] * len(points)), ('vcas', [1.8] * len(points)),
                ('data_en', [1.8] * len(points)), ('pam2', [0.0] * len(points)),
                ('pam1', [0.0] * len(points)), ('pam0', [0.0] * len(points)),
-               ('iref_in', [1.5e-5] * len(points))]
+               ('iref_in', [0.75] * len(points))]
     if no_probe:
         signals = [pair for pair in signals if pair[0] != 'Ip_branch:i']
     if drop is not None:
@@ -733,7 +775,8 @@ def row_for(code, value, current, deck_sha):
     return {'case_id': 'DC-%s' % code, 'code': code, 'role': 'dut', 'clamp_V': '%.3f' % value,
             'data_out_V': '%.6f' % (value * 0.999), 'I_sink_A': '%.9e' % current,
             'I_sink_uA': '%.6f' % (current * 1e6), 'vdd18_V': '1.800', 'vcas_V': '1.800',
-            'data_en_V': '1.800', 'pam_bits': code[2] + code[1] + code[0], 'iref_A': '1.500e-05',
+            'data_en_V': '1.800', 'pam_bits': code[2] + code[1] + code[0],
+            'iref_source_A': '1.500e-05', 'iref_node_V': '0.750000',
             'corner': 'TT', 'temp_C': '27', 'deck_sha256': deck_sha, 'raw_sha256': 'x',
             'run_id': 'selftest', 'launch_id': 'D000', 'unit_clamp': 'V', 'unit_current': 'A'}
 
@@ -826,6 +869,24 @@ def selftest():
            and extracted[0]['unit_current'] == 'A'
            and info['probe_column'] == 'Ip_branch:i' and info['axis'] == 'dc'
            and extracted[0]['code'] == '000')
+    record('the_reference_current_is_read_from_the_deck_not_the_voltage_column',
+           abs(iref_from_deck(deck_text) - 1.5e-5) < 1e-18
+           and extracted[0]['iref_source_A'] == '%.3e' % 1.5e-5
+           and extracted[0]['iref_node_V'] != extracted[0]['iref_source_A'],
+           'deck %s node %s' % (extracted[0]['iref_source_A'], extracted[0]['iref_node_V']))
+    meter = [row_for('000', value, value / PREFLIGHT_LOAD_OHMS, deck_sha)
+             for value in sweep_points()]
+    for row in meter:
+        row['iref_node_V'] = '%.6f' % 0.75
+    witness = preflight_witness(meter, deck_text)
+    flipped_witness = preflight_witness(
+        [dict(row, I_sink_A='%.9e' % -abs(float(row['I_sink_A']))) for row in meter], deck_text)
+    record('the_meter_witness_passes_only_with_the_right_sign',
+           witness['load_within_tolerance'] and witness['reference_within_tolerance']
+           and abs(witness['expected_load_current_A'] - 1.5e-5) < 1e-12
+           and abs(witness['expected_reference_node_V'] - 0.75) < 1e-12
+           and not flipped_witness['load_within_tolerance'],
+           json.dumps(witness, sort_keys=True)[:160])
     refusals = (
         ('a_missing_point_is_refused',
          synthetic_psf(os.path.join(scratch, 'gap.raw'), [1.875e-6] * 19, drop=12)),
@@ -886,6 +947,13 @@ def selftest():
     except Refuse as error:
         record('a_gapped_launch_id_sequence_is_refused', 'jump' in str(error).lower(),
                str(error)[:60])
+    record('the_runner_answer_is_read_as_text_fields_not_objects',
+           runner_says_ok({'rc': '0', 'errors': '0', 'done': 'spectre completes with 0 error',
+                           'datafile': '/x/y.raw/dc_case.dc'})
+           and not runner_says_ok({'rc': '0', 'errors': '2',
+                                   'done': 'spectre completes with 2 errors', 'datafile': '/x'})
+           and not runner_says_ok({'rc': '2', 'errors': '0', 'done': 'x 0 error',
+                                   'datafile': '/x'}))
     ok_row = RENDER.nominal_unit_row('111', 8, 1.5e-05)
     record('the_uA_column_prints_microamperes',
            abs(RENDER.unit_field(ok_row, 'uA') - 15.0) < 1e-9)
