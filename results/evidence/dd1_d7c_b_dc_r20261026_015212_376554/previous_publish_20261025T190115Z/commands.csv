@@ -1,0 +1,21 @@
+gate,command,rc,expected_rc,verdict_state,verdict
+dc_offline_selftest,python dd1_d7c_b_dc_run.py --selftest,0,0,PASS,DC_SELFTEST: PASS (35/35 named exactly, failures: none, evidence OFFLINE_NO_PROCESS)
+preparation_contract_selfcheck,python dd1_d7c_b_prep_contract.py --check,0,0,PASS,D7C_B_CONTRACT_CHECK: PASS (state=PROPOSED_FOR_REVIEW sweep_points=19 markdown_rows=26 problems=0)
+preparation_schedule_check,python dd1_d7c_b_prep_schedule.py --check,0,0,PASS,D7C_B_SCHEDULE_CHECK: PASS (rows=15 windows=143 pwl=300 problems=0)
+preparation_deck_check,python dd1_d7c_b_prep_deckgen.py --check,0,0,PASS,D7C_B_DECKGEN_CHECK: PASS (15 decks, problems=0)
+preparation_deck_reader,python dd1_d7c_b_prep_r1_deck_read.py --check,0,0,PASS,D7C_B_PREP_R1_DECK_READ: PASS (15 decks, problems=0)
+preparation_synthetic_cases,python dd1_d7c_b_prep_cases.py,0,0,PASS,D7C_B_PREP_CASES: PASS (31/31 named exactly, failures: none, evidence SYNTHETIC_NOT_MEASURED)
+candidate_offline_checks,python dd1_d7c_a_offline_check.py,0,0,PASS,D7C_A_OFFLINE_CHECK: PASS (34 checks, failures: none)
+candidate_counterexamples,python dd1_d7c_a_guards.py,0,0,PASS,D7C_A_GUARDS: PASS (65/65 named exactly; not hit: none)
+earlier_handoff_binds_its_own_bytes,python dd1_d7c_b_prep_r2_verify.py --handoff-check,1,1,PASS,rc=1 by design: the R2 handoff digests the bytes of its own round, and this round legitimately moved reports/dd1_d7c_b_prep_contract.md, scripts/dd1_d7c_b_prep_contract.py. nothing else is reported (clean)
+dc_handoff_structure,in process: handoff_check() over DATA-7C-B-DC.json against the record, the account and the bytes on disk,0,0,PASS,fields, per-code uA re-derived from judgement.json, account labels and costs agreeing, digests against disk, markers, no self-listing
+dc_matrix_shape,python dd1_d7c_b_dc_matrix.py check <evidence>,0,0,PASS,DC_MATRIX_CHECK: PASS (152 dut rows, 152 preflight rows, problems: none)
+dc_judgement,python dd1_d7c_b_dc_matrix.py judge <evidence> then read judgement.json field by field,0,0,PASS,I111 15.382706 uA band [14.25, 15.75]; Iunit_ref 1.922838 uA; monotonic True; ratio True; worst deviation 0.000911750 uA; bands contain 1.20 V for all eight codes
+launch_account_reconciles,in process: read launch_account.csv, require one preflight and one dut row per case, a gapless D001.. id series and every raw digest present on disk,0,0,PASS,16 rows, ceiling 20, remaining 4, one preflight + one dut per case, every raw paired
+every_published_json_parses,in process: json.loads over every .json this round publishes,0,0,PASS,7 files parse
+record_line_endings,scan every published table for CR and round-trip a comma-and-quote row through the table writer,0,0,PASS,published files with CR: none; writer emits LF (confirmed)
+unauthorised_refusal_writes_nothing,python dd1_d7c_b_dc_run.py --launch DC-000 --role dut --out <temp> (without the authorisation marker),0,0,PASS,rc=5 evidence_dir_created=False refusal=DC_LAUNCH {"case_id": "DC-000", "process_started": false, "refusal": "DATA-7C-B-DC: this call is not
+ceiling_refusal_before_a_process,in process: Account(ceiling=1) reserve, settle, reserve again,0,0,PASS,LAUNCH_CEILING_REACHED: the account already carries 1 of 1 launches; a failure costs the budget and recovery n
+judgement_cannot_be_normalised_into_a_pass,python dd1_d7c_b_dc_run.py --selftest (case a_uniformly_short_ladder_is_not_rescued_by_normalisation),0,0,PASS,a half-height ladder reads FAIL on the absolute test while the ratio test passes, which is the pair the task book requires together
+provenance,python scripts/provenance_check.py,0,0,PASS,SOURCE_PROVENANCE_CHECK: PASS
+history_safety,python scripts/precommit_safety_check.py --mode history,0,0,PASS,SAFETY_GATE: PASS

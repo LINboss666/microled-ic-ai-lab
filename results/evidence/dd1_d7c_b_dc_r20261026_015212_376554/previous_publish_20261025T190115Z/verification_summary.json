@@ -1,0 +1,240 @@
+{
+ "account": {
+  "ceiling": 20,
+  "confirmed": 15,
+  "failed": 1,
+  "remaining": 4,
+  "rows": 16,
+  "uncertain": 0
+ },
+ "bands": {
+  "000": {
+   "adjacent_failing_V": "NO_MEASURED_POINT_BELOW",
+   "containing_main_V": [
+    0.6,
+    1.5
+   ],
+   "criterion": "abs(I(clamp) - I(1.2 V)) <= 5% of I(1.2 V)",
+   "lowest_verified_V": 0.6,
+   "no_extrapolation": true,
+   "points": 19,
+   "status": "MEASURED_POINTS_ONLY"
+  },
+  "001": {
+   "adjacent_failing_V": "NO_MEASURED_POINT_BELOW",
+   "containing_main_V": [
+    0.6,
+    1.5
+   ],
+   "criterion": "abs(I(clamp) - I(1.2 V)) <= 5% of I(1.2 V)",
+   "lowest_verified_V": 0.6,
+   "no_extrapolation": true,
+   "points": 19,
+   "status": "MEASURED_POINTS_ONLY"
+  },
+  "010": {
+   "adjacent_failing_V": "NO_MEASURED_POINT_BELOW",
+   "containing_main_V": [
+    0.6,
+    1.5
+   ],
+   "criterion": "abs(I(clamp) - I(1.2 V)) <= 5% of I(1.2 V)",
+   "lowest_verified_V": 0.6,
+   "no_extrapolation": true,
+   "points": 19,
+   "status": "MEASURED_POINTS_ONLY"
+  },
+  "011": {
+   "adjacent_failing_V": "NO_MEASURED_POINT_BELOW",
+   "containing_main_V": [
+    0.6,
+    1.5
+   ],
+   "criterion": "abs(I(clamp) - I(1.2 V)) <= 5% of I(1.2 V)",
+   "lowest_verified_V": 0.6,
+   "no_extrapolation": true,
+   "points": 19,
+   "status": "MEASURED_POINTS_ONLY"
+  },
+  "100": {
+   "adjacent_failing_V": "NO_MEASURED_POINT_BELOW",
+   "containing_main_V": [
+    0.6,
+    1.5
+   ],
+   "criterion": "abs(I(clamp) - I(1.2 V)) <= 5% of I(1.2 V)",
+   "lowest_verified_V": 0.6,
+   "no_extrapolation": true,
+   "points": 19,
+   "status": "MEASURED_POINTS_ONLY"
+  },
+  "101": {
+   "adjacent_failing_V": "NO_MEASURED_POINT_BELOW",
+   "containing_main_V": [
+    0.6,
+    1.5
+   ],
+   "criterion": "abs(I(clamp) - I(1.2 V)) <= 5% of I(1.2 V)",
+   "lowest_verified_V": 0.6,
+   "no_extrapolation": true,
+   "points": 19,
+   "status": "MEASURED_POINTS_ONLY"
+  },
+  "110": {
+   "adjacent_failing_V": "NO_MEASURED_POINT_BELOW",
+   "containing_main_V": [
+    0.6,
+    1.5
+   ],
+   "criterion": "abs(I(clamp) - I(1.2 V)) <= 5% of I(1.2 V)",
+   "lowest_verified_V": 0.6,
+   "no_extrapolation": true,
+   "points": 19,
+   "status": "MEASURED_POINTS_ONLY"
+  },
+  "111": {
+   "adjacent_failing_V": "NO_MEASURED_POINT_BELOW",
+   "containing_main_V": [
+    0.6,
+    1.5
+   ],
+   "criterion": "abs(I(clamp) - I(1.2 V)) <= 5% of I(1.2 V)",
+   "lowest_verified_V": 0.6,
+   "no_extrapolation": true,
+   "points": 19,
+   "status": "MEASURED_POINTS_ONLY"
+  }
+ },
+ "base_offline_content_sha": "e51c5320a28bd5043e21d08a0be97e9d5612cd16",
+ "branch": "poc/data-pam-d7c-b-dc",
+ "completion_level": "NATIVE_PAM_DC_TT_MEASURED",
+ "credential_values_recorded": 0,
+ "csv_read_back": [
+  {
+   "cr_bytes": false,
+   "file": "commands.csv",
+   "header_matches": true,
+   "rows": 20
+  },
+  {
+   "cr_bytes": false,
+   "file": "frozen_comparison.csv",
+   "header_matches": true,
+   "rows": 9
+  },
+  {
+   "cr_bytes": false,
+   "file": "git_checks.csv",
+   "header_matches": true,
+   "rows": 2
+  },
+  {
+   "cr_bytes": false,
+   "file": "launches_reconcile.csv",
+   "header_matches": true,
+   "rows": 8
+  },
+  {
+   "cr_bytes": false,
+   "file": "source_identity.csv",
+   "header_matches": true,
+   "rows": 123
+  }
+ ],
+ "dut_rows": 152,
+ "electrical_results": "MEASURED for the eight DC codes at TT 27 C on the PAM candidate over the declared 0.60-1.50 V clamp grid; everything else in this record is text, arithmetic, table shape or Git identity",
+ "evidence_directory": "dd1_d7c_b_dc_r20261026_015212_376554",
+ "expected_rows": 152,
+ "frozen_enforced_mismatches": 1,
+ "frozen_rows": 9,
+ "full_scale": {
+  "band_uA": [
+   14.25,
+   15.75
+  ],
+  "code": "111",
+  "measured_A": 1.538270557e-05,
+  "measured_uA": 15.38270557,
+  "pass": true,
+  "target_uA": 15.0
+ },
+ "gates": 20,
+ "gates_failed": [],
+ "gates_informational": [],
+ "generated_utc": "2026-10-25T18:43:00Z",
+ "guest_write_root": "/root/microled_ai_project/cadence_work/dd1_d7c_b_dc/<run_id>",
+ "identity_rows": 123,
+ "iunit_ref_uA": 1.92283819625,
+ "measured_currents_at_1p20V_uA": {
+  "000": 1.922839108,
+  "001": 3.8456771570000003,
+  "010": 5.768515211,
+  "011": 7.691353271,
+  "100": 9.614191336,
+  "101": 11.53702941,
+  "110": 13.45986748,
+  "111": 15.38270557
+ },
+ "model_card_content_committed": 0,
+ "not_run_or_not_verified": [
+  "PWM_PAM_TRANSIENT_INTEGRATION=NOT_RUN",
+  "GRAY_LUT=NOT_RUN",
+  "FULL_MOS_GRAY_CONTROLLER=NOT_RUN",
+  "OPTICAL_EFFECTIVE_BITS=NOT_VERIFIED",
+  "SOA_SIGNOFF=NO",
+  "MERGE_PERFORMED=NO",
+  "NEXT_STAGE_AUTHORISED=NO"
+ ],
+ "oa_writes": 0,
+ "pdk_paths_committed": 0,
+ "preflight_witnesses_all_within_tolerance": true,
+ "published_json": [
+  {
+   "file": "D001_label_attestation.json",
+   "parses": true
+  },
+  {
+   "file": "judgement.json",
+   "parses": true
+  },
+  {
+   "file": "model_identity.json",
+   "parses": true
+  }
+ ],
+ "range_counts": {
+  "P_to_R1_recomputed": {
+   "added": 23,
+   "changed": 26,
+   "commits": 5,
+   "deleted": 0,
+   "renamed": 0
+  },
+  "R1_to_base": {
+   "added": 47,
+   "changed": 5,
+   "commits": 7,
+   "deleted": 0,
+   "renamed": 0
+  },
+  "base_to_HEAD": {
+   "added": 89,
+   "changed": 2,
+   "commits": 9,
+   "deleted": 0,
+   "renamed": 0
+  }
+ },
+ "ratio_pass": true,
+ "registered_offline_content": "e51c5320a28bd5043e21d08a0be97e9d5612cd16",
+ "report_render_fixed_point": "PASS",
+ "rtl_simulations": 0,
+ "spectre_launches": 16,
+ "stop_reason": "AWAITING_INDEPENDENT_REVIEW",
+ "strict_monotonic": true,
+ "task_id": "DATA-7C-B-DC",
+ "tip": "62ea6355ef2db56daadc608a9ec688cb7b3c534f",
+ "transient_simulations": 0,
+ "verdict": "PASS",
+ "worst_deviation_in_iunit_ref": 4.741688622672253e-07
+}

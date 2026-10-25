@@ -1,0 +1,32 @@
+{
+ "archived_into": "previous_publish_20261025T190115Z",
+ "files": [
+  {
+   "path": "commands.csv",
+   "sha256": "80df2bffdb88a11e649d2a70443cdf05f344ea816534829878e9376f41364dc1"
+  },
+  {
+   "path": "frozen_comparison.csv",
+   "sha256": "7533c73da0a065383b93087cef94b9bfcce484405d31722f9adfd570e6d77506"
+  },
+  {
+   "path": "git_checks.csv",
+   "sha256": "7941dd6c4c70a107dd1df324895203e04fc678451339d71a9ed33627fc4990a2"
+  },
+  {
+   "path": "launches_reconcile.csv",
+   "sha256": "a0855e2feaa109fc5987641deeb538f4bae102bc2ab383a9e7978f3887c2fbc4"
+  },
+  {
+   "path": "source_identity.csv",
+   "sha256": "a00f7ac9c8efd83a9f70c964925dd7aabf9da617b9188c803732327d74d6b319"
+  },
+  {
+   "path": "verification_summary.json",
+   "sha256": "c3b1e1e2b80d1c2d0f4a57a970e783fb01fb1ba301a094a9a116123486604f7d"
+  }
+ ],
+ "moved_utc": "2026-10-25T19:01:15Z",
+ "reason": "the first publish of this record measured the same bytes but its gate list had no row over the frozen comparison, and the identity table had four paths twice; the tables were moved, not deleted, and their digests are listed here",
+ "report_rendered_by_the_first_publish": "the report file was rewritten in place by this run, which is what its own identity row says it does"
+}

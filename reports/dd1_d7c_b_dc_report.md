@@ -55,6 +55,16 @@
 判决：**PASS**，152 条唯一数据（8 码 × 19 点），全部来自原生输出。
 
 <!-- BEGIN 7CBD_LADDER -->
+| 码 | 实测 I(1.20 V) /uA | 名义 /uA | 偏差 /uA | 偏差 / Iunit_ref | 已测 ±5% 区间 | 最低已验证 | 相邻未通过 |
+|---|---:|---:|---:|---:|---|---:|---:|
+| `000` | 1.922839 | 1.875 | 0.000000912 | 0.000000 | 0.60..1.50 | 0.60 | NO_MEASURED_POINT_BELOW |
+| `001` | 3.845677 | 3.750 | 0.000000764 | 0.000000 | 0.60..1.50 | 0.60 | NO_MEASURED_POINT_BELOW |
+| `010` | 5.768515 | 5.625 | 0.000000622 | 0.000000 | 0.60..1.50 | 0.60 | NO_MEASURED_POINT_BELOW |
+| `011` | 7.691353 | 7.500 | 0.000000486 | 0.000000 | 0.60..1.50 | 0.60 | NO_MEASURED_POINT_BELOW |
+| `100` | 9.614191 | 9.375 | 0.000000355 | 0.000000 | 0.60..1.50 | 0.60 | NO_MEASURED_POINT_BELOW |
+| `101` | 11.537029 | 11.250 | 0.000000233 | 0.000000 | 0.60..1.50 | 0.60 | NO_MEASURED_POINT_BELOW |
+| `110` | 13.459867 | 13.125 | 0.000000106 | 0.000000 | 0.60..1.50 | 0.60 | NO_MEASURED_POINT_BELOW |
+| `111` | 15.382706 | 15.000 | 0.000000000 | 0.000000 | 0.60..1.50 | 0.60 | NO_MEASURED_POINT_BELOW |
 <!-- END 7CBD_LADDER -->
 
 满量程与共享单位：I111 = 15.382706 µA（带 14.25–15.75 µA ✓，相对 15 µA 目标 +2.55%），
@@ -70,9 +80,42 @@
 ## 6 闸与账本
 
 <!-- BEGIN 7CBD_GATES -->
+| 门 | 命令 | rc | 期望 | 判决 | 依据 |
+|---|---|---|---|---|---|
+| `dc_offline_selftest` | `python dd1_d7c_b_dc_run.py --selftest` | 0 | 0 | PASS | DC_SELFTEST: PASS (35/35 named exactly, failures: none, evidence OFFLINE_NO_PROCESS) |
+| `preparation_contract_selfcheck` | `python dd1_d7c_b_prep_contract.py --check` | 0 | 0 | PASS | D7C_B_CONTRACT_CHECK: PASS (state=PROPOSED_FOR_REVIEW sweep_points=19 markdown_rows=26 problems=0) |
+| `preparation_schedule_check` | `python dd1_d7c_b_prep_schedule.py --check` | 0 | 0 | PASS | D7C_B_SCHEDULE_CHECK: PASS (rows=15 windows=143 pwl=300 problems=0) |
+| `preparation_deck_check` | `python dd1_d7c_b_prep_deckgen.py --check` | 0 | 0 | PASS | D7C_B_DECKGEN_CHECK: PASS (15 decks, problems=0) |
+| `preparation_deck_reader` | `python dd1_d7c_b_prep_r1_deck_read.py --check` | 0 | 0 | PASS | D7C_B_PREP_R1_DECK_READ: PASS (15 decks, problems=0) |
+| `preparation_synthetic_cases` | `python dd1_d7c_b_prep_cases.py` | 0 | 0 | PASS | D7C_B_PREP_CASES: PASS (31/31 named exactly, failures: none, evidence SYNTHETIC_NOT_MEASURED) |
+| `candidate_offline_checks` | `python dd1_d7c_a_offline_check.py` | 0 | 0 | PASS | D7C_A_OFFLINE_CHECK: PASS (34 checks, failures: none) |
+| `candidate_counterexamples` | `python dd1_d7c_a_guards.py` | 0 | 0 | PASS | D7C_A_GUARDS: PASS (65/65 named exactly; not hit: none) |
+| `earlier_handoff_binds_its_own_bytes` | `python dd1_d7c_b_prep_r2_verify.py --handoff-check` | 1 | 1 | PASS | rc=1 by design: the R2 handoff digests the bytes of its own round, and this round legitimately moved reports/dd1_d7c_b_prep_contract.md, scripts/dd1_d7c_b_prep_contract.p |
+| `dc_handoff_structure` | `in process: handoff_check() over DATA-7C-B-DC.json against the record,` | 0 | 0 | PASS | fields, per-code uA re-derived from judgement.json, account labels and costs agreeing, digests against disk, markers, no self-listing |
+| `dc_matrix_shape` | `python dd1_d7c_b_dc_matrix.py check <evidence>` | 0 | 0 | PASS | DC_MATRIX_CHECK: PASS (152 dut rows, 152 preflight rows, problems: none) |
+| `dc_judgement` | `python dd1_d7c_b_dc_matrix.py judge <evidence> then read judgement.jso` | 0 | 0 | PASS | I111 15.382706 uA band [14.25, 15.75]; Iunit_ref 1.922838 uA; monotonic True; ratio True; worst deviation 0.000911750 uA; bands contain 1.20 V for all eight codes |
+| `launch_account_reconciles` | `in process: read launch_account.csv, require one preflight and one dut` | 0 | 0 | PASS | 16 rows, ceiling 20, remaining 4, one preflight + one dut per case, every raw paired |
+| `every_published_json_parses` | `in process: json.loads over every .json this round publishes` | 0 | 0 | PASS | 8 files parse |
+| `record_line_endings` | `scan every published table for CR and round-trip a comma-and-quote row` | 0 | 0 | PASS | published files with CR: none; writer emits LF (confirmed) |
+| `unauthorised_refusal_writes_nothing` | `python dd1_d7c_b_dc_run.py --launch DC-000 --role dut --out <temp> (wi` | 0 | 0 | PASS | rc=5 evidence_dir_created=False refusal=DC_LAUNCH {"case_id": "DC-000", "process_started": false, "refusal": "DATA-7C-B-DC: this call is not |
+| `ceiling_refusal_before_a_process` | `in process: Account(ceiling=1) reserve, settle, reserve again` | 0 | 0 | PASS | LAUNCH_CEILING_REACHED: the account already carries 1 of 1 launches; a failure costs the budget and recovery n |
+| `judgement_cannot_be_normalised_into_a_pass` | `python dd1_d7c_b_dc_run.py --selftest (case a_uniformly_short_ladder_i` | 0 | 0 | PASS | a half-height ladder reads FAIL on the absolute test while the ratio test passes, which is the pair the task book requires together |
+| `provenance` | `python scripts/provenance_check.py` | 0 | 0 | PASS | SOURCE_PROVENANCE_CHECK: PASS |
+| `history_safety` | `python scripts/precommit_safety_check.py --mode history` | 0 | 0 | PASS | SAFETY_GATE: PASS |
+| `frozen_surfaces` | `in process: blob and mode comparison over explicit path lists against ` | 0 | 0 | PASS | enforced rows 9, violations 0, informational 0; details on the violating rows: none |
 <!-- END 7CBD_GATES -->
 
 <!-- BEGIN 7CBD_ACCOUNT -->
+| 例 | 预检行 | DUT 行 | CONFIRMED | FAILED | UNCERTAIN | raw 配对 | log 配对 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `DC-000` | 1 | 1 | 1 | 1 | 0 | 2 | 2 |
+| `DC-111` | 1 | 1 | 2 | 0 | 0 | 2 | 2 |
+| `DC-001` | 1 | 1 | 2 | 0 | 0 | 2 | 2 |
+| `DC-010` | 1 | 1 | 2 | 0 | 0 | 2 | 2 |
+| `DC-011` | 1 | 1 | 2 | 0 | 0 | 2 | 2 |
+| `DC-100` | 1 | 1 | 2 | 0 | 0 | 2 | 2 |
+| `DC-101` | 1 | 1 | 2 | 0 | 0 | 2 | 2 |
+| `DC-110` | 1 | 1 | 2 | 0 | 0 | 2 | 2 |
 <!-- END 7CBD_ACCOUNT -->
 
 账本 `launch_account.csv` 16 行 = 8 预检 + 8 DUT，D001…D016 无跳号，上限 20、余 4；
@@ -84,9 +127,25 @@
 ## 7 冻结面与区间
 
 <!-- BEGIN 7CBD_FROZEN -->
+| 面 | 期望 | 强制 | 路径数 | 一致 | 失配 | 细节 |
+|---|---|---|---:|---:|---:|---|
+| four candidate DUT netslists | `identical` | yes | 4 | 4 | 0 | none; empty-name misses none |
+| fifteen delivered PREP decks | `identical` | yes | 15 | 15 | 0 | none; empty-name misses spectre/dd1_d7c_b_prep |
+| schedule windows and pwl tables | `identical` | yes | 4 | 4 | 0 | none; empty-name misses tests/dd1_d7c_b_prep |
+| shared executors and measurement cores | `identical` | yes | 15 | 15 | 0 | none; empty-name misses none |
+| preparation contract json | `identical` | yes | 1 | 1 | 0 | none; empty-name misses none |
+| earlier records; reports and handoffs | `none_removed` | yes | 31 | 31 | 0 | none; empty-name misses results/evidence/dd1_d7c_b_prep,results/evidence/dd1_d7c_b_prep_r1,results/evidence/dd1_d7c_b_pr |
+| modified files against the registered offline commit | `only_allowed_new` | yes | 2 | 2 | 0 | reports/dd1_d7c_b_prep_contract.md,scripts/dd1_d7c_b_prep_contract.py |
+| paths added by this round | `only_allowed_new` | yes | 89 | 89 | 0 | unexpected: none |
+| paths removed against the registered offline commit | `none_removed` | yes | 0 | 0 | 0 | none |
 <!-- END 7CBD_FROZEN -->
 
 <!-- BEGIN 7CBD_RANGES -->
+| 区间 | 新增 | 改动 | 删除 | 重命名 | 提交 |
+|---|---:|---:|---:|---:|---:|
+| `P_to_R1_recomputed` | 23 | 26 | 0 | 0 | 5 |
+| `R1_to_base` | 47 | 5 | 0 | 0 | 7 |
+| `base_to_HEAD` | 89 | 2 | 0 | 0 | 10 |
 <!-- END 7CBD_RANGES -->
 
 被登记的离线内容之后，本轮真正改动的既有文件只有 §6 里那份复审点名要修的两个
