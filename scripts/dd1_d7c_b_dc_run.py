@@ -1090,7 +1090,7 @@ def main(argv):
             return 2
         code, facts = launch(arguments.launch, arguments.role, os.path.abspath(arguments.out),
                              arguments.run_id or time.strftime('r%Y%m%d_%H%M%S', time.gmtime()))
-        print('DC_LAUNCH %s' % json.dumps(facts, sort_keys=True, default=str)[:1200])
+        print('DC_LAUNCH %s' % json.dumps(facts, sort_keys=True, default=str))
         return code
     if arguments.extract:
         rows, info = extract(arguments.extract, arguments.deck_sha, arguments.case, arguments.role,
