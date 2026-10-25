@@ -86,6 +86,28 @@ TABLE_SPECS = {'commands.csv': COMMANDS_HEADER, 'frozen_comparison.csv': FROZEN_
                'launches_reconcile.csv': RECONCILE_HEADER}
 
 
+def publish_history(evidence, archive, kept):
+    """the note is derived from what is on disk, so an older publish cannot be lost by a later move"""
+    archives = []
+    for name in sorted(os.listdir(evidence)):
+        if not name.startswith('previous_publish_'):
+            continue
+        archives.append({'archived_into': name,
+                         'files': [{'path': item, 'sha256': sha_of(os.path.join(evidence, name, item))}
+                                   for item in sorted(os.listdir(os.path.join(evidence, name)))
+                                   if not os.path.isdir(os.path.join(evidence, name, item))]})
+    return {'written_utc': now(), 'rule': 'a published record is never overwritten or deleted; every '
+            'earlier set of tables stays in its own previous_publish_ directory and this note is '
+            'recomputed from those directories, so no move can lose an earlier one',
+            'reason_of_the_latest_move': 'the record entry gained gates after its first publish (a row '
+                                         'over the frozen comparison, a re-split of every published '
+                                         'table, the observation witness) and the identity table had to '
+                                         'stop listing untracked paths, so the tables were re-derived '
+                                         'over the same measurements',
+            'latest_move': {'into': os.path.basename(archive), 'files': kept},
+            'all_previous_publishes': archives}
+
+
 def rows_write(path, header, table):
     """a published table is read back by splitting on commas, so no field may carry one"""
     clean = [[str(row.get(key, '')).replace(',', ';').replace(chr(10), ' | ').replace(chr(13), '')
@@ -709,15 +731,8 @@ def main(argv):
                 shutil.move(os.path.join(evidence, name), os.path.join(archive, name))
                 kept.append({'path': name, 'sha256': sha_of(os.path.join(archive, name))})
         io.open(os.path.join(evidence, 'republish_note.json'), 'wb').write(
-            (json.dumps({'moved_utc': now(), 'reason': 'the first publish of this record measured the '
-                             'same bytes but its gate list had no row over the frozen comparison, and '
-                             'the identity table had four paths twice; the tables were moved, not '
-                             'deleted, and their digests are listed here',
-                     'archived_into': os.path.basename(archive), 'files': kept,
-                     'report_rendered_by_the_first_publish': 'the report file was rewritten in place by '
-                                                            'this run, which is what its own identity '
-                                                            'row says it does'},
-                    indent=1, sort_keys=True, ensure_ascii=False).encode('utf-8') + b'\n'))
+            (json.dumps(publish_history(evidence, archive, kept), indent=1, sort_keys=True,
+                        ensure_ascii=False) + chr(10)).encode('utf-8'))
     if arguments.draft and not os.path.isdir(out_dir):
         os.makedirs(out_dir)
     report_path = os.path.join(ROOT, REPORT.replace('/', os.sep))
