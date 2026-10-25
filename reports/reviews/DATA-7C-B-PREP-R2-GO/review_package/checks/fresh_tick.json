@@ -1,0 +1,34 @@
+{
+  "evidence_class": "SYNTHETIC_NOT_MEASURED",
+  "native_launches": 0,
+  "case_id": "TR-LONG",
+  "code": "111",
+  "actual_full_window_s": 1e-06,
+  "expected_extra_charge_C": 5e-13,
+  "observed_extra_charge_C": 4.99999999999995e-13,
+  "delivered_entry": {
+    "q_full_C": 1.5499999999999998e-11,
+    "tick_s": 1.2e-07,
+    "qlsb_C": 2.2499999999999998e-13,
+    "error_nominal_LSB": 2.2222222222222148,
+    "verdict_nominal": "OUTSIDE_PROPOSED_LIMIT"
+  },
+  "independent_contract_references": [
+    {
+      "contract_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "error_LSB": 2.2222222222222006,
+      "outside_half_LSB": true
+    },
+    {
+      "contract_tick_s": 2e-07,
+      "qlsb_C": 3.75e-13,
+      "error_LSB": 1.3333333333333202,
+      "outside_half_LSB": true
+    }
+  ],
+  "reported_denominator_is_neither_declared_tick": false,
+  "over_half_LSB_error_accepted_by_window_denominator": false,
+  "defect_reproduced": false,
+  "instrument_sha256": "3b970d0fcff5d3f6582d467baf51f5af3eaa59a79d7355d8148023c6a56425ad"
+}

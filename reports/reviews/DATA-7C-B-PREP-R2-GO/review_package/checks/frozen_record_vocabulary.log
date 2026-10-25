@@ -1,0 +1,4 @@
+  PROBLEM mandatory gate(s) absent from commands.csv: reviewer_instrument_on_T,reviewer_instrument_on_fixed_bytes
+  PROBLEM instrument_T.json is absent
+  PROBLEM instrument_fixed.json is absent
+D7C_A_R2_RECORD_CHECK: FAIL (frozen_rows=11, gates=25, git_checks=2, identity_rows=99, 3 semantic problems)

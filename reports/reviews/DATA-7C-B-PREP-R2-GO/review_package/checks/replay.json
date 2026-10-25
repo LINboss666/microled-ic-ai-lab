@@ -1,0 +1,188 @@
+[
+  {
+    "name": "tick_R1",
+    "command": [
+      "python",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r1-review-20261024/probe_tick_normalisation.py",
+      "--root",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r1-review-20261024/fresh_tip",
+      "--out",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r2-review-20261024/checks/tick_R1.json"
+    ],
+    "rc": 0,
+    "expected_rc": 0,
+    "matched": true,
+    "tail": [
+      "{\"evidence_class\": \"SYNTHETIC_NOT_MEASURED\", \"native_launches\": 0, \"case_id\": \"TR-LONG\", \"code\": \"111\", \"actual_full_window_s\": 1e-06, \"expected_extra_charge_C\": 5e-13, \"observed_extra_charge_C\": 4.99999999999995e-13, \"delivered_entry\": {\"q_full_C\": 1.5499999999999998e-11, \"tick_s\": 1e-06, \"qlsb_C\": 1.875e-12, \"error_nominal_LSB\": 0.2666666666666658, \"verdict_nominal\": \"WITHIN_PROPOSED_LIMIT\"}, \"independent_contract_references\": [{\"contract_tick_s\": 1.2e-07, \"qlsb_C\": 2.2499999999999998e-13, \"error_LSB\": 2.2222222222222006, \"outside_half_LSB\": true}, {\"contract_tick_s\": 2e-07, \"qlsb_C\": 3.75e-13, \"error_LSB\": 1.3333333333333202, \"outside_half_LSB\": true}], \"reported_denominator_is_neither_declared_tick\": true, \"over_half_LSB_error_accepted_by_window_denominator\": true, \"defect_reproduced\": true, \"instrument_sha256\": \"3b970d0fcff5d3f6582d467baf51f5af3eaa59a79d7355d8148023c6a56425ad\"}"
+    ]
+  },
+  {
+    "name": "tick_R2",
+    "command": [
+      "python",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r1-review-20261024/probe_tick_normalisation.py",
+      "--root",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r2-review-20261024/repo",
+      "--out",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r2-review-20261024/checks/tick_R2.json"
+    ],
+    "rc": 1,
+    "expected_rc": 1,
+    "matched": true,
+    "tail": [
+      "{\"evidence_class\": \"SYNTHETIC_NOT_MEASURED\", \"native_launches\": 0, \"case_id\": \"TR-LONG\", \"code\": \"111\", \"actual_full_window_s\": 1e-06, \"expected_extra_charge_C\": 5e-13, \"observed_extra_charge_C\": 4.99999999999995e-13, \"delivered_entry\": {\"q_full_C\": 1.5499999999999998e-11, \"tick_s\": 1.2e-07, \"qlsb_C\": 2.2499999999999998e-13, \"error_nominal_LSB\": 2.2222222222222148, \"verdict_nominal\": \"OUTSIDE_PROPOSED_LIMIT\"}, \"independent_contract_references\": [{\"contract_tick_s\": 1.2e-07, \"qlsb_C\": 2.2499999999999998e-13, \"error_LSB\": 2.2222222222222006, \"outside_half_LSB\": true}, {\"contract_tick_s\": 2e-07, \"qlsb_C\": 3.75e-13, \"error_LSB\": 1.3333333333333202, \"outside_half_LSB\": true}], \"reported_denominator_is_neither_declared_tick\": false, \"over_half_LSB_error_accepted_by_window_denominator\": false, \"defect_reproduced\": false, \"instrument_sha256\": \"3b970d0fcff5d3f6582d467baf51f5af3eaa59a79d7355d8148023c6a56425ad\"}"
+    ]
+  },
+  {
+    "name": "old_families",
+    "command": [
+      "python",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-review-20261024/probe_prep_gaps.py",
+      "--root",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r2-review-20261024/repo",
+      "--out",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r2-review-20261024/checks/old_families.json"
+    ],
+    "rc": 1,
+    "expected_rc": 1,
+    "matched": true,
+    "tail": [
+      "{\"rc_meaning\": \"0=all_four_families_reproduced; 1=not_all; 2=instrument_error\", \"result\": false, \"individual\": {\"F1_PAM_bit_order_and_high_level\": false, \"F2_PWL_and_window_physics\": false, \"F3_measurement_entry_wiring\": false, \"F4_native_deck_known_contract\": false}, \"error\": null, \"out\": \"/workspace/scratch/3a8f01ce6668/d7c-b-prep-r2-review-20261024/checks/old_families.json\"}"
+    ]
+  },
+  {
+    "name": "contract",
+    "command": [
+      "python",
+      "scripts/dd1_d7c_b_prep_contract.py",
+      "--check"
+    ],
+    "rc": 0,
+    "expected_rc": 0,
+    "matched": true,
+    "tail": [
+      "D7C_B_CONTRACT_CHECK: PASS (state=PROPOSED_FOR_REVIEW sweep_points=19 markdown_rows=26 problems=0)"
+    ]
+  },
+  {
+    "name": "schedule",
+    "command": [
+      "python",
+      "scripts/dd1_d7c_b_prep_schedule.py",
+      "--check"
+    ],
+    "rc": 0,
+    "expected_rc": 0,
+    "matched": true,
+    "tail": [
+      "D7C_B_SCHEDULE_CHECK: PASS (rows=15 windows=143 pwl=300 problems=0)"
+    ]
+  },
+  {
+    "name": "deck",
+    "command": [
+      "python",
+      "scripts/dd1_d7c_b_prep_deckgen.py",
+      "--check"
+    ],
+    "rc": 0,
+    "expected_rc": 0,
+    "matched": true,
+    "tail": [
+      "D7C_B_DECKGEN_CHECK: PASS (15 decks, problems=0)"
+    ]
+  },
+  {
+    "name": "deck_read",
+    "command": [
+      "python",
+      "scripts/dd1_d7c_b_prep_r1_deck_read.py",
+      "--check",
+      "--observe",
+      "--json",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r2-review-20261024/checks/deck_read.json"
+    ],
+    "rc": 0,
+    "expected_rc": 0,
+    "matched": true,
+    "tail": [
+      "D7C_B_PREP_R1_DECK_READ: PASS (15 decks, problems=0)",
+      "D7C_B_PREP_R1_DECK_READ_OBSERVE: PASS ({\"decks_read\": 15, \"half_rail_crossings_total\": 54, \"pam_changing_segments_total\": 36, \"pwl_signals_read\": [\"data_en\", \"pam0\", \"pam1\", \"pam2\"], \"windows_by_kind\": {\"dc_sweep_point\": 8, \"emission\": 27, \"emission_flat\": 27, \"leak_last100\": 27, \"off_tail\": 27, \"p)"
+    ]
+  },
+  {
+    "name": "synthetic",
+    "command": [
+      "python",
+      "scripts/dd1_d7c_b_prep_cases.py",
+      "--json",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r2-review-20261024/checks/synthetic.json"
+    ],
+    "rc": 0,
+    "expected_rc": 0,
+    "matched": true,
+    "tail": [
+      "C31_convergence_uses_the_reference_tick NEGATIVE HIT   10 fC over 120 ns is 0.0444444 QLSB against a 0.01 limit; a denominator that disagrees with the pair, a zero r",
+      "D7C_B_PREP_CASES: PASS (31/31 named exactly, failures: none, evidence SYNTHETIC_NOT_MEASURED)"
+    ]
+  },
+  {
+    "name": "offline",
+    "command": [
+      "python",
+      "scripts/dd1_d7c_a_offline_check.py",
+      "--json",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r2-review-20261024/checks/offline.json"
+    ],
+    "rc": 0,
+    "expected_rc": 0,
+    "matched": true,
+    "tail": [
+      "DRAFT_DECK_SYNTAX_INVENTORY              PASS   every active deck line classifies into simulator/include/parameters/save/source/probe/instance/analysis; unrecognised active statements would be refused by name",
+      "D7C_A_OFFLINE_CHECK: PASS (34 checks, failures: none)"
+    ]
+  },
+  {
+    "name": "guards",
+    "command": [
+      "python",
+      "scripts/dd1_d7c_a_guards.py",
+      "--json",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r2-review-20261024/checks/guards.json"
+    ],
+    "rc": 0,
+    "expected_rc": 0,
+    "matched": true,
+    "tail": [
+      "C5_header_only                           HIT   refused by schema: /tmp/dd1-d7c-a-guards-1d_qxlzf/C5_header_only.csv declares the header gate,command,rc,expected_rc,verdict_state",
+      "D7C_A_GUARDS: PASS (65/65 named exactly; not hit: none)"
+    ]
+  },
+  {
+    "name": "handoff",
+    "command": [
+      "python",
+      "scripts/dd1_d7c_b_prep_r2_verify.py",
+      "--handoff-check"
+    ],
+    "rc": 0,
+    "expected_rc": 0,
+    "matched": true,
+    "tail": [
+      "D7C_B_PREP_R2_HANDOFF PASS fields, digests against disk, the five editable files, zero costs and no self-listing"
+    ]
+  },
+  {
+    "name": "diff_check",
+    "command": [
+      "git",
+      "diff",
+      "--check",
+      "6778535e70b139812265eba490d0a1381a1fae5c..HEAD"
+    ],
+    "rc": 0,
+    "expected_rc": 0,
+    "matched": true,
+    "tail": []
+  }
+]

@@ -1,0 +1,39 @@
+{
+  "reviewed_tip": "e51c5320a28bd5043e21d08a0be97e9d5612cd16",
+  "base": "6778535e70b139812265eba490d0a1381a1fae5c",
+  "review_recommendation": "GO",
+  "scope": "PAM_CANDIDATE_AND_OFFLINE_PREPARATION_ONLY",
+  "new_blocking_findings": 0,
+  "nonblocking_notes": 1,
+  "native_authorisation_current": 0,
+  "proposed_next_task": "DATA-7C-B-DC",
+  "proposed_next_spectre_limit": 20,
+  "proposal_status": "PENDING_USER_APPROVAL",
+  "acceptance_registered": false,
+  "merged": false,
+  "api_independently_replayed": false,
+  "executor_zip_bytes_available": false,
+  "reviewer_costs": {
+    "spectre": 0,
+    "rtl_simulations": 0,
+    "oa": 0,
+    "ssh_vm": 0,
+    "credential_model_access": 0
+  },
+  "history_safety": {
+    "rc": 0,
+    "commits": 199,
+    "objects": 2767,
+    "PDK_TRACKED_FILES": 0,
+    "CREDENTIAL_TRACKED_FILES": 0,
+    "PRIVATE_KEYS_TRACKED_FILES": 0,
+    "VENDOR_MODEL_TRACKED_FILES": 0
+  },
+  "provenance": {
+    "rc": 0,
+    "files": 495,
+    "labelled_lines": 555,
+    "violations": 0
+  },
+  "created_utc": "2026-10-24T12:28:08.401654+00:00"
+}

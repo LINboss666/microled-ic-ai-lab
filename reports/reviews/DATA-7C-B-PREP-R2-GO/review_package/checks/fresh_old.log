@@ -1,0 +1,1 @@
+{"rc_meaning": "0=all_four_families_reproduced; 1=not_all; 2=instrument_error", "result": false, "individual": {"F1_PAM_bit_order_and_high_level": false, "F2_PWL_and_window_physics": false, "F3_measurement_entry_wiring": false, "F4_native_deck_known_contract": false}, "error": null, "out": "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r2-review-20261024/checks/fresh_old.json"}

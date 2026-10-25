@@ -1,0 +1,2 @@
+D7C_B_PREP_R1_DECK_READ: PASS (15 decks, problems=0)
+D7C_B_PREP_R1_DECK_READ_OBSERVE: PASS ({"decks_read": 15, "half_rail_crossings_total": 54, "pam_changing_segments_total": 36, "pwl_signals_read": ["data_en", "pam0", "pam1", "pam2"], "windows_by_kind": {"dc_sweep_point": 8, "emission": 27, "emission_flat": 27, "leak_last100": 27, "off_tail": 27, "p)

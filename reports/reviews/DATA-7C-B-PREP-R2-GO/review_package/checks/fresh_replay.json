@@ -1,0 +1,74 @@
+[
+  {
+    "name": "fresh_tick",
+    "command": [
+      "python",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r1-review-20261024/probe_tick_normalisation.py",
+      "--root",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r2-review-20261024/fresh_tip",
+      "--out",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r2-review-20261024/checks/fresh_tick.json"
+    ],
+    "rc": 1,
+    "expected_rc": 1,
+    "matched": true,
+    "tail": [
+      "{\"evidence_class\": \"SYNTHETIC_NOT_MEASURED\", \"native_launches\": 0, \"case_id\": \"TR-LONG\", \"code\": \"111\", \"actual_full_window_s\": 1e-06, \"expected_extra_charge_C\": 5e-13, \"observed_extra_charge_C\": 4.99999999999995e-13, \"delivered_entry\": {\"q_full_C\": 1.5499999999999998e-11, \"tick_s\": 1.2e-07, \"qlsb_C\": 2.2499999999999998e-13, \"error_nominal_LSB\": 2.2222222222222148, \"verdict_nominal\": \"OUTSIDE_PROPOSED_LIMIT\"}, \"independent_contract_references\": [{\"contract_tick_s\": 1.2e-07, \"qlsb_C\": 2.2499999999999998e-13, \"error_LSB\": 2.2222222222222006, \"outside_half_LSB\": true}, {\"contract_tick_s\": 2e-07, \"qlsb_C\": 3.75e-13, \"error_LSB\": 1.3333333333333202, \"outside_half_LSB\": true}], \"reported_denominator_is_neither_declared_tick\": false, \"over_half_LSB_error_accepted_by_window_denominator\": false, \"defect_reproduced\": false, \"instrument_sha256\": \"3b970d0fcff5d3f6582d467baf51f5af3eaa59a79d7355d8148023c6a56425ad\"}"
+    ]
+  },
+  {
+    "name": "fresh_old",
+    "command": [
+      "python",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-review-20261024/probe_prep_gaps.py",
+      "--root",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r2-review-20261024/fresh_tip",
+      "--out",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r2-review-20261024/checks/fresh_old.json"
+    ],
+    "rc": 1,
+    "expected_rc": 1,
+    "matched": true,
+    "tail": [
+      "{\"rc_meaning\": \"0=all_four_families_reproduced; 1=not_all; 2=instrument_error\", \"result\": false, \"individual\": {\"F1_PAM_bit_order_and_high_level\": false, \"F2_PWL_and_window_physics\": false, \"F3_measurement_entry_wiring\": false, \"F4_native_deck_known_contract\": false}, \"error\": null, \"out\": \"/workspace/scratch/3a8f01ce6668/d7c-b-prep-r2-review-20261024/checks/fresh_old.json\"}"
+    ]
+  },
+  {
+    "name": "fresh_cases",
+    "command": [
+      "python",
+      "scripts/dd1_d7c_b_prep_cases.py",
+      "--json",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r2-review-20261024/checks/fresh_cases.json"
+    ],
+    "rc": 0,
+    "expected_rc": 0,
+    "matched": true,
+    "tail": [
+      "C29_all_27_windows_read_back     POSITIVE HIT   27 windows across 7 transient and refined cases, every QLSB equal to Iunit x that case reference tick (TR-200=",
+      "C30_bad_tick_refuses_first       NEGATIVE HIT   5 bad ticks each refused by name before the division, missing and unknown refuse too, and the DC row reports N",
+      "C31_convergence_uses_the_reference_tick NEGATIVE HIT   10 fC over 120 ns is 0.0444444 QLSB against a 0.01 limit; a denominator that disagrees with the pair, a zero r",
+      "D7C_B_PREP_CASES: PASS (31/31 named exactly, failures: none, evidence SYNTHETIC_NOT_MEASURED)"
+    ]
+  },
+  {
+    "name": "frozen_record_vocabulary",
+    "command": [
+      "python",
+      "scripts/dd1_d7c_a_r2_record_check.py",
+      "--record",
+      "/workspace/scratch/3a8f01ce6668/d7c-b-prep-r2-review-20261024/repo/results/evidence/dd1_d7c_b_prep_r2_20261024_112947_879fa0",
+      "--git-ref",
+      "e51c5320a28bd5043e21d08a0be97e9d5612cd16"
+    ],
+    "rc": 1,
+    "expected_rc": 1,
+    "matched": true,
+    "tail": [
+      "  PROBLEM mandatory gate(s) absent from commands.csv: reviewer_instrument_on_T,reviewer_instrument_on_fixed_bytes",
+      "  PROBLEM instrument_T.json is absent",
+      "  PROBLEM instrument_fixed.json is absent",
+      "D7C_A_R2_RECORD_CHECK: FAIL (frozen_rows=11, gates=25, git_checks=2, identity_rows=99, 3 semantic problems)"
+    ]
+  }
+]

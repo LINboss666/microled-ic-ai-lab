@@ -1,0 +1,67 @@
+D7C_A_GUARDS baseline delivered_bytes_failures=none
+E01_pam_bit_order_swapped                HIT   new failures exactly THERMO_GOLDEN_16,TOP_INTEGRATED_THERMO_16
+E02_thermometer_threshold_off_one        HIT   new failures exactly THERMO_GOLDEN_16,TOP_INTEGRATED_THERMO_16
+E03_branch_ignores_global_data_en        HIT   new failures exactly THERMO_GOLDEN_16,TOP_INTEGRATED_THERMO_16
+E04_branch_left_the_common_output        HIT   new failures exactly ALL_BRANCHES_ON_COMMON_OUTPUT
+E05_shared_reference_ratio_wrong         HIT   new failures exactly MIRROR_RATIO_ESTIMATED_ONLY
+E06_dnw_pass_body_tied_to_vss            HIT   new failures exactly DNW_PASS_BODY_LOCAL,UNIT_CORE_ISOMORPHIC_TO_ACCEPTED
+E07_enb_tied_to_a_constant               HIT   new failures exactly EN_ENB_PAIR_PER_BRANCH
+E08_subckt_port_order_corrupted          HIT   new failures exactly DNW_PASS_BODY_LOCAL,REFERENCE_NODE_IDENTITY,TOP_INTEGRATED_THERMO_16,UNIT_PORT_BINDING_MATCHES_DESIGN_TABLE
+E09_stale_device_count_in_report         HIT   new failures exactly REPORT_CLAIMS_BOUND_TO_OBJECT
+E10_unsupported_syntax_refused           HIT   new failures exactly ALL_BRANCHES_ON_COMMON_OUTPUT,BLEED_GATED_BY_BRANCH_COMPLEMENT,CLAIM_TABLE_MATCHES_PARSE,DECK_PROBE_ORIENTATI
+E11_select5_reuses_select1               HIT   new failures exactly THERMO_GOLDEN_16,TOP_INTEGRATED_THERMO_16
+E12_top_pam_bits_swapped                 HIT   new failures exactly TOP_INTEGRATED_THERMO_16
+E13_top_enable_tied_high                 HIT   new failures exactly TOP_INTEGRATED_THERMO_16
+E14_reference_bound_to_vcas              HIT   new failures exactly DNW_PASS_BODY_LOCAL,REFERENCE_NODE_IDENTITY
+E15_duplicate_mos_instance               HIT   new failures exactly NO_DUPLICATE_INSTANCES
+E16_cascode_multiplicity_changed         HIT   new failures exactly DEVICE_COUNT_SEPARATION,UNIT_CORE_ISOMORPHIC_TO_ACCEPTED
+E17_golden_header_only                   HIT   new failures exactly GOLDEN_TABLE_SCHEMA,INPUT_TABLE_SCHEMAS,THERMO_GOLDEN_16,TOP_INTEGRATED_THERMO_16
+E18_request_table_emptied                HIT   new failures exactly INPUT_TABLE_SCHEMAS,REQUEST_REFUSAL_TABLE,REQUEST_TABLE_SCHEMA
+E19_claim_table_stale                    HIT   new failures exactly CLAIM_TABLE_MATCHES_PARSE
+E20_plan_refines_more_than_time          HIT   new failures exactly NATIVE_PLAN_SHAPE,PLAN_SCHEDULE_ARITHMETIC
+E21_active_tran_without_dev              HIT   new failures exactly DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS
+E22_active_dc_with_dev                   HIT   new failures exactly DRAFT_DECK_HAS_NO_ACTIVE_ANALYSIS
+E23_unknown_active_deck_statement        HIT   new failures exactly DRAFT_DECK_SYNTAX_INVENTORY
+E24_golden_key_duplicated                HIT   new failures exactly GOLDEN_TABLE_SCHEMA,INPUT_TABLE_SCHEMAS,THERMO_GOLDEN_16,TOP_INTEGRATED_THERMO_16
+E25_decoder_supply_shorted_to_vss        HIT   new failures exactly TOP_SUPPLY_BINDINGS
+E26_decoder_supply_swapped               HIT   new failures exactly TOP_SUPPLY_BINDINGS
+E27_branch_left_the_ground_rail          HIT   new failures exactly BLEED_GATED_BY_BRANCH_COMPLEMENT,MAIN_PATH_DATA_OUT_CAS_MOUT_VSS,TOP_SUPPLY_BINDINGS,UNIT_PORT_BINDING_MATCHE
+E28_decoder_supply_tied_to_a_logic_net   HIT   new failures exactly TOP_SUPPLY_BINDINGS
+E29_golden_row_extra_cell                HIT   new failures exactly GOLDEN_TABLE_SCHEMA,INPUT_TABLE_SCHEMAS,THERMO_GOLDEN_16,TOP_INTEGRATED_THERMO_16
+E30_golden_nonfinite_number              HIT   new failures exactly GOLDEN_TABLE_SCHEMA,INPUT_TABLE_SCHEMAS,THERMO_GOLDEN_16,TOP_INTEGRATED_THERMO_16
+E31_claims_header_only                   HIT   new failures exactly CLAIM_TABLE_MATCHES_PARSE,INPUT_TABLE_SCHEMAS
+E32_claims_duplicate_key                 HIT   new failures exactly CLAIM_TABLE_MATCHES_PARSE,INPUT_TABLE_SCHEMAS
+E33_claims_illegal_key                   HIT   new failures exactly CLAIM_TABLE_MATCHES_PARSE,INPUT_TABLE_SCHEMAS
+E34_request_code_invented                HIT   new failures exactly REQUEST_REFUSAL_TABLE,REQUEST_TABLE_SCHEMA
+E35_plan_all_dc_codes_zero               HIT   new failures exactly NATIVE_PLAN_SHAPE,PLAN_SCHEDULE_ARITHMETIC
+E36_plan_long_gap_contradicted           HIT   new failures exactly PLAN_SCHEDULE_ARITHMETIC
+E37_plan_refined_pair_stimulus_drift     HIT   new failures exactly PLAN_SCHEDULE_ARITHMETIC
+E38_plan_dc_units_washed                 HIT   new failures exactly NATIVE_PLAN_SHAPE
+E39_deck_probe_terminals_reversed        HIT   new failures exactly DECK_PROBE_ORIENTATION_MATCHES_PLAN
+R0_control_record_is_accepted            HIT   fixture accepted (frozen_rows=3, gates=15, git_checks=3, identity_rows=2)
+R1_rc99_marked_PASS                      HIT   a row whose rc contradicts its own expected_rc cannot read P | refused as declared: offline_checks (rc=99 expected=0 state=PASS) d
+R2_mandatory_gate_absent                 HIT   dropping a gate has to be visible, not just a smaller count | refused as declared: mandatory gate(s) absent from commands.csv: pro
+R3_invented_status_word                  HIT   a verdict outside the declared enum is refused | refused as declared: native_entry_refused: 'LOOKED_FINE' is not one of the allowe
+R4_summary_passes_a_failed_gate          HIT   a sub-check failure cannot be washed by the summary line | refused as declared: the summary says PASS_WITH_DISCLOSED_INFORMATIONAL
+R5_stale_digest_in_identity              HIT   the record may not quote bytes that are no longer there | refused as declared: spectre/dd1_d7c_a_pam_top.scs digest on disk is f46
+R6_identity_names_an_absent_file         HIT   a path that does not exist is not a delivered file | refused as declared: source_identity names spectre/never_delivered.scs which 
+R7_enforced_row_with_a_violation         HIT   the frozen gate has to agree with the enforced rows | refused as declared: enforced frozen rows with a non-zero count: four_candid
+R8_counterexample_never_hit              HIT   a HIT label over a MISS row is refused | refused as declared: counterexamples.json has probes that did not hit: E04
+R9_empty_expectation_set                 HIT   an injection with no expected failure can never detect anyth | refused as declared: 1 counterexamples declare an empty expectation
+R10_selftest_refusal_reported_as_pass    HIT   NOT_RUN for want of Git history is not nine passes | refused as declared: the selftest refused for want of Git history (rc=2) whil
+R11_offline_failures_but_gate_pass       HIT   the gate text listing failures contradicts its PASS | refused as declared: offline_checks gate passed while its own text lists fai
+R12_instrument_case_unchanged_bytes      HIT   a diagnosis that changed no bytes proves nothing | refused as declared: instrument_T.json/fault_2 changed no bytes, so it proves n
+R13_synthetic_sign_case_unlabelled       HIT   a hand-written number must not read as a measurement | refused as declared: S1_synthetic is a synthetic sign case without evidence
+S1_delivered_deck_writes_the_positive_form HIT   deck Ip_branch clamp_node data_out and 15 plan rows quote the same terminals
+S2_positive_reading_is_the_sink_current  HIT   SYNTHETIC fA samples [0, 1875, 3750, 1875] read back unchanged, Q=7500000 in 1e-24 C (fA x ns, exact integer arithmetic)
+S3_reversed_order_negates_the_same_physics HIT   the same physics on (data_out clamp_node) reads [0, -1875, -3750, -1875], so a negative number is a wiring fact and not something 
+S4_negative_tail_keeps_its_sign          HIT   SYNTHETIC [1000000, -250000] fA over 2000 ns: positive 2000000000, negative -500000000, total 1500000000 in 1e-24 C (fA x ns, exac
+S5_kcl_over_the_series_path              HIT   SYNTHETIC eight codes: the iprobe sum equals the conducting branch count x 1875 fA, 1875..15000 fA (ESTIMATED_MIRROR_RATIO_ONLY, n
+S6_zero_window_is_not_a_measurement      HIT   SYNTHETIC all-zero window gives (0, 0, 0) charge; it is a shape test, not a measurement, and no sign claim is made from it
+S7_third_orientation_is_refused          HIT   SYNTHETIC (clamp_node vss) raised orientation ('clamp_node', 'vss') is neither probe form, so the sign i; the sign is only defined
+C1_round_trip_ok                         HIT   read back 1 rows, 6 columns each
+C2_unquoted_comma_row                    HIT   refused by schema: /tmp/dd1-d7c-a-guards-1d_qxlzf/C2_unquoted_comma_row.csv line 2 has 7 columns, the header declares 6
+C3_wrong_column_count                    HIT   refused by schema: /tmp/dd1-d7c-a-guards-1d_qxlzf/C3_wrong_column_count.csv line 2 has 3 columns, the header declares 6
+C4_duplicate_key                         HIT   refused by schema: /tmp/dd1-d7c-a-guards-1d_qxlzf/C4_duplicate_key.csv repeats gate=x
+C5_header_only                           HIT   refused by schema: /tmp/dd1-d7c-a-guards-1d_qxlzf/C5_header_only.csv declares the header gate,command,rc,expected_rc,verdict_state
+D7C_A_GUARDS: PASS (65/65 named exactly; not hit: none)

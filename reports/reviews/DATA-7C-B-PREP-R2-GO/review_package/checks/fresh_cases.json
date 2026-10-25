@@ -1,0 +1,290 @@
+{
+ "cases": 31,
+ "evidence_class": "SYNTHETIC_NOT_MEASURED",
+ "failures": [],
+ "oa_writes": 0,
+ "results": [
+  {
+   "case": "C01_positive_sink_charge",
+   "detail": "Q=1.875e-13 C over 100 ns at 1.875 uA, sign SINK_POSITIVE_AS_DECLARED",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "POSITIVE",
+   "meaning": "a 100 ns window at one unit current integrates to the hand-computed charge and reads positive",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C02_reversed_probe_refused",
+   "detail": "the same physics on reversed terminals gives Q=-1.875e-13 C; abs() would have made it look identical to the positive case, the rule refuses instead",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "NEGATIVE",
+   "meaning": "turning the ammeter around cannot be rescued by abs()",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C03_deck_probe_order_named",
+   "detail": "line 79 became (data_out clamp_node) and the deck audit answered: TR-120.scs writes the probe as \"Ip_branch (data_out clamp_node) iprobe\", which is not the contracted terminal order Ip_branch (clamp_node data_out) ip",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "NEGATIVE",
+   "meaning": "a deck written with the terminals swapped is refused by the deck audit",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C04_cancelling_tail_fails",
+   "detail": "net Q=0 C looks like a shut branch, the magnitude test still says 0.5 uA against a 0.15 uA limit",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "NEGATIVE",
+   "meaning": "a tail whose positive and negative halves cancel is not zero leakage",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C05_quiet_tail_passes",
+   "detail": "max(abs(I))=0.01 uA at 1380 ns inside the last 100 ns, under the 0.15 uA limit",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "POSITIVE",
+   "meaning": "a quiet tail passes and names its sample instant",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C06_nonuniform_pencil_check",
+   "detail": "Q=1.375e-13 C, boundaries interpolated onto the enclosing pairs",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "POSITIVE",
+   "meaning": "interpolated boundaries over unequal spacing match the arithmetic done by hand",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C07_adaptive_precision",
+   "detail": "kept 1.99902e+06 ps (quantum 50000 ps), which is the bound a reviewer needs beside the number",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "POSITIVE",
+   "meaning": "a printed simulator time is kept at its own precision with its display quantum reported",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C08_garbage_named",
+   "detail": "four bad sample shapes and one edge-less window all refused by name",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "NEGATIVE",
+   "meaning": "NaN, a repeated time, a backwards time, an empty list and a missing edge each refuse by name",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C09_left_band_before_deadline",
+   "detail": "left the band at 1201.55 ns, held only None ns, deadline 1230 ns",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "NEGATIVE",
+   "meaning": "entering the band and leaving early is not a settled window",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C10_settled_held",
+   "detail": "in band from the edge to the deadline, held 100 ns",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "POSITIVE",
+   "meaning": "staying in band to the deadline is the settled case",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C11_halved_array",
+   "detail": "half current gives worst deviation 0 units of Iunit_ref, absolute 7.5 uA against the band 14.25-15.75 uA",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "NEGATIVE",
+   "meaning": "eight levels at half current pass the ratio and fail the absolute target",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C12_code_000_not_black",
+   "detail": "code 000 = 1 branch, and a ladder missing it is refused by name",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "NEGATIVE",
+   "meaning": "the lowest code is one conducting branch and cannot be dropped from the ladder",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C13_refined_lost_history",
+   "detail": "the schedule refused it: RS-FULL writes off_window_ns 2100.000-2500.000;3600.000-4000.000;5100.000-5500.000;6600.000-7000.000;8100.000-",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "NEGATIVE",
+   "meaning": "a refined case that dropped the seven earlier platforms is not the same conditions",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C14_refined_changed_supply",
+   "detail": "the schedule refused it: RS-LOW differs from TR-120 outside the time step: data_en_level_V",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "NEGATIVE",
+   "meaning": "a refined case that also moved the enable level is refused",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C15_refined_lost_transition",
+   "detail": "the schedule refused it: RS-SWITCH declares 3 code-change entries for 4 platforms",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "NEGATIVE",
+   "meaning": "a refined case that dropped one code change is a different experiment",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C16_convergence_absolute",
+   "detail": "delta Q=10 fC = 0.0444444 QLSB against a 0.01 limit; moving the window by 10 ns refuses the comparison",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "NEGATIVE",
+   "meaning": "convergence always carries an absolute difference, and a moved window refuses the comparison",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C17_two_charge_expectations",
+   "detail": "nominal 1.875e-13 C vs DC NOT_RUN; QLSB 2.25e-13 C, error 0 LSB",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "POSITIVE",
+   "meaning": "nominal and DC expectations stay apart and the missing DC point is NOT_RUN, never a geometry guess",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C18_leak_in_second_tail",
+   "detail": "8 codes, one 5 uA leak in platform 1: ABOVE_LIMIT at index [1] with max(abs(I)) = 5e-06 A over 100 ns, the other seven WITHIN_LIMIT",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "POSITIVE",
+   "meaning": "eight codes measured at once find the 5 uA leak in the second tail and nowhere else",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C19_full_versus_flat_window",
+   "detail": "full 2.15625e-13 C over 120 ns of enable versus flat 1.875e-13 C over 100 ns of flat part; the difference 2.8125e-14 C is the two ramp trapezoids",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "POSITIVE",
+   "meaning": "the full-enable charge and the flat charge are different numbers, each matching its own pencil arithmetic",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C20_no_edge_refusal_left",
+   "detail": "27 windows over 7 transient cases measured through the entrance, edge refusals=0, edges off their declared instant=0",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "POSITIVE",
+   "meaning": "every window of the delivered schedule finds its own interpolated 50% edges on the declared instant",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C21_missing_context_refused",
+   "detail": "6 context fields each refused by name when both sides omitted them; the complete pair converges at WITHIN_LIMIT",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "NEGATIVE",
+   "meaning": "convergence refuses when a side does not carry the named context, instead of calling None equal to None",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C22_leakage_window_refusals",
+   "detail": "a 10 ns tail refuses as REFUSED_LEAKAGE_OUTSIDE_PURE_OFF and an enable that reaches 1.8 V inside the window refuses as REFUSED_ENABLE_NOT_LOW, instead of being shortened to fit",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "NEGATIVE",
+   "meaning": "a leakage interval that reaches the pure-off start or a rising enable is refused, never shortened to fit",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C23_dc_expectation_via_entrance",
+   "detail": "nominal 2.25e-13 C (-0.0416667 LSB) with the DC column NOT_RUN; supplying IDC 2 uA makes the DC expectation 2.4e-13 C, a different number reported beside it",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "NEGATIVE",
+   "meaning": "through the entrance a missing native DC point stays NOT_RUN while the nominal error is computed",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C24_decks_read_clean",
+   "detail": "15 decks read from disk with the reader's own parser, problems=0",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "POSITIVE",
+   "meaning": "the independent reader opens the fifteen delivered decks and finds nothing to report",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C25_reader_names_the_shapes",
+   "detail": "3 of 3 shapes refused by name on temporary copies (old_long_ramp, leak_window_over_next_rise, delivered_bytes_control)",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "NEGATIVE",
+   "meaning": "the old long ramp and leakage over the next rise are refused by name on temporary copies",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C26_half_pC_is_outside",
+   "detail": "TR-LONG code 111: T50 1 us stays the window, QLSB 0.225 pC comes from the 120 ns reference tick, error +0.5 pC = 2.22222 LSB, OUTSIDE_PROPOSED_LIMIT",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "NEGATIVE",
+   "meaning": "the review +0.5 pC on a 1 us platform reads 2.222222 QLSB and OUTSIDE_PROPOSED_LIMIT through the entrance",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C27_qlsb_follows_the_case",
+   "detail": "TR-120 0.225 pC, TR-200 0.375 pC, TR-LONG eight codes all on 0.225 pC while its own window is 1 us (10 windows read)",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "POSITIVE",
+   "meaning": "one case keeps one ruler across its codes while TR-200 keeps its own 200 ns ruler",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C28_expectation_scales_with_t50",
+   "detail": "120 ns and 1 us windows of one code: expected 2.25e-13 C versus 1.875e-12 C, QLSB 2.25e-13 C both times, and the delivered entrance agrees",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "POSITIVE",
+   "meaning": "a wider window moves the expected charge and leaves the QLSB where the contract put it",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C29_all_27_windows_read_back",
+   "detail": "27 windows across 7 transient and refined cases, every QLSB equal to Iunit x that case reference tick (TR-200=0.375 pC, TR-LONG=0.225 pC)",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "POSITIVE",
+   "meaning": "every emission window of the delivered schedule carries its own case QLSB from the contract map",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C30_bad_tick_refuses_first",
+   "detail": "5 bad ticks each refused by name before the division, missing and unknown refuse too, and the DC row reports NOT_APPLICABLE_DC_HAS_NO_TIME_DOMAIN",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "NEGATIVE",
+   "meaning": "zero, negative, NaN, infinity, missing and unknown ticks refuse by name before any division",
+   "problems": [],
+   "verdict": "HIT"
+  },
+  {
+   "case": "C31_convergence_uses_the_reference_tick",
+   "detail": "10 fC over 120 ns is 0.0444444 QLSB against a 0.01 limit; a denominator that disagrees with the pair, a zero ruler and a drifted pair are each refused",
+   "evidence_class": "SYNTHETIC_NOT_MEASURED",
+   "kind": "NEGATIVE",
+   "meaning": "convergence divides by the tick the pair carries and refuses a denominator that disagrees with it",
+   "problems": [],
+   "verdict": "HIT"
+  }
+ ],
+ "rtl_simulations": 0,
+ "rule": "every negative case first proves the injected fact exists, then requires the named rule to refuse it; an empty expectation against an empty result is never a detection",
+ "spectre_launches": 0
+}

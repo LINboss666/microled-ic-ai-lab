@@ -1,0 +1,310 @@
+{
+  "evidence_class": "SYNTHETIC_NOT_MEASURED",
+  "window_count": 27,
+  "mapping_matches": true,
+  "window_reads": [
+    {
+      "case_id": "TR-LONG",
+      "window_id": "TR-LONG#W0",
+      "code": "000",
+      "T50_s": 1e-06,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "TR-LONG",
+      "window_id": "TR-LONG#W1",
+      "code": "001",
+      "T50_s": 1e-06,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "TR-LONG",
+      "window_id": "TR-LONG#W2",
+      "code": "010",
+      "T50_s": 1e-06,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "TR-LONG",
+      "window_id": "TR-LONG#W3",
+      "code": "011",
+      "T50_s": 1e-06,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "TR-LONG",
+      "window_id": "TR-LONG#W4",
+      "code": "100",
+      "T50_s": 1e-06,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "TR-LONG",
+      "window_id": "TR-LONG#W5",
+      "code": "101",
+      "T50_s": 1e-06,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "TR-LONG",
+      "window_id": "TR-LONG#W6",
+      "code": "110",
+      "T50_s": 1e-06,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "TR-LONG",
+      "window_id": "TR-LONG#W7",
+      "code": "111",
+      "T50_s": 1e-06,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "TR-120",
+      "window_id": "TR-120#W0",
+      "code": "000",
+      "T50_s": 1.2e-07,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "TR-200",
+      "window_id": "TR-200#W0",
+      "code": "000",
+      "T50_s": 2e-07,
+      "reference_tick_s": 2e-07,
+      "qlsb_C": 3.75e-13,
+      "expected_qlsb_C": 3.75e-13,
+      "matches": true
+    },
+    {
+      "case_id": "TR-OFFCODE",
+      "window_id": "TR-OFFCODE#W0",
+      "code": "011",
+      "T50_s": 3e-07,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "TR-OFFCODE",
+      "window_id": "TR-OFFCODE#W1",
+      "code": "100",
+      "T50_s": 3e-07,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "TR-OFFCODE",
+      "window_id": "TR-OFFCODE#W2",
+      "code": "000",
+      "T50_s": 3e-07,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "TR-OFFCODE",
+      "window_id": "TR-OFFCODE#W3",
+      "code": "111",
+      "T50_s": 3e-07,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "RS-FULL",
+      "window_id": "RS-FULL#W0",
+      "code": "000",
+      "T50_s": 1e-06,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "RS-FULL",
+      "window_id": "RS-FULL#W1",
+      "code": "001",
+      "T50_s": 1e-06,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "RS-FULL",
+      "window_id": "RS-FULL#W2",
+      "code": "010",
+      "T50_s": 1e-06,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "RS-FULL",
+      "window_id": "RS-FULL#W3",
+      "code": "011",
+      "T50_s": 1e-06,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "RS-FULL",
+      "window_id": "RS-FULL#W4",
+      "code": "100",
+      "T50_s": 1e-06,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "RS-FULL",
+      "window_id": "RS-FULL#W5",
+      "code": "101",
+      "T50_s": 1e-06,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "RS-FULL",
+      "window_id": "RS-FULL#W6",
+      "code": "110",
+      "T50_s": 1e-06,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "RS-FULL",
+      "window_id": "RS-FULL#W7",
+      "code": "111",
+      "T50_s": 1e-06,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "RS-LOW",
+      "window_id": "RS-LOW#W0",
+      "code": "000",
+      "T50_s": 1.2e-07,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "RS-SWITCH",
+      "window_id": "RS-SWITCH#W0",
+      "code": "011",
+      "T50_s": 3e-07,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "RS-SWITCH",
+      "window_id": "RS-SWITCH#W1",
+      "code": "100",
+      "T50_s": 3e-07,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "RS-SWITCH",
+      "window_id": "RS-SWITCH#W2",
+      "code": "000",
+      "T50_s": 3e-07,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    },
+    {
+      "case_id": "RS-SWITCH",
+      "window_id": "RS-SWITCH#W3",
+      "code": "111",
+      "T50_s": 3e-07,
+      "reference_tick_s": 1.2e-07,
+      "qlsb_C": 2.2499999999999998e-13,
+      "expected_qlsb_C": 2.2499999999999998e-13,
+      "matches": true
+    }
+  ],
+  "DC_tick_refusals": [
+    "DC-000",
+    "DC-001",
+    "DC-010",
+    "DC-011",
+    "DC-100",
+    "DC-101",
+    "DC-110",
+    "DC-111"
+  ],
+  "convergence_10fC": {
+    "delta_q_C": 9.999999999998544e-15,
+    "delta_q_fC": 9.999999999998543,
+    "qlsb_C": 2.2499999999999998e-13,
+    "reference_tick_s": 1.2e-07,
+    "abs_delta_over_qlsb": 0.04444444444443798,
+    "limit": 0.01,
+    "status": "OUTSIDE_LIMIT",
+    "context_fields_checked": [
+      "sign_rule",
+      "threshold_V",
+      "window_start_ps",
+      "window_stop_ps",
+      "reference_current_A",
+      "reference_tick_s"
+    ],
+    "context_drift": [],
+    "absolute_difference_always_reported": true,
+    "evidence_class": "SYNTHETIC_NOT_MEASURED",
+    "refusal": ""
+  },
+  "changed_denominator_refused": "REFUSED_MISSING_CONTEXT",
+  "pass": true
+}

@@ -1,0 +1,32 @@
+C01_positive_sink_charge         POSITIVE HIT   Q=1.875e-13 C over 100 ns at 1.875 uA, sign SINK_POSITIVE_AS_DECLARED
+C02_reversed_probe_refused       NEGATIVE HIT   the same physics on reversed terminals gives Q=-1.875e-13 C; abs() would have made it look identical to the po
+C03_deck_probe_order_named       NEGATIVE HIT   line 79 became (data_out clamp_node) and the deck audit answered: TR-120.scs writes the probe as "Ip_branch (d
+C04_cancelling_tail_fails        NEGATIVE HIT   net Q=0 C looks like a shut branch, the magnitude test still says 0.5 uA against a 0.15 uA limit
+C05_quiet_tail_passes            POSITIVE HIT   max(abs(I))=0.01 uA at 1380 ns inside the last 100 ns, under the 0.15 uA limit
+C06_nonuniform_pencil_check      POSITIVE HIT   Q=1.375e-13 C, boundaries interpolated onto the enclosing pairs
+C07_adaptive_precision           POSITIVE HIT   kept 1.99902e+06 ps (quantum 50000 ps), which is the bound a reviewer needs beside the number
+C08_garbage_named                NEGATIVE HIT   four bad sample shapes and one edge-less window all refused by name
+C09_left_band_before_deadline    NEGATIVE HIT   left the band at 1201.55 ns, held only None ns, deadline 1230 ns
+C10_settled_held                 POSITIVE HIT   in band from the edge to the deadline, held 100 ns
+C11_halved_array                 NEGATIVE HIT   half current gives worst deviation 0 units of Iunit_ref, absolute 7.5 uA against the band 14.25-15.75 uA
+C12_code_000_not_black           NEGATIVE HIT   code 000 = 1 branch, and a ladder missing it is refused by name
+C13_refined_lost_history         NEGATIVE HIT   the schedule refused it: RS-FULL writes off_window_ns 2100.000-2500.000;3600.000-4000.000;5100.000-5500.000;66
+C14_refined_changed_supply       NEGATIVE HIT   the schedule refused it: RS-LOW differs from TR-120 outside the time step: data_en_level_V
+C15_refined_lost_transition      NEGATIVE HIT   the schedule refused it: RS-SWITCH declares 3 code-change entries for 4 platforms
+C16_convergence_absolute         NEGATIVE HIT   delta Q=10 fC = 0.0444444 QLSB against a 0.01 limit; moving the window by 10 ns refuses the comparison
+C17_two_charge_expectations      POSITIVE HIT   nominal 1.875e-13 C vs DC NOT_RUN; QLSB 2.25e-13 C, error 0 LSB
+C18_leak_in_second_tail          POSITIVE HIT   8 codes, one 5 uA leak in platform 1: ABOVE_LIMIT at index [1] with max(abs(I)) = 5e-06 A over 100 ns, the oth
+C19_full_versus_flat_window      POSITIVE HIT   full 2.15625e-13 C over 120 ns of enable versus flat 1.875e-13 C over 100 ns of flat part; the difference 2.81
+C20_no_edge_refusal_left         POSITIVE HIT   27 windows over 7 transient cases measured through the entrance, edge refusals=0, edges off their declared ins
+C21_missing_context_refused      NEGATIVE HIT   6 context fields each refused by name when both sides omitted them; the complete pair converges at WITHIN_LIMI
+C22_leakage_window_refusals      NEGATIVE HIT   a 10 ns tail refuses as REFUSED_LEAKAGE_OUTSIDE_PURE_OFF and an enable that reaches 1.8 V inside the window re
+C23_dc_expectation_via_entrance  NEGATIVE HIT   nominal 2.25e-13 C (-0.0416667 LSB) with the DC column NOT_RUN; supplying IDC 2 uA makes the DC expectation 2.
+C24_decks_read_clean             POSITIVE HIT   15 decks read from disk with the reader's own parser, problems=0
+C25_reader_names_the_shapes      NEGATIVE HIT   3 of 3 shapes refused by name on temporary copies (old_long_ramp, leak_window_over_next_rise, delivered_bytes_
+C26_half_pC_is_outside           NEGATIVE HIT   TR-LONG code 111: T50 1 us stays the window, QLSB 0.225 pC comes from the 120 ns reference tick, error +0.5 pC
+C27_qlsb_follows_the_case        POSITIVE HIT   TR-120 0.225 pC, TR-200 0.375 pC, TR-LONG eight codes all on 0.225 pC while its own window is 1 us (10 windows
+C28_expectation_scales_with_t50  POSITIVE HIT   120 ns and 1 us windows of one code: expected 2.25e-13 C versus 1.875e-12 C, QLSB 2.25e-13 C both times, and t
+C29_all_27_windows_read_back     POSITIVE HIT   27 windows across 7 transient and refined cases, every QLSB equal to Iunit x that case reference tick (TR-200=
+C30_bad_tick_refuses_first       NEGATIVE HIT   5 bad ticks each refused by name before the division, missing and unknown refuse too, and the DC row reports N
+C31_convergence_uses_the_reference_tick NEGATIVE HIT   10 fC over 120 ns is 0.0444444 QLSB against a 0.01 limit; a denominator that disagrees with the pair, a zero r
+D7C_B_PREP_CASES: PASS (31/31 named exactly, failures: none, evidence SYNTHETIC_NOT_MEASURED)

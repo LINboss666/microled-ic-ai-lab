@@ -1,0 +1,249 @@
+{
+ "accepted_as": "PAM_CANDIDATE_AND_OFFLINE_PREPARATION: the eight-level candidate text circuits, the fifteen offline stimulus decks and the transient charge measurement entrance with the per-case reference tick. It is not a measured eight-level current, not a native netlist syntax proof and not a display or optical claim",
+ "accepted_branch": "poc/data-pam-d7c-b-prep-r2",
+ "accepted_sha": "e51c5320a28bd5043e21d08a0be97e9d5612cd16",
+ "data7b_overage": "59/56 and the credential echo event stay as they are; this registration does not touch them",
+ "evidence_basis": {
+  "executor_delivered_archive": {
+   "bytes": 808824,
+   "path": "D:/r2_pkg_out/MicroLED_DATA7C_B_PREP_R2_Package_20261024.zip",
+   "sha256": "d98622c1c451e4eb70c06a218d226b95915a00459f3111c501888c550a383e7e",
+   "verified_by_the_review": "NO - review_identity.json says executor_zip_bytes_available=false, so this digest is executor-side only"
+  },
+  "recount_by_this_agent": {
+   "commits_base_r1_to_reviewed_tip": 7,
+   "note": "matches the review report section 1 (7 commits, 2,766 tracked paths, five modified files)",
+   "tracked_paths_at_reviewed_tip": 2766
+  },
+  "review_package_manifest_mismatches": [],
+  "review_package_manifest_rows": 37,
+  "review_package_mirror": "reports/reviews/DATA-7C-B-PREP-R2-GO/review_package",
+  "review_package_unlisted_files_in_mirror": [
+   "MANIFEST.csv"
+  ],
+  "review_package_zip": {
+   "bytes": 70516,
+   "path_on_executor": "C:/Users/LMX/Downloads/MicroLED_DATA7C_B_PREP_R2_GO_Independent_Review_20261024.zip",
+   "sha256": "54dcb4bc66f90960b8c758de07d35bac1bf39a821d4a6903f3074d64968fbb58"
+  },
+  "review_report": {
+   "bytes": 5655,
+   "path": "reports/reviews/DATA-7C-B-PREP-R2-GO/review_package/REVIEW_DATA7C_B_PREP_R2_GO_20261024.md",
+   "sha256": "0e1a0ea5c02cf38c2b0e813af1ae9134a26c06a373e3f700c399ba7f4656c7ff"
+  },
+  "reviewed_content_blob_sample": {
+   "byte_identical": 17,
+   "difference_is_line_endings_only": [],
+   "paths_compared": 17,
+   "rows": [
+    {
+     "bytes": 32297,
+     "difference_is_line_endings_only": false,
+     "git_blob_at_reviewed_tip": "5ff60229544492bd9de61fba41dbf04b7277681cfefe3030e1f032208236495d",
+     "identical": true,
+     "path": "scripts/dd1_d7c_b_prep_measure.py",
+     "sha256_on_disk": "5ff60229544492bd9de61fba41dbf04b7277681cfefe3030e1f032208236495d"
+    },
+    {
+     "bytes": 60864,
+     "difference_is_line_endings_only": false,
+     "git_blob_at_reviewed_tip": "edab66ccabaf2a7dd9d19ce6401bd3055d7bd7890110f22a5bde4864e1d23e09",
+     "identical": true,
+     "path": "scripts/dd1_d7c_b_prep_contract.py",
+     "sha256_on_disk": "edab66ccabaf2a7dd9d19ce6401bd3055d7bd7890110f22a5bde4864e1d23e09"
+    },
+    {
+     "bytes": 62914,
+     "difference_is_line_endings_only": false,
+     "git_blob_at_reviewed_tip": "fcdf5b98d95a50c45be3a590695387adcd0028fa55acc7598212cf865a8c2a64",
+     "identical": true,
+     "path": "scripts/dd1_d7c_b_prep_cases.py",
+     "sha256_on_disk": "fcdf5b98d95a50c45be3a590695387adcd0028fa55acc7598212cf865a8c2a64"
+    },
+    {
+     "bytes": 24746,
+     "difference_is_line_endings_only": false,
+     "git_blob_at_reviewed_tip": "29861970b9bee33b70d17edc83302f320cf5e050284d4d0ecc9c199c4a151840",
+     "identical": true,
+     "path": "tests/dd1_d7c_b_prep/contract.json",
+     "sha256_on_disk": "29861970b9bee33b70d17edc83302f320cf5e050284d4d0ecc9c199c4a151840"
+    },
+    {
+     "bytes": 14840,
+     "difference_is_line_endings_only": false,
+     "git_blob_at_reviewed_tip": "fef4c9d3c8deaa3aeb576d90ecabe3ad977acba85b85c4a9b52cf6882a4665f6",
+     "identical": true,
+     "path": "tests/dd1_d7c_b_prep/schedule.csv",
+     "sha256_on_disk": "fef4c9d3c8deaa3aeb576d90ecabe3ad977acba85b85c4a9b52cf6882a4665f6"
+    },
+    {
+     "bytes": 49799,
+     "difference_is_line_endings_only": false,
+     "git_blob_at_reviewed_tip": "5f7bd75cd1a15f5c05e3a79d55fd234d1e60ecb2b5bd66972d43c4d84cb87aa3",
+     "identical": true,
+     "path": "tests/dd1_d7c_b_prep/windows.csv",
+     "sha256_on_disk": "5f7bd75cd1a15f5c05e3a79d55fd234d1e60ecb2b5bd66972d43c4d84cb87aa3"
+    },
+    {
+     "bytes": 22453,
+     "difference_is_line_endings_only": false,
+     "git_blob_at_reviewed_tip": "f3dcfe12e42150190d616a3128264787fc7148a7bccbde9c315dcbbf0b9cdf18",
+     "identical": true,
+     "path": "tests/dd1_d7c_b_prep/pwl.csv",
+     "sha256_on_disk": "f3dcfe12e42150190d616a3128264787fc7148a7bccbde9c315dcbbf0b9cdf18"
+    },
+    {
+     "bytes": 21270,
+     "difference_is_line_endings_only": false,
+     "git_blob_at_reviewed_tip": "fec7bbb1970b8fa679b65675e444646bd3772e66b0a96cef6d9184045ad9319e",
+     "identical": true,
+     "path": "reports/dd1_d7c_b_prep_contract.md",
+     "sha256_on_disk": "fec7bbb1970b8fa679b65675e444646bd3772e66b0a96cef6d9184045ad9319e"
+    },
+    {
+     "bytes": 25860,
+     "difference_is_line_endings_only": false,
+     "git_blob_at_reviewed_tip": "8932d38af1cfd2d6ff51558f5c2c396dce40ee5def835a09908c6647bd6855be",
+     "identical": true,
+     "path": "reports/dd1_d7c_b_prep_review_fix_r2.md",
+     "sha256_on_disk": "8932d38af1cfd2d6ff51558f5c2c396dce40ee5def835a09908c6647bd6855be"
+    },
+    {
+     "bytes": 68631,
+     "difference_is_line_endings_only": false,
+     "git_blob_at_reviewed_tip": "132ee686f085e4cab2867085598d5d49718a516ac6226263819a301c6712fe91",
+     "identical": true,
+     "path": "scripts/dd1_d7c_b_prep_r2_verify.py",
+     "sha256_on_disk": "132ee686f085e4cab2867085598d5d49718a516ac6226263819a301c6712fe91"
+    },
+    {
+     "bytes": 6033,
+     "difference_is_line_endings_only": false,
+     "git_blob_at_reviewed_tip": "520c8ad5f5a077fd004dd52953db86e3a91ffbc0cfd71fac2d5bb6ec12527bcb",
+     "identical": true,
+     "path": "results/evidence/dd1_d7c_b_prep_r2_20261024_112947_879fa0/verification_summary.json",
+     "sha256_on_disk": "520c8ad5f5a077fd004dd52953db86e3a91ffbc0cfd71fac2d5bb6ec12527bcb"
+    },
+    {
+     "bytes": 3871,
+     "difference_is_line_endings_only": false,
+     "git_blob_at_reviewed_tip": "d2def4e657532b655941c2e42adf8534b7144544fa72ff2f41dfbd3374620faf",
+     "identical": true,
+     "path": "spectre/dd1_d7c_a_gates.scs",
+     "sha256_on_disk": "d2def4e657532b655941c2e42adf8534b7144544fa72ff2f41dfbd3374620faf"
+    },
+    {
+     "bytes": 4674,
+     "difference_is_line_endings_only": false,
+     "git_blob_at_reviewed_tip": "9f6c8d7895d13aaf031eac8036bba7165e26a448c685beef8ab2d0a128627d24",
+     "identical": true,
+     "path": "spectre/dd1_d7c_a_pam_dec.scs",
+     "sha256_on_disk": "9f6c8d7895d13aaf031eac8036bba7165e26a448c685beef8ab2d0a128627d24"
+    },
+    {
+     "bytes": 4114,
+     "difference_is_line_endings_only": false,
+     "git_blob_at_reviewed_tip": "60e06aa3010a66442ac25ff408abc22f1aab93d6b5d3b24dbc15095ac66234af",
+     "identical": true,
+     "path": "spectre/dd1_d7c_a_sink_unit.scs",
+     "sha256_on_disk": "60e06aa3010a66442ac25ff408abc22f1aab93d6b5d3b24dbc15095ac66234af"
+    },
+    {
+     "bytes": 4029,
+     "difference_is_line_endings_only": false,
+     "git_blob_at_reviewed_tip": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24",
+     "identical": true,
+     "path": "spectre/dd1_d7c_a_pam_top.scs",
+     "sha256_on_disk": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24"
+    },
+    {
+     "bytes": 4803,
+     "difference_is_line_endings_only": false,
+     "git_blob_at_reviewed_tip": "2193e220d0f539d853b5da59a4ec7e185c4da131d1a2597463a46145962850fe",
+     "identical": true,
+     "path": "spectre/dd1_d7c_b_prep/DC-000.scs",
+     "sha256_on_disk": "2193e220d0f539d853b5da59a4ec7e185c4da131d1a2597463a46145962850fe"
+    },
+    {
+     "bytes": 4800,
+     "difference_is_line_endings_only": false,
+     "git_blob_at_reviewed_tip": "e333cce09c94dbbdb811f134772d76961ee3534984b2ba253e39097813e6b405",
+     "identical": true,
+     "path": "spectre/dd1_d7c_b_prep/DC-111.scs",
+     "sha256_on_disk": "e333cce09c94dbbdb811f134772d76961ee3534984b2ba253e39097813e6b405"
+    }
+   ],
+   "working_tree_drifts_from_the_tip": []
+  },
+  "reviewer_instruments_as_received": [
+   {
+    "path": "reports/reviews/DATA-7C-B-PREP-R2-GO/review_package/reviewer/probe_tick_normalisation.py",
+    "sha256": "3b970d0fcff5d3f6582d467baf51f5af3eaa59a79d7355d8148023c6a56425ad"
+   },
+   {
+    "path": "reports/reviews/DATA-7C-B-PREP-R2-GO/review_package/reviewer/probe_prep_gaps.py",
+    "sha256": "d981ff190a627ae70bb8e8a5656226b1b2a2d35e65b6539d99b13768dbe69b7c"
+   }
+  ],
+  "reviewer_observed_facts": {
+   "frozen_shared_cli": "exactly three round-bound vocabulary problems, not called a PASS",
+   "old_four_families": "individually false on the work tree and on a fresh archive",
+   "record_semantics": "25 gates, 0 problems, 99 identity rows matched against real blobs",
+   "tick_probe_on_R1": "rc=0 defect_reproduced=true tick=1e-06 qlsb=1.875e-12 error=0.266667 LSB WITHIN_PROPOSED_LIMIT",
+   "tick_probe_on_R2": "rc=1 defect_reproduced=false tick=1.2e-07 qlsb=2.2499999999999998e-13 error=2.222222 LSB OUTSIDE_PROPOSED_LIMIT"
+  }
+ },
+ "merge_performed": false,
+ "native_authorisation_granted_by_this_user_approval": {
+  "DEBUG_MARGIN": 4,
+  "DUT_RUNS": 8,
+  "GUEST_WRITE_PATH": "/root/microled_ai_project/<new run dir for this round>",
+  "NATIVE_PREFLIGHT_RUNS": 8,
+  "SPECTRE_LIMIT": 20,
+  "STILL_FORBIDDEN": [
+   "OA read or write",
+   "RTL simulation",
+   "transient simulation",
+   "DUT topology or W/L change",
+   "PDK, licence or password change",
+   "VM power, snapshot or network change",
+   "force push",
+   "skipped hooks",
+   "gc or prune",
+   "history rewrite",
+   "visibility change",
+   "push to main",
+   "merging this branch"
+  ],
+  "TASK_ID": "DATA-7C-B-DC"
+ },
+ "new_blocking_findings": 0,
+ "nonblocking_note_fixed_this_round": "the nominal current table rendered the ampere number in the uA column; the fix is value*1e6 in the renderer and a re-render of that markdown only, done inside this round as the review asked, with no DOC round",
+ "nonblocking_notes": 1,
+ "previous_rounds_ratified": "NONE",
+ "registered_by": "user approval given in the Qoder Desktop conversation on 2026-10-25; the exact click time is not observable to this agent, so only the moment this record was written is timestamped here",
+ "registered_round": "DATA-7C-B-PREP-R2",
+ "registered_utc": "2026-10-25T17:22:16Z",
+ "remote_readback_at_registration": {
+  "api_answer": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/git/refs#get-a-reference\",\"status\":\"404\"}gh: Not Found (HTTP 404)",
+  "api_command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/poc/data-pam-d7c-b-dc",
+  "api_rc": 1,
+  "command": "git -C <repo> -c http.proxy=http://127.0.0.1:7892 ls-remote origin refs/heads/main refs/heads/poc/data-pam-d7c-b-prep-r2 refs/heads/poc/data-pam-d7c-b-dc",
+  "note": "the branch this round creates did not exist when the read-back ran, so the API 404 is the correct answer; github.com over 443 needs the system proxy for the git transport while api.github.com answers directly",
+  "objects": {
+   "refs/heads/main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+   "refs/heads/poc/data-pam-d7c-b-prep-r2": "e51c5320a28bd5043e21d08a0be97e9d5612cd16"
+  },
+  "queried_utc": "2026-10-25T17:22:15Z",
+  "rc": 0
+ },
+ "review_recommendation": "GO",
+ "review_scope": "PAM_CANDIDATE_AND_OFFLINE_PREPARATION_ONLY",
+ "schema_version": 1,
+ "stop_if_this_record_is_read_alone": "the registration records a user decision about offline content; it is not a licence for any later stage",
+ "task_id": "DATA-7C-B-DC",
+ "user_selection_verbatim": [
+  "是否批准 DATA-7C-B-DC 并按任务书执行（含进入 guest 与 Spectre 启动预算）？ -> 批准 20 次，一跑到底",
+  "接受登记的范围怎么定？（复审建议把 e51c532 登记为限定版本）？ -> 登记，限 PAM 候选与离线准备（推荐）"
+ ]
+}
