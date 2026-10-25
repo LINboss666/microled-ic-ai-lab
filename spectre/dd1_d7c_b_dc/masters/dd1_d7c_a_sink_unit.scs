@@ -1,0 +1,50 @@
+// dd1_d7c_a_sink_unit.scs -- DATA-7C-A: one unit current branch, the accepted four-device sink core
+// rebuilt at unit geometry. CANDIDATE / NOT SIMULATED.
+//
+// Why a new file instead of re-using data_sink_1ch: the accepted core sizes Mout and Mcas at
+// w=2e-5 (20 um), which is the full 15 uA reference current. Candidate A needs each of eight
+// branches to carry 15/8 uA, so the mirror devices must be 20/8 = 2.5 um. Editing the accepted file
+// would change frozen, already-reviewed bytes, so the unit core is a new subckt that is structurally
+// identical to data_sink_1ch and differs ONLY in those two widths. The offline checker proves that
+// statement by matching device-by-device (same instance name, same model, same D/G/S/B pattern, same
+// L) and by refusing any other difference -- scripts/dd1_d7c_a_guards.py injects a body change and a
+// width change beyond the two allowed ones and requires them to be named.
+//
+// Device by device, with terminal order ( d g s b ) and the main current direction:
+//   Mout          (node_m     vbias_ch     VSS  VSS)         n33  l=2e-6 w=2.5e-6
+//       the unit current device. Current enters at D from node_m, leaves at S to VSS; its gate is the
+//       LOCAL bias node vbias_ch. W/L = 2.5/2 against the reference Mref W/L = 20/2, which is the
+//       ESTIMATED_MIRROR_RATIO_ONLY statement 1:8. No simulation result is claimed from it.
+//   Mcas          (DATA_OUT   VCAS         node_m VSS)       n33  l=2e-6 w=2.5e-6
+//       the cascode. DATA_OUT -> Mcas -> Mout -> VSS is the main path of the branch; VCAS is the
+//       inherited 1.8 V cascode bias (POC clamp condition 1.2 V at the output in the native plan), and
+//       scaled with the unit current for the same reason as Mout.
+//   Mpass_local   (VBIAS_SHARED  EN   vbias_ch  vbias_ch)    n33_dnw_4t_ckt l=2e-6 w=5e-6
+//       the local bias pass device. Drain is the SHARED reference node, source and the fourth terminal
+//       (the DNW body) are this branch's OWN vbias_ch. The body is never tied to VSS: the accepted
+//       core ties it to the node it passes, and the guard injects a VSS tie to prove the checker
+//       notices. Gate is this branch's own en net, so the branch cannot be biased on by another branch.
+//       Width inherited from the accepted core, NOT divided by 8: it is a switch transferring a
+//       voltage, not a current-carrying mirror device.
+//   Mbleed_local  (vbias_ch    EN_B        VSS   VSS)        n33  l=2e-6 w=2e-6
+//       the discharge device for the local bias node when the branch is off. Width inherited from the
+//       accepted core on purpose: shrinking it with the current would slow down vbias_ch discharge and
+//       is exactly the kind of change that must be measured, not assumed.
+//
+// vbias_ch and node_m stay inside this subckt. Eight instances therefore hold eight independent local
+// bias nodes and eight independent cascode sources; the top level must not name them. That is what
+// LOCAL_NODES_NOT_SHARED checks, because "eight branches" and "one branch eight times written out"
+// are only the same circuit if the local nodes really are per instance.
+//
+// m (fingers) is left unset on all four devices, which is the accepted core's own convention, so the
+// effective width is w x m = 2.5 um x 1 per branch and 8 x 2.5 um = 20 um summed over the branches --
+// equal to one accepted Mout. Whether that distribution is better than one 20 um device with m=8
+// fingers is a matching/lag/area question this round does not answer; both are reported as candidates
+// in reports/dd1_d7c_a_pam_candidate.md and neither is simulated.
+
+subckt dd1_d7c_a_sink_unit (EN EN_B VBIAS_SHARED VCAS DATA_OUT VSS)
+  Mbleed_local (vbias_ch EN_B VSS VSS) n33 l=2e-6 w=2e-6
+  Mcas (DATA_OUT VCAS node_m VSS) n33 l=2e-6 w=2.5e-6
+  Mout (node_m vbias_ch VSS VSS) n33 l=2e-6 w=2.5e-6
+  Mpass_local (VBIAS_SHARED EN vbias_ch vbias_ch) n33_dnw_4t_ckt l=2e-6 w=5e-6
+ends dd1_d7c_a_sink_unit

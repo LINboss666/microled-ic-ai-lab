@@ -1,0 +1,251 @@
+{
+ "base_sha": "e51c5320a28bd5043e21d08a0be97e9d5612cd16",
+ "decks": [
+  {
+   "case_id": "DC-000",
+   "delivered_sha256": "2193e220d0f539d853b5da59a4ec7e185c4da131d1a2597463a46145962850fe",
+   "dut_line_replaced": [
+    "Xdut (data_en pam0 pam1 pam2 iref_in vcas data_out vdd18 vss) dd1_d7c_a_pam_1ch"
+   ],
+   "load_ohms": 80000.0,
+   "meter_loads_added": [
+    "Rload_meter (data_out vss) resistor r=80e3",
+    "Rref_meter (iref_in vss) resistor r=50e3"
+   ],
+   "preflight_path": "spectre/dd1_d7c_b_dc/DC-000.pre.scs",
+   "preflight_sha256": "77c3bb3b6c4497f7aea275f2715439dff232a798a1f3bd3ca547e7c0adfd5465",
+   "reference_expected_V": 0.75,
+   "save_lines_dropped": [
+    "save Xdut.en0 Xdut.en1 Xdut.en2 Xdut.en3 Xdut.en4 Xdut.en5 Xdut.en6 Xdut.en7",
+    "save Xdut.enb0 Xdut.enb1 Xdut.enb2 Xdut.enb3 Xdut.enb4 Xdut.enb5 Xdut.enb6 Xdut.enb7",
+    "save Xdut.Xu0.vbias_ch Xdut.Xu1.vbias_ch Xdut.Xu2.vbias_ch Xdut.Xu3.vbias_ch",
+    "save Xdut.Xu4.vbias_ch Xdut.Xu5.vbias_ch Xdut.Xu6.vbias_ch Xdut.Xu7.vbias_ch",
+    "save Xdut.Xu0.node_m Xdut.Xu4.node_m"
+   ]
+  },
+  {
+   "case_id": "DC-111",
+   "delivered_sha256": "e333cce09c94dbbdb811f134772d76961ee3534984b2ba253e39097813e6b405",
+   "dut_line_replaced": [
+    "Xdut (data_en pam0 pam1 pam2 iref_in vcas data_out vdd18 vss) dd1_d7c_a_pam_1ch"
+   ],
+   "load_ohms": 80000.0,
+   "meter_loads_added": [
+    "Rload_meter (data_out vss) resistor r=80e3",
+    "Rref_meter (iref_in vss) resistor r=50e3"
+   ],
+   "preflight_path": "spectre/dd1_d7c_b_dc/DC-111.pre.scs",
+   "preflight_sha256": "a83b7a6f95d21edaf33f44fd766d0c957a6f2dd65f02875c4d4cadd3aa5edb8b",
+   "reference_expected_V": 0.75,
+   "save_lines_dropped": [
+    "save Xdut.en0 Xdut.en1 Xdut.en2 Xdut.en3 Xdut.en4 Xdut.en5 Xdut.en6 Xdut.en7",
+    "save Xdut.enb0 Xdut.enb1 Xdut.enb2 Xdut.enb3 Xdut.enb4 Xdut.enb5 Xdut.enb6 Xdut.enb7",
+    "save Xdut.Xu0.vbias_ch Xdut.Xu1.vbias_ch Xdut.Xu2.vbias_ch Xdut.Xu3.vbias_ch",
+    "save Xdut.Xu4.vbias_ch Xdut.Xu5.vbias_ch Xdut.Xu6.vbias_ch Xdut.Xu7.vbias_ch",
+    "save Xdut.Xu0.node_m Xdut.Xu4.node_m"
+   ]
+  },
+  {
+   "case_id": "DC-001",
+   "delivered_sha256": "b015fccb485850ff92d00f4c58637883b9be249ac864b31efd3edfef40ba6bd1",
+   "dut_line_replaced": [
+    "Xdut (data_en pam0 pam1 pam2 iref_in vcas data_out vdd18 vss) dd1_d7c_a_pam_1ch"
+   ],
+   "load_ohms": 80000.0,
+   "meter_loads_added": [
+    "Rload_meter (data_out vss) resistor r=80e3",
+    "Rref_meter (iref_in vss) resistor r=50e3"
+   ],
+   "preflight_path": "spectre/dd1_d7c_b_dc/DC-001.pre.scs",
+   "preflight_sha256": "164bf744989bb752e23cf990fa5f36f0eb1610fab3365392159d06dfd6eee60d",
+   "reference_expected_V": 0.75,
+   "save_lines_dropped": [
+    "save Xdut.en0 Xdut.en1 Xdut.en2 Xdut.en3 Xdut.en4 Xdut.en5 Xdut.en6 Xdut.en7",
+    "save Xdut.enb0 Xdut.enb1 Xdut.enb2 Xdut.enb3 Xdut.enb4 Xdut.enb5 Xdut.enb6 Xdut.enb7",
+    "save Xdut.Xu0.vbias_ch Xdut.Xu1.vbias_ch Xdut.Xu2.vbias_ch Xdut.Xu3.vbias_ch",
+    "save Xdut.Xu4.vbias_ch Xdut.Xu5.vbias_ch Xdut.Xu6.vbias_ch Xdut.Xu7.vbias_ch",
+    "save Xdut.Xu0.node_m Xdut.Xu4.node_m"
+   ]
+  },
+  {
+   "case_id": "DC-010",
+   "delivered_sha256": "cd9df1cff8fda01a403caafaa6d726714d1d4d7cf1ad2586e150634ca4e2b690",
+   "dut_line_replaced": [
+    "Xdut (data_en pam0 pam1 pam2 iref_in vcas data_out vdd18 vss) dd1_d7c_a_pam_1ch"
+   ],
+   "load_ohms": 80000.0,
+   "meter_loads_added": [
+    "Rload_meter (data_out vss) resistor r=80e3",
+    "Rref_meter (iref_in vss) resistor r=50e3"
+   ],
+   "preflight_path": "spectre/dd1_d7c_b_dc/DC-010.pre.scs",
+   "preflight_sha256": "87fa134b1bc7eb3cc058c39cf81fd798f36a7f7746f692cdae419142cdab6361",
+   "reference_expected_V": 0.75,
+   "save_lines_dropped": [
+    "save Xdut.en0 Xdut.en1 Xdut.en2 Xdut.en3 Xdut.en4 Xdut.en5 Xdut.en6 Xdut.en7",
+    "save Xdut.enb0 Xdut.enb1 Xdut.enb2 Xdut.enb3 Xdut.enb4 Xdut.enb5 Xdut.enb6 Xdut.enb7",
+    "save Xdut.Xu0.vbias_ch Xdut.Xu1.vbias_ch Xdut.Xu2.vbias_ch Xdut.Xu3.vbias_ch",
+    "save Xdut.Xu4.vbias_ch Xdut.Xu5.vbias_ch Xdut.Xu6.vbias_ch Xdut.Xu7.vbias_ch",
+    "save Xdut.Xu0.node_m Xdut.Xu4.node_m"
+   ]
+  },
+  {
+   "case_id": "DC-011",
+   "delivered_sha256": "70e1044d3ba95720e7fd26f719e954050e63f54134f1162f103da0a9e360abb4",
+   "dut_line_replaced": [
+    "Xdut (data_en pam0 pam1 pam2 iref_in vcas data_out vdd18 vss) dd1_d7c_a_pam_1ch"
+   ],
+   "load_ohms": 80000.0,
+   "meter_loads_added": [
+    "Rload_meter (data_out vss) resistor r=80e3",
+    "Rref_meter (iref_in vss) resistor r=50e3"
+   ],
+   "preflight_path": "spectre/dd1_d7c_b_dc/DC-011.pre.scs",
+   "preflight_sha256": "6478626db9f0c1cf840147630d6330453e7acd27f9df2e6cc32b46545fbb5035",
+   "reference_expected_V": 0.75,
+   "save_lines_dropped": [
+    "save Xdut.en0 Xdut.en1 Xdut.en2 Xdut.en3 Xdut.en4 Xdut.en5 Xdut.en6 Xdut.en7",
+    "save Xdut.enb0 Xdut.enb1 Xdut.enb2 Xdut.enb3 Xdut.enb4 Xdut.enb5 Xdut.enb6 Xdut.enb7",
+    "save Xdut.Xu0.vbias_ch Xdut.Xu1.vbias_ch Xdut.Xu2.vbias_ch Xdut.Xu3.vbias_ch",
+    "save Xdut.Xu4.vbias_ch Xdut.Xu5.vbias_ch Xdut.Xu6.vbias_ch Xdut.Xu7.vbias_ch",
+    "save Xdut.Xu0.node_m Xdut.Xu4.node_m"
+   ]
+  },
+  {
+   "case_id": "DC-100",
+   "delivered_sha256": "dbfff3035bbabf2ab4a735c61223e410963e290dbf9de51d5841e0a912f6b5ef",
+   "dut_line_replaced": [
+    "Xdut (data_en pam0 pam1 pam2 iref_in vcas data_out vdd18 vss) dd1_d7c_a_pam_1ch"
+   ],
+   "load_ohms": 80000.0,
+   "meter_loads_added": [
+    "Rload_meter (data_out vss) resistor r=80e3",
+    "Rref_meter (iref_in vss) resistor r=50e3"
+   ],
+   "preflight_path": "spectre/dd1_d7c_b_dc/DC-100.pre.scs",
+   "preflight_sha256": "76786c144ed90f62ebf1de3fef59e6213fd59f18dd4536d8d3829381ada3d761",
+   "reference_expected_V": 0.75,
+   "save_lines_dropped": [
+    "save Xdut.en0 Xdut.en1 Xdut.en2 Xdut.en3 Xdut.en4 Xdut.en5 Xdut.en6 Xdut.en7",
+    "save Xdut.enb0 Xdut.enb1 Xdut.enb2 Xdut.enb3 Xdut.enb4 Xdut.enb5 Xdut.enb6 Xdut.enb7",
+    "save Xdut.Xu0.vbias_ch Xdut.Xu1.vbias_ch Xdut.Xu2.vbias_ch Xdut.Xu3.vbias_ch",
+    "save Xdut.Xu4.vbias_ch Xdut.Xu5.vbias_ch Xdut.Xu6.vbias_ch Xdut.Xu7.vbias_ch",
+    "save Xdut.Xu0.node_m Xdut.Xu4.node_m"
+   ]
+  },
+  {
+   "case_id": "DC-101",
+   "delivered_sha256": "35aa0a97f65da729afb88ab5e8dadb060ed7b8d0f96667a4298c64cd5fa67588",
+   "dut_line_replaced": [
+    "Xdut (data_en pam0 pam1 pam2 iref_in vcas data_out vdd18 vss) dd1_d7c_a_pam_1ch"
+   ],
+   "load_ohms": 80000.0,
+   "meter_loads_added": [
+    "Rload_meter (data_out vss) resistor r=80e3",
+    "Rref_meter (iref_in vss) resistor r=50e3"
+   ],
+   "preflight_path": "spectre/dd1_d7c_b_dc/DC-101.pre.scs",
+   "preflight_sha256": "d812354795645574afeea0a54c431cb0b2c50c69718ff7086fd4e99cee03ac1f",
+   "reference_expected_V": 0.75,
+   "save_lines_dropped": [
+    "save Xdut.en0 Xdut.en1 Xdut.en2 Xdut.en3 Xdut.en4 Xdut.en5 Xdut.en6 Xdut.en7",
+    "save Xdut.enb0 Xdut.enb1 Xdut.enb2 Xdut.enb3 Xdut.enb4 Xdut.enb5 Xdut.enb6 Xdut.enb7",
+    "save Xdut.Xu0.vbias_ch Xdut.Xu1.vbias_ch Xdut.Xu2.vbias_ch Xdut.Xu3.vbias_ch",
+    "save Xdut.Xu4.vbias_ch Xdut.Xu5.vbias_ch Xdut.Xu6.vbias_ch Xdut.Xu7.vbias_ch",
+    "save Xdut.Xu0.node_m Xdut.Xu4.node_m"
+   ]
+  },
+  {
+   "case_id": "DC-110",
+   "delivered_sha256": "9f7ec47174690e70a8b517d12fd1e25aa259b8fed5a5e1929e925a3a0856064d",
+   "dut_line_replaced": [
+    "Xdut (data_en pam0 pam1 pam2 iref_in vcas data_out vdd18 vss) dd1_d7c_a_pam_1ch"
+   ],
+   "load_ohms": 80000.0,
+   "meter_loads_added": [
+    "Rload_meter (data_out vss) resistor r=80e3",
+    "Rref_meter (iref_in vss) resistor r=50e3"
+   ],
+   "preflight_path": "spectre/dd1_d7c_b_dc/DC-110.pre.scs",
+   "preflight_sha256": "2d06c1461a6ba2dce721150ae2e61b83195477c4e51be750c49829836168ff37",
+   "reference_expected_V": 0.75,
+   "save_lines_dropped": [
+    "save Xdut.en0 Xdut.en1 Xdut.en2 Xdut.en3 Xdut.en4 Xdut.en5 Xdut.en6 Xdut.en7",
+    "save Xdut.enb0 Xdut.enb1 Xdut.enb2 Xdut.enb3 Xdut.enb4 Xdut.enb5 Xdut.enb6 Xdut.enb7",
+    "save Xdut.Xu0.vbias_ch Xdut.Xu1.vbias_ch Xdut.Xu2.vbias_ch Xdut.Xu3.vbias_ch",
+    "save Xdut.Xu4.vbias_ch Xdut.Xu5.vbias_ch Xdut.Xu6.vbias_ch Xdut.Xu7.vbias_ch",
+    "save Xdut.Xu0.node_m Xdut.Xu4.node_m"
+   ]
+  }
+ ],
+ "generated_utc": "2026-10-25T17:51:33Z",
+ "masters": [
+  {
+   "annotation_lines_removed": 4,
+   "blob_sha256": "04cd6833087511465aba06a3d2ba2f1ba71a49cce1ae962febff3b3eb1e4d79b",
+   "device_digest_equal": true,
+   "lines_after": 17,
+   "lines_before": 21,
+   "name": "dd1_d6_inv18.scs",
+   "path": "spectre/dd1_d7c_b_dc/masters/dd1_d6_inv18.scs",
+   "port_order_digest_equal": true,
+   "stripped_sha256": "d535ad0112c31952d0c51e314cc57054b631b18c7457ba8088d970945ca6de77"
+  },
+  {
+   "annotation_lines_removed": 2,
+   "blob_sha256": "4115e2d17a86fb92e7c222df085f1d1a82da14cb7640654d90f4e2589e9b31e7",
+   "device_digest_equal": true,
+   "lines_after": 3,
+   "lines_before": 5,
+   "name": "dd1_d6_bias_core.scs",
+   "path": "spectre/dd1_d7c_b_dc/masters/dd1_d6_bias_core.scs",
+   "port_order_digest_equal": true,
+   "stripped_sha256": "379536efb1dd9b2626e93ec384d572c734d5c1b398881c6de6ce4405e230c293"
+  },
+  {
+   "annotation_lines_removed": 20,
+   "blob_sha256": "d2def4e657532b655941c2e42adf8534b7144544fa72ff2f41dfbd3374620faf",
+   "device_digest_equal": true,
+   "lines_after": 59,
+   "lines_before": 79,
+   "name": "dd1_d7c_a_gates.scs",
+   "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_gates.scs",
+   "port_order_digest_equal": true,
+   "stripped_sha256": "55c08f25eaee6184c8be263e8762559f51ff1c66be37c0a0dfb1c2b0e8f1e5de"
+  },
+  {
+   "annotation_lines_removed": 22,
+   "blob_sha256": "9f6c8d7895d13aaf031eac8036bba7165e26a448c685beef8ab2d0a128627d24",
+   "device_digest_equal": true,
+   "lines_after": 82,
+   "lines_before": 104,
+   "name": "dd1_d7c_a_pam_dec.scs",
+   "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_pam_dec.scs",
+   "port_order_digest_equal": true,
+   "stripped_sha256": "f4d458d21d82e91c3f0e4012cc8fb568c090c1bb364fd486bf0b82a469163b5a"
+  },
+  {
+   "annotation_lines_removed": 6,
+   "blob_sha256": "60e06aa3010a66442ac25ff408abc22f1aab93d6b5d3b24dbc15095ac66234af",
+   "device_digest_equal": true,
+   "lines_after": 50,
+   "lines_before": 56,
+   "name": "dd1_d7c_a_sink_unit.scs",
+   "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_sink_unit.scs",
+   "port_order_digest_equal": true,
+   "stripped_sha256": "289ae1dd8edf91c806c2c2dfecc15d9b3b8524ed987849d0094bab1124369a3f"
+  },
+  {
+   "annotation_lines_removed": 9,
+   "blob_sha256": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24",
+   "device_digest_equal": true,
+   "lines_after": 50,
+   "lines_before": 59,
+   "name": "dd1_d7c_a_pam_top.scs",
+   "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_pam_top.scs",
+   "port_order_digest_equal": true,
+   "stripped_sha256": "8489616e4826fccdd7516d7b02764ae3850ad3e4476181b5ae0f5249ec5a08a5"
+  }
+ ],
+ "rule": "only the port-direction annotation lines are removed from the masters; the preflight deck replaces exactly one Xdut line with two meter loads and drops the five hierarchical saves of the DUT; sources, the 19-point clamp grid, the analysis line and the probe stay byte-identical to the delivered deck"
+}

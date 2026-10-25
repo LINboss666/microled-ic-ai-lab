@@ -1,0 +1,3 @@
+subckt data_bias_ref (VBIAS_SHARED VSS)
+  Mref (VBIAS_SHARED VBIAS_SHARED VSS VSS) n33 l=2e-6 w=2e-5
+ends data_bias_ref

@@ -1,0 +1,50 @@
+// dd1_d7c_a_pam_top.scs -- DATA-7C-A: candidate A top level, eight unit branches into ONE output.
+//
+// CANDIDATE / NOT SIMULATED. One current-pull-down output, eight selectable unit branches. This is
+// NOT eight LED channels: there is exactly one output port (data_out) and all eight branch cores hang
+// their DATA_OUT terminal on that single net. The checker proves it structurally (every branch
+// instance's DATA_OUT terminal must resolve to the top-level output net, and the subckt must declare
+// exactly one output port), and scripts/dd1_d7c_a_guards.py breaks one branch's output connection to
+// show the check is real.
+//
+// Hierarchy (追踪关系，全部来自本网表而不是文字):
+//   pam_sel[2:0] + data_en
+//     -> Xdec  dd1_d7c_a_pam_dec            (thermometer decode + per-branch AND + real inverters)
+//     -> en0..en7, enb0..enb7               (16 named nets, one inverting node per branch)
+//     -> Xu0..Xu7 dd1_d7c_a_sink_unit       (8 unit branches: pass, bleed, cascode, mirror)
+//     -> shared reference node iref_in      (Xref data_bias_ref, diode-connected Mref, injected by
+//                                            the testbench current meter, never an ideal VBIAS source)
+//     -> data_out                            (one output)
+//
+// Interface mapping to the accepted DATA-7A controller (rtl/dd1_d7a_gray_ctrl.sv), which this round
+// only prepares for -- nothing is wired to the controller and no accepted file is modified:
+//   controller data_en      -> DATA_EN   (top port data_en, 1.8 V domain)
+//   controller pam_sel[2:0] -> PAM_SEL   (top ports pam_sel0 = bit0 = weight 1,
+//                                                        pam_sel1 = bit1 = weight 2,
+//                                                        pam_sel2 = bit2 = weight 4)
+//   controller data_en_b    -> NOT used here. Each branch makes its own EN_B from its own en net,
+//                              because a branch that is selected off needs its local bias node bled,
+//                              and a shared complement would also be wrong for the eight different en
+//                              nets. The global complement stays what the accepted controller says.
+// External supplies and biases: iref_in (15 uA injected reference), vcas (1.8 V cascode bias,
+// inherited POC condition), vdd18 (1.8 V logic domain for the decoder), vss.
+//
+// Reference loading, stated rather than assumed: the eight pass devices all look at the same shared
+// reference node, so at DC the node only has to supply gate current, but its settling and its noise
+// sensitivity under eight capacitive loads is a native question (NOT_RUN). The mirror accounting is:
+// Iunit estimated = Iref x (W/L unit) / (W/L reference) = 15 uA x (2.5/2) / (20/2) = 1.875 uA, which
+// is ESTIMATED_MIRROR_RATIO_ONLY -- short-channel effects, output resistance, local bias drop across
+// the pass device and the mismatch between eight branches are all unmeasured here.
+
+subckt dd1_d7c_a_pam_1ch (data_en pam_sel0 pam_sel1 pam_sel2 iref_in vcas data_out vdd18 vss)
+  Xref (iref_in vss) data_bias_ref
+  Xdec (pam_sel0 pam_sel1 pam_sel2 data_en en0 en1 en2 en3 en4 en5 en6 en7 enb0 enb1 enb2 enb3 enb4 enb5 enb6 enb7 vdd18 vss) dd1_d7c_a_pam_dec
+  Xu0 (en0 enb0 iref_in vcas data_out vss) dd1_d7c_a_sink_unit
+  Xu1 (en1 enb1 iref_in vcas data_out vss) dd1_d7c_a_sink_unit
+  Xu2 (en2 enb2 iref_in vcas data_out vss) dd1_d7c_a_sink_unit
+  Xu3 (en3 enb3 iref_in vcas data_out vss) dd1_d7c_a_sink_unit
+  Xu4 (en4 enb4 iref_in vcas data_out vss) dd1_d7c_a_sink_unit
+  Xu5 (en5 enb5 iref_in vcas data_out vss) dd1_d7c_a_sink_unit
+  Xu6 (en6 enb6 iref_in vcas data_out vss) dd1_d7c_a_sink_unit
+  Xu7 (en7 enb7 iref_in vcas data_out vss) dd1_d7c_a_sink_unit
+ends dd1_d7c_a_pam_1ch

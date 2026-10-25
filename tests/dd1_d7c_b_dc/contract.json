@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "task_id": "DATA-7C-B-DC",
+  "round": "first native stage: eight PAM codes on one output channel, DC only, TT 27C",
+  "base_offline_content_sha": "e51c5320a28bd5043e21d08a0be97e9d5612cd16",
+  "branch": "poc/data-pam-d7c-b-dc",
+  "authorisation": {
+    "status": "GRANTED_BY_USER_FOR_THIS_TASK_BOOK",
+    "user_selection_verbatim": "批准 20 次，一跑到底",
+    "granted_scope": "implementation, SSH transfer, read-only model and environment checks, native preflight, eight DC measurements and a safe push, as one continuous in-scope action",
+    "spectre_launch_limit_total": 20,
+    "dut_runs": 8,
+    "preflight_runs": 8,
+    "debug_margin": 4,
+    "counts_rule": "every spectre process counts, including preflight, DUT, help, syntax probes, failures, crashes, aborts and launches whose result was never retrieved; REQUESTED occupies the budget before the process starts and recovery never refunds it; parsing a file or a static check costs nothing",
+    "guest_write_root": "/root/microled_ai_project/cadence_work/dd1_d7c_b_dc/<run_id>",
+    "independent_of": "the old 36-launch PREP draft, the DATA-7B 59/56 account and every future transient budget; no borrowing in either direction",
+    "never_authorised_by_this_round": ["OA read or write", "RTL simulation", "transient simulation", "DUT topology or W/L change", "PDK, licence or password change", "VM power, snapshot or network configuration change", "force push", "skipped hooks", "gc or prune", "history rewrite", "repository visibility change", "push to main", "merge"]
+  },
+  "criteria_source": {
+    "path": "tests/dd1_d7c_b_prep/contract.json",
+    "frozen_this_round": true,
+    "rules_reused": ["clamp", "full_scale_absolute", "eight_level_ratio", "supplies", "process_corner"],
+    "drift_rule": "the snapshot below is compared with the live frozen contract on every run, so a criterion cannot change between the preparation round and the measurement round without a named refusal",
+    "snapshot": {
+      "clamp_main_eval_V": 1.2,
+      "sweep_start_V": 0.6,
+      "sweep_step_V": 0.05,
+      "sweep_stop_V": 1.5,
+      "sweep_points_expected": 19,
+      "full_scale_code": "111",
+      "full_scale_target_A": 1.5e-05,
+      "full_scale_lower_A": 1.425e-05,
+      "full_scale_upper_A": 1.575e-05,
+      "unit_deviation_limit_in_units_of_iunit_ref": 0.25,
+      "strict_monotonic_required": true,
+      "iref_A": 1.5e-05,
+      "vdd18_V": 1.8,
+      "vcas_V": 1.8,
+      "vss_V": 0.0,
+      "temperature_statement": "simopt options temp=27",
+      "corner": "TT",
+      "nominal_current_identity": "ESTIMATED_MIRROR_RATIO_ONLY"
+    }
+  },
+  "matrix": {
+    "codes": ["000", "001", "010", "011", "100", "101", "110", "111"],
+    "launch_order": ["DC-000", "DC-111", "DC-001", "DC-010", "DC-011", "DC-100", "DC-101", "DC-110"],
+    "order_rule": "the two end codes run and pass first; the six middle codes follow. An end code passing is never a reason to skip a middle code",
+    "rows_expected": 152,
+    "rows_formula": "8 codes x 19 clamp points, debug and preflight rows excluded",
+    "sign_convention": "Ip_branch (clamp_node data_out) iprobe, so I_sink = Ip_branch with no negation and no abs(); a negative reading is diagnosed, never flipped",
+    "probe_instance": "Ip_branch",
+    "probe_signal": "Ip_branch:current",
+    "main_eval_point": 1.2,
+    "time_domain_qlsb": "NOT_APPLICABLE_DC_HAS_NO_TIME_DOMAIN"
+  },
+  "passing_ceiling": {
+    "level": "NATIVE_PAM_DC_TT_MEASURED",
+    "never_claimed_by_this_round": ["PAM and PWM joint charge", "optical effective bits", "layout", "SOA sign-off", "a full MOS grey-scale controller", "a LUT"],
+    "syntax_claim_rule": "native netlist syntax is only ever confirmed for the derived DC decks that actually ran, never extrapolated to the whole hierarchy or to transient"
+  },
+  "refusals": [
+    "launch without the authorisation marker set, before any file is written",
+    "launch when the persisted account shows no budget left",
+    "a deck that differs from the frozen delivered bytes in anything but the recorded derived-copy rule",
+    "an extraction with a non-finite value, a missing clamp point, a duplicate point, a missing 1.20 V point, a missing unit on the sweep axis or a deck/output identity mismatch",
+    "a judgement that normalises a whole-ladder shortfall into a pass",
+    "a result row copied from the nominal ladder instead of the native output"
+  ]
+}
