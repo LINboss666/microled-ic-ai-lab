@@ -478,6 +478,25 @@ def contract():
     return data
 
 
+def nominal_unit_row(code, branches, value_A):
+    """the one place the three spellings of the same current are written, so the scales cannot drift"""
+    return '| `%s` | %d | %.3f | %g A = %g fA = %g uA |' % (
+        code, branches, value_A * 1e6, value_A, value_A * 1e15, value_A * 1e6)
+
+
+def unit_field(row, unit):
+    """read one unit column back out of a rendered row; this is how the selfcheck catches a scale
+    written into the wrong column, which a render-versus-file comparison cannot see"""
+    for part in row.split('|')[-2].split('='):
+        tokens = part.strip().split()
+        if len(tokens) == 2 and tokens[1] == unit:
+            try:
+                return float(tokens[0])
+            except ValueError:
+                return None
+    return None
+
+
 def selfcheck(data):
     """arithmetic over the emitted contract; every refusal names the rule it broke"""
     problems = []
@@ -521,6 +540,13 @@ def selfcheck(data):
                             % (tick, computed, expected))
     if abs(UNIT_CURRENT_NOMINAL_A * 1e15 - 1.875e9) > 1e-6:
         problems.append('1.875 uA is not 1.875e9 fA, so the unit column is wrong')
+    for code, value in sorted(data['nominal_current_A_by_code'].items()):
+        for unit, scale in (('fA', 1e15), ('uA', 1e6)):
+            printed = unit_field(nominal_unit_row(code, int(code, 2) + 1, value), unit)
+            if printed is None or abs(printed - value * scale) > abs(value * scale) * 1e-9:
+                problems.append('code %s prints %r in the %s column, the rendered text has to '
+                                'carry %r; this is the unit column bug the review of R2 reported'
+                                % (code, printed, unit, value * scale))
     pair = data['rules']['time_step_pairing']
     if pair['nominal_maxstep_ns'] <= pair['refined_maxstep_ns']:
         problems.append('the refined step %s ns is not finer than the nominal %s ns'
@@ -777,8 +803,7 @@ def render_markdown(data):
     a('|---|---:|---:|---|')
     for code in sorted(data['nominal_current_A_by_code']):
         value = data['nominal_current_A_by_code'][code]
-        a('| `%s` | %d | %.3f | %g A = %g fA = %g uA |'
-          % (code, int(code, 2) + 1, value * 1e6, value, value * 1e15, value))
+        a(nominal_unit_row(code, int(code, 2) + 1, value))
     a('')
     a('代码位权：`pam_sel0`=bit0 权重 1，`pam_sel1`=bit1 权重 2，`pam_sel2`=bit2 权重 4；'
       '码 `000` 是**最低非零档**（一条支路），不得当黑码。')
