@@ -114,7 +114,7 @@
    "cr_bytes": false,
    "file": "commands.csv",
    "header_matches": true,
-   "rows": 21
+   "rows": 22
   },
   {
    "cr_bytes": false,
@@ -138,7 +138,7 @@
    "cr_bytes": false,
    "file": "source_identity.csv",
    "header_matches": true,
-   "rows": 123
+   "rows": 131
   }
  ],
  "dut_rows": 152,
@@ -158,12 +158,12 @@
   "pass": true,
   "target_uA": 15.0
  },
- "gates": 21,
+ "gates": 22,
  "gates_failed": [],
  "gates_informational": [],
- "generated_utc": "2026-10-25T19:01:15Z",
+ "generated_utc": "2026-10-25T19:25:33Z",
  "guest_write_root": "/root/microled_ai_project/cadence_work/dd1_d7c_b_dc/<run_id>",
- "identity_rows": 123,
+ "identity_rows": 131,
  "iunit_ref_uA": 1.92283819625,
  "measured_currents_at_1p20V_uA": {
   "000": 1.922839108,
@@ -202,6 +202,10 @@
    "parses": true
   },
   {
+   "file": "observed_signals.json",
+   "parses": true
+  },
+  {
    "file": "republish_note.json",
    "parses": true
   }
@@ -227,9 +231,9 @@
    "renamed": 0
   },
   "base_to_HEAD": {
-   "added": 89,
+   "added": 103,
    "changed": 2,
-   "commits": 10,
+   "commits": 13,
    "deleted": 0,
    "renamed": 0
   }
@@ -242,7 +246,7 @@
  "stop_reason": "AWAITING_INDEPENDENT_REVIEW",
  "strict_monotonic": true,
  "task_id": "DATA-7C-B-DC",
- "tip": "6acce1e4a40b3cb4a25f9ac54148c53771118a0b",
+ "tip": "859b64526c9ac085d933ecc23cbbc3b94f3ac7dc",
  "transient_simulations": 0,
  "verdict": "PASS",
  "worst_deviation_in_iunit_ref": 4.741688622672253e-07

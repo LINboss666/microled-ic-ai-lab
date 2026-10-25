@@ -1,32 +1,123 @@
 {
- "archived_into": "previous_publish_20261025T190115Z",
- "files": [
+ "all_previous_publishes": [
   {
-   "path": "commands.csv",
-   "sha256": "80df2bffdb88a11e649d2a70443cdf05f344ea816534829878e9376f41364dc1"
+   "archived_into": "previous_publish_20261025T190115Z",
+   "files": [
+    {
+     "path": "commands.csv",
+     "sha256": "80df2bffdb88a11e649d2a70443cdf05f344ea816534829878e9376f41364dc1"
+    },
+    {
+     "path": "frozen_comparison.csv",
+     "sha256": "7533c73da0a065383b93087cef94b9bfcce484405d31722f9adfd570e6d77506"
+    },
+    {
+     "path": "git_checks.csv",
+     "sha256": "7941dd6c4c70a107dd1df324895203e04fc678451339d71a9ed33627fc4990a2"
+    },
+    {
+     "path": "launches_reconcile.csv",
+     "sha256": "a0855e2feaa109fc5987641deeb538f4bae102bc2ab383a9e7978f3887c2fbc4"
+    },
+    {
+     "path": "source_identity.csv",
+     "sha256": "a00f7ac9c8efd83a9f70c964925dd7aabf9da617b9188c803732327d74d6b319"
+    },
+    {
+     "path": "verification_summary.json",
+     "sha256": "c3b1e1e2b80d1c2d0f4a57a970e783fb01fb1ba301a094a9a116123486604f7d"
+    }
+   ]
   },
   {
-   "path": "frozen_comparison.csv",
-   "sha256": "7533c73da0a065383b93087cef94b9bfcce484405d31722f9adfd570e6d77506"
+   "archived_into": "previous_publish_20261025T192034Z",
+   "files": [
+    {
+     "path": "commands.csv",
+     "sha256": "1dd3585405030cd1b15a6eb87970d97074a35adbcf453d249a63b6da7cc68c58"
+    },
+    {
+     "path": "frozen_comparison.csv",
+     "sha256": "8aeb6ee06899739f995d9fced8d6a7f398fb3c840645c8d8a528d7182fbbcdc0"
+    },
+    {
+     "path": "git_checks.csv",
+     "sha256": "c0aa7d1af7dd65e98a759e0b8da297fc6f4ad134ead025619da8fdead1bb4d16"
+    },
+    {
+     "path": "launches_reconcile.csv",
+     "sha256": "a0855e2feaa109fc5987641deeb538f4bae102bc2ab383a9e7978f3887c2fbc4"
+    },
+    {
+     "path": "source_identity.csv",
+     "sha256": "e1fa703b12b2b135bf3d45773d47fdd9d74221e59e702556c5e9b9b9a693d050"
+    },
+    {
+     "path": "verification_summary.json",
+     "sha256": "ad073ce6328b051bbdf2fd47511f452f81cd4b438d75abeb5c7662e3784de1c7"
+    }
+   ]
   },
   {
-   "path": "git_checks.csv",
-   "sha256": "7941dd6c4c70a107dd1df324895203e04fc678451339d71a9ed33627fc4990a2"
-  },
-  {
-   "path": "launches_reconcile.csv",
-   "sha256": "a0855e2feaa109fc5987641deeb538f4bae102bc2ab383a9e7978f3887c2fbc4"
-  },
-  {
-   "path": "source_identity.csv",
-   "sha256": "a00f7ac9c8efd83a9f70c964925dd7aabf9da617b9188c803732327d74d6b319"
-  },
-  {
-   "path": "verification_summary.json",
-   "sha256": "c3b1e1e2b80d1c2d0f4a57a970e783fb01fb1ba301a094a9a116123486604f7d"
+   "archived_into": "previous_publish_20261025T192533Z",
+   "files": [
+    {
+     "path": "commands.csv",
+     "sha256": "3c54628726b576e3cbbcfd9f8b4385d5d0339dadf5c5621842c3346b3600719d"
+    },
+    {
+     "path": "frozen_comparison.csv",
+     "sha256": "0d01201d935c7070f2db0cc8052f4e23c86ea639c55538de9a650e1aa92dd569"
+    },
+    {
+     "path": "git_checks.csv",
+     "sha256": "bf3162f9739aed8e9698c1bfc5e0c57615b8184e0041b2a75f58e3c2d9e3bdb5"
+    },
+    {
+     "path": "launches_reconcile.csv",
+     "sha256": "a0855e2feaa109fc5987641deeb538f4bae102bc2ab383a9e7978f3887c2fbc4"
+    },
+    {
+     "path": "source_identity.csv",
+     "sha256": "fae77edb6f08cdf48658a13cd8af7354af52dba1a6a4d802b84e9cf1c70525ad"
+    },
+    {
+     "path": "verification_summary.json",
+     "sha256": "58dd7f034b2c2e1209126fe64c8a6a63422481b89c82d35a503bbb264ac1a5db"
+    }
+   ]
   }
  ],
- "moved_utc": "2026-10-25T19:01:15Z",
- "reason": "the first publish of this record measured the same bytes but its gate list had no row over the frozen comparison, and the identity table had four paths twice; the tables were moved, not deleted, and their digests are listed here",
- "report_rendered_by_the_first_publish": "the report file was rewritten in place by this run, which is what its own identity row says it does"
+ "latest_move": {
+  "files": [
+   {
+    "path": "commands.csv",
+    "sha256": "3c54628726b576e3cbbcfd9f8b4385d5d0339dadf5c5621842c3346b3600719d"
+   },
+   {
+    "path": "frozen_comparison.csv",
+    "sha256": "0d01201d935c7070f2db0cc8052f4e23c86ea639c55538de9a650e1aa92dd569"
+   },
+   {
+    "path": "git_checks.csv",
+    "sha256": "bf3162f9739aed8e9698c1bfc5e0c57615b8184e0041b2a75f58e3c2d9e3bdb5"
+   },
+   {
+    "path": "launches_reconcile.csv",
+    "sha256": "a0855e2feaa109fc5987641deeb538f4bae102bc2ab383a9e7978f3887c2fbc4"
+   },
+   {
+    "path": "source_identity.csv",
+    "sha256": "fae77edb6f08cdf48658a13cd8af7354af52dba1a6a4d802b84e9cf1c70525ad"
+   },
+   {
+    "path": "verification_summary.json",
+    "sha256": "58dd7f034b2c2e1209126fe64c8a6a63422481b89c82d35a503bbb264ac1a5db"
+   }
+  ],
+  "into": "previous_publish_20261025T192533Z"
+ },
+ "reason_of_the_latest_move": "the record entry gained gates after its first publish (a row over the frozen comparison, a re-split of every published table, the observation witness) and the identity table had to stop listing untracked paths, so the tables were re-derived over the same measurements",
+ "rule": "a published record is never overwritten or deleted; every earlier set of tables stays in its own previous_publish_ directory and this note is recomputed from those directories, so no move can lose an earlier one",
+ "written_utc": "2026-10-25T19:25:33Z"
 }

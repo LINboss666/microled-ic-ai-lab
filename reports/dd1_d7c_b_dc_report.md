@@ -91,11 +91,12 @@
 | `candidate_offline_checks` | `python dd1_d7c_a_offline_check.py` | 0 | 0 | PASS | D7C_A_OFFLINE_CHECK: PASS (34 checks, failures: none) |
 | `candidate_counterexamples` | `python dd1_d7c_a_guards.py` | 0 | 0 | PASS | D7C_A_GUARDS: PASS (65/65 named exactly; not hit: none) |
 | `earlier_handoff_binds_its_own_bytes` | `python dd1_d7c_b_prep_r2_verify.py --handoff-check` | 1 | 1 | PASS | rc=1 by design: the R2 handoff digests the bytes of its own round, and this round legitimately moved reports/dd1_d7c_b_prep_contract.md, scripts/dd1_d7c_b_prep_contract.p |
+| `internal_observations_recorded` | `in process: read observed_signals.json, written by dd1_d7c_b_dc_matrix` | 0 | 0 | PASS | every required signal (data_out, clamp_node, the supplies, the three PAM bits, the reference node) is present in all 8 answers; the deck asks for 39 observation names and |
 | `dc_handoff_structure` | `in process: handoff_check() over DATA-7C-B-DC.json against the record,` | 0 | 0 | PASS | fields, per-code uA re-derived from judgement.json, account labels and costs agreeing, digests against disk, markers, no self-listing |
 | `dc_matrix_shape` | `python dd1_d7c_b_dc_matrix.py check <evidence>` | 0 | 0 | PASS | DC_MATRIX_CHECK: PASS (152 dut rows, 152 preflight rows, problems: none) |
 | `dc_judgement` | `python dd1_d7c_b_dc_matrix.py judge <evidence> then read judgement.jso` | 0 | 0 | PASS | I111 15.382706 uA band [14.25, 15.75]; Iunit_ref 1.922838 uA; monotonic True; ratio True; worst deviation 0.000911750 uA; bands contain 1.20 V for all eight codes |
 | `launch_account_reconciles` | `in process: read launch_account.csv, require one preflight and one dut` | 0 | 0 | PASS | 16 rows, ceiling 20, remaining 4, one preflight + one dut per case, every raw paired |
-| `every_published_json_parses` | `in process: json.loads over every .json this round publishes` | 0 | 0 | PASS | 8 files parse |
+| `every_published_json_parses` | `in process: json.loads over every .json this round publishes` | 0 | 0 | PASS | 10 files parse |
 | `record_line_endings` | `scan every published table for CR and round-trip a comma-and-quote row` | 0 | 0 | PASS | published files with CR: none; writer emits LF (confirmed) |
 | `unauthorised_refusal_writes_nothing` | `python dd1_d7c_b_dc_run.py --launch DC-000 --role dut --out <temp> (wi` | 0 | 0 | PASS | rc=5 evidence_dir_created=False refusal=DC_LAUNCH {"case_id": "DC-000", "process_started": false, "refusal": "DATA-7C-B-DC: this call is not |
 | `ceiling_refusal_before_a_process` | `in process: Account(ceiling=1) reserve, settle, reserve again` | 0 | 0 | PASS | LAUNCH_CEILING_REACHED: the account already carries 1 of 1 launches; a failure costs the budget and recovery n |
@@ -136,7 +137,7 @@
 | preparation contract json | `identical` | yes | 1 | 1 | 0 | none; empty-name misses none |
 | earlier records; reports and handoffs | `none_removed` | yes | 31 | 31 | 0 | none; empty-name misses results/evidence/dd1_d7c_b_prep,results/evidence/dd1_d7c_b_prep_r1,results/evidence/dd1_d7c_b_pr |
 | modified files against the registered offline commit | `only_allowed_new` | yes | 2 | 2 | 0 | reports/dd1_d7c_b_prep_contract.md,scripts/dd1_d7c_b_prep_contract.py |
-| paths added by this round | `only_allowed_new` | yes | 89 | 89 | 0 | unexpected: none |
+| paths added by this round | `only_allowed_new` | yes | 103 | 103 | 0 | unexpected: none |
 | paths removed against the registered offline commit | `none_removed` | yes | 0 | 0 | 0 | none |
 <!-- END 7CBD_FROZEN -->
 
@@ -145,7 +146,7 @@
 |---|---:|---:|---:|---:|---:|
 | `P_to_R1_recomputed` | 23 | 26 | 0 | 0 | 5 |
 | `R1_to_base` | 47 | 5 | 0 | 0 | 7 |
-| `base_to_HEAD` | 89 | 2 | 0 | 0 | 10 |
+| `base_to_HEAD` | 103 | 2 | 0 | 0 | 13 |
 <!-- END 7CBD_RANGES -->
 
 被登记的离线内容之后，本轮真正改动的既有文件只有 §6 里那份复审点名要修的两个

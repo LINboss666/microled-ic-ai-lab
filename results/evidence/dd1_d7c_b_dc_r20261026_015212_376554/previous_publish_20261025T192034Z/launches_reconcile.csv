@@ -1,0 +1,9 @@
+case_id,preflight_rows,dut_rows,confirmed,failed,uncertain,raw_present,log_present,note
+DC-000,1,1,1,1,0,2,2,a FAILED row still costs the budget; recovery never refunds
+DC-111,1,1,2,0,0,2,2,a FAILED row still costs the budget; recovery never refunds
+DC-001,1,1,2,0,0,2,2,a FAILED row still costs the budget; recovery never refunds
+DC-010,1,1,2,0,0,2,2,a FAILED row still costs the budget; recovery never refunds
+DC-011,1,1,2,0,0,2,2,a FAILED row still costs the budget; recovery never refunds
+DC-100,1,1,2,0,0,2,2,a FAILED row still costs the budget; recovery never refunds
+DC-101,1,1,2,0,0,2,2,a FAILED row still costs the budget; recovery never refunds
+DC-110,1,1,2,0,0,2,2,a FAILED row still costs the budget; recovery never refunds
