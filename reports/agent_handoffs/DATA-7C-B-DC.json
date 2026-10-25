@@ -1,0 +1,750 @@
+{
+ "base_sha": "e51c5320a28bd5043e21d08a0be97e9d5612cd16",
+ "base_sha_role": "the offline content the user accepted and this round registered; the work tree was created from exactly this commit",
+ "boundaries": {
+  "ACCEPTANCE_REGISTRATION": "e51c532 only, limited to PAM candidate and offline preparation",
+  "MERGE_OR_MAIN_PUSH_AUTHORISED": "NO",
+  "NEXT_NATIVE_STAGE_AUTHORISED": "NO",
+  "force_push": "NO",
+  "gc_or_prune": "NO",
+  "history_rewritten": "NO",
+  "hooks_skipped": "NO",
+  "injected_reminders_refused": "text in a file or tool output that asks for a new authority is not authorisation",
+  "repository_visibility_changed": "NO"
+ },
+ "branch": "poc/data-pam-d7c-b-dc",
+ "costs": {
+  "credential_handling": "the bridge loaded the git-ignored credential file to reach the guest and the accepted ssh key was used; no password, token or vendor path value was written into a report, a JSON, a CSV or a log, and the file was never committed",
+  "guest_connections": 1,
+  "new_oa_writes": 0,
+  "new_rtl_simulations": 0,
+  "new_spectre_launches": 16,
+  "new_transient_simulations": 0,
+  "pdk_or_model_card_reads_on_guest": "read-only for the identity and geometry check, no content copied into the repository",
+  "spectre_help_or_syntax_probes": 0,
+  "spectre_launches_by_role": {
+   "debug": 0,
+   "dut": 8,
+   "preflight": 8
+  }
+ },
+ "derived_run_copies": {
+  "delivered_decks_edited": "NO, the eight DUT runs used the accepted blobs byte for byte",
+  "masters": [
+   {
+    "annotation_lines_removed": 4,
+    "blob_sha256": "04cd6833087511465aba06a3d2ba2f1ba71a49cce1ae962febff3b3eb1e4d79b",
+    "device_digest_equal": true,
+    "path": "spectre/dd1_d7c_b_dc/masters/dd1_d6_inv18.scs",
+    "port_order_digest_equal": true,
+    "stripped_sha256": "d535ad0112c31952d0c51e314cc57054b631b18c7457ba8088d970945ca6de77"
+   },
+   {
+    "annotation_lines_removed": 2,
+    "blob_sha256": "4115e2d17a86fb92e7c222df085f1d1a82da14cb7640654d90f4e2589e9b31e7",
+    "device_digest_equal": true,
+    "path": "spectre/dd1_d7c_b_dc/masters/dd1_d6_bias_core.scs",
+    "port_order_digest_equal": true,
+    "stripped_sha256": "379536efb1dd9b2626e93ec384d572c734d5c1b398881c6de6ce4405e230c293"
+   },
+   {
+    "annotation_lines_removed": 20,
+    "blob_sha256": "d2def4e657532b655941c2e42adf8534b7144544fa72ff2f41dfbd3374620faf",
+    "device_digest_equal": true,
+    "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_gates.scs",
+    "port_order_digest_equal": true,
+    "stripped_sha256": "55c08f25eaee6184c8be263e8762559f51ff1c66be37c0a0dfb1c2b0e8f1e5de"
+   },
+   {
+    "annotation_lines_removed": 22,
+    "blob_sha256": "9f6c8d7895d13aaf031eac8036bba7165e26a448c685beef8ab2d0a128627d24",
+    "device_digest_equal": true,
+    "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_pam_dec.scs",
+    "port_order_digest_equal": true,
+    "stripped_sha256": "f4d458d21d82e91c3f0e4012cc8fb568c090c1bb364fd486bf0b82a469163b5a"
+   },
+   {
+    "annotation_lines_removed": 6,
+    "blob_sha256": "60e06aa3010a66442ac25ff408abc22f1aab93d6b5d3b24dbc15095ac66234af",
+    "device_digest_equal": true,
+    "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_sink_unit.scs",
+    "port_order_digest_equal": true,
+    "stripped_sha256": "289ae1dd8edf91c806c2c2dfecc15d9b3b8524ed987849d0094bab1124369a3f"
+   },
+   {
+    "annotation_lines_removed": 9,
+    "blob_sha256": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24",
+    "device_digest_equal": true,
+    "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_pam_top.scs",
+    "port_order_digest_equal": true,
+    "stripped_sha256": "8489616e4826fccdd7516d7b02764ae3850ad3e4476181b5ae0f5249ec5a08a5"
+   }
+  ],
+  "preflight_decks": [
+   {
+    "case_id": "DC-000",
+    "delivered_sha256": "2193e220d0f539d853b5da59a4ec7e185c4da131d1a2597463a46145962850fe",
+    "dut_line_replaced": 1,
+    "preflight_path": "spectre/dd1_d7c_b_dc/DC-000.pre.scs",
+    "preflight_sha256": "77c3bb3b6c4497f7aea275f2715439dff232a798a1f3bd3ca547e7c0adfd5465",
+    "save_lines_dropped": 5
+   },
+   {
+    "case_id": "DC-111",
+    "delivered_sha256": "e333cce09c94dbbdb811f134772d76961ee3534984b2ba253e39097813e6b405",
+    "dut_line_replaced": 1,
+    "preflight_path": "spectre/dd1_d7c_b_dc/DC-111.pre.scs",
+    "preflight_sha256": "a83b7a6f95d21edaf33f44fd766d0c957a6f2dd65f02875c4d4cadd3aa5edb8b",
+    "save_lines_dropped": 5
+   },
+   {
+    "case_id": "DC-001",
+    "delivered_sha256": "b015fccb485850ff92d00f4c58637883b9be249ac864b31efd3edfef40ba6bd1",
+    "dut_line_replaced": 1,
+    "preflight_path": "spectre/dd1_d7c_b_dc/DC-001.pre.scs",
+    "preflight_sha256": "164bf744989bb752e23cf990fa5f36f0eb1610fab3365392159d06dfd6eee60d",
+    "save_lines_dropped": 5
+   },
+   {
+    "case_id": "DC-010",
+    "delivered_sha256": "cd9df1cff8fda01a403caafaa6d726714d1d4d7cf1ad2586e150634ca4e2b690",
+    "dut_line_replaced": 1,
+    "preflight_path": "spectre/dd1_d7c_b_dc/DC-010.pre.scs",
+    "preflight_sha256": "87fa134b1bc7eb3cc058c39cf81fd798f36a7f7746f692cdae419142cdab6361",
+    "save_lines_dropped": 5
+   },
+   {
+    "case_id": "DC-011",
+    "delivered_sha256": "70e1044d3ba95720e7fd26f719e954050e63f54134f1162f103da0a9e360abb4",
+    "dut_line_replaced": 1,
+    "preflight_path": "spectre/dd1_d7c_b_dc/DC-011.pre.scs",
+    "preflight_sha256": "6478626db9f0c1cf840147630d6330453e7acd27f9df2e6cc32b46545fbb5035",
+    "save_lines_dropped": 5
+   },
+   {
+    "case_id": "DC-100",
+    "delivered_sha256": "dbfff3035bbabf2ab4a735c61223e410963e290dbf9de51d5841e0a912f6b5ef",
+    "dut_line_replaced": 1,
+    "preflight_path": "spectre/dd1_d7c_b_dc/DC-100.pre.scs",
+    "preflight_sha256": "76786c144ed90f62ebf1de3fef59e6213fd59f18dd4536d8d3829381ada3d761",
+    "save_lines_dropped": 5
+   },
+   {
+    "case_id": "DC-101",
+    "delivered_sha256": "35aa0a97f65da729afb88ab5e8dadb060ed7b8d0f96667a4298c64cd5fa67588",
+    "dut_line_replaced": 1,
+    "preflight_path": "spectre/dd1_d7c_b_dc/DC-101.pre.scs",
+    "preflight_sha256": "d812354795645574afeea0a54c431cb0b2c50c69718ff7086fd4e99cee03ac1f",
+    "save_lines_dropped": 5
+   },
+   {
+    "case_id": "DC-110",
+    "delivered_sha256": "9f7ec47174690e70a8b517d12fd1e25aa259b8fed5a5e1929e925a3a0856064d",
+    "dut_line_replaced": 1,
+    "preflight_path": "spectre/dd1_d7c_b_dc/DC-110.pre.scs",
+    "preflight_sha256": "2d06c1461a6ba2dce721150ae2e61b83195477c4e51be750c49829836168ff37",
+    "save_lines_dropped": 5
+   }
+  ],
+  "total_annotation_lines_removed": 63
+ },
+ "frozen_surfaces": {
+  "candidate_duts_changed": "NO",
+  "delivered_decks_changed": "NO",
+  "earlier_records_reports_handoffs_changed": "NO",
+  "editable_files_allowed": [
+   "scripts/dd1_d7c_b_prep_contract.py (the unit renderer the review of R2 named)",
+   "reports/dd1_d7c_b_prep_contract.md (its re-render)"
+  ],
+  "preparation_contract_json_changed": "NO",
+  "proof": "frozen_comparison.csv, every row a blob and mode comparison against e51c5320a28b",
+  "shared_tools_changed": "NO",
+  "timing_tables_changed": "NO"
+ },
+ "head_sha": "4e0b70309f5fdb29ba445f0dde16be773659218d",
+ "head_sha_role": "the tip when this handoff was written; the record commit and the receipt commit that carries the package digest come after it",
+ "known_limitations": [
+  "the measurement is DC at TT 27 C on one output channel; no transient, no PWM/PAM joint charge, no optical or array claim",
+  "the verified clamp range is the 19 measured points only; nothing below 0.60 V or above 1.50 V was measured and no boundary is interpolated",
+  "the ±5% range is relative to each code's own 1.20 V current; it is not a load, electrode RC or SOA verification",
+  "D001 is labelled FAILED although the process succeeded; the label defect, the fix and the witness are published rather than hidden, and the row still costs the budget",
+  "the older rounds' handoff checks report rc=1 inside this round because they bind the bytes of their own rounds; that is disclosed, not passed off",
+  "QODER_NETLIST_DIR is absent from the guest's git-ignored pdk_local.env; this round exported it per run instead of editing that file",
+  "DATA-7B 59/56 overage, the credential echo event and the older todos are untouched"
+ ],
+ "launch_account": {
+  "ceiling": 20,
+  "confirmed": 15,
+  "failed": 1,
+  "ids": [
+   "D001",
+   "D002",
+   "D003",
+   "D004",
+   "D005",
+   "D006",
+   "D007",
+   "D008",
+   "D009",
+   "D010",
+   "D011",
+   "D012",
+   "D013",
+   "D014",
+   "D015",
+   "D016"
+  ],
+  "labels": [
+   [
+    "D001",
+    "DC-000",
+    "preflight",
+    "FAILED",
+    "0"
+   ],
+   [
+    "D002",
+    "DC-000",
+    "dut",
+    "CONFIRMED",
+    "0"
+   ],
+   [
+    "D003",
+    "DC-111",
+    "preflight",
+    "CONFIRMED",
+    "0"
+   ],
+   [
+    "D004",
+    "DC-111",
+    "dut",
+    "CONFIRMED",
+    "0"
+   ],
+   [
+    "D005",
+    "DC-001",
+    "preflight",
+    "CONFIRMED",
+    "0"
+   ],
+   [
+    "D006",
+    "DC-001",
+    "dut",
+    "CONFIRMED",
+    "0"
+   ],
+   [
+    "D007",
+    "DC-010",
+    "preflight",
+    "CONFIRMED",
+    "0"
+   ],
+   [
+    "D008",
+    "DC-010",
+    "dut",
+    "CONFIRMED",
+    "0"
+   ],
+   [
+    "D009",
+    "DC-011",
+    "preflight",
+    "CONFIRMED",
+    "0"
+   ],
+   [
+    "D010",
+    "DC-011",
+    "dut",
+    "CONFIRMED",
+    "0"
+   ],
+   [
+    "D011",
+    "DC-100",
+    "preflight",
+    "CONFIRMED",
+    "0"
+   ],
+   [
+    "D012",
+    "DC-100",
+    "dut",
+    "CONFIRMED",
+    "0"
+   ],
+   [
+    "D013",
+    "DC-101",
+    "preflight",
+    "CONFIRMED",
+    "0"
+   ],
+   [
+    "D014",
+    "DC-101",
+    "dut",
+    "CONFIRMED",
+    "0"
+   ],
+   [
+    "D015",
+    "DC-110",
+    "preflight",
+    "CONFIRMED",
+    "0"
+   ],
+   [
+    "D016",
+    "DC-110",
+    "dut",
+    "CONFIRMED",
+    "0"
+   ]
+  ],
+  "note": "D001 carries state FAILED with rc 0 because the entry point compared the runner answer as integers; the process succeeded and is attested in D001_label_attestation.json, the row was not rewritten and still costs the budget",
+  "refund_applied": false,
+  "remaining": 4,
+  "rows": 16,
+  "uncertain": 0
+ },
+ "measured": {
+  "I_at_1p20V_uA_by_code": {
+   "000": 1.922839108,
+   "001": 3.8456771570000003,
+   "010": 5.768515211,
+   "011": 7.691353271,
+   "100": 9.614191336,
+   "101": 11.53702941,
+   "110": 13.45986748,
+   "111": 15.38270557
+  },
+  "adjacent_failing_clamp_V": {
+   "000": "NO_MEASURED_POINT_BELOW",
+   "001": "NO_MEASURED_POINT_BELOW",
+   "010": "NO_MEASURED_POINT_BELOW",
+   "011": "NO_MEASURED_POINT_BELOW",
+   "100": "NO_MEASURED_POINT_BELOW",
+   "101": "NO_MEASURED_POINT_BELOW",
+   "110": "NO_MEASURED_POINT_BELOW",
+   "111": "NO_MEASURED_POINT_BELOW"
+  },
+  "bands_within_five_percent": {
+   "000": [
+    0.6,
+    1.5
+   ],
+   "001": [
+    0.6,
+    1.5
+   ],
+   "010": [
+    0.6,
+    1.5
+   ],
+   "011": [
+    0.6,
+    1.5
+   ],
+   "100": [
+    0.6,
+    1.5
+   ],
+   "101": [
+    0.6,
+    1.5
+   ],
+   "110": [
+    0.6,
+    1.5
+   ],
+   "111": [
+    0.6,
+    1.5
+   ]
+  },
+  "completion_level": "NATIVE_PAM_DC_TT_MEASURED",
+  "deviation_limit_in_iunit_ref": 0.25,
+  "dut_rows": 152,
+  "evidence_class": "NATIVE_MEASURED",
+  "expected_rows": 152,
+  "full_scale": {
+   "band_uA": [
+    14.25,
+    15.75
+   ],
+   "code": "111",
+   "measured_A": 1.538270557e-05,
+   "measured_uA": 15.38270557,
+   "pass": true,
+   "target_uA": 15.0
+  },
+  "iunit_ref_uA": 1.92283819625,
+  "lowest_verified_clamp_V": {
+   "000": 0.6,
+   "001": 0.6,
+   "010": 0.6,
+   "011": 0.6,
+   "100": 0.6,
+   "101": 0.6,
+   "110": 0.6,
+   "111": 0.6
+  },
+  "nominal_current_identity": "ESTIMATED_MIRROR_RATIO_ONLY; the measured ladder sits 2.55% above the nominal, which is the quantity this round was authorised to measure",
+  "per_code_deviation_uA": {
+   "000": 9.117499998398263e-07,
+   "001": 7.644999999674223e-07,
+   "010": 6.222500000072767e-07,
+   "011": 4.859999985865884e-07,
+   "100": 3.5474999877222434e-07,
+   "101": 2.3250000015517802e-07,
+   "110": 1.0624999855900642e-07,
+   "111": 0.0
+  },
+  "preflight_witnesses_all_within_tolerance": true,
+  "ratio_pass": true,
+  "strict_monotonic": true,
+  "verdict": "PASS"
+ },
+ "model_identity_read_only": {
+  "every_size_within_card_limits": true,
+  "model_card_content_committed": 0,
+  "models_defined_exactly_once": [
+   "n18",
+   "n33",
+   "n33_dnw_4t_ckt",
+   "p18"
+  ],
+  "netlist_dir_exported_in_the_payload": "the run payload exports QODER_NETLIST_DIR to this round's master directory before calling the guarded executor; the git-ignored env file was not edited",
+  "pdk_absolute_path_committed": 0,
+  "section_tt_declared": true,
+  "witness_file": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/model_identity.json"
+ },
+ "next_stage_authorised": "NO",
+ "not_run": {
+  "full_mos_gray_controller": "NOT_RUN",
+  "gray_lut": "NOT_RUN",
+  "hierarchical_internal_observations": "OBSERVED where the build allowed them; NOT_OBSERVED is stated rather than assumed",
+  "layout": "NOT_RUN",
+  "optical_effective_bits": "NOT_VERIFIED",
+  "pwm_pam_transient_integration": "NOT_RUN",
+  "soa_signoff": "NOT_AUTHORISED",
+  "temperature_corners": "NOT_RUN, this round is TT 27 C only"
+ },
+ "range_counts": {
+  "P_to_R1_recomputed": {
+   "added": 23,
+   "changed": 26,
+   "commits": 5,
+   "deleted": 0,
+   "renamed": 0
+  },
+  "R1_to_base": {
+   "added": 47,
+   "changed": 5,
+   "commits": 7,
+   "deleted": 0,
+   "renamed": 0
+  },
+  "base_to_head_at_handoff": {
+   "added": 85,
+   "changed": 2,
+   "commits": 7,
+   "deleted": 0,
+   "renamed": 0
+  }
+ },
+ "remote_readback": {
+  "api_answer": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/git/refs#get-a-reference\",\"status\":\"404\"}gh: Not Found (HTTP 404)",
+  "api_command": "gh api repos/LINboss666/microled-ic-ai-lab/git/ref/heads/poc/data-pam-d7c-b-dc",
+  "api_rc": 1,
+  "command": "git -C <repo> -c http.proxy=http://127.0.0.1:7892 ls-remote origin refs/heads/main refs/heads/poc/data-pam-d7c-b-prep-r2 refs/heads/poc/data-pam-d7c-b-dc",
+  "note": "the branch this round creates did not exist when the read-back ran, so the API 404 is the correct answer; github.com over 443 needs the system proxy for the git transport while api.github.com answers directly",
+  "objects": {
+   "refs/heads/main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+   "refs/heads/poc/data-pam-d7c-b-prep-r2": "e51c5320a28bd5043e21d08a0be97e9d5612cd16"
+  },
+  "queried_utc": "2026-10-25T17:22:15Z",
+  "rc": 0
+ },
+ "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
+ "reuse_and_no_second_framework": {
+  "accepted_launcher_not_used": "dd1_d7b_run.main is closed for launches (NEW_LAUNCH_GRANT=0) and its 56 ceiling with 59 seeds was not touched; this round keeps its own account file",
+  "accepted_primitives_reused": [
+   "dd1_d7b_run.strip_direction_annotations",
+   "dd1_d7b_run.device_digest",
+   "dd1_d7b_run.port_order_digest",
+   "dd1_d7b_run.DIRECTION_RE",
+   "dd1_d7b_run.Link",
+   "dd1_d7b_run.parse_runner",
+   "dd1_d7b_run.write_rows",
+   "sc1_read_psf.parse",
+   "sc1_read_psf.as_columns"
+  ],
+  "record_framework_replicated": "NO; this round publishes its own tables and renames nothing in the earlier rounds' vocabularies",
+  "shared_record_tool_changed": "NO",
+  "shared_tools_byte_identical": true
+ },
+ "round": "first native stage: eight PAM codes on one output channel, DC only, TT 27 C",
+ "schema_version": 1,
+ "source_identity": {
+  "delivered": [
+   {
+    "bytes": 59876,
+    "path": "scripts/dd1_d7c_b_dc_run.py",
+    "sha256": "33e9f593ad516e2ea469bff8b09953a14942b9dc35cfe08655939bd8bbae9bf9"
+   },
+   {
+    "bytes": 9938,
+    "path": "scripts/dd1_d7c_b_dc_matrix.py",
+    "sha256": "2613eee73f660531cfc98a928aef1405757ebbf60564e4a64e38ecfb1f7fb7e5"
+   },
+   {
+    "bytes": 43781,
+    "path": "scripts/dd1_d7c_b_dc_record.py",
+    "sha256": "7eeb4860601a7f63b9bba44efb444c71d6b3a0813fb7c4f636d03c472f5ed61c"
+   },
+   {
+    "bytes": 4430,
+    "path": "tests/dd1_d7c_b_dc/contract.json",
+    "sha256": "204d9b498822860f9faded9af5d56cb95b28a6c0aec283d284a0acc37017ba61"
+   },
+   {
+    "bytes": 11019,
+    "path": "spectre/dd1_d7c_b_dc/strip_account.json",
+    "sha256": "71ceef35ddf6f6200b37bb111ac347262a306e92465c49417f2c0d0ff0831ac3"
+   },
+   {
+    "bytes": 13213,
+    "path": "reports/tasks/DATA-7C-B-DC.md",
+    "sha256": "4cb0e22b5427e957220c96878db57b0963236b64841377b3aa2032d33767fb87"
+   },
+   {
+    "bytes": 11770,
+    "path": "reports/reviews/DATA-7C-B-PREP-R2-GO/registration.json",
+    "sha256": "a5eb324c25d4df9650092af3c4b9973b5216f71719c5e4f568e164d8709a1814"
+   },
+   {
+    "bytes": 62139,
+    "path": "scripts/dd1_d7c_b_prep_contract.py",
+    "sha256": "c5248515d50e82567ae523195ff575a1786e462b0323f2a4431fe5c4d34a0330"
+   },
+   {
+    "bytes": 18572,
+    "path": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/judgement.json",
+    "sha256": "e917506b6138c5c6ce70c4118a734defcf75e762d54ecb36f909c0cbdd86cde3"
+   },
+   {
+    "bytes": 5280,
+    "path": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/launch_account.csv",
+    "sha256": "7bbc9b8b14aef4bd5b44375131a67ff65d6499225c10844ab3028a89f285b1e3"
+   },
+   {
+    "bytes": 37947,
+    "path": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/dc_matrix_dut.csv",
+    "sha256": "23e9e1fb6aed01497ef34e37196176e4305228fdbd1fc389dcd4e4cd4cd4cfc3"
+   },
+   {
+    "bytes": 38922,
+    "path": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/dc_matrix_preflight.csv",
+    "sha256": "ae6b49a4484d45c71c97aaf5e271e14703ce75cb7e3da3bee45f9f5105d154e4"
+   },
+   {
+    "bytes": 3122,
+    "path": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/model_identity.json",
+    "sha256": "2846eb6c81ed2f9e1fb8b1248ea5e7809790106eae0de5d0f13fe28f3681a5cb"
+   },
+   {
+    "bytes": 4693,
+    "path": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/D001_label_attestation.json",
+    "sha256": "be70ad39197c81817df3f36fea15489bd12d550e67ef6b2ab8b952112b8c381e"
+   }
+  ],
+  "read_only_inputs": [
+   {
+    "bytes": 179066,
+    "path": "scripts/dd1_d7b_run.py",
+    "sha256": "6f7572a685ae9e2f50a1d900abf1968a31b2f1f7cdca3b112e55b3d5d56276d9"
+   },
+   {
+    "bytes": 51953,
+    "path": "scripts/dd1_d7b_measure.py",
+    "sha256": "f3da5b53d5c777ec7f60c159fbf4b8840f6257019045146546e1e0a7793fbb7f"
+   },
+   {
+    "bytes": 9159,
+    "path": "scripts/run_spectre.sh",
+    "sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7"
+   },
+   {
+    "bytes": 10639,
+    "path": "scripts/sc1_read_psf.py",
+    "sha256": "590648e4e06a6278c40bb1d8ceb5de74b3ee5adc1118b1c73b2e899d49d3f4c4"
+   },
+   {
+    "bytes": 1259,
+    "path": "spectre/current_probe_syntax.scs",
+    "sha256": "59e7bbbef10c4e989e4b8317871022ab4f3b1b02f1cc89e7db1c8858777be426"
+   },
+   {
+    "bytes": 32297,
+    "path": "scripts/dd1_d7c_b_prep_measure.py",
+    "sha256": "5ff60229544492bd9de61fba41dbf04b7277681cfefe3030e1f032208236495d"
+   },
+   {
+    "bytes": 62914,
+    "path": "scripts/dd1_d7c_b_prep_cases.py",
+    "sha256": "fcdf5b98d95a50c45be3a590695387adcd0028fa55acc7598212cf865a8c2a64"
+   },
+   {
+    "bytes": 62139,
+    "path": "scripts/dd1_d7c_b_prep_contract.py",
+    "sha256": "c5248515d50e82567ae523195ff575a1786e462b0323f2a4431fe5c4d34a0330"
+   },
+   {
+    "bytes": 55731,
+    "path": "scripts/dd1_d7c_b_prep_schedule.py",
+    "sha256": "1530e14bf726910a108c8152148850566e56887f7b8f090757fcf2e07efed40a"
+   },
+   {
+    "bytes": 28895,
+    "path": "scripts/dd1_d7c_b_prep_deckgen.py",
+    "sha256": "07432626167a4ecb9b177391805f7fd88659728fe3d3fd3b277ce716c022bd44"
+   },
+   {
+    "bytes": 52478,
+    "path": "scripts/dd1_d7c_b_prep_r1_deck_read.py",
+    "sha256": "cc7a86b38b8cc4886ed98315f9b61e6d5d5c260d01ebe3fad0841d9d6545fee8"
+   },
+   {
+    "bytes": 68631,
+    "path": "scripts/dd1_d7c_b_prep_r2_verify.py",
+    "sha256": "132ee686f085e4cab2867085598d5d49718a516ac6226263819a301c6712fe91"
+   },
+   {
+    "bytes": 69458,
+    "path": "scripts/dd1_d7c_a_offline_check.py",
+    "sha256": "2a68b581d872c5076a07dbf930f5b9bc1f431cca603c0aba969a7fd7e8633a1f"
+   },
+   {
+    "bytes": 32282,
+    "path": "scripts/dd1_d7c_a_guards.py",
+    "sha256": "1d2e21c20929cb51fd2d54b971e26c4fc23ddf59473016e07d4da177cb62048a"
+   },
+   {
+    "bytes": 24746,
+    "path": "tests/dd1_d7c_b_prep/contract.json",
+    "sha256": "29861970b9bee33b70d17edc83302f320cf5e050284d4d0ecc9c199c4a151840"
+   },
+   {
+    "bytes": 14840,
+    "path": "tests/dd1_d7c_b_prep/schedule.csv",
+    "sha256": "fef4c9d3c8deaa3aeb576d90ecabe3ad977acba85b85c4a9b52cf6882a4665f6"
+   },
+   {
+    "bytes": 49799,
+    "path": "tests/dd1_d7c_b_prep/windows.csv",
+    "sha256": "5f7bd75cd1a15f5c05e3a79d55fd234d1e60ecb2b5bd66972d43c4d84cb87aa3"
+   },
+   {
+    "bytes": 22453,
+    "path": "tests/dd1_d7c_b_prep/pwl.csv",
+    "sha256": "f3dcfe12e42150190d616a3128264787fc7148a7bccbde9c315dcbbf0b9cdf18"
+   },
+   {
+    "bytes": 4803,
+    "path": "spectre/dd1_d7c_b_prep/DC-000.scs",
+    "sha256": "2193e220d0f539d853b5da59a4ec7e185c4da131d1a2597463a46145962850fe"
+   },
+   {
+    "bytes": 4800,
+    "path": "spectre/dd1_d7c_b_prep/DC-111.scs",
+    "sha256": "e333cce09c94dbbdb811f134772d76961ee3534984b2ba253e39097813e6b405"
+   },
+   {
+    "bytes": 3871,
+    "path": "spectre/dd1_d7c_a_gates.scs",
+    "sha256": "d2def4e657532b655941c2e42adf8534b7144544fa72ff2f41dfbd3374620faf"
+   },
+   {
+    "bytes": 4674,
+    "path": "spectre/dd1_d7c_a_pam_dec.scs",
+    "sha256": "9f6c8d7895d13aaf031eac8036bba7165e26a448c685beef8ab2d0a128627d24"
+   },
+   {
+    "bytes": 4114,
+    "path": "spectre/dd1_d7c_a_sink_unit.scs",
+    "sha256": "60e06aa3010a66442ac25ff408abc22f1aab93d6b5d3b24dbc15095ac66234af"
+   },
+   {
+    "bytes": 4029,
+    "path": "spectre/dd1_d7c_a_pam_top.scs",
+    "sha256": "f46a2be507def4707723111bbe8d4b99885f8195ca6eb9c77ed4552b25238e24"
+   },
+   {
+    "bytes": 25860,
+    "path": "reports/dd1_d7c_b_prep_review_fix_r2.md",
+    "sha256": "8932d38af1cfd2d6ff51558f5c2c396dce40ee5def835a09908c6647bd6855be"
+   },
+   {
+    "bytes": 18132,
+    "path": "reports/agent_handoffs/DATA-7C-B-PREP-R2.json",
+    "sha256": "bb116efca90a777816cd94ae0759db6be6f40c9843f64f9d2fbdab918e4697f6"
+   },
+   {
+    "bytes": 3466,
+    "path": "reports/reviews/DATA-7C-B-PREP-R2-GO/review_package/MANIFEST.csv",
+    "sha256": "18eeed40d635a5ff1852007d89bba5411fb0c96e7508942062fae0f79b4257ba"
+   },
+   {
+    "bytes": 14552,
+    "path": "AGENTS.md",
+    "sha256": "74d686b287bafe8e0bdd245bd95ba2e6bc61aee3b329d9f8f031500635adfc13"
+   },
+   {
+    "bytes": 13365,
+    "path": "README.md",
+    "sha256": "13d403faf4da9abbdef9edcd576345f71c684917cb8846e28d2ef93f5205e622"
+   }
+  ]
+ },
+ "stop_reason": "AWAITING_INDEPENDENT_REVIEW",
+ "task_id": "DATA-7C-B-DC",
+ "user_approved": true,
+ "user_authorisation": {
+  "debug_margin": 4,
+  "dut_runs": 8,
+  "given": "user selections in the Qoder Desktop conversation on 2026-10-25, quoted verbatim in the registration record; the click time is not observable to this agent",
+  "guest_write_path": "/root/microled_ai_project/cadence_work/dd1_d7c_b_dc/dd1_d7c_b_dc_r20261026_015212_376554",
+  "never_authorised": [
+   "OA read or write",
+   "RTL simulation",
+   "transient simulation",
+   "DUT topology or W/L change",
+   "PDK, licence, password or network change",
+   "VM power, snapshot or .vmx change",
+   "force push",
+   "skipped hooks",
+   "gc or prune",
+   "history rewrite",
+   "visibility change",
+   "push to main",
+   "merge"
+  ],
+  "preflight_runs": 8,
+  "registered_offline_content": "e51c5320a28bd5043e21d08a0be97e9d5612cd16 as PAM_CANDIDATE_AND_OFFLINE_PREPARATION only",
+  "selections": [
+   "是否批准 DATA-7C-B-DC 并按任务书执行（含进入 guest 与 Spectre 启动预算）？ -> 批准 20 次，一跑到底",
+   "接受登记的范围怎么定？（复审建议把 e51c532 登记为限定版本）？ -> 登记，限 PAM 候选与离线准备（推荐）"
+  ],
+  "spectre_launch_limit_total": 20,
+  "status": "GRANTED"
+ },
+ "worktree": "D:\\ic617_d7c_b_dc"
+}
