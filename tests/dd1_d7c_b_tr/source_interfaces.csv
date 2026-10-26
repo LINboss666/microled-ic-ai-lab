@@ -1,0 +1,56 @@
+module,symbol,line_at_base,resolved_as,use,inheritance_rule
+scripts/dd1_d7b_measure.py,float_samples,139,def,native adaptive samples kept as floats,KEEP: this is what stops the round from rounding native time to ps or assuming a uniform step
+scripts/dd1_d7b_measure.py,time_quantum_ps,124,def,reported export quantum,USE for the F-TR-2 readability proof only; a display quantum is not an algorithm tolerance
+scripts/dd1_d7b_measure.py,interp_pair,158,def,linear interpolation at a window bound,KEEP
+scripts/dd1_d7b_measure.py,clip_window,174,def,window bounds that are not sample points,KEEP
+scripts/dd1_d7b_measure.py,signed_areas,199,def,positive and negative area kept apart,"KEEP: Q, Qpos and abs(Qneg) are reported separately and never cancel"
+scripts/dd1_d7b_measure.py,integrate,231,def,trapezoid integral over an interpolated window,KEEP; the main result is never a resampled or decimated approximation
+scripts/dd1_d7b_measure.py,crossing,244,def,adjacent-pair level crossing with interpolation,KEEP for the 0.9 V T50 crossings; a first-sample-past-threshold is not a crossing
+scripts/dd1_d7b_measure.py,sustained_in_band,340,def,settling with a minimum in-band time,REUSE with the deadline replaced by flat_stop of this window
+scripts/dd1_d7b_measure.py,band_spans,297,def,in-band spans used by settling,"KEEP, but BAND_REL is the inherited POC tolerance, not a new claim"
+scripts/dd1_d7b_measure.py,tail_segment_max_abs,459,def,last-100 ns leakage magnitude,KEEP with OFF_ABS replaced by the frozen 0.15 uA of this contract
+scripts/dd1_d7b_measure.py,measure_window,467,def,the DATA-7B window assembly,"DO NOT INHERIT: its ical, tick and threshold defaults are Pure-specific"
+scripts/dd1_d7b_measure.py,judge,623,def,the DATA-7B verdict,DO NOT INHERIT: this round publishes six separate statuses
+scripts/dd1_d7b_trace.py,read_trace,179,def,real four-state VCD reader,"SCOPE MUST BE VERIFIED: the default scope is the DATA-7B testbench, not this TB"
+scripts/dd1_d7b_trace.py,defined_bits,97,def,refuse X and Z before any conversion,KEEP
+scripts/dd1_d7b_trace.py,bus_values,112,def,bus words decoded with their bit order,KEEP: pam0 is bit 0 weight 1
+scripts/dd1_d7b_trace.py,sampling_edges,162,def,the reference edges that consume a tick,"KEEP: t0 is a clk rising edge, never the leading obs_tick"
+scripts/dd1_d7b_trace.py,window_edges,326,def,edges inside one logical window,KEEP
+scripts/dd1_d7b_trace.py,build_pwl,338,def,edges to hold/ramp PWL points,REUSE with edge_total 2 ns and the whole-wave shift; its Pure ramp and TAIL_NS defaults are not adopted unverified
+scripts/dd1_d7b_trace.py,check_window,261,def,stimulus self-check,"REWRITE: it carries the Pure settling target, this round checks the hybrid frame windows of its own contract"
+scripts/dd1_d7c_b_prep_measure.py,ps,59,def,ns to ps without integer loss,KEEP
+scripts/dd1_d7c_b_prep_measure.py,enable_edges,72,def,rise50 and fall50 of an enable series,KEEP with the 0.9 V threshold of this contract
+scripts/dd1_d7c_b_prep_measure.py,reference_tick_for_case,117,def,per-case QLSB tick,"SUPERSEDED: this round reads the tick from its own contract, the PREP mapping stays PROPOSED"
+scripts/dd1_d7c_b_prep_measure.py,window_charge,168,def,signed charge over a window,KEEP
+scripts/dd1_d7c_b_prep_measure.py,settling,185,def,settling against a deadline,"IF THE TARGET IS HARD-WIRED TO THE NOMINAL CURRENT, keep that column and compute the IDC-target result with the same base functions"
+scripts/dd1_d7c_b_prep_measure.py,leakage,206,def,tail leakage inside a pure-off region,"KEEP, measured only inside pure-off and never across the next rise"
+scripts/dd1_d7c_b_prep_measure.py,charge_errors,258,def,nominal and dynamic LSB errors,KEEP both columns; the denominator stays QLSB_nominal
+scripts/dd1_d7c_b_prep_measure.py,ladder,302,def,per-code staircase view,REUSE read-only
+scripts/dd1_d7c_b_prep_measure.py,convergence,339,def,coarse against refined with context,KEEP the context refusal; None == None is not a match
+scripts/dd1_d7c_b_prep_measure.py,measure_case,437,def,the PREP synthetic measurement entry,"DO NOT INHERIT AS A TRANSIENT EXTRACTOR: it reads a synthetic sample set, not a native raw"
+scripts/dd1_d7c_b_dc_run.py,Account,259,class,append-only reserve-before-start ledger,REUSE THE DISCIPLINE with this round ceilings of 24 and 4
+scripts/dd1_d7c_b_dc_run.py,strip_masters,194,def,six stripped masters with digests,READ ONLY: the masters are frozen accepted content
+scripts/dd1_d7c_b_dc_run.py,preflight_deck,223,def,ideal meter loads instead of the DUT,REUSE the 80 kohm and 50 kohm witness values for the transient preflight
+scripts/dd1_d7c_b_dc_run.py,psf_units,352,def,units declared by the native file itself,"KEEP: units come from the answer, never assumed"
+scripts/dd1_d7c_b_dc_run.py,probe_column,379,def,the real native current column name,KEEP and name the column when it is absent
+scripts/dd1_d7c_b_dc_run.py,deck_static_sources,398,def,levels the deck declares,"REUSE: conditions are attributed to the deck, never to an observation"
+scripts/dd1_d7c_b_dc_run.py,logic_bit,438,def,a level that is neither rail is refused,KEEP for the PAM bit readback of a preflight
+scripts/dd1_d7c_b_dc_run.py,extract,463,def,strict required-signal extraction of DC rows,"DO NOT INHERIT: it is a static sweep extractor, a transient extractor is written new here"
+scripts/dd1_d7c_b_dc_run.py,validate_dc_matrix,651,def,complete-matrix gate before a verdict,REUSE THE PATTERN: the transient record needs its own complete-window gate
+scripts/dd1_d7b_run.py,Link,330,class,ssh plus scp channel with base64 payloads,REUSE the accepted channel unchanged; no new bridge toolchain
+scripts/dd1_d7b_run.py,write_rows,937,def,the project csv writer,REUSE
+scripts/dd1_d7b_run.py,parse_runner,796,def,the runner answer fields read as numbers,REUSE: only an explicit token plus rc 0 is success
+scripts/dd1_d7b_run.py,strip_direction_annotations,179,def,port direction annotation removal,READ ONLY
+scripts/sc1_read_psf.py,parse,75,def,psfascii reader,REUSE
+scripts/sc1_read_psf.py,as_columns,148,def,grouped columns plus axis,REUSE
+scripts/dd1_d7a_run.py,find_tools,123,def,the oss-cad-suite toolchain probe,"REUSE, and a missing toolchain is a hard stop rather than a substitute"
+scripts/dd1_d7a_run.py,compile_sim,442,def,iverilog -g2012 -Wall,REUSE: a compilation is recorded but is not an RTL simulation
+scripts/dd1_d7a_run.py,run_vvp,451,def,vvp run plus VCD sanity,"EVERY actual vvp start, including a failure, is charged against the four simulations"
+rtl/dd1_d7a_gray_ctrl.sv,dd1_d7a_gray_ctrl,11,module,the accepted controller semantics,"READ ONLY: 63 maps to FULL_HYB 64, tick is consumed on a clk edge, blank and fault pull the enable down combinationally"
+tests/dd1_d7a/tb_dd1_d7a_gray.sv,run_window,209,task,the accepted protocol task pattern,PATTERN ONLY: this round writes its own single-channel frame testbench
+reports/dd1_d7a_contract.md,,1,FILE,the accepted RTL contract,READ ONLY
+tests/dd1_d7c_b_prep/contract.json,,1,FILE,the PROPOSED preparation contract bytes,FROZEN: this new contract carries the frozen decision and its source
+tests/dd1_d7c_b_prep/schedule.csv,,1,FILE,frozen timing of the seven prepared cases,"FROZEN, read back independently"
+tests/dd1_d7c_b_prep/windows.csv,,1,FILE,frozen window declarations,"FROZEN, read back"
+spectre/dd1_d7c_b_dc/masters,,,PATH,the six stripped masters actually included,FROZEN
+scripts/run_spectre.sh,,1,FILE,the guest batch executor,USED AS IS; the payload exports QODER_NETLIST_DIR itself

@@ -1,0 +1,10 @@
+case_id,source,tick_ns,maxstep_ns,convergence_partner,preflight_launches,dut_launches,authorisation,result,purpose
+TR-LONG,frozen_PREP,120,2,,1,1,USER_APPROVED,NOT_RUN,"000..111 eight 1 us emission windows, per-step settling and tail"
+TR-120,frozen_PREP,120,2,,1,1,USER_APPROVED,NOT_RUN,lowest non-zero code on a 120 ns pulse
+TR-200,frozen_PREP,200,2,,1,1,USER_APPROVED,NOT_RUN,lowest non-zero code on a 200 ns pulse
+TR-OFFCODE,frozen_PREP,120,2,,1,1,USER_APPROVED,NOT_RUN,"011 -> 100 -> 000 -> 111, code changes only inside the shutoff region"
+RS-FULL,frozen_PREP,120,0.1,TR-LONG,1,1,USER_APPROVED,NOT_RUN,step-size convergence control for TR-LONG
+RS-LOW,frozen_PREP,120,0.1,TR-120,1,1,USER_APPROVED,NOT_RUN,step-size convergence control for TR-120
+RS-SWITCH,frozen_PREP,120,0.1,TR-OFFCODE,1,1,USER_APPROVED,NOT_RUN,step-size convergence control for TR-OFFCODE
+HYB-120,accepted_RTL_new_VCD,120,0.1,,1,1,USER_APPROVED,NOT_RUN,joint PWM/PAM charge driven by the accepted RTL four-state VCD at a 120 ns tick
+HYB-200,accepted_RTL_new_VCD,200,0.1,,1,1,USER_APPROVED,NOT_RUN,joint PWM/PAM charge driven by the accepted RTL four-state VCD at a 200 ns tick

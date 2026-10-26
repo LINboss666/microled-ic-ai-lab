@@ -1,0 +1,752 @@
+{
+ "accepted_dc_content_sha": "b7509c4766a6bbfd0413749d50a5f294192b60fb",
+ "accepted_rtl_sha": "f68449672774ac9266ba9e4893024e4f3027dd9d",
+ "accounting": {
+  "borrowed": [],
+  "ceiling_rtl": 4,
+  "ceiling_spectre": 24,
+  "counts": "every simulator process, including -h, version, syntax probes, failures, crashes, aborts and sub-calls made inside the runner",
+  "no_refund": "a failure costs the budget; recovery never refunds it",
+  "not_borrowed": [
+   "DATA-7B 59/56",
+   "the DC round remaining 4",
+   "the PREP 36 draft"
+  ],
+  "old_ledgers_modified": false,
+  "reserve_before_start": "REQUESTED is persisted before the process starts",
+  "single_executor": "one executor runs at a time and re-reads the on-disk account inside the lock",
+  "uncertain_kept": "an uncertain request keeps its charge"
+ },
+ "approval_note": "the user replied YES on 2026-10-26 (Asia/Shanghai) to this task book with the two ceilings below; the same scope is not asked for again",
+ "authorisation": {
+  "approval_date": "2026-10-26",
+  "approval_response": "YES",
+  "approval_timezone": "Asia/Shanghai",
+  "approved_task_book": "reports/tasks/DATA-7C-B-TR.md",
+  "existing_tracked_paths_may_be_modified": false,
+  "guest_write_root": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/<run_id>/",
+  "historical_budgets_may_be_borrowed": false,
+  "iverilog_compilations_count_as_rtl_simulations": false,
+  "merge_authorised": false,
+  "next_stage_authorised": false,
+  "oa_access_authorised": false,
+  "rtl_failure_or_debug_margin": 2,
+  "rtl_planned_main_runs": 2,
+  "rtl_simulation_total_limit": 4,
+  "spectre_failure_or_debug_margin": 6,
+  "spectre_planned_dut_runs": 9,
+  "spectre_planned_preflights": 9,
+  "spectre_total_limit": 24,
+  "status": "USER_APPROVED"
+ },
+ "base_sha": "61621f6e3d887082ecd6a7ecc1c771f8e509a24a",
+ "branch": "poc/data-pam-d7c-b-tr",
+ "carried_followups": [
+  {
+   "id": "F-TR-1",
+   "origin": "DC-R1 limited GO section 5(1)",
+   "text": "vss is a required signal alongside the supplies; this round carries it in every new extraction and observation list"
+  },
+  {
+   "id": "F-TR-2",
+   "origin": "DC-R1 limited GO section 5(1)",
+   "text": "the ideal iprobe two-terminal check uses 1e-06 V plus 1e-09 times the magnitude, is proven readable in this machine export precision, and is not a device drop spec"
+  }
+ ],
+ "cases": [
+  {
+   "analysis_line_in_source": "tran_case tran stop=13050.000n maxstep=2.000n",
+   "authorisation": "USER_APPROVED",
+   "case_id": "TR-LONG",
+   "class": "transient",
+   "convergence_partner": "",
+   "dut_launches": 1,
+   "emission_windows_in_source": 8,
+   "maxstep_ns": 2.0,
+   "paired_case_in_source": "",
+   "preflight_launches": 1,
+   "purpose": "000..111 eight 1 us emission windows, per-step settling and tail",
+   "qlsb_nominal_C": 2.25e-13,
+   "run_copy": "spectre/dd1_d7c_b_tr/TR-LONG.scs",
+   "source": "frozen_PREP",
+   "source_deck": "spectre/dd1_d7c_b_prep/TR-LONG.scs",
+   "source_deck_sha256_at_base": "54506e945920713fba2682d0d535aa04c1cd9b1718b12395bf83c4841c8f78d5",
+   "stop_ns": 13050.0,
+   "tick_ns": 120.0
+  },
+  {
+   "analysis_line_in_source": "tran_case tran stop=1530.000n maxstep=2.000n",
+   "authorisation": "USER_APPROVED",
+   "case_id": "TR-120",
+   "class": "transient",
+   "convergence_partner": "",
+   "dut_launches": 1,
+   "emission_windows_in_source": 1,
+   "maxstep_ns": 2.0,
+   "paired_case_in_source": "",
+   "preflight_launches": 1,
+   "purpose": "lowest non-zero code on a 120 ns pulse",
+   "qlsb_nominal_C": 2.25e-13,
+   "run_copy": "spectre/dd1_d7c_b_tr/TR-120.scs",
+   "source": "frozen_PREP",
+   "source_deck": "spectre/dd1_d7c_b_prep/TR-120.scs",
+   "source_deck_sha256_at_base": "f5a0f3386bea52de1e3fa7387b7127eb7e3c20120fa8e45e63ee3b72f94cbb2b",
+   "stop_ns": 1530.0,
+   "tick_ns": 120.0
+  },
+  {
+   "analysis_line_in_source": "tran_case tran stop=1610.000n maxstep=2.000n",
+   "authorisation": "USER_APPROVED",
+   "case_id": "TR-200",
+   "class": "transient",
+   "convergence_partner": "",
+   "dut_launches": 1,
+   "emission_windows_in_source": 1,
+   "maxstep_ns": 2.0,
+   "paired_case_in_source": "",
+   "preflight_launches": 1,
+   "purpose": "lowest non-zero code on a 200 ns pulse",
+   "qlsb_nominal_C": 3.75e-13,
+   "run_copy": "spectre/dd1_d7c_b_tr/TR-200.scs",
+   "source": "frozen_PREP",
+   "source_deck": "spectre/dd1_d7c_b_prep/TR-200.scs",
+   "source_deck_sha256_at_base": "4cee5055e93209646175234ec4f28026212727ef083ce1b2d1723f76807bc6f3",
+   "stop_ns": 1610.0,
+   "tick_ns": 200.0
+  },
+  {
+   "analysis_line_in_source": "tran_case tran stop=3750.000n maxstep=2.000n",
+   "authorisation": "USER_APPROVED",
+   "case_id": "TR-OFFCODE",
+   "class": "transient",
+   "convergence_partner": "",
+   "dut_launches": 1,
+   "emission_windows_in_source": 4,
+   "maxstep_ns": 2.0,
+   "paired_case_in_source": "",
+   "preflight_launches": 1,
+   "purpose": "011 -> 100 -> 000 -> 111, code changes only inside the shutoff region",
+   "qlsb_nominal_C": 2.25e-13,
+   "run_copy": "spectre/dd1_d7c_b_tr/TR-OFFCODE.scs",
+   "source": "frozen_PREP",
+   "source_deck": "spectre/dd1_d7c_b_prep/TR-OFFCODE.scs",
+   "source_deck_sha256_at_base": "26eea84243362e2f73cbe893961514ac08a114dda74b92b9f41a661ef4863265",
+   "stop_ns": 3750.0,
+   "tick_ns": 120.0
+  },
+  {
+   "analysis_line_in_source": "tran_case tran stop=13050.000n maxstep=0.100n",
+   "authorisation": "USER_APPROVED",
+   "case_id": "RS-FULL",
+   "class": "transient",
+   "convergence_partner": "TR-LONG",
+   "dut_launches": 1,
+   "emission_windows_in_source": 8,
+   "maxstep_ns": 0.1,
+   "paired_case_in_source": "TR-LONG",
+   "preflight_launches": 1,
+   "purpose": "step-size convergence control for TR-LONG",
+   "qlsb_nominal_C": 2.25e-13,
+   "run_copy": "spectre/dd1_d7c_b_tr/RS-FULL.scs",
+   "source": "frozen_PREP",
+   "source_deck": "spectre/dd1_d7c_b_prep/RS-FULL.scs",
+   "source_deck_sha256_at_base": "3694083b3fc404e45217f6a3c6654264aecb0bf77b11ca96fe4270440c89ac79",
+   "stop_ns": 13050.0,
+   "tick_ns": 120.0
+  },
+  {
+   "analysis_line_in_source": "tran_case tran stop=1530.000n maxstep=0.100n",
+   "authorisation": "USER_APPROVED",
+   "case_id": "RS-LOW",
+   "class": "transient",
+   "convergence_partner": "TR-120",
+   "dut_launches": 1,
+   "emission_windows_in_source": 1,
+   "maxstep_ns": 0.1,
+   "paired_case_in_source": "TR-120",
+   "preflight_launches": 1,
+   "purpose": "step-size convergence control for TR-120",
+   "qlsb_nominal_C": 2.25e-13,
+   "run_copy": "spectre/dd1_d7c_b_tr/RS-LOW.scs",
+   "source": "frozen_PREP",
+   "source_deck": "spectre/dd1_d7c_b_prep/RS-LOW.scs",
+   "source_deck_sha256_at_base": "86b919a0c1ce15168c3829acfbc2562efac7710231c388b2ce644b9ca1215f2c",
+   "stop_ns": 1530.0,
+   "tick_ns": 120.0
+  },
+  {
+   "analysis_line_in_source": "tran_case tran stop=3750.000n maxstep=0.100n",
+   "authorisation": "USER_APPROVED",
+   "case_id": "RS-SWITCH",
+   "class": "transient",
+   "convergence_partner": "TR-OFFCODE",
+   "dut_launches": 1,
+   "emission_windows_in_source": 4,
+   "maxstep_ns": 0.1,
+   "paired_case_in_source": "TR-OFFCODE",
+   "preflight_launches": 1,
+   "purpose": "step-size convergence control for TR-OFFCODE",
+   "qlsb_nominal_C": 2.25e-13,
+   "run_copy": "spectre/dd1_d7c_b_tr/RS-SWITCH.scs",
+   "source": "frozen_PREP",
+   "source_deck": "spectre/dd1_d7c_b_prep/RS-SWITCH.scs",
+   "source_deck_sha256_at_base": "7067156ade6f3c01ec7941a8fbfc68828e375e963dde690bfeac675f58bab6a2",
+   "stop_ns": 3750.0,
+   "tick_ns": 120.0
+  },
+  {
+   "analysis_line_in_source": "NOT_IN_BASE",
+   "authorisation": "USER_APPROVED",
+   "case_id": "HYB-120",
+   "class": "transient_rtl_vcd_driven",
+   "convergence_partner": "",
+   "dut_launches": 1,
+   "emission_windows_in_source": "FROM_VCD",
+   "maxstep_ns": 0.1,
+   "paired_case_in_source": "",
+   "preflight_launches": 1,
+   "purpose": "joint PWM/PAM charge driven by the accepted RTL four-state VCD at a 120 ns tick",
+   "qlsb_nominal_C": 2.25e-13,
+   "run_copy": "spectre/dd1_d7c_b_tr/HYB-120.scs",
+   "source": "accepted_RTL_new_VCD",
+   "source_deck": "NEW: derived from the accepted RTL four-state VCD",
+   "source_deck_sha256_at_base": "NOT_IN_BASE",
+   "stop_ns": "FROM_VCD",
+   "tick_ns": 120.0
+  },
+  {
+   "analysis_line_in_source": "NOT_IN_BASE",
+   "authorisation": "USER_APPROVED",
+   "case_id": "HYB-200",
+   "class": "transient_rtl_vcd_driven",
+   "convergence_partner": "",
+   "dut_launches": 1,
+   "emission_windows_in_source": "FROM_VCD",
+   "maxstep_ns": 0.1,
+   "paired_case_in_source": "",
+   "preflight_launches": 1,
+   "purpose": "joint PWM/PAM charge driven by the accepted RTL four-state VCD at a 200 ns tick",
+   "qlsb_nominal_C": 3.75e-13,
+   "run_copy": "spectre/dd1_d7c_b_tr/HYB-200.scs",
+   "source": "accepted_RTL_new_VCD",
+   "source_deck": "NEW: derived from the accepted RTL four-state VCD",
+   "source_deck_sha256_at_base": "NOT_IN_BASE",
+   "stop_ns": "FROM_VCD",
+   "tick_ns": 200.0
+  }
+ ],
+ "charge": {
+  "both_columns_kept": true,
+  "dynamic_frozen_limit": 0.5,
+  "error_dynamic_LSB": "(Qmeas - Qtarget_dc) / QLSB_nominal",
+  "error_nominal_LSB": "(Qmeas - Qtarget_nominal) / QLSB_nominal",
+  "forbidden_denominators": [
+   "the length of the window under test",
+   "the measured Q of that window",
+   "a transient average current",
+   "the code current of that window multiplied by its length",
+   "I111 / 8 substituted for the nominal denominator"
+  ],
+  "limit_status": "FROZEN_BY_APPROVED_TASK",
+  "nominal_independent_limit": 0.5,
+  "nominal_pass_may_not_be_claimed_from_dynamic_pass": true,
+  "qlsb_definition": "QLSB_nominal = 1.875e-06 A x Ttick",
+  "qlsb_nominal_C_by_tick_ns": {
+   "120": 2.25e-13,
+   "200": 3.75e-13
+  },
+  "qtarget_dc": "IDC(k) x T50",
+  "qtarget_nominal": "Inom(k) x T50",
+  "t50_rule": "T50 is only the interval between the actual 0.9 V crossings of the enable for that window; for the safety window it is the actual falling edge after the abort"
+ },
+ "contract_state": "USER_APPROVED_FOR_EXECUTION_DATA_7C_B_TR",
+ "convergence": {
+  "also_report": "absolute dQ in coulombs and femtocoulombs per window",
+  "context_fields": [
+   "case mapping",
+   "code position",
+   "stimulus digest",
+   "measurement window",
+   "threshold",
+   "sign rule",
+   "DC reference identity",
+   "reference_tick",
+   "QLSB"
+  ],
+  "limit_rel_qlsb": 0.01,
+  "missing_context_is_a_refusal": true,
+  "none_equals_none_is_not_a_match": true,
+  "pairs": [
+   {
+    "coarse": "TR-LONG",
+    "coarse_maxstep_ns": 2.0,
+    "maxstep_ns": 0.1,
+    "only_maxstep_may_differ": true,
+    "refined": "RS-FULL",
+    "tick_ns": 120.0
+   },
+   {
+    "coarse": "TR-120",
+    "coarse_maxstep_ns": 2.0,
+    "maxstep_ns": 0.1,
+    "only_maxstep_may_differ": true,
+    "refined": "RS-LOW",
+    "tick_ns": 120.0
+   },
+   {
+    "coarse": "TR-OFFCODE",
+    "coarse_maxstep_ns": 2.0,
+    "maxstep_ns": 0.1,
+    "only_maxstep_may_differ": true,
+    "refined": "RS-SWITCH",
+    "tick_ns": 120.0
+   }
+  ],
+  "proves": "nothing about whether the waveform itself meets an electrical requirement",
+  "uncovered": [
+   "TR-200 has no dedicated fine-step partner, so no claim is made that every case has an independent fine-step check",
+   "HYB-120 and HYB-200 have no fine-step pair of their own"
+  ]
+ },
+ "dc_reference": {
+  "blob_sha256_at_base": "23e9e1fb6aed01497ef34e37196176e4305228fdbd1fc389dcd4e4cd4cd4cfc3",
+  "deck_sha256_by_code": {
+   "000": "2193e220d0f539d853b5da59a4ec7e185c4da131d1a2597463a46145962850fe",
+   "001": "b015fccb485850ff92d00f4c58637883b9be249ac864b31efd3edfef40ba6bd1",
+   "010": "cd9df1cff8fda01a403caafaa6d726714d1d4d7cf1ad2586e150634ca4e2b690",
+   "011": "70e1044d3ba95720e7fd26f719e954050e63f54134f1162f103da0a9e360abb4",
+   "100": "dbfff3035bbabf2ab4a735c61223e410963e290dbf9de51d5841e0a912f6b5ef",
+   "101": "35aa0a97f65da729afb88ab5e8dadb060ed7b8d0f96667a4298c64cd5fa67588",
+   "110": "9f7ec47174690e70a8b517d12fd1e25aa259b8fed5a5e1929e925a3a0856064d",
+   "111": "e333cce09c94dbbdb811f134772d76961ee3534984b2ba253e39097813e6b405"
+  },
+  "idc_A_by_code": {
+   "000": 1.922839108e-06,
+   "001": 3.845677157e-06,
+   "010": 5.768515211e-06,
+   "011": 7.691353271e-06,
+   "100": 9.614191336e-06,
+   "101": 1.153702941e-05,
+   "110": 1.345986748e-05,
+   "111": 1.538270557e-05
+  },
+  "known_dc_bias": "the accepted DC round measures I111 at 1.20 V as 1.538270557e-05 A, +2.551370 % above the 1.5e-05 A nominal, so a long or full-bright window may exceed 0.5 LSB on the nominal error and that is a reported result",
+  "nominal_A_by_code": {
+   "000": 1.875e-06,
+   "001": 3.75e-06,
+   "010": 5.625e-06,
+   "011": 7.5e-06,
+   "100": 9.375000000000001e-06,
+   "101": 1.125e-05,
+   "110": 1.3125e-05,
+   "111": 1.5e-05
+  },
+  "nominal_identity": "ESTIMATED_MIRROR_RATIO_ONLY",
+  "path": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/dc_matrix_dut.csv",
+  "raw_sha256_by_code": {
+   "000": "5f3757d8cf2ad90bfcc0f10c3055524ebb2ee7560583fdef63ef6ff8793732c9",
+   "001": "287e17402f58fad404d0f5cd440af6531901441a315082469cc45b849b5b74a6",
+   "010": "46bb553cf3aca6c6bdb5b5c9554d4a6847b76ae28503f1b56ff879f832a3e7ae",
+   "011": "5e9e9e2ee331925ca041934cd3f5822fc2325bb3f64683c31306d7b3a239f2a9",
+   "100": "73dc86984baaeacb87bde54018bac2eecacd851a74589f7e305f1020e86f155d",
+   "101": "833d6eb01631646c814dbe54cface4d5389871bbf811e4ddd91a215248dc4a63",
+   "110": "7bae8518b0560627ae327dd932308db5489b90b7619bb0b0112fbbda7a98e426",
+   "111": "9b2b8d02e262cb1f983187bb08e29465e5a67aefd190a8580bea731261085b03"
+  },
+  "rule": "IDC(k) is the I_sink_A column of the 1.20 V DUT row of each code in the accepted DC table, read at run time rather than copied from a display column"
+ },
+ "deck_rules": {
+  "display_and_algorithm_tolerance": "reported in separate columns",
+  "form_proven_on_this_build": {
+   "netlist_dir": "the run payload exports QODER_NETLIST_DIR; the old environment file is not touched",
+   "pwl": "Vname (node 0) vsource type=pwl wave=[t1 v1 ...]",
+   "temp": "simopt options temp=27",
+   "tran": "tran_case tran stop=<ns> maxstep=<ns>"
+  },
+  "include_target": "the six accepted stripped masters listed below",
+  "masters": [
+   {
+    "blob_sha256_at_base": "d535ad0112c31952d0c51e314cc57054b631b18c7457ba8088d970945ca6de77",
+    "name": "dd1_d6_inv18.scs",
+    "path": "spectre/dd1_d7c_b_dc/masters/dd1_d6_inv18.scs"
+   },
+   {
+    "blob_sha256_at_base": "379536efb1dd9b2626e93ec384d572c734d5c1b398881c6de6ce4405e230c293",
+    "name": "dd1_d6_bias_core.scs",
+    "path": "spectre/dd1_d7c_b_dc/masters/dd1_d6_bias_core.scs"
+   },
+   {
+    "blob_sha256_at_base": "55c08f25eaee6184c8be263e8762559f51ff1c66be37c0a0dfb1c2b0e8f1e5de",
+    "name": "dd1_d7c_a_gates.scs",
+    "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_gates.scs"
+   },
+   {
+    "blob_sha256_at_base": "f4d458d21d82e91c3f0e4012cc8fb568c090c1bb364fd486bf0b82a469163b5a",
+    "name": "dd1_d7c_a_pam_dec.scs",
+    "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_pam_dec.scs"
+   },
+   {
+    "blob_sha256_at_base": "289ae1dd8edf91c806c2c2dfecc15d9b3b8524ed987849d0094bab1124369a3f",
+    "name": "dd1_d7c_a_sink_unit.scs",
+    "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_sink_unit.scs"
+   },
+   {
+    "blob_sha256_at_base": "8489616e4826fccdd7516d7b02764ae3850ad3e4476181b5ae0f5249ec5a08a5",
+    "name": "dd1_d7c_a_pam_top.scs",
+    "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_pam_top.scs"
+   }
+  ],
+  "native_time": "adaptive native samples keep float precision, are strictly increasing and finite, and carry their declared unit; they are never rounded to ps nor assumed equally spaced",
+  "preflight": {
+   "also_read_back": "the input PWL levels, edges and bit order from the native output",
+   "drops": "the hierarchical saves of a DUT that is not present",
+   "expected": {
+    "clamp_current_A": 1.4999999999999999e-05,
+    "reference_node_V": 0.7499999999999999
+   },
+   "keeps": [
+    "supplies",
+    "PWL inputs",
+    "time range",
+    "maxstep"
+   ],
+   "load_ohms": 80000.0,
+   "loads": [
+    "Rload_meter (data_out vss) resistor r=80e3",
+    "Rref_meter (iref_in vss) resistor r=50e3",
+    "Vclamp (clamp_node 0) vsource dc=1.2"
+   ],
+   "not_a_claim": "an ideal resistive preflight does not switch off with DATA_EN, so it is never a shutoff or ladder result",
+   "reference_ohms": 50000.0
+  },
+  "run_copies_only": "this round runs only copies under spectre/dd1_d7c_b_tr; the frozen PREP deck text is never edited",
+  "step_speed_may_not_be_tuned_for_pass": true,
+  "unchanged": [
+   "sources",
+   "waveforms",
+   "windows",
+   "analysis conditions",
+   "the declared physical inputs of a step-size pair"
+  ]
+ },
+ "electrical_environment": {
+  "clamp_V": 1.2,
+  "clamp_identity": "POC_CLAMP_CONDITION_NOT_LED_NOT_VSCAN_NOT_ELECTRODE_RC",
+  "corner": "TT",
+  "enable_mid_V": 0.9,
+  "ideal_clamp_note": "the clamp is an ideal test condition, not a real LED, scan high side or electrode RC",
+  "iref_A": 1.5e-05,
+  "iref_form": "external 15 uA injected into the frozen diode-connected reference",
+  "logic_high_V": 1.8,
+  "logic_low_V": 0.0,
+  "model_source": "the environment variables the accepted rounds already used; no model card, vendor path or licence value is copied into this repository",
+  "temp_C": 27.0,
+  "vcas_V": 1.8,
+  "vdd18_V": 1.8,
+  "vss_V": 0.0,
+  "vss_form": "explicit 0 V vsource, present in the delivered deck"
+ },
+ "frozen": {
+  "candidate_duts_and_derived_masters": "the four candidate DUTs, the six stripped masters and the fifteen PREP decks are frozen",
+  "data_and_pam_polarity": "Data drives the LED N side and the scan high side drives the P side; the polarity is not changed",
+  "dut_geometry_body_and_reference_structure": "unchanged; no W/L/body edit is authorised",
+  "old_records_reports_handoffs_and_ledgers": "frozen",
+  "prep_contract_state": "the PROPOSED bytes are kept byte-identical; this contract carries the frozen decision and its source"
+ },
+ "hybrid": {
+  "conversion": {
+   "edge_shape": "a hold/ramp point pair per edge, the 50 % point aligned to the original VCD edge",
+   "edge_total_ns": 2.0,
+   "forbidden": "slow interpolation across an emission window",
+   "levels_V": [
+    0.0,
+    1.8
+   ],
+   "maxstep_ns": 0.1,
+   "self_recheck": "the converted PWL is re-parsed and every original edge, bit order, 2 ns slope and initial level is confirmed; overlapping edges are refused",
+   "shift_ns": 1000.0,
+   "shift_rule": "the whole waveform moves right, enable and PAM together",
+   "signals": [
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2"
+   ],
+   "xz_rule": "any X or Z, and any illegal protocol, is refused before the analogue run"
+  },
+  "driven_by": "the real four-state VCD of the accepted rtl/dd1_d7a_gray_ctrl.sv at base",
+  "expectation_source": "the independent expectation is built from the input codes and the measured tick stream, not copied from the DUT target arithmetic",
+  "frame_F63_note": "cfg_hyb_time == 63 maps to FULL_HYB = 64 intervals in the accepted RTL, so M = 64 and not 63",
+  "frames": [
+   {
+    "cfg_hyb_pam": "000",
+    "cfg_hyb_time": 0,
+    "expected_conducting_intervals": 0,
+    "frame": "B0"
+   },
+   {
+    "cfg_hyb_pam": "000",
+    "cfg_hyb_time": 1,
+    "expected_conducting_intervals": 1,
+    "frame": "L1"
+   },
+   {
+    "cfg_hyb_pam": "011",
+    "cfg_hyb_time": 2,
+    "expected_conducting_intervals": 2,
+    "frame": "M2"
+   },
+   {
+    "cfg_hyb_pam": "111",
+    "cfg_hyb_time": 63,
+    "expected_conducting_intervals": 64,
+    "frame": "F63"
+   }
+  ],
+  "normal_frame_rule": "data_en conducts over [t0, t0 + M*T), pam holds for the whole frame and its tail, and the frame ends with 65 boundary events",
+  "not_a_claim": [
+   "not a MOS implementation of the RTL controller",
+   "not a real-time mixed simulation",
+   "not physical CDC or skew verification"
+  ],
+  "protocol": [
+   "reset with mode 00, blank 1, system_en 0",
+   "release reset, change mode to 01 in the safe phase and hold at least two reference periods",
+   "allow system_en",
+   "cfg_valid low then high, complete a new load, wait at least one sampling edge, then LATCH",
+   "one more sampling edge, then START",
+   "the first tick is consumed only after blank is released",
+   "tick is set ahead on the falling edge and consumed on the rising edge; config, latch and START never crowd onto the same edge",
+   "wait for win_state DONE every frame, including a zero code, which still walks all 64 intervals, keep the tick at least two more times, then prepare the next frame",
+   "at least 500 ns of preparation and tail under DATA_EN = 0 between frames",
+   "a code change finishes at least 100 ns before the next DATA_EN rising edge"
+  ],
+  "rtl_blob_sha256_at_base": "6dbf464a49e49ad489188fa51920c30a3c89d6b3106046a4fefe558ef0a50c87",
+  "rtl_equal_to_accepted_f684496": true,
+  "rtl_path": "rtl/dd1_d7a_gray_ctrl.sv",
+  "safety_frame": {
+   "after_withdrawal": "inside blank only START is issued, no load and no LATCH, ticks continue and at least 600 ns must stay black",
+   "cfg_hyb_pam": "111",
+   "cfg_hyb_time": 63,
+   "fault_hold_min_ns": 40.0,
+   "fault_rise": "t0 + 2.5*T + 3 ns",
+   "frame": "A",
+   "measured_as": "the actual fault closing edge, never the planned 64 T",
+   "no_new_recovery_window": true,
+   "only_in": "HYB-120",
+   "planned_intervals": 64
+  },
+  "single_channel_instance": "one instance only per VCD, no new RTL function, the controller is not modified",
+  "t0": "the reference clk rising edge that consumes the tick, never the obs_tick that leads it",
+  "vcd_signals": [
+   "clk",
+   "reset_n",
+   "system_en",
+   "tick",
+   "mode",
+   "cfg_pure",
+   "cfg_hyb_time",
+   "cfg_hyb_pam",
+   "cfg_valid",
+   "latch_stb",
+   "pwm_start",
+   "blank",
+   "fault",
+   "data_en",
+   "data_en_b",
+   "obs_tick",
+   "pam_sel",
+   "win_state",
+   "cfg_version",
+   "proto_err"
+  ],
+  "window_count": {
+   "logical_frame_windows": 9,
+   "rule": "four normal frames per group plus the HYB-120 safety frame; the two zero codes have no emission edge and are listed as black windows",
+   "separately_listed_black_windows": [
+    "the two zero-code frames",
+    "the post-fault hold"
+   ]
+  }
+ },
+ "internal_nodes": {
+  "branch_count_rule": "checked against k+1 conducting branches, with an unselected branch local bias distinguished from a selected one",
+  "no_device_op_parameters": "this build saves node values only, so no MOS region, SOA or saturation sign-off is claimed from a node name",
+  "no_presumed_bias_voltage": true,
+  "not_done_this_round": [
+   "no Iref/W/L change",
+   "no 0.3 V extension",
+   "no LED",
+   "no scan high side",
+   "no electrode RC"
+  ],
+  "per_step_observation": "TR-LONG reports at least 50 ns of time-weighted observation at the end of every flat step: the eight en/enb logics, the eight vbias_ch, the shared iref_in and a representative node_m",
+  "switch_and_off": "the internal nodes and the output current are shown together and the delay is attributed to decode, bias charge/discharge or current build-up; where the evidence does not reach, the report says it was not attributed",
+  "time_weighted_ns": 50.0
+ },
+ "main_sha_kept": "23e471cb936b421ee97e1250c3be06edf96f9937",
+ "not_run": [
+  "GRAY_LUT",
+  "FULL_MOS_GRAY_CONTROLLER",
+  "TCON",
+  "ARRAY",
+  "LAYOUT",
+  "DRC",
+  "LVS",
+  "PEX",
+  "OA_READ_OR_WRITE"
+ ],
+ "not_verified": [
+  "OPTICAL_EFFECTIVE_BITS",
+  "PHYSICAL_CDC_AND_SKEW",
+  "SOA_SIGNOFF",
+  "MISMATCH",
+  "PVT",
+  "PRODUCTION_ACCURACY"
+ ],
+ "probe": {
+  "definition": "I_sink = Ip_branch with no negation and no abs()",
+  "ideal_two_terminal_check": {
+   "absolute_tol_V": 1e-06,
+   "earlier_round_not_rewritten": "the accepted DC round keeps its published 20 mV guard and value; only this adapter carries the tightened rule",
+   "expression": "abs(data_out_V - clamp_node_V) <= 1e-06 + 1e-09 * abs(clamp_node_V)",
+   "identity": "NUMERIC_CONSISTENCY_OF_THE_EXPORT_NOT_A_DEVICE_DROP_SPEC",
+   "must_be_proven_readable": "this round proves the tolerance is expressible in the exported precision before using it as a check",
+   "relative_tol": 1e-09
+  },
+  "instance": "Ip_branch",
+  "order_rule": "Ip_branch (clamp_node data_out) iprobe, the order the accepted bench uses",
+  "physical_positive_path": [
+   "clamp_node",
+   "data_out",
+   "the conducting branch(es)",
+   "vss"
+  ],
+  "tail_sign": "a shutoff tail keeps its own sign; Q, Qpos and abs(Qneg) are reported separately and never cancel",
+  "terminals": [
+   "clamp_node",
+   "data_out"
+  ]
+ },
+ "publication": {
+  "electrical_fail_still_delivers_valid_measurements": true,
+  "one_overall_pass_may_not_absorb_a_negative_finding": true,
+  "statuses": [
+   "EXECUTION_COMPLETENESS",
+   "EVIDENCE_INTEGRITY",
+   "DYNAMIC_CHARGE_STATUS",
+   "NOMINAL_CHARGE_STATUS",
+   "SETTLING_STATUS",
+   "SHUTOFF_STATUS",
+   "CONVERGENCE_STATUS"
+  ]
+ },
+ "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
+ "required_signals": {
+  "always_extracted": [
+   "time",
+   "Ip_branch_current",
+   "data_en",
+   "pam0",
+   "pam1",
+   "pam2",
+   "vdd18",
+   "vss",
+   "vcas",
+   "iref_in",
+   "clamp_node",
+   "data_out"
+  ],
+  "axis": [
+   "time"
+  ],
+  "current": [
+   "the Ip_branch current column under its real native name"
+  ],
+  "internal_nodes": {
+   "en": [
+    "Xdut.en0",
+    "Xdut.en1",
+    "Xdut.en2",
+    "Xdut.en3",
+    "Xdut.en4",
+    "Xdut.en5",
+    "Xdut.en6",
+    "Xdut.en7"
+   ],
+   "enb": [
+    "Xdut.enb0",
+    "Xdut.enb1",
+    "Xdut.enb2",
+    "Xdut.enb3",
+    "Xdut.enb4",
+    "Xdut.enb5",
+    "Xdut.enb6",
+    "Xdut.enb7"
+   ],
+   "node_m": [
+    "Xdut.Xu0.node_m",
+    "Xdut.Xu4.node_m"
+   ],
+   "vbias_ch": [
+    "Xdut.Xu0.vbias_ch",
+    "Xdut.Xu1.vbias_ch",
+    "Xdut.Xu2.vbias_ch",
+    "Xdut.Xu3.vbias_ch",
+    "Xdut.Xu4.vbias_ch",
+    "Xdut.Xu5.vbias_ch",
+    "Xdut.Xu6.vbias_ch",
+    "Xdut.Xu7.vbias_ch"
+   ]
+  },
+  "missing_internal_node_rule": "output measurements already obtained may be kept, but the complete internal observation status is PARTIAL and no full stage PASS is granted for it; the schematic is never redrawn for it",
+  "missing_named_rule": "a name that does not exist is named in the refusal; no contract value is substituted, no observation is claimed and no DUT port is repurposed to make an export appear",
+  "note": "carry-over followup F-TR-1 from the DC-R1 limited GO: vss is listed as a required signal beside the supplies at the same level in every new extraction and observation list of this round",
+  "pre_run_check": "before each native launch the save list and the model naming are checked read-only, and the first DUT run checks the internal columns too, so nine cases are not run to discover a missing observation"
+ },
+ "round": "TR",
+ "task_id": "DATA-7C-B-TR",
+ "windows": {
+  "black_window": {
+   "post_fault_hold": "the 600 ns after the fault withdrawal is its own black window",
+   "rule": "a zero-code window has no emission edge: Q and max(abs(I)) are measured over the whole 64-tick window, Qtarget is 0, the QLSB is the same fixed one, and no T50 is invented"
+  },
+  "frozen_table_window_counts": {
+   "emission": 27,
+   "emission_flat": 27,
+   "leak_last100": 27,
+   "off_tail": 27,
+   "pure_off": 27
+  },
+  "kinds": [
+   "full",
+   "flat",
+   "tail",
+   "pure-off",
+   "leak-last-100"
+  ],
+  "settling": {
+   "deadline": "flat_stop of this window, the start of the falling ramp",
+   "fraction": 0.05,
+   "min_in_band_ns": 10.0,
+   "reports": [
+    "start",
+    "left limit",
+    "last out-of-band sample"
+   ],
+   "short_window": "NOT_SETTLED_WITHIN_PULSE, the deadline is never moved",
+   "targets": [
+    "Inom(k)",
+    "IDC(k)"
+   ]
+  },
+  "source_of_truth": "the PWL text of the run copy; the five kinds are re-derived from it and compared with the frozen windows table, so the generator is never its own witness",
+  "tail": {
+   "criterion": "max(abs(I_sink)) <= 1.5e-07 A",
+   "measured_only_inside_pure_off": true,
+   "never_cancelled_against_positive_charge": true,
+   "never_merged_into_the_main_window": true,
+   "window": "the last 100 ns of the pure-off window"
+  }
+ }
+}
