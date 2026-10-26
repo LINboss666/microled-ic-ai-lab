@@ -1,0 +1,125 @@
+{
+ "acceptance_registered": "YES_BY_USER_DECISION_FOR_THE_LIMITED_SCOPE_ABOVE",
+ "accepted_scope": [
+  "the eight-level single-output PAM TT direct-current result of DATA-7C-B-DC: 152 DUT rows and 152 preflight rows, full scale 15.38270557 uA inside the frozen 14.25-15.75 uA band, Iunit_ref 1.92283819625 uA, strict monotonicity and every step within a quarter unit",
+  "the offline extraction, judgement and identity repairs of DATA-7C-B-DC-R1: the signed band, the required-signal refusals, the complete-matrix gate in front of every PASS path, and a source identity bound to the Git blob the commit carries"
+ ],
+ "audited_sha": "b7509c4766a6bbfd0413749d50a5f294192b60fb",
+ "audited_sha_role": "the DATA-7C-B-DC-R1 receipt tip the independent review examined; this registration is committed after it and quotes it, so no file here digests the commit that carries it",
+ "audited_tree": "d91179901252d0b9c627faaa60478b2ce466252d",
+ "base_of_audited_tip": "337563fc22699e480bf7fc82890750c126a50654",
+ "branch": "poc/data-pam-d7c-b-dc-r1",
+ "housekeeping_for_the_next_round": "this directory is added after the audited commit, so a later round that re-publishes the DATA-7C-B-DC-R1 record has to declare reports/reviews/DATA-7C-B-DC-R1-GO/ among its own allowed new prefixes; the scripts, numbers and account of the audited commit are not touched by this registration",
+ "known_gaps_in_the_review_artifact": {
+  "note": "recorded so a later whitespace check over a range that includes this file is not read as a defect of the audited content; the attachment is stored unmodified",
+  "trailing_whitespace_lines_in_the_attachment": 0
+ },
+ "main_still": "23e471cb936b421ee97e1250c3be06edf96f9937",
+ "merge_performed": "NO",
+ "next_native_stage_authorised": "NO",
+ "nonblocking_followups": [
+  {
+   "affects_this_acceptance": false,
+   "disposition": "fold into the next self-contained transient / PWM-PAM task on the user choice 并入瞬态阶段; no R2 round and no separate doc round opens for it",
+   "found_by": "the independent review, section 5 (1)",
+   "item": "matrix.py observe() REQUIRED_SIGNALS does not list vss, while the extractor set does; the two observation lists are not fully aligned"
+  },
+  {
+   "affects_this_acceptance": false,
+   "disposition": "same: next self-contained native stage, with the real export precision measured rather than assumed",
+   "found_by": "the independent review, section 5 (1)",
+   "item": "the output-tracks-clamp guard is 20 mV, which is wide for an ideal probe; the review suggests something like abs(data_out-clamp) <= 1e-6 V + 1e-9 * abs(clamp)",
+   "observed_in_this_data": "every committed row has data_out equal to the swept clamp, so the guard did not hide anything here"
+  }
+ ],
+ "not_accepted_by_this_registration": [
+  "no merge into main and no move of main; main stays 23e471cb936b421ee97e1250c3be06edf96f9937",
+  "no native authorisation of any kind: the transient stage, new Spectre launches, PWM/PAM joint charge and grey-scale work all need their own self-contained task book and their own budget",
+  "the four unused launches of the measured DC round are not borrowed forward",
+  "no optical effective-bit, SOA, layout, mismatch, Monte Carlo or PVT claim",
+  "not a cloud re-extraction from the native PSF: the raw and log answers stay on the executor machine",
+  "the executor package zip is not in Git; its bytes and digest live in the message of the audited commit itself"
+ ],
+ "registered_offline_content_still": "e51c5320a28bd5043e21d08a0be97e9d5612cd16",
+ "remote_readback": {
+  "audited_tip_agrees_on_both_channels": true,
+  "channel_a": {
+   "command": "git -c http.proxy=http://127.0.0.1:7892 ls-remote origin refs/heads/poc/data-pam-d7c-b-dc-r1 refs/heads/main refs/heads/poc/data-pam-d7c-b-dc",
+   "objects": {
+    "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+    "poc/data-pam-d7c-b-dc": "337563fc22699e480bf7fc82890750c126a50654",
+    "poc/data-pam-d7c-b-dc-r1": "b7509c4766a6bbfd0413749d50a5f294192b60fb"
+   },
+   "queried_utc": "2026-10-26T08:51:21Z",
+   "rc": 0
+  },
+  "channel_b": {
+   "answer": {
+    "commit": "b7509c4766a6bbfd0413749d50a5f294192b60fb",
+    "tree": "d91179901252d0b9c627faaa60478b2ce466252d"
+   },
+   "command": "curl https://api.github.com/repos/LINboss666/microled-ic-ai-lab/branches/poc/data-pam-d7c-b-dc-r1",
+   "http_code": "200",
+   "queried_utc": "2026-10-26T08:51:22Z"
+  },
+  "main_still": true,
+  "measured_dc_branch_still": true
+ },
+ "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
+ "review_artifact": {
+  "attachment_path": "C:/Users/LMX/Downloads/REVIEW_DATA7C_B_DC_R1_GO_20261026.md",
+  "byte_identical_to_the_attachment": true,
+  "bytes": 8503,
+  "file": "reports/reviews/DATA-7C-B-DC-R1-GO/REVIEW_DATA7C_B_DC_R1_GO_20261026.md",
+  "review_package_zip": "none attached this round; the review arrived as this single markdown file, so no MANIFEST of a reviewer archive was verified",
+  "sha256": "a4322daa0b127085762fcb9dcb53768e2a7fb9c19f0b1492fd7ad6b3d1cf1e24"
+ },
+ "reviewer": "ChatGPT independent reviewer, files attached by the user",
+ "reviewer_flags_verbatim": {
+  "ACCEPTANCE_REGISTERED_BY_REVIEWER": "NO",
+  "COMPLETION_LEVEL": "NATIVE_PAM_DC_TT_MEASURED",
+  "F1_SIGNED_BAND": "CLOSED",
+  "F2_REQUIRED_NATIVE_SIGNALS": "CLOSED",
+  "F3_COMPLETE_MATRIX_GATE": "CLOSED",
+  "F4_COMMITTED_IDENTITY": "CLOSED",
+  "MERGE_PERFORMED": "NO",
+  "NEW_BLOCKING_FINDINGS": "0",
+  "NEW_GUEST_OR_SSH_ACTIONS_BY_REVIEWER": "0",
+  "NEW_NATIVE_LAUNCHES_BY_REVIEWER": "0",
+  "NEW_OA_WRITES_BY_REVIEWER": "0",
+  "NEW_RTL_SIMULATIONS_BY_REVIEWER": "0",
+  "NEXT_NATIVE_STAGE_AUTHORISED": "NO",
+  "RECOMMENDATION": "LIMITED_GO",
+  "REVIEWED_TIP": "b7509c4766a6bbfd0413749d50a5f294192b60fb",
+  "SOA_SIGNOFF": "NO"
+ },
+ "soa_signoff": "NO",
+ "stop_reason": "AWAITING_THE_TRANSIENT_TASK_BOOK",
+ "task_id": "DATA-7C-B-DC-R1-GO",
+ "user_decision": {
+  "asked": "是否由我把这个 tip 登记为限定接受版本？",
+  "meaning": "the user registers the audited tip as the limited accepted content for this scope; the agent does not decide acceptance",
+  "second_question": "两个非阻断待办怎么放？",
+  "second_selection_verbatim": "并入瞬态阶段",
+  "selection_verbatim": "登记，限定范围"
+ },
+ "verification_by_the_registrar": {
+  "base_to_audited_tip": {
+   "added": 51,
+   "changed": [
+    "scripts/dd1_d7c_b_dc_matrix.py",
+    "scripts/dd1_d7c_b_dc_record.py",
+    "scripts/dd1_d7c_b_dc_run.py"
+   ],
+   "commits": 3,
+   "removed": 0,
+   "unchanged_blob_and_mode": 2878
+  },
+  "committed_copy_path": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/reviewer_inputs/probe_dc_review_gaps.py",
+  "git_diff_check_base_to_audited_tip_lines": 0,
+  "identity_rows_of_the_audited_record": 195,
+  "reviewer_instrument_sha": "d48448b1880c7d011a660e72f8fe202ddd63b251ccc2b16dc037b4bc03aa9e25",
+  "reviewer_instrument_sha_matches_the_committed_copy": true
+ },
+ "written_utc": "2026-10-26T08:51:21Z"
+}
