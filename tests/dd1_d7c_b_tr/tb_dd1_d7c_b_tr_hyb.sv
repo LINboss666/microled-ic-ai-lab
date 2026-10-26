@@ -33,8 +33,8 @@ module tb_dd1_d7c_b_tr_hyb;
     reg fault = 1'b0;
     reg [1:0] mode = 2'd0;
     reg [7:0] cfg_pure = 8'd0;
-    reg [5:0] cfg_ht = 6'd0;
-    reg [2:0] cfg_pam = 3'd0;
+    reg [5:0] cfg_hyb_time = 6'd0;      // the dump must carry the port names: the analogue
+    reg [2:0] cfg_hyb_pam = 3'd0;       // stimulus is converted from these recorded edges
     reg cfg_valid = 1'b0;
     reg latch_stb = 1'b0;
     reg pwm_start = 1'b0;
@@ -45,7 +45,7 @@ module tb_dd1_d7c_b_tr_hyb;
 
     dd1_d7a_gray_ctrl u_ctrl (
         .clk(clk), .reset_n(reset_n), .system_en(system_en), .tick(tick), .mode(mode),
-        .cfg_pure(cfg_pure), .cfg_hyb_time(cfg_ht), .cfg_hyb_pam(cfg_pam),
+        .cfg_pure(cfg_pure), .cfg_hyb_time(cfg_hyb_time), .cfg_hyb_pam(cfg_hyb_pam),
         .cfg_valid(cfg_valid), .latch_stb(latch_stb), .pwm_start(pwm_start),
         .blank(blank), .fault(fault),
         .data_en(data_en), .data_en_b(data_en_b), .obs_tick(obs_tick),
@@ -112,8 +112,8 @@ module tb_dd1_d7c_b_tr_hyb;
             latch_stb = 1'b0;
             cfg_valid = 1'b0;
             cfg_pure = 8'd0;
-            cfg_ht = 6'd0;
-            cfg_pam = 3'd0;
+            cfg_hyb_time = 6'd0;
+            cfg_hyb_pam = 3'd0;
             reset_n = 1'b0;
             edges(RESET_EDGES);
             reset_n = 1'b1;
@@ -144,8 +144,8 @@ module tb_dd1_d7c_b_tr_hyb;
         input integer pam;
         begin
             drive_begin;
-            cfg_ht = ht[5:0];
-            cfg_pam = pam[2:0];
+            cfg_hyb_time = ht[5:0];
+            cfg_hyb_pam = pam[2:0];
             cfg_valid = 1'b1;
             edges(2);
             drive_begin;
@@ -226,7 +226,19 @@ module tb_dd1_d7c_b_tr_hyb;
 
     initial begin
         $timeformat(-9, 3, " ns", 12);
-        group_ns = $test$plusargs("GROUP200") ? 200 : 120;
+        // the group must be stated explicitly: a silent default let a 200 ns request produce a 120 ns
+        // trace, which is exactly the kind of wrong-input run this round cannot afford
+        if ($test$plusargs("GROUP200") && $test$plusargs("GROUP120")) begin
+            $display("TB-ERROR both GROUP120 and GROUP200 were given");
+            $finish;
+        end else if ($test$plusargs("GROUP200")) begin
+            group_ns = 200;
+        end else if ($test$plusargs("GROUP120")) begin
+            group_ns = 120;
+        end else begin
+            $display("TB-ERROR neither GROUP120 nor GROUP200 was given, refusing to guess a tick");
+            $finish;
+        end
         tick_div = group_ns / 10;
         if (tick_div * 10 != group_ns || (tick_div != 12 && tick_div != 20)) begin
             $display("TB-ERROR GROUP must be 120 or 200, got %0d", group_ns);

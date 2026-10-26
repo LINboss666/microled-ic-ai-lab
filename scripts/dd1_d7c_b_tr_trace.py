@@ -67,7 +67,7 @@ def group_for(case_id):
     if case_id == 'HYB-120':
         return {'case_id': case_id, 'tick_ns': 120.0, 'plusargs': ['+GROUP120'], 'safety': True}
     if case_id == 'HYB-200':
-        return {'case_id': case_id, 'tick_ns': 200.0, 'plusargs': [], 'safety': False}
+        return {'case_id': case_id, 'tick_ns': 200.0, 'plusargs': ['+GROUP200'], 'safety': False}
     raise Refuse('%s is not one of the two hybrid cases' % case_id)
 
 
@@ -391,8 +391,32 @@ def tools():
     return D7A.find_tools()
 
 
+def tb_declared(text):
+    """the identifiers a $dumpvars(1, tb) run can record: the declarations in the TB scope"""
+    names = set()
+    for line in text.split('\n'):
+        found = re.match(r"^\s*(?:reg|wire)\s+(?:\[\s*\d+\s*:\s*\d+\s*\]\s*)?(.*?)\s*;", line)
+        if not found or 'function' in line or 'task' in line:
+            continue
+        for part in found.group(1).split(','):
+            identifier = re.match(r"\s*([A-Za-z_]\w*)", part)
+            if identifier:
+                names.add(identifier.group(1))
+    return names
+
+
+def tb_missing_signals(tb_text):
+    return [name for name in SCALARS + BUSES if name not in tb_declared(tb_text)]
+
+
 def compile_tb(run_dir, tag='trhyb'):
     """iverilog is a compilation, not an RTL simulation: it is recorded and never charged"""
+    tb_text = io.open(repo(TB_PATH), encoding='utf-8', newline='').read()
+    missing = tb_missing_signals(tb_text)
+    if missing:
+        raise Refuse('the testbench scope declares no %s, so $dumpvars(1, tb) cannot record the '
+                     'signals this round converts from; a missing dump name is a defect, not a '
+                     'reason to spend a simulation' % ','.join(missing))
     root, tools_map, env = tools()
     exe, rc, out = D7A.compile_sim(tools_map, env, run_dir, rtl=repo(RTL_PATH), tb=repo(TB_PATH),
                                    tag=tag)
@@ -583,7 +607,23 @@ def selftest():
     record('a safety fault that is not at t0 + 2.5T + 3 ns is refused', refused, '')
     record('the converter refuses a case it does not own', _raises(lambda: group_for('TR-120')),
            '')
+    tb_text = io.open(repo(TB_PATH), encoding='utf-8', newline='').read()
+    record('the testbench scope declares all twenty signals the conversion reads',
+           not tb_missing_signals(tb_text), tb_missing_signals(tb_text))
+    renamed = tb_text.replace('cfg_hyb_time', 'cfg_ht_port')
+    record('a recorded name the converter cannot find is caught before any simulation',
+           'cfg_hyb_time' in tb_missing_signals(renamed), tb_missing_signals(renamed)[:3])
+    record('the compile entry refuses a testbench with a missing recorded signal',
+           _raises(lambda: compile_guard(renamed)) and not _raises(lambda: compile_guard(tb_text)),
+           '')
     return results
+
+
+def compile_guard(tb_text):
+    """the guard compile_tb applies, exercised against an edited testbench text without iverilog"""
+    missing = tb_missing_signals(tb_text)
+    if missing:
+        raise Refuse('missing %s' % ','.join(missing))
 
 
 def _raises(action):

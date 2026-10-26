@@ -84,8 +84,9 @@ def staging():
 class Account(object):
     """append-only, one writer, reserve before the start, no refund, ceiling from the approved task"""
 
-    def __init__(self, path, ceiling, header, prefix):
+    def __init__(self, path, ceiling, header, prefix, reconcile=None):
         self.path, self.ceiling, self.header, self.prefix = path, int(ceiling), header, prefix
+        self.reconcile = reconcile
         self.lock = path + '.lock'
         self.rows = []
         if os.path.isfile(path):
@@ -113,8 +114,34 @@ class Account(object):
     def occupied(self):
         return len(self.rows)
 
+    def duplicate_bookings(self):
+        """row ids this round has reconciled as a second booking of one already-charged process.
+
+        A recovery never refunds a process that may have started. A booking that provably never
+        reached a process is a different thing, and it is reconciled in a named file rather than by
+        editing the ledger.
+        """
+        if not self.reconcile or not os.path.isfile(self.reconcile):
+            return []
+        data = json.loads(io.open(self.reconcile, encoding='utf-8').read())
+        out = []
+        for booking in data.get('duplicate_bookings', []):
+            duplicate = booking.get(self.header[0]) or booking.get('sim_id')
+            digest = (booking.get('evidence') or {}).get('log_sha256') or ''
+            witness = [row for row in self.rows
+                       if digest and row.get('log_sha256') == digest
+                       and row[self.header[0]] != duplicate]
+            if duplicate and witness and any(row[self.header[0]] == duplicate
+                                             for row in self.rows):
+                out.append(duplicate)
+        return out
+
+    def processes(self):
+        duplicates = set(self.duplicate_bookings())
+        return len([row for row in self.rows if row[self.header[0]] not in duplicates])
+
     def remaining(self):
-        return self.ceiling - self.occupied()
+        return self.ceiling - self.processes()
 
     def _acquire(self):
         try:
@@ -128,10 +155,10 @@ class Account(object):
     def reserve(self, fields):
         self._acquire()
         try:
-            if self.occupied() >= self.ceiling:
-                raise Refuse('LAUNCH_CEILING_REACHED: the account carries %d of %d; a failure costs '
-                             'the budget and recovery never refunds it'
-                             % (self.occupied(), self.ceiling))
+            if self.processes() >= self.ceiling:
+                raise Refuse('LAUNCH_CEILING_REACHED: the account carries %d charged processes of '
+                             '%d (rows %d); a failure costs the budget and recovery never refunds it'
+                             % (self.processes(), self.ceiling, self.occupied()))
             row = dict((key, '') for key in self.header)
             row.update({'task_id': TASK_ID, self.header[0]:
                         '%s%03d' % (self.prefix, self.occupied() + 1),
@@ -185,7 +212,8 @@ def spectre_account(out_dir, run_id=''):
 
 def rtl_account(out_dir, run_id=''):
     return Account(os.path.join(out_dir, 'rtl_simulation_account.csv'), RTL_LIMIT,
-                   RTL_ACCOUNT_HEADER, 'R')
+                   RTL_ACCOUNT_HEADER, 'R',
+                   reconcile=os.path.join(out_dir, 'rtl_process_reconciliation.json'))
 
 
 def authorisation_problem(role, case_id, done_preflight=None):
@@ -465,7 +493,7 @@ def selftest():
     account.settle(account.rows[0], 'FAILED', rc='1', refusal='SYNTAX')
     record('settling a row does not free the budget', account.remaining() == 0,
            account.remaining())
-    account.settle(account.rows[1], 'CONFIRMED', rc='0', raw_sha='a' * 64)
+    account.settle(account.rows[1], 'CONFIRMED', rc='0', raw_sha='a' * 64, log_sha='b' * 64)
     record('a confirmed row keeps its digest in the account',
            account.rows[1]['raw_sha256'] == 'a' * 64, account.rows[1])
     refused = False
@@ -487,6 +515,22 @@ def selftest():
         refused = True
     record('an account whose ids jump is refused rather than trusted', refused, '')
     os.remove(account_path + '.bad')
+    reconcile = account_path + '.reconcile.json'
+    settled = Account(account_path, 3, ACCOUNT_HEADER, 'T')
+    io.open(reconcile, 'wb').write((json.dumps({'duplicate_bookings': [
+        {'launch_id': 'T001', 'evidence': {'log_sha256': settled.rows[1]['log_sha256']}}]})
+        + '\n').encode('utf-8'))
+    checked = Account(account_path, 3, ACCOUNT_HEADER, 'T', reconcile=reconcile)
+    record('a duplicate booking is honoured only when another row carries the cited process log',
+           checked.processes() == 2 and checked.remaining() == 1,
+           (checked.processes(), checked.remaining()))
+    io.open(reconcile, 'wb').write((json.dumps({'duplicate_bookings': [
+        {'launch_id': 'T001', 'evidence': {'log_sha256': 'f' * 64}}]}) + '\n').encode('utf-8'))
+    forged = Account(account_path, 3, ACCOUNT_HEADER, 'T', reconcile=reconcile)
+    record('a booking citing a log no row carries cannot free the budget',
+           forged.processes() == 3 and forged.remaining() == 0,
+           (forged.processes(), forged.remaining()))
+    os.remove(reconcile)
     record('the deck account stamps every run copy with the committed contract digest',
            not DECK.check_account(account_of_masters(), require_all=False),
            DECK.check_account(account_of_masters(), require_all=False)[:2])
