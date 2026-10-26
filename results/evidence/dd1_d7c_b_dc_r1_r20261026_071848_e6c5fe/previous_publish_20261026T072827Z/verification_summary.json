@@ -1,0 +1,263 @@
+{
+ "account": {
+  "ceiling": 20,
+  "confirmed": 15,
+  "failed": 1,
+  "remaining": 4,
+  "rows": 16,
+  "uncertain": 0
+ },
+ "bands": {
+  "000": {
+   "adjacent_failing_V": "NO_MEASURED_POINT_BELOW",
+   "containing_main_V": [
+    0.6,
+    1.5
+   ],
+   "criterion": "abs(I(clamp) - I(1.2 V)) <= 5% of I(1.2 V)",
+   "lowest_verified_V": 0.6,
+   "no_extrapolation": true,
+   "points": 19,
+   "status": "MEASURED_POINTS_ONLY"
+  },
+  "001": {
+   "adjacent_failing_V": "NO_MEASURED_POINT_BELOW",
+   "containing_main_V": [
+    0.6,
+    1.5
+   ],
+   "criterion": "abs(I(clamp) - I(1.2 V)) <= 5% of I(1.2 V)",
+   "lowest_verified_V": 0.6,
+   "no_extrapolation": true,
+   "points": 19,
+   "status": "MEASURED_POINTS_ONLY"
+  },
+  "010": {
+   "adjacent_failing_V": "NO_MEASURED_POINT_BELOW",
+   "containing_main_V": [
+    0.6,
+    1.5
+   ],
+   "criterion": "abs(I(clamp) - I(1.2 V)) <= 5% of I(1.2 V)",
+   "lowest_verified_V": 0.6,
+   "no_extrapolation": true,
+   "points": 19,
+   "status": "MEASURED_POINTS_ONLY"
+  },
+  "011": {
+   "adjacent_failing_V": "NO_MEASURED_POINT_BELOW",
+   "containing_main_V": [
+    0.6,
+    1.5
+   ],
+   "criterion": "abs(I(clamp) - I(1.2 V)) <= 5% of I(1.2 V)",
+   "lowest_verified_V": 0.6,
+   "no_extrapolation": true,
+   "points": 19,
+   "status": "MEASURED_POINTS_ONLY"
+  },
+  "100": {
+   "adjacent_failing_V": "NO_MEASURED_POINT_BELOW",
+   "containing_main_V": [
+    0.6,
+    1.5
+   ],
+   "criterion": "abs(I(clamp) - I(1.2 V)) <= 5% of I(1.2 V)",
+   "lowest_verified_V": 0.6,
+   "no_extrapolation": true,
+   "points": 19,
+   "status": "MEASURED_POINTS_ONLY"
+  },
+  "101": {
+   "adjacent_failing_V": "NO_MEASURED_POINT_BELOW",
+   "containing_main_V": [
+    0.6,
+    1.5
+   ],
+   "criterion": "abs(I(clamp) - I(1.2 V)) <= 5% of I(1.2 V)",
+   "lowest_verified_V": 0.6,
+   "no_extrapolation": true,
+   "points": 19,
+   "status": "MEASURED_POINTS_ONLY"
+  },
+  "110": {
+   "adjacent_failing_V": "NO_MEASURED_POINT_BELOW",
+   "containing_main_V": [
+    0.6,
+    1.5
+   ],
+   "criterion": "abs(I(clamp) - I(1.2 V)) <= 5% of I(1.2 V)",
+   "lowest_verified_V": 0.6,
+   "no_extrapolation": true,
+   "points": 19,
+   "status": "MEASURED_POINTS_ONLY"
+  },
+  "111": {
+   "adjacent_failing_V": "NO_MEASURED_POINT_BELOW",
+   "containing_main_V": [
+    0.6,
+    1.5
+   ],
+   "criterion": "abs(I(clamp) - I(1.2 V)) <= 5% of I(1.2 V)",
+   "lowest_verified_V": 0.6,
+   "no_extrapolation": true,
+   "points": 19,
+   "status": "MEASURED_POINTS_ONLY"
+  }
+ },
+ "base_of_this_round": "337563fc22699e480bf7fc82890750c126a50654",
+ "base_sha_of_this_round": "337563fc22699e480bf7fc82890750c126a50654",
+ "branch": "poc/data-pam-d7c-b-dc-r1",
+ "completion_level": "NATIVE_PAM_DC_TT_MEASURED",
+ "credential_values_recorded": 0,
+ "csv_read_back": [
+  {
+   "cr_bytes": false,
+   "file": "commands.csv",
+   "header_matches": true,
+   "rows": 30
+  },
+  {
+   "cr_bytes": false,
+   "file": "frozen_comparison.csv",
+   "header_matches": true,
+   "rows": 13
+  },
+  {
+   "cr_bytes": false,
+   "file": "git_checks.csv",
+   "header_matches": true,
+   "rows": 4
+  },
+  {
+   "cr_bytes": false,
+   "file": "launches_reconcile.csv",
+   "header_matches": true,
+   "rows": 8
+  },
+  {
+   "cr_bytes": false,
+   "file": "source_identity.csv",
+   "header_matches": true,
+   "rows": 188
+  }
+ ],
+ "dut_rows": 152,
+ "electrical_results": "MEASURED for the eight DC codes at TT 27 C on the PAM candidate over the declared 0.60-1.50 V clamp grid; everything else in this record is text, arithmetic, table shape or Git identity",
+ "evidence_directory": "dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe",
+ "expected_rows": 152,
+ "frozen_enforced_mismatches": 0,
+ "frozen_rows": 13,
+ "full_scale": {
+  "band_uA": [
+   14.25,
+   15.75
+  ],
+  "code": "111",
+  "measured_A": 1.538270557e-05,
+  "measured_uA": 15.38270557,
+  "pass": true,
+  "target_uA": 15.0
+ },
+ "gates": 30,
+ "gates_failed": [],
+ "gates_informational": [],
+ "generated_utc": "2026-10-26T07:23:26Z",
+ "guest_write_root": "/root/microled_ai_project/cadence_work/dd1_d7c_b_dc/<run_id>",
+ "identity_rows": 188,
+ "identity_source_rule": "every published identity row is the digest of the blob this commit carries, read from the index; a working copy is never the identity, because Git may normalise its line endings",
+ "iunit_ref_uA": 1.92283819625,
+ "measured_currents_at_1p20V_uA": {
+  "000": 1.922839108,
+  "001": 3.8456771570000003,
+  "010": 5.768515211,
+  "011": 7.691353271,
+  "100": 9.614191336,
+  "101": 11.53702941,
+  "110": 13.45986748,
+  "111": 15.38270557
+ },
+ "model_card_content_committed": 0,
+ "not_run_or_not_verified": [
+  "PWM_PAM_TRANSIENT_INTEGRATION=NOT_RUN",
+  "GRAY_LUT=NOT_RUN",
+  "FULL_MOS_GRAY_CONTROLLER=NOT_RUN",
+  "OPTICAL_EFFECTIVE_BITS=NOT_VERIFIED",
+  "SOA_SIGNOFF=NO",
+  "MERGE_PERFORMED=NO",
+  "NEXT_STAGE_AUTHORISED=NO"
+ ],
+ "oa_writes": 0,
+ "pdk_paths_committed": 0,
+ "preflight_witnesses_all_within_tolerance": true,
+ "published_json": [
+  {
+   "file": "judgement.json",
+   "parses": true
+  },
+  {
+   "file": "observation_provenance.json",
+   "parses": true
+  },
+  {
+   "file": "observed_signals.json",
+   "parses": true
+  },
+  {
+   "file": "reuse_declaration.json",
+   "parses": true
+  },
+  {
+   "file": "stale_fields_of_the_earlier_record.json",
+   "parses": true
+  }
+ ],
+ "published_tables_recheck": {
+  "detail": "5 tables, every row re-splits to its header, commas and newlines are folded by rows_write before writing",
+  "rc": 0,
+  "verdict": "PASS"
+ },
+ "range_counts": {
+  "BASE_to_HEAD_this_round": {
+   "added": 0,
+   "changed": 0,
+   "commits": 0,
+   "deleted": 0,
+   "renamed": 0
+  },
+  "P_to_R1_recomputed": {
+   "added": 23,
+   "changed": 26,
+   "commits": 5,
+   "deleted": 0,
+   "renamed": 0
+  },
+  "R1_to_base": {
+   "added": 47,
+   "changed": 5,
+   "commits": 7,
+   "deleted": 0,
+   "renamed": 0
+  },
+  "e51c532_to_BASE_measured_round": {
+   "added": 115,
+   "changed": 2,
+   "commits": 15,
+   "deleted": 0,
+   "renamed": 0
+  }
+ },
+ "ratio_pass": true,
+ "registered_offline_content": "e51c5320a28bd5043e21d08a0be97e9d5612cd16",
+ "report_render_fixed_point": "PASS",
+ "reused_native_account_rows": 16,
+ "rtl_simulations": 0,
+ "spectre_launches": 0,
+ "stop_reason": "AWAITING_INDEPENDENT_REVIEW",
+ "strict_monotonic": true,
+ "task_id": "DATA-7C-B-DC-R1",
+ "tip": "337563fc22699e480bf7fc82890750c126a50654",
+ "transient_simulations": 0,
+ "verdict": "PASS",
+ "worst_deviation_in_iunit_ref": 4.741688622672253e-07
+}

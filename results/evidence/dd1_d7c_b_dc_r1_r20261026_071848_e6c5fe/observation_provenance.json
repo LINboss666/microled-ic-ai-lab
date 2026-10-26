@@ -1,0 +1,60 @@
+{
+ "answers": [
+  {
+   "bytes": 29502,
+   "file": "r20261026_015212_376554_DC-000_dut.raw",
+   "read_from": "the executor-saved native answer, not shipped",
+   "sha256": "5f3757d8cf2ad90bfcc0f10c3055524ebb2ee7560583fdef63ef6ff8793732c9"
+  },
+  {
+   "bytes": 29502,
+   "file": "r20261026_015212_376554_DC-111_dut.raw",
+   "read_from": "the executor-saved native answer, not shipped",
+   "sha256": "9b2b8d02e262cb1f983187bb08e29465e5a67aefd190a8580bea731261085b03"
+  },
+  {
+   "bytes": 29502,
+   "file": "r20261026_015212_376554_DC-001_dut.raw",
+   "read_from": "the executor-saved native answer, not shipped",
+   "sha256": "287e17402f58fad404d0f5cd440af6531901441a315082469cc45b849b5b74a6"
+  },
+  {
+   "bytes": 29502,
+   "file": "r20261026_015212_376554_DC-010_dut.raw",
+   "read_from": "the executor-saved native answer, not shipped",
+   "sha256": "46bb553cf3aca6c6bdb5b5c9554d4a6847b76ae28503f1b56ff879f832a3e7ae"
+  },
+  {
+   "bytes": 29502,
+   "file": "r20261026_015212_376554_DC-011_dut.raw",
+   "read_from": "the executor-saved native answer, not shipped",
+   "sha256": "5e9e9e2ee331925ca041934cd3f5822fc2325bb3f64683c31306d7b3a239f2a9"
+  },
+  {
+   "bytes": 29502,
+   "file": "r20261026_015212_376554_DC-100_dut.raw",
+   "read_from": "the executor-saved native answer, not shipped",
+   "sha256": "73dc86984baaeacb87bde54018bac2eecacd851a74589f7e305f1020e86f155d"
+  },
+  {
+   "bytes": 29502,
+   "file": "r20261026_015212_376554_DC-101_dut.raw",
+   "read_from": "the executor-saved native answer, not shipped",
+   "sha256": "833d6eb01631646c814dbe54cface4d5389871bbf811e4ddd91a215248dc4a63"
+  },
+  {
+   "bytes": 29502,
+   "file": "r20261026_015212_376554_DC-110_dut.raw",
+   "read_from": "the executor-saved native answer, not shipped",
+   "sha256": "7bae8518b0560627ae327dd932308db5489b90b7619bb0b0112fbbda7a98e426"
+  }
+ ],
+ "command": "python scripts/dd1_d7c_b_dc_matrix.py observe <copy of the saved native answers>",
+ "last_line": [
+  "DC_OBSERVE PASS cases=8 not_observed=Ip_branch,Ip_branch:current required_missing=none not_run=none -> observed_signals.json"
+ ],
+ "rc": 0,
+ "rule": "the observation was read from the native answers this machine still holds. The answers are not in the repository, so their digests are listed here instead; nothing was re-simulated.",
+ "task_id": "DATA-7C-B-DC-R1",
+ "written_utc": "2026-10-26T07:18:56Z"
+}

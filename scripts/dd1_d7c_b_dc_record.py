@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""dd1_d7c_b_dc_record.py -- publish this round's record tables over the bytes it actually measured.
+"""dd1_d7c_b_dc_record.py -- publish this round's record tables over the bytes Git actually carries.
 
-One entry, no second record platform: the shared DATA-7C-A checker and the PREP/R2 adapters keep their
-own round-bound gate and instrument names, and this round does not rename them or copy their framework.
-What is published here is the ledger of commands with their real rc, the blob-level frozen comparison
-against the registered offline commit, the source identity over Git-tracked paths only, the account
-reconciliation for the sixteen spectre processes, and the rendered tables of the round report.
+DATA-7C-B-DC-R1: the entry point is now the repair round's. It still publishes the ledger of commands
+with their real rc, the blob-level frozen comparison, the source identity, the account reconciliation
+and the rendered tables, but two things changed on purpose. Source identity is taken from a Git blob
+(the committed one, or the staged one this run just added) and never from the working copy, because the
+working copy may carry CRLF where the repository carries LF -- that is how two figure digests drifted
+out of the previous record. And every complete-matrix PASS path now walks DC.validate_dc_matrix first.
 
     python scripts/dd1_d7c_b_dc_record.py                      # publish into a new run directory
     python scripts/dd1_d7c_b_dc_record.py --evidence <dir>      # re-derive over an existing measurement dir
@@ -37,23 +38,29 @@ import dd1_d7b_run as B7B                                       # noqa: E402
 import dd1_d7c_b_dc_run as DC                                   # noqa: E402
 import dd1_d7c_b_dc_matrix as MATRIX                            # noqa: E402
 
-TASK_ID = 'DATA-7C-B-DC'
-BASE = DC.BASE_SHA
-BRANCH = DC.BRANCH
-REPORT = 'reports/dd1_d7c_b_dc_report.md'
+TASK_ID = 'DATA-7C-B-DC-R1'
+BASE = '337563fc22699e480bf7fc82890750c126a50654'     # the DC tip this repair round is cut from
+OFFLINE_BASE = DC.BASE_SHA                            # e51c532, the registered offline content
+MEASURED = 'results/evidence/dd1_d7c_b_dc_r20261026_015212_376554'   # the native round, read-only
+BRANCH = 'poc/data-pam-d7c-b-dc-r1'
+REPORT = 'reports/dd1_d7c_b_dc_review_fix_r1.md'
 CONTRACT_PATH = 'tests/dd1_d7c_b_dc/contract.json'
-EVIDENCE_PREFIX = 'dd1_d7c_b_dc_'
+EVIDENCE_PREFIX = 'dd1_d7c_b_dc_r1_'
 COMMANDS_HEADER = ('gate', 'command', 'rc', 'expected_rc', 'verdict_state', 'verdict')
 FROZEN_HEADER = ('surface', 'expectation', 'enforced', 'paths', 'matched', 'mismatched', 'detail')
 GIT_HEADER = ('gate', 'command', 'rc', 'lines', 'scope')
-IDENTITY_HEADER = ('role', 'path', 'bytes', 'sha256')
+IDENTITY_HEADER = ('role', 'path', 'bytes', 'sha256', 'identity_source')
 RECONCILE_HEADER = ('case_id', 'preflight_rows', 'dut_rows', 'confirmed', 'failed', 'uncertain',
                     'raw_present', 'log_present', 'note')
-ALLOWED_MODIFIED = ('scripts/dd1_d7c_b_prep_contract.py', 'reports/dd1_d7c_b_prep_contract.md')
-NEW_PREFIXES = ('scripts/dd1_d7c_b_dc_', 'spectre/dd1_d7c_b_dc/', 'tests/dd1_d7c_b_dc/',
-                'reports/dd1_d7c_b_dc_report.md',
-                'results/evidence/dd1_d7c_b_dc_', 'reports/agent_handoffs/DATA-7C-B-DC',
-                'reports/reviews/DATA-7C-B-PREP-R2-GO', 'reports/tasks/DATA-7C-B-DC.md')
+ALLOWED_MODIFIED = ('scripts/dd1_d7c_b_dc_run.py', 'scripts/dd1_d7c_b_dc_matrix.py',
+                    'scripts/dd1_d7c_b_dc_record.py')
+# what the measured DC round was allowed to move on its way from the registered offline content here;
+# an earlier round binding its own bytes names these, and naming them is not a new fault
+MEASURED_ROUND_MODIFIED = ('scripts/dd1_d7c_b_prep_contract.py', 'reports/dd1_d7c_b_prep_contract.md')
+NEW_PREFIXES = ('results/evidence/dd1_d7c_b_dc_r1_', 'reports/dd1_d7c_b_dc_review_fix_r1.md',
+                'reports/agent_handoffs/DATA-7C-B-DC-R1', 'reports/tasks/DATA-7C-B-DC-R1.md')
+BLOB_STAGED_SOURCE = 'git blob staged by this record run'
+DISK_REJECTED = 'the working copy is never an identity: Git may normalise it before it is stored'
 FROZEN_SURFACES = (
     ('four candidate DUT netslists', ('spectre/dd1_d7c_a_gates.scs',
                                       'spectre/dd1_d7c_a_pam_dec.scs',
@@ -80,6 +87,15 @@ FROZEN_SURFACES = (
                                                'results/evidence/dd1_d7c_b_prep_r2',
                                                'results/evidence/dd1_d7b', 'reports/agent_handoffs',
                                                'reports/tasks'), 'none_removed'),
+    ('the measured DC round: tables, record, report and handoff',
+     (MEASURED,), 'identical'),
+    ('the DC round report and handoff', ('reports/dd1_d7c_b_dc_report.md',
+                                         'reports/agent_handoffs/DATA-7C-B-DC.json',
+                                         'reports/agent_handoffs/DATA-7C-B-DC.md',
+                                         'reports/tasks/DATA-7C-B-DC.md'), 'identical'),
+    ('the six masters and eight derived preflight decks of the DC round',
+     ('spectre/dd1_d7c_b_dc',), 'identical'),
+    ('the DC contract of the measured round', (CONTRACT_PATH,), 'identical'),
 )
 TABLE_SPECS = {'commands.csv': COMMANDS_HEADER, 'frozen_comparison.csv': FROZEN_HEADER,
                'git_checks.csv': GIT_HEADER, 'source_identity.csv': IDENTITY_HEADER,
@@ -99,18 +115,21 @@ def publish_history(evidence, archive, kept):
     return {'written_utc': now(), 'rule': 'a published record is never overwritten or deleted; every '
             'earlier set of tables stays in its own previous_publish_ directory and this note is '
             'recomputed from those directories, so no move can lose an earlier one',
-            'reason_of_the_latest_move': 'the record entry gained gates after its first publish (a row '
-                                         'over the frozen comparison, a re-split of every published '
-                                         'table, the observation witness) and the identity table had to '
-                                         'stop listing untracked paths, so the tables were re-derived '
-                                         'over the same measurements',
+            'reason_of_the_latest_move': 'this round re-exported its evidence directory without copying '
+                                         'the two figures (they are referenced where they are, so the '
+                                         'whitespace they carry is not moved into the range of this '
+                                         'round), and the report prose gained the clarification that '
+                                         '756 check output lines are the 378 flagged locations; the '
+                                         'tables were therefore re-derived over the same reused '
+                                         'measurements',
             'latest_move': {'into': os.path.basename(archive), 'files': kept},
             'all_previous_publishes': archives}
 
 
 def rows_write(path, header, table):
-    """a published table is read back by splitting on commas, so no field may carry one"""
-    clean = [[str(row.get(key, '')).replace(',', ';').replace(chr(10), ' | ').replace(chr(13), '')
+    """a published table is read back by splitting on commas, so no field may carry one; and a published
+    line carries no trailing space, because git diff --check reads these tables as text"""
+    clean = [[str(row.get(key, '')).replace(',', ';').replace(chr(10), ' | ').replace(chr(13), '').strip()
               for key in header] for row in table]
     B7B.write_rows(path, clean, list(header))
     return path
@@ -175,6 +194,51 @@ def blobs(rev):
             out[path] = (mode, kind, sha)
     return out
 
+
+def git_bytes(*args):
+    return subprocess.check_output(['git', '-C', ROOT] + list(args))
+
+
+def blob_of(rel):
+    """the bytes the record commit will carry for this path, read out of the index. The working copy is
+    deliberately not consulted: with core.autocrlf the file on disk can hold CRLF where the stored blob
+    holds LF, and a digest taken from the disk is then not the digest a reviewer reproduces from Git."""
+    try:
+        return git_bytes('cat-file', 'blob', ':%s' % rel)
+    except subprocess.CalledProcessError:
+        raise SystemExit('DC_RECORD_REFUSED %s has no staged blob, so the record cannot name the bytes '
+                         'it is about to commit. %s' % (rel, DISK_REJECTED))
+
+
+def round_paths(evidence_name):
+    """what this record may put into the index: its own evidence directory, the three files the task
+    book allows, and the reports or handoff it is publishing"""
+    directory = os.path.join(ROOT, 'results', 'evidence', evidence_name)
+    out = []
+    for root, dirs, files in os.walk(directory):
+        dirs[:] = [d for d in dirs if d != '__pycache__']
+        for name in files:
+            out.append(os.path.relpath(os.path.join(root, name), ROOT).replace(os.sep, '/'))
+    for rel in ('scripts/dd1_d7c_b_dc_run.py', 'scripts/dd1_d7c_b_dc_matrix.py',
+                'scripts/dd1_d7c_b_dc_record.py', REPORT,
+                'reports/agent_handoffs/DATA-7C-B-DC-R1.json',
+                'reports/agent_handoffs/DATA-7C-B-DC-R1.md',
+                'reports/tasks/DATA-7C-B-DC-R1.md'):
+        target = os.path.join(ROOT, rel.replace('/', os.sep))
+        if os.path.isfile(target) and rel not in out:
+            out.append(rel)
+    return sorted(out)
+
+
+def stage(paths):
+    """only this round's own new paths and the three files its task book allows may enter the index"""
+    outside = [rel for rel in paths if not any(rel.startswith(prefix) for prefix in NEW_PREFIXES)
+               and rel not in ALLOWED_MODIFIED]
+    if outside:
+        raise SystemExit('DC_RECORD_REFUSED the record would stage %s, which this round%s not allowed '
+                         'to touch' % (', '.join(outside[:3]), 'is' if len(outside) == 1 else 'are'))
+    if paths:
+        subprocess.check_call(['git', '-C', ROOT, 'add', '--'] + list(paths))
 
 def _gate(name, command, rc, expected, verdict):
     return {'gate': name, 'command': command, 'rc': rc, 'expected_rc': str(expected),
@@ -343,7 +407,291 @@ def line_ending_gate(evidence):
                  % (with_cr or 'none', 'confirmed' if writer_lf else 'BROKEN'))
 
 
-def build_gates(evidence):
+def _digest_tree(directory):
+    out = {}
+    for name in sorted(os.listdir(directory)):
+        path = os.path.join(directory, name)
+        if os.path.isfile(path):
+            out[name] = sha_of(path)
+    return out
+
+
+def r1_gates(evidence, scratch, answers_dir, evidence_name):
+    """the four gap families the independent review named, each with its positive and negative case"""
+    gates = []
+    if not os.path.isdir(scratch):
+        os.makedirs(scratch)
+    codes = DC.dc_contract()['matrix']['codes']
+    dut = MATRIX.merged(evidence, 'dut')
+    clean = DC.judge(dut)
+    flipped = [dict(row, I_sink_A='%.9e' % -abs(float(row['I_sink_A'])),
+                    I_sink_uA='%.6f' % -abs(float(row['I_sink_uA'])))
+               if abs(float(row['clamp_V']) - 0.60) < 1e-9 else row for row in dut]
+    signed = DC.judge(flipped)
+    narrowed = [code for code in codes
+                if signed['band_5_percent'][code]['lowest_verified_V'] == 0.65
+                and signed['band_5_percent'][code]['adjacent_failing_V'] == 0.6]
+    kept_main = signed['verdict'] == 'PASS' and clean['verdict'] == 'PASS'
+    untouched_band = all(clean['band_5_percent'][code]['lowest_verified_V'] == 0.60
+                         for code in codes)
+    problems = [] if (len(narrowed) == 8 and kept_main and untouched_band) else [
+        'codes whose 0.60 V point stayed inside the band: %s' % (','.join(
+            code for code in codes if code not in narrowed) or 'none'),
+        'main verdict after the flip %s, before %s' % (signed['verdict'], clean['verdict'])]
+    gates.append(_gate('f1_signed_band_keeps_the_direction_of_a_reading',
+                       'in process: judge the 152 published rows, then the same table with the eight '
+                       '0.60 V readings signed over, point by point', 0 if not problems else 1, 0,
+                       'signed criterion abs(I - I(1.2 V)) <= 0.05 * abs(I(1.2 V)): %d of eight codes '
+                       'now narrow to 0.65 V with 0.60 V named as the adjacent failing point, the main '
+                       '1.20 V verdict stays PASS for both tables, and the unmutated matrix still reads '
+                       '0.60..1.50 V (%s)' % (len(narrowed), '; '.join(problems) or 'clean')))
+    deck_sha = DC.delivered_deck('DC-000')[1]
+    positive_path = os.path.join(scratch, 'complete.raw')
+    DC.synthetic_psf(positive_path, [1.875e-6] * 19, omit=(), code='000')
+    good_rows, good_info = DC.extract(positive_path, deck_sha, 'DC-000', 'dut', 'fixture', 'DTEST')
+    refused, accepted_after, bad_unit = [], [], []
+    for name in ('Ip_branch:i',) + DC.REQUIRED_SIGNALS:
+        path = os.path.join(scratch, 'missing_%s.raw' % name.replace(':', '_'))
+        DC.synthetic_psf(path, [1.875e-6] * 19, omit=() if name == 'Ip_branch:i' else (name,),
+                         no_probe=name == 'Ip_branch:i', code='000')
+        try:
+            rows, _info = DC.extract(path, deck_sha, 'DC-000', 'dut', 'fixture', 'DTEST')
+            accepted_after.append('%s (%d rows, %s)' % (name, len(rows),
+                                                        rows[0].get('vdd18_V') if rows else ''))
+        except DC.Refuse as error:
+            if name.split(':')[0] not in str(error):
+                refused.append('%s refused but did not name it: %s' % (name, str(error)[:60]))
+        if name == 'pam1':
+            wrong = os.path.join(scratch, 'bad_unit_pam1.raw')
+            DC.synthetic_psf(wrong, [1.875e-6] * 19, omit=(), bad_unit='pam1', code='000')
+            try:
+                DC.extract(wrong, deck_sha, 'DC-000', 'dut', 'fixture', 'DTEST')
+                bad_unit.append('a pam1 column without a unit was accepted')
+            except DC.Refuse as error:
+                if 'unit' not in str(error):
+                    bad_unit.append('refused for another reason: %s' % str(error)[:80])
+    sentinel = os.path.join(scratch, 'output_dir')
+    os.makedirs(sentinel)
+    io.open(os.path.join(sentinel, 'sentinel.txt'), 'wb').write(b'the refusal must not touch this\n')
+    before = _digest_tree(sentinel)
+    rc_cli, body_cli = run([sys.executable, os.path.join(HERE, 'dd1_d7c_b_dc_run.py'), '--extract',
+                            os.path.join(scratch, 'missing_vdd18.raw'), '--deck-sha', deck_sha,
+                            '--case', 'DC-000', '--role', 'dut', '--run-id', 'fixture',
+                            '--out', sentinel])
+    after = _digest_tree(sentinel)
+    problems = []
+    if len(good_rows) != 19:
+        problems.append('the complete fixture returned %d rows, 19 were required' % len(good_rows))
+    if accepted_after:
+        problems.append('missing signals still accepted: %s' % ', '.join(accepted_after))
+    if refused:
+        problems.extend(refused)
+    if bad_unit:
+        problems.extend(bad_unit)
+    if good_info['code_measured'] != '000' or good_info['code_from_deck'] != '000':
+        problems.append('the fixture code did not round-trip: %s' % good_info['code_measured'])
+    if rc_cli != 1 or after != before or len(after) != 1:
+        problems.append('a refusal through --extract wrote into the output directory (rc=%s, files '
+                        'after %s, before %s)' % (rc_cli, sorted(after), sorted(before)))
+    gates.append(_gate('f2_a_missing_required_signal_is_a_refusal',
+                       'in process: synthetic_psf with one required column removed at a time, then '
+                       'extract() against the frozen DC-000 deck, then one refusal through --extract into '
+                       'a pre-populated output directory', 0 if not problems else 1, 0,
+                       'complete fixture gives 19 rows, code %s from the columns and %s from the deck; '
+                       '%d of %d required signals (axis probe included) refused by naming the signal, no '
+                       'nominal fill-in survived, and a refusal left the output directory at %s file(s) '
+                       'with identical digests (%s)'
+                       % (good_info['code_measured'], good_info['code_from_deck'],
+                          len(DC.REQUIRED_SIGNALS) + 1 - len(refused) - len(accepted_after),
+                          len(DC.REQUIRED_SIGNALS) + 1, len(after),
+                          '; '.join(problems) or 'clean')))
+    eight = [row for row in dut if abs(float(row['clamp_V']) - 1.20) < 1e-9]
+    short_table = os.path.join(scratch, 'eight_rows.csv')
+    B7B.write_rows(short_table, [[row[key] for key in DC.ROWS_HEADER] for row in eight],
+                   list(DC.ROWS_HEADER))
+    rc_eight, body_eight = run([sys.executable, os.path.join(HERE, 'dd1_d7c_b_dc_run.py'),
+                                '--judge', short_table])
+    rc_full, body_full = run([sys.executable, os.path.join(HERE, 'dd1_d7c_b_dc_run.py'),
+                              '--judge', os.path.join(evidence, 'dc_matrix_dut.csv')])
+    mutations = {}
+    for label, rows in (('one_row_short', dut[:-1]),
+                        ('one_extra_point', dut + [dict(dut[0], clamp_V='1.550')]),
+                        ('a_duplicate_replaces_a_missing_point',
+                         [dict(row, clamp_V='0.600') if row is dut[-1] else row for row in dut]),
+                        ('a_non_finite_current',
+                         [dict(row, I_sink_A='nan') if row is dut[0] else row for row in dut]),
+                        ('a_wrong_unit', [dict(row, unit_current='') if row is dut[0] else row
+                                          for row in dut]),
+                        ('a_code_not_in_the_matrix',
+                         [dict(row, code='222') if row is dut[0] else row for row in dut]),
+                        ('a_broken_column_set', [dict((key, value) for key, value in row.items()
+                                                     if key != 'pam_bits') if row is dut[0] else row
+                                                  for row in dut])):
+        try:
+            result = DC.judge(rows)
+            mutations[label] = 'accepted with verdict %s' % result['verdict']
+        except DC.Refuse as error:
+            mutations[label] = str(error)[:150]
+    unexpected = [label for label, answer in sorted(mutations.items())
+                  if not answer.startswith('the DC matrix')]
+    flipped_sign = DC.main_point_arithmetic(
+        dict((code, [dict(row, I_sink_A='%.9e' % -abs(float(row['I_sink_A'])))
+                    for row in dut if row['code'] == code
+                    and abs(float(row['clamp_V']) - 1.2) < 1e-9]) for code in codes),
+        DC.criteria()[0], codes)
+    gates.append(_gate('f3_every_complete_pass_path_validates_the_matrix_first',
+                       'in process: judge() over the 152 rows, over eight rows, and over seven broken '
+                       'tables; plus the public --judge entry on both tables',
+                       0 if (rc_eight == 1 and 'DC_JUDGE_REFUSED' in body_eight and rc_full == 0
+                             and not unexpected and not flipped_sign['absolute_pass']) else 1, 0,
+                       'the eight-row table is refused at the public --judge entry (rc=%s), the full '
+                       'table judges PASS (rc=%s), %d of %d mutations refused at the matrix gate (%s), '
+                       'and negating the eight main readings turns absolute_pass False without turning '
+                       'any current positive' % (rc_eight, rc_full, len(mutations) - len(unexpected),
+                                                 len(mutations),
+                                                 '; '.join(unexpected) or 'all named')))
+    earlier = os.path.join(ROOT, MEASURED.replace('/', os.sep))
+    earlier_rows = [row for row in
+                    _read_table(os.path.join(earlier, 'source_identity.csv'))
+                    if row['path'].endswith('.svg')]
+    published_identity = identity_rows(evidence_name)
+    crlf_proof, new_rows = [], []
+    for row in earlier_rows:
+        data = git_bytes('cat-file', 'blob', '%s:%s' % (BASE, row['path']))
+        crlf = data.replace(b'\n', b'\r\n')
+        if DC.sha_bytes(crlf) != row['sha256'] or len(crlf) != int(row['bytes']):
+            crlf_proof.append('%s is not the CRLF form of the committed LF blob' % row['path'])
+        if DC.sha_bytes(data) == row['sha256']:
+            crlf_proof.append('%s matched after all, so the earlier row was never stale' % row['path'])
+        if not any(os.path.basename(item['path']) == os.path.basename(row['path'])
+                   for item in published_identity):
+            new_rows.append('%s is not re-declared by this record' % row['path'])
+    gates.append(_gate('f4_identity_rows_are_blob_bytes_and_the_stale_two_are_named',
+                       'in process: re-derive the two figure digests from the committed LF blob, take '
+                       'the CRLF form, and compare both against the earlier record',
+                       0 if not (crlf_proof or new_rows) else 1, 0,
+                       'the two figures a reviewer cannot reproduce from Git are exactly the CRLF '
+                       'rendering of the LF blob (%d paths named, %d bytes recorded against %d blob '
+                       'bytes); this record publishes %d rows taken from the staged blob and re-declares '
+                       'both figures (%s)'
+                       % (len(earlier_rows), int(earlier_rows[0]['bytes']),
+                          len(git_bytes('cat-file', 'blob', '%s:%s' % (BASE, earlier_rows[0]['path']))),
+                          len(published_identity),
+                          '; '.join(crlf_proof + new_rows) or 'root cause reproduced')))
+    if answers_dir and os.path.isdir(answers_dir):
+        replayed, mismatches, refused_here = 0, [], []
+        for case_id in DC.dc_contract()['matrix']['launch_order']:
+            for role in ('dut', 'preflight'):
+                raw = os.path.join(answers_dir, 'r20261026_015212_376554_%s_%s.raw' % (case_id, role))
+                published = MATRIX.read_rows(os.path.join(earlier, 'rows_%s_%s.csv'
+                                                           % (case_id, role)))
+                if not os.path.isfile(raw):
+                    refused_here.append('%s %s has no saved answer on this machine' % (case_id, role))
+                    continue
+                try:
+                    rows, _info = DC.extract(raw, published[0]['deck_sha256'], case_id, role,
+                                             'r1replay', published[0]['launch_id'])
+                except DC.Refuse as error:
+                    refused_here.append('%s %s refused: %s' % (case_id, role, str(error)[:120]))
+                    continue
+                replayed += 1
+                for key in DC.ROWS_HEADER:
+                    if key in ('run_id',):
+                        continue
+                    differ = [index for index in range(19) if rows[index][key] != published[index][key]]
+                    if differ:
+                        mismatches.append('%s %s %s differs at points %s'
+                                          % (case_id, role, key, differ[:3]))
+        gates.append(_gate('f5_the_saved_answers_still_extract_to_the_published_rows',
+                           'python dd1_d7c_b_dc_run.py --extract <saved raw> --deck-sha <published deck> '
+                           '--case <case> --role <role> (in process, over the saved native answers of '
+                           'the measured round)',
+                           0 if (replayed == 16 and not mismatches and not refused_here) else 1, 0,
+                           '%d of 16 case/role answers re-extracted with the hardened extractor, %d '
+                           'field differences against the published rows, %d refusals (%s); the native '
+                           'answers themselves are not shipped, their digests are in the account'
+                           % (replayed, len(mismatches), len(refused_here),
+                              '; '.join(mismatches + refused_here)[:200] or 'none')))
+    else:
+        gates.append(_gate('f5_the_saved_answers_still_extract_to_the_published_rows',
+                           'needs the executor-saved .raw answers, given with --answers', 1, 0,
+                           'NOT_RUN: no saved answer directory was given, so the hardened extractor was '
+                           'not put against the real native text. This is a gap, not a pass.'))
+    resolution = _identity_resolution(earlier)
+    gates.append(_gate('f6_every_row_resolves_to_one_accounted_launch',
+                       'in process: join (case_id, role, deck_sha256, raw_sha256) of the published rows '
+                       'onto launch_account.csv', 0 if not resolution['problems'] else 1, 0,
+                       '%d distinct native sources carry the 304 published rows, every one of them '
+                       'exactly one accounted launch; %s'
+                       % (resolution['sources'], '; '.join(resolution['problems']) or 'no gap')))
+    empty = os.path.join(scratch, 'no_answers')
+    os.makedirs(empty)
+    rc_observe, body_observe = run([sys.executable, os.path.join(HERE, 'dd1_d7c_b_dc_matrix.py'),
+                                    'observe', empty])
+    seen = json.loads(io.open(os.path.join(empty, 'observed_signals.json'),
+                              encoding='utf-8').read())
+    gates.append(_gate('f7_an_answer_that_is_not_here_is_not_a_pass',
+                       'python dd1_d7c_b_dc_matrix.py observe <empty dir>',
+                       0 if (rc_observe == 3 and seen['verdict'] == 'NOT_RUN'
+                             and len(seen['not_run_because_no_answer_on_this_machine']) == 8
+                             and all(case['observation_state'] == 'NOT_OBSERVED'
+                                     for case in seen['cases'].values())) else 1, 0,
+                       'a directory without native answers now answers verdict NOT_RUN and rc 3 with '
+                       'all eight cases NOT_OBSERVED; the required signals are never inferred from a '
+                       'table of nothing (%s)' % body_observe.strip().splitlines()[-1][:120]))
+    worst_A = max(abs(value) for value in clean['per_code_deviation_A'].values())
+    shown = '%.9e' % (worst_A * 1e6)
+    exact = '%.9e' % (9.1175e-13 * 1e6)
+    gates.append(_gate('f8_the_microamp_field_is_microamps',
+                       'in process: format the worst residual with the published coefficient, check the '
+                       'exact positive case 9.1175e-13 A, and format the same ampere value with the old '
+                       '1e9 to show what changed',
+                       0 if (exact == '9.117500000e-07'
+                             and abs(float(shown) - worst_A * 1e6) <= 5e-10 * worst_A * 1e6
+                             and '%.9e' % (worst_A * 1e9) != shown) else 1, 0,
+                       'the exact positive case 9.1175e-13 A prints as %s uA; the worst residual of this '
+                       'round, %.9e A, prints as %s uA, while the earlier 1e9 coefficient printed %s, '
+                       'a thousand times too large. The ampere values in judgement.json are untouched'
+                       % (exact, worst_A, shown, '%.9e' % (worst_A * 1e9))))
+    return gates
+
+
+def _read_table(path):
+    lines = [line for line in io.open(path, encoding='utf-8', newline='').read().split('\n')
+             if line.strip()]
+    header = lines[0].split(',')
+    return [dict(zip(header, line.split(','))) for line in lines[1:]]
+
+
+def _identity_resolution(earlier):
+    account = _read_table(os.path.join(earlier, 'launch_account.csv'))
+    by_source = {}
+    for row in account:
+        if row['state'] in ('CONFIRMED', 'FAILED') and row['raw_sha256']:
+            by_source.setdefault((row['case_id'], row['role'], row['deck_sha256'],
+                                  row['raw_sha256']), []).append(
+                (row['run_id'], row['launch_id']))
+    problems, sources = [], set()
+    for role in ('dut', 'preflight'):
+        for case_id in DC.dc_contract()['matrix']['launch_order']:
+            for row in _read_table(os.path.join(earlier, 'rows_%s_%s.csv' % (case_id, role))):
+                key = (row['case_id'], row['role'], row['deck_sha256'], row['raw_sha256'])
+                sources.add(key)
+                hits = by_source.get(key)
+                if not hits:
+                    problems.append('%s %s has no account row for its deck and raw digests'
+                                    % (case_id, role))
+                elif len(hits) > 1:
+                    problems.append('%s %s resolves to %d launches, which is one-to-many'
+                                    % (case_id, role, len(hits)))
+    return {'sources': len(sources), 'problems': problems,
+            'rows': [{'case_id': key[0], 'role': key[1], 'legacy_run_id': 'manual',
+                      'legacy_launch_id': 'D000', 'resolved_run_id': by_source[key][0][0],
+                      'resolved_launch_id': by_source[key][0][1], 'deck_sha256': key[2],
+                      'raw_sha256': key[3]} for key in sorted(sources) if by_source.get(key)]}
+
+
+def build_gates(evidence, answers_dir='', evidence_name=''):
     gates = []
     commands = (
         ('dc_offline_selftest', ['dd1_d7c_b_dc_run.py', '--selftest'], 'DC_SELFTEST: PASS'),
@@ -370,7 +718,8 @@ def build_gates(evidence):
     reasons = text.replace('D7C_B_PREP_R2_HANDOFF FAIL', '').strip().split('; ')
     named = sorted(set(match.group(1) for line in reasons
                        for match in [re.match(r'\s*(\S+\.\w+) digest', line)] if match))
-    outside = [path for path in named if path not in ALLOWED_MODIFIED]
+    moved_here_or_by_the_measured_round = set(ALLOWED_MODIFIED) | set(MEASURED_ROUND_MODIFIED)
+    outside = [path for path in named if path not in moved_here_or_by_the_measured_round]
     other = [line for line in reasons
              if line and 'digest in the handoff does not match' not in line
              and 'byte count in the handoff does not match' not in line]
@@ -378,30 +727,40 @@ def build_gates(evidence):
     gates.append({'gate': 'earlier_handoff_binds_its_own_bytes',
                   'command': 'python dd1_d7c_b_prep_r2_verify.py --handoff-check', 'rc': rc,
                   'expected_rc': '1', 'verdict_state': 'PASS' if ok else 'FAIL',
-                  'verdict': 'rc=1 by design: the R2 handoff digests the bytes of its own round, and '
-                             'this round legitimately moved %s. nothing else is reported (%s)'
+                  'verdict': 'rc=1 by design: the R2 handoff digests the bytes of its own round, and the '
+                             'rounds since then legitimately moved %s. nothing else is reported (%s)'
                              % (', '.join(named) or 'no file', 'clean' if ok else text[:150])})
     observations = {'gate': 'internal_observations_recorded',
                     'command': 'in process: read observed_signals.json, written by '
-                               'dd1_d7c_b_dc_matrix.py observe from the pulled native answers',
+                               'dd1_d7c_b_dc_matrix.py observe over the native answers this machine '
+                               'still holds (see observation_provenance.json)',
                     'rc': 0, 'expected_rc': '0', 'verdict_state': 'PASS', 'verdict': 'provisional'}
     try:
         witness = json.loads(io.open(os.path.join(evidence, 'observed_signals.json'),
                                      encoding='utf-8').read())
         absent = sorted(set(sum([witness['cases'][case].get('requested_but_not_delivered', [])
                                  for case in witness['cases']], [])))
-        problems = [] if witness['verdict'] == 'PASS' else ['required signal missing in %s' % ', '
-                                                            .join(witness['required_signals_missing_in'])]
+        not_run = witness.get('not_run_because_no_answer_on_this_machine', [])
+        delivered = sorted(set(sum([[name for name in
+                                     MATRIX.REQUESTED_SAVES
+                                     if name not in case.get('requested_but_not_delivered', [])]
+                                    for case in witness['cases'].values()], [])))
+        problems = [] if (witness['verdict'] == 'PASS' and not not_run) else [
+            'required signal missing in %s' % ', '.join(witness['required_signals_missing_in'])
+            if witness['required_signals_missing_in'] else
+            'no native answer was read for %s, so nothing is observed there' % ', '.join(not_run)]
         observations.update({
             'rc': len(problems), 'verdict_state': 'PASS' if not problems else 'FAIL',
             'verdict': 'every required signal (data_out, clamp_node, the supplies, the three PAM bits, '
-                       'the reference node) is present in all %d answers; the deck asks for %d '
-                       'observation names and %d of them came back (eight en, eight enb, eight '
-                       'per-unit vbias_ch, two node_m); NOT_OBSERVED under the requested name: %s '
-                       '(the probe current is delivered as Ip_branch:i with :in and :out, so the two '
-                       'aliases are stated rather than silently dropped) %s'
-                       % (len(witness['cases']), len(MATRIX.REQUESTED_SAVES), 26,
-                          ', '.join(absent) or 'none', '; '.join(problems) or '')})
+                       'the reference node and vss) is present in all %d answers read from native text; '
+                       'the deck asks for %d observation names, %d of them came back (eight en, eight '
+                       'enb, eight per-unit vbias_ch, two node_m) and %d are NOT_OBSERVED under the '
+                       'requested name: %s (the probe current is delivered as Ip_branch:i with :in and '
+                       ':out, so the two aliases are stated rather than silently dropped); cases with no '
+                       'answer on this machine: %s %s'
+                       % (len(witness['cases']), len(MATRIX.REQUESTED_SAVES), len(delivered),
+                          len(absent), ', '.join(absent) or 'none', ', '.join(not_run) or 'none',
+                          '; '.join(problems) or '')})
     except IOError as error:
         observations.update({'rc': 1, 'verdict_state': 'FAIL',
                              'verdict': 'observed_signals.json cannot be read: %s' % error})
@@ -420,12 +779,14 @@ def build_gates(evidence):
     payload = json.loads(io.open(os.path.join(evidence, 'judgement.json'), encoding='utf-8').read())
     judgement = payload['judgement']
     numbers = 'I111 %.6f uA band [%.2f, %.2f]; Iunit_ref %.6f uA; monotonic %s; ratio %s; worst ' \
-              'deviation %.9f uA; bands contain 1.20 V for all eight codes' % (
+              'deviation %.9e uA; bands contain 1.20 V for all eight codes; the matrix gate saw %d ' \
+              'unique keys' % (
                   judgement['full_scale']['measured_uA'], judgement['full_scale']['band_uA'][0],
                   judgement['full_scale']['band_uA'][1], judgement['iunit_ref_uA'],
                   judgement['strict_monotonic'], judgement['ratio_pass'],
                   max(abs(judgement['per_code_deviation_A'][code]) for code in judgement[
-                      'per_code_deviation_A']) * 1e9)
+                      'per_code_deviation_A']) * 1e6,
+                  judgement.get('matrix_validation', {}).get('keys_unique', -1))
     gates.append({'gate': 'dc_judgement', 'command': 'python dd1_d7c_b_dc_matrix.py judge '
                   '<evidence> then read judgement.json field by field', 'rc': 0 if
                   judgement['verdict'] == 'PASS' and payload['dut_rows'] == 152 and
@@ -446,6 +807,7 @@ def build_gates(evidence):
     scratch = tempfile.mkdtemp(prefix='dc-guard-')
     try:
         gates.extend(guard_gates(evidence, scratch))
+        gates.extend(r1_gates(evidence, os.path.join(scratch, 'r1'), answers_dir, evidence_name))
     finally:
         shutil.rmtree(scratch, ignore_errors=True)
     for name, argv, marker in (('provenance', ['provenance_check.py'], 'SOURCE_PROVENANCE_CHECK: PASS'),
@@ -517,36 +879,57 @@ def render_report(text, payload, results, frozen, ranges):
     return out
 
 
-def identity_rows(head, evidence_name):
-    """source identity is the table a reviewer binds to Git blobs, so it lists tracked paths only"""
-    index = blobs(head)
+def staged_paths():
+    out = {}
+    for line in git('ls-files', '--stage').split('\n'):
+        if not line.strip():
+            continue
+        meta, path = line.split('\t', 1)
+        out[path] = meta.split()[1]
+    return out
+
+
+def identity_rows(evidence_name):
+    """source identity is the table a reviewer binds to Git blobs, so every row is the digest of the
+    blob the record commit carries, never of a working copy"""
+    in_index = staged_paths()
     rows = []
 
     def add(role, rel):
         target = os.path.join(ROOT, rel.replace('/', os.sep))
-        if os.path.isfile(target) and not any(row['path'] == rel for row in rows):
-            rows.append({'role': role, 'path': rel, 'bytes': os.path.getsize(target),
-                         'sha256': sha_of(target)})
+        if not os.path.isfile(target):
+            return
+        if any(row['path'] == rel for row in rows):
+            return
+        if rel not in in_index:
+            raise SystemExit('DC_RECORD_REFUSED source_identity would name %s, which has no staged blob, '
+                             'so the record cannot state what the commit will carry. %s'
+                             % (rel, DISK_REJECTED))
+        data = blob_of(rel)
+        rows.append({'role': role, 'path': rel, 'bytes': len(data), 'sha256': DC.sha_bytes(data),
+                     'identity_source': BLOB_STAGED_SOURCE})
 
     for rel in ('scripts/dd1_d7c_b_dc_run.py', 'scripts/dd1_d7c_b_dc_matrix.py',
                 'scripts/dd1_d7c_b_dc_record.py', CONTRACT_PATH,
-                'reports/tasks/DATA-7C-B-DC.md',
+                'reports/tasks/DATA-7C-B-DC.md', 'reports/tasks/DATA-7C-B-DC-R1.md',
                 'reports/reviews/DATA-7C-B-PREP-R2-GO/registration.json',
                 'reports/reviews/DATA-7C-B-PREP-R2-GO/package_identity.json',
                 'scripts/dd1_d7c_b_prep_contract.py', 'reports/dd1_d7c_b_prep_contract.md'):
-        add('delivered by this round', rel)
-    for rel in sorted(path for path in index if path.startswith('spectre/dd1_d7c_b_dc/')):
-        add('derived run copy pushed to the guest', rel)
-    for rel in sorted(path for path in index if path.startswith('results/evidence/' + evidence_name)):
-        add('record and measurement of this round', rel)
-    add('rendered by this record run, so the digest is of the bytes it wrote', REPORT)
-    for rel in ('reports/agent_handoffs/DATA-7C-B-DC.json', 'reports/agent_handoffs/DATA-7C-B-DC.md'):
+        add('delivered by this round or read by it', rel)
+    for rel in sorted(path for path in in_index if path.startswith('spectre/dd1_d7c_b_dc/')):
+        add('derived run copy pushed to the guest in the measured round', rel)
+    for rel in sorted(path for path in in_index
+                      if path.startswith('results/evidence/' + evidence_name)):
+        add('record and repair evidence of this round', rel)
+    add('rendered by this record run, over its own staged blob', REPORT)
+    for rel in ('reports/agent_handoffs/DATA-7C-B-DC-R1.json',
+                'reports/agent_handoffs/DATA-7C-B-DC-R1.md'):
         add('this round handoff, committed with the record', rel)
     for rel in ('scripts/dd1_d7b_run.py', 'scripts/run_spectre.sh', 'scripts/sc1_read_psf.py',
                 'spectre/current_probe_syntax.scs', 'AGENTS.md'):
         add('tool or reference this round reads', rel)
     for surface, paths, _expectation in FROZEN_SURFACES:
-        matched, _empty = expand(paths, sorted(index))
+        matched, _empty = expand(paths, sorted(in_index))
         for rel in matched:
             add('frozen by the task book: %s' % surface, rel)
     duplicates = sorted(set(row['path'] for row in rows
@@ -554,15 +937,10 @@ def identity_rows(head, evidence_name):
     if duplicates:
         raise SystemExit('DC_RECORD_REFUSED source_identity would publish %s twice'
                          % ','.join(duplicates))
-    untracked = [row['path'] for row in rows if row['path'] not in index]
-    if untracked:
-        raise SystemExit('DC_RECORD_REFUSED source_identity names %s which %s not in %s'
-                         % (', '.join(untracked[:3]), 'is' if len(untracked) == 1 else 'are',
-                            head[:12]))
     return rows
 
 
-HANDOFF = 'reports/agent_handoffs/DATA-7C-B-DC.json'
+HANDOFF = 'reports/agent_handoffs/DATA-7C-B-DC-R1.json'
 RENDERED_BY_THIS_RUN = (REPORT,)
 
 
@@ -583,7 +961,7 @@ def handoff_check():
     if payload.get('task_id') != TASK_ID:
         problems.append('task_id is %r' % payload.get('task_id'))
     if payload.get('base_sha') != BASE:
-        problems.append('base_sha is not the registered offline content')
+        problems.append('base_sha is not the commit this round was cut from')
     if payload.get('branch') != BRANCH:
         problems.append('branch is %r' % payload.get('branch'))
     grant = payload.get('user_authorisation') or {}
@@ -615,18 +993,33 @@ def handoff_check():
                                                   and measured.get('ratio_pass')):
         problems.append('a PASS verdict without all three tests passing')
     costs = payload.get('costs') or {}
-    if costs.get('new_spectre_launches') != account.occupied():
-        problems.append('costs.new_spectre_launches is %r, the account carries %d rows'
-                        % (costs.get('new_spectre_launches'), account.occupied()))
+    native_round = not TASK_ID.endswith('-R1')
+    if native_round:
+        if costs.get('new_spectre_launches') != account.occupied():
+            problems.append('costs.new_spectre_launches is %r, the account carries %d rows'
+                            % (costs.get('new_spectre_launches'), account.occupied()))
+        if costs.get('guest_connections', 0) < 1:
+            problems.append('the handoff hides the guest sessions: it says %r while the round ran on '
+                            'the VM' % costs.get('guest_connections'))
+    else:
+        if costs.get('new_spectre_launches') != 0:
+            problems.append('costs.new_spectre_launches is %r: this repair round may not start a '
+                            'process at all' % costs.get('new_spectre_launches'))
+        if costs.get('reused_account_rows') != account.occupied():
+            problems.append('costs.reused_account_rows is %r while the account it reuses carries %d '
+                            'rows' % (costs.get('reused_account_rows'), account.occupied()))
+        if costs.get('guest_connections', 0) != 0:
+            problems.append('the repair round claims %r guest sessions, and its task book authorises '
+                            'no ssh or VM action' % costs.get('guest_connections'))
+        if costs.get('new_ssh_or_vm_actions') != 0:
+            problems.append('costs.new_ssh_or_vm_actions is %r' % costs.get('new_ssh_or_vm_actions'))
     for key in ('new_rtl_simulations', 'new_oa_writes', 'new_transient_simulations',
                 'spectre_help_or_syntax_probes'):
         if costs.get(key) != 0:
             problems.append('costs.%s is %r, this round was not authorised to spend any'
                             % (key, costs.get(key)))
-    if costs.get('guest_connections', 0) < 1:
-        problems.append('the handoff hides the guest sessions: it says %r while the round ran on the '
-                        'VM' % costs.get('guest_connections'))
-    by_role = costs.get('spectre_launches_by_role') or {}
+    by_role = costs.get('spectre_launches_by_role' if native_round
+                        else 'reused_account_rows_by_role') or {}
     for role in sorted(set(row['role'] for row in account.rows)):
         counted = sum(1 for row in account.rows if row['role'] == role)
         if by_role.get(role, 0) != counted:
@@ -647,13 +1040,14 @@ def handoff_check():
                 problems.append('%s is digested by the handoff it lives in, or by a file this record '
                                 'rewrites' % rel)
                 continue
-            target = os.path.join(ROOT, rel.replace('/', os.sep))
-            if not os.path.isfile(target):
-                problems.append('source_identity names %s which is not on disk' % rel)
+            if rel not in staged_paths():
+                problems.append('source_identity names %s, which has no blob in the repository to '
+                                'compare against' % rel)
                 continue
-            if item.get('sha256') != sha_of(target) or int(item.get('bytes', -1)) != \
-                    os.path.getsize(target):
-                problems.append('%s digest or byte count in the handoff does not match the disk' % rel)
+            data = blob_of(rel)
+            if item.get('sha256') != DC.sha_bytes(data) or int(item.get('bytes', -1)) != len(data):
+                problems.append('%s digest or byte count in the handoff does not match the blob the '
+                                'repository carries' % rel)
     blob = json.dumps(payload, ensure_ascii=False)
     for forbidden in ('OPTICAL_EFFECTIVE_BITS=9', 'SOA_SIGNOFF=YES', 'MERGE_PERFORMED=YES',
                       'NEXT_NATIVE_STAGE_AUTHORISED=YES', 'PAM_PWM_TRANSIENT_INTEGRATION=PASS'):
@@ -673,41 +1067,197 @@ def newest_evidence():
     return sorted(name for name in os.listdir(directory) if name.startswith(EVIDENCE_PREFIX))[-1]
 
 
+def reused_paths():
+    """the files this round reuses from the measured round, named by their path in the repository.
+    The two figures are not copied: they are referenced where they are, because a byte copy would move
+    another thousand whitespace-flagged lines into the range of this round for no evidence gain."""
+    names = ['launch_account.csv', 'dc_matrix_dut.csv', 'dc_matrix_preflight.csv']
+    names += ['rows_%s_%s.csv' % (case_id, role)
+              for case_id in DC.dc_contract()['matrix']['launch_order'] for role in ('dut', 'preflight')]
+    return ['%s/%s' % (MEASURED, name) for name in names]
+
+
+def export_r1(answers_dir, name=''):
+    """Build the evidence directory of this repair round: reuse the measured tables exactly as Git
+    stores them, recompute the judgement with the repaired tool, resolve every published row back onto
+    one accounted launch, and re-observe the saved native answers. No process starts and no earlier
+    byte is rewritten."""
+    evidence_name = name or 'dd1_d7c_b_dc_r1_%s' % time.strftime('r%Y%m%d_%H%M%S', time.gmtime())
+    directory = os.path.join(ROOT, 'results', 'evidence', evidence_name)
+    if os.path.exists(directory):
+        raise SystemExit('DC_R1_REFUSED %s already exists; a record directory is never reused'
+                         % evidence_name)
+    os.makedirs(directory)
+    reused, differences = [], []
+    for rel in reused_paths():
+        data = git_bytes('cat-file', 'blob', '%s:%s' % (BASE, rel))
+        inside = rel.replace(MEASURED + '/', '')
+        target = os.path.join(directory, inside.replace('/', os.sep))
+        if not os.path.isdir(os.path.dirname(target)):
+            os.makedirs(os.path.dirname(target))
+        io.open(target, 'wb').write(data)
+        entry = {'path_in_the_measured_round': rel, 'bytes': len(data), 'sha256': DC.sha_bytes(data),
+                 'identity_source': 'git blob at %s' % BASE, 'copied_byte_for_byte': True,
+                 'new_name_in_this_round': 'results/evidence/%s/%s' % (evidence_name, inside)}
+        reused.append(entry)
+    io.open(os.path.join(directory, 'reuse_declaration.json'), 'wb').write(
+        (json.dumps({'task_id': TASK_ID, 'written_utc': now(), 'base': BASE,
+                     'rule': 'these are the bytes the measured round published, taken out of Git at '
+                             '%s and written again unchanged. Reusing them is not a new simulation: '
+                             'this round starts no process and its own task book authorises none. The '
+                             'judgement recomputed over them is the new offline work of this round.'
+                             % BASE[:12],
+                     'files': reused}, indent=1, sort_keys=True, ensure_ascii=False)
+         + chr(10)).encode('utf-8'))
+    rc, body = run([sys.executable, os.path.join(HERE, 'dd1_d7c_b_dc_matrix.py'), 'judge', directory])
+    if rc != 0:
+        raise SystemExit('DC_R1_REFUSED the repaired judge did not pass over the reused table (rc=%s): '
+                         '%s' % (rc, body.strip().splitlines()[-1:]))
+    resolution = _identity_resolution(os.path.join(ROOT, MEASURED.replace('/', os.sep)))
+    rows_write(os.path.join(directory, 'extraction_identity_resolution.csv'),
+               ('case_id', 'role', 'legacy_run_id', 'legacy_launch_id', 'resolved_run_id',
+                'resolved_launch_id', 'deck_sha256', 'raw_sha256'), resolution['rows'])
+    earlier = os.path.join(ROOT, MEASURED.replace('/', os.sep))
+    stale = []
+    for row in _read_table(os.path.join(earlier, 'source_identity.csv')):
+        data = git_bytes('cat-file', 'blob', '%s:%s' % (BASE, row['path']))
+        crlf = data.replace(b'\n', b'\r\n')
+        if DC.sha_bytes(data) != row['sha256']:
+            stale.append({'path': row['path'], 'recorded_bytes': int(row['bytes']),
+                          'recorded_sha256': row['sha256'], 'git_blob_bytes': len(data),
+                          'git_blob_sha256': DC.sha_bytes(data),
+                          'recorded_value_is_the_CRLF_form_of_the_blob':
+                              DC.sha_bytes(crlf) == row['sha256'] and len(crlf) == int(row['bytes']),
+                          'replacement': 'referenced where it is and re-declared by this record from the '
+                                         'blob at %s: %s' % (BASE, row['path'])})
+    io.open(os.path.join(directory, 'stale_fields_of_the_earlier_record.json'), 'wb').write(
+        (json.dumps({'task_id': TASK_ID, 'written_utc': now(),
+                     'earlier_record': MEASURED,
+                     'rule': 'the earlier record stays published exactly as it is. These are the fields '
+                             'it cannot reproduce from Git: it hashed the working copy, which carried '
+                             'CRLF, while the repository carries LF. Nothing about the figures content '
+                             'or the measurements is in question, and this round does not redraw them: '
+                             'the replacement rows are the committed bytes named here.',
+                     'rows': stale,
+                     'what_this_record_replaces': 'the source identity of the two figures and the '
+                                                  'unit of the worst residual in the dc_judgement gate',
+                     'what_stays_as_published': 'the 152 native rows, the eight preflight witnesses, the '
+                                                'sixteen-row account and the electrical verdict'},
+                    indent=1, sort_keys=True, ensure_ascii=False) + chr(10)).encode('utf-8'))
+    if answers_dir and os.path.isdir(answers_dir):
+        scratch = tempfile.mkdtemp(prefix='dc-r1-observe-')
+        provenance = []
+        for case_id in DC.dc_contract()['matrix']['launch_order']:
+            source = os.path.join(answers_dir, 'r20261026_015212_376554_%s_dut.raw' % case_id)
+            if os.path.isfile(source):
+                data = io.open(source, 'rb').read()
+                io.open(os.path.join(scratch, os.path.basename(source)), 'wb').write(data)
+                provenance.append({'file': os.path.basename(source), 'bytes': len(data),
+                                   'sha256': DC.sha_bytes(data),
+                                   'read_from': 'the executor-saved native answer, not shipped'})
+        rc_observe, observe_body = run([sys.executable, os.path.join(HERE, 'dd1_d7c_b_dc_matrix.py'),
+                                        'observe', scratch])
+        observed = json.loads(io.open(os.path.join(scratch, 'observed_signals.json'),
+                                      encoding='utf-8').read())
+        io.open(os.path.join(directory, 'observed_signals.json'), 'wb').write(
+            (json.dumps(observed, indent=1, sort_keys=True, ensure_ascii=False) + chr(10)).encode('utf-8'))
+        io.open(os.path.join(directory, 'observation_provenance.json'), 'wb').write(
+            (json.dumps({'task_id': TASK_ID, 'written_utc': now(), 'rc': rc_observe,
+                         'command': 'python scripts/dd1_d7c_b_dc_matrix.py observe <copy of the saved '
+                                    'native answers>',
+                         'last_line': observe_body.strip().splitlines()[-1:],
+                         'answers': provenance,
+                         'rule': 'the observation was read from the native answers this machine still '
+                                 'holds. The answers are not in the repository, so their digests are '
+                                 'listed here instead; nothing was re-simulated.'},
+                        indent=1, sort_keys=True, ensure_ascii=False) + chr(10)).encode('utf-8'))
+        shutil.rmtree(scratch, ignore_errors=True)
+    print('DC_R1_EXPORT %s (%d reused files, %d native sources resolved, %d stale rows named, '
+          'observation rc=%s) -> %s' % (evidence_name, len(reused), len(resolution['rows']),
+                                        len(stale), rc_observe if answers_dir else 'NOT_RUN',
+                                        directory))
+    return evidence_name
+
+
+def verify_committed(rev, evidence_name):
+    """after the commit: every published identity row must equal the blob the commit carries"""
+    problems, rows = [], _read_table(os.path.join(ROOT, 'results', 'evidence', evidence_name,
+                                                  'source_identity.csv'))
+    for row in rows:
+        try:
+            data = git_bytes('cat-file', 'blob', '%s:%s' % (rev, row['path']))
+        except subprocess.CalledProcessError:
+            problems.append('%s is not in %s' % (row['path'], rev[:12]))
+            continue
+        if len(data) != int(row['bytes']) or DC.sha_bytes(data) != row['sha256']:
+            problems.append('%s: published %s bytes %s, the commit carries %d bytes %s'
+                            % (row['path'], row['bytes'], row['sha256'][:12], len(data),
+                               DC.sha_bytes(data)[:12]))
+    print('DC_IDENTITY_VERIFIED_COMMITTED %s (%d rows against git cat-file blob %s:<path>, problems: %s)'
+          % ('PASS' if not problems else 'FAIL', len(rows), rev[:12],
+             '; '.join(problems[:3]) or 'none'))
+    return 0 if not problems else 1
+
+
 def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--evidence', default='')
     parser.add_argument('--draft', default='')
     parser.add_argument('--check-only', action='store_true')
     parser.add_argument('--republish', action='store_true')
+    parser.add_argument('--answers', default='', help='directory holding the saved native .raw answers')
+    parser.add_argument('--export', action='store_true', help='build this round evidence directory')
+    parser.add_argument('--new-name', default='')
+    parser.add_argument('--verify-committed', default='', help='rev to compare the published identity '
+                                                              'against')
     arguments = parser.parse_args(argv)
+    answers_dir = os.path.abspath(arguments.answers) if arguments.answers else ''
+    if arguments.verify_committed:
+        return verify_committed(arguments.verify_committed,
+                                os.path.basename(arguments.evidence.rstrip('/\\')))
     directory = os.path.join(ROOT, 'results', 'evidence')
+    if arguments.export:
+        export_r1(answers_dir, arguments.new_name)
+        return 0
     candidates = sorted(name for name in os.listdir(directory) if name.startswith(EVIDENCE_PREFIX))
     if not candidates:
-        raise SystemExit('DC_RECORD_REFUSED no measurement directory exists yet')
+        raise SystemExit('DC_RECORD_REFUSED no evidence directory of this round exists yet; run '
+                         '--answers <saved native answers> --export first')
     evidence_name = (os.path.basename(arguments.evidence.rstrip('/\\')) if arguments.evidence
                      else candidates[-1])
     evidence = os.path.join(directory, evidence_name)
     if not os.path.isdir(evidence):
         raise SystemExit('DC_RECORD_REFUSED %s is not a directory' % evidence_name)
     head = git('rev-parse', 'HEAD').strip()
+    if not arguments.draft and not arguments.check_only:
+        stage(round_paths(evidence_name))
     payload = json.loads(io.open(os.path.join(evidence, 'judgement.json'), encoding='utf-8').read())
-    results, reconcile, account = build_gates(evidence)
+    results, reconcile, account = build_gates(evidence, answers_dir, evidence_name)
     payload['reconcile'] = reconcile
     frozen, _problems = frozen_rows(head)
     results.append(frozen_gate(frozen))
     failures = [row['gate'] for row in results if row['verdict_state'] != 'PASS']
-    ranges = {'base_to_HEAD': range_counts(BASE, head),
+    ranges = {'BASE_to_HEAD_this_round': range_counts(BASE, head),
+              'e51c532_to_BASE_measured_round': range_counts(OFFLINE_BASE, BASE),
               'P_to_R1_recomputed': range_counts('dcef9b336f2222d6291d266858270f7448b6bb78',
                                                  '6778535e70b139812265eba490d0a1381a1fae5c'),
-              'R1_to_base': range_counts('6778535e70b139812265eba490d0a1381a1fae5c', BASE)}
+              'R1_to_base': range_counts('6778535e70b139812265eba490d0a1381a1fae5c', OFFLINE_BASE)}
     git_rows = []
-    for label, other in (('diff_check_base_to_HEAD', BASE),
-                         ('diff_check_P_to_HEAD', 'dcef9b336f2222d6291d266858270f7448b6bb78')):
-        rc, body = run(['git', 'diff', '--check', '%s..HEAD' % other])
-        git_rows.append({'gate': label, 'command': 'git diff --check %s..HEAD' % other, 'rc': rc,
+    for label, command, expected in (
+            ('diff_check_staged_this_round', ['git', 'diff', '--check', '--cached'], 0),
+            ('diff_check_BASE_to_HEAD', ['git', 'diff', '--check', '%s..HEAD' % BASE], 0),
+            ('diff_check_earlier_range_disclosed_negative',
+             ['git', 'diff', '--check', '%s..%s' % (OFFLINE_BASE, BASE)], 2),
+            ('diff_check_P_to_HEAD', ['git', 'diff', '--check',
+                                      'dcef9b336f2222d6291d266858270f7448b6bb78..HEAD'], 2)):
+        rc, body = run(command)
+        git_rows.append({'gate': label, 'command': ' '.join(command), 'rc': rc,
                          'lines': len([line for line in body.split('\n') if line.strip()]),
-                         'scope': 'committed range %s to HEAD(%s) at %s'
-                                  % (other[:12], head[:12], now())})
+                         'scope': 'expected rc %d, got %s; the earlier range stays negative on purpose '
+                                  'because archived review logs, the two figures of the measured round '
+                                  'and its commands.csv were saved as they are, and none of those bytes '
+                                  'is rewritten to make a check read clean. HEAD here is %s at %s'
+                                  % (expected, rc, head[:12], now())})
     if arguments.check_only:
         for row in results:
             print('GATE %-42s %s %s' % (row['gate'], row['verdict_state'],
@@ -745,13 +1295,16 @@ def main(argv):
         again = render_report(io.open(report_path, encoding='utf-8', newline='').read(), payload,
                               results, frozen, ranges)
         fixed_point = 'PASS' if again == rendered else 'FAIL'
-    identity = identity_rows(head, evidence_name)
+    identity = None
     for name, header, table in (('commands.csv', COMMANDS_HEADER, results),
-                               ('frozen_comparison.csv', FROZEN_HEADER, frozen),
-                               ('git_checks.csv', GIT_HEADER, git_rows),
-                               ('source_identity.csv', IDENTITY_HEADER, identity),
-                               ('launches_reconcile.csv', RECONCILE_HEADER, reconcile)):
+                                ('frozen_comparison.csv', FROZEN_HEADER, frozen),
+                                ('git_checks.csv', GIT_HEADER, git_rows),
+                                ('launches_reconcile.csv', RECONCILE_HEADER, reconcile)):
         rows_write(os.path.join(out_dir, name), header, table)
+    if not arguments.draft:
+        stage(round_paths(evidence_name))
+        identity = identity_rows(evidence_name)
+        rows_write(os.path.join(out_dir, 'source_identity.csv'), IDENTITY_HEADER, identity)
     recheck = tables_parse_gate(out_dir)
     read_back = []
     for name, header in sorted(TABLE_SPECS.items()):
@@ -770,7 +1323,7 @@ def main(argv):
             json_probe.append({'file': name, 'parses': True})
         except ValueError as error:
             json_probe.append({'file': name, 'parses': False, 'error': str(error)[:80]})
-    summary = {'task_id': TASK_ID, 'base_offline_content_sha': BASE, 'branch': BRANCH, 'tip': head,
+    summary = {'task_id': TASK_ID, 'base_sha_of_this_round': BASE, 'branch': BRANCH, 'tip': head,
                'evidence_directory': evidence_name, 'generated_utc': now(),
                'gates': len(results), 'gates_failed': failures,
                'gates_informational': [row['gate'] for row in results
@@ -779,7 +1332,10 @@ def main(argv):
                'published_tables_recheck': {'verdict': recheck['verdict_state'], 'rc': recheck['rc'],
                                               'detail': recheck['verdict']},
                'csv_read_back': read_back,
-               'published_json': json_probe, 'identity_rows': len(identity),
+               'published_json': json_probe, 'identity_rows': len(identity or []),
+               'identity_source_rule': 'every published identity row is the digest of the blob this '
+                                       'commit carries, read from the index; a working copy is never '
+                                       'the identity, because Git may normalise its line endings',
                'frozen_rows': len(frozen),
                'frozen_enforced_mismatches': sum(int(row['mismatched']) for row in frozen
                                                  if row['enforced'] == 'yes'),
@@ -806,8 +1362,9 @@ def main(argv):
                'preflight_witnesses_all_within_tolerance':
                    payload['all_preflight_witnesses_within_tolerance'],
                'dut_rows': payload['dut_rows'], 'expected_rows': payload['expected_rows'],
-               'registered_offline_content': BASE,
-               'spectre_launches': account.occupied(), 'rtl_simulations': 0, 'oa_writes': 0,
+               'registered_offline_content': OFFLINE_BASE, 'base_of_this_round': BASE,
+               'spectre_launches': 0, 'reused_native_account_rows': account.occupied(),
+               'rtl_simulations': 0, 'oa_writes': 0,
                'transient_simulations': 0, 'credential_values_recorded': 0,
                'model_card_content_committed': 0, 'pdk_paths_committed': 0,
                'guest_write_root': DC.dc_contract()['authorisation']['guest_write_root'],

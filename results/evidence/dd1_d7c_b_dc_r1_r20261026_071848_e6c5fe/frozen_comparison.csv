@@ -1,0 +1,14 @@
+surface,expectation,enforced,paths,matched,mismatched,detail
+four candidate DUT netslists,identical,yes,4,4,0,none; empty-name misses none
+fifteen delivered PREP decks,identical,yes,15,15,0,none; empty-name misses spectre/dd1_d7c_b_prep
+schedule windows and pwl tables,identical,yes,4,4,0,none; empty-name misses tests/dd1_d7c_b_prep
+shared executors and measurement cores,identical,yes,15,15,0,none; empty-name misses none
+preparation contract json,identical,yes,1,1,0,none; empty-name misses none
+earlier records; reports and handoffs,none_removed,yes,34,34,0,none; empty-name misses results/evidence/dd1_d7c_b_prep;results/evidence/dd1_d7c_b_prep_r1;results/evidence/dd1_d7c_b_prep_r2;results/evidence/dd1_d7b;reports/agent_handoffs;reports/tasks
+the measured DC round: tables; record; report and handoff,identical,yes,51,51,0,none; empty-name misses results/evidence/dd1_d7c_b_dc_r20261026_015212_376554
+the DC round report and handoff,identical,yes,4,4,0,none; empty-name misses none
+the six masters and eight derived preflight decks of the DC round,identical,yes,15,15,0,none; empty-name misses spectre/dd1_d7c_b_dc
+the DC contract of the measured round,identical,yes,1,1,0,none; empty-name misses none
+modified files against the registered offline commit,only_allowed_new,yes,0,0,0,none
+paths added by this round,only_allowed_new,yes,0,0,0,unexpected: none
+paths removed against the registered offline commit,none_removed,yes,0,0,0,none

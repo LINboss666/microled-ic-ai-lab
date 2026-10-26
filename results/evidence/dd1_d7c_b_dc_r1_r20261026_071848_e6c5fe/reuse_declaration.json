@@ -1,0 +1,160 @@
+{
+ "base": "337563fc22699e480bf7fc82890750c126a50654",
+ "files": [
+  {
+   "bytes": 5280,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/launch_account.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/launch_account.csv",
+   "sha256": "7bbc9b8b14aef4bd5b44375131a67ff65d6499225c10844ab3028a89f285b1e3"
+  },
+  {
+   "bytes": 37947,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/dc_matrix_dut.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/dc_matrix_dut.csv",
+   "sha256": "23e9e1fb6aed01497ef34e37196176e4305228fdbd1fc389dcd4e4cd4cd4cfc3"
+  },
+  {
+   "bytes": 38922,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/dc_matrix_preflight.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/dc_matrix_preflight.csv",
+   "sha256": "ae6b49a4484d45c71c97aaf5e271e14703ce75cb7e3da3bee45f9f5105d154e4"
+  },
+  {
+   "bytes": 4906,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/rows_DC-000_dut.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/rows_DC-000_dut.csv",
+   "sha256": "5aee144851c6897d2a75eee2e840337f98f4ee8052c226c383de7e5483077aa5"
+  },
+  {
+   "bytes": 5035,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/rows_DC-000_preflight.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/rows_DC-000_preflight.csv",
+   "sha256": "ce4f2223d18aecd98953716d175c2cc5ca9b4c11c35601ed1c77fdc9b1a4c12a"
+  },
+  {
+   "bytes": 4925,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/rows_DC-111_dut.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/rows_DC-111_dut.csv",
+   "sha256": "51630c3919ab98c4802a266e03b4db820780c21d4c872d0c0c5933427bb7f57f"
+  },
+  {
+   "bytes": 5035,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/rows_DC-111_preflight.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/rows_DC-111_preflight.csv",
+   "sha256": "ac9834ae8956f509a77c1c802f3f15ac5761e862eab2a06d90c199f9c3b6bcb0"
+  },
+  {
+   "bytes": 4906,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/rows_DC-001_dut.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/rows_DC-001_dut.csv",
+   "sha256": "91b43f76af719c9a1d84e8fa9c3d63966ad6dd6c89b018ba7206d08a9d181d81"
+  },
+  {
+   "bytes": 5035,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/rows_DC-001_preflight.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/rows_DC-001_preflight.csv",
+   "sha256": "3f371ea41a900caa04861ccf020d69b4a10a8618ae22020e25e69c943af2f762"
+  },
+  {
+   "bytes": 4906,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/rows_DC-010_dut.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/rows_DC-010_dut.csv",
+   "sha256": "cd7c806dd1e5694202fe5b96dfb0bc5555177ad26141e1e71ca145e347314321"
+  },
+  {
+   "bytes": 5035,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/rows_DC-010_preflight.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/rows_DC-010_preflight.csv",
+   "sha256": "2112b4cc92129e6a3c254b59719e5618d453edd31d1503f8e21c0e236cf092ca"
+  },
+  {
+   "bytes": 4906,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/rows_DC-011_dut.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/rows_DC-011_dut.csv",
+   "sha256": "d1290914b241ff8acd55a76eb67a1c3afa3a48103ee77f07bd652508e1295b42"
+  },
+  {
+   "bytes": 5035,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/rows_DC-011_preflight.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/rows_DC-011_preflight.csv",
+   "sha256": "64ea4b52939bbff63cc48b0972354867c9c24663419b789a4f8a22da44058a88"
+  },
+  {
+   "bytes": 4906,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/rows_DC-100_dut.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/rows_DC-100_dut.csv",
+   "sha256": "72b5f0081fcbdc22006926799d5b35c408bef195aa04de55aa6872c9e3ea36fa"
+  },
+  {
+   "bytes": 5035,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/rows_DC-100_preflight.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/rows_DC-100_preflight.csv",
+   "sha256": "8a20c585b0474b668c5f8f5b8e69720975abb4c499e22771c5985bef2b613894"
+  },
+  {
+   "bytes": 4925,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/rows_DC-101_dut.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/rows_DC-101_dut.csv",
+   "sha256": "667f7dce35413458bbbf6c8e7df2c0972428d49b18f432e683c87b66fbd4c992"
+  },
+  {
+   "bytes": 5035,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/rows_DC-101_preflight.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/rows_DC-101_preflight.csv",
+   "sha256": "eb68ebd5aec3e88572b74c55c89f47faa0d54e14a1966271422010064f280369"
+  },
+  {
+   "bytes": 4925,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/rows_DC-110_dut.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/rows_DC-110_dut.csv",
+   "sha256": "813d368a9b75bc2c5d11778b23f506d4d7fed6b8e9f20272b61df22a0860a50a"
+  },
+  {
+   "bytes": 5035,
+   "copied_byte_for_byte": true,
+   "identity_source": "git blob at 337563fc22699e480bf7fc82890750c126a50654",
+   "new_name_in_this_round": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/rows_DC-110_preflight.csv",
+   "path_in_the_measured_round": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/rows_DC-110_preflight.csv",
+   "sha256": "cb4bd2539292d157d5307353711df7074809f61bd757610f6deb4327f11ff580"
+  }
+ ],
+ "rule": "these are the bytes the measured round published, taken out of Git at 337563fc2269 and written again unchanged. Reusing them is not a new simulation: this round starts no process and its own task book authorises none. The judgement recomputed over them is the new offline work of this round.",
+ "task_id": "DATA-7C-B-DC-R1",
+ "written_utc": "2026-10-26T07:18:49Z"
+}

@@ -64,6 +64,18 @@ PREFLIGHT_LOAD = ['Rload_meter (data_out vss) resistor r=80e3',
                   'Rref_meter (iref_in vss) resistor r=50e3']
 PREFLIGHT_LOAD_OHMS = 80e3     # the witness: at the 1.20 V point the probe reads 15 uA
 PREFLIGHT_REF_OHMS = 50e3      # 15 uA into 50 kohm puts the reference node at 0.75 V
+# DATA-7C-B-DC-R1: the signals the task book calls required, so a missing one is a refusal and never a
+# nominal fill-in. The axis and the probe current are resolved separately by probe_column().
+REQUIRED_SIGNALS = ('data_out', 'vss', 'vdd18', 'vcas', 'data_en', 'pam0', 'pam1', 'pam2', 'iref_in')
+LOGIC_HIGH_V = 1.8             # the deck's logic domain high, from reports/tasks/DATA-7C-B-DC.md s4
+LOGIC_LOW_V = 0.0
+LOGIC_TOLERANCE_V = 0.05       # anything between these two windows is not accepted as a logic level
+SUPPLY_TOLERANCE_V = 0.005
+GROUND_TOLERANCE_V = 0.005
+CLAMP_TRACKS_OUTPUT_V = 0.02   # data_out is the node the clamp source drives, so it tracks the axis
+DECK_SOURCE_RE = re.compile(r'^([A-Za-z_]\w*)\s*\(\s*(\S+)\s+(\S+)\s*\)\s*(vsource|isource)'
+                            r'\s+dc=([0-9.eE+-]+)([numk]?)\s*(?://.*)?$')
+UNIT_SCALE = {'': 1.0, 'n': 1e-9, 'u': 1e-6, 'm': 1e-3, 'k': 1e3}
 ROLES = ('preflight', 'dut', 'debug')
 ACCOUNT_STATES = ('REQUESTED', 'CONFIRMED', 'FAILED', 'UNCERTAIN')
 ACCOUNT_HEADER = ('launch_id', 'task_id', 'run_id', 'case_id', 'role', 'state', 'requested_utc',
@@ -383,8 +395,74 @@ def iref_from_deck(deck_text):
     raise Refuse('the deck declares no isource line, so the reference condition cannot be named')
 
 
+def deck_static_sources(deck_text, case_id):
+    """the levels this case's frozen deck drives, node by node; these are deck conditions, never
+    described as observations"""
+    levels, reference = {}, None
+    for line in deck_text.splitlines():
+        text = line.strip()
+        if not text or text.startswith('//'):
+            continue
+        found = DECK_SOURCE_RE.match(text)
+        if not found:
+            continue
+        _name, node_a, node_b, kind, value, suffix = found.groups()
+        volts = float(value) * UNIT_SCALE[suffix]
+        if kind == 'isource':
+            reference = (node_a, node_b, volts)
+            continue
+        for node in (node_a, node_b):
+            if node != '0':
+                levels[node] = volts
+    for node in ('vdd18', 'vcas', 'vss', 'data_en', 'pam0', 'pam1', 'pam2'):
+        if node not in levels:
+            raise Refuse('%s: the frozen deck declares no vsource for %s, so the condition of that '
+                         'node cannot be named and a measured level cannot be checked against it'
+                         % (case_id, node))
+    if reference is None:
+        raise Refuse('%s: the frozen deck declares no isource, so the reference condition is unknown'
+                     % case_id)
+    return levels, reference
+
+
+def deck_corner_and_temp(deck_text, case_id):
+    """corner and temperature are written in the deck, so they are reported as deck conditions"""
+    corner = re.search(r'include\s+"\$\{QODER_PDK_LIB\}"\s+section=(\w+)', deck_text)
+    temp = re.search(r'simopt\s+options\s+temp=([0-9.]+)', deck_text)
+    if not corner or not temp:
+        raise Refuse('%s: the deck carries no section= or simopt temp= line, so corner and temperature '
+                     'cannot be attributed to the deck' % case_id)
+    return corner.group(1).upper(), float(temp.group(1))
+
+
+def logic_bit(volt, node, case_id):
+    """the deck's logic domain is 1.8 V high and 0 V low; a level in between is refused rather than
+    rounded up to the nearest rail, which is what let 0.9 V look like a one before"""
+    if abs(volt - LOGIC_HIGH_V) <= LOGIC_TOLERANCE_V:
+        return 1
+    if abs(volt - LOGIC_LOW_V) <= LOGIC_TOLERANCE_V:
+        return 0
+    raise Refuse('%s: %s reads %r V, which is neither the deck high %g V nor the deck low %g V within '
+                 '%g V, so no bit can be claimed from it'
+                 % (case_id, node, volt, LOGIC_HIGH_V, LOGIC_LOW_V, LOGIC_TOLERANCE_V))
+
+
+def measured_code(cols, levels, case_id):
+    """the three PAM bits as measured, cross-checked against the same case's frozen deck"""
+    bits = ''.join(str(logic_bit(cols['pam%d' % index][0], 'pam%d' % index, case_id))
+                   for index in (2, 1, 0))
+    declared = ''.join(str(logic_bit(levels['pam%d' % index], 'pam%d' % index, case_id))
+                       for index in (2, 1, 0))
+    if bits != declared or bits != case_id.split('-')[1]:
+        raise Refuse('%s: the measured PAM levels read %s while the frozen deck drives %s and the case '
+                     'is named %s; a mixed code is never published'
+                     % (case_id, bits, declared, case_id.split('-')[1]))
+    return bits, declared
+
+
 def extract(raw_path, deck_sha, case_id, role, run_id, launch_id):
-    """the 19 native rows, with units, sign and identity carried through; no nominal number is copied"""
+    """the 19 native rows, with units, sign and identity carried through; no nominal number and no case
+    name is ever substituted for a signal the answer does not carry"""
     groups, axis = PSF.parse(raw_path)
     cols, axis_values = PSF.as_columns(groups, axis)
     units = psf_units(raw_path)
@@ -407,39 +485,92 @@ def extract(raw_path, deck_sha, case_id, role, run_id, launch_id):
     if units.get(current) != 'A':
         raise Refuse('%s: the probe column %s declares units %r, not amperes'
                      % (case_id, current, units.get(current)))
-    if 'data_out' not in cols:
-        raise Refuse('%s: the raw has no data_out column, so the measured point cannot be named' % case_id)
-    deck_text, _digest = delivered_deck(case_id)
-    bits = ''.join(str(int(cols['pam%d' % index][0] > 0.9)) for index in (2, 1, 0)) \
-        if all('pam%d' % index in cols for index in (0, 1, 2)) else 'NOT_OBSERVED'
+    missing = [name for name in REQUIRED_SIGNALS if name not in cols]
+    if missing:
+        raise Refuse('%s: the raw carries no column for %s, which this round declares required, so the '
+                     'extraction is incomplete and a contract nominal cannot fill it'
+                     % (case_id, ','.join(missing)))
+    columns = (current,) + REQUIRED_SIGNALS
+    wrong_unit = ['%s=%r' % (name, units.get(name)) for name in columns
+                  if units.get(name) != ('A' if name == current else 'V')]
+    if wrong_unit:
+        raise Refuse('%s: a required column declares the wrong unit: %s' % (case_id, ', '.join(wrong_unit)))
+    ragged = ['%s=%d' % (name, len(cols[name])) for name in columns
+              if len(cols[name]) != len(axis_values)]
+    if ragged:
+        raise Refuse('%s: a required column does not span the sweep: %s' % (case_id, ', '.join(ragged)))
+    non_finite = ['%s at point %g' % (name, axis_values[index]) for name in columns
+                  for index in range(len(axis_values)) if not _finite(cols[name][index])]
+    if non_finite:
+        raise Refuse('%s: a required value is not finite: %s' % (case_id, '; '.join(non_finite[:3])))
+    deck_text, deck_digest = delivered_deck(case_id)
+    if role == 'preflight':
+        derived, _detail = preflight_deck(deck_text, case_id)
+        expect = sha_bytes(derived.encode('utf-8'))
+        which = 'derived preflight copy'
+    else:
+        expect = deck_digest
+        which = 'delivered deck'
+    if deck_sha and deck_sha != expect:
+        raise Refuse('%s: the deck digest handed to the extraction is %s while this case%s is %s, so '
+                     'the answer and the deck are not the same object'
+                     % (case_id, deck_sha[:12], which, expect[:12]))
+    levels, reference = deck_static_sources(deck_text, case_id)
+    corner, temp_C = deck_corner_and_temp(deck_text, case_id)
+    bits, declared = measured_code(cols, levels, case_id)
     rows = []
     for index, clamp in enumerate(axis_values):
-        row = {'case_id': case_id, 'code': bits if bits != 'NOT_OBSERVED' else case_id.split('-')[1],
-               'role': role, 'clamp_V': '%.3f' % clamp,
+        row = {'case_id': case_id, 'code': bits, 'role': role, 'clamp_V': '%.3f' % clamp,
                'data_out_V': '%.6f' % cols['data_out'][index],
                'I_sink_A': '%.9e' % cols[current][index],
                'I_sink_uA': '%.6f' % (cols[current][index] * 1e6),
-               'vdd18_V': '%.3f' % (cols['vdd18'][index] if 'vdd18' in cols
-                                    else criteria()[0]['vdd18_V']),
-               'vcas_V': '%.3f' % (cols['vcas'][index] if 'vcas' in cols
-                                   else criteria()[0]['vcas_V']),
-               'data_en_V': '%.3f' % (cols['data_en'][index] if 'data_en' in cols
-                                      else criteria()[0]['vcas_V']),
+               'vdd18_V': '%.3f' % cols['vdd18'][index],
+               'vcas_V': '%.3f' % cols['vcas'][index],
+               'data_en_V': '%.3f' % cols['data_en'][index],
                'pam_bits': bits,
-               'iref_source_A': '%.3e' % iref_from_deck(deck_text),
-               'iref_node_V': '%.6f' % (cols['iref_in'][index] if 'iref_in' in cols else float('nan')),
-               'corner': criteria()[0]['corner'], 'temp_C': '27',
-               'deck_sha256': deck_sha, 'raw_sha256': sha_file(raw_path), 'run_id': run_id,
+               'iref_source_A': '%.3e' % reference[2],
+               'iref_node_V': '%.6f' % cols['iref_in'][index],
+               'corner': corner, 'temp_C': '%g' % temp_C,
+               'deck_sha256': deck_sha or expect, 'raw_sha256': sha_file(raw_path), 'run_id': run_id,
                'launch_id': launch_id, 'unit_clamp': units.get(axis, ''),
                'unit_current': units.get(current, '')}
-        for key in ('clamp_V', 'data_out_V', 'I_sink_A'):
+        if abs(cols['data_out'][index] - clamp) > CLAMP_TRACKS_OUTPUT_V:
+            raise Refuse('%s point %g V: data_out reads %.6f V, more than %g V from the swept clamp, so '
+                         'the output is not the node this scan drives'
+                         % (case_id, clamp, cols['data_out'][index], CLAMP_TRACKS_OUTPUT_V))
+        if abs(cols['vss'][index] - levels['vss']) > GROUND_TOLERANCE_V:
+            raise Refuse('%s point %g V: vss reads %.6f V, not the explicit %g V ground the deck drives'
+                         % (case_id, clamp, cols['vss'][index], levels['vss']))
+        for name, tolerance in (('vdd18', SUPPLY_TOLERANCE_V), ('vcas', SUPPLY_TOLERANCE_V),
+                                ('data_en', LOGIC_TOLERANCE_V)):
+            if abs(cols[name][index] - levels[name]) > tolerance:
+                raise Refuse('%s point %g V: %s reads %.3f V against the frozen deck value %.3f V, which '
+                             'is outside %g V' % (case_id, clamp, name, cols[name][index],
+                                                  levels[name], tolerance))
+        measured_bits = ''.join(str(logic_bit(cols['pam%d' % bit][index], 'pam%d' % bit, case_id))
+                                for bit in (2, 1, 0))
+        if measured_bits != bits:
+            raise Refuse('%s: the PAM bits change along the scan (%s then %s), which a static-code DC '
+                         'point cannot be' % (case_id, bits, measured_bits))
+        for key in ('clamp_V', 'data_out_V', 'I_sink_A', 'iref_node_V'):
             if not _finite(row[key]):
                 raise Refuse('%s point %s: %s is not finite' % (case_id, row['clamp_V'], key))
         if not row['unit_clamp'] or not row['unit_current']:
             raise Refuse('%s: a row without a declared unit cannot be published' % case_id)
         rows.append(row)
     return rows, {'axis': axis, 'probe_column': current, 'points': len(rows),
-                  'units': dict((key, units[key]) for key in (axis, current) if key in units)}
+                  'units': dict((key, units[key]) for key in columns if key in units),
+                  'code_measured': bits, 'code_from_deck': declared,
+                  'deck_levels': dict((key, levels[key]) for key in sorted(levels)),
+                  'reference_from_deck': {'from_node': reference[0], 'into_node': reference[1],
+                                          'amps': reference[2]},
+                  'field_origin': dict((key, 'native column %s' % columns[0]) for key in
+                                       ('I_sink_A', 'I_sink_uA')),
+                  'origin_rule': 'data_out_V, vdd18_V, vcas_V, data_en_V, pam_bits, iref_node_V and '
+                                 'unit_* are native columns of this answer; iref_source_A, corner and '
+                                 'temp_C are read out of the frozen deck and are deck conditions, not '
+                                 'observations; code and pam_bits are the measured PAM levels, checked '
+                                 'against the same deck'}
 
 
 def _finite(text):
@@ -473,16 +604,21 @@ def preflight_witness(rows, deck_text, tolerance=0.02):
 
 
 def band_of(pairs, target_A, main_V, step=0.05, fraction=0.05):
-    """the largest continuous set of measured grid points, containing the evaluation point, whose current
-    stays within +/-5% of this code's own 1.20 V current. The neighbour outside the run is named as a
-    measured point, never interpolated into a sharper boundary, and a near-zero target says so instead of
-    dividing by it"""
+    """the largest continuous set of measured grid points, containing the evaluation point, whose SIGNED
+    current stays within +/-5% of this code's own 1.20 V current. The difference is taken with the sign
+    of the reading, so a point whose current has flipped direction is outside the band instead of being
+    mistaken for an equal current. The neighbour outside the run is named as a measured point, never
+    interpolated into a sharper boundary, and a near-zero target says so instead of dividing by it"""
+    for value, current in pairs:
+        if not (_finite(value) and _finite(current)):
+            raise Refuse('the band cannot be taken over a non-finite point: clamp %r current %r'
+                         % (value, current))
     if abs(target_A) < 1e-12:
         return {'status': 'DEGENERATE_TARGET_NEAR_ZERO', 'points': 0, 'lowest_verified_V': None,
                 'adjacent_failing_V': None, 'containing_main_V': None}
     limit = fraction * abs(target_A)
     grid = [value for value, _current in pairs]
-    good = dict((value, abs(abs(current) - abs(target_A)) <= limit) for value, current in pairs)
+    good = dict((value, abs(current - target_A) <= limit) for value, current in pairs)
     main_index = [index for index, value in enumerate(grid) if abs(value - main_V) < 1e-9]
     if not main_index:
         raise Refuse('the %g V evaluation point is not in the measured grid' % main_V)
@@ -512,45 +648,124 @@ def main_point(rows, volts=1.2):
     return hits[0]
 
 
-def judge(dut_rows):
-    """every number the pass rests on, printed; normalisation never rescues a short ladder"""
-    crit = criteria()[0]
-    by_code = {}
-    for row in dut_rows:
-        by_code.setdefault(row['code'], []).append(row)
-    codes = dc_contract()['matrix']['codes']
-    if sorted(by_code) != sorted(codes):
-        return {'verdict': 'INCOMPLETE', 'reason': 'codes measured: %s, the matrix names %s'
-                % (','.join(sorted(by_code)), ','.join(codes)), 'rows': len(dut_rows)}
-    at_main = {}
-    for code in codes:
-        at_main[code] = float(main_point(by_code[code])['I_sink_A'])
+def validate_dc_matrix(dut_rows, codes=None, points=None):
+    """DATA-7C-B-DC-R1: the one gate every complete-phase DC PASS has to walk through first. It names
+    the missing, extra, duplicated or malformed key instead of judging whatever rows happen to be
+    present, so eight main points can never again be read as a finished 8 x 19 matrix"""
+    contract = dc_contract()
+    codes = list(codes if codes is not None else contract['matrix']['codes'])
+    points = list(points if points is not None else sweep_points())
+    expected = set((code, round(point, 3)) for code in codes for point in points)
+    problems, seen = [], {}
+    for number, row in enumerate(dut_rows, 1):
+        if len(row) < len(ROWS_HEADER) or any(key not in row for key in ROWS_HEADER):
+            problems.append('row %d does not carry all %d published columns' % (number, len(ROWS_HEADER)))
+            continue
+        if row['role'] != 'dut':
+            problems.append('row %d has role %r inside the DUT matrix' % (number, row['role']))
+        code = row['code']
+        if code not in codes:
+            problems.append('row %d carries code %r, which the matrix does not name' % (number, code))
+            continue
+        if row['pam_bits'] != code or row['case_id'] != 'DC-%s' % code:
+            problems.append('row %d mixes identity: case %s, code %s, pam_bits %s'
+                            % (number, row['case_id'], code, row['pam_bits']))
+        try:
+            clamp = round(float(row['clamp_V']), 3)
+        except (TypeError, ValueError):
+            problems.append('row %d has an unreadable clamp voltage %r' % (number, row['clamp_V']))
+            continue
+        if clamp not in [round(point, 3) for point in points]:
+            problems.append('row %d sits at %s V, which is not on the frozen %g V grid'
+                            % (number, row['clamp_V'], points[0]))
+        for key in ('I_sink_A', 'I_sink_uA', 'data_out_V', 'iref_node_V', 'clamp_V'):
+            if not _finite(row[key]):
+                problems.append('row %d: %s is %r, which is not a finite number'
+                                % (number, key, row[key]))
+        if abs(float(row['I_sink_uA']) - float(row['I_sink_A']) * 1e6) > 5.1e-7:
+            problems.append('row %d: the uA column is not the A column times 1e6' % number)
+        if row['unit_clamp'] != 'V' or row['unit_current'] != 'A':
+            problems.append('row %d declares units %r/%r instead of V/A'
+                            % (number, row['unit_clamp'], row['unit_current']))
+        if not row['deck_sha256'] or not row['raw_sha256']:
+            problems.append('row %d carries no deck or raw digest, so its identity cannot be checked'
+                            % number)
+        key = (code, clamp)
+        if key in seen:
+            problems.append('the point %s at %s V appears twice, so the matrix has no unique row for it'
+                            % (code, row['clamp_V']))
+        seen[key] = row
+    missing = sorted(expected - set(seen))
+    extra = sorted(set(seen) - expected)
+    if missing:
+        problems.append('%d of the %d required keys are absent, starting with %s'
+                        % (len(missing), len(expected),
+                           ', '.join('%s at %s V' % (code, clamp) for code, clamp in missing[:3])))
+    if extra:
+        problems.append('%d keys are not in the declared matrix, starting with %s'
+                        % (len(extra), ', '.join('%s at %s V' % (code, clamp) for code, clamp in extra[:3])))
+    if problems:
+        raise Refuse('the DC matrix is not complete and consistent: %s' % '; '.join(problems[:4]))
+    return {'rows': len(dut_rows), 'codes': len(codes), 'points_per_code': len(points),
+            'keys_expected': len(expected), 'keys_unique': len(seen),
+            'rows_by_code': dict((code, [row for key, row in seen.items() if key[0] == code])
+                                 for code in codes),
+            'rule': '8 codes x %d declared clamp points, one unique finite row per key, role, case, '
+                    'code, pam_bits, units and digests all consistent' % len(points)}
+
+
+def main_point_arithmetic(rows_by_code, crit, codes):
+    """the eight main evaluation points only. It answers the ladder arithmetic and never a phase verdict:
+    a PASS here is not a statement that the 8 x 19 matrix was measured"""
+    at_main = dict((code, float(main_point(rows_by_code[code])['I_sink_A'])) for code in codes)
     full = at_main[crit['full_scale_code']]
     iunit_ref = full / 8.0
     deviations = dict((code, at_main[code] - (int(code, 2) + 1) * iunit_ref) for code in codes)
     ladder = [at_main[code] for code in codes]
-    monotonic = all(ladder[index + 1] > ladder[index] for index in range(len(ladder) - 1))
-    absolute_pass = crit['full_scale_lower_A'] <= full <= crit['full_scale_upper_A']
-    ratio_pass = all(abs(deviations[code]) <= 0.25 * abs(iunit_ref) for code in codes)
+    return {'at_main_A': at_main, 'full_scale_A': full, 'iunit_ref_A': iunit_ref,
+            'deviations_A': deviations,
+            'strict_monotonic': all(ladder[index + 1] > ladder[index]
+                                    for index in range(len(ladder) - 1)),
+            'absolute_pass': crit['full_scale_lower_A'] <= full <= crit['full_scale_upper_A'],
+            'ratio_pass': all(abs(deviations[code]) <= 0.25 * abs(iunit_ref) for code in codes),
+            'scope': 'the eight 1.20 V points only'}
+
+
+def judge(dut_rows):
+    """every number the pass rests on; normalisation never rescues a short ladder and a short table
+    never reaches a verdict at all"""
+    matrix = validate_dc_matrix(dut_rows)
+    crit = criteria()[0]
+    codes = dc_contract()['matrix']['codes']
+    arithmetic = main_point_arithmetic(matrix['rows_by_code'], crit, codes)
+    published_matrix = dict(matrix)
+    published_matrix.pop('rows_by_code', None)
+    published_matrix['rows_per_code'] = dict(
+        (code, len(matrix['rows_by_code'][code])) for code in codes)
+    at_main, full = arithmetic['at_main_A'], arithmetic['full_scale_A']
+    iunit_ref, deviations = arithmetic['iunit_ref_A'], arithmetic['deviations_A']
     bands = {}
     for code in codes:
-        pairs = [(float(row['clamp_V']), float(row['I_sink_A']))
-                 for row in sorted(by_code[code], key=lambda row: float(row['clamp_V']))]
+        pairs = sorted((float(row['clamp_V']), float(row['I_sink_A']))
+                       for row in matrix['rows_by_code'][code])
         bands[code] = band_of(pairs, at_main[code], crit['clamp_main_eval_V'])
-    return {'verdict': 'PASS' if (absolute_pass and ratio_pass and monotonic) else 'FAIL',
-            'rows': len(dut_rows), 'main_eval_V': crit['clamp_main_eval_V'],
+    return {'verdict': 'PASS' if (arithmetic['absolute_pass'] and arithmetic['ratio_pass']
+                                  and arithmetic['strict_monotonic']) else 'FAIL',
+            'rows': len(dut_rows), 'matrix_validation': published_matrix,
+            'main_eval_V': crit['clamp_main_eval_V'],
             'I_at_main_A_by_code': dict((code, at_main[code]) for code in codes),
             'full_scale': {'code': crit['full_scale_code'], 'measured_A': full,
                            'measured_uA': full * 1e6, 'target_uA': crit['full_scale_target_A'] * 1e6,
                            'band_uA': [crit['full_scale_lower_A'] * 1e6,
-                                      crit['full_scale_upper_A'] * 1e6], 'pass': absolute_pass},
+                                      crit['full_scale_upper_A'] * 1e6],
+                           'pass': arithmetic['absolute_pass']},
             'iunit_ref_A': iunit_ref, 'iunit_ref_uA': iunit_ref * 1e6,
             'per_code_deviation_A': dict((code, deviations[code]) for code in codes),
             'per_code_deviation_in_iunit_ref': dict(
                 (code, deviations[code] / iunit_ref if iunit_ref else None) for code in codes),
             'deviation_limit_in_iunit_ref': 0.25,
-            'strict_monotonic': monotonic,
-            'ratio_pass': ratio_pass,
+            'strict_monotonic': arithmetic['strict_monotonic'],
+            'ratio_pass': arithmetic['ratio_pass'],
             'nominal_identity': crit['nominal_current_identity'],
             'band_5_percent': bands,
             'time_domain_qlsb': 'NOT_APPLICABLE_DC_HAS_NO_TIME_DOMAIN',
@@ -737,15 +952,30 @@ def launch(case_id, role, out_dir, run_id, timeout=600):
 
 # ---- offline family ------------------------------------------------------------------------------
 
-def synthetic_psf(path, currents, drop=None, duplicate=False, no_probe=False, axis_units='V'):
-    """a psfascii file with the section layout this build really writes, for the extraction tests only"""
+def synthetic_psf(path, currents, drop=None, duplicate=False, no_probe=False, axis_units='V',
+                 omit=('vss',), levels=None, bad_unit=None, clamp_offset=0.999, code='000'):
+    """a psfascii file with the section layout this build really writes, for the extraction tests only.
+
+    The vss column is left out by default because the reviewer's own instrument completes this same
+    fixture by inserting one vss column; a fixture that already carried it would be read as a duplicate
+    and turn their instrument into an error. Pass omit=() for the complete answer the extractor requires.
+    """
     points = sweep_points()
+    value_levels = dict({'vdd18': 1.8, 'vcas': 1.8, 'data_en': 1.8, 'vss': 0.0,
+                         'iref_in': 0.75}, **(levels or {}))
+    for bit in (0, 1, 2):
+        value_levels.setdefault('pam%d' % bit, 1.8 if code[2 - bit] == '1' else 0.0)
     signals = [('dc', list(points)), ('Ip_branch:i', list(currents)),
-               ('data_out', [value * 0.999 for value in points]),
-               ('vdd18', [1.8] * len(points)), ('vcas', [1.8] * len(points)),
-               ('data_en', [1.8] * len(points)), ('pam2', [0.0] * len(points)),
-               ('pam1', [0.0] * len(points)), ('pam0', [0.0] * len(points)),
-               ('iref_in', [0.75] * len(points))]
+               ('data_out', [value * clamp_offset for value in points]),
+               ('vdd18', [value_levels['vdd18']] * len(points)),
+               ('vcas', [value_levels['vcas']] * len(points)),
+               ('data_en', [value_levels['data_en']] * len(points)),
+               ('pam2', [value_levels['pam2']] * len(points)),
+               ('pam1', [value_levels['pam1']] * len(points)),
+               ('pam0', [value_levels['pam0']] * len(points)),
+               ('iref_in', [value_levels['iref_in']] * len(points)),
+               ('vss', [value_levels['vss']] * len(points))]
+    signals = [pair for pair in signals if pair[0] not in omit]
     if no_probe:
         signals = [pair for pair in signals if pair[0] != 'Ip_branch:i']
     if drop is not None:
@@ -755,8 +985,10 @@ def synthetic_psf(path, currents, drop=None, duplicate=False, no_probe=False, ax
              '"dc" "sweep" PROP(', '"sweep_direction" 0', '"units" "%s"' % axis_units,
              '"plot" 0', '"grid" 1', ')', 'TRACE']
     for name, _values in signals[1:]:
-        lines.append('"%s" "%s"' % (name, 'A' if name.startswith('Ip_branch') else
-                                    ('V' if name in ('data_out', 'vdd18', 'vcas', 'data_en') else '')))
+        unit = 'A' if name.startswith('Ip_branch') else 'V'
+        if bad_unit == name:
+            unit = ''
+        lines.append('"%s" "%s"' % (name, unit))
     lines.append('VALUE')
     for index in range(len(signals[0][1])):
         for name, values in signals:
@@ -789,7 +1021,7 @@ def row_for(code, value, current, deck_sha):
     return {'case_id': 'DC-%s' % code, 'code': code, 'role': 'dut', 'clamp_V': '%.3f' % value,
             'data_out_V': '%.6f' % (value * 0.999), 'I_sink_A': '%.9e' % current,
             'I_sink_uA': '%.6f' % (current * 1e6), 'vdd18_V': '1.800', 'vcas_V': '1.800',
-            'data_en_V': '1.800', 'pam_bits': code[2] + code[1] + code[0],
+            'data_en_V': '1.800', 'pam_bits': code,
             'iref_source_A': '1.500e-05', 'iref_node_V': '0.750000',
             'corner': 'TT', 'temp_C': '27', 'deck_sha256': deck_sha, 'raw_sha256': 'x',
             'run_id': 'selftest', 'launch_id': 'D000', 'unit_clamp': 'V', 'unit_current': 'A'}
@@ -866,6 +1098,7 @@ def selftest():
     for row in kinked:
         if row['code'] == '010' and row['clamp_V'] == '1.200':
             row['I_sink_A'] = '%.9e' % 4.0e-5
+            row['I_sink_uA'] = '%.6f' % (4.0e-5 * 1e6)
     record('a_non_monotonic_ladder_is_named', judge(kinked)['strict_monotonic'] is False)
     flipped = [dict(row) for row in good_rows]
     for row in flipped:
@@ -876,7 +1109,7 @@ def selftest():
     record('a_negative_reading_stays_negative_and_is_not_abs_flipped',
            answer['I_at_main_A_by_code']['111'] == -1.5e-5 and answer['verdict'] == 'FAIL')
     extracted, info = extract(synthetic_psf(os.path.join(scratch, 'good.raw'),
-                                            [1.875e-6] * 19), deck_sha, 'DC-000', 'dut',
+                                            [1.875e-6] * 19, omit=()), deck_sha, 'DC-000', 'dut',
                               'selftest', 'D001')
     record('extraction_carries_units_and_names_the_probe_column',
            len(extracted) == 19 and extracted[0]['unit_clamp'] == 'V'
@@ -903,19 +1136,112 @@ def selftest():
            json.dumps(witness, sort_keys=True)[:160])
     refusals = (
         ('a_missing_point_is_refused',
-         synthetic_psf(os.path.join(scratch, 'gap.raw'), [1.875e-6] * 19, drop=12)),
+         synthetic_psf(os.path.join(scratch, 'gap.raw'), [1.875e-6] * 19, drop=12), ''),
         ('a_duplicated_answer_is_refused',
-         synthetic_psf(os.path.join(scratch, 'dup.raw'), [1.875e-6] * 19, duplicate=True)),
+         synthetic_psf(os.path.join(scratch, 'dup.raw'), [1.875e-6] * 19, duplicate=True), ''),
         ('a_raw_without_the_probe_column_is_refused',
-         synthetic_psf(os.path.join(scratch, 'noprobe.raw'), [1.875e-6] * 19, no_probe=True)),
+         synthetic_psf(os.path.join(scratch, 'noprobe.raw'), [1.875e-6] * 19, no_probe=True),
+         'Ip_branch'),
         ('a_sweep_without_declared_units_is_refused',
-         synthetic_psf(os.path.join(scratch, 'nounits.raw'), [1.875e-6] * 19, axis_units='')))
-    for name, path in refusals:
+         synthetic_psf(os.path.join(scratch, 'nounits.raw'), [1.875e-6] * 19, axis_units=''), ''),
+        ('a_non_finite_reading_is_refused',
+         synthetic_psf(os.path.join(scratch, 'nan.raw'), [1.875e-6] * 18 + [float('nan')],
+                       omit=()), ''),
+    )
+    for signal in REQUIRED_SIGNALS:
+        refusals += (('%s_is_a_required_signal_not_a_contract_nominal' % signal,
+                      synthetic_psf(os.path.join(scratch, 'no_%s.raw' % signal),
+                                    [1.875e-6] * 19, omit=(signal,)), signal),)
+    refusals += (
+        ('a_column_without_a_unit_is_refused',
+         synthetic_psf(os.path.join(scratch, 'badunit.raw'), [1.875e-6] * 19, omit=(),
+                       bad_unit='pam1'), 'unit'),
+        ('a_supply_that_differs_from_the_frozen_deck_is_refused',
+         synthetic_psf(os.path.join(scratch, 'badvdd.raw'), [1.875e-6] * 19, omit=(),
+                       levels={'vdd18': 1.2}), 'vdd18'),
+        ('an_intermediate_logic_level_is_not_a_bit',
+         synthetic_psf(os.path.join(scratch, 'halfbit.raw'), [1.875e-6] * 19, omit=(),
+                       levels={'pam0': 0.9}), 'pam0'),
+        ('a_code_that_is_not_the_case_is_refused',
+         synthetic_psf(os.path.join(scratch, 'wrongcode.raw'), [1.875e-6] * 19, omit=(),
+                       code='101'), 'PAM'),
+        ('an_output_that_is_not_the_swept_node_is_refused',
+         synthetic_psf(os.path.join(scratch, 'stuck.raw'), [1.875e-6] * 19, omit=(),
+                       clamp_offset=0.5), 'data_out'),
+    )
+    for name, path, expected in refusals:
         try:
             extract(path, deck_sha, 'DC-000', 'dut', 'selftest', 'D002')
             record(name, False, 'it parsed')
         except (Refuse, ValueError) as error:
-            record(name, True, str(error)[:70])
+            text = str(error)
+            record(name, (not expected) or expected.lower() in text.lower(), text[:70])
+    mismatch_path = synthetic_psf(os.path.join(scratch, 'deck_mismatch.raw'),
+                                  [1.875e-6] * 19, omit=())
+    try:
+        extract(mismatch_path, 'f' * 64, 'DC-000', 'dut', 'selftest', 'D002')
+        record('an_answer_paired_with_the_wrong_deck_is_refused', False, 'it extracted')
+    except Refuse as error:
+        record('an_answer_paired_with_the_wrong_deck_is_refused',
+               'not the same object' in str(error), str(error)[:80])
+    eight_only = [row for row in good_rows if row['clamp_V'] == '1.200']
+    for name, rows in (
+            ('eight_main_points_are_not_a_complete_matrix', eight_only),
+            ('one_row_short_of_the_matrix_is_refused', good_rows[:-1]),
+            ('one_extra_point_is_refused', good_rows + [dict(good_rows[0], clamp_V='1.550')]),
+            ('a_duplicate_replacing_a_missing_point_is_refused',
+             [dict(row, clamp_V='0.600') if row is good_rows[-1] else row for row in good_rows]),
+            ('a_row_without_a_unit_is_refused',
+             [dict(row, unit_current='') if row is good_rows[0] else row for row in good_rows]),
+            ('a_row_that_lost_a_column_is_refused',
+             [dict((key, value) for key, value in row.items() if key != 'pam_bits')
+              if row is good_rows[0] else row for row in good_rows]),
+            ('a_code_not_in_the_matrix_is_refused',
+             [dict(row, code='222') if row is good_rows[0] else row for row in good_rows])):
+        try:
+            answer = judge(rows)
+            record(name, False, 'it returned verdict %s over %d rows'
+                   % (answer['verdict'], len(rows)))
+        except Refuse as error:
+            record(name, 'matrix' in str(error).lower(), str(error)[:80])
+    codes = dc_contract()['matrix']['codes']
+    record('the_main_point_arithmetic_alone_is_not_a_phase_verdict',
+           'verdict' not in main_point_arithmetic(
+               dict((code, [row for row in good_rows if row['code'] == code
+                            and row['clamp_V'] == '1.200']) for code in codes),
+               criteria()[0], codes))
+    flat = [row_for(code, value, (index + 1) * 1.875e-6, deck_sha)
+             for index, code in enumerate(codes) for value in sweep_points()]
+    signed_low = [dict(row, I_sink_A='%.9e' % -abs(float(row['I_sink_A'])),
+                       I_sink_uA='%.6f' % -abs(float(row['I_sink_uA'])))
+                  if row['clamp_V'] == '0.600' else row for row in flat]
+    signed_answer = judge(signed_low)
+    record('a_signed_over_band_point_narrows_the_measured_interval',
+           all(item['lowest_verified_V'] == 0.65 and item['adjacent_failing_V'] == 0.60
+               for item in signed_answer['band_5_percent'].values())
+           and signed_answer['verdict'] == 'PASS'
+           and all(item['lowest_verified_V'] == 0.60
+                   for item in judge(flat)['band_5_percent'].values()),
+           'lowest %s, neighbour %s' % (
+               sorted(set(item['lowest_verified_V'] for item in
+                          signed_answer['band_5_percent'].values())),
+               sorted(set(str(item['adjacent_failing_V']) for item in
+                          signed_answer['band_5_percent'].values()))))
+    blown = [dict(row, I_sink_A='%.9e' % (float(row['I_sink_A']) * 2.0),
+                  I_sink_uA='%.6f' % (float(row['I_sink_uA']) * 2.0))
+             if row['clamp_V'] == '1.000' else row for row in flat]
+    blown_answer = judge(blown)
+    record('a_mid_scan_break_splits_the_interval_at_a_measured_point',
+           all(item['containing_main_V'] == [1.05, 1.5] and item['adjacent_failing_V'] == 1.0
+               for item in blown_answer['band_5_percent'].values()),
+           json.dumps([blown_answer['band_5_percent']['000']['containing_main_V'],
+                       blown_answer['band_5_percent']['000']['adjacent_failing_V']]))
+    try:
+        band_of([(0.6, float('nan')), (0.65, 1e-6)], 1e-6, 1.2)
+        record('a_non_finite_point_is_not_an_ordinary_band_failure', False, 'the band accepted it')
+    except Refuse as error:
+        record('a_non_finite_point_is_not_an_ordinary_band_failure', 'finite' in str(error),
+               str(error)[:70])
     granted = os.environ.pop('QODER_DC_AUTHORISED', None)
     record('an_unauthorised_call_refuses', bool(authorisation_problem()))
     os.environ['QODER_DC_AUTHORISED'] = '1'
@@ -1093,8 +1419,12 @@ def main(argv):
         print('DC_LAUNCH %s' % json.dumps(facts, sort_keys=True, default=str))
         return code
     if arguments.extract:
-        rows, info = extract(arguments.extract, arguments.deck_sha, arguments.case, arguments.role,
-                             arguments.run_id or 'manual', 'D000')
+        try:
+            rows, info = extract(arguments.extract, arguments.deck_sha, arguments.case, arguments.role,
+                                 arguments.run_id or 'manual', 'D000')
+        except Refuse as error:
+            print('DC_EXTRACT_REFUSED %s' % error)
+            return 1
         target = os.path.join(arguments.out or run_staging(),
                               'rows_%s_%s.csv' % (arguments.case, arguments.role))
         B7B.write_rows(target, [[row[key] for key in ROWS_HEADER] for row in rows],
@@ -1107,7 +1437,11 @@ def main(argv):
                  io.open(arguments.judge, encoding='utf-8', newline='').read().split('\n')
                  if line.strip()]
         rows = [dict(zip(table[0], cells)) for cells in table[1:]]
-        result = judge([row for row in rows if row['role'] == 'dut'])
+        try:
+            result = judge([row for row in rows if row['role'] == 'dut'])
+        except Refuse as error:
+            print('DC_JUDGE_REFUSED %s' % error)
+            return 1
         print('DC_JUDGE %s' % json.dumps(result, sort_keys=True, indent=1))
         return 0 if result['verdict'] == 'PASS' else 1
     print(__doc__)

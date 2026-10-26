@@ -1,0 +1,62 @@
+{
+ "baseline_reproduction": {
+  "any_defect_reproduced": true,
+  "command": "python probe_dc_review_gaps.py --repo D:/ic617_d7c_b_dc_r1 (an untouched checkout of BASE) --out D:/dc_r1_scratch/baseline_probe.json",
+  "note": "rc=0 here means the instrument found a defect; it is not a pass, and every field was read",
+  "positive_control_complete_fixture_accepted": true,
+  "rc": 0,
+  "reproduced_count": 7
+ },
+ "instruments": [
+  {
+   "bytes": 5074,
+   "modified_by_this_round": false,
+   "path": "reviewer_inputs/probe_dc_review_gaps.py",
+   "sha256": "d48448b1880c7d011a660e72f8fe202ddd63b251ccc2b16dc037b4bc03aa9e25",
+   "taken_from": "the review package MANIFEST row for probe_dc_review_gaps.py"
+  },
+  {
+   "bytes": 5958,
+   "modified_by_this_round": false,
+   "path": "reviewer_inputs/independent_recount.py",
+   "sha256": "ddfbd8e026889314c861998c412c308be4513d3ae967676c64c18fb6ae402928",
+   "taken_from": "the review package MANIFEST row for independent_recount.py"
+  },
+  {
+   "bytes": 1946,
+   "modified_by_this_round": false,
+   "path": "reviewer_inputs/run_checks.py",
+   "sha256": "5c811777490f6f2fa88a9ebacddf6fc4e310a9fe0111d10fb605cfa7e10f8419",
+   "taken_from": "the review package MANIFEST row for run_checks.py"
+  },
+  {
+   "bytes": 2821,
+   "path": "reviewer_inputs/baseline_probe_on_unchanged_BASE.json",
+   "rc_recorded_separately": true,
+   "run_of": "python probe_dc_review_gaps.py --repo <BASE checkout> --out ...",
+   "sha256": "8af4756e4e3228281842599f96dbb12880a87748c9de84accf3a5f94795d547b"
+  },
+  {
+   "bytes": 2823,
+   "path": "reviewer_inputs/baseline_probe_on_unchanged_BASE_output.txt",
+   "rc_recorded_separately": true,
+   "run_of": "python probe_dc_review_gaps.py --repo <BASE checkout> --out ...",
+   "sha256": "6d17877e006ac616df4819dff273a821d338b9f1ff9537cdb2d0e0295d1adaf4"
+  }
+ ],
+ "manifest_rows": 34,
+ "manifest_verified": "each of the 34 rows was compared against the extracted bytes",
+ "review_findings": {
+  "ELECTRICAL_RECOUNT_ON_COMMITTED_TABLES": "PASS",
+  "MEASUREMENT_TOOL_AND_RECORD_ACCEPTANCE": "REWORK",
+  "NEW_BLOCKING_FINDINGS_GROUPS": 4,
+  "REVIEW_RECOMMENDATION": "REWORK",
+  "reviewed_tip": "337563fc22699e480bf7fc82890750c126a50654"
+ },
+ "review_package": "MicroLED_DATA7C_B_DC_Independent_Review_REWORK_20261026.zip",
+ "review_package_bytes": 47977,
+ "review_package_members": 35,
+ "review_package_sha256": "e603abeef577d5a60415c50ac631fcfec286e9928edc1fe8f8037bdb42c398fe",
+ "rule": "the reviewer instrument was copied unchanged and run as it stands; the closure run against this record happens after the record commit and is published in the follow-up commit of this round",
+ "task_id": "DATA-7C-B-DC-R1"
+}

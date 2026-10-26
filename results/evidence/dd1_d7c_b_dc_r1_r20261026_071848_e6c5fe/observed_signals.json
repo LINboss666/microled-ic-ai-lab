@@ -1,0 +1,150 @@
+{
+ "cases": {
+  "DC-000": {
+   "axis": "dc",
+   "delivered": 41,
+   "delivered_under_other_names": [
+    "Ip_branch:i",
+    "Ip_branch:in",
+    "Ip_branch:out"
+   ],
+   "observation_state": "OBSERVED",
+   "raw_sha256": "5f3757d8cf2ad90bfcc0f10c3055524ebb2ee7560583fdef63ef6ff8793732c9",
+   "requested_but_not_delivered": [
+    "Ip_branch",
+    "Ip_branch:current"
+   ],
+   "required_present": true,
+   "state": "READ_FROM_THE_NATIVE_ANSWER"
+  },
+  "DC-001": {
+   "axis": "dc",
+   "delivered": 41,
+   "delivered_under_other_names": [
+    "Ip_branch:i",
+    "Ip_branch:in",
+    "Ip_branch:out"
+   ],
+   "observation_state": "OBSERVED",
+   "raw_sha256": "287e17402f58fad404d0f5cd440af6531901441a315082469cc45b849b5b74a6",
+   "requested_but_not_delivered": [
+    "Ip_branch",
+    "Ip_branch:current"
+   ],
+   "required_present": true,
+   "state": "READ_FROM_THE_NATIVE_ANSWER"
+  },
+  "DC-010": {
+   "axis": "dc",
+   "delivered": 41,
+   "delivered_under_other_names": [
+    "Ip_branch:i",
+    "Ip_branch:in",
+    "Ip_branch:out"
+   ],
+   "observation_state": "OBSERVED",
+   "raw_sha256": "46bb553cf3aca6c6bdb5b5c9554d4a6847b76ae28503f1b56ff879f832a3e7ae",
+   "requested_but_not_delivered": [
+    "Ip_branch",
+    "Ip_branch:current"
+   ],
+   "required_present": true,
+   "state": "READ_FROM_THE_NATIVE_ANSWER"
+  },
+  "DC-011": {
+   "axis": "dc",
+   "delivered": 41,
+   "delivered_under_other_names": [
+    "Ip_branch:i",
+    "Ip_branch:in",
+    "Ip_branch:out"
+   ],
+   "observation_state": "OBSERVED",
+   "raw_sha256": "5e9e9e2ee331925ca041934cd3f5822fc2325bb3f64683c31306d7b3a239f2a9",
+   "requested_but_not_delivered": [
+    "Ip_branch",
+    "Ip_branch:current"
+   ],
+   "required_present": true,
+   "state": "READ_FROM_THE_NATIVE_ANSWER"
+  },
+  "DC-100": {
+   "axis": "dc",
+   "delivered": 41,
+   "delivered_under_other_names": [
+    "Ip_branch:i",
+    "Ip_branch:in",
+    "Ip_branch:out"
+   ],
+   "observation_state": "OBSERVED",
+   "raw_sha256": "73dc86984baaeacb87bde54018bac2eecacd851a74589f7e305f1020e86f155d",
+   "requested_but_not_delivered": [
+    "Ip_branch",
+    "Ip_branch:current"
+   ],
+   "required_present": true,
+   "state": "READ_FROM_THE_NATIVE_ANSWER"
+  },
+  "DC-101": {
+   "axis": "dc",
+   "delivered": 41,
+   "delivered_under_other_names": [
+    "Ip_branch:i",
+    "Ip_branch:in",
+    "Ip_branch:out"
+   ],
+   "observation_state": "OBSERVED",
+   "raw_sha256": "833d6eb01631646c814dbe54cface4d5389871bbf811e4ddd91a215248dc4a63",
+   "requested_but_not_delivered": [
+    "Ip_branch",
+    "Ip_branch:current"
+   ],
+   "required_present": true,
+   "state": "READ_FROM_THE_NATIVE_ANSWER"
+  },
+  "DC-110": {
+   "axis": "dc",
+   "delivered": 41,
+   "delivered_under_other_names": [
+    "Ip_branch:i",
+    "Ip_branch:in",
+    "Ip_branch:out"
+   ],
+   "observation_state": "OBSERVED",
+   "raw_sha256": "7bae8518b0560627ae327dd932308db5489b90b7619bb0b0112fbbda7a98e426",
+   "requested_but_not_delivered": [
+    "Ip_branch",
+    "Ip_branch:current"
+   ],
+   "required_present": true,
+   "state": "READ_FROM_THE_NATIVE_ANSWER"
+  },
+  "DC-111": {
+   "axis": "dc",
+   "delivered": 41,
+   "delivered_under_other_names": [
+    "Ip_branch:i",
+    "Ip_branch:in",
+    "Ip_branch:out"
+   ],
+   "observation_state": "OBSERVED",
+   "raw_sha256": "9b2b8d02e262cb1f983187bb08e29465e5a67aefd190a8580bea731261085b03",
+   "requested_but_not_delivered": [
+    "Ip_branch",
+    "Ip_branch:current"
+   ],
+   "required_present": true,
+   "state": "READ_FROM_THE_NATIVE_ANSWER"
+  }
+ },
+ "not_observed_overall": [
+  "Ip_branch",
+  "Ip_branch:current"
+ ],
+ "not_run_because_no_answer_on_this_machine": [],
+ "required_signals_missing_in": [],
+ "rule": "the deck asks for these signals; a name the answer does not carry is NOT_OBSERVED under that name, and the required set is never optional. A case whose native answer is not on this machine is NOT_OBSERVED and cannot contribute a PASS to the verdict.",
+ "task_id": "DATA-7C-B-DC",
+ "verdict": "PASS",
+ "written_utc": "2026-10-26T07:18:56Z"
+}

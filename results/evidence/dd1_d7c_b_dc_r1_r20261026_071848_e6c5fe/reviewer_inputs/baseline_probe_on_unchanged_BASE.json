@@ -1,0 +1,86 @@
+{
+  "instrument": "probe_dc_review_gaps.py",
+  "native_launches": 0,
+  "published_bytes_modified": false,
+  "positive_control": {
+    "complete_required_signal_fixture_accepted": true
+  },
+  "cases": [
+    {
+      "name": "opposite_sign_at_0p60V_counted_inside_signed_5pct_band",
+      "defect_reproduced": true,
+      "judge_verdict": "PASS",
+      "bad_band_codes": [
+        "000",
+        "001",
+        "010",
+        "011",
+        "100",
+        "101",
+        "110",
+        "111"
+      ],
+      "expected": "each 0.60 V point is outside signed +/-5% band; main-point judgement can stay PASS separately"
+    },
+    {
+      "name": "eight_rows_accepted_by_judge_as_PASS",
+      "defect_reproduced": true,
+      "expected": "refuse incomplete 8x19 matrix before PASS",
+      "observed": {
+        "verdict": "PASS",
+        "rows": 8
+      }
+    },
+    {
+      "name": "missing_required_vdd18_accepted_by_extraction",
+      "defect_reproduced": true,
+      "expected": "refuse missing measured signal; never substitute contract nominal or case-name bits",
+      "observed": {
+        "rows": 19,
+        "substituted_or_marked_value": "1.800",
+        "code": "000"
+      }
+    },
+    {
+      "name": "missing_required_vcas_accepted_by_extraction",
+      "defect_reproduced": true,
+      "expected": "refuse missing measured signal; never substitute contract nominal or case-name bits",
+      "observed": {
+        "rows": 19,
+        "substituted_or_marked_value": "1.800",
+        "code": "000"
+      }
+    },
+    {
+      "name": "missing_required_data_en_accepted_by_extraction",
+      "defect_reproduced": true,
+      "expected": "refuse missing measured signal; never substitute contract nominal or case-name bits",
+      "observed": {
+        "rows": 19,
+        "substituted_or_marked_value": "1.800",
+        "code": "000"
+      }
+    },
+    {
+      "name": "missing_required_pam0_accepted_by_extraction",
+      "defect_reproduced": true,
+      "expected": "refuse missing measured signal; never substitute contract nominal or case-name bits",
+      "observed": {
+        "rows": 19,
+        "substituted_or_marked_value": "NOT_OBSERVED",
+        "code": "000"
+      }
+    },
+    {
+      "name": "published_source_identity_does_not_match_committed_blobs",
+      "defect_reproduced": true,
+      "mismatches": [
+        "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/figures/dc_iv_curves.svg",
+        "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/figures/dc_ladder_at_1p20V.svg"
+      ],
+      "expected": "all published identities equal delivered Git bytes or explicitly mark stale historical record and publish a current replacement"
+    }
+  ],
+  "reproduced_count": 7,
+  "any_defect_reproduced": true
+}

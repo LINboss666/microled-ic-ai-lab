@@ -53,6 +53,11 @@ def check(directory):
     problems = []
     dut = merged(directory, 'dut')
     pre = merged(directory, 'preflight')
+    try:
+        matrix = DC.validate_dc_matrix(dut)
+    except DC.Refuse as error:
+        matrix = None
+        problems.append(str(error))
     if len(dut) != 152:
         problems.append('%d DUT rows, the matrix declares 8 codes x 19 points = 152' % len(dut))
     if len(pre) != 152:
@@ -78,8 +83,10 @@ def check(directory):
     if len(pairs) != len(CASES):
         problems.append('the eight codes do not sit on eight distinct native answers (%d)'
                         % len(pairs))
-    print('DC_MATRIX_CHECK: %s (%d dut rows, %d preflight rows, problems: %s)'
+    print('DC_MATRIX_CHECK: %s (%d dut rows, %d preflight rows, unique keys %s of %s, problems: %s)'
           % ('PASS' if not problems else 'FAIL', len(dut), len(pre),
+             matrix['keys_unique'] if matrix else 'refused',
+             matrix['keys_expected'] if matrix else 152,
              '; '.join(problems) if problems else 'none'))
     return 0 if not problems else 1
 
@@ -194,40 +201,60 @@ REQUIRED_SIGNALS = ('data_out', 'clamp_node', 'vdd18', 'vcas', 'data_en', 'pam0'
 
 def observe(directory):
     """what the build actually delivered per case, so an optional internal observation that came back
-    under another name is stated instead of quietly assumed away"""
+    under another name is stated instead of quietly assumed away. DATA-7C-B-DC-R1: an answer that is not
+    on this machine is NOT_OBSERVED and the verdict is NOT_RUN, because a table of nothing observed is
+    not a pass on the required set."""
     import sc1_read_psf as PSF
     report = {'task_id': DC.TASK_ID, 'written_utc': DC.now(),
               'rule': 'the deck asks for these signals; a name the answer does not carry is '
-                      'NOT_OBSERVED under that name, and the required set is never optional',
+                      'NOT_OBSERVED under that name, and the required set is never optional. A case '
+                      'whose native answer is not on this machine is NOT_OBSERVED and cannot '
+                      'contribute a PASS to the verdict.',
               'cases': {}}
-    missing_required = []
+    missing_required, not_run = [], []
     for case_id in CASES:
         raw = os.path.join(directory, 'r20261026_015212_376554_%s_dut.raw' % case_id)
         if not os.path.isfile(raw):
-            report['cases'][case_id] = {'state': 'NO_RAW_ON_THIS_MACHINE'}
+            report['cases'][case_id] = {'state': 'NO_RAW_ON_THIS_MACHINE',
+                                        'observation_state': 'NOT_OBSERVED',
+                                        'delivered': 0, 'requested_but_not_delivered': [],
+                                        'required_present': False,
+                                        'note': 'no native answer was read here, so nothing about this '
+                                                'case is observed; this is not a pass'}
+            not_run.append(case_id)
             continue
         groups, axis = PSF.parse(raw)
         columns, _axis_values = PSF.as_columns(groups, axis)
         delivered = sorted(columns)
         absent = [name for name in REQUESTED_SAVES if name not in columns]
         extra = [name for name in delivered if name not in REQUESTED_SAVES and name != axis]
-        report['cases'][case_id] = {'axis': axis, 'delivered': len(delivered),
-                                   'requested_but_not_delivered': absent,
-                                   'delivered_under_other_names': extra,
-                                   'required_present': all(name in columns for name in
+        report['cases'][case_id] = {'state': 'READ_FROM_THE_NATIVE_ANSWER',
+                                    'observation_state': 'OBSERVED', 'raw_sha256': DC.sha_file(raw),
+                                    'axis': axis, 'delivered': len(delivered),
+                                    'requested_but_not_delivered': absent,
+                                    'delivered_under_other_names': extra,
+                                    'required_present': all(name in columns for name in
                                                            REQUIRED_SIGNALS)}
         if not all(name in columns for name in REQUIRED_SIGNALS):
             missing_required.append(case_id)
-    report['verdict'] = ('PASS' if not missing_required else 'FAIL')
+    if missing_required:
+        verdict = 'FAIL'
+    elif not_run:
+        verdict = 'NOT_RUN'
+    else:
+        verdict = 'PASS'
+    report['verdict'] = verdict
     report['required_signals_missing_in'] = missing_required
+    report['not_run_because_no_answer_on_this_machine'] = not_run
     report['not_observed_overall'] = sorted(set(sum([report['cases'][case].get(
         'requested_but_not_delivered', []) for case in CASES], [])))
     target = os.path.join(directory, 'observed_signals.json')
     io.open(target, 'wb').write((json.dumps(report, indent=1, sort_keys=True, ensure_ascii=False) + chr(10)).encode('utf-8'))
-    print('DC_OBSERVE %s cases=%d not_observed=%s required_missing=%s -> %s'
-          % (report['verdict'], len(CASES), ','.join(report['not_observed_overall']) or 'none',
-             ','.join(missing_required) or 'none', os.path.basename(target)))
-    return 0 if not missing_required else 1
+    print('DC_OBSERVE %s cases=%d not_observed=%s required_missing=%s not_run=%s -> %s'
+          % (verdict, len(CASES), ','.join(report['not_observed_overall']) or 'none',
+             ','.join(missing_required) or 'none', ','.join(not_run) or 'none',
+             os.path.basename(target)))
+    return 0 if verdict == 'PASS' else (3 if verdict == 'NOT_RUN' else 1)
 
 
 def main(argv):

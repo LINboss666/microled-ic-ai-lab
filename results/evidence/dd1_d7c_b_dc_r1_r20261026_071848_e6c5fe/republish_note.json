@@ -1,0 +1,65 @@
+{
+ "all_previous_publishes": [
+  {
+   "archived_into": "previous_publish_20261026T072827Z",
+   "files": [
+    {
+     "path": "commands.csv",
+     "sha256": "9a2e282d2ae93211b68ed7ee3b4df7842804ad14e007df9a95cdefb79126dcb8"
+    },
+    {
+     "path": "frozen_comparison.csv",
+     "sha256": "9ca2d0f4268ae235f8eb16fe54d1b40e902f743aacede3655c41f99f4dcd0e4b"
+    },
+    {
+     "path": "git_checks.csv",
+     "sha256": "aa3bcc62767479e051e7a30495ed6cea8f55115f1d80e47abac94689cda37d0b"
+    },
+    {
+     "path": "launches_reconcile.csv",
+     "sha256": "0908242967339b34ed3bc5815436662499c1b3b65c696c6e333eb46e2098027b"
+    },
+    {
+     "path": "source_identity.csv",
+     "sha256": "538b8ffed430aebc875bcf5431a3ebac2ce943f7800cccb60ed3f89f15b16e7c"
+    },
+    {
+     "path": "verification_summary.json",
+     "sha256": "d41da4d627f8d9171b30c16414b40e4a4dc4f27ddd717d83141854fcd50ebb8f"
+    }
+   ]
+  }
+ ],
+ "latest_move": {
+  "files": [
+   {
+    "path": "commands.csv",
+    "sha256": "9a2e282d2ae93211b68ed7ee3b4df7842804ad14e007df9a95cdefb79126dcb8"
+   },
+   {
+    "path": "frozen_comparison.csv",
+    "sha256": "9ca2d0f4268ae235f8eb16fe54d1b40e902f743aacede3655c41f99f4dcd0e4b"
+   },
+   {
+    "path": "git_checks.csv",
+    "sha256": "aa3bcc62767479e051e7a30495ed6cea8f55115f1d80e47abac94689cda37d0b"
+   },
+   {
+    "path": "launches_reconcile.csv",
+    "sha256": "0908242967339b34ed3bc5815436662499c1b3b65c696c6e333eb46e2098027b"
+   },
+   {
+    "path": "source_identity.csv",
+    "sha256": "538b8ffed430aebc875bcf5431a3ebac2ce943f7800cccb60ed3f89f15b16e7c"
+   },
+   {
+    "path": "verification_summary.json",
+    "sha256": "d41da4d627f8d9171b30c16414b40e4a4dc4f27ddd717d83141854fcd50ebb8f"
+   }
+  ],
+  "into": "previous_publish_20261026T072827Z"
+ },
+ "reason_of_the_latest_move": "this round re-exported its evidence directory without copying the two figures (they are referenced where they are, so the whitespace they carry is not moved into the range of this round), and the report prose gained the clarification that 756 check output lines are the 378 flagged locations; the tables were therefore re-derived over the same reused measurements",
+ "rule": "a published record is never overwritten or deleted; every earlier set of tables stays in its own previous_publish_ directory and this note is recomputed from those directories, so no move can lose an earlier one",
+ "written_utc": "2026-10-26T07:28:27Z"
+}

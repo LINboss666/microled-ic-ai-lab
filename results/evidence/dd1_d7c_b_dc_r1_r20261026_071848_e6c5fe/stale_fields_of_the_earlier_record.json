@@ -1,0 +1,28 @@
+{
+ "earlier_record": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554",
+ "rows": [
+  {
+   "git_blob_bytes": 44364,
+   "git_blob_sha256": "72875fece666daaf913d16a132f12ab2dbd5f1056667729acda1771fadc2806b",
+   "path": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/figures/dc_iv_curves.svg",
+   "recorded_bytes": 45208,
+   "recorded_sha256": "65922cb5aa653456bdd6e9022595431b1018d3811fb76b8c863420f5127fb58b",
+   "recorded_value_is_the_CRLF_form_of_the_blob": true,
+   "replacement": "referenced where it is and re-declared by this record from the blob at 337563fc22699e480bf7fc82890750c126a50654: results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/figures/dc_iv_curves.svg"
+  },
+  {
+   "git_blob_bytes": 18923,
+   "git_blob_sha256": "cc0c0e6bac183665af2c2106e3cb94d9bb36c6071ee14ac0972b302d6f6d3b0b",
+   "path": "results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/figures/dc_ladder_at_1p20V.svg",
+   "recorded_bytes": 19316,
+   "recorded_sha256": "3d79420396e0c6b7bff69ee1eb538aae4e4c666e672c2a906955dc02e18b3ce0",
+   "recorded_value_is_the_CRLF_form_of_the_blob": true,
+   "replacement": "referenced where it is and re-declared by this record from the blob at 337563fc22699e480bf7fc82890750c126a50654: results/evidence/dd1_d7c_b_dc_r20261026_015212_376554/figures/dc_ladder_at_1p20V.svg"
+  }
+ ],
+ "rule": "the earlier record stays published exactly as it is. These are the fields it cannot reproduce from Git: it hashed the working copy, which carried CRLF, while the repository carries LF. Nothing about the figures content or the measurements is in question, and this round does not redraw them: the replacement rows are the committed bytes named here.",
+ "task_id": "DATA-7C-B-DC-R1",
+ "what_stays_as_published": "the 152 native rows, the eight preflight witnesses, the sixteen-row account and the electrical verdict",
+ "what_this_record_replaces": "the source identity of the two figures and the unit of the worst residual in the dc_judgement gate",
+ "written_utc": "2026-10-26T07:18:56Z"
+}
