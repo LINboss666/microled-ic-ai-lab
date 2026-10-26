@@ -37,6 +37,11 @@ RTL_LIMIT = TRC.RTL_LIMIT
 AUTH_VAR = 'QODER_TR_AUTHORISED'
 ROLES = ('preflight', 'dut', 'debug')
 ACCOUNT_STATES = ('REQUESTED', 'CONFIRMED', 'FAILED', 'UNCERTAIN')
+# a row counts as a process only if it carries one of these; the names differ between the two
+# accounts, so the reconciliation looks at both rather than at one ledger's vocabulary
+PROCESS_EVIDENCE_KEYS = ('exe_sha256', 'deck_sha256', 'rc', 'raw_sha256', 'vcd_sha256',
+                         'log_sha256')
+COMPILED_TARGET_KEYS = ('exe_sha256', 'deck_sha256')
 ORDER = list(TRC.CASE_ORDER)
 MIN_FREE_KB = 400000
 DISK_REFUSAL = 'DISK_HEADROOM_BELOW_LIMIT'
@@ -115,25 +120,32 @@ class Account(object):
         return len(self.rows)
 
     def duplicate_bookings(self):
-        """row ids this round has reconciled as a second booking of one already-charged process.
+        """row ids reconciled as a second booking of one already-charged process.
 
-        A recovery never refunds a process that may have started. A booking that provably never
-        reached a process is a different thing, and it is reconciled in a named file rather than by
-        editing the ledger.
+        A recovery never refunds a process that may have started. A booking frees nothing unless the
+        ledger itself proves it: the row must carry no executable digest and no return code, and it
+        must name a witness row reserved in the same second for the same case that does carry the
+        process evidence. Anything else stays charged.
         """
         if not self.reconcile or not os.path.isfile(self.reconcile):
             return []
         data = json.loads(io.open(self.reconcile, encoding='utf-8').read())
+        by_id = dict((row[self.header[0]], row) for row in self.rows)
         out = []
         for booking in data.get('duplicate_bookings', []):
             duplicate = booking.get(self.header[0]) or booking.get('sim_id')
-            digest = (booking.get('evidence') or {}).get('log_sha256') or ''
-            witness = [row for row in self.rows
-                       if digest and row.get('log_sha256') == digest
-                       and row[self.header[0]] != duplicate]
-            if duplicate and witness and any(row[self.header[0]] == duplicate
-                                             for row in self.rows):
-                out.append(duplicate)
+            witness = (booking.get('evidence') or {}).get('witness_row')
+            if duplicate not in by_id or witness not in by_id or duplicate == witness:
+                continue
+            dup_row, wit_row = by_id[duplicate], by_id[witness]
+            if any(dup_row.get(key) for key in PROCESS_EVIDENCE_KEYS):
+                continue
+            if not any(wit_row.get(key) for key in COMPILED_TARGET_KEYS):
+                continue
+            if (dup_row.get('requested_utc') != wit_row.get('requested_utc')
+                    or dup_row.get('case_id') != wit_row.get('case_id')):
+                continue
+            out.append(duplicate)
         return out
 
     def processes(self):
@@ -517,19 +529,34 @@ def selftest():
     os.remove(account_path + '.bad')
     reconcile = account_path + '.reconcile.json'
     settled = Account(account_path, 3, ACCOUNT_HEADER, 'T')
-    io.open(reconcile, 'wb').write((json.dumps({'duplicate_bookings': [
-        {'launch_id': 'T001', 'evidence': {'log_sha256': settled.rows[1]['log_sha256']}}]})
-        + '\n').encode('utf-8'))
+    # T003 is the shape of a double booking: reserved, never settled, no executable and no return
+    # code, while T002 beside it carries the process that actually ran
+    settled.rows[2]['requested_utc'] = settled.rows[1]['requested_utc'] = (
+        settled.rows[0]['requested_utc'])
+    settled.rows[2]['case_id'] = settled.rows[1]['case_id']
+    settled.rows[1]['deck_sha256'] = 'd' * 64      # the target the process actually ran
+    settled.flush()
+    booking = json.dumps({'duplicate_bookings': [
+        {'launch_id': 'T003', 'evidence': {'witness_row': 'T002'}}]}) + '\n'
+    io.open(reconcile, 'wb').write(booking.encode('utf-8'))
     checked = Account(account_path, 3, ACCOUNT_HEADER, 'T', reconcile=reconcile)
-    record('a duplicate booking is honoured only when another row carries the cited process log',
+    record('a duplicate booking is honoured only against a row that carries the process evidence',
            checked.processes() == 2 and checked.remaining() == 1,
            (checked.processes(), checked.remaining()))
-    io.open(reconcile, 'wb').write((json.dumps({'duplicate_bookings': [
-        {'launch_id': 'T001', 'evidence': {'log_sha256': 'f' * 64}}]}) + '\n').encode('utf-8'))
+    tainted = Account(account_path, 3, ACCOUNT_HEADER, 'T')
+    tainted.rows[2]['rc'] = '1'
+    tainted.flush()
     forged = Account(account_path, 3, ACCOUNT_HEADER, 'T', reconcile=reconcile)
-    record('a booking citing a log no row carries cannot free the budget',
+    record('a booking that carries process evidence of its own stays charged',
            forged.processes() == 3 and forged.remaining() == 0,
            (forged.processes(), forged.remaining()))
+    witness = Account(account_path, 3, ACCOUNT_HEADER, 'T')
+    witness.rows[1]['deck_sha256'] = ''
+    witness.rows[2]['rc'] = ''
+    witness.flush()
+    empty_witness = Account(account_path, 3, ACCOUNT_HEADER, 'T', reconcile=reconcile)
+    record('a witness row without an executable cannot vouch for a duplicate',
+           empty_witness.processes() == 3, empty_witness.processes())
     os.remove(reconcile)
     record('the deck account stamps every run copy with the committed contract digest',
            not DECK.check_account(account_of_masters(), require_all=False),

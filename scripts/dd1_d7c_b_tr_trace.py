@@ -158,7 +158,11 @@ def segment_frames(vcd):
 def frame_details(vcd, frame, plan, tick_ps):
     """one frame: the loaded code, t0, the measured conduction and the protocol evidence"""
     edges = vcd['edges']
-    window = lambda name: [(t, v) for t, v in edges[name] if frame['start_ps'] <= t <= frame['end_ps']]
+    # a frame runs up to, but not including, the reset fall that opens the next one: that instant is
+    # the asynchronous clear of the next frame, and reading it as part of this frame would report the
+    # version and pam of a running frame as having moved inside it
+    window = lambda name: [(t, v) for t, v in edges[name]
+                           if frame['start_ps'] <= t < frame['end_ps']]
     latch_rises = [t for t, v in window('latch_stb') if v == 1]
     if len(latch_rises) != 1:
         raise Refuse('frame %d shows %d latch requests, the protocol allows exactly one'
@@ -192,8 +196,8 @@ def frame_details(vcd, frame, plan, tick_ps):
                      % frame['index'])
     t0 = [t for t in vcd['clk_rises_ps'] if t >= obs[0]][0]
     lead = t0 - obs[0]
-    de = [(t, v) for t, v in edges['data_en'] if t >= t0 and t <= frame['end_ps']]
-    segments = B7T.segments_of(de, t0, frame['end_ps'])
+    de = [(t, v) for t, v in edges['data_en'] if t >= t0 and t < frame['end_ps']]
+    segments = B7T.segments_of(de, t0, frame['end_ps'] - 1)
     mode = _value_at(edges['mode'], latch_edge - 1)
     version = _value_at(edges['cfg_version'], latch_edge)
     fault_rises = [t for t, v in window('fault') if v == 1]
@@ -243,7 +247,7 @@ def check_frames(vcd, frames, case_id):
                             'accepted LATCH steps it by exactly one'
                             % (tag, row['cfg_version_after_latch'], row['cfg_version_before_latch']))
         steps = [pair for pair in vcd['edges']['cfg_version']
-                 if row['latch_edge_ps'] <= pair[0] <= row['end_ps']]
+                 if row['latch_edge_ps'] <= pair[0] < row['end_ps']]
         if len(steps) != 1 or steps[0][0] != row['latch_edge_ps']:
             problems.append('%s: cfg_version moves %d time(s) after its latch edge (%s), a frame may '
                             'carry exactly one accepted LATCH and the recovery after an abort may '
@@ -436,13 +440,17 @@ def run_vvp(case_id, exe, run_dir, account=None, run_id='', timeout=600):
     """one vvp start, charged before it runs; a failure keeps its charge"""
     root, tools_map, env = tools()
     group = group_for(case_id)
+    # the testbench names its own dump after the group, so one compiled executable gives one
+    # deterministic trace per group; the log is named after the ledger row so a retry cannot erase
+    # the record of the attempt before it
     vcd = os.path.join(run_dir, dump_name(case_id))
-    log = os.path.join(run_dir, '%s.vvp.log' % case_id)
-    args = [tools_map['vvp'], exe] + group['plusargs']
     row = None
     if account is not None:
         row = account.reserve({'case_id': case_id, 'kind': 'vvp', 'run_id': run_id,
                                'exe_sha256': sha_file(exe)})
+    log = os.path.join(run_dir, '%s_%s.vvp.log'
+                       % (case_id, row['sim_id'] if row else 'unaccounted'))
+    args = [tools_map['vvp'], exe] + group['plusargs']
     try:
         proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env,
                                 cwd=run_dir)
@@ -469,11 +477,11 @@ def run_vvp(case_id, exe, run_dir, account=None, run_id='', timeout=600):
             account.settle(row, 'FAILED', rc, refusal='NO_TRACE_PRODUCED')
         raise Refuse('vvp produced no trace for %s' % case_id)
     if account is not None:
-        account.settle(row, 'CONFIRMED', rc, raw_sha=sha_file(vcd), log_sha=sha_file(log))
+        account.settle(row, 'CONFIRMED', rc, vcd_sha256=sha_file(vcd), log_sha256=sha_file(log))
     return {'case_id': case_id, 'rc': rc, 'vcd': vcd, 'vcd_sha256': sha_file(vcd),
             'vcd_bytes': os.path.getsize(vcd), 'log': log, 'log_sha256': sha_file(log),
-            'markers': re.findall(r'^MARK .*$', out, re.M), 'launch_id':
-            row['launch_id'] if row else 'NOT_CHARGED'}
+            'markers': re.findall(r'^MARK .*$', out, re.M),
+            'sim_id': (row or {}).get('sim_id', 'NOT_CHARGED')}
 
 
 def selftest():
