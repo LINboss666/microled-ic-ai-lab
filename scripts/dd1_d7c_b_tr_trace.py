@@ -170,10 +170,14 @@ def frame_details(vcd, frame, plan, tick_ps):
         raise Refuse('frame %d: the latch request never falls again, so it spans the rest of the '
                      'frame and the sampling edge cannot be named' % frame['index'])
     after = [t for t in vcd['clk_rises_ps'] if latch_rises[0] < t <= latch_falls[0]]
-    if len(after) != 1:
-        raise Refuse('frame %d: the latch request spans %d reference edges, it must span exactly one'
-                     % (frame['index'], len(after)))
+    if not after:
+        raise Refuse('frame %d: the latch request falls again before any reference edge samples it, '
+                     'so no LATCH edge exists' % frame['index'])
+    # the accepted RTL keys on the request edge, so the LATCH is taken at the first rising edge after
+    # the request rises; holding the request up across later edges cannot latch twice, and the version
+    # step below is what proves that
     latch_edge = after[0]
+    version_before = _value_at(edges['cfg_version'], latch_edge - 1)
     # the value in effect at the sampling edge comes from the whole series: a bus that does not change
     # between two frames is not re-dumped, so reading only inside the window would lose it
     ht = _value_at(edges['cfg_hyb_time'], latch_edge - 1)
@@ -200,6 +204,8 @@ def frame_details(vcd, frame, plan, tick_ps):
             'cfg_hyb_time': ht, 'cfg_hyb_pam': code, 'cfg_hyb_pam_value': pam,
             'mode_at_latch': mode,
             'latch_edge_ps': latch_edge, 'cfg_version_after_latch': version,
+            'cfg_version_before_latch': version_before,
+            'latch_edges_spanned': len(after),
             't0_ps': t0, 'tick_lead_ps': lead,
             'accepted_tick_ps': obs, 'accepted_ticks': len(obs),
             'tick_pulses_raised': len(tick_rises),
@@ -232,6 +238,16 @@ def check_frames(vcd, frames, case_id):
         if row['mode_at_latch'] != 1:
             problems.append('%s: the mode sampled at the latch edge is %d, Hybrid needs 1'
                             % (tag, row['mode_at_latch']))
+        if row['cfg_version_after_latch'] != row['cfg_version_before_latch'] + 1:
+            problems.append('%s: cfg_version reads %d at the latch edge and was %d before it, one '
+                            'accepted LATCH steps it by exactly one'
+                            % (tag, row['cfg_version_after_latch'], row['cfg_version_before_latch']))
+        steps = [pair for pair in vcd['edges']['cfg_version']
+                 if row['latch_edge_ps'] <= pair[0] <= row['end_ps']]
+        if len(steps) != 1 or steps[0][0] != row['latch_edge_ps']:
+            problems.append('%s: cfg_version moves %d time(s) after its latch edge (%s), a frame may '
+                            'carry exactly one accepted LATCH and the recovery after an abort may '
+                            'not add a second one' % (tag, len(steps), steps[:3]))
         if row['tick_lead_ps'] != int(LEAD_NS * 1000):
             problems.append('%s: the accepted tick is %d ps before its consuming edge, the bench '
                             'convention is %d ps' % (tag, row['tick_lead_ps'],
@@ -386,16 +402,23 @@ def compile_tb(run_dir, tag='trhyb'):
             'charged_as_rtl_simulation': False}
 
 
-def run_vvp(case_id, exe, run_dir, account=None, timeout=600):
+def dump_name(case_id):
+    """the testbench names its own dump after the group, because this iverilog build has no runtime
+    $valueplusarg; the runner must look for exactly that name"""
+    return 'dd1_d7c_b_tr_hyb_%s.vcd' % ('120' if case_id == 'HYB-120' else '200')
+
+
+def run_vvp(case_id, exe, run_dir, account=None, run_id='', timeout=600):
     """one vvp start, charged before it runs; a failure keeps its charge"""
     root, tools_map, env = tools()
     group = group_for(case_id)
-    vcd = os.path.join(run_dir, '%s.vcd' % case_id)
+    vcd = os.path.join(run_dir, dump_name(case_id))
     log = os.path.join(run_dir, '%s.vvp.log' % case_id)
-    args = [tools_map['vvp'], exe] + group['plusargs'] + ['+VCD=%s' % vcd]
+    args = [tools_map['vvp'], exe] + group['plusargs']
     row = None
     if account is not None:
-        row = account.reserve(case_id, 'rtl_sim', sha_file(exe), run_id=account.run_id)
+        row = account.reserve({'case_id': case_id, 'kind': 'vvp', 'run_id': run_id,
+                               'exe_sha256': sha_file(exe)})
     try:
         proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env,
                                 cwd=run_dir)
@@ -523,6 +546,23 @@ def selftest():
         refused = True
     record('an accepted tick that is not one tick period after its neighbour is refused',
            refused, '')
+    bad = dict((key, list(value)) for key, value in signals.items())
+    extra = [(row['latch_edge_ps'], row['cfg_version_after_latch']) for row in
+              convert('HYB-200', fixture)['frames']]
+    record('one accepted LATCH per frame steps cfg_version by exactly one at its latch edge',
+           extra == [(row['latch_edge_ps'], index + 1) for index, row in
+                     enumerate(convert('HYB-200', fixture)['frames'])], extra)
+    bad = dict((key, list(value)) for key, value in signals.items())
+    first = [row for row in convert('HYB-200', fixture)['frames']][0]
+    bad['cfg_version'] = list(bad['cfg_version']) + [(first['end_ps'] - 20000, 9)]
+    write_vcd(fixture + '.ver.vcd', bad)
+    refused = False
+    try:
+        convert('HYB-200', fixture + '.ver.vcd')
+    except Refuse:
+        refused = True
+    record('a second cfg_version step inside one frame is refused, not read as a harmless re-latch',
+           refused, '')
     safety = synthetic_signals(group_ns=120, safety=True)
     write_vcd(fixture + '.safe.vcd', safety)
     made_s = convert('HYB-120', fixture + '.safe.vcd')
@@ -618,9 +658,10 @@ def synthetic_signals(group_ns=200, safety=False):
         put('cfg_valid', load, 1)
         latch_rise = next_rise(load) + 2000
         put('latch_stb', latch_rise, 1)
-        # the latch request spans exactly one reference edge: that edge is the sample
+        # the accepted bench holds the request across several reference edges: the RTL takes one
+        # LATCH, at the first edge that sees it, which is what the version step proves
         sample = next_rise(latch_rise)
-        put('latch_stb', sample + 2000, 0)
+        put('latch_stb', next_rise(sample + 20000) + 2000, 0)
         put('cfg_valid', sample + 2000, 0)
         version += 1
         put('cfg_version', sample, version)

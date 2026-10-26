@@ -53,7 +53,7 @@ def axis_tokens(path, axis):
 
 
 def value_tokens(path, name):
-    """the printed tokens of one column, before any conversion, for the display bound"""
+    """the printed tokens of one column: psfascii writes "name" then the value, before any conversion"""
     out, section = [], None
     for raw in io.open(path, encoding='utf-8', errors='replace').read().split('\n'):
         line = raw.strip()
@@ -63,8 +63,8 @@ def value_tokens(path, name):
         if section != 'value':
             continue
         parts = line.split()
-        if len(parts) == 2 and parts[1].strip('"') == name:
-            out.append(parts[0].strip('"'))
+        if len(parts) == 2 and parts[0].strip('"') == name:
+            out.append(parts[1].strip('"'))
     return out
 
 
@@ -223,8 +223,11 @@ def measure_window(case_id, window, windows, data, code, role, meta):
         if row is None:
             raise Refuse('%s %s: the delivered PWL declares no %s window for this emission window'
                          % (case_id, window['window_id'], name))
-    fall_start_lo = max(rise, flat['stop_ns'] - 2 * TRC.EDGE_NS)
-    fall = B7M.crossing(enable, TRC.ENABLE_MID_V, False, ns_to_ps(fall_start_lo),
+    # rise is in ps and flat_stop is in ns: mixing them in one max() would pick the larger number,
+    # not the later instant
+    rise_ns = rise * S_PER_PS * 1e9
+    fall_start_lo_ns = max(rise_ns, flat['stop_ns'] - 2 * TRC.EDGE_NS)
+    fall = B7M.crossing(enable, TRC.ENABLE_MID_V, False, ns_to_ps(fall_start_lo_ns),
                         ns_to_ps(tail['stop_ns']),
                         '%s %s fall' % (case_id, window['window_id']))
     if fall is None:
@@ -262,9 +265,11 @@ def measure_window(case_id, window, windows, data, code, role, meta):
                 'qtarget_dc_C': target_dc,
                 'err_nominal_LSB': (full['q'] - target_nominal) / qlsb,
                 'err_dynamic_LSB': (full['q'] - target_dc) / qlsb})
-    settle = settling(current, rise, target_nominal, ns_to_ps(flat['stop_ns']),
+    # settling is judged against the two target CURRENTS, not against the target charges: passing a
+    # coulomb figure here would make every window look un-settled because the band is 1e-6 wide
+    settle = settling(current, rise, inom, ns_to_ps(flat['stop_ns']),
                       '%s %s nominal' % (case_id, window['window_id']))
-    settle_dc = settling(current, rise, target_dc, ns_to_ps(flat['stop_ns']),
+    settle_dc = settling(current, rise, idc, ns_to_ps(flat['stop_ns']),
                          '%s %s dc' % (case_id, window['window_id']))
     out.update({'settling_nominal': settle['state'], 'settling_dc': settle_dc['state'],
                 'settling_start_ns': settle['settled_ns'] or '',
@@ -695,6 +700,32 @@ def selftest():
                'TR-LONG', {'window_id': 'W0', 'kind': 'emission', 'start_ns': 2500.0,
                            'stop_ns': 2900.0}, windows, data, '000', 'dut',
                {'raw_sha256': 'x', 'deck_sha256': 'y', 'launch_id': 'T', 'run_id': 'r'})), '')
+    fixture_windows = [{'window_id': 'W0', 'kind': 'emission', 'start_ns': 1050.0,
+                        'stop_ns': 2050.0},
+                       {'window_id': 'F0', 'kind': 'emission_flat', 'start_ns': 1100.0,
+                        'stop_ns': 2000.0},
+                       {'window_id': 'T0', 'kind': 'off_tail', 'start_ns': 2050.0,
+                        'stop_ns': 2500.0},
+                       {'window_id': 'O0', 'kind': 'pure_off', 'start_ns': 2100.0,
+                        'stop_ns': 2500.0},
+                       {'window_id': 'L0', 'kind': 'leak_last100', 'start_ns': 2400.0,
+                        'stop_ns': 2500.0}]
+    one = measure_window('TR-LONG', fixture_windows[0], fixture_windows, data, '000', 'dut',
+                         {'raw_sha256': 'x', 'deck_sha256': 'y', 'launch_id': 'T', 'run_id': 'r'})
+    record('the falling bound is taken in nanoseconds, not mixed with the picosecond rise',
+           abs(one['t50_ns'] - 1000.0) < 1e-6
+           and abs(one['fall50_ns'] - 2050.0) < 1e-6, (one['rise50_ns'], one['fall50_ns']))
+    record('the two charge columns are reported side by side from one measurement',
+           one['qtarget_nominal_C'] != one['qtarget_dc_C']
+           and abs(one['q_full_C'] - 1.875e-12) < 1e-21, one['q_full_C'])
+    record('the tail charge is integrated separately over its own window',
+           one['tail_q_C'] != one['q_full_C']
+           and abs(one['tail_q_C'] - 1.875e-6 * 49.5e-9) < 1e-21, one['tail_q_C'])
+    record('settling inside measure_window is judged against the target currents, not the charges',
+           one['settling_nominal'] == 'SETTLED' and one['settling_dc'] == 'SETTLED',
+           (one['settling_nominal'], one['settling_dc']))
+    record('the settling start is reported and is inside the pulse',
+           1050.0 <= float(one['settling_start_ns']) < 2000.0, one['settling_start_ns'])
     record('a required signal absent from the native answer names itself',
            _refuses(lambda: _load_missing()), '')
     return results

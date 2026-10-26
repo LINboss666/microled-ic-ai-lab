@@ -82,6 +82,7 @@ module tb_dd1_d7c_b_tr_hyb;
 
     integer group_ns = 120;
     reg [8*128:1] arg;
+    reg [8*128:1] dumpname;
 
     task automatic edges;
         input integer n;
@@ -231,10 +232,13 @@ module tb_dd1_d7c_b_tr_hyb;
             $display("TB-ERROR GROUP must be 120 or 200, got %0d", group_ns);
             $finish;
         end
-        if ($valueplusarg("VCD", arg) <= 0) arg = "dd1_d7c_b_tr_hyb.vcd";
-        $dumpfile(arg);
+        // this iverilog build resolves $valueplusarg only at runtime, so the trace name is derived
+        // from the group instead: one compiled executable, one deterministic dump per run
+        if (group_ns == 200) dumpname = "dd1_d7c_b_tr_hyb_200.vcd";
+        else dumpname = "dd1_d7c_b_tr_hyb_120.vcd";
+        $dumpfile(dumpname);
         $dumpvars(1, tb_dd1_d7c_b_tr_hyb);
-        $display("MARK start group_ns %0d tick_div %0d", group_ns, tick_div);
+        $display("MARK start group_ns %0d tick_div %0d dump %0s", group_ns, tick_div, dumpname);
         clk_run = 1'b1;
         edges(2);
         frame(0, 0, 0);                     // B0, the black frame

@@ -228,10 +228,15 @@ def prepare_remote(link, run_id):
         raise Refuse('the guest run directories could not be created under %s: %s'
                      % (paths['base'], (text or '').strip()[:160]))
     account = account_of_masters()
+    if 'masters' not in account:
+        raise Refuse('the deck account carries no master list, so nothing can be pushed as the '
+                     'netlib include target')
     for row in account['masters']:
         digest = sha_file(repo(row['path']))
-        if digest != row['stripped_sha256']:
-            raise Refuse('%s on disk is not the byte string the strip account carries' % row['path'])
+        if digest != row['sha256_on_disk'] or digest != row['blob_sha256_at_base']:
+            raise Refuse('%s on disk is %s, the account says %s and the base blob says %s'
+                         % (row['path'], digest[:12], row['sha256_on_disk'][:12],
+                            row['blob_sha256_at_base'][:12]))
         link.push(repo(row['path']), '%s/%s' % (paths['masters'], row['name']),
                   'master-' + row['name'])
     link.push(repo('scripts/run_spectre.sh'), '%s/run_spectre.sh' % paths['scripts'], 'executor')
@@ -362,6 +367,12 @@ def observe(raw_path, case_id, role, run_id, launch_id, deck_sha):
     missing = [name for name in required if name not in have]
     int_present = [name for name in internals if name in have]
     int_missing = [name for name in internals if name not in have]
+    if role == 'preflight':
+        # a meter preflight instantiates no DUT, so its hierarchy saves were deliberately removed;
+        # calling that PARTIAL would misreport a designed absence as an observation gap
+        internal_status = 'NOT_APPLICABLE_IDEAL_LOADS'
+    else:
+        internal_status = 'COMPLETE' if not int_missing else 'PARTIAL'
     monotonic = all(data['series']['time'][index][0] > data['series']['time'][index - 1][0]
                     if 'time' in data['series'] else True
                     for index in range(1, len(data['series'].get('time', []))))
@@ -373,7 +384,7 @@ def observe(raw_path, case_id, role, run_id, launch_id, deck_sha):
             'required_present': ','.join(present), 'required_missing': ','.join(missing),
             'internal_present': '%d/%d' % (len(int_present), len(internals)),
             'internal_missing': ','.join(int_missing) or '-',
-            'internal_status': 'COMPLETE' if not int_missing else 'PARTIAL',
+            'internal_status': internal_status,
             'time_quantum_ps': data['quantum_ps'], 'value_quantum_V': data['value_quantum_V'],
             't_first_ns': data['t_first_ps'] / 1000.0, 't_last_ns': data['t_last_ps'] / 1000.0,
             'monotonic': 'YES' if monotonic else 'NO',

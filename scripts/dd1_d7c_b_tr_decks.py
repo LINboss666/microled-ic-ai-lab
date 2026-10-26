@@ -49,6 +49,10 @@ def sha_bytes(data):
     return TRC.sha_bytes(data)
 
 
+def sha_file(path):
+    return TRC.sha_file(path)
+
+
 def body(text):
     """statement lines only: comments are excluded, so a comment rewrite cannot mask a real one"""
     return [line for line in text.split('\n') if not line.startswith('//')]
@@ -268,6 +272,13 @@ def write_all(hyb=None):
         merged.pop('statement_lines_differing', None)
         account['preflights'].append(merged)
     with io.open(repo('%s/deck_account.json' % DECK_DIR), 'wb') as handle:
+        account['masters'] = [{'name': os.path.basename(master['path']),
+                               'path': master['path'],
+                               'sha256_on_disk': sha_file(repo(master['path'])),
+                               'blob_sha256_at_base': master['blob_sha256_at_base'],
+                               'equal_to_base_blob': (sha_file(repo(master['path']))
+                                                      == master['blob_sha256_at_base'])}
+                              for master in TRC.contract()['deck_rules']['masters']]
         handle.write((json.dumps(account, indent=1, sort_keys=True, ensure_ascii=False) + '\n')
                      .encode('utf-8'))
     return account

@@ -86,6 +86,50 @@
    "tick_ns": "120"
   }
  ],
+ "masters": [
+  {
+   "blob_sha256_at_base": "d535ad0112c31952d0c51e314cc57054b631b18c7457ba8088d970945ca6de77",
+   "equal_to_base_blob": true,
+   "name": "dd1_d6_inv18.scs",
+   "path": "spectre/dd1_d7c_b_dc/masters/dd1_d6_inv18.scs",
+   "sha256_on_disk": "d535ad0112c31952d0c51e314cc57054b631b18c7457ba8088d970945ca6de77"
+  },
+  {
+   "blob_sha256_at_base": "379536efb1dd9b2626e93ec384d572c734d5c1b398881c6de6ce4405e230c293",
+   "equal_to_base_blob": true,
+   "name": "dd1_d6_bias_core.scs",
+   "path": "spectre/dd1_d7c_b_dc/masters/dd1_d6_bias_core.scs",
+   "sha256_on_disk": "379536efb1dd9b2626e93ec384d572c734d5c1b398881c6de6ce4405e230c293"
+  },
+  {
+   "blob_sha256_at_base": "55c08f25eaee6184c8be263e8762559f51ff1c66be37c0a0dfb1c2b0e8f1e5de",
+   "equal_to_base_blob": true,
+   "name": "dd1_d7c_a_gates.scs",
+   "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_gates.scs",
+   "sha256_on_disk": "55c08f25eaee6184c8be263e8762559f51ff1c66be37c0a0dfb1c2b0e8f1e5de"
+  },
+  {
+   "blob_sha256_at_base": "f4d458d21d82e91c3f0e4012cc8fb568c090c1bb364fd486bf0b82a469163b5a",
+   "equal_to_base_blob": true,
+   "name": "dd1_d7c_a_pam_dec.scs",
+   "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_pam_dec.scs",
+   "sha256_on_disk": "f4d458d21d82e91c3f0e4012cc8fb568c090c1bb364fd486bf0b82a469163b5a"
+  },
+  {
+   "blob_sha256_at_base": "289ae1dd8edf91c806c2c2dfecc15d9b3b8524ed987849d0094bab1124369a3f",
+   "equal_to_base_blob": true,
+   "name": "dd1_d7c_a_sink_unit.scs",
+   "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_sink_unit.scs",
+   "sha256_on_disk": "289ae1dd8edf91c806c2c2dfecc15d9b3b8524ed987849d0094bab1124369a3f"
+  },
+  {
+   "blob_sha256_at_base": "8489616e4826fccdd7516d7b02764ae3850ad3e4476181b5ae0f5249ec5a08a5",
+   "equal_to_base_blob": true,
+   "name": "dd1_d7c_a_pam_top.scs",
+   "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_pam_top.scs",
+   "sha256_on_disk": "8489616e4826fccdd7516d7b02764ae3850ad3e4476181b5ae0f5249ec5a08a5"
+  }
+ ],
  "not_written": [
   {
    "case_id": "HYB-120",
