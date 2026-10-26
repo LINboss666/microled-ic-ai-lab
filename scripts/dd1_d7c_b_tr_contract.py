@@ -320,6 +320,18 @@ def nominal_A(code):
 # ---- the contract ------------------------------------------------------------------------------
 
 def contract():
+    """the contract as one derived value; the git and file reads below are the same for every caller,
+    so the result is cached per process and no consumer pays for a subprocess per deck"""
+    if _CONTRACT_CACHE:
+        return _CONTRACT_CACHE[0]
+    _CONTRACT_CACHE.append(_contract())
+    return _CONTRACT_CACHE[0]
+
+
+_CONTRACT_CACHE = []
+
+
+def _contract():
     schedule = schedule_rows()
     idc = dc_idc_by_code()
     cases = []

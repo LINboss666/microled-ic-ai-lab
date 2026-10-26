@@ -84,6 +84,86 @@
    "source_sha256": "7067156ade6f3c01ec7941a8fbfc68828e375e963dde690bfeac675f58bab6a2",
    "statement_lines_equal_to_source": true,
    "tick_ns": "120"
+  },
+  {
+   "case_id": "HYB-120",
+   "identity_lines_added": 44,
+   "maxstep_ns": "0.1",
+   "path": "spectre/dd1_d7c_b_tr/HYB-120.scs",
+   "role": "dut",
+   "sha256": "66bf817daf027b4c97ded93aa7eae7bdfd9ae9e59606b6a3ee379b98928671cf",
+   "source_sha256": "54506e945920713fba2682d0d535aa04c1cd9b1718b12395bf83c4841c8f78d5",
+   "statement_line_count_equal": true,
+   "statement_lines_differing": [
+    [
+     20,
+     "Vdata_en (data_en 0) vsource type=pwl wave=[0n 0.000 1000n 0.000 1100n 1.800 2000n 1.800 2100n 0.000 2500n 0.000 2600n 1.800 3500n 1.800 3600n 0.000 4000n 0.000 4100n 1.800 5000n 1.800 5100n 0.000 5500n 0.000 5600n 1.800 6500n 1.800 6600n 0.000 7000n 0.000 7100n 1.800 8000n 1.800 8100n 0.000 8500n 0.000 8600n 1.800 9500n 1.800 9600n 0.000 10000n 0.000 10100n 1.800 11000n 1.800 11100n 0.000 11500n 0.000 11600n 1.800 12500n 1.800 12600n 0.000 13050n 0.000]",
+     "Vdata_en (data_en 0) vsource type=pwl wave=[0n 0.000 12515n 0.000 12517n 1.800 12635n 1.800 12637n 0.000 22665n 0.000 22667n 1.800 22905n 1.800 22907n 0.000 32815n 0.000 32817n 1.800 40495n 1.800 40497n 0.000 42965n 0.000 42967n 1.800 43268n 1.800 43270n 0.000 44686n 0.000]"
+    ],
+    [
+     21,
+     "VPAM0 (pam0 0) vsource type=pwl wave=[0n 0.000 2299n 0.000 2301n 1.800 3799n 1.800 3801n 0.000 5299n 0.000 5301n 1.800 6799n 1.800 6801n 0.000 8299n 0.000 8301n 1.800 9799n 1.800 9801n 0.000 11299n 0.000 11301n 1.800]",
+     "VPAM0 (pam0 0) vsource type=pwl wave=[0n 0.000 22545n 0.000 22547n 1.800 31477n 1.800 31479n 0.000 32695n 0.000 32697n 1.800 41627n 1.800 41629n 0.000 42845n 0.000 42847n 1.800 44686n 1.800]"
+    ],
+    [
+     22,
+     "VPAM1 (pam1 0) vsource type=pwl wave=[0n 0.000 2299n 0.000 2301n 0.000 3799n 0.000 3801n 1.800 5299n 1.800 5301n 1.800 6799n 1.800 6801n 0.000 8299n 0.000 8301n 0.000 9799n 0.000 9801n 1.800 11299n 1.800 11301n 1.800]",
+     "VPAM1 (pam1 0) vsource type=pwl wave=[0n 0.000 22545n 0.000 22547n 1.800 31477n 1.800 31479n 0.000 32695n 0.000 32697n 1.800 41627n 1.800 41629n 0.000 42845n 0.000 42847n 1.800 44686n 1.800]"
+    ],
+    [
+     23,
+     "VPAM2 (pam2 0) vsource type=pwl wave=[0n 0.000 2299n 0.000 2301n 0.000 3799n 0.000 3801n 0.000 5299n 0.000 5301n 0.000 6799n 0.000 6801n 1.800 8299n 1.800 8301n 1.800 9799n 1.800 9801n 1.800 11299n 1.800 11301n 1.800]",
+     "VPAM2 (pam2 0) vsource type=pwl wave=[0n 0.000 32695n 0.000 32697n 1.800 41627n 1.800 41629n 0.000 42845n 0.000 42847n 1.800 44686n 1.800]"
+    ],
+    [
+     34,
+     "tran_case tran stop=13050.000n maxstep=2.000n",
+     "tran_case tran stop=44686.000n maxstep=0.100n"
+    ]
+   ],
+   "template_case": "TR-LONG",
+   "tick_ns": "120",
+   "vcd_sha256": "0d07a25a55787e3c6eda262e9c03d9b01c30fb21790ef90d49d3af5d604a191f"
+  },
+  {
+   "case_id": "HYB-200",
+   "identity_lines_added": 44,
+   "maxstep_ns": "0.1",
+   "path": "spectre/dd1_d7c_b_tr/HYB-200.scs",
+   "role": "dut",
+   "sha256": "3cb8e6b77170a74cca7bb65044192342c97dd5cf0bb7183b94460658d799e859",
+   "source_sha256": "54506e945920713fba2682d0d535aa04c1cd9b1718b12395bf83c4841c8f78d5",
+   "statement_line_count_equal": true,
+   "statement_lines_differing": [
+    [
+     20,
+     "Vdata_en (data_en 0) vsource type=pwl wave=[0n 0.000 1000n 0.000 1100n 1.800 2000n 1.800 2100n 0.000 2500n 0.000 2600n 1.800 3500n 1.800 3600n 0.000 4000n 0.000 4100n 1.800 5000n 1.800 5100n 0.000 5500n 0.000 5600n 1.800 6500n 1.800 6600n 0.000 7000n 0.000 7100n 1.800 8000n 1.800 8100n 0.000 8500n 0.000 8600n 1.800 9500n 1.800 9600n 0.000 10000n 0.000 10100n 1.800 11000n 1.800 11100n 0.000 11500n 0.000 11600n 1.800 12500n 1.800 12600n 0.000 13050n 0.000]",
+     "Vdata_en (data_en 0) vsource type=pwl wave=[0n 0.000 18035n 0.000 18037n 1.800 18235n 1.800 18237n 0.000 33705n 0.000 33707n 1.800 34105n 1.800 34107n 0.000 49375n 0.000 49377n 1.800 62175n 1.800 62177n 0.000 63896n 0.000]"
+    ],
+    [
+     21,
+     "VPAM0 (pam0 0) vsource type=pwl wave=[0n 0.000 2299n 0.000 2301n 1.800 3799n 1.800 3801n 0.000 5299n 0.000 5301n 1.800 6799n 1.800 6801n 0.000 8299n 0.000 8301n 1.800 9799n 1.800 9801n 0.000 11299n 0.000 11301n 1.800]",
+     "VPAM0 (pam0 0) vsource type=pwl wave=[0n 0.000 33585n 0.000 33587n 1.800 48037n 1.800 48039n 0.000 49255n 0.000 49257n 1.800 63896n 1.800]"
+    ],
+    [
+     22,
+     "VPAM1 (pam1 0) vsource type=pwl wave=[0n 0.000 2299n 0.000 2301n 0.000 3799n 0.000 3801n 1.800 5299n 1.800 5301n 1.800 6799n 1.800 6801n 0.000 8299n 0.000 8301n 0.000 9799n 0.000 9801n 1.800 11299n 1.800 11301n 1.800]",
+     "VPAM1 (pam1 0) vsource type=pwl wave=[0n 0.000 33585n 0.000 33587n 1.800 48037n 1.800 48039n 0.000 49255n 0.000 49257n 1.800 63896n 1.800]"
+    ],
+    [
+     23,
+     "VPAM2 (pam2 0) vsource type=pwl wave=[0n 0.000 2299n 0.000 2301n 0.000 3799n 0.000 3801n 0.000 5299n 0.000 5301n 0.000 6799n 0.000 6801n 1.800 8299n 1.800 8301n 1.800 9799n 1.800 9801n 1.800 11299n 1.800 11301n 1.800]",
+     "VPAM2 (pam2 0) vsource type=pwl wave=[0n 0.000 49255n 0.000 49257n 1.800 63896n 1.800]"
+    ],
+    [
+     34,
+     "tran_case tran stop=13050.000n maxstep=2.000n",
+     "tran_case tran stop=63896.000n maxstep=0.100n"
+    ]
+   ],
+   "template_case": "TR-LONG",
+   "tick_ns": "200",
+   "vcd_sha256": "0798d47c83d22b119e7fa4a678449c2e929f23cf106d540c6c4a181ea7211eb1"
   }
  ],
  "masters": [
@@ -130,16 +210,7 @@
    "sha256_on_disk": "8489616e4826fccdd7516d7b02764ae3850ad3e4476181b5ae0f5249ec5a08a5"
   }
  ],
- "not_written": [
-  {
-   "case_id": "HYB-120",
-   "state": "AWAITING_ACCEPTED_RTL_VCD"
-  },
-  {
-   "case_id": "HYB-200",
-   "state": "AWAITING_ACCEPTED_RTL_VCD"
-  }
- ],
+ "not_written": [],
  "preflights": [
   {
    "body_equal_after_removing_identity_block": true,
@@ -266,6 +337,44 @@
    "source_sha256": "7067156ade6f3c01ec7941a8fbfc68828e375e963dde690bfeac675f58bab6a2",
    "statement_lines_equal_to_source": true,
    "tick_ns": "120"
+  },
+  {
+   "case_id": "HYB-120",
+   "dut_line_replaced": 1,
+   "expected_clamp_current_A": 1.4999999999999999e-05,
+   "expected_reference_node_V": 0.7499999999999999,
+   "hierarchical_saves_dropped": 26,
+   "identity_lines_added": 44,
+   "load_ohms": 80000.0,
+   "maxstep_ns": "0.1",
+   "path": "spectre/dd1_d7c_b_tr/HYB-120.pre.scs",
+   "reference_ohms": 50000.0,
+   "role": "preflight",
+   "sha256": "3414710860cfc0a6d315337f16b30ce354ce748e9de9e2c42c65c174d74ef482",
+   "source_sha256": "54506e945920713fba2682d0d535aa04c1cd9b1718b12395bf83c4841c8f78d5",
+   "statement_line_count_equal": true,
+   "template_case": "TR-LONG",
+   "tick_ns": "120",
+   "vcd_sha256": "0d07a25a55787e3c6eda262e9c03d9b01c30fb21790ef90d49d3af5d604a191f"
+  },
+  {
+   "case_id": "HYB-200",
+   "dut_line_replaced": 1,
+   "expected_clamp_current_A": 1.4999999999999999e-05,
+   "expected_reference_node_V": 0.7499999999999999,
+   "hierarchical_saves_dropped": 26,
+   "identity_lines_added": 44,
+   "load_ohms": 80000.0,
+   "maxstep_ns": "0.1",
+   "path": "spectre/dd1_d7c_b_tr/HYB-200.pre.scs",
+   "reference_ohms": 50000.0,
+   "role": "preflight",
+   "sha256": "573463e76f93f727e8faf2ca6af106a83f9f8c0e1bfe8287012e464db0a2d913",
+   "source_sha256": "54506e945920713fba2682d0d535aa04c1cd9b1718b12395bf83c4841c8f78d5",
+   "statement_line_count_equal": true,
+   "template_case": "TR-LONG",
+   "tick_ns": "200",
+   "vcd_sha256": "0798d47c83d22b119e7fa4a678449c2e929f23cf106d540c6c4a181ea7211eb1"
   }
  ],
  "rule": "a prepared run copy is the frozen deck text plus TR-IDENTITY comment lines; a hybrid run copy substitutes only the four logic waves, the tran stop and the first comment line of the frozen TR-120 body",

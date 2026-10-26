@@ -44,6 +44,7 @@ PROCESS_EVIDENCE_KEYS = ('exe_sha256', 'deck_sha256', 'rc', 'raw_sha256', 'vcd_s
 COMPILED_TARGET_KEYS = ('exe_sha256', 'deck_sha256')
 ORDER = list(TRC.CASE_ORDER)
 MIN_FREE_KB = 400000
+BUDGET_FILE = 'spectre_budget_adjustments.json'
 DISK_REFUSAL = 'DISK_HEADROOM_BELOW_LIMIT'
 ACCOUNT_HEADER = ('launch_id', 'task_id', 'run_id', 'case_id', 'role', 'state', 'requested_utc',
                   'ended_utc', 'rc', 'deck_sha256', 'raw_sha256', 'log_sha256', 'refusal',
@@ -214,7 +215,7 @@ class Account(object):
 
 def spectre_account(out_dir, run_id=''):
     path = os.path.join(out_dir, 'spectre_launch_account.csv')
-    account = Account(path, SPECTRE_LIMIT, ACCOUNT_HEADER, 'T')
+    account = Account(path, spectre_ceiling(out_dir), ACCOUNT_HEADER, 'T')
     if run_id:
         for row in account.rows:
             if not row['run_id']:
@@ -322,8 +323,52 @@ def expected_preflight_sha(case_id):
     raise Refuse('%s has no preflight entry in the deck account' % case_id)
 
 
+def evidence_dir_of(out_dir):
+    """a launch may only land in this round's evidence directory.
+
+    Without this, a selftest that passed the authorisation variable started two real Spectre
+    processes into a scratch directory: they consumed the licence and the guest, each left a raw
+    whose digest is recorded in the archived stray ledger and whose bytes were then deleted, and
+    they appeared nowhere near the measurement they were supposed to refuse. The two processes are
+    charged against the approved ceiling by spectre_budget_adjustments.json.
+    """
+    normalised = os.path.abspath(out_dir).replace(os.sep, '/')
+    return re.search(r'/results/evidence/dd1_d7c_b_tr_r[0-9]{8}_[0-9]{6}_[0-9a-f]{6}$',
+                     normalised) is not None
+
+
+def evidence_like(directory):
+    """a path with the shape of this round evidence directory, used only by the refusal fixtures; it
+    is never created, because every refusal returns before any file is written"""
+    return os.path.join(directory, 'results', 'evidence',
+                        'dd1_d7c_b_tr_r00000000_000000_000000')
+
+
+def budget_strays(directory):
+    """processes that ran outside this account and are charged against the ceiling anyway"""
+    path = os.path.join(directory, BUDGET_FILE)
+    if not os.path.isdir(directory) or not os.path.isfile(path):
+        return 0, []
+    data = json.loads(io.open(path, encoding='utf-8').read())
+    return sum(int(row['processes']) for row in data.get('adjustments', [])), data.get(
+        'adjustments', [])
+
+
+def spectre_ceiling(directory):
+    stray, _rows = budget_strays(directory)
+    ceiling = SPECTRE_LIMIT - stray
+    if ceiling < 1:
+        raise Refuse('the recorded stray processes (%d) already consume the whole approved ceiling '
+                     'of %d' % (stray, SPECTRE_LIMIT))
+    return ceiling
+
+
 def launch(case_id, role, out_dir, run_id, timeout=1800, done_preflight=None):
     """one Spectre process, charged before it starts; a refusal writes nothing into the evidence"""
+    if not evidence_dir_of(out_dir):
+        return 7, {'refusal': '%s is not this round evidence directory, so no process may start '
+                              'under an evidence-shaped account outside it' % out_dir,
+                   'case_id': case_id, 'role': role, 'process_started': False}
     problem = authorisation_problem(role, case_id, done_preflight)
     if problem:
         return 5, {'refusal': problem, 'case_id': case_id, 'role': role, 'process_started': False}
@@ -462,29 +507,33 @@ def selftest():
     record('no authorisation variable means no launch and no file',
            authorisation_problem('dut', 'TR-LONG').startswith(AUTH_VAR),
            authorisation_problem('dut', 'TR-LONG'))
-    rc, answer = launch('TR-LONG', 'dut', out, 'r_selftest')
+    rc, answer = launch('TR-LONG', 'dut', evidence_like(ROOT), 'r_selftest')
     record('an unauthorised launch returns rc 5 without starting a process',
            rc == 5 and answer['process_started'] is False, answer)
-    record('the refusal path wrote no account row',
-           not os.path.isfile(os.path.join(out, 'spectre_launch_account.csv'))
-           or spectre_account(out).occupied() == 0, '')
+    record('the refusal path created no evidence directory and no account row',
+           not os.path.exists(evidence_like(ROOT)), '',)
     os.environ[AUTH_VAR] = '1'
     try:
-        rc, answer = launch('TR-999', 'dut', out, 'r_selftest')
+        rc, answer = launch('TR-LONG', 'dut', out, 'r_selftest')
+        record('a launch outside the round evidence directory is refused before any process',
+               rc == 7 and answer['process_started'] is False, answer)
+        record('and it left no account file behind',
+               not os.path.isfile(os.path.join(out, 'spectre_launch_account.csv')), '')
+        rc, answer = launch('TR-999', 'dut', evidence_like(ROOT), 'r_selftest')
         record('a case outside the approved nine is refused by name', rc == 5 and
                'nine approved cases' in answer['refusal'], answer)
-        rc, answer = launch('TR-LONG', 'probe', out, 'r_selftest')
+        rc, answer = launch('TR-LONG', 'probe', evidence_like(ROOT), 'r_selftest')
         record('an unknown role is refused', rc == 5, answer)
-        rc, answer = launch('TR-120', 'dut', out, 'r_selftest', done_preflight=set())
+        rc, answer = launch('TR-120', 'dut', evidence_like(ROOT), 'r_selftest',
+                            done_preflight=set())
         record('a DUT run without its own meter preflight is refused',
                rc == 5 and 'preflight' in answer['refusal'], answer)
         absent = [case for case in ORDER
                   if not os.path.isfile(os.path.join(repo(DECK_DIR), case + '.scs'))]
-        record('the prepared run copies are all present before any launch',
-               set(absent) <= set(TRC.HYB_CASES), absent)
-        rc, answer = launch('HYB-120', 'dut', out, 'r_selftest', done_preflight={'HYB-120'})
-        record('a hybrid launch is refused until its own run copy exists',
-               rc == 5 and 'run copy' in answer['refusal'], answer)
+        record('a run copy exists for every approved case before any launch', not absent, absent)
+        missing = [case for case in ORDER
+                   if not os.path.isfile(os.path.join(repo(DECK_DIR), case + '.pre.scs'))]
+        record('a meter preflight copy exists for every approved case', not missing, missing)
     finally:
         os.environ.pop(AUTH_VAR, None)
     account_path = os.path.join(out, 'account_ceiling.csv')

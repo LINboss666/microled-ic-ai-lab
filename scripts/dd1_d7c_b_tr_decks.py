@@ -208,6 +208,11 @@ def deck_text(case_id, hyb=None):
     facts['frame_count'] = hyb['frame_count']
     facts['stop_ns'] = '%g' % hyb['stop_ns']
     facts['substituted_lines'] = 'the four logic pwl waves, the tran line and the first comment'
+    facts['analysis_declared'] = 'tran_case tran stop=%.3fn maxstep=%.3fn' % (
+        hyb['stop_ns'], MAXSTEP_NS[case_id])
+    facts['inherited_comment_blocks'] = ('they describe the template case %s; the delivered '
+                                         'statements and this identity block are the condition of '
+                                         'this run copy' % HYB_TEMPLATE_CASE)
     for node in HYB_SIGNALS:
         pts = hyb['waves'][node]
         if not pts:
@@ -222,8 +227,36 @@ def deck_text(case_id, hyb=None):
     return text, facts, template
 
 
+def load_hyb_inputs():
+    """the converted hybrid inputs, from the committed evidence copy when there is one.
+
+    The waves of a hybrid case are derived from the accepted RTL's four-state VCD, so re-emitting a
+    run copy must be possible from delivered artefacts alone; a scratch file is accepted only while
+    the round is still running.
+    """
+    candidates = []
+    if os.environ.get('QODER_TR_HYB_INPUTS'):
+        candidates.append(os.environ['QODER_TR_HYB_INPUTS'])
+    for name in sorted(os.listdir(repo(os.path.join('results', 'evidence')))):
+        if name.startswith('dd1_d7c_b_tr_r'):
+            candidates.append(repo('results/evidence/%s/hyb_inputs.json' % name))
+    candidates.append(os.path.join(ROOT, 'review', 'scratch', 'tr_hyb_inputs.json'))
+    for path in candidates:
+        if os.path.isfile(path):
+            data = json.loads(io.open(path, encoding='utf-8').read())
+            out = {}
+            for case_id, payload in data.items():
+                out[case_id] = dict(payload,
+                                    waves=dict((node, [(int(t), v) for t, v in series])
+                                               for node, series in payload['waves'].items()))
+            return out, path
+    raise Refuse('no converted hybrid input was found; a hybrid run copy cannot be written from a '
+                 'hand-typed wave list')
+
+
 def write_all(hyb=None):
-    hyb = hyb or {}
+    if hyb is None:
+        hyb = load_hyb_inputs()[0]
     if not os.path.isdir(repo(DECK_DIR)):
         os.makedirs(repo(DECK_DIR))
     account = {'task_id': TASK_ID, 'base_sha': BASE_SHA,
@@ -600,6 +633,12 @@ def main(argv):
         account = write_all()
         print('TR_DECKS_EMITTED %d decks %d preflights awaiting=%d'
               % (len(account['decks']), len(account['preflights']), len(account['not_written'])))
+        return 0
+    if mode == '--emit-prepared':
+        account = write_all(hyb={})
+        print('TR_DECKS_EMITTED_PREPARED %d decks %d preflights awaiting=%s'
+              % (len(account['decks']), len(account['preflights']),
+                 [row['case_id'] for row in account['not_written']]))
         return 0
     if mode == '--selftest':
         results = selftest()
