@@ -1714,10 +1714,11 @@ def main():
                            abs(float(row['t50_ns']) - (float(row['fall50_ns'])
                                                        - float(row['rise50_ns']))) <= 1e-6,
                            row['t50_ns']))
-            checks.append(('Q splits into Qpos and Qneg without cancelling'
-                           % row['window_id'],
-                           abs(float(row['q_full_C']) - (float(row['q_pos_C'])
-                                                         + float(row['q_neg_C']))) <= 1e-24,
+            checks.append(('Q of %s splits into Qpos and signed Qneg without cancelling, within the '
+                           'precision the table exports' % row['window_id'],
+                           abs(float(row['q_full_C']) - (float(row['q_pos_C']) + float(row['q_neg_C'])))
+                           <= 1e-11 * max(abs(float(row['q_full_C'])), abs(float(row['q_pos_C'])),
+                                          abs(float(row['q_neg_C'])), 1e-30),
                            row['q_full_C']))
         if row['kind'].startswith('black'):
             checks.append(('black window %s %s has a zero target and no invented T50'
