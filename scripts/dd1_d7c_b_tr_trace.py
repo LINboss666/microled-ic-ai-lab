@@ -40,6 +40,8 @@ TICK_NS = {'HYB-120': 120.0, 'HYB-200': 200.0}
 RAMP_PS = int(TRC.EDGE_NS * 1000)               # 2000 ps total edge width
 SHIFT_PS = int(TRC.SHIFT_NS * 1000)             # the whole wave moves right by 1000 ns
 BOUNDARY_TICKS = 65                             # 64 intervals plus the tick that ends the window
+HYB_WINDOW_INTERVALS = 64                       # FULL_HYB in the accepted RTL: cfg_hyb_time 63 maps
+                                                # to 64 intervals, so a whole Hybrid window is 64 T
 T5_TOLERANCE_NS = 1.0
 LEAD_NS = 5.0                                   # the accepted bench raises the tick 5 ns early
 
@@ -329,6 +331,125 @@ def check_frames(vcd, frames, case_id):
     return problems
 
 
+def log_path(run_dir, case_id, sim_id, account=None):
+    """the log of one charged start, found by its ledger row and by nothing else
+
+    The logs are named after the row that paid for them, so a marker list can only be read from the
+    run it came from. A case-name lookup would find the log of an earlier failed attempt beside it,
+    and that is exactly what once paired the 200 ns trace with the 120 ns group banner. The two
+    confirmed starts of the first round predate that naming, so a legacy case-named log is accepted
+    only when its digest is the one the ledger row carries for that start.
+    """
+    named = os.path.join(run_dir, '%s_%s.vvp.log' % (case_id, sim_id))
+    if os.path.isfile(named):
+        return named
+    legacy = os.path.join(run_dir, '%s.vvp.log' % case_id)
+    if not os.path.isfile(legacy):
+        raise Refuse('%s: no vvp log for start %s at %s or %s: the markers of a run are evidence '
+                     'only when they are read from the log that start wrote'
+                     % (case_id, sim_id, named, legacy))
+    rows = [row for row in (account.rows if account else []) if row['sim_id'] == sim_id]
+    bound = rows[0].get('log_sha256') if rows else ''
+    if not bound:
+        raise Refuse('%s: the case-named log %s is not bound to start %s by any digest in the '
+                     'account, so it cannot be used as that start%s attestation'
+                     % (case_id, legacy, sim_id, sim_id))
+    actual = sha_file(legacy)
+    if actual != bound:
+        raise Refuse('%s: the case-named log hashes to %s while start %s settled with log %s'
+                     % (case_id, actual[:12], sim_id, bound[:12]))
+    return legacy
+
+
+def markers_of_log(run_dir, case_id, sim_id, account=None):
+    return re.findall(r'^MARK .*$', io.open(log_path(run_dir, case_id, sim_id, account),
+                                            encoding='utf-8', errors='replace').read(), re.M)
+
+
+def check_markers(markers, case_id, made):
+    """the testbench attestations must be the attestations of the trace this conversion read"""
+    problems = []
+    starts = [line for line in markers if line.startswith('MARK start')]
+    ends = [line for line in markers if line.startswith('MARK end')]
+    tick_ns = TICK_NS[case_id]
+    if len(starts) != 1 or len(ends) != 1:
+        problems.append('%s: %d start and %d end markers, the log of one run carries exactly one of '
+                        'each' % (case_id, len(starts), len(ends)))
+        return problems
+    for tag, line in (('start', starts[0]), ('end', ends[0])):
+        found = re.search(r'group_ns (\d+)', line)
+        if not found or float(found.group(1)) != tick_ns:
+            problems.append('%s: the %s marker declares group %s ns while this case is a %g ns tick, '
+                            'so the marker list is not from this run'
+                            % (case_id, tag, found.group(1) if found else '?', tick_ns))
+    dumped = re.search(r'dump (\S+)', starts[0])
+    if not dumped or dumped.group(1) != dump_name(case_id):
+        problems.append('%s: the start marker dumps into %s, the %g ns group dumps into %s'
+                        % (case_id, dumped.group(1) if dumped else '?', tick_ns,
+                           dump_name(case_id)))
+    frames = [line for line in markers if line.startswith('MARK frame')]
+    if len(frames) != made['frame_count']:
+        problems.append('%s: %d MARK frame lines against %d frames segmented out of the trace'
+                        % (case_id, len(frames), made['frame_count']))
+    for row, line in zip(made['frames'], frames):
+        ht = re.search(r'ht (\d+)', line)
+        if ht and int(ht.group(1)) != row['cfg_hyb_time']:
+            problems.append('%s frame %s: the marker says cfg_hyb_time %s, the trace measures %d'
+                            % (case_id, row['frame'], ht.group(1), row['cfg_hyb_time']))
+    safety = [line for line in markers if line.startswith('MARK safety')]
+    aborted = [row for row in made['frames'] if row.get('fault_rise_ps')]
+    if safety and not aborted:
+        problems.append('%s: the log marks a safety branch the trace does not show' % case_id)
+    if aborted and not safety:
+        problems.append('%s: the trace shows a fault inside a window the log never marked' % case_id)
+    return problems
+
+
+def measurement_windows(made):
+    """the enable-low regions this round must measure, derived from the frames, not typed in
+
+    A zero-code frame arms a window whose every interval is off, so no enable edge exists for the
+    window list to be derived from: Q and the peak are then taken over the whole 64-interval window,
+    Qtarget is 0, the QLSB is the same fixed one and no T50 is invented. The aborted safety frame is
+    measured from the fault's own closing edge to the end of the run, which is where the refused
+    re-arm lives; that region is its own black window and is never merged into the aborted one. Both
+    carry the same whole-wave shift as the delivered PWL, so the boundaries are in the deck time base.
+    """
+    case_id = made['case_id']
+    tick_ps = int(TICK_NS[case_id] * 1000)
+    out = []
+    for row in made['frames']:
+        if row['expected_intervals'] == 0 and not row['conducting_segments']:
+            start = row['t0_ps'] + SHIFT_PS
+            stop = start + HYB_WINDOW_INTERVALS * tick_ps
+            if stop > row['end_ps'] + SHIFT_PS:
+                raise Refuse('%s frame %s: the 64-interval window runs past the frame that the trace '
+                             'records, so the black window boundary cannot be claimed'
+                             % (case_id, row['frame']))
+            out.append({'window_id': 'BLACK_%s' % row['frame'], 'kind': 'black_64T',
+                        'code': row['cfg_hyb_pam'], 'start_ns': start / 1000.0,
+                        'stop_ns': stop / 1000.0, 'frame': row['frame'],
+                        'declared_by': 'scripts/dd1_d7c_b_tr_trace.py measurement_windows',
+                        'basis': 't0 plus %d intervals of %g ns, inside a frame that ends at %g ns'
+                                 % (HYB_WINDOW_INTERVALS, tick_ps / 1000.0,
+                                    (row['end_ps'] + SHIFT_PS) / 1000.0),
+                        'accepted_ticks': row['accepted_ticks']})
+        if row['kind'] == 'safety' and row.get('fault_rise_ps') and row.get('fault_fall_ps'):
+            start = row['fault_fall_ps'] + SHIFT_PS
+            stop = row['end_ps'] + SHIFT_PS
+            if stop <= start:
+                raise Refuse('%s frame %s: the run ends at or before the fault withdrawal'
+                             % (case_id, row['frame']))
+            out.append({'window_id': 'BLACK_POSTFAULT_%s' % row['frame'],
+                        'kind': 'black_post_fault_hold', 'code': row['cfg_hyb_pam'],
+                        'start_ns': start / 1000.0, 'stop_ns': stop / 1000.0,
+                        'frame': row['frame'],
+                        'declared_by': 'scripts/dd1_d7c_b_tr_trace.py measurement_windows',
+                        'basis': 'the actual fault closing edge to the end of the run, never the '
+                                 'planned 64 T', 'accepted_ticks': row['accepted_ticks']})
+    return out
+
+
 def pam_bit_edges(vcd, index):
     """the pam_sel bus split into the three single-bit series the bench drives"""
     out = []
@@ -613,6 +734,103 @@ def selftest():
     except Refuse:
         refused = True
     record('a safety fault that is not at t0 + 2.5T + 3 ns is refused', refused, '')
+    # ---- the marker cross-check and the derived black windows
+    def markers_for(case_id, converted):
+        tick = TICK_NS[case_id]
+        lines = ['MARK start group_ns %g tick_div %d dump %s'
+                 % (tick, int(tick // 10), dump_name(case_id))]
+        for row in converted['frames']:
+            lines.append('MARK frame ht %d pam %032s win_state 3 version %d proto_err 00000000 '
+                         'time %.3f ns' % (row['cfg_hyb_time'],
+                                            format(row['cfg_hyb_pam_value'], '032b'),
+                                            row['cfg_version_after_latch'],
+                                            row['end_ps'] / 1000.0))
+        aborted = [row for row in converted['frames'] if row.get('fault_rise_ps')]
+        if aborted:
+            lines.append('MARK safety_t0 %.3f ns ticks_raised 1' % (aborted[0]['t0_ps'] / 1000.0))
+            lines.append('MARK safety_fault %.3f ns ticks_raised 2'
+                         % (aborted[0]['fault_rise_ps'] / 1000.0))
+        lines.append('MARK end group_ns %g tick_div %d ticks_raised %d proto_err 00000000 '
+                     'time %.3f ns' % (tick, int(tick // 10),
+                                        sum(row['accepted_ticks'] for row in converted['frames']),
+                                        converted['frames'][-1]['end_ps'] / 1000.0))
+        return lines
+
+    own = markers_for('HYB-200', made)
+    record('the marker list of the run that wrote the trace passes the cross-check',
+           not check_markers(own, 'HYB-200', made), check_markers(own, 'HYB-200', made))
+    stale = [line.replace('group_ns 200', 'group_ns 120')
+             .replace(dump_name('HYB-200'), dump_name('HYB-120')) for line in own]
+    stale_problems = check_markers(stale, 'HYB-200', made)
+    record('markers read from the log of another group are refused, with the group named',
+           any('not from this run' in problem for problem in stale_problems)
+           and any('dumps into' in problem for problem in stale_problems), stale_problems)
+    record('markers from a five-frame run against a four-frame trace are refused',
+           any('against' in problem for problem in
+               check_markers(own + ['MARK frame ht 63 pam 0 win_state 3 version 1 proto_err 0 '
+                                    'time 1.000 ns'], 'HYB-200', made)), '')
+    record('a marker list that marks a safety branch the trace does not show is refused',
+           any('safety branch' in problem for problem in
+               check_markers(own[:1] + ['MARK safety_t0 1.000 ns ticks_raised 1'] + own[1:],
+                             'HYB-200', made)), '')
+    record('a marker list without the safety lines of an aborted frame is refused',
+           any('never marked' in problem for problem in
+               check_markers([line for line in markers_for('HYB-120', made_s)
+                              if 'MARK safety' not in line], 'HYB-120', made_s)), '')
+    record('a log whose ledger row is not on disk is refused before its markers are used',
+           _raises(lambda: markers_of_log(os.path.join(ROOT, 'review', 'scratch', 'tr_rtl'),
+                                          'HYB-200', 'R999')), '')
+    legacy_dir = os.path.join(ROOT, 'review', 'scratch', 'tr_rtl')
+    legacy_log = os.path.join(legacy_dir, 'LEG.vvp.log')
+    io.open(legacy_log, 'w', encoding='utf-8', newline='\n').write('\n'.join(own) + '\n')
+    bound = type('Account', (), {'rows': [{'sim_id': 'R7', 'log_sha256': sha_file(legacy_log)}]})()
+    record('a legacy case-named log is honoured when the ledger row carries exactly its digest',
+           markers_of_log(legacy_dir, 'LEG', 'R7', bound) == own, '')
+    unbound = type('Account', (), {'rows': [{'sim_id': 'R7', 'log_sha256': ''}]})()
+    record('a legacy log that no row binds to a start is refused',
+           _raises(lambda: markers_of_log(legacy_dir, 'LEG', 'R7', unbound)), '')
+    wrong = type('Account', (), {'rows': [{'sim_id': 'R7', 'log_sha256': '0' * 64}]})()
+    record('a legacy log whose digest differs from the one the row settled with is refused',
+           _raises(lambda: markers_of_log(legacy_dir, 'LEG', 'R7', wrong)), '')
+    os.remove(legacy_log)
+    dark = measurement_windows(made)
+    record('the zero-code frame becomes one black window of exactly 64 ticks',
+           len(dark) == 1 and dark[0]['kind'] == 'black_64T'
+           and abs((dark[0]['stop_ns'] - dark[0]['start_ns'])
+                   - HYB_WINDOW_INTERVALS * TICK_NS['HYB-200']) < 1e-9, dark)
+    zero = [row for row in made['frames'] if row['frame'] == 'B0'][0]
+    record('the black window starts at the consuming edge of the first accepted tick, shifted as the '
+           'waves are', abs(dark[0]['start_ns'] - (zero['t0_ps'] + SHIFT_PS) / 1000.0) < 1e-9,
+           (dark[0]['start_ns'], zero['t0_ps']))
+    emission_ns = [(pair[0] / 1000.0, pair[1] / 1000.0)
+                   for pair in TRC.windows_from_enable(made['waves']['data_en'])['emission']]
+    record('the derived black window overlaps no emission window of the delivered PWL',
+           all(not (row['start_ns'] < stop and start < row['stop_ns'])
+               for row in dark for start, stop in emission_ns), (dark, emission_ns))
+    record('the black window carries the code the frame actually held',
+           dark[0]['code'] == zero['cfg_hyb_pam'], (dark[0]['code'], zero['cfg_hyb_pam']))
+    dark_s = measurement_windows(made_s)
+    record('an aborted safety frame adds its own post-fault black window, never merged into it',
+           len(dark_s) == 2 and dark_s[-1]['kind'] == 'black_post_fault_hold', dark_s)
+    record('a fault falling edge in a frame that never armed is not read as an aborted window',
+           zero['fault_fall_ps'] is not None and zero['kind'] != 'safety'
+           and [row['window_id'] for row in dark] == ['BLACK_B0'],
+           (zero['fault_fall_ps'], zero['kind'], dark))
+    record('the post-fault window is declared only for the frame whose kind is safety',
+           sorted(set(row['frame'] for row in dark + dark_s
+                      if row['kind'] == 'black_post_fault_hold')) == ['A'],
+           [row['frame'] for row in dark + dark_s if row['kind'] == 'black_post_fault_hold'])
+    aborted = made_s['frames'][-1]
+    record('the post-fault window begins at the actual fault closing edge and ends with the run',
+           abs(dark_s[-1]['start_ns'] - (aborted['fault_fall_ps'] + SHIFT_PS) / 1000.0) < 1e-9
+           and abs(dark_s[-1]['stop_ns'] - (aborted['end_ps'] + SHIFT_PS) / 1000.0) < 1e-9,
+           (dark_s[-1]['start_ns'], dark_s[-1]['stop_ns']))
+    record('the post-fault window is at least the black hold the contract asks for',
+           dark_s[-1]['stop_ns'] - dark_s[-1]['start_ns'] >= TRC.SAFETY_BLACK_NS - 1e-9,
+           dark_s[-1]['stop_ns'] - dark_s[-1]['start_ns'])
+    record('every derived black window names the function that derived it',
+           all(row['declared_by'].startswith('scripts/dd1_d7c_b_tr_trace.py')
+               for row in dark + dark_s), [row['declared_by'] for row in dark + dark_s])
     record('the converter refuses a case it does not own', _raises(lambda: group_for('TR-120')),
            '')
     tb_text = io.open(repo(TB_PATH), encoding='utf-8', newline='').read()

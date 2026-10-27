@@ -1,0 +1,62 @@
+{
+ "actual_vvp_processes_started": 4,
+ "ceiling": 4,
+ "derived_by": "scripts/dd1_d7c_b_tr_record.py derive_duplicates",
+ "duplicate_bookings": [
+  {
+   "evidence": {
+    "log_file_of_that_process": "HYB-200.vvp.log",
+    "log_sha256": "bed59df6b8196598c8666608e8b0571f3119d4ae984ecb24eb4e5dcafd2aa954",
+    "shared_requested_utc": "2026-10-26T13:36:26Z",
+    "witness_exe_sha256": "30c5ccff763dacdf120071f6b2141ae21812ecb03aad26d0fbfad34205dc25fe",
+    "witness_rc": "1",
+    "witness_row": "R002"
+   },
+   "reason": "the driver reserved a row and TRACE.run_vvp then reserved its own for the same case in the same second, so R001 and R002 describe one process; R001 never reached a subprocess call, carries no executable digest and no return code",
+   "sim_id": "R001",
+   "witness_row": "R002"
+  }
+ ],
+ "ledger_rows_at_this_statement": [
+  "R001",
+  "R002",
+  "R003",
+  "R004",
+  "R005"
+ ],
+ "restated_from": "",
+ "restated_reason": "the ledger grew after the first statement, and a statement about a ledger must name the ledger it counts",
+ "run_id": "r20261026_132228_3fc148",
+ "stated_utc": "2026-10-26T15:03:19Z",
+ "statement_history": [
+  {
+   "actual_vvp_processes_started": 3,
+   "ceiling": 4,
+   "duplicate_bookings": [
+    {
+     "evidence": {
+      "log_file_of_that_process": "HYB-200.vvp.log",
+      "log_sha256": "bed59df6b8196598c8666608e8b0571f3119d4ae984ecb24eb4e5dcafd2aa954",
+      "shared_requested_utc": "2026-10-26T13:36:26Z",
+      "witness_exe_sha256": "30c5ccff763dacdf120071f6b2141ae21812ecb03aad26d0fbfad34205dc25fe",
+      "witness_rc": "1",
+      "witness_row": "R002"
+     },
+     "reason": "the driver reserved a row and TRACE.run_vvp then reserved its own for the same case in the same second, so R001 and R002 describe one process; R001 never reached a subprocess call, carries no executable digest and no return code",
+     "sim_id": "R001",
+     "witness_row": "R002"
+    }
+   ],
+   "ledger_rows_at_this_statement": [
+    "R001",
+    "R002",
+    "R003",
+    "R004"
+   ],
+   "run_id": "r20261026_132228_3fc148",
+   "superseded_utc": "2026-10-26T15:03:19Z",
+   "task_id": "DATA-7C-B-TR"
+  }
+ ],
+ "task_id": "DATA-7C-B-TR"
+}

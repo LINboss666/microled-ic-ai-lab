@@ -1,0 +1,11 @@
+{
+ "confirmed_without_trace_digest": [
+  "R004"
+ ],
+ "note": "a gap is named here so that no claim depends on the missing bytes",
+ "raws_kept_locally": 9,
+ "stray_launches": [
+  "T001",
+  "T002"
+ ]
+}

@@ -1,0 +1,881 @@
+{
+ "authorisation": {
+  "approval_date": "2026-10-26",
+  "approval_response": "YES",
+  "approval_timezone": "Asia/Shanghai",
+  "approved_task_book": "reports/tasks/DATA-7C-B-TR.md",
+  "existing_tracked_paths_may_be_modified": false,
+  "guest_write_root": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/<run_id>/",
+  "historical_budgets_may_be_borrowed": false,
+  "iverilog_compilations_count_as_rtl_simulations": false,
+  "merge_authorised": false,
+  "next_stage_authorised": false,
+  "oa_access_authorised": false,
+  "rtl_failure_or_debug_margin": 2,
+  "rtl_planned_main_runs": 2,
+  "rtl_simulation_total_limit": 4,
+  "spectre_failure_or_debug_margin": 6,
+  "spectre_planned_dut_runs": 9,
+  "spectre_planned_preflights": 9,
+  "spectre_total_limit": 24,
+  "status": "USER_APPROVED"
+ },
+ "base_sha": "61621f6e3d887082ecd6a7ecc1c771f8e509a24a",
+ "branch": "poc/data-pam-d7c-b-tr",
+ "budget": {
+  "approved_ceiling": 24,
+  "enforced_ceiling": 22,
+  "remaining": 3,
+  "rtl_approved_ceiling": 4,
+  "rtl_processes": 4,
+  "spectre_processes": 19,
+  "spectre_rows": 19,
+  "strays": 2
+ },
+ "carried_followups": [
+  {
+   "id": "F-TR-1",
+   "origin": "DC-R1 limited GO section 5(1)",
+   "text": "vss is a required signal alongside the supplies; this round carries it in every new extraction and observation list"
+  },
+  {
+   "id": "F-TR-2",
+   "origin": "DC-R1 limited GO section 5(1)",
+   "text": "the ideal iprobe two-terminal check uses 1e-06 V plus 1e-09 times the magnitude, is proven readable in this machine export precision, and is not a device drop spec"
+  }
+ ],
+ "contract_state": "USER_APPROVED_FOR_EXECUTION_DATA_7C_B_TR",
+ "convergence": {
+  "context_problems": [],
+  "pairs": [
+   {
+    "coarse": "TR-LONG",
+    "coarse_maxstep_ns": 2.0,
+    "maxstep_ns": 0.1,
+    "refined": "RS-FULL",
+    "tick_ns": 120.0,
+    "windows": 8
+   },
+   {
+    "coarse": "TR-120",
+    "coarse_maxstep_ns": 2.0,
+    "maxstep_ns": 0.1,
+    "refined": "RS-LOW",
+    "tick_ns": 120.0,
+    "windows": 1
+   },
+   {
+    "coarse": "TR-OFFCODE",
+    "coarse_maxstep_ns": 2.0,
+    "maxstep_ns": 0.1,
+    "refined": "RS-SWITCH",
+    "tick_ns": 120.0,
+    "windows": 4
+   }
+  ],
+  "rows": 13
+ },
+ "evidence_gaps": [
+  "R004 carries no trace digest in the RTL account because it was settled before the vcd column was fixed",
+  "the two stray launches left no raw bytes behind and their first log was overwritten; no number from them is published",
+  "the raws and guest logs stay on this machine; digests and local paths are published in provenance.json"
+ ],
+ "gate_summary": "36/36 gates pass",
+ "gates": [
+  {
+   "extra": "",
+   "name": "the record stage starts no simulator: the launch account is unchanged after it",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "every approved case has a published row table",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the prepared PAM cases publish exactly the frozen emission window count",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the two joint cases publish the emission windows their own enable waveforms declare",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "every published table re-reads at its header width on every line",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the black windows are the declared zero-code and post-fault regions",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "no black window invents a T50 and every one carries a zero target",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "every black window names the function that declared its boundary",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "each published row is bound to a confirmed launch of the delivered deck",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the meter witness passed for all nine meters before their DUT ran",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the three declared convergence pairs are computed with matching context",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the convergence verdict is per window against the frozen limit",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the seven statuses are published separately",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "a negative electrical finding is published as a FAIL, never folded into an aggregate",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the internal-node tables cover every flat step of every case",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "each flat step is observed for at least the 50 ns the task book asks for",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "TR-LONG carries all 26 branch columns and the shared reference on every step",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the selected branch count is cross-checked as code plus one on every step",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the delay attribution is measured on every emission window of the nine cases",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "a boundary the samples do not carry is named as unattributed, not filled in",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the carried DC-R1 followup F-TR-1 is implemented: vss is a required signal",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the carried DC-R1 followup F-TR-2 is closed with proof: terminals agree and the tolerance is expressible at the exported precision",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the hybrid stimulus is the trace of a charged start and its log says so",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the RTL reconciliation names the ledger it counts",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "every stray process is charged and the enforced ceiling still holds",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "0 existing tracked path was modified or deleted since the base",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the bytes this round adds stay under the 32 MiB ceiling",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "every modified file this round owns is staged beside the tables it produced",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "nothing this round touches is a deletion",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "no raw answer, log, unpacked trace or executable is a tracked candidate",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the shipped traces decompress byte for byte and are the traces the decks stamp",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "a confirmed start whose ledger row carries no trace digest is published as a gap",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "no credential, PDK, license or vendor absolute path string is in a tracked text file",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "published text is LF only",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the nine run copies still equal the frozen base plus their identity block",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "every delivered deck stamps the contract as it is committed at HEAD",
+   "verdict": "PASS"
+  }
+ ],
+ "generated_utc": "2026-10-27T03:51:48Z",
+ "head_sha": "86fc70862ad27e37a9d3838fe7b892f3e281828e",
+ "hybrid_marker_binding": {
+  "checked_from": [
+   "HYB-120",
+   "HYB-200"
+  ],
+  "problems": [],
+  "source": "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/hyb_inputs.json"
+ },
+ "merge_performed": false,
+ "negative_findings": {
+  "dynamic_over_limit": [
+   "TR-OFFCODE W3",
+   "RS-SWITCH W3",
+   "HYB-120 W2",
+   "HYB-120 W3"
+  ],
+  "nominal_over_limit": [
+   "TR-LONG W2",
+   "TR-LONG W3",
+   "TR-LONG W4",
+   "TR-LONG W5",
+   "TR-LONG W6",
+   "TR-LONG W7",
+   "RS-FULL W2",
+   "RS-FULL W3",
+   "RS-FULL W4",
+   "RS-FULL W5",
+   "RS-FULL W6",
+   "RS-FULL W7",
+   "HYB-120 W2",
+   "HYB-200 W2"
+  ]
+ },
+ "next_stage_authorised": false,
+ "not_run": [
+  "GRAY_LUT",
+  "FULL_MOS_GRAY_CONTROLLER",
+  "ARRAY_OR_LAYOUT",
+  "DRC_LVS_PEX",
+  "OPTICAL_MEASUREMENT",
+  "OA_ACCESS"
+ ],
+ "not_tracked_by_design": [
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_HYB-120-space-before.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_HYB-200-space-before.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_RS-FULL-space-before.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_RS-LOW-space-before.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_RS-SWITCH-space-before.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_TR-120-space-before.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_TR-200-space-before.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_TR-LONG-space-before.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_TR-OFFCODE-space-before.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_gc-HYB-120-dut.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_gc-HYB-120-preflight.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_gc-HYB-200-dut.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_gc-HYB-200-preflight.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_gc-RS-FULL-dut.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_gc-RS-FULL-preflight.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_gc-RS-LOW-dut.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_gc-RS-LOW-preflight.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_gc-RS-SWITCH-dut.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_gc-RS-SWITCH-preflight.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_gc-TR-120-dut.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_gc-TR-120-preflight.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_gc-TR-200-dut.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_gc-TR-200-preflight.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_gc-TR-LONG-dut.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_gc-TR-LONG-preflight.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_gc-TR-OFFCODE-dut.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_001_gc-TR-OFFCODE-preflight.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_002_HYB-120-space-after-gc.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_002_HYB-200-space-after-gc.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_002_RS-FULL-space-after-gc.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_002_RS-LOW-space-after-gc.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_002_RS-SWITCH-space-after-gc.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_002_TR-120-space-after-gc.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_002_TR-200-space-after-gc.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_002_TR-LONG-space-after-gc.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_002_TR-OFFCODE-space-after-gc.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_002_mkdir.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_003_master-dd1_d6_inv18.scs-verify.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_004_master-dd1_d6_bias_core.scs-verify.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_005_master-dd1_d7c_a_gates.scs-verify.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_006_master-dd1_d7c_a_pam_dec.scs-verify.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_007_master-dd1_d7c_a_sink_unit.scs-verify.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_008_master-dd1_d7c_a_pam_top.scs-verify.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_009_executor-verify.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_010_mkdir-case.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_011_deck-verify.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_012_dut-HYB-120.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_012_dut-HYB-200.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_012_dut-RS-FULL.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_012_dut-RS-LOW.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_012_dut-RS-SWITCH.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_012_dut-TR-120.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_012_dut-TR-200.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_012_dut-TR-LONG.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_012_dut-TR-OFFCODE.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_012_preflight-HYB-120.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_012_preflight-HYB-200.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_012_preflight-RS-FULL.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_012_preflight-RS-LOW.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_012_preflight-RS-SWITCH.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_012_preflight-TR-120.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_012_preflight-TR-200.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_012_preflight-TR-LONG.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_012_preflight-TR-OFFCODE.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_013_HYB-120-space-after.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_013_HYB-200-space-after.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_013_RS-FULL-space-after.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_013_RS-LOW-space-after.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_013_RS-SWITCH-space-after.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_013_TR-120-space-after.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_013_TR-200-space-after.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_013_TR-LONG-space-after.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/guest_logs/guest_013_TR-OFFCODE-space-after.txt",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_HYB-120_dut.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_HYB-120_dut.raw",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_HYB-120_preflight.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_HYB-120_preflight.raw",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_HYB-200_dut.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_HYB-200_dut.raw",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_HYB-200_preflight.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_HYB-200_preflight.raw",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_RS-FULL_dut.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_RS-FULL_dut.raw",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_RS-FULL_preflight.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_RS-FULL_preflight.raw",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_RS-LOW_dut.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_RS-LOW_dut.raw",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_RS-LOW_preflight.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_RS-LOW_preflight.raw",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_RS-SWITCH_dut.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_RS-SWITCH_dut.raw",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_RS-SWITCH_preflight.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_RS-SWITCH_preflight.raw",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_TR-120_dut.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_TR-120_dut.raw",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_TR-120_preflight.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_TR-120_preflight.raw",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_TR-200_dut.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_TR-200_dut.raw",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_TR-200_preflight.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_TR-200_preflight.raw",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_TR-LONG_dut.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_TR-LONG_dut.raw",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_TR-LONG_preflight.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_TR-LONG_preflight.raw",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_TR-OFFCODE_dut.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_TR-OFFCODE_dut.raw",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_TR-OFFCODE_preflight.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/r20261026_132228_3fc148_TR-OFFCODE_preflight.raw",
+   "kept on this machine: raw and log stay local by the task book"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/rtl/HYB-120.vvp.log",
+   "kept on this machine: it carries an absolute command line"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/rtl/HYB-200.vvp.log",
+   "kept on this machine: it carries an absolute command line"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/rtl/HYB-200_R005.vvp.log",
+   "kept on this machine: it carries an absolute command line"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/rtl/compile_HYB-120.json",
+   "kept on this machine: it carries an absolute command line"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/rtl/compile_HYB-200.json",
+   "kept on this machine: it carries an absolute command line"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/rtl/trhyb.vvp",
+   "kept on this machine: it carries an absolute command line"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/rtl/vvp_HYB-200.json",
+   "kept on this machine: it carries an absolute command line"
+  ],
+  [
+   "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/selftest_stray_launches/r_selftest_HYB-120_dut.log",
+   "kept on this machine: raw and log stay local by the task book"
+  ]
+ ],
+ "not_verified": [
+  "OPTICAL_EFFECTIVE_BITS",
+  "PHYSICAL_CDC_AND_SKEW",
+  "SOA"
+ ],
+ "report_sha256": "242ea3d94cb6234d9a6d4d31590e10930a2d5b7d38edabf44eb78076ef2edb8e",
+ "reviewer_entry_points": [
+  {
+   "command": "python scripts/dd1_d7c_b_tr_record.py --gates",
+   "needs": "the evidence directory of this round",
+   "starts_simulator": false
+  },
+  {
+   "command": "python scripts/dd1_d7c_b_tr_record.py --selftest",
+   "needs": "the evidence directory copy under review/scratch",
+   "starts_simulator": false
+  },
+  {
+   "command": "python scripts/dd1_d7c_b_tr_contract.py --selftest",
+   "needs": "nothing but the repository",
+   "starts_simulator": false
+  },
+  {
+   "command": "python scripts/dd1_d7c_b_tr_decks.py --check",
+   "needs": "the delivered run copies",
+   "starts_simulator": false
+  },
+  {
+   "command": "python scripts/dd1_d7c_b_tr_trace.py --selftest",
+   "needs": "synthetic traces only",
+   "note": "starts iverilog/vvp on a synthetic trace, never Spectre",
+   "starts_simulator": true
+  },
+  {
+   "command": "python scripts/dd1_d7c_b_tr_measure.py --selftest",
+   "needs": "hand-computed fixtures",
+   "starts_simulator": false
+  }
+ ],
+ "run_id": "r20261026_132228_3fc148",
+ "self_registration": "NONE: this round does not register an accepted version and does not give itself a GO",
+ "statuses": [
+  {
+   "expected": 18,
+   "measured": 18,
+   "note": "18 of 18 planned launches confirmed, 19 account rows charged, 2 stray processes charged from the recorded budget adjustment, effective ceiling 22 of the approved 24, 4 vvp processes charged of the approved 4; rows kept charged and not refunded: T001",
+   "status": "EXECUTION_COMPLETENESS",
+   "verdict": "PASS"
+  },
+  {
+   "expected": 37,
+   "measured": 37,
+   "note": "37 rows bound to a confirmed launch and the delivered deck; 9 cases carry the two-terminal check",
+   "status": "EVIDENCE_INTEGRITY",
+   "verdict": "PASS"
+  },
+  {
+   "expected": 37,
+   "measured": 33,
+   "note": "abs(error_dynamic_LSB) <= 0.5, the frozen criterion of this task",
+   "status": "DYNAMIC_CHARGE_STATUS",
+   "verdict": "FAIL"
+  },
+  {
+   "expected": 37,
+   "measured": 23,
+   "note": "abs(error_nominal_LSB) <= 0.5 reported independently; a dynamic pass is never presented as an uncalibrated grey-scale pass",
+   "status": "NOMINAL_CHARGE_STATUS",
+   "verdict": "FAIL"
+  },
+  {
+   "expected": 34,
+   "measured": 34,
+   "note": "against the DC target with a +/-5 % band, at least 10 ns, deadline flat_stop",
+   "status": "SETTLING_STATUS",
+   "verdict": "PASS"
+  },
+  {
+   "expected": 34,
+   "measured": 34,
+   "note": "max(abs(I_sink)) <= 1.5e-07 A over the last 100 ns of the pure-off window only",
+   "status": "SHUTOFF_STATUS",
+   "verdict": "PASS"
+  },
+  {
+   "expected": 0,
+   "measured": 13,
+   "note": "abs(dQ)/QLSB <= 0.01 on the three declared pairs",
+   "status": "CONVERGENCE_STATUS",
+   "verdict": "PASS"
+  }
+ ],
+ "stop_reason": "AWAITING_INDEPENDENT_REVIEW",
+ "task_id": "DATA-7C-B-TR",
+ "tracked_bytes": 693598,
+ "tracked_file_count": 60,
+ "windows": {
+  "black": 3,
+  "emission": 34,
+  "total_rows": 37
+ }
+}

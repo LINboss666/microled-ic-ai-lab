@@ -1,0 +1,42 @@
+[
+ {
+  "case_id": "TR-OFFCODE",
+  "file": "fig_TR-OFFCODE_switch.svg",
+  "scaling": "each row is scaled by the peak it prints, native samples, no resampling",
+  "sha256": "8b0d5e8ef1f0da6ac41084602af2d8d4e97852e7df5045cb34ac7f63791e3644",
+  "span_ns": [
+   1300.0,
+   2300.0
+  ],
+  "traces": [
+   {
+    "signal": "data_en",
+    "unit": "V"
+   },
+   {
+    "signal": "pam2",
+    "unit": "V"
+   },
+   {
+    "signal": "Xdut.en0",
+    "unit": "V"
+   },
+   {
+    "signal": "Xdut.en4",
+    "unit": "V"
+   },
+   {
+    "signal": "Xdut.Xu0.vbias_ch",
+    "unit": "V"
+   },
+   {
+    "signal": "Xdut.Xu4.vbias_ch",
+    "unit": "V"
+   },
+   {
+    "signal": "Ip_branch_current",
+    "unit": "A"
+   }
+  ]
+ }
+]

@@ -1,0 +1,42 @@
+{
+ "case_id": "HYB-120",
+ "conversion_source": "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/hyb_inputs.json",
+ "deck_sha256": "66bf817daf027b4c97ded93aa7eae7bdfd9ae9e59606b6a3ee379b98928671cf",
+ "marker_check": "PASS",
+ "markers": [
+  "MARK start group_ns 120 tick_div 12 dump dd1_d7c_b_tr_hyb_120.vcd",
+  "MARK frame ht 0 pam 00000000000000000000000000000000 win_state 3 version 1 proto_err 00000000 time 10166.000 ns",
+  "MARK frame ht 1 pam 00000000000000000000000000000000 win_state 3 version 1 proto_err 00000000 time 20316.000 ns",
+  "MARK frame ht 2 pam 00000000000000000000000000000011 win_state 3 version 1 proto_err 00000000 time 30466.000 ns",
+  "MARK frame ht 63 pam 00000000000000000000000000000111 win_state 3 version 1 proto_err 00000000 time 40616.000 ns",
+  "MARK safety_t0 41966.000 ns ticks_raised 277",
+  "MARK safety_fault 42269.000 ns ticks_raised 279",
+  "MARK frame ht 63 pam 00000000000000000000000000000111 win_state 4 version 1 proto_err 00010000 time 43486.000 ns",
+  "MARK end group_ns 120 tick_div 12 ticks_raised 285 proto_err 00010000 time 43686.000 ns"
+ ],
+ "vcd_sha256": "0d07a25a55787e3c6eda262e9c03d9b01c30fb21790ef90d49d3af5d604a191f",
+ "windows": [
+  {
+   "accepted_ticks": 65,
+   "basis": "t0 plus 64 intervals of 120 ns, inside a frame that ends at 11178 ns",
+   "code": "000",
+   "declared_by": "scripts/dd1_d7c_b_tr_trace.py measurement_windows",
+   "frame": "B0",
+   "kind": "black_64T",
+   "start_ns": 2366.0,
+   "stop_ns": 10046.0,
+   "window_id": "BLACK_B0"
+  },
+  {
+   "accepted_ticks": 3,
+   "basis": "the actual fault closing edge to the end of the run, never the planned 64 T",
+   "code": "111",
+   "declared_by": "scripts/dd1_d7c_b_tr_trace.py measurement_windows",
+   "frame": "A",
+   "kind": "black_post_fault_hold",
+   "start_ns": 43309.0,
+   "stop_ns": 44686.0,
+   "window_id": "BLACK_POSTFAULT_A"
+  }
+ ]
+}

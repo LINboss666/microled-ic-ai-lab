@@ -1,0 +1,182 @@
+[
+ {
+  "case_dir": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148/cases/TR-LONG_dut",
+  "guest_free_kb_after_gc": 2562080,
+  "launch_id": "T003",
+  "local_raw_sha256": "2c43328d762384214e6cba3261861a4aae1c87a78663841ec2fddc783fa811fd",
+  "note": "removed only after the raw and log were pulled and digested",
+  "raw_sha256": "2c43328d762384214e6cba3261861a4aae1c87a78663841ec2fddc783fa811fd",
+  "rc": 0,
+  "recorded_utc": "2026-10-26T13:32:41Z"
+ },
+ {
+  "case_dir": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148/cases/TR-LONG_preflight",
+  "guest_free_kb_after_gc": 2565224,
+  "launch_id": "T002",
+  "local_raw_sha256": "e34c83162e9a7557b21fee96f34dd8e42ba057e1b66eb7e3a2d09ff500f984a8",
+  "note": "removed only after the raw and log were pulled and digested",
+  "raw_sha256": "e34c83162e9a7557b21fee96f34dd8e42ba057e1b66eb7e3a2d09ff500f984a8",
+  "rc": 0,
+  "recorded_utc": "2026-10-26T13:32:43Z"
+ },
+ {
+  "case_dir": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148/cases/TR-120_dut",
+  "guest_free_kb_after_gc": 2564476,
+  "launch_id": "T005",
+  "local_raw_sha256": "45bb26b4095ba1f3fb857fdc0c4f2396aadaeab4b6c589c2b0bc2ce2500e84bc",
+  "note": "removed only after the raw and log were pulled and digested",
+  "raw_sha256": "45bb26b4095ba1f3fb857fdc0c4f2396aadaeab4b6c589c2b0bc2ce2500e84bc",
+  "rc": 0,
+  "recorded_utc": "2026-10-26T13:33:30Z"
+ },
+ {
+  "case_dir": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148/cases/TR-120_preflight",
+  "guest_free_kb_after_gc": 2564856,
+  "launch_id": "T004",
+  "local_raw_sha256": "c8192192eae706df64fe83052e84f83f0e44e0957f01962590e990548a05d962",
+  "note": "removed only after the raw and log were pulled and digested",
+  "raw_sha256": "c8192192eae706df64fe83052e84f83f0e44e0957f01962590e990548a05d962",
+  "rc": 0,
+  "recorded_utc": "2026-10-26T13:33:32Z"
+ },
+ {
+  "case_dir": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148/cases/TR-200_dut",
+  "guest_free_kb_after_gc": 2564076,
+  "launch_id": "T007",
+  "local_raw_sha256": "7a5bb25228cbebfd36599a975f74cb86c26b436c106b223358ece25ebe2d6972",
+  "note": "removed only after the raw and log were pulled and digested",
+  "raw_sha256": "7a5bb25228cbebfd36599a975f74cb86c26b436c106b223358ece25ebe2d6972",
+  "rc": 0,
+  "recorded_utc": "2026-10-26T13:34:21Z"
+ },
+ {
+  "case_dir": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148/cases/TR-200_preflight",
+  "guest_free_kb_after_gc": 2564488,
+  "launch_id": "T006",
+  "local_raw_sha256": "ffca6665708b5870b4f90aed1d1496f849dc59c73941be72eb711f22643b12dc",
+  "note": "removed only after the raw and log were pulled and digested",
+  "raw_sha256": "ffca6665708b5870b4f90aed1d1496f849dc59c73941be72eb711f22643b12dc",
+  "rc": 0,
+  "recorded_utc": "2026-10-26T13:34:23Z"
+ },
+ {
+  "case_dir": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148/cases/TR-OFFCODE_dut",
+  "guest_free_kb_after_gc": 2563176,
+  "launch_id": "T009",
+  "local_raw_sha256": "ed94c910df49e9a610643c2e35299705d0fbaf3b582358d43b63d386891094a9",
+  "note": "removed only after the raw and log were pulled and digested",
+  "raw_sha256": "ed94c910df49e9a610643c2e35299705d0fbaf3b582358d43b63d386891094a9",
+  "rc": 0,
+  "recorded_utc": "2026-10-26T13:35:15Z"
+ },
+ {
+  "case_dir": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148/cases/TR-OFFCODE_preflight",
+  "guest_free_kb_after_gc": 2564128,
+  "launch_id": "T008",
+  "local_raw_sha256": "f9a000234e3689040f8c91516f219621373df0e59120d66875f82db42cf8856b",
+  "note": "removed only after the raw and log were pulled and digested",
+  "raw_sha256": "f9a000234e3689040f8c91516f219621373df0e59120d66875f82db42cf8856b",
+  "rc": 0,
+  "recorded_utc": "2026-10-26T13:35:17Z"
+ },
+ {
+  "case_dir": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148/cases/RS-FULL_dut",
+  "guest_free_kb_after_gc": 2502668,
+  "launch_id": "T011",
+  "local_raw_sha256": "ced5113d620a497c7e093e51327d149bf8b265a4b1ca33ece467f5b61f408e9f",
+  "note": "removed only after the raw and log were pulled and digested",
+  "raw_sha256": "ced5113d620a497c7e093e51327d149bf8b265a4b1ca33ece467f5b61f408e9f",
+  "rc": 0,
+  "recorded_utc": "2026-10-26T13:37:39Z"
+ },
+ {
+  "case_dir": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148/cases/RS-FULL_preflight",
+  "guest_free_kb_after_gc": 2563768,
+  "launch_id": "T010",
+  "local_raw_sha256": "0392a0c191842fe625df33dbc5065e63a2894f7d7dd643c1e447d68445d263ba",
+  "note": "removed only after the raw and log were pulled and digested",
+  "raw_sha256": "0392a0c191842fe625df33dbc5065e63a2894f7d7dd643c1e447d68445d263ba",
+  "rc": 0,
+  "recorded_utc": "2026-10-26T13:37:42Z"
+ },
+ {
+  "case_dir": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148/cases/RS-LOW_dut",
+  "guest_free_kb_after_gc": 2556204,
+  "launch_id": "T013",
+  "local_raw_sha256": "b99776c92f4045d943ce568ce69d71d8c590eeafe94068aeafe3c6e60a3e7b40",
+  "note": "removed only after the raw and log were pulled and digested",
+  "raw_sha256": "b99776c92f4045d943ce568ce69d71d8c590eeafe94068aeafe3c6e60a3e7b40",
+  "rc": 0,
+  "recorded_utc": "2026-10-26T13:39:07Z"
+ },
+ {
+  "case_dir": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148/cases/RS-LOW_preflight",
+  "guest_free_kb_after_gc": 2563392,
+  "launch_id": "T012",
+  "local_raw_sha256": "b94522317978cf21cbf35940174307b4fff335f04bb2fdb22ba14be289dbe812",
+  "note": "removed only after the raw and log were pulled and digested",
+  "raw_sha256": "b94522317978cf21cbf35940174307b4fff335f04bb2fdb22ba14be289dbe812",
+  "rc": 0,
+  "recorded_utc": "2026-10-26T13:39:09Z"
+ },
+ {
+  "case_dir": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148/cases/RS-SWITCH_dut",
+  "guest_free_kb_after_gc": 2545444,
+  "launch_id": "T015",
+  "local_raw_sha256": "7a1765dc740081a39663d6a345e8fb5ab0ab6a41bb654345f157e5bcd715fb7f",
+  "note": "removed only after the raw and log were pulled and digested",
+  "raw_sha256": "7a1765dc740081a39663d6a345e8fb5ab0ab6a41bb654345f157e5bcd715fb7f",
+  "rc": 0,
+  "recorded_utc": "2026-10-26T13:40:11Z"
+ },
+ {
+  "case_dir": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148/cases/RS-SWITCH_preflight",
+  "guest_free_kb_after_gc": 2563016,
+  "launch_id": "T014",
+  "local_raw_sha256": "0a477838e8ab3c1bf61b741b8bde61a9f18e02ad85f97bdf03fe04d467d68f01",
+  "note": "removed only after the raw and log were pulled and digested",
+  "raw_sha256": "0a477838e8ab3c1bf61b741b8bde61a9f18e02ad85f97bdf03fe04d467d68f01",
+  "rc": 0,
+  "recorded_utc": "2026-10-26T13:40:13Z"
+ },
+ {
+  "case_dir": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148/cases/HYB-120_dut",
+  "guest_free_kb_after_gc": 1727772,
+  "launch_id": "T017",
+  "local_raw_sha256": "c99af908d455fc5bdcd408b9400643a86deade5ba7616caaa621ebf6e3b75827",
+  "note": "removed only after the raw and log were pulled and digested",
+  "raw_sha256": "c99af908d455fc5bdcd408b9400643a86deade5ba7616caaa621ebf6e3b75827",
+  "rc": 0,
+  "recorded_utc": "2026-10-26T14:33:35Z"
+ },
+ {
+  "case_dir": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148/cases/HYB-120_preflight",
+  "guest_free_kb_after_gc": 1936852,
+  "launch_id": "T016",
+  "local_raw_sha256": "504767580ff2cf4d6a8b419770bb237eaee5257972fc136ec0d517192355b9f3",
+  "note": "removed only after the raw and log were pulled and digested",
+  "raw_sha256": "504767580ff2cf4d6a8b419770bb237eaee5257972fc136ec0d517192355b9f3",
+  "rc": 0,
+  "recorded_utc": "2026-10-26T14:33:37Z"
+ },
+ {
+  "case_dir": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148/cases/HYB-200_dut",
+  "guest_free_kb_after_gc": 1637548,
+  "launch_id": "T019",
+  "local_raw_sha256": "6532f533ba5e94bd82efc010b8f510cd81dd0670ecc8ceb40829644966b206a1",
+  "note": "removed only after the raw and log were pulled and digested",
+  "raw_sha256": "6532f533ba5e94bd82efc010b8f510cd81dd0670ecc8ceb40829644966b206a1",
+  "rc": 0,
+  "recorded_utc": "2026-10-26T14:39:20Z"
+ },
+ {
+  "case_dir": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148/cases/HYB-200_preflight",
+  "guest_free_kb_after_gc": 1936484,
+  "launch_id": "T018",
+  "local_raw_sha256": "5210bfb296f62bbd363498487225f633adc26051179662e16920047dbe93b076",
+  "note": "removed only after the raw and log were pulled and digested",
+  "raw_sha256": "5210bfb296f62bbd363498487225f633adc26051179662e16920047dbe93b076",
+  "rc": 0,
+  "recorded_utc": "2026-10-26T14:39:23Z"
+ }
+]

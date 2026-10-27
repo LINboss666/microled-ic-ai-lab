@@ -1,0 +1,223 @@
+{
+ "authorisation": {
+  "accepted_dc_content_sha": "b7509c4766a6bbfd0413749d50a5f294192b60fb",
+  "approval_date": "2026-10-26",
+  "approval_timezone": "Asia/Shanghai",
+  "approved_proposal": {
+   "bytes": 18676,
+   "filename": "TASK_DATA7C_B_TR_PENDING_APPROVAL.md",
+   "sha256": "502763a7e7527986ac4611d9e7996f2f2dce6d67cebd20c710bd56e52a2b9b76"
+  },
+  "approved_question": "是否批准按这份任务书执行，两个上限分别为24次和4次？",
+  "authorisation_status": "USER_APPROVED",
+  "base_sha": "61621f6e3d887082ecd6a7ecc1c771f8e509a24a",
+  "budget_accounting": "Every actual simulator process, including failed, interrupted, debug and help/version invocations, consumes the applicable limit; requested uncertain starts stay charged.",
+  "existing_tracked_paths_may_be_modified": false,
+  "historical_budgets_may_be_borrowed": false,
+  "issued_at": "2026-10-26T18:26:09+08:00",
+  "main_push_authorised": false,
+  "merge_authorised": false,
+  "new_branch": "poc/data-pam-d7c-b-tr",
+  "next_stage_authorised": false,
+  "oa_access_authorised": false,
+  "preparation_actual_actions": {
+   "guest_connections": 0,
+   "oa_access": 0,
+   "rtl_simulations": 0,
+   "spectre_launches": 0
+  },
+  "rtl_failure_or_debug_margin": 2,
+  "rtl_planned_main_runs": 2,
+  "rtl_simulation_total_limit": 4,
+  "scope": "All nine cases, internal observations, two carried nonblocking followups and measurement criteria in the approved task; no change to the proposal technical scope.",
+  "spectre_failure_or_debug_margin": 6,
+  "spectre_planned_duts": 9,
+  "spectre_planned_preflights": 9,
+  "spectre_total_limit": 24,
+  "stop_at": "AWAITING_INDEPENDENT_REVIEW",
+  "task_id": "DATA-7C-B-TR",
+  "user_message_verbatim": "@网页搜索 YES"
+ },
+ "base_sha": "61621f6e3d887082ecd6a7ecc1c771f8e509a24a",
+ "branch": "poc/data-pam-d7c-b-tr",
+ "channel_probe_now": {
+  "guest_free_kb": 2565692,
+  "lines": [
+   "work-eda",
+   "2026-10-26T13:22:20Z",
+   "2565692",
+   "/root/microled_ai_project/cadence_work"
+  ],
+  "rc": 0
+ },
+ "credentials_note": "the bridge loads the guest credentials from its local credential file at run time; no password value is printed, echoed into a command line, logged or committed by this round",
+ "deck_account": {
+  "decks": 7,
+  "not_written": [
+   "HYB-120",
+   "HYB-200"
+  ],
+  "preflights": 7
+ },
+ "existing_tracked_paths_modified_or_deleted": [],
+ "guest_write_root": "/root/microled_ai_project/cadence_work/dd1_d7c_b_tr/r20261026_132228_3fc148",
+ "input_identity": {
+  "files": [
+   {
+    "bytes": 12982,
+    "path": "rtl/dd1_d7a_gray_ctrl.sv",
+    "sha256": "6dbf464a49e49ad489188fa51920c30a3c89d6b3106046a4fefe558ef0a50c87"
+   },
+   {
+    "bytes": 16759,
+    "path": "reports/dd1_d7a_contract.md",
+    "sha256": "37f55cb9f0783e2f184ad360f69ee07526f1aba5d39f6698388826b3b8652284"
+   },
+   {
+    "bytes": 24746,
+    "path": "tests/dd1_d7c_b_prep/contract.json",
+    "sha256": "29861970b9bee33b70d17edc83302f320cf5e050284d4d0ecc9c199c4a151840"
+   },
+   {
+    "bytes": 14840,
+    "path": "tests/dd1_d7c_b_prep/schedule.csv",
+    "sha256": "fef4c9d3c8deaa3aeb576d90ecabe3ad977acba85b85c4a9b52cf6882a4665f6"
+   },
+   {
+    "bytes": 49799,
+    "path": "tests/dd1_d7c_b_prep/windows.csv",
+    "sha256": "5f7bd75cd1a15f5c05e3a79d55fd234d1e60ecb2b5bd66972d43c4d84cb87aa3"
+   },
+   {
+    "bytes": 22453,
+    "path": "tests/dd1_d7c_b_prep/pwl.csv",
+    "sha256": "f3dcfe12e42150190d616a3128264787fc7148a7bccbde9c315dcbbf0b9cdf18"
+   },
+   {
+    "bytes": 37947,
+    "path": "results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/dc_matrix_dut.csv",
+    "sha256": "23e9e1fb6aed01497ef34e37196176e4305228fdbd1fc389dcd4e4cd4cd4cfc3"
+   },
+   {
+    "bytes": 6945,
+    "path": "reports/reviews/DATA-7C-B-DC-R1-GO/registration.json",
+    "sha256": "e005408d0a178833c23f0e8c0ac1d2ea356a3d27822d350d7d82a824f589b67a"
+   },
+   {
+    "bytes": 3954,
+    "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_sink_unit.scs",
+    "sha256": "289ae1dd8edf91c806c2c2dfecc15d9b3b8524ed987849d0094bab1124369a3f"
+   },
+   {
+    "bytes": 120,
+    "path": "spectre/dd1_d7c_b_dc/masters/dd1_d6_bias_core.scs",
+    "sha256": "379536efb1dd9b2626e93ec384d572c734d5c1b398881c6de6ce4405e230c293"
+   },
+   {
+    "bytes": 3778,
+    "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_pam_top.scs",
+    "sha256": "8489616e4826fccdd7516d7b02764ae3850ad3e4476181b5ae0f5249ec5a08a5"
+   },
+   {
+    "bytes": 3383,
+    "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_gates.scs",
+    "sha256": "55c08f25eaee6184c8be263e8762559f51ff1c66be37c0a0dfb1c2b0e8f1e5de"
+   },
+   {
+    "bytes": 1027,
+    "path": "spectre/dd1_d7c_b_dc/masters/dd1_d6_inv18.scs",
+    "sha256": "d535ad0112c31952d0c51e314cc57054b631b18c7457ba8088d970945ca6de77"
+   },
+   {
+    "bytes": 4123,
+    "path": "spectre/dd1_d7c_b_dc/masters/dd1_d7c_a_pam_dec.scs",
+    "sha256": "f4d458d21d82e91c3f0e4012cc8fb568c090c1bb364fd486bf0b82a469163b5a"
+   }
+  ],
+  "native_launched_by_planner": 0,
+  "rtl_content_matches_accepted_f684496": true,
+  "rtl_simulations_by_planner": 0,
+  "source_sha": "61621f6e3d887082ecd6a7ecc1c771f8e509a24a"
+ },
+ "offline_suites": {
+  "python scripts/dd1_d7c_b_tr_contract.py --check": {
+   "problems": [],
+   "rc": 0,
+   "summary": "TR_CONTRACT_CHECK PASS (9 cases, 6 masters, 3 pairs)"
+  },
+  "scripts/dd1_d7c_b_tr_contract.py --selftest": {
+   "failing_records": [],
+   "rc": 0,
+   "stderr": "",
+   "summary": "TR_CONTRACT_SELFTEST 35/35"
+  },
+  "scripts/dd1_d7c_b_tr_decks.py --selftest": {
+   "failing_records": [],
+   "rc": 0,
+   "stderr": "",
+   "summary": "TR_DECK_SELFTEST 19/19"
+  },
+  "scripts/dd1_d7c_b_tr_measure.py --selftest": {
+   "failing_records": [],
+   "rc": 0,
+   "stderr": "",
+   "summary": "TR_MEASURE_SELFTEST 29/29"
+  },
+  "scripts/dd1_d7c_b_tr_run.py --selftest": {
+   "failing_records": [],
+   "rc": 0,
+   "stderr": "",
+   "summary": "TR_RUN_SELFTEST 22/22"
+  },
+  "scripts/dd1_d7c_b_tr_trace.py --selftest": {
+   "failing_records": [],
+   "rc": 0,
+   "stderr": "",
+   "summary": "TR_TRACE_SELFTEST 16/16"
+  }
+ },
+ "recorded_utc": "2026-10-26T13:22:29Z",
+ "remote_read_back": {
+  "channels": {
+   "A_git_ls_remote_over_proxy": {
+    "moment_utc": "2026-10-26T13:19:56Z",
+    "rc": 0,
+    "refs": {
+     "refs/heads/main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+     "refs/heads/poc/data-pam-d7c-b-dc": "337563fc22699e480bf7fc82890750c126a50654",
+     "refs/heads/poc/data-pam-d7c-b-dc-r1": "61621f6e3d887082ecd6a7ecc1c771f8e509a24a"
+    },
+    "stderr": ""
+   },
+   "B_github_api_direct": {
+    "main": {
+     "branch_http": 200,
+     "commit": "23e471cb936b421ee97e1250c3be06edf96f9937",
+     "tree": "a485ac3b2acea4ab6e5ba609bdaa6d4d95833ac3",
+     "tree_http": 200
+    },
+    "poc/data-pam-d7c-b-dc-r1": {
+     "branch_http": 200,
+     "commit": "61621f6e3d887082ecd6a7ecc1c771f8e509a24a",
+     "tree": "152c1c1c266acbfbed1f244f8e4c6c238ff1e932",
+     "tree_http": 200
+    },
+    "poc/data-pam-d7c-b-tr": {
+     "branch_http": 404,
+     "meaning": "the new branch has not been pushed yet at this moment"
+    }
+   }
+  },
+  "expectations": {
+   "A_matches_B": true,
+   "accepted_dc_content_sha": "b7509c4766a6bbfd0413749d50a5f294192b60fb",
+   "base_sha": "61621f6e3d887082ecd6a7ecc1c771f8e509a24a",
+   "main_must_stay": "23e471cb936b421ee97e1250c3be06edf96f9937"
+  },
+  "recorded_utc": "2026-10-26T13:19:56Z"
+ },
+ "rtl_limit": 4,
+ "run_id": "r20261026_132228_3fc148",
+ "spectre_limit": 24,
+ "task_id": "DATA-7C-B-TR"
+}

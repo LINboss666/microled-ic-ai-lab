@@ -1,0 +1,8 @@
+status,verdict,measured,expected,note
+EXECUTION_COMPLETENESS,PASS,18,18,"18 of 18 planned launches confirmed, 19 account rows charged, 2 stray processes charged from the recorded budget adjustment, effective ceiling 22 of the approved 24, 4 vvp processes charged of the approved 4; rows kept charged and not refunded: T001"
+EVIDENCE_INTEGRITY,PASS,37,37,37 rows bound to a confirmed launch and the delivered deck; 9 cases carry the two-terminal check
+DYNAMIC_CHARGE_STATUS,FAIL,33,37,"abs(error_dynamic_LSB) <= 0.5, the frozen criterion of this task"
+NOMINAL_CHARGE_STATUS,FAIL,23,37,abs(error_nominal_LSB) <= 0.5 reported independently; a dynamic pass is never presented as an uncalibrated grey-scale pass
+SETTLING_STATUS,PASS,34,34,"against the DC target with a +/-5 % band, at least 10 ns, deadline flat_stop"
+SHUTOFF_STATUS,PASS,34,34,max(abs(I_sink)) <= 1.5e-07 A over the last 100 ns of the pure-off window only
+CONVERGENCE_STATUS,PASS,13,0,abs(dQ)/QLSB <= 0.01 on the three declared pairs

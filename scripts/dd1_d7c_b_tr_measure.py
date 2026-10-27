@@ -9,6 +9,7 @@ a value from the DUT's own target arithmetic, and a nominal number is never subs
 measurement.
 """
 
+import csv
 import io
 import json
 import math
@@ -31,13 +32,15 @@ Refuse = B7M.Refuse
 S_PER_PS = B7M.S_PER_PS
 REQUIRED = tuple(TRC.contract()['required_signals']['always_extracted'])
 INTERNAL = TRC.contract()['required_signals']['internal_nodes']
+SHARED_NODES = ('iref_in',)          # the one reference node every branch shares, saved by the deck
 HEADER = ('case_id', 'window_id', 'kind', 'code', 'role', 'tick_ns', 'qlsb_C',
           'window_start_ns', 'window_stop_ns', 'rise50_ns', 'fall50_ns', 't50_ns',
           'flat_start_ns', 'flat_stop_ns', 'q_full_C', 'q_flat_C', 'q_pos_C', 'q_neg_C',
           'abs_q_neg_C', 'peak_A', 'peak_ns', 'flat_mean_A', 'tail_q_C', 'leak_max_abs_A',
           'qtarget_nominal_C', 'qtarget_dc_C', 'err_nominal_LSB', 'err_dynamic_LSB',
           'settling_nominal', 'settling_dc', 'settling_start_ns', 'settling_last_out_ns',
-          'settling_left_limit_A', 'evidence', 'raw_sha256', 'deck_sha256', 'launch_id', 'run_id')
+          'settling_left_limit_A', 'evidence', 'raw_sha256', 'deck_sha256', 'launch_id', 'run_id',
+          'window_basis', 'declared_by')
 CONV_HEADER = ('pair', 'refined_case', 'coarse_case', 'window_id', 'code', 'tick_ns', 'qlsb_C',
                'refined_q_C', 'coarse_q_C', 'dq_C', 'abs_dq_over_qlsb', 'status', 'context_match')
 STATUS_HEADER = ('status', 'verdict', 'measured', 'expected', 'note')
@@ -204,7 +207,10 @@ def measure_window(case_id, window, windows, data, code, role, meta):
            'flat_mean_A': '', 'tail_q_C': '', 'leak_max_abs_A': '', 'qtarget_nominal_C': '',
            'qtarget_dc_C': '', 'err_nominal_LSB': '', 'err_dynamic_LSB': '',
            'settling_nominal': '', 'settling_dc': '', 'settling_start_ns': '',
-           'settling_last_out_ns': '', 'settling_left_limit_A': ''}
+           'settling_last_out_ns': '', 'settling_left_limit_A': '',
+           'window_basis': 'the 0.9 V crossings of the native enable, inside the window the delivered '
+                           'PWL of this run copy declares',
+           'declared_by': 'scripts/dd1_d7c_b_tr_measure.py windows_of'}
     if window['kind'] != 'emission':
         return out
     index = int(re.sub(r'^[A-Z]', '', window['window_id']))
@@ -302,14 +308,22 @@ def settling(current, edge_ps, target_A, deadline_ps, ctx):
             'band_A': band, 'ctx': ctx}
 
 
-def black_window(case_id, start_ns, stop_ns, data, role, meta, code):
-    """a zero-code frame: no emission edge, Qtarget 0, the same fixed QLSB, no invented T50"""
+def black_window(case_id, start_ns, stop_ns, data, role, meta, code, label=None):
+    """a zero-code frame: no emission edge, Qtarget 0, the same fixed QLSB, no invented T50
+
+    The label is the window the trace converter declared, so the row carries the boundary it was
+    measured over and where that boundary came from; a black window without a label is the 64-interval
+    case the contract names, and the post-fault hold is the same rule over its own shorter region.
+    """
+    label = label or {}
     current = data['series']['Ip_branch_current']
     start_ps, stop_ps = ns_to_ps(start_ns), ns_to_ps(stop_ns)
     charge = B7M.integrate(current, start_ps, stop_ps, '%s black %s' % (case_id, code))
     peak, peak_at = B7M.extreme([(t, abs(v)) for t, v in current], start_ps, stop_ps)
     qlsb = TRC.qlsb_C(TRC.TICK_NS[case_id])
-    return {'case_id': case_id, 'window_id': 'BLACK', 'kind': 'black_64T', 'code': code,
+    return {'case_id': case_id,
+            'window_id': label.get('window_id', 'BLACK'),
+            'kind': label.get('kind', 'black_64T'), 'code': code,
             'role': role, 'tick_ns': TRC.TICK_NS[case_id], 'qlsb_C': qlsb,
             'window_start_ns': start_ns, 'window_stop_ns': stop_ns,
             'rise50_ns': 'NO_EDGE', 'fall50_ns': 'NO_EDGE', 't50_ns': 'NOT_DEFINED_FOR_BLACK',
@@ -322,7 +336,32 @@ def black_window(case_id, start_ns, stop_ns, data, role, meta, code):
             'launch_id': meta['launch_id'], 'run_id': meta['run_id'],
             'flat_start_ns': '', 'flat_stop_ns': '', 'q_flat_C': '', 'flat_mean_A': '',
             'tail_q_C': '', 'settling_nominal': 'NOT_APPLICABLE', 'settling_dc': 'NOT_APPLICABLE',
-            'settling_start_ns': '', 'settling_last_out_ns': '', 'settling_left_limit_A': ''}
+            'settling_start_ns': '', 'settling_last_out_ns': '', 'settling_left_limit_A': '',
+            'window_basis': label.get('basis', 'the whole 64-interval window of a zero-code frame'),
+            'declared_by': label.get('declared_by',
+                                     'hand-declared: no converter supplied this black window')}
+
+
+def black_window_placement(case_id, windows, placed_ids, row):
+    """where a declared black window may be published, and what it may not be confused with
+
+    It must be clear of every emission window, because the same charge counted twice would look like
+    a real measurement of a dark frame; and it must have an id of its own, because two black windows
+    under one id would publish one twice and drop the other.
+    """
+    inside = [other['window_id'] for other in windows
+              if other['kind'] == 'emission'
+              and other['start_ns'] < row['stop_ns'] and row['start_ns'] < other['stop_ns']]
+    if inside:
+        raise Refuse('%s: the declared black window %s (%g..%g ns) overlaps the emission window(s) '
+                     '%s, so its charge would be counted twice'
+                     % (case_id, row.get('window_id', '?'), row['start_ns'], row['stop_ns'],
+                        ','.join(inside)))
+    identifier = row.get('window_id', 'BLACK')
+    if identifier in placed_ids:
+        raise Refuse('%s: two black windows share the id %s, so one would be published twice and the '
+                     'other never at all' % (case_id, identifier))
+    return identifier
 
 
 def measure_case(case_id, raw_path, deck_text, meta, extra_windows=()):
@@ -338,8 +377,9 @@ def measure_case(case_id, raw_path, deck_text, meta, extra_windows=()):
         rows.append(measure_window(case_id, window, windows, data, code,
                                    meta.get('role', 'dut'), meta))
     for row in extra_windows:
+        black_window_placement(case_id, windows, [item['window_id'] for item in rows], row)
         rows.append(black_window(case_id, row['start_ns'], row['stop_ns'], data,
-                                 meta.get('role', 'dut'), meta, row.get('code', '000')))
+                                 meta.get('role', 'dut'), meta, row.get('code', '000'), row))
     return rows, data
 
 
@@ -495,6 +535,20 @@ def internal_nodes(data, windows, codes, window_ns=50.0):
                 mean = _time_weighted(data['series'][name], start, row['stop_ns'])
                 entry['nodes'][name] = mean
         entry['selected_branches'] = (int(codes[index], 2) + 1) if index < len(codes) else None
+        # the shared reference node the task book asks for beside the branch nodes, measured the same
+        # time-weighted way; it is not one of the contract's per-branch internal columns
+        entry['shared_reference'] = {
+            name: (_time_weighted(data['series'][name], start, row['stop_ns'])
+                   if name in data['series'] else 'NOT_OBSERVED')
+            for name in SHARED_NODES}
+        entry['branch_enables_high'] = sum(
+            1 for bit in range(8)
+            if isinstance(entry['nodes'].get('Xdut.en%d' % bit), float)
+            and entry['nodes']['Xdut.en%d' % bit] >= TRC.ENABLE_MID_V)
+        entry['branch_enable_bars_high'] = sum(
+            1 for bit in range(8)
+            if isinstance(entry['nodes'].get('Xdut.enb%d' % bit), float)
+            and entry['nodes']['Xdut.enb%d' % bit] >= TRC.ENABLE_MID_V)
         out.append(entry)
     return out
 
@@ -513,8 +567,14 @@ def _time_weighted(series, from_ns, to_ns):
 
 
 def write_rows(path, rows, header):
-    return DC.B7B.write_rows(path, [[_cell(row.get(key, '')) for key in header] for row in rows],
-                             list(header))
+    """an RFC 4180 table: the accepted writer joins with a bare comma, and a declared window boundary
+    contains commas, so this round quotes its own fields instead of publishing a torn row"""
+    with io.open(path, 'w', encoding='utf-8', newline='') as handle:
+        writer = csv.writer(handle, lineterminator='\n', quoting=csv.QUOTE_MINIMAL)
+        writer.writerow(list(header))
+        for row in rows:
+            writer.writerow([_cell(row.get(key, '')) for key in header])
+    return path
 
 
 def _cell(value):
@@ -676,6 +736,44 @@ def selftest():
     record('a black window carries no invented T50 and a zero target',
            black['t50_ns'] == 'NOT_DEFINED_FOR_BLACK' and black['qtarget_dc_C'] == 0.0
            and black['err_dynamic_LSB'] == 0.0, black)
+    record('an unlabelled black window says for itself that no converter supplied it',
+           black['declared_by'].startswith('hand-declared') and black['window_id'] == 'BLACK',
+           (black['window_id'], black['declared_by']))
+    label = {'window_id': 'BLACK_POSTFAULT_A', 'kind': 'black_post_fault_hold',
+             'basis': 'the actual fault closing edge to the end of the run',
+             'declared_by': 'scripts/dd1_d7c_b_tr_trace.py measurement_windows'}
+    named = black_window('HYB-200', 2400.0, 2900.0, data, 'dut',
+                         {'raw_sha256': 'x', 'deck_sha256': 'y', 'launch_id': 'T001',
+                          'run_id': 'r'}, '111', label)
+    record('a labelled black window publishes the id, kind, basis and author the converter declared',
+           (named['window_id'], named['kind'], named['code']) ==
+           ('BLACK_POSTFAULT_A', 'black_post_fault_hold', '111')
+           and named['window_basis'].startswith('the actual fault closing edge')
+           and named['declared_by'].startswith('scripts/dd1_d7c_b_tr_trace.py'),
+           (named['window_id'], named['kind'], named['window_basis'], named['declared_by']))
+    record('a post-fault black window still counts toward the same frozen dynamic criterion',
+           named['kind'].startswith('black') and named['qtarget_nominal_C'] == 0.0
+           and named['qtarget_dc_C'] == 0.0, (named['kind'], named['qtarget_dc_C']))
+    emission_only = [row for row in windows if row['kind'] == 'emission']
+    record('a black window clear of every emission window is placed',
+           black_window_placement('TR-LONG', windows, [],
+                                  {'window_id': 'BLACK', 'start_ns': 90000.0,
+                                   'stop_ns': 90100.0}) == 'BLACK', '')
+    record('a black window over an emission window is refused, not silently double counted',
+           _refuses(lambda: black_window_placement('TR-LONG', windows, [],
+                                                   {'window_id': 'BLACK',
+                                                    'start_ns': emission_only[0]['start_ns'],
+                                                    'stop_ns': emission_only[0]['stop_ns']})), '')
+    record('a black window clipped to the tail of an emission window is refused too',
+           _refuses(lambda: black_window_placement('TR-LONG', windows, [],
+                                                   {'window_id': 'BLACK',
+                                                    'start_ns': emission_only[0]['stop_ns'] - 1.0,
+                                                    'stop_ns': emission_only[0]['stop_ns'] + 1.0})),
+           '')
+    record('two black windows under one id are refused before either is published',
+           _refuses(lambda: black_window_placement('TR-LONG', windows, ['BLACK'],
+                                                   {'window_id': 'BLACK', 'start_ns': 90000.0,
+                                                    'stop_ns': 90100.0})), '')
     table = [dict(row, kind='emission') for row in refined]
     verdicts = dict((row['status'], row['verdict']) for row in
                     statuses(table, rows, {'verdict': 'PASS', 'measured': 1, 'expected': 1,
@@ -728,6 +826,71 @@ def selftest():
            1050.0 <= float(one['settling_start_ns']) < 2000.0, one['settling_start_ns'])
     record('a required signal absent from the native answer names itself',
            _refuses(lambda: _load_missing()), '')
+    # ---- the internal-node view, exercised on a synthetic answer that carries the saved columns
+    def _flat_series(value):
+        return [(t * 1e3, value) for t in range(1900, 2010, 10)]
+
+    inner = dict(data)
+    inner['series'] = dict(data['series'])
+    selected = 4
+    for bit in range(8):
+        inner['series']['Xdut.en%d' % bit] = _flat_series(
+            TRC.LOGIC_HIGH_V if bit < selected else TRC.LOGIC_LOW_V)
+        inner['series']['Xdut.enb%d' % bit] = _flat_series(
+            TRC.LOGIC_LOW_V if bit < selected else TRC.LOGIC_HIGH_V)
+    for branch in range(8):
+        inner['series']['Xdut.Xu%d.vbias_ch' % branch] = _flat_series(
+            0.884 if branch < selected else 3e-10)
+    inner['series']['Xdut.Xu0.node_m'] = _flat_series(0.651)
+    inner['series']['Xdut.Xu4.node_m'] = _flat_series(1.169)
+    inner['series']['iref_in'] = _flat_series(0.75)
+    nodes = internal_nodes(inner, fixture_windows, ['011'])
+    record('the internal-node view is one entry per flat step, at its last 50 ns',
+           len(nodes) == 1 and (nodes[0]['from_ns'], nodes[0]['to_ns']) == (1950.0, 2000.0),
+           [(row['from_ns'], row['to_ns']) for row in nodes])
+    record('every flat step is at least the 50 ns the task book asks for',
+           all(row['to_ns'] - row['from_ns'] >= 50.0 - 1e-9 for row in nodes),
+           [row['to_ns'] - row['from_ns'] for row in nodes])
+    record('the branch count is cross-checked as code plus one, not as the code value',
+           nodes[0]['selected_branches'] == selected and nodes[0]['code'] == '011',
+           (nodes[0]['code'], nodes[0]['selected_branches']))
+    record('the selected and unselected branch enables are counted off the deck logic rails',
+           nodes[0]['branch_enables_high'] == selected
+           and nodes[0]['branch_enable_bars_high'] == 8 - selected,
+           (nodes[0]['branch_enables_high'], nodes[0]['branch_enable_bars_high']))
+    record('a selected branch bias is distinguished from an unselected one in the same entry',
+           nodes[0]['nodes']['Xdut.Xu0.vbias_ch'] > 0.8
+           and nodes[0]['nodes']['Xdut.Xu7.vbias_ch'] < 1e-6,
+           (nodes[0]['nodes']['Xdut.Xu0.vbias_ch'], nodes[0]['nodes']['Xdut.Xu7.vbias_ch']))
+    record('the shared reference node is carried beside the per-branch columns',
+           abs(nodes[0]['shared_reference']['iref_in'] - 0.75) < 1e-9, nodes[0]['shared_reference'])
+    missing = dict(inner)
+    missing['series'] = dict(inner['series'])
+    del missing['series']['Xdut.en0']
+    del missing['series']['iref_in']
+    sparse = internal_nodes(missing, fixture_windows, ['011'])
+    record('an internal column the answer does not carry is published as NOT_OBSERVED, not dropped',
+           sparse[0]['nodes']['Xdut.en0'] == 'NOT_OBSERVED'
+           and sparse[0]['shared_reference']['iref_in'] == 'NOT_OBSERVED',
+           (sparse[0]['nodes']['Xdut.en0'], sparse[0]['shared_reference']))
+    record('a missing enable column is never counted as a conducting branch',
+           sparse[0]['branch_enables_high'] == selected - 1, sparse[0]['branch_enables_high'])
+    torn = dict(named)
+    torn['window_basis'] = 't0 plus 64 intervals of 120 ns, inside a frame that ends at 10347 ns'
+    round_path = os.path.join(ROOT, 'review', 'scratch', 'tr_staging', 'rows_roundtrip.csv')
+    if not os.path.isdir(os.path.dirname(round_path)):
+        os.makedirs(os.path.dirname(round_path))
+    write_rows(round_path, [torn, black], HEADER)
+    again = list(csv.DictReader(io.open(round_path, encoding='utf-8', newline='')))
+    record('a field that contains a comma survives the published table intact',
+           len(again) == 2 and again[0]['window_basis'] == torn['window_basis']
+           and again[0]['kind'] == 'black_post_fault_hold'
+           and again[1]['window_id'] == 'BLACK', (again[0]['window_basis'], again[1]['window_id']))
+    widths = set()
+    for line in io.open(round_path, encoding='utf-8', newline='').read().splitlines():
+        widths.add(len(next(csv.reader([line]))))
+    record('the published table re-reads at the header width on every line',
+           widths == {len(HEADER)}, (sorted(widths), len(HEADER)))
     return results
 
 

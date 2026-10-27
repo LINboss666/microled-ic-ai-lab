@@ -1,0 +1,48 @@
+{
+ "adjustments": [
+  {
+   "decided_utc": "2026-10-26T14:22:13Z",
+   "evidence_directory": "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/selftest_stray_launches",
+   "launched_by": "the DATA-7C-B-TR runner selftest, before the output-directory guard",
+   "launches": [
+    {
+     "case_id": "HYB-120",
+     "deck_sha256": "66bf817daf027b4c97ded93aa7eae7bdfd9ae9e59606b6a3ee379b98928671cf",
+     "ended_utc": "2026-10-26T14:15:20Z",
+     "launch_id": "T001",
+     "log_sha256": "9253aeaa5ff9cd991bf8fc235912c11677a3effa45d8b37a2f76bd4b78e45ebc",
+     "raw_sha256": "ae840226c875186a853b12e55b6eae3521705f04f337a312a5d3046d649d805d",
+     "rc": "0",
+     "requested_utc": "2026-10-26T14:13:00Z",
+     "role": "dut",
+     "state": "CONFIRMED"
+    },
+    {
+     "case_id": "HYB-120",
+     "deck_sha256": "66bf817daf027b4c97ded93aa7eae7bdfd9ae9e59606b6a3ee379b98928671cf",
+     "ended_utc": "2026-10-26T14:18:42Z",
+     "launch_id": "T002",
+     "log_sha256": "3cf1fdae53f55ea07d407eb5d2cf2204f30738718ee11aa876dec45bccfdfeec",
+     "raw_sha256": "622ce160b4ea814c58b16e24b97d08fa6857669fa16279810265ab2e2a07c749",
+     "rc": "0",
+     "requested_utc": "2026-10-26T14:16:23Z",
+     "role": "dut",
+     "state": "CONFIRMED"
+    }
+   ],
+   "log_file_survives_for": "T002 only: both stray runs wrote one per-case log name, so the log recorded for T001 at 14:15:20Z was overwritten when T002 settled at 14:18:42Z. The bytes now held in selftest_stray_launches/r_selftest_HYB-120_dut.log hash to the T002 digest 3cf1fdae...; the T001 digest 9253aeaa... is a recorded number with no retained bytes behind it. The runner now names each log after its ledger row, so this collision cannot recur.",
+   "not_used_as_measurement": true,
+   "processes": 2,
+   "raw_files_kept": "no: the two staging raws were deleted after their digests were computed, so neither stray run can be re-extracted or re-measured. The digests ae840226... (T001) and 622ce160... (T002) attest only that bytes existed at those hashes; no number from them is published.",
+   "raws_left_in_staging": false,
+   "reason": "the runner selftest reached a real launch path before the output-directory guard existed, so each entry below started one Spectre process into the scratch staging directory",
+   "records_moved": [
+    "r_selftest_HYB-120_dut.log",
+    "spectre_launch_account.csv"
+   ]
+  }
+ ],
+ "approved_ceiling": 24,
+ "run_id": "r20261026_132228_3fc148",
+ "task_id": "DATA-7C-B-TR"
+}

@@ -1,0 +1,28 @@
+{
+ "case_id": "HYB-200",
+ "conversion_source": "results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148/hyb_inputs.json",
+ "deck_sha256": "3cb8e6b77170a74cca7bb65044192342c97dd5cf0bb7183b94460658d799e859",
+ "marker_check": "PASS",
+ "markers": [
+  "MARK start group_ns 200 tick_div 20 dump dd1_d7c_b_tr_hyb_200.vcd",
+  "MARK frame ht 0 pam 00000000000000000000000000000000 win_state 3 version 1 proto_err 00000000 time 15686.000 ns",
+  "MARK frame ht 1 pam 00000000000000000000000000000000 win_state 3 version 1 proto_err 00000000 time 31356.000 ns",
+  "MARK frame ht 2 pam 00000000000000000000000000000011 win_state 3 version 1 proto_err 00000000 time 47026.000 ns",
+  "MARK frame ht 63 pam 00000000000000000000000000000111 win_state 3 version 1 proto_err 00000000 time 62696.000 ns",
+  "MARK end group_ns 200 tick_div 20 ticks_raised 276 proto_err 00000000 time 62896.000 ns"
+ ],
+ "vcd_sha256": "0798d47c83d22b119e7fa4a678449c2e929f23cf106d540c6c4a181ea7211eb1",
+ "windows": [
+  {
+   "accepted_ticks": 65,
+   "basis": "t0 plus 64 intervals of 200 ns, inside a frame that ends at 16698 ns",
+   "code": "000",
+   "declared_by": "scripts/dd1_d7c_b_tr_trace.py measurement_windows",
+   "frame": "B0",
+   "kind": "black_64T",
+   "start_ns": 2366.0,
+   "stop_ns": 15166.0,
+   "window_id": "BLACK_B0"
+  }
+ ]
+}

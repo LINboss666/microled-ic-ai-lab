@@ -1,0 +1,87 @@
+{
+ "compile_records": [
+  "compile_HYB-120.json",
+  "compile_HYB-200.json"
+ ],
+ "iverilog_binary_sha256": "ed783633fe5ff079955fb35835d300ec825af932329f2f33a7937a896b0ed2b3",
+ "iverilog_records": [
+  {
+   "charged": false,
+   "exe_sha256": "D:\\ic617_d7c_b_tr\\results\\evidence\\dd1_d7c_b_tr_r20261026_132228_3fc148\\rtl\\trhyb.vvp",
+   "file": "compile_HYB-120.json",
+   "note": "recorded, not charged: the approved ceiling counts simulator processes, and this round charges every vvp start it made",
+   "rc": 0
+  },
+  {
+   "charged": false,
+   "exe_sha256": "D:\\ic617_d7c_b_tr\\results\\evidence\\dd1_d7c_b_tr_r20261026_132228_3fc148\\rtl\\trhyb.vvp",
+   "file": "compile_HYB-200.json",
+   "note": "recorded, not charged: the approved ceiling counts simulator processes, and this round charges every vvp start it made",
+   "rc": 0
+  }
+ ],
+ "kept_locally": [
+  {
+   "bytes": 1129,
+   "file": "HYB-120.vvp.log",
+   "reason": "log of a charged start, kept locally: it embeds the absolute command line",
+   "sha256": "0281bf6494d14f70dd72c91455a33cc298ace0d2264d54bd6172343ae59aa87e"
+  },
+  {
+   "bytes": 1119,
+   "file": "HYB-200.vvp.log",
+   "reason": "log of a charged start, kept locally: it embeds the absolute command line",
+   "sha256": "bed59df6b8196598c8666608e8b0571f3119d4ae984ecb24eb4e5dcafd2aa954"
+  },
+  {
+   "bytes": 920,
+   "file": "HYB-200_R005.vvp.log",
+   "reason": "log of a charged start, kept locally: it embeds the absolute command line",
+   "sha256": "89be969b6445360705e10795aa13192e8c3ae54e75ee2931b8cc503405f379d5"
+  },
+  {
+   "bytes": 55528,
+   "file": "trhyb.vvp",
+   "reason": "intermediate of the compile step, kept locally",
+   "sha256": "d265f17f8e93e8920755da202dd37c547fbfad212ed6c46f1121bbb1e1ce883b"
+  }
+ ],
+ "rtl_blob_sha256": "6dbf464a49e49ad489188fa51920c30a3c89d6b3106046a4fefe558ef0a50c87",
+ "rtl_path": "rtl/dd1_d7a_gray_ctrl.sv",
+ "run_id": "r20261026_132228_3fc148",
+ "task_id": "DATA-7C-B-TR",
+ "tb_blob_sha256": "69936b231bbc662bd64d77f6568665f38d684a1ccd7a5e1e3dea2fb965a30279",
+ "tb_path": "tests/dd1_d7c_b_tr/tb_dd1_d7c_b_tr_hyb.sv",
+ "tool_root_redacted": "the tool tree path is not published; the binary digest is",
+ "traces": [
+  {
+   "bytes": 169543,
+   "case_id": "HYB-120",
+   "charged_start": "R004",
+   "file": "dd1_d7c_b_tr_hyb_120.vcd",
+   "gzip_bytes": 28073,
+   "gzip_file": "dd1_d7c_b_tr_hyb_120.vcd.gz",
+   "gzip_sha256": "d492cb0fb7a570e4292a51bb0045a168f30a72a4eb6134db83b9fd8d658e4503",
+   "log_kept_locally_because": "the vvp log begins with the command line, which names an absolute tool path",
+   "log_sha256": "0281bf6494d14f70dd72c91455a33cc298ace0d2264d54bd6172343ae59aa87e",
+   "lossless": true,
+   "sha256": "0d07a25a55787e3c6eda262e9c03d9b01c30fb21790ef90d49d3af5d604a191f",
+   "start_rc": "0"
+  },
+  {
+   "bytes": 246736,
+   "case_id": "HYB-200",
+   "charged_start": "R005",
+   "file": "dd1_d7c_b_tr_hyb_200.vcd",
+   "gzip_bytes": 34714,
+   "gzip_file": "dd1_d7c_b_tr_hyb_200.vcd.gz",
+   "gzip_sha256": "49f1a6b1233180a7b846bf753e40ecd276492231584f42d167c513965bfa8c32",
+   "log_kept_locally_because": "the vvp log begins with the command line, which names an absolute tool path",
+   "log_sha256": "89be969b6445360705e10795aa13192e8c3ae54e75ee2931b8cc503405f379d5",
+   "lossless": true,
+   "sha256": "0798d47c83d22b119e7fa4a678449c2e929f23cf106d540c6c4a181ea7211eb1",
+   "start_rc": "0"
+  }
+ ],
+ "written_by": "scripts/dd1_d7c_b_tr_record.py deliver_traces"
+}

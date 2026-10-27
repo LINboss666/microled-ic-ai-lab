@@ -1,0 +1,3 @@
+launch_id,task_id,run_id,case_id,role,state,requested_utc,ended_utc,rc,deck_sha256,raw_sha256,log_sha256,refusal,ceiling,occupied_after,guest_free_kb,samples,columns
+T001,DATA-7C-B-TR,r_selftest,HYB-120,dut,CONFIRMED,2026-10-26T14:13:00Z,2026-10-26T14:15:20Z,0,66bf817daf027b4c97ded93aa7eae7bdfd9ae9e59606b6a3ee379b98928671cf,ae840226c875186a853b12e55b6eae3521705f04f337a312a5d3046d649d805d,9253aeaa5ff9cd991bf8fc235912c11677a3effa45d8b37a2f76bd4b78e45ebc,,24,1,1937408,,
+T002,DATA-7C-B-TR,r_selftest,HYB-120,dut,CONFIRMED,2026-10-26T14:16:23Z,2026-10-26T14:18:42Z,0,66bf817daf027b4c97ded93aa7eae7bdfd9ae9e59606b6a3ee379b98928671cf,622ce160b4ea814c58b16e24b97d08fa6857669fa16279810265ab2e2a07c749,3cf1fdae53f55ea07d407eb5d2cf2204f30738718ee11aa876dec45bccfdfeec,,24,2,1937252,,

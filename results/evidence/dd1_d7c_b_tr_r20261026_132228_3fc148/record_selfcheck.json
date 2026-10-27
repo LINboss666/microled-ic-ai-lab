@@ -1,0 +1,187 @@
+{
+ "gates": [
+  {
+   "extra": "",
+   "name": "the record stage starts no simulator: the launch account is unchanged after it",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "every approved case has a published row table",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the prepared PAM cases publish exactly the frozen emission window count",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the two joint cases publish the emission windows their own enable waveforms declare",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "every published table re-reads at its header width on every line",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the black windows are the declared zero-code and post-fault regions",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "no black window invents a T50 and every one carries a zero target",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "every black window names the function that declared its boundary",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "each published row is bound to a confirmed launch of the delivered deck",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the meter witness passed for all nine meters before their DUT ran",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the three declared convergence pairs are computed with matching context",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the convergence verdict is per window against the frozen limit",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the seven statuses are published separately",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "a negative electrical finding is published as a FAIL, never folded into an aggregate",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the internal-node tables cover every flat step of every case",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "each flat step is observed for at least the 50 ns the task book asks for",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "TR-LONG carries all 26 branch columns and the shared reference on every step",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the selected branch count is cross-checked as code plus one on every step",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the delay attribution is measured on every emission window of the nine cases",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "a boundary the samples do not carry is named as unattributed, not filled in",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the carried DC-R1 followup F-TR-1 is implemented: vss is a required signal",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the carried DC-R1 followup F-TR-2 is closed with proof: terminals agree and the tolerance is expressible at the exported precision",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the hybrid stimulus is the trace of a charged start and its log says so",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the RTL reconciliation names the ledger it counts",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "every stray process is charged and the enforced ceiling still holds",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "0 existing tracked path was modified or deleted since the base",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the bytes this round adds stay under the 32 MiB ceiling",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "every modified file this round owns is staged beside the tables it produced",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "nothing this round touches is a deletion",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "no raw answer, log, unpacked trace or executable is a tracked candidate",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the shipped traces decompress byte for byte and are the traces the decks stamp",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "a confirmed start whose ledger row carries no trace digest is published as a gap",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "no credential, PDK, license or vendor absolute path string is in a tracked text file",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "published text is LF only",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "the nine run copies still equal the frozen base plus their identity block",
+   "verdict": "PASS"
+  },
+  {
+   "extra": "",
+   "name": "every delivered deck stamps the contract as it is committed at HEAD",
+   "verdict": "PASS"
+  }
+ ],
+ "generated_utc": "2026-10-27T03:51:46Z",
+ "head_sha": "86fc70862ad27e37a9d3838fe7b892f3e281828e",
+ "written_by": "scripts/dd1_d7c_b_tr_record.py"
+}
