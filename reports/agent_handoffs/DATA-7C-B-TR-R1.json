@@ -1,0 +1,294 @@
+{
+ "base_sha": "398c9e852c16db85cbfa4539e859534e117ff0d2",
+ "branch": "poc/data-pam-d7c-b-tr-r1",
+ "counterexamples": {
+  "after": {
+   "all_named_defects_reproduced": false,
+   "native_launches": 0,
+   "permitted_processes": [
+    "git",
+    "python.exe"
+   ],
+   "positive_controls_pass": true,
+   "reproduced": {
+    "black_window_one_uA_peak_ignored_by_shutoff_status": false,
+    "generated_recompute_accepts_five_process_evidence_rows_as_four": true,
+    "generated_recompute_accepts_forged_dc_target_and_dynamic_PASS": true,
+    "generated_recompute_accepts_wrong_reference_tick_1000ns": true,
+    "native_nonincreasing_time_accepted": false,
+    "native_wrong_current_unit_accepted": false,
+    "native_zero_vdd18_accepted": false,
+    "stale_account_overwrites_a_charged_reservation": false,
+    "ten_ns_late_hybrid_enable_accepted": false
+   },
+   "rtl_simulations": 0
+  },
+  "before": {
+   "all_named_defects_reproduced": true,
+   "native_launches": 0,
+   "positive_controls_pass": true,
+   "reproduced": {
+    "black_window_one_uA_peak_ignored_by_shutoff_status": true,
+    "generated_recompute_accepts_five_process_evidence_rows_as_four": true,
+    "generated_recompute_accepts_forged_dc_target_and_dynamic_PASS": true,
+    "generated_recompute_accepts_wrong_reference_tick_1000ns": true,
+    "native_nonincreasing_time_accepted": true,
+    "native_wrong_current_unit_accepted": true,
+    "native_zero_vdd18_accepted": true,
+    "stale_account_overwrites_a_charged_reservation": true,
+    "ten_ns_late_hybrid_enable_accepted": true
+   },
+   "rtl_simulations": 0
+  },
+  "instrument_not_applicable": [
+   "generated_recompute_accepts_forged_dc_target_and_dynamic_PASS",
+   "generated_recompute_accepts_wrong_reference_tick_1000ns",
+   "generated_recompute_accepts_five_process_evidence_rows_as_four"
+  ],
+  "real_entry_forgery_probe": {
+   "all_three_refused": true,
+   "cases": {
+    "five_process_evidence_rows_as_four": {
+     "failed_lines": 2,
+     "injected": "the fifth RTL row was given an executable digest and a return code of its own",
+     "rc": 1,
+     "refused_by_name": true,
+     "reproduced": true
+    },
+    "forged_dc_target_and_dynamic_PASS": {
+     "failed_lines": 68,
+     "injected": "every DC target replaced by the measured charge and the dynamic verdict written as PASS",
+     "rc": 1,
+     "refused_by_name": true,
+     "reproduced": true
+    },
+    "wrong_reference_tick_1000ns": {
+     "failed_lines": 3,
+     "injected": "the TR-120 denominator moved to a 1000 ns tick and both errors recomputed for it",
+     "rc": 1,
+     "refused_by_name": true,
+     "reproduced": true
+    }
+   },
+   "clean_package": {
+    "failed": [],
+    "failed_lines": 0,
+    "log": "D:\\d7cb_tr_r1_parts_staging\\probe_forgery_final_20261028_021221\\clean\\replay.log",
+    "rc": 0,
+    "refused": "",
+    "summary": "RECOMPUTE_R1 gate 838/838"
+   },
+   "file": "results/evidence/dd1_d7c_b_tr_r1_r20261027_143223_4c8a81/probe_forgery/r1_recompute_forgery.json"
+  }
+ },
+ "delivery_integrity": {
+  "artifacts_excluded": 2,
+  "artifacts_recorded": 21,
+  "artifacts_verified": 19,
+  "excluded": [
+   "dd1_d7c_b_tr_hyb_120.vcd: recorded by digest only (NOT_TRACKED_BY_RULE)",
+   "dd1_d7c_b_tr_hyb_200.vcd: recorded by digest only (NOT_TRACKED_BY_RULE)"
+  ],
+  "native_evidence_files_compared": 54,
+  "native_evidence_mismatches": [],
+  "note": "the delivered containers rejoin to the digests the manifest records, and every file of the native round still equals its committed blob",
+  "part_files": 134,
+  "problems": [],
+  "whole_containers": 8
+ },
+ "evidence_directory": "results/evidence/dd1_d7c_b_tr_r1_r20261027_143223_4c8a81",
+ "frozen_surface": {
+  "differences": [],
+  "method": "git ls-tree -r blob sha and mode, BASE against HEAD",
+  "paths_compared": 2935
+ },
+ "head_at_handoff": "f38a8bd30d42730b4b348d30300200ccab761e93",
+ "inputs_registered": 19,
+ "instrument_sha256": "1dc6e85fc849afbb11e98863b129509917b4f55c5351d19449c1e8c01bf6a37f",
+ "limits_kept": {
+  "acceptance_registered": "NO",
+  "candidate_dut_changed": "NO",
+  "merge_performed": "NO",
+  "new_guest_connections": 0,
+  "new_oa_access": 0,
+  "new_pdk_license_or_credential_reads": 0,
+  "new_rtl_simulations": 0,
+  "new_spectre_launches": 0,
+  "next_native_stage_authorised": "NO",
+  "old_evidence_or_account_changed": "NO",
+  "soa_signoff": "NO"
+ },
+ "native_sequences": {
+  "answers_exported": 18,
+  "cap_bytes": 32505856,
+  "container": "base85 text container around a gzip payload of the printed tokens",
+  "gaps": [
+   {
+    "case_id": "HYB-120",
+    "gap": "NOT_TRACKED_BY_RULE",
+    "reason": "the trace bytes stay out of the tracked directory; the container is shipped in the reviewer package built with --package, and the re-read proof of both traces is published by dd1_d7c_b_tr_r1_publish.py",
+    "role": null,
+    "samples": null
+   },
+   {
+    "case_id": "HYB-200",
+    "gap": "NOT_TRACKED_BY_RULE",
+    "reason": "the trace bytes stay out of the tracked directory; the container is shipped in the reviewer package built with --package, and the re-read proof of both traces is published by dd1_d7c_b_tr_r1_publish.py",
+    "role": null,
+    "samples": null
+   }
+  ],
+  "internal_fragments": [
+   "RS-SWITCH",
+   "RS-FULL"
+  ],
+  "observations_witnessed": 2,
+  "samples_total": 2562403,
+  "tracked_bytes": 32193607
+ },
+ "old_vs_new": {
+  "added_columns": [
+   "settling_dc_last_out_ns",
+   "settling_dc_left_limit_A",
+   "settling_dc_start_ns",
+   "settling_nominal_last_out_ns",
+   "settling_nominal_left_limit_A",
+   "settling_nominal_start_ns"
+  ],
+  "changed_cells": 222,
+  "keys_compared": 37,
+  "note": "a negative electrical finding stays published as itself: this table is the only place a number may move, and every move names its reason",
+  "same_value_cells": 1369
+ },
+ "recompute": {
+  "budget_accounting": {
+   "claim_limit": "the 19 booked rows are not 19 independently proven starts; T001 stays charged as UNCERTAIN and the two escaped processes are charged as recorded strays",
+   "main_ledger_ceiling": 22,
+   "main_ledger_rows": 19,
+   "recorded_stray_processes": 2,
+   "remaining_before_next_stage": 3,
+   "rtl_distinct_executables": 4,
+   "rtl_process_count": 4,
+   "rtl_reconciliation_problems": [],
+   "rtl_reconciliation_processes": 4,
+   "rtl_rows": 5,
+   "rtl_rows_with_process_evidence": 4,
+   "task_total": 24,
+   "total_occupied": 21,
+   "uncertain_rows": [
+    "T001"
+   ]
+  },
+  "delivery_gate": "RECOMPUTE_R1 gate 838/838",
+  "delivery_gate_rc": 0,
+  "failures": [],
+  "preflight": "RECOMPUTE_R1 preflight 835/835"
+ },
+ "reconversion": {
+  "note": "the converter re-read the trace bytes whose digest the native round recorded and the four PWL sources of the delivered run copy, without starting vvp",
+  "runs": [
+   {
+    "black_windows": 2,
+    "case_id": "HYB-120",
+    "deck_problems": [],
+    "deck_sha256": "66bf817daf027b4c97ded93aa7eae7bdfd9ae9e59606b6a3ee379b98928671cf",
+    "frames": 5,
+    "reconverted": true,
+    "vcd_sha256": "0d07a25a55787e3c6eda262e9c03d9b01c30fb21790ef90d49d3af5d604a191f"
+   },
+   {
+    "black_windows": 1,
+    "case_id": "HYB-200",
+    "deck_problems": [],
+    "deck_sha256": "3cb8e6b77170a74cca7bb65044192342c97dd5cf0bb7183b94460658d799e859",
+    "frames": 4,
+    "reconverted": true,
+    "vcd_sha256": "0798d47c83d22b119e7fa4a678449c2e929f23cf106d540c6c4a181ea7211eb1"
+   }
+  ]
+ },
+ "report": "reports/dd1_d7c_b_tr_review_fix_r1.md",
+ "reviewed_content_sha": "f49ba9d78190f8c3da2adca9dbd4fb3e48d26841",
+ "reviewer_zip": {
+  "bytes": 44147,
+  "path": "MicroLED_DATA7C_B_TR_Independent_Review_and_R1_Task_20261027.zip",
+  "path_note": "the machine-local directory was dropped from this record because it carries a user name; the ZIP is identified by the file name, the byte count and the digest, which are unchanged",
+  "sha256": "5c9b267a484aa7c1c68dbf38ce242d6bd7ef377937341f35b5a2826f508440a8"
+ },
+ "run_id": "r20261027_143223_4c8a81",
+ "statuses": [
+  {
+   "expected": "18",
+   "measured": "18",
+   "note": "18 of 18 planned launches confirmed, 19 account rows charged, 2 stray processes charged from the recorded budget adjustment, effective ceiling 22 of the approved 24, 4 vvp processes charged of the approved 4; rows kept charged and not refunded: T001; the seven verdicts are judged on the rows re-extracted by this round and the integrity and completeness figures are the native record's own",
+   "status": "EXECUTION_COMPLETENESS",
+   "verdict": "PASS"
+  },
+  {
+   "expected": "37",
+   "measured": "37",
+   "note": "37 rows bound to a confirmed launch and the delivered deck; 9 cases carry the two-terminal check; the seven verdicts are judged on the rows re-extracted by this round and the integrity and completeness figures are the native record's own",
+   "status": "EVIDENCE_INTEGRITY",
+   "verdict": "PASS"
+  },
+  {
+   "expected": "37",
+   "measured": "33",
+   "note": "abs(error_dynamic_LSB) <= 0.5, the frozen criterion of this task",
+   "status": "DYNAMIC_CHARGE_STATUS",
+   "verdict": "FAIL"
+  },
+  {
+   "expected": "37",
+   "measured": "23",
+   "note": "abs(error_nominal_LSB) <= 0.5 reported independently; a dynamic pass is never presented as an uncalibrated grey-scale pass",
+   "status": "NOMINAL_CHARGE_STATUS",
+   "verdict": "FAIL"
+  },
+  {
+   "expected": "34",
+   "measured": "34",
+   "note": "against the DC target with a +/-5 % band, at least 10 ns, deadline flat_stop",
+   "status": "SETTLING_STATUS",
+   "verdict": "PASS"
+  },
+  {
+   "expected": "37",
+   "measured": "37",
+   "note": "max(abs(I_sink)) <= 1.5e-07 A over the last 100 ns of every emission pure-off window AND over the whole of every black window, where a net charge of zero never excuses a current peak",
+   "status": "SHUTOFF_STATUS",
+   "verdict": "PASS"
+  },
+  {
+   "expected": "0",
+   "measured": "13",
+   "note": "abs(dQ)/QLSB <= 0.01 on the three declared pairs",
+   "status": "CONVERGENCE_STATUS",
+   "verdict": "PASS"
+  },
+  {
+   "expected": "835",
+   "measured": "835",
+   "note": "the standalone recomputer re-integrated every published window from the exported native samples and re-derived both charge columns",
+   "status": "NATIVE_SEQUENCE_REINTEGRATION",
+   "verdict": "PASS"
+  },
+  {
+   "expected": "2",
+   "measured": "2",
+   "note": "both stored traces were re-read with the patched converter and answer against the four PWL sources of the delivered run copy",
+   "status": "RTL_INPUT_PROVENANCE",
+   "verdict": "PASS"
+  },
+  {
+   "expected": "24",
+   "measured": "21",
+   "note": "the approved task allows 24 Spectre processes, the main ledger is enforced at 22 after the 2 recorded stray processes, and the 19 booked rows plus those strays occupy 21 of 24; RTL starts are counted by the 4 distinct executable digests on their own rows, never by subtracting one from a row count ",
+   "status": "BUDGET_ACCOUNTING_STATUS",
+   "verdict": "PASS"
+  }
+ ],
+ "stop_reason": "AWAITING_INDEPENDENT_REVIEW",
+ "task_book_copy": "reports/tasks/DATA-7C-B-TR-R1.md",
+ "task_id": "DATA-7C-B-TR-R1"
+}

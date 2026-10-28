@@ -162,7 +162,8 @@
  "reviewer_directory_read": "D:\\dc_tr_review_R1_20261027_222732",
  "reviewer_zip": {
   "bytes": 44147,
-  "path": "C:\\Users\\LMX\\Downloads\\MicroLED_DATA7C_B_TR_Independent_Review_and_R1_Task_20261027.zip",
+  "path": "MicroLED_DATA7C_B_TR_Independent_Review_and_R1_Task_20261027.zip",
+  "path_note": "the machine-local directory was dropped from this record because it carries a user name; the ZIP is identified by the file name, the byte count and the digest, which are unchanged",
   "sha256": "5c9b267a484aa7c1c68dbf38ce242d6bd7ef377937341f35b5a2826f508440a8"
  },
  "run_id": "r20261027_143223_4c8a81",
