@@ -70,9 +70,13 @@ the evidence directory.
 ## What was measured, not restated
 
 ```text
-newly tracked bytes this round   33,093,802 B (221 added files = 32,818,620 B of evidence and
-                                 tooling growth over 4 modified files, 275,182 B of scripts/tests/reports)
-                                 460,630 B under the task's 32 MiB (33,554,432 B)
+newly tracked bytes this round   33,100,639 B measured over 398c9e85..9145cf3 (222 added files:
+                                 32,818,620 B of evidence and 275,182 B of scripts/tests/reports at
+                                 the packaging commit, plus this receipt's own 6,837 B)
+                                 453,793 B under the task's 32 MiB (33,554,432 B). The commit that
+                                 carries this restatement adds a few hundred bytes more, which the
+                                 margin absorbs; the figure is not self-referential because it names
+                                 the range it was measured over.
 delivered containers             32,193,607 B against the exporter's 32,505,856 B ceiling
 part and whole artifacts         142 files: 134 parts, 8 whole containers
 verify at the delivered directory 19 verified, 2 named excluded (the two .vcd traces), 0 problems
