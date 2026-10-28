@@ -370,17 +370,23 @@ package now carries the entries' import and input closure instead of a subset of
 ```text
 payload commit      f38a8bd30d42730b4b348d30300200ccab761e93   (222 files: tools, evidence, task book)
 record commit       706d6e54ce717895456a7f67e4a339d81b3af380   (report, handoff, nameless input path)
-packaging commit    recorded in reports/dd1_d7c_b_tr_r1_delivery_receipt.md, with its own read-back
+packaging commit    d6ad3444d96e6577d94e10594a8dd7ec36dfd623   (the package carries what its own
+                                                                   entries import and read)
 branch pushed       origin/poc/data-pam-d7c-b-tr-r1, new branch, normal push (no force, no --no-verify)
-remote full SHA     706d6e54ce717895456a7f67e4a339d81b3af380 at 2026-10-28T02:42:51Z (git ls-remote)
+remote full SHA     d6ad3444d96e6577d94e10594a8dd7ec36dfd623 at 2026-10-28T03:16:13Z (git ls-remote),
+                    confirmed again at 03:16:28Z and agreeing with `git rev-parse HEAD`
 main                23e471cb936b421ee97e1250c3be06edf96f9937 (unchanged on the remote, verified)
 other branches      poc/data-pam-d7c-b-tr 398c9e8, -dc-r1 61621f6, -prep-r2 e51c532 (all unmoved)
-reviewer ZIP        bytes and sha256 recorded outside the archive, in the delivery receipt
+reviewer ZIP        dd1_d7c_b_tr_package_d6ad344.zip, 23,729,459 B,
+                    sha256 b669632e07c9805d3766cb932d9e6a8d5e72968dc4e25cb3ca96070372cbe0ee,
+                    325 files, 6 refused, replay 838/838 and --verify 19/21 problems=0 at rc=0;
+                    recorded in reports/dd1_d7c_b_tr_r1_delivery_receipt.md, outside the archive
 ```
 
 Both read-back paths were taken on the remote (`git ls-remote` through the machine's proxy) and at
 the repository (`git rev-parse HEAD`), and they agreed; the pre-commit safety gate ran for real on
-every one of these commits and reported `SAFETY_GATE: PASS` (222 objects, then 4).
+every one of these commits and reported `SAFETY_GATE: PASS` (222 objects, then 4, then 3), as did the
+pre-push history scan.
 
 ## 13. Stop
 
