@@ -101,12 +101,13 @@ but these containers.
 * All 9 DUT and all 9 preflight answers fit, with the two internal fragments that do fit: the 18
   sequences, the frozen dependency and the RS-SWITCH and RS-FULL fragments come to **32,193,607
   delivered bytes**, which the exporter holds under its own ceiling of 32,505,856 B (the task's 32
-  MiB, 33,554,432 B, minus a 1 MiB reserve for the rest of the evidence). The arithmetic the reviewer
-  can re-check on the working tree, before the payload commit, is: containers and dependency
-  32,193,607 B + the republished tables, statuses, probes and JSON of this round's evidence directory
-  624,842 B = **32,818,449 B of newly tracked numeric evidence**, 735,983 B under the task ceiling;
-  with the round's own scripts, tests, reports and handoff (619,912 B) the whole tracked set is
-  **33,338,361 B**, 216,071 B under 32 MiB. §12 restates these figures against the committed tree.
+  MiB, 33,554,432 B, minus a 1 MiB reserve for the rest of the evidence). The figure a reviewer can
+  reproduce — `git diff --name-status 398c9e85..HEAD` with one `git cat-file -s` per path, which is
+  what was measured here at the record commit — is: this round's evidence directory
+  **32,818,620 B of newly tracked numeric evidence** (the containers plus the republished tables,
+  statuses, probes and JSON) and 270,103 B of its own scripts, tests and reports, so **33,088,723 B
+  added to the repository, 465,709 B under the task's 32 MiB**. The receipt restates the total after
+  the packaging and receipt commits.
   A container longer than 240 KiB is cut into `<name>.part000.txt`, `<name>.part001.txt` …
   because the repository's own history gate refuses any single blob over 512 KiB;
   `native_manifest.json` records the whole-file digest and the digest and byte count of every part,
@@ -335,7 +336,13 @@ the local vvp logs through `QODER_TR_RAW_DIR` and its evidence-directory argumen
 written); run without them it refuses, because the raws, logs and traces are not in the object store.
 Out of the repository the recomputer replays on a copy: 838/838 clean, three named refusals. The
 Git-bound packaging entry is run at the repository, and any entry that needs Git is declared NOT_RUN
-inside the package copy.
+inside the package copy. What the copy does run was run: `independent_recompute.py` re-derived
+**838/838 at rc=0**, and `dd1_d7c_b_tr_r1_native.py --verify` on the delivered directory inside the
+extracted copy rejoined every part and reported **19 verified, 2 named excluded, 0 problems at rc=0**,
+with no Git and no guest. That took two packaging fixes: the range alone did not carry
+`scripts/dd1_d7c_b_dc_run.py` (which the export entry imports) nor the frozen PREP schedule and window
+tables and the accepted DC table that its contract module opens at their published paths, so the
+package now carries the entries' import and input closure instead of a subset of a diff.
 
 ## 11. Not verified / limits kept open
 
@@ -361,14 +368,19 @@ inside the package copy.
 ## 12. Delivery read-back
 
 ```text
-payload commit      <pending>
-record commit       <pending>
-branch pushed       <pending>
-remote full SHA     <pending>
-read-back UTC       <pending>
-main                23e471cb936b421ee97e1250c3be06edf96f9937 (must remain)
-reviewer ZIP        <pending>  digest recorded outside the archive
+payload commit      f38a8bd30d42730b4b348d30300200ccab761e93   (222 files: tools, evidence, task book)
+record commit       706d6e54ce717895456a7f67e4a339d81b3af380   (report, handoff, nameless input path)
+packaging commit    recorded in reports/dd1_d7c_b_tr_r1_delivery_receipt.md, with its own read-back
+branch pushed       origin/poc/data-pam-d7c-b-tr-r1, new branch, normal push (no force, no --no-verify)
+remote full SHA     706d6e54ce717895456a7f67e4a339d81b3af380 at 2026-10-28T02:42:51Z (git ls-remote)
+main                23e471cb936b421ee97e1250c3be06edf96f9937 (unchanged on the remote, verified)
+other branches      poc/data-pam-d7c-b-tr 398c9e8, -dc-r1 61621f6, -prep-r2 e51c532 (all unmoved)
+reviewer ZIP        bytes and sha256 recorded outside the archive, in the delivery receipt
 ```
+
+Both read-back paths were taken on the remote (`git ls-remote` through the machine's proxy) and at
+the repository (`git rev-parse HEAD`), and they agreed; the pre-commit safety gate ran for real on
+every one of these commits and reported `SAFETY_GATE: PASS` (222 objects, then 4).
 
 ## 13. Stop
 

@@ -1889,6 +1889,47 @@ if __name__ == '__main__':
 '''
 
 
+PACKAGE_ENTRIES = ('scripts/dd1_d7c_b_tr_r1_native.py', 'scripts/dd1_d7c_b_tr_r1_publish.py',
+                   'scripts/dd1_d7c_b_tr_r1_recompute.py', 'scripts/dd1_d7c_b_tr_record.py',
+                   'scripts/dd1_d7c_b_tr_measure.py', 'scripts/dd1_d7c_b_tr_trace.py')
+IMPORT_PREFIXES = ('dd1_', 'sc1_')
+# the pre-range inputs that the packaged entries read at their published paths: the frozen schedule
+# and window tables of the PREP round, and the accepted DC table the contract names as its reference.
+# They were committed before this packaging range, so a copy built from the range alone cannot run
+# the entries that open them, and the README would promise something the package cannot do.
+PACKAGE_DATA = ('tests/dd1_d7c_b_prep/schedule.csv', 'tests/dd1_d7c_b_prep/windows.csv',
+                'results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe/dc_matrix_dut.csv')
+
+
+def support_for(head):
+    """the repository modules and the frozen inputs the package's runnable entries need
+
+    The packaging range lists what this round changed, and an entry such as `--verify` imports
+    accepted primitives that predate that range and opens the tables those primitives read. Without
+    them the promise the README makes about running the entries in the copy is aspirational, so they
+    travel with the entry that needs them, taken from the same HEAD the rest of the package is built
+    from.
+    """
+    found, queue = set(PACKAGE_DATA), list(PACKAGE_ENTRIES)
+    while queue:
+        rel = queue.pop()
+        if rel in found:
+            continue
+        proc = subprocess.Popen(['git', 'show', '%s:%s' % (head, rel)], cwd=ROOT,
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        text = proc.communicate()[0].decode('utf-8', 'replace')
+        if proc.returncode:
+            continue
+        found.add(rel)
+        for name in re.findall(r'^\s*import\s+([A-Za-z0-9_]+)', text, re.M):
+            if not name.startswith(IMPORT_PREFIXES):
+                continue
+            candidate = 'scripts/%s.py' % name
+            if candidate not in found:
+                queue.append(candidate)
+    return sorted(found)
+
+
 def package(base, head, out_root='review'):
     """a reviewer package built from committed blobs only, with the safety gate run first"""
     import repo_safety_rules as RULES
@@ -1933,6 +1974,24 @@ def package(base, head, out_root='review'):
         os.makedirs(os.path.dirname(dest), exist_ok=True)
         io.open(dest, 'wb').write(data)
         manifest.append((rel, len(data), hashlib.sha256(data).hexdigest()))
+    for rel in support_for(head):
+        proc = subprocess.Popen(['git', 'cat-file', 'blob', '%s:%s' % (head, rel)], cwd=ROOT,
+                                stdout=subprocess.PIPE)
+        data = proc.communicate()[0]
+        if not data:
+            refused.append((rel, 'no blob at HEAD, so the entry that imports it cannot run here'))
+            continue
+        text = data.decode('latin-1')
+        hits = [name for name, _rule in RULES.content_denied(text)] \
+            + [name for name, _rule in RULES.secrets_in(text)]
+        if RULES.path_denied(rel) or hits:
+            refused.append((rel, hits or 'path rule'))
+            continue
+        dest = os.path.join(stag, rel)
+        if not os.path.isfile(dest):
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+            io.open(dest, 'wb').write(data)
+            manifest.append((rel, len(data), hashlib.sha256(data).hexdigest()))
     io.open(os.path.join(stag, RECOMPUTE_NAME), 'w', encoding='utf-8',
             newline='\n').write(independent_recompute_bytes())
     os.chmod(os.path.join(stag, RECOMPUTE_NAME), 0o755)

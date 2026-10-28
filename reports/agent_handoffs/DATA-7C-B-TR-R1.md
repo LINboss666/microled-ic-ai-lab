@@ -40,11 +40,18 @@ package re-derives (838/838) and then refuses each of the three forgeries by nam
 * 18 native sequences, 2,562,403 samples, printed tokens verbatim, gzipped and carried as base85
   text containers, cut into ≤240 KiB parts because the repository safety rules admit no unknown
   binary extension and its history gate refuses a blob over 512 KiB; 142 delivered files, 32,193,607 B
-  tracked against the 32,505,856 B export ceiling and 33,351,804 B for everything this round adds,
-  which is under the task's 32 MiB. `native_manifest.json` records the whole and per-part digests and
+  tracked against the 32,505,856 B export ceiling, and 33,088,723 B added to the repository by this
+  round at the record commit (32,818,620 B of it numeric evidence), which is under the task's 32 MiB.
+  `native_manifest.json` records the whole and per-part digests and
   `--verify` rejoins them: 19 verified, 2 named as excluded, 0 problems. The identity chain of every
   answer and the budget are published the same way (task 24, main ledger 22, occupied 21 with `T001`
   UNCERTAIN still charged).
+* The reviewer package is built from committed blobs and now carries the import and input closure of
+  the entries it promises to run, so inside the extracted copy, with no Git and no guest,
+  `independent_recompute.py` re-derives 838/838 at rc=0 and
+  `dd1_d7c_b_tr_r1_native.py --verify` rejoins every delivered part at rc=0 (19 verified, 2 named as
+  excluded, 0 problems). Its bytes and sha256 are recorded outside the archive, in the delivery
+  receipt.
 * The two real traces are published by **identity** (name, byte count, uncompressed digest, the digest
   the native conversion recorded) and by their re-read result, not by copying their bytes into the
   tracked tree: `*.vcd` is a family this repository never tracks and those 416,278 B are what the RS-
