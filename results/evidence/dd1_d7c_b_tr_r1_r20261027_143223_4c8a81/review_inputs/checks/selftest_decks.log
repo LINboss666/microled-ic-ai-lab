@@ -1,0 +1,20 @@
+the seven prepared run copies are present                        PASS 
+every prepared run copy is the frozen text plus the identity block PASS 
+a hybrid copy rewrites only waves and the tran line              PASS 
+every run copy states that this round runs it                    PASS 
+both roles exist for every written case                          PASS 
+the account checks clean against the bytes on disk               PASS 
+a 2 ns ramp centred on the shifted edge passes the delivered-text check PASS 
+the synthetic text carries the ramp the checker is meant to read PASS 
+an edge whose 50 % point is off the original instant is caught   PASS 
+a ramp wider than the frozen 2 ns is caught                      PASS 
+a ramp moved off the original edge instant is caught             PASS 
+a mid-rail value stored as a level is caught                     PASS 
+a signal the conversion produced but the deck does not drive is named PASS 
+a wave that starts high loses its first edge and is caught       PASS 
+a wave that is not shifted as a whole is caught                  PASS 
+a sub-nanosecond edge instant is emitted at its own precision    PASS 
+a wave with an odd token count is refused rather than half read  PASS 
+the preflight replaces the DUT and drops its hierarchy saves     PASS 
+a preflight over a deck without exactly one DUT line is refused  PASS 
+TR_DECK_SELFTEST 19/19

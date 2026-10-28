@@ -1,0 +1,10 @@
+{
+ "at_ps": null,
+ "case_id": "TR-LONG",
+ "max_abs_difference_V": 0.0,
+ "passes": true,
+ "tolerance_is_expressible": true,
+ "tolerance_rule": "abs(data_out_V - clamp_node_V) <= 1e-06 + 1e-09 * abs(clamp_node_V)",
+ "value_display_quantum_V": 5e-16,
+ "worst_tolerance_at_that_point": 1.0012e-06
+}

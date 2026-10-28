@@ -200,6 +200,10 @@ def frame_details(vcd, frame, plan, tick_ps):
     lead = t0 - obs[0]
     de = [(t, v) for t, v in edges['data_en'] if t >= t0 and t < frame['end_ps']]
     segments = B7T.segments_of(de, t0, frame['end_ps'] - 1)
+    # the enable endpoints are read from the frame window itself, not clipped to t0: a converter that
+    # clips cannot see an edge that arrived early or late, and that is the whole question
+    enable_rises = [t for t, v in window('data_en') if v == 1]
+    enable_falls = [t for t, v in window('data_en') if v == 0 and enable_rises and t > enable_rises[0]]
     mode = _value_at(edges['mode'], latch_edge - 1)
     version = _value_at(edges['cfg_version'], latch_edge)
     fault_rises = [t for t, v in window('fault') if v == 1]
@@ -217,7 +221,14 @@ def frame_details(vcd, frame, plan, tick_ps):
             'tick_pulses_raised': len(tick_rises),
             'conducting_segments': [[a, b, b - a] for a, b, _w in segments],
             'conduct_ns': [round((b - a) / 1000.0, 3) for a, b, _w in segments],
+            'enable_rises_ps': enable_rises, 'enable_falls_ps': enable_falls,
             'pam_held_ps': [[t, v] for t, v in window('pam_sel') if t >= t0],
+            'latch_rise_ps': [t for t, v in window('latch_stb') if v == 1],
+            'cfg_valid_rise_ps': [t for t, v in window('cfg_valid') if v == 1],
+            'pwm_start_rise_ps': [t for t, v in window('pwm_start') if v == 1],
+            'blank_high_at_start': [int(_value_at(edges['blank'], t)) for t
+                                    in [t for t, v in window('pwm_start') if v == 1]],
+            'tick_rise_ps': tick_rises,
             'fault_rise_ps': fault_rises[0] if fault_rises else None,
             'fault_fall_ps': fault_falls[0] if fault_falls else None,
             'expected_intervals': plan['expected_intervals'],
@@ -258,6 +269,31 @@ def check_frames(vcd, frames, case_id):
             problems.append('%s: the accepted tick is %d ps before its consuming edge, the bench '
                             'convention is %d ps' % (tag, row['tick_lead_ps'],
                                                      int(LEAD_NS * 1000)))
+        # an enable window is named by its two endpoints, not by its width: a wave moved whole keeps
+        # the width and still drives the wrong instants, which is what the first converter accepted
+        if row['expected_intervals'] == 0:
+            if row['enable_rises_ps']:
+                problems.append('%s: the zero code must stay dark over the whole %d-interval frame, '
+                                'the enable rises at %d ps inside it'
+                                % (tag, HYB_WINDOW_INTERVALS, row['enable_rises_ps'][0]))
+        else:
+            if len(row['enable_rises_ps']) != 1:
+                problems.append('%s: the enable rises %d time(s) inside one frame, the protocol lights '
+                                'it once' % (tag, len(row['enable_rises_ps'])))
+            if row['enable_rises_ps'][:1] != [row['t0_ps']]:
+                problems.append("%s: data_en rises at %s while the reference edge that consumes the "
+                                "first accepted tick is %d ps; the endpoints are compared in the "
+                                "trace's own integer units, with no tolerance"
+                                % (tag, row['enable_rises_ps'][:1] or 'nowhere inside the frame',
+                                   row['t0_ps']))
+            want_fall_ps = (row['fault_rise_ps'] if row['kind'] == 'safety' and row['fault_rise_ps']
+                            else row['t0_ps'] + row['expected_intervals'] * tick_ps)
+            if len(row['enable_falls_ps']) != 1 or row['enable_falls_ps'][:1] != [want_fall_ps]:
+                problems.append('%s: data_en falls at %s while a %d-interval window opened at %d ps '
+                                'ends at %d ps%s'
+                                % (tag, row['enable_falls_ps'][:1] or 'nowhere inside the frame',
+                                   row['expected_intervals'], row['t0_ps'], want_fall_ps,
+                                   ', where the fault edge cuts it' if row['kind'] == 'safety' else ''))
         if row['kind'] == 'normal':
             gaps = sorted(set(row['accepted_tick_ps'][index] - row['accepted_tick_ps'][index - 1]
                               for index in range(1, len(row['accepted_tick_ps']))))
@@ -304,11 +340,34 @@ def check_frames(vcd, frames, case_id):
                     problems.append('%s: the enable re-lights after the fault is withdrawn (%s), '
                                     'the aborted window must stay black'
                                     % (tag, after[:1]))
-                black_ns = (row['end_ps'] - row['fault_fall_ps']) / 1000.0
-                if black_ns < TRC.SAFETY_BLACK_NS:
-                    problems.append('%s: only %g ns of black is observed after the withdrawal, the '
-                                    'contract asks for %g ns'
-                                    % (tag, black_ns, TRC.SAFETY_BLACK_NS))
+                # the black has to be observed under a running clock, and the recovery of the accepted
+                # bench is a bare START inside blank: no new load, no new LATCH, no new authorisation
+                ticking = [t for t in row['tick_rise_ps'] if t > row['fault_fall_ps']]
+                if not ticking:
+                    problems.append('%s: no tick rises after the withdrawal at %d ps, so the black at '
+                                    'the end of the frame is not an observation under a running clock'
+                                    % (tag, row['fault_fall_ps']))
+                else:
+                    run_ns = (ticking[-1] - row['fault_fall_ps']) / 1000.0
+                    if run_ns < TRC.SAFETY_BLACK_NS:
+                        problems.append('%s: the ticks only run %g ns on after the withdrawal, the '
+                                        'contract asks for %g ns of observed black'
+                                        % (tag, run_ns, TRC.SAFETY_BLACK_NS))
+                late_load = [t for t in row['cfg_valid_rise_ps'] if t > row['fault_rise_ps']]
+                late_latch = [t for t in row['latch_rise_ps'] if t > row['fault_rise_ps']]
+                if late_load or late_latch:
+                    problems.append('%s: the aborted frame takes a new load at %s or a new LATCH at '
+                                    '%s after the fault edge; the recovery is a bare START only'
+                                    % (tag, late_load[:1], late_latch[:1]))
+                started = [index for index, t in enumerate(row['pwm_start_rise_ps'])
+                           if t > row['fault_fall_ps']]
+                if not started:
+                    problems.append('%s: the bench never issues a START after the withdrawal, so the '
+                                    'frame ends in abort with no recovery recorded' % tag)
+                elif any(not row['blank_high_at_start'][index] for index in started):
+                    problems.append('%s: a START after the withdrawal (%s ps) is not inside blank, the '
+                                    'accepted recovery pulses it while blank is held'
+                                    % (tag, [row['pwm_start_rise_ps'][index] for index in started]))
                 if len(row['conducting_segments']) != 1:
                     problems.append('%s: the safety frame gives %d conducting segments, exactly one '
                                     'aborted segment is expected'
@@ -511,6 +570,51 @@ def convert(case_id, vcd_path):
 
 
 # ---- the simulator runs ---------------------------------------------------------------------------
+
+def deck_wave_comparison(case_id, made, deck_path):
+    """the four PWL sources the delivered run copy actually drives, token by token
+
+    The converter and the deck are written by different code paths, so a conversion that no longer
+    reproduces the delivered wave text means the deck and the trace disagree about the stimulus. The
+    comparison is on the printed tokens, which keeps the instant exactly as the deck states it.
+    """
+    text = io.open(deck_path, encoding='utf-8', newline='').read()
+    lines = {}
+    for line in text.split('\n'):
+        found = DECK.PWL_LINE_RE.match(line)
+        if found:
+            lines[found.group('node')] = found.group('wave').split()
+    problems, compared = [], []
+    for node in CONVERTED:
+        if node not in lines:
+            problems.append('%s: the delivered deck drives no pwl source for %s' % (case_id, node))
+            continue
+        mine = DECK.format_wave(made['waves'][node]).split()
+        compared.append(node)
+        if lines[node] != mine:
+            at = next((index for index, (a, b) in enumerate(zip(lines[node], mine)) if a != b),
+                      min(len(lines[node]), len(mine)))
+            problems.append('%s: the deck wave of %s differs from this conversion at token %d '
+                            '(deck %r, conversion %r), %d tokens against %d'
+                            % (case_id, node, at,
+                               lines[node][at] if at < len(lines[node]) else '-',
+                               mine[at] if at < len(mine) else '-', len(lines[node]), len(mine)))
+    return problems, {'case_id': case_id, 'deck': os.path.relpath(deck_path, ROOT).replace(os.sep,
+                                                                                           '/'),
+                      'deck_sha256': sha_file(deck_path), 'nodes_compared': compared,
+                      'problems': problems,
+                      'note': 'the same conversion also re-reads through the deck checker for the '
+                              'edge width, the 50 %% points and the uniform %g ns shift'
+                              % TRC.SHIFT_NS}
+
+
+def reconvert(case_id, vcd_path, deck_path):
+    """re-read one stored trace with the patched converter and answer against the delivered deck"""
+    made = convert(case_id, vcd_path)
+    problems, comparison = deck_wave_comparison(case_id, made, deck_path)
+    made['deck_comparison'] = comparison
+    made['deck_problems'] = problems
+    return made
 
 def tools():
     return D7A.find_tools()
@@ -734,6 +838,89 @@ def selftest():
     except Refuse:
         refused = True
     record('a safety fault that is not at t0 + 2.5T + 3 ns is refused', refused, '')
+    # ---- the endpoints, which is what the review proved missing: the first converter compared only
+    # ---- how long the enable stayed up, so a wave moved whole ten nanoseconds late still converted
+    def refusal_of(what, case_id, tag):
+        path = write_vcd('%s.%s.vcd' % (fixture, tag), what)
+        try:
+            convert(case_id, path)
+        except Refuse as error:
+            return str(error)
+        return ''
+
+    plan = [row for row in convert('HYB-200', fixture)['frames']]
+    shifted = dict((key, list(value)) for key, value in signals.items())
+    first_lit = [t for t, v in shifted['data_en'] if v == 1][0]
+    shifted['data_en'] = [(t + 10000 if t >= first_lit else t, v) for t, v in shifted['data_en']]
+    message = refusal_of(shifted, 'HYB-200', 'late_whole')
+    record('the whole enable wave moved ten nanoseconds late is refused at its rise',
+           'data_en rises at' in message, message[:220])
+    late_end = dict((key, list(value)) for key, value in signals.items())
+    short = plan[1]
+    late_end['data_en'] = [(t + 10000 if v == 0 and t == short['t0_ps']
+                            + short['expected_intervals'] * 200000 else t, v)
+                           for t, v in late_end['data_en']]
+    message = refusal_of(late_end, 'HYB-200', 'late_end')
+    record('an enable that keeps its start but falls after the last interval is refused at its fall',
+           'data_en falls at' in message, message[:220])
+    lit_black = dict((key, list(value)) for key, value in signals.items())
+    dark = plan[0]
+    lit_black['data_en'] = lit_black['data_en'] + [(dark['t0_ps'] + 200000, 1),
+                                                   (dark['t0_ps'] + 400000, 0)]
+    message = refusal_of(lit_black, 'HYB-200', 'black_lit')
+    record('the zero-code frame that conducts for two ticks is refused as a black window',
+           'zero code must stay dark' in message, message[:220])
+    safety_plan = [row for row in convert('HYB-120', fixture + '.safe.vcd')['frames']][-1]
+    late_cut = dict((key, list(value)) for key, value in safety.items())
+    late_cut['data_en'] = [(t + 25000 if v == 0 and t == safety_plan['fault_rise_ps'] else t, v)
+                           for t, v in late_cut['data_en']]
+    message = refusal_of(late_cut, 'HYB-120', 'spans_fault')
+    record('an aborted output that stays lit past the fault edge is refused, one segment or not',
+           'data_en falls at' in message, message[:220])
+    no_start = dict((key, list(value)) for key, value in safety.items())
+    no_start['pwm_start'] = [(t, v) for t, v in no_start['pwm_start']
+                             if t <= safety_plan['fault_fall_ps']]
+    message = refusal_of(no_start, 'HYB-120', 'no_recovery_start')
+    record('an aborted frame that never issues its recovery START is refused',
+           'never issues a START' in message, message[:220])
+    extra_load = dict((key, list(value)) for key, value in safety.items())
+    extra_load['cfg_valid'] = (extra_load['cfg_valid']
+                               + [(safety_plan['fault_fall_ps'] + 20000, 1),
+                                  (safety_plan['fault_fall_ps'] + 24000, 0)])
+    message = refusal_of(extra_load, 'HYB-120', 'load_after_abort')
+    record('a new load taken after the fault edge is refused: the recovery is a bare START',
+           'new load' in message, message[:220])
+    stalled = dict((key, list(value)) for key, value in safety.items())
+    stalled['tick'] = [(t, v) for t, v in stalled['tick']
+                       if t <= safety_plan['fault_fall_ps'] + 200000]
+    message = refusal_of(stalled, 'HYB-120', 'ticks_stop_early')
+    record('black that is not observed under a running clock is refused',
+           'the ticks only run' in message, message[:220])
+    all_frames = plan + [safety_plan]
+    exact = all(row['enable_rises_ps'][:1] == ([row['t0_ps']] if row['expected_intervals'] else [])
+                and (row['enable_falls_ps'][:1] ==
+                     ([row['fault_rise_ps']] if row['kind'] == 'safety'
+                      else [row['t0_ps'] + row['expected_intervals'] * 200000]
+                      if row['expected_intervals'] else [])) for row in all_frames)
+    record('a frame that really does hold puts its rise on the consuming edge and its fall on '
+           't0 plus M ticks', exact,
+           [(row['frame'], row['enable_rises_ps'], row['enable_falls_ps'], row['t0_ps'])
+            for row in all_frames])
+    deck_text = ''.join('V%s (%s 0) vsource type=pwl wave=[%s]\n'
+                        % (node, node, DECK.format_wave(made['waves'][node]))
+                        for node in CONVERTED)
+    deck_path = os.path.join(os.path.dirname(fixture), 'HYB-200_synthetic.scs')
+    io.open(deck_path, 'w', encoding='utf-8', newline='').write(deck_text)
+    deck_problems, comparison = deck_wave_comparison('HYB-200', made, deck_path)
+    record('a conversion re-reads against the deck text that carries exactly its own tokens',
+           not deck_problems and comparison['nodes_compared'] == list(CONVERTED), deck_problems)
+    head, tail = deck_text.split('\n')[0], deck_text.split('\n')[1:]
+    torn_text = head.replace('wave=[', 'wave=[1n ', 1)
+    io.open(deck_path + '.torn', 'w', encoding='utf-8', newline='').write(
+        '\n'.join([torn_text] + tail))
+    deck_problems, _c = deck_wave_comparison('HYB-200', made, deck_path + '.torn')
+    record('a delivered wave that differs from the conversion by one token is named at that token',
+           len(deck_problems) == 1 and 'at token 0' in deck_problems[0], deck_problems)
     # ---- the marker cross-check and the derived black windows
     def markers_for(case_id, converted):
         tick = TICK_NS[case_id]
@@ -1032,7 +1219,19 @@ def main(argv):
         print('TR_CONVERT %s frames=%d stop_ns=%.3f vcd=%s'
               % (case_id, made['frame_count'], made['stop_ns'], made['vcd_sha256'][:12]))
         return 0
-    print('usage: --selftest | --compile [dir] | --convert <case> <vcd>')
+    if mode == '--reconvert':
+        case_id, vcd = argv[1], argv[2]
+        deck = argv[3] if len(argv) > 3 else repo('%s/%s.scs' % (TRC.DECK_DIR, case_id))
+        made = reconvert(case_id, vcd, deck)
+        out = os.path.join(ROOT, 'review', 'scratch', 'tr_rtl', '%s_reconvert.json' % case_id)
+        io.open(out, 'wb').write((json.dumps(made, indent=1, sort_keys=True, default=str) + '\n')
+                                 .encode('utf-8'))
+        print('TR_RECONVERT %s frames=%d deck=%s deck_problems=%d vcd=%s'
+              % (case_id, made['frame_count'], made['deck_comparison']['deck_sha256'][:12],
+                 len(made['deck_problems']), made['vcd_sha256'][:12]))
+        return 0 if not made['deck_problems'] else 1
+    print('usage: --selftest | --compile [dir] | --convert <case> <vcd> '
+          '| --reconvert <case> <vcd> [deck]')
     return 2
 
 

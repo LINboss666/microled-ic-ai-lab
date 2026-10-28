@@ -1,0 +1,31 @@
+{
+ "context_problems": [],
+ "declared_by": "scripts/dd1_d7c_b_tr_record.py convergence_table",
+ "limit_rel_qlsb": 0.01,
+ "pairs": [
+  {
+   "coarse": "TR-LONG",
+   "coarse_maxstep_ns": 2.0,
+   "maxstep_ns": 0.1,
+   "refined": "RS-FULL",
+   "tick_ns": 120.0,
+   "windows": 8
+  },
+  {
+   "coarse": "TR-120",
+   "coarse_maxstep_ns": 2.0,
+   "maxstep_ns": 0.1,
+   "refined": "RS-LOW",
+   "tick_ns": 120.0,
+   "windows": 1
+  },
+  {
+   "coarse": "TR-OFFCODE",
+   "coarse_maxstep_ns": 2.0,
+   "maxstep_ns": 0.1,
+   "refined": "RS-SWITCH",
+   "tick_ns": 120.0,
+   "windows": 4
+  }
+ ]
+}

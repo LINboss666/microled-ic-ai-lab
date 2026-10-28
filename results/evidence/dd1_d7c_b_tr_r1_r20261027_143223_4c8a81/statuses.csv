@@ -1,0 +1,11 @@
+status,verdict,measured,expected,note
+EXECUTION_COMPLETENESS,PASS,18,18,"18 of 18 planned launches confirmed, 19 account rows charged, 2 stray processes charged from the recorded budget adjustment, effective ceiling 22 of the approved 24, 4 vvp processes charged of the approved 4; rows kept charged and not refunded: T001; the seven verdicts are judged on the rows re-extracted by this round and the integrity and completeness figures are the native record's own"
+EVIDENCE_INTEGRITY,PASS,37,37,37 rows bound to a confirmed launch and the delivered deck; 9 cases carry the two-terminal check; the seven verdicts are judged on the rows re-extracted by this round and the integrity and completeness figures are the native record's own
+DYNAMIC_CHARGE_STATUS,FAIL,33,37,"abs(error_dynamic_LSB) <= 0.5, the frozen criterion of this task"
+NOMINAL_CHARGE_STATUS,FAIL,23,37,abs(error_nominal_LSB) <= 0.5 reported independently; a dynamic pass is never presented as an uncalibrated grey-scale pass
+SETTLING_STATUS,PASS,34,34,"against the DC target with a +/-5 % band, at least 10 ns, deadline flat_stop"
+SHUTOFF_STATUS,PASS,37,37,"max(abs(I_sink)) <= 1.5e-07 A over the last 100 ns of every emission pure-off window AND over the whole of every black window, where a net charge of zero never excuses a current peak"
+CONVERGENCE_STATUS,PASS,13,0,abs(dQ)/QLSB <= 0.01 on the three declared pairs
+NATIVE_SEQUENCE_REINTEGRATION,PASS,835,835,the standalone recomputer re-integrated every published window from the exported native samples and re-derived both charge columns
+RTL_INPUT_PROVENANCE,PASS,2,2,both stored traces were re-read with the patched converter and answer against the four PWL sources of the delivered run copy
+BUDGET_ACCOUNTING_STATUS,PASS,21,24,"the approved task allows 24 Spectre processes, the main ledger is enforced at 22 after the 2 recorded stray processes, and the 19 booked rows plus those strays occupy 21 of 24; RTL starts are counted by the 4 distinct executable digests on their own rows, never by subtracting one from a row count "

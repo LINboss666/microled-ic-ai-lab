@@ -1,0 +1,206 @@
+{
+  "repo": "D:\\ic617_d7c_b_tr_r1",
+  "scratch": "D:\\ic617_d7c_b_tr_r1\\results\\evidence\\dd1_d7c_b_tr_r1_r20261027_143223_4c8a81\\probe_before\\probe_5bu1x_z8",
+  "native_launches": 0,
+  "rtl_simulations": 0,
+  "probes": {
+    "stale_account_overwrites_a_charged_reservation": {
+      "reproduced": true,
+      "ceiling": 1,
+      "successful_reservations": 2,
+      "disk_rows": 1,
+      "disk_case": "TR-200",
+      "refused": false
+    },
+    "native_wrong_current_unit_accepted": {
+      "reproduced": true,
+      "unit": "V",
+      "vdd18": [
+        1.8,
+        1.8,
+        1.8
+      ],
+      "times_ps": [
+        0.0,
+        1000.0000000000001,
+        2000.0000000000002
+      ],
+      "observe_finite": "YES",
+      "observe_monotonic": "YES"
+    },
+    "native_zero_vdd18_accepted": {
+      "reproduced": true,
+      "unit": "A",
+      "vdd18": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "times_ps": [
+        0.0,
+        1000.0000000000001,
+        2000.0000000000002
+      ],
+      "observe_finite": "YES",
+      "observe_monotonic": "YES"
+    },
+    "native_nonincreasing_time_accepted": {
+      "reproduced": true,
+      "unit": "A",
+      "vdd18": [
+        1.8,
+        1.8,
+        1.8
+      ],
+      "times_ps": [
+        0.0,
+        2000.0000000000002,
+        1000.0000000000001
+      ],
+      "observe_finite": "YES",
+      "observe_monotonic": "NO"
+    },
+    "ten_ns_late_hybrid_enable_accepted": {
+      "reproduced": true,
+      "start_offsets_ns": [
+        10.0,
+        10.0,
+        10.0
+      ],
+      "widths_ns": [
+        [],
+        [
+          200.0
+        ],
+        [
+          400.0
+        ],
+        [
+          12800.0
+        ]
+      ],
+      "source": "SYNTHETIC_NOT_MEASURED"
+    },
+    "black_window_one_uA_peak_ignored_by_shutoff_status": {
+      "reproduced": true,
+      "black_peak_A": 1e-06,
+      "frozen_limit_A": 1.5e-07,
+      "shutoff": {
+        "status": "SHUTOFF_STATUS",
+        "verdict": "PASS",
+        "measured": 34,
+        "expected": 34,
+        "note": "max(abs(I_sink)) <= 1.5e-07 A over the last 100 ns of the pure-off window only"
+      }
+    },
+    "generated_recompute_accepts_forged_dc_target_and_dynamic_PASS": {
+      "rc": 0,
+      "summary": [
+        "RECOMPUTE 198/198"
+      ],
+      "log": "D:\\ic617_d7c_b_tr_r1\\results\\evidence\\dd1_d7c_b_tr_r1_r20261027_143223_4c8a81\\probe_before\\probe_5bu1x_z8\\forged_dc_target_and_dynamic_PASS\\replay.log",
+      "reproduced": true
+    },
+    "generated_recompute_accepts_wrong_reference_tick_1000ns": {
+      "rc": 0,
+      "summary": [
+        "RECOMPUTE 198/198"
+      ],
+      "log": "D:\\ic617_d7c_b_tr_r1\\results\\evidence\\dd1_d7c_b_tr_r1_r20261027_143223_4c8a81\\probe_before\\probe_5bu1x_z8\\wrong_reference_tick_1000ns\\replay.log",
+      "reproduced": true
+    },
+    "generated_recompute_accepts_five_process_evidence_rows_as_four": {
+      "rc": 0,
+      "summary": [
+        "RECOMPUTE 198/198"
+      ],
+      "log": "D:\\ic617_d7c_b_tr_r1\\results\\evidence\\dd1_d7c_b_tr_r1_r20261027_143223_4c8a81\\probe_before\\probe_5bu1x_z8\\five_process_evidence_rows_as_four\\replay.log",
+      "reproduced": true
+    }
+  },
+  "positive_controls": {
+    "valid_psf": {
+      "accepted": true,
+      "unit": "A"
+    },
+    "synthetic_hybrid_converter": {
+      "accepted": true,
+      "source": "SYNTHETIC_NOT_MEASURED",
+      "frame_count": 4
+    },
+    "submitted_tables": {
+      "windows": 37,
+      "integrity": {
+        "verdict": "PASS",
+        "measured": 37,
+        "expected": 37,
+        "note": "37 rows bound to a confirmed launch and the delivered deck; 9 cases carry the two-terminal check",
+        "problems": []
+      },
+      "statuses": [
+        {
+          "status": "EXECUTION_COMPLETENESS",
+          "verdict": "PASS",
+          "measured": 18,
+          "expected": 18,
+          "note": "18 of 18 planned launches confirmed, 19 account rows charged, 2 stray processes charged from the recorded budget adjustment, effective ceiling 22 of the approved 24, 4 vvp processes charged of the approved 4; rows kept charged and not refunded: T001"
+        },
+        {
+          "status": "EVIDENCE_INTEGRITY",
+          "verdict": "PASS",
+          "measured": 37,
+          "expected": 37,
+          "note": "37 rows bound to a confirmed launch and the delivered deck; 9 cases carry the two-terminal check"
+        },
+        {
+          "status": "DYNAMIC_CHARGE_STATUS",
+          "verdict": "FAIL",
+          "measured": 33,
+          "expected": 37,
+          "note": "abs(error_dynamic_LSB) <= 0.5, the frozen criterion of this task"
+        },
+        {
+          "status": "NOMINAL_CHARGE_STATUS",
+          "verdict": "FAIL",
+          "measured": 23,
+          "expected": 37,
+          "note": "abs(error_nominal_LSB) <= 0.5 reported independently; a dynamic pass is never presented as an uncalibrated grey-scale pass"
+        },
+        {
+          "status": "SETTLING_STATUS",
+          "verdict": "PASS",
+          "measured": 34,
+          "expected": 34,
+          "note": "against the DC target with a +/-5 % band, at least 10 ns, deadline flat_stop"
+        },
+        {
+          "status": "SHUTOFF_STATUS",
+          "verdict": "PASS",
+          "measured": 34,
+          "expected": 34,
+          "note": "max(abs(I_sink)) <= 1.5e-07 A over the last 100 ns of the pure-off window only"
+        },
+        {
+          "status": "CONVERGENCE_STATUS",
+          "verdict": "PASS",
+          "measured": 13,
+          "expected": 0,
+          "note": "abs(dQ)/QLSB <= 0.01 on the three declared pairs"
+        }
+      ]
+    },
+    "original_generated_recompute": {
+      "rc": 0,
+      "summary": [
+        "RECOMPUTE 198/198"
+      ],
+      "log": "D:\\ic617_d7c_b_tr_r1\\results\\evidence\\dd1_d7c_b_tr_r1_r20261027_143223_4c8a81\\probe_before\\probe_5bu1x_z8\\recompute_original\\replay.log"
+    }
+  },
+  "all_named_defects_reproduced": true,
+  "positive_controls_pass": true,
+  "permitted_processes": [
+    "git",
+    "python.exe"
+  ]
+}

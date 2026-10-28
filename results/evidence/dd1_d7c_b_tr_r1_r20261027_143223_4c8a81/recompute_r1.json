@@ -1,0 +1,110 @@
+{
+ "budget_accounting": {
+  "claim_limit": "the 19 booked rows are not 19 independently proven starts; T001 stays charged as UNCERTAIN and the two escaped processes are charged as recorded strays",
+  "main_ledger_ceiling": 22,
+  "main_ledger_rows": 19,
+  "recorded_stray_processes": 2,
+  "remaining_before_next_stage": 3,
+  "rtl_distinct_executables": 4,
+  "rtl_process_count": 4,
+  "rtl_reconciliation_problems": [],
+  "rtl_reconciliation_processes": 4,
+  "rtl_rows": 5,
+  "rtl_rows_with_process_evidence": 4,
+  "task_total": 24,
+  "total_occupied": 21,
+  "uncertain_rows": [
+   "T001"
+  ]
+ },
+ "delivery_gate": {
+  "failures": [],
+  "lines": 838,
+  "preflight": false,
+  "rc": 0,
+  "refused": "",
+  "summary": "RECOMPUTE_R1 gate 838/838"
+ },
+ "native_evidence": "dd1_d7c_b_tr_r20261026_132228_3fc148",
+ "preflight": {
+  "failures": [],
+  "lines": 835,
+  "preflight": true,
+  "rc": 0,
+  "refused": "",
+  "summary": "RECOMPUTE_R1 preflight 835/835"
+ },
+ "shipped_by": "scripts/dd1_d7c_b_tr_r1_recompute.py",
+ "statuses": [
+  {
+   "expected": 18,
+   "measured": 18,
+   "note": "18 of 18 planned launches confirmed, 19 account rows charged, 2 stray processes charged from the recorded budget adjustment, effective ceiling 22 of the approved 24, 4 vvp processes charged of the approved 4; rows kept charged and not refunded: T001; the seven verdicts are judged on the rows re-extracted by this round and the integrity and completeness figures are the native record's own",
+   "status": "EXECUTION_COMPLETENESS",
+   "verdict": "PASS"
+  },
+  {
+   "expected": 37,
+   "measured": 37,
+   "note": "37 rows bound to a confirmed launch and the delivered deck; 9 cases carry the two-terminal check; the seven verdicts are judged on the rows re-extracted by this round and the integrity and completeness figures are the native record's own",
+   "status": "EVIDENCE_INTEGRITY",
+   "verdict": "PASS"
+  },
+  {
+   "expected": 37,
+   "measured": 33,
+   "note": "abs(error_dynamic_LSB) <= 0.5, the frozen criterion of this task",
+   "status": "DYNAMIC_CHARGE_STATUS",
+   "verdict": "FAIL"
+  },
+  {
+   "expected": 37,
+   "measured": 23,
+   "note": "abs(error_nominal_LSB) <= 0.5 reported independently; a dynamic pass is never presented as an uncalibrated grey-scale pass",
+   "status": "NOMINAL_CHARGE_STATUS",
+   "verdict": "FAIL"
+  },
+  {
+   "expected": 34,
+   "measured": 34,
+   "note": "against the DC target with a +/-5 % band, at least 10 ns, deadline flat_stop",
+   "status": "SETTLING_STATUS",
+   "verdict": "PASS"
+  },
+  {
+   "expected": 37,
+   "measured": 37,
+   "note": "max(abs(I_sink)) <= 1.5e-07 A over the last 100 ns of every emission pure-off window AND over the whole of every black window, where a net charge of zero never excuses a current peak",
+   "status": "SHUTOFF_STATUS",
+   "verdict": "PASS"
+  },
+  {
+   "expected": 0,
+   "measured": 13,
+   "note": "abs(dQ)/QLSB <= 0.01 on the three declared pairs",
+   "status": "CONVERGENCE_STATUS",
+   "verdict": "PASS"
+  },
+  {
+   "expected": 835,
+   "measured": 835,
+   "note": "the standalone recomputer re-integrated every published window from the exported native samples and re-derived both charge columns",
+   "status": "NATIVE_SEQUENCE_REINTEGRATION",
+   "verdict": "PASS"
+  },
+  {
+   "expected": 2,
+   "measured": 2,
+   "note": "both stored traces were re-read with the patched converter and answer against the four PWL sources of the delivered run copy",
+   "status": "RTL_INPUT_PROVENANCE",
+   "verdict": "PASS"
+  },
+  {
+   "expected": 24,
+   "measured": 21,
+   "note": "the approved task allows 24 Spectre processes, the main ledger is enforced at 22 after the 2 recorded stray processes, and the 19 booked rows plus those strays occupy 21 of 24; RTL starts are counted by the 4 distinct executable digests on their own rows, never by subtracting one from a row count ",
+   "status": "BUDGET_ACCOUNTING_STATUS",
+   "verdict": "PASS"
+  }
+ ]
+}

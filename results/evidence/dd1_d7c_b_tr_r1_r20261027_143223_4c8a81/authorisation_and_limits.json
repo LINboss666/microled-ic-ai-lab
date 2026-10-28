@@ -1,0 +1,25 @@
+{
+ "acceptance_registered": false,
+ "base_sha": "398c9e852c16db85cbfa4539e859534e117ff0d2",
+ "branch": "poc/data-pam-d7c-b-tr-r1",
+ "carried_forward_limits": [
+  "the original 24/4 approval does not extend to this round and the 3 unused launches are not borrowed",
+  "no simulator of any kind may start, including -h, version and syntax probes",
+  "frozen surfaces are read-only: masters, candidate DUTs, RTL, original testbench, the 18 executed decks and deck_account, contract.json, the old nine-case plan, every pre-existing result directory, account, report, handoff, receipt and task book, the shared safety rules and the accepted base functions",
+  "the escape events keep their original wording: the two stray raws were deleted and the earlier log was overwritten, so their digests are not recoverable bytes",
+  "the unreachable 3583407-byte object from an earlier round is not touched: no gc, no prune, no history rewrite"
+ ],
+ "main_must_remain": "23e471cb936b421ee97e1250c3be06edf96f9937",
+ "merge_performed": false,
+ "new_oa_access_allowed": 0,
+ "new_pdk_license_or_credential_reads_allowed": 0,
+ "new_rtl_simulations_allowed": 0,
+ "new_spectre_launches_allowed": 0,
+ "new_ssh_or_guest_connections_allowed": 0,
+ "next_native_stage_authorised": false,
+ "original_task_base": "61621f6e3d887082ecd6a7ecc1c771f8e509a24a",
+ "registered_utc": "2026-10-27T14:33:20Z",
+ "repository": "https://github.com/LINboss666/microled-ic-ai-lab",
+ "reviewed_content_sha": "f49ba9d78190f8c3da2adca9dbd4fb3e48d26841",
+ "task_id": "DATA-7C-B-TR-R1"
+}

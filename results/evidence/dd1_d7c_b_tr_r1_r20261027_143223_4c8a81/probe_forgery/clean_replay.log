@@ -1,0 +1,840 @@
+PASS hand check: 2 A held for 2 ns is 4 nC
+PASS hand check: a ramp from 0 to 2 A over 1 ns is 1 nC
+PASS hand check: -1 A to +1 A over 2 ns splits into plus and minus 0.5 nC at the crossing, and the net still cancels
+PASS hand check: a window starting inside a segment is interpolated to 2 A first, so 500 ps to 1500 ps is 3.5 nC
+PASS HYB-120: QLSB is 1.875 uA times its own 120 ns reference tick
+PASS HYB-200: QLSB is 1.875 uA times its own 200 ns reference tick
+PASS RS-FULL: QLSB is 1.875 uA times its own 120 ns reference tick
+PASS RS-LOW: QLSB is 1.875 uA times its own 120 ns reference tick
+PASS RS-SWITCH: QLSB is 1.875 uA times its own 120 ns reference tick
+PASS TR-120: QLSB is 1.875 uA times its own 120 ns reference tick
+PASS TR-200: QLSB is 1.875 uA times its own 200 ns reference tick
+PASS TR-LONG: QLSB is 1.875 uA times its own 120 ns reference tick
+PASS TR-OFFCODE: QLSB is 1.875 uA times its own 120 ns reference tick
+PASS HYB-120: the exported answer is strictly increasing over 447447 samples
+PASS HYB-120: every sample of the meter current is a finite number
+PASS HYB-120: the file declares its own units, seconds on the axis and amperes on the meter current
+PASS HYB-200: the exported answer is strictly increasing over 639348 samples
+PASS HYB-200: every sample of the meter current is a finite number
+PASS HYB-200: the file declares its own units, seconds on the axis and amperes on the meter current
+PASS RS-FULL: the exported answer is strictly increasing over 130985 samples
+PASS RS-FULL: every sample of the meter current is a finite number
+PASS RS-FULL: the file declares its own units, seconds on the axis and amperes on the meter current
+PASS RS-LOW: the exported answer is strictly increasing over 15341 samples
+PASS RS-LOW: every sample of the meter current is a finite number
+PASS RS-LOW: the file declares its own units, seconds on the axis and amperes on the meter current
+PASS RS-SWITCH: the exported answer is strictly increasing over 37808 samples
+PASS RS-SWITCH: every sample of the meter current is a finite number
+PASS RS-SWITCH: the file declares its own units, seconds on the axis and amperes on the meter current
+PASS TR-120: the exported answer is strictly increasing over 878 samples
+PASS TR-120: every sample of the meter current is a finite number
+PASS TR-120: the file declares its own units, seconds on the axis and amperes on the meter current
+PASS TR-200: the exported answer is strictly increasing over 915 samples
+PASS TR-200: every sample of the meter current is a finite number
+PASS TR-200: the file declares its own units, seconds on the axis and amperes on the meter current
+PASS TR-LONG: the exported answer is strictly increasing over 7675 samples
+PASS TR-LONG: every sample of the meter current is a finite number
+PASS TR-LONG: the file declares its own units, seconds on the axis and amperes on the meter current
+PASS TR-OFFCODE: the exported answer is strictly increasing over 2518 samples
+PASS TR-OFFCODE: every sample of the meter current is a finite number
+PASS TR-OFFCODE: the file declares its own units, seconds on the axis and amperes on the meter current
+PASS TR-LONG W0: the table carries the case reference tick, not its own length
+PASS TR-LONG W0: the rising 0.9 V edge re-derived from the samples is the published one
+PASS TR-LONG W0: the falling 0.9 V edge re-derived from the samples is the published one
+PASS TR-LONG W0: T50 is the interval between the two native edges
+PASS TR-LONG W0: the delivered run copy names the same 50 % edges as the native samples
+PASS TR-LONG W0: q_full_C re-integrated from the native samples matches the published table
+PASS TR-LONG W0: q_pos_C re-integrated from the native samples matches the published table
+PASS TR-LONG W0: q_neg_C re-integrated from the native samples matches the published table
+PASS TR-LONG W0: the flat part re-integrates to the published figure
+PASS TR-LONG W0: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS TR-LONG W0: the last 100 ns of that pure-off region holds the published leak peak
+PASS TR-LONG W0: the peak current and its instant come from the same samples
+PASS TR-LONG W0: the flat mean is the flat charge over the flat span
+PASS TR-LONG W0: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS TR-LONG W0: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS TR-LONG W0: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-LONG W0: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-LONG W0: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS TR-LONG W0: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS TR-LONG W0: the last sample outside the DC band, re-read from the samples, is the published one
+PASS TR-LONG W0: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS TR-LONG W1: the table carries the case reference tick, not its own length
+PASS TR-LONG W1: the rising 0.9 V edge re-derived from the samples is the published one
+PASS TR-LONG W1: the falling 0.9 V edge re-derived from the samples is the published one
+PASS TR-LONG W1: T50 is the interval between the two native edges
+PASS TR-LONG W1: the delivered run copy names the same 50 % edges as the native samples
+PASS TR-LONG W1: q_full_C re-integrated from the native samples matches the published table
+PASS TR-LONG W1: q_pos_C re-integrated from the native samples matches the published table
+PASS TR-LONG W1: q_neg_C re-integrated from the native samples matches the published table
+PASS TR-LONG W1: the flat part re-integrates to the published figure
+PASS TR-LONG W1: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS TR-LONG W1: the last 100 ns of that pure-off region holds the published leak peak
+PASS TR-LONG W1: the peak current and its instant come from the same samples
+PASS TR-LONG W1: the flat mean is the flat charge over the flat span
+PASS TR-LONG W1: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS TR-LONG W1: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS TR-LONG W1: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-LONG W1: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-LONG W1: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS TR-LONG W1: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS TR-LONG W1: the last sample outside the DC band, re-read from the samples, is the published one
+PASS TR-LONG W1: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS TR-LONG W2: the table carries the case reference tick, not its own length
+PASS TR-LONG W2: the rising 0.9 V edge re-derived from the samples is the published one
+PASS TR-LONG W2: the falling 0.9 V edge re-derived from the samples is the published one
+PASS TR-LONG W2: T50 is the interval between the two native edges
+PASS TR-LONG W2: the delivered run copy names the same 50 % edges as the native samples
+PASS TR-LONG W2: q_full_C re-integrated from the native samples matches the published table
+PASS TR-LONG W2: q_pos_C re-integrated from the native samples matches the published table
+PASS TR-LONG W2: q_neg_C re-integrated from the native samples matches the published table
+PASS TR-LONG W2: the flat part re-integrates to the published figure
+PASS TR-LONG W2: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS TR-LONG W2: the last 100 ns of that pure-off region holds the published leak peak
+PASS TR-LONG W2: the peak current and its instant come from the same samples
+PASS TR-LONG W2: the flat mean is the flat charge over the flat span
+PASS TR-LONG W2: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS TR-LONG W2: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS TR-LONG W2: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-LONG W2: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-LONG W2: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS TR-LONG W2: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS TR-LONG W2: the last sample outside the DC band, re-read from the samples, is the published one
+PASS TR-LONG W2: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS TR-LONG W3: the table carries the case reference tick, not its own length
+PASS TR-LONG W3: the rising 0.9 V edge re-derived from the samples is the published one
+PASS TR-LONG W3: the falling 0.9 V edge re-derived from the samples is the published one
+PASS TR-LONG W3: T50 is the interval between the two native edges
+PASS TR-LONG W3: the delivered run copy names the same 50 % edges as the native samples
+PASS TR-LONG W3: q_full_C re-integrated from the native samples matches the published table
+PASS TR-LONG W3: q_pos_C re-integrated from the native samples matches the published table
+PASS TR-LONG W3: q_neg_C re-integrated from the native samples matches the published table
+PASS TR-LONG W3: the flat part re-integrates to the published figure
+PASS TR-LONG W3: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS TR-LONG W3: the last 100 ns of that pure-off region holds the published leak peak
+PASS TR-LONG W3: the peak current and its instant come from the same samples
+PASS TR-LONG W3: the flat mean is the flat charge over the flat span
+PASS TR-LONG W3: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS TR-LONG W3: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS TR-LONG W3: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-LONG W3: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-LONG W3: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS TR-LONG W3: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS TR-LONG W3: the last sample outside the DC band, re-read from the samples, is the published one
+PASS TR-LONG W3: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS TR-LONG W4: the table carries the case reference tick, not its own length
+PASS TR-LONG W4: the rising 0.9 V edge re-derived from the samples is the published one
+PASS TR-LONG W4: the falling 0.9 V edge re-derived from the samples is the published one
+PASS TR-LONG W4: T50 is the interval between the two native edges
+PASS TR-LONG W4: the delivered run copy names the same 50 % edges as the native samples
+PASS TR-LONG W4: q_full_C re-integrated from the native samples matches the published table
+PASS TR-LONG W4: q_pos_C re-integrated from the native samples matches the published table
+PASS TR-LONG W4: q_neg_C re-integrated from the native samples matches the published table
+PASS TR-LONG W4: the flat part re-integrates to the published figure
+PASS TR-LONG W4: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS TR-LONG W4: the last 100 ns of that pure-off region holds the published leak peak
+PASS TR-LONG W4: the peak current and its instant come from the same samples
+PASS TR-LONG W4: the flat mean is the flat charge over the flat span
+PASS TR-LONG W4: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS TR-LONG W4: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS TR-LONG W4: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-LONG W4: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-LONG W4: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS TR-LONG W4: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS TR-LONG W4: the last sample outside the DC band, re-read from the samples, is the published one
+PASS TR-LONG W4: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS TR-LONG W5: the table carries the case reference tick, not its own length
+PASS TR-LONG W5: the rising 0.9 V edge re-derived from the samples is the published one
+PASS TR-LONG W5: the falling 0.9 V edge re-derived from the samples is the published one
+PASS TR-LONG W5: T50 is the interval between the two native edges
+PASS TR-LONG W5: the delivered run copy names the same 50 % edges as the native samples
+PASS TR-LONG W5: q_full_C re-integrated from the native samples matches the published table
+PASS TR-LONG W5: q_pos_C re-integrated from the native samples matches the published table
+PASS TR-LONG W5: q_neg_C re-integrated from the native samples matches the published table
+PASS TR-LONG W5: the flat part re-integrates to the published figure
+PASS TR-LONG W5: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS TR-LONG W5: the last 100 ns of that pure-off region holds the published leak peak
+PASS TR-LONG W5: the peak current and its instant come from the same samples
+PASS TR-LONG W5: the flat mean is the flat charge over the flat span
+PASS TR-LONG W5: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS TR-LONG W5: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS TR-LONG W5: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-LONG W5: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-LONG W5: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS TR-LONG W5: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS TR-LONG W5: the last sample outside the DC band, re-read from the samples, is the published one
+PASS TR-LONG W5: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS TR-LONG W6: the table carries the case reference tick, not its own length
+PASS TR-LONG W6: the rising 0.9 V edge re-derived from the samples is the published one
+PASS TR-LONG W6: the falling 0.9 V edge re-derived from the samples is the published one
+PASS TR-LONG W6: T50 is the interval between the two native edges
+PASS TR-LONG W6: the delivered run copy names the same 50 % edges as the native samples
+PASS TR-LONG W6: q_full_C re-integrated from the native samples matches the published table
+PASS TR-LONG W6: q_pos_C re-integrated from the native samples matches the published table
+PASS TR-LONG W6: q_neg_C re-integrated from the native samples matches the published table
+PASS TR-LONG W6: the flat part re-integrates to the published figure
+PASS TR-LONG W6: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS TR-LONG W6: the last 100 ns of that pure-off region holds the published leak peak
+PASS TR-LONG W6: the peak current and its instant come from the same samples
+PASS TR-LONG W6: the flat mean is the flat charge over the flat span
+PASS TR-LONG W6: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS TR-LONG W6: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS TR-LONG W6: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-LONG W6: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-LONG W6: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS TR-LONG W6: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS TR-LONG W6: the last sample outside the DC band, re-read from the samples, is the published one
+PASS TR-LONG W6: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS TR-LONG W7: the table carries the case reference tick, not its own length
+PASS TR-LONG W7: the rising 0.9 V edge re-derived from the samples is the published one
+PASS TR-LONG W7: the falling 0.9 V edge re-derived from the samples is the published one
+PASS TR-LONG W7: T50 is the interval between the two native edges
+PASS TR-LONG W7: the delivered run copy names the same 50 % edges as the native samples
+PASS TR-LONG W7: q_full_C re-integrated from the native samples matches the published table
+PASS TR-LONG W7: q_pos_C re-integrated from the native samples matches the published table
+PASS TR-LONG W7: q_neg_C re-integrated from the native samples matches the published table
+PASS TR-LONG W7: the flat part re-integrates to the published figure
+PASS TR-LONG W7: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS TR-LONG W7: the last 100 ns of that pure-off region holds the published leak peak
+PASS TR-LONG W7: the peak current and its instant come from the same samples
+PASS TR-LONG W7: the flat mean is the flat charge over the flat span
+PASS TR-LONG W7: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS TR-LONG W7: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS TR-LONG W7: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-LONG W7: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-LONG W7: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS TR-LONG W7: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS TR-LONG W7: the last sample outside the DC band, re-read from the samples, is the published one
+PASS TR-LONG W7: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS TR-120 W0: the table carries the case reference tick, not its own length
+PASS TR-120 W0: the rising 0.9 V edge re-derived from the samples is the published one
+PASS TR-120 W0: the falling 0.9 V edge re-derived from the samples is the published one
+PASS TR-120 W0: T50 is the interval between the two native edges
+PASS TR-120 W0: the delivered run copy names the same 50 % edges as the native samples
+PASS TR-120 W0: q_full_C re-integrated from the native samples matches the published table
+PASS TR-120 W0: q_pos_C re-integrated from the native samples matches the published table
+PASS TR-120 W0: q_neg_C re-integrated from the native samples matches the published table
+PASS TR-120 W0: the flat part re-integrates to the published figure
+PASS TR-120 W0: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS TR-120 W0: the last 100 ns of that pure-off region holds the published leak peak
+PASS TR-120 W0: the peak current and its instant come from the same samples
+PASS TR-120 W0: the flat mean is the flat charge over the flat span
+PASS TR-120 W0: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS TR-120 W0: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS TR-120 W0: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-120 W0: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-120 W0: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS TR-120 W0: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS TR-120 W0: the last sample outside the DC band, re-read from the samples, is the published one
+PASS TR-120 W0: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS TR-200 W0: the table carries the case reference tick, not its own length
+PASS TR-200 W0: the rising 0.9 V edge re-derived from the samples is the published one
+PASS TR-200 W0: the falling 0.9 V edge re-derived from the samples is the published one
+PASS TR-200 W0: T50 is the interval between the two native edges
+PASS TR-200 W0: the delivered run copy names the same 50 % edges as the native samples
+PASS TR-200 W0: q_full_C re-integrated from the native samples matches the published table
+PASS TR-200 W0: q_pos_C re-integrated from the native samples matches the published table
+PASS TR-200 W0: q_neg_C re-integrated from the native samples matches the published table
+PASS TR-200 W0: the flat part re-integrates to the published figure
+PASS TR-200 W0: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS TR-200 W0: the last 100 ns of that pure-off region holds the published leak peak
+PASS TR-200 W0: the peak current and its instant come from the same samples
+PASS TR-200 W0: the flat mean is the flat charge over the flat span
+PASS TR-200 W0: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS TR-200 W0: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS TR-200 W0: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-200 W0: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-200 W0: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS TR-200 W0: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS TR-200 W0: the last sample outside the DC band, re-read from the samples, is the published one
+PASS TR-200 W0: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS TR-OFFCODE W0: the table carries the case reference tick, not its own length
+PASS TR-OFFCODE W0: the rising 0.9 V edge re-derived from the samples is the published one
+PASS TR-OFFCODE W0: the falling 0.9 V edge re-derived from the samples is the published one
+PASS TR-OFFCODE W0: T50 is the interval between the two native edges
+PASS TR-OFFCODE W0: the delivered run copy names the same 50 % edges as the native samples
+PASS TR-OFFCODE W0: q_full_C re-integrated from the native samples matches the published table
+PASS TR-OFFCODE W0: q_pos_C re-integrated from the native samples matches the published table
+PASS TR-OFFCODE W0: q_neg_C re-integrated from the native samples matches the published table
+PASS TR-OFFCODE W0: the flat part re-integrates to the published figure
+PASS TR-OFFCODE W0: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS TR-OFFCODE W0: the last 100 ns of that pure-off region holds the published leak peak
+PASS TR-OFFCODE W0: the peak current and its instant come from the same samples
+PASS TR-OFFCODE W0: the flat mean is the flat charge over the flat span
+PASS TR-OFFCODE W0: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS TR-OFFCODE W0: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS TR-OFFCODE W0: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-OFFCODE W0: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-OFFCODE W0: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS TR-OFFCODE W0: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS TR-OFFCODE W0: the last sample outside the DC band, re-read from the samples, is the published one
+PASS TR-OFFCODE W0: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS TR-OFFCODE W1: the table carries the case reference tick, not its own length
+PASS TR-OFFCODE W1: the rising 0.9 V edge re-derived from the samples is the published one
+PASS TR-OFFCODE W1: the falling 0.9 V edge re-derived from the samples is the published one
+PASS TR-OFFCODE W1: T50 is the interval between the two native edges
+PASS TR-OFFCODE W1: the delivered run copy names the same 50 % edges as the native samples
+PASS TR-OFFCODE W1: q_full_C re-integrated from the native samples matches the published table
+PASS TR-OFFCODE W1: q_pos_C re-integrated from the native samples matches the published table
+PASS TR-OFFCODE W1: q_neg_C re-integrated from the native samples matches the published table
+PASS TR-OFFCODE W1: the flat part re-integrates to the published figure
+PASS TR-OFFCODE W1: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS TR-OFFCODE W1: the last 100 ns of that pure-off region holds the published leak peak
+PASS TR-OFFCODE W1: the peak current and its instant come from the same samples
+PASS TR-OFFCODE W1: the flat mean is the flat charge over the flat span
+PASS TR-OFFCODE W1: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS TR-OFFCODE W1: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS TR-OFFCODE W1: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-OFFCODE W1: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-OFFCODE W1: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS TR-OFFCODE W1: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS TR-OFFCODE W1: the last sample outside the DC band, re-read from the samples, is the published one
+PASS TR-OFFCODE W1: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS TR-OFFCODE W2: the table carries the case reference tick, not its own length
+PASS TR-OFFCODE W2: the rising 0.9 V edge re-derived from the samples is the published one
+PASS TR-OFFCODE W2: the falling 0.9 V edge re-derived from the samples is the published one
+PASS TR-OFFCODE W2: T50 is the interval between the two native edges
+PASS TR-OFFCODE W2: the delivered run copy names the same 50 % edges as the native samples
+PASS TR-OFFCODE W2: q_full_C re-integrated from the native samples matches the published table
+PASS TR-OFFCODE W2: q_pos_C re-integrated from the native samples matches the published table
+PASS TR-OFFCODE W2: q_neg_C re-integrated from the native samples matches the published table
+PASS TR-OFFCODE W2: the flat part re-integrates to the published figure
+PASS TR-OFFCODE W2: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS TR-OFFCODE W2: the last 100 ns of that pure-off region holds the published leak peak
+PASS TR-OFFCODE W2: the peak current and its instant come from the same samples
+PASS TR-OFFCODE W2: the flat mean is the flat charge over the flat span
+PASS TR-OFFCODE W2: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS TR-OFFCODE W2: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS TR-OFFCODE W2: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-OFFCODE W2: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-OFFCODE W2: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS TR-OFFCODE W2: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS TR-OFFCODE W2: the last sample outside the DC band, re-read from the samples, is the published one
+PASS TR-OFFCODE W2: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS TR-OFFCODE W3: the table carries the case reference tick, not its own length
+PASS TR-OFFCODE W3: the rising 0.9 V edge re-derived from the samples is the published one
+PASS TR-OFFCODE W3: the falling 0.9 V edge re-derived from the samples is the published one
+PASS TR-OFFCODE W3: T50 is the interval between the two native edges
+PASS TR-OFFCODE W3: the delivered run copy names the same 50 % edges as the native samples
+PASS TR-OFFCODE W3: q_full_C re-integrated from the native samples matches the published table
+PASS TR-OFFCODE W3: q_pos_C re-integrated from the native samples matches the published table
+PASS TR-OFFCODE W3: q_neg_C re-integrated from the native samples matches the published table
+PASS TR-OFFCODE W3: the flat part re-integrates to the published figure
+PASS TR-OFFCODE W3: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS TR-OFFCODE W3: the last 100 ns of that pure-off region holds the published leak peak
+PASS TR-OFFCODE W3: the peak current and its instant come from the same samples
+PASS TR-OFFCODE W3: the flat mean is the flat charge over the flat span
+PASS TR-OFFCODE W3: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS TR-OFFCODE W3: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS TR-OFFCODE W3: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-OFFCODE W3: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS TR-OFFCODE W3: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS TR-OFFCODE W3: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS TR-OFFCODE W3: the last sample outside the DC band, re-read from the samples, is the published one
+PASS TR-OFFCODE W3: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS RS-FULL W0: the table carries the case reference tick, not its own length
+PASS RS-FULL W0: the rising 0.9 V edge re-derived from the samples is the published one
+PASS RS-FULL W0: the falling 0.9 V edge re-derived from the samples is the published one
+PASS RS-FULL W0: T50 is the interval between the two native edges
+PASS RS-FULL W0: the delivered run copy names the same 50 % edges as the native samples
+PASS RS-FULL W0: q_full_C re-integrated from the native samples matches the published table
+PASS RS-FULL W0: q_pos_C re-integrated from the native samples matches the published table
+PASS RS-FULL W0: q_neg_C re-integrated from the native samples matches the published table
+PASS RS-FULL W0: the flat part re-integrates to the published figure
+PASS RS-FULL W0: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS RS-FULL W0: the last 100 ns of that pure-off region holds the published leak peak
+PASS RS-FULL W0: the peak current and its instant come from the same samples
+PASS RS-FULL W0: the flat mean is the flat charge over the flat span
+PASS RS-FULL W0: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS RS-FULL W0: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS RS-FULL W0: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-FULL W0: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-FULL W0: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS RS-FULL W0: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS RS-FULL W0: the last sample outside the DC band, re-read from the samples, is the published one
+PASS RS-FULL W0: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS RS-FULL W1: the table carries the case reference tick, not its own length
+PASS RS-FULL W1: the rising 0.9 V edge re-derived from the samples is the published one
+PASS RS-FULL W1: the falling 0.9 V edge re-derived from the samples is the published one
+PASS RS-FULL W1: T50 is the interval between the two native edges
+PASS RS-FULL W1: the delivered run copy names the same 50 % edges as the native samples
+PASS RS-FULL W1: q_full_C re-integrated from the native samples matches the published table
+PASS RS-FULL W1: q_pos_C re-integrated from the native samples matches the published table
+PASS RS-FULL W1: q_neg_C re-integrated from the native samples matches the published table
+PASS RS-FULL W1: the flat part re-integrates to the published figure
+PASS RS-FULL W1: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS RS-FULL W1: the last 100 ns of that pure-off region holds the published leak peak
+PASS RS-FULL W1: the peak current and its instant come from the same samples
+PASS RS-FULL W1: the flat mean is the flat charge over the flat span
+PASS RS-FULL W1: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS RS-FULL W1: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS RS-FULL W1: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-FULL W1: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-FULL W1: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS RS-FULL W1: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS RS-FULL W1: the last sample outside the DC band, re-read from the samples, is the published one
+PASS RS-FULL W1: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS RS-FULL W2: the table carries the case reference tick, not its own length
+PASS RS-FULL W2: the rising 0.9 V edge re-derived from the samples is the published one
+PASS RS-FULL W2: the falling 0.9 V edge re-derived from the samples is the published one
+PASS RS-FULL W2: T50 is the interval between the two native edges
+PASS RS-FULL W2: the delivered run copy names the same 50 % edges as the native samples
+PASS RS-FULL W2: q_full_C re-integrated from the native samples matches the published table
+PASS RS-FULL W2: q_pos_C re-integrated from the native samples matches the published table
+PASS RS-FULL W2: q_neg_C re-integrated from the native samples matches the published table
+PASS RS-FULL W2: the flat part re-integrates to the published figure
+PASS RS-FULL W2: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS RS-FULL W2: the last 100 ns of that pure-off region holds the published leak peak
+PASS RS-FULL W2: the peak current and its instant come from the same samples
+PASS RS-FULL W2: the flat mean is the flat charge over the flat span
+PASS RS-FULL W2: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS RS-FULL W2: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS RS-FULL W2: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-FULL W2: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-FULL W2: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS RS-FULL W2: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS RS-FULL W2: the last sample outside the DC band, re-read from the samples, is the published one
+PASS RS-FULL W2: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS RS-FULL W3: the table carries the case reference tick, not its own length
+PASS RS-FULL W3: the rising 0.9 V edge re-derived from the samples is the published one
+PASS RS-FULL W3: the falling 0.9 V edge re-derived from the samples is the published one
+PASS RS-FULL W3: T50 is the interval between the two native edges
+PASS RS-FULL W3: the delivered run copy names the same 50 % edges as the native samples
+PASS RS-FULL W3: q_full_C re-integrated from the native samples matches the published table
+PASS RS-FULL W3: q_pos_C re-integrated from the native samples matches the published table
+PASS RS-FULL W3: q_neg_C re-integrated from the native samples matches the published table
+PASS RS-FULL W3: the flat part re-integrates to the published figure
+PASS RS-FULL W3: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS RS-FULL W3: the last 100 ns of that pure-off region holds the published leak peak
+PASS RS-FULL W3: the peak current and its instant come from the same samples
+PASS RS-FULL W3: the flat mean is the flat charge over the flat span
+PASS RS-FULL W3: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS RS-FULL W3: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS RS-FULL W3: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-FULL W3: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-FULL W3: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS RS-FULL W3: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS RS-FULL W3: the last sample outside the DC band, re-read from the samples, is the published one
+PASS RS-FULL W3: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS RS-FULL W4: the table carries the case reference tick, not its own length
+PASS RS-FULL W4: the rising 0.9 V edge re-derived from the samples is the published one
+PASS RS-FULL W4: the falling 0.9 V edge re-derived from the samples is the published one
+PASS RS-FULL W4: T50 is the interval between the two native edges
+PASS RS-FULL W4: the delivered run copy names the same 50 % edges as the native samples
+PASS RS-FULL W4: q_full_C re-integrated from the native samples matches the published table
+PASS RS-FULL W4: q_pos_C re-integrated from the native samples matches the published table
+PASS RS-FULL W4: q_neg_C re-integrated from the native samples matches the published table
+PASS RS-FULL W4: the flat part re-integrates to the published figure
+PASS RS-FULL W4: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS RS-FULL W4: the last 100 ns of that pure-off region holds the published leak peak
+PASS RS-FULL W4: the peak current and its instant come from the same samples
+PASS RS-FULL W4: the flat mean is the flat charge over the flat span
+PASS RS-FULL W4: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS RS-FULL W4: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS RS-FULL W4: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-FULL W4: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-FULL W4: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS RS-FULL W4: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS RS-FULL W4: the last sample outside the DC band, re-read from the samples, is the published one
+PASS RS-FULL W4: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS RS-FULL W5: the table carries the case reference tick, not its own length
+PASS RS-FULL W5: the rising 0.9 V edge re-derived from the samples is the published one
+PASS RS-FULL W5: the falling 0.9 V edge re-derived from the samples is the published one
+PASS RS-FULL W5: T50 is the interval between the two native edges
+PASS RS-FULL W5: the delivered run copy names the same 50 % edges as the native samples
+PASS RS-FULL W5: q_full_C re-integrated from the native samples matches the published table
+PASS RS-FULL W5: q_pos_C re-integrated from the native samples matches the published table
+PASS RS-FULL W5: q_neg_C re-integrated from the native samples matches the published table
+PASS RS-FULL W5: the flat part re-integrates to the published figure
+PASS RS-FULL W5: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS RS-FULL W5: the last 100 ns of that pure-off region holds the published leak peak
+PASS RS-FULL W5: the peak current and its instant come from the same samples
+PASS RS-FULL W5: the flat mean is the flat charge over the flat span
+PASS RS-FULL W5: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS RS-FULL W5: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS RS-FULL W5: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-FULL W5: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-FULL W5: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS RS-FULL W5: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS RS-FULL W5: the last sample outside the DC band, re-read from the samples, is the published one
+PASS RS-FULL W5: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS RS-FULL W6: the table carries the case reference tick, not its own length
+PASS RS-FULL W6: the rising 0.9 V edge re-derived from the samples is the published one
+PASS RS-FULL W6: the falling 0.9 V edge re-derived from the samples is the published one
+PASS RS-FULL W6: T50 is the interval between the two native edges
+PASS RS-FULL W6: the delivered run copy names the same 50 % edges as the native samples
+PASS RS-FULL W6: q_full_C re-integrated from the native samples matches the published table
+PASS RS-FULL W6: q_pos_C re-integrated from the native samples matches the published table
+PASS RS-FULL W6: q_neg_C re-integrated from the native samples matches the published table
+PASS RS-FULL W6: the flat part re-integrates to the published figure
+PASS RS-FULL W6: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS RS-FULL W6: the last 100 ns of that pure-off region holds the published leak peak
+PASS RS-FULL W6: the peak current and its instant come from the same samples
+PASS RS-FULL W6: the flat mean is the flat charge over the flat span
+PASS RS-FULL W6: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS RS-FULL W6: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS RS-FULL W6: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-FULL W6: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-FULL W6: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS RS-FULL W6: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS RS-FULL W6: the last sample outside the DC band, re-read from the samples, is the published one
+PASS RS-FULL W6: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS RS-FULL W7: the table carries the case reference tick, not its own length
+PASS RS-FULL W7: the rising 0.9 V edge re-derived from the samples is the published one
+PASS RS-FULL W7: the falling 0.9 V edge re-derived from the samples is the published one
+PASS RS-FULL W7: T50 is the interval between the two native edges
+PASS RS-FULL W7: the delivered run copy names the same 50 % edges as the native samples
+PASS RS-FULL W7: q_full_C re-integrated from the native samples matches the published table
+PASS RS-FULL W7: q_pos_C re-integrated from the native samples matches the published table
+PASS RS-FULL W7: q_neg_C re-integrated from the native samples matches the published table
+PASS RS-FULL W7: the flat part re-integrates to the published figure
+PASS RS-FULL W7: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS RS-FULL W7: the last 100 ns of that pure-off region holds the published leak peak
+PASS RS-FULL W7: the peak current and its instant come from the same samples
+PASS RS-FULL W7: the flat mean is the flat charge over the flat span
+PASS RS-FULL W7: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS RS-FULL W7: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS RS-FULL W7: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-FULL W7: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-FULL W7: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS RS-FULL W7: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS RS-FULL W7: the last sample outside the DC band, re-read from the samples, is the published one
+PASS RS-FULL W7: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS RS-LOW W0: the table carries the case reference tick, not its own length
+PASS RS-LOW W0: the rising 0.9 V edge re-derived from the samples is the published one
+PASS RS-LOW W0: the falling 0.9 V edge re-derived from the samples is the published one
+PASS RS-LOW W0: T50 is the interval between the two native edges
+PASS RS-LOW W0: the delivered run copy names the same 50 % edges as the native samples
+PASS RS-LOW W0: q_full_C re-integrated from the native samples matches the published table
+PASS RS-LOW W0: q_pos_C re-integrated from the native samples matches the published table
+PASS RS-LOW W0: q_neg_C re-integrated from the native samples matches the published table
+PASS RS-LOW W0: the flat part re-integrates to the published figure
+PASS RS-LOW W0: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS RS-LOW W0: the last 100 ns of that pure-off region holds the published leak peak
+PASS RS-LOW W0: the peak current and its instant come from the same samples
+PASS RS-LOW W0: the flat mean is the flat charge over the flat span
+PASS RS-LOW W0: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS RS-LOW W0: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS RS-LOW W0: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-LOW W0: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-LOW W0: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS RS-LOW W0: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS RS-LOW W0: the last sample outside the DC band, re-read from the samples, is the published one
+PASS RS-LOW W0: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS RS-SWITCH W0: the table carries the case reference tick, not its own length
+PASS RS-SWITCH W0: the rising 0.9 V edge re-derived from the samples is the published one
+PASS RS-SWITCH W0: the falling 0.9 V edge re-derived from the samples is the published one
+PASS RS-SWITCH W0: T50 is the interval between the two native edges
+PASS RS-SWITCH W0: the delivered run copy names the same 50 % edges as the native samples
+PASS RS-SWITCH W0: q_full_C re-integrated from the native samples matches the published table
+PASS RS-SWITCH W0: q_pos_C re-integrated from the native samples matches the published table
+PASS RS-SWITCH W0: q_neg_C re-integrated from the native samples matches the published table
+PASS RS-SWITCH W0: the flat part re-integrates to the published figure
+PASS RS-SWITCH W0: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS RS-SWITCH W0: the last 100 ns of that pure-off region holds the published leak peak
+PASS RS-SWITCH W0: the peak current and its instant come from the same samples
+PASS RS-SWITCH W0: the flat mean is the flat charge over the flat span
+PASS RS-SWITCH W0: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS RS-SWITCH W0: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS RS-SWITCH W0: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-SWITCH W0: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-SWITCH W0: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS RS-SWITCH W0: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS RS-SWITCH W0: the last sample outside the DC band, re-read from the samples, is the published one
+PASS RS-SWITCH W0: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS RS-SWITCH W1: the table carries the case reference tick, not its own length
+PASS RS-SWITCH W1: the rising 0.9 V edge re-derived from the samples is the published one
+PASS RS-SWITCH W1: the falling 0.9 V edge re-derived from the samples is the published one
+PASS RS-SWITCH W1: T50 is the interval between the two native edges
+PASS RS-SWITCH W1: the delivered run copy names the same 50 % edges as the native samples
+PASS RS-SWITCH W1: q_full_C re-integrated from the native samples matches the published table
+PASS RS-SWITCH W1: q_pos_C re-integrated from the native samples matches the published table
+PASS RS-SWITCH W1: q_neg_C re-integrated from the native samples matches the published table
+PASS RS-SWITCH W1: the flat part re-integrates to the published figure
+PASS RS-SWITCH W1: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS RS-SWITCH W1: the last 100 ns of that pure-off region holds the published leak peak
+PASS RS-SWITCH W1: the peak current and its instant come from the same samples
+PASS RS-SWITCH W1: the flat mean is the flat charge over the flat span
+PASS RS-SWITCH W1: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS RS-SWITCH W1: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS RS-SWITCH W1: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-SWITCH W1: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-SWITCH W1: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS RS-SWITCH W1: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS RS-SWITCH W1: the last sample outside the DC band, re-read from the samples, is the published one
+PASS RS-SWITCH W1: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS RS-SWITCH W2: the table carries the case reference tick, not its own length
+PASS RS-SWITCH W2: the rising 0.9 V edge re-derived from the samples is the published one
+PASS RS-SWITCH W2: the falling 0.9 V edge re-derived from the samples is the published one
+PASS RS-SWITCH W2: T50 is the interval between the two native edges
+PASS RS-SWITCH W2: the delivered run copy names the same 50 % edges as the native samples
+PASS RS-SWITCH W2: q_full_C re-integrated from the native samples matches the published table
+PASS RS-SWITCH W2: q_pos_C re-integrated from the native samples matches the published table
+PASS RS-SWITCH W2: q_neg_C re-integrated from the native samples matches the published table
+PASS RS-SWITCH W2: the flat part re-integrates to the published figure
+PASS RS-SWITCH W2: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS RS-SWITCH W2: the last 100 ns of that pure-off region holds the published leak peak
+PASS RS-SWITCH W2: the peak current and its instant come from the same samples
+PASS RS-SWITCH W2: the flat mean is the flat charge over the flat span
+PASS RS-SWITCH W2: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS RS-SWITCH W2: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS RS-SWITCH W2: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-SWITCH W2: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-SWITCH W2: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS RS-SWITCH W2: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS RS-SWITCH W2: the last sample outside the DC band, re-read from the samples, is the published one
+PASS RS-SWITCH W2: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS RS-SWITCH W3: the table carries the case reference tick, not its own length
+PASS RS-SWITCH W3: the rising 0.9 V edge re-derived from the samples is the published one
+PASS RS-SWITCH W3: the falling 0.9 V edge re-derived from the samples is the published one
+PASS RS-SWITCH W3: T50 is the interval between the two native edges
+PASS RS-SWITCH W3: the delivered run copy names the same 50 % edges as the native samples
+PASS RS-SWITCH W3: q_full_C re-integrated from the native samples matches the published table
+PASS RS-SWITCH W3: q_pos_C re-integrated from the native samples matches the published table
+PASS RS-SWITCH W3: q_neg_C re-integrated from the native samples matches the published table
+PASS RS-SWITCH W3: the flat part re-integrates to the published figure
+PASS RS-SWITCH W3: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS RS-SWITCH W3: the last 100 ns of that pure-off region holds the published leak peak
+PASS RS-SWITCH W3: the peak current and its instant come from the same samples
+PASS RS-SWITCH W3: the flat mean is the flat charge over the flat span
+PASS RS-SWITCH W3: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS RS-SWITCH W3: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS RS-SWITCH W3: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-SWITCH W3: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS RS-SWITCH W3: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS RS-SWITCH W3: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS RS-SWITCH W3: the last sample outside the DC band, re-read from the samples, is the published one
+PASS RS-SWITCH W3: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS HYB-120 W0: the table carries the case reference tick, not its own length
+PASS HYB-120 W0: the rising 0.9 V edge re-derived from the samples is the published one
+PASS HYB-120 W0: the falling 0.9 V edge re-derived from the samples is the published one
+PASS HYB-120 W0: T50 is the interval between the two native edges
+PASS HYB-120 W0: the delivered run copy names the same 50 % edges as the native samples
+PASS HYB-120 W0: q_full_C re-integrated from the native samples matches the published table
+PASS HYB-120 W0: q_pos_C re-integrated from the native samples matches the published table
+PASS HYB-120 W0: q_neg_C re-integrated from the native samples matches the published table
+PASS HYB-120 W0: the flat part re-integrates to the published figure
+PASS HYB-120 W0: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS HYB-120 W0: the last 100 ns of that pure-off region holds the published leak peak
+PASS HYB-120 W0: the peak current and its instant come from the same samples
+PASS HYB-120 W0: the flat mean is the flat charge over the flat span
+PASS HYB-120 W0: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS HYB-120 W0: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS HYB-120 W0: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS HYB-120 W0: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS HYB-120 W0: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS HYB-120 W0: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS HYB-120 W0: the last sample outside the DC band, re-read from the samples, is the published one
+PASS HYB-120 W0: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS HYB-120 W1: the table carries the case reference tick, not its own length
+PASS HYB-120 W1: the rising 0.9 V edge re-derived from the samples is the published one
+PASS HYB-120 W1: the falling 0.9 V edge re-derived from the samples is the published one
+PASS HYB-120 W1: T50 is the interval between the two native edges
+PASS HYB-120 W1: the delivered run copy names the same 50 % edges as the native samples
+PASS HYB-120 W1: q_full_C re-integrated from the native samples matches the published table
+PASS HYB-120 W1: q_pos_C re-integrated from the native samples matches the published table
+PASS HYB-120 W1: q_neg_C re-integrated from the native samples matches the published table
+PASS HYB-120 W1: the flat part re-integrates to the published figure
+PASS HYB-120 W1: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS HYB-120 W1: the last 100 ns of that pure-off region holds the published leak peak
+PASS HYB-120 W1: the peak current and its instant come from the same samples
+PASS HYB-120 W1: the flat mean is the flat charge over the flat span
+PASS HYB-120 W1: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS HYB-120 W1: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS HYB-120 W1: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS HYB-120 W1: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS HYB-120 W1: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS HYB-120 W1: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS HYB-120 W1: the last sample outside the DC band, re-read from the samples, is the published one
+PASS HYB-120 W1: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS HYB-120 W2: the table carries the case reference tick, not its own length
+PASS HYB-120 W2: the rising 0.9 V edge re-derived from the samples is the published one
+PASS HYB-120 W2: the falling 0.9 V edge re-derived from the samples is the published one
+PASS HYB-120 W2: T50 is the interval between the two native edges
+PASS HYB-120 W2: the delivered run copy names the same 50 % edges as the native samples
+PASS HYB-120 W2: q_full_C re-integrated from the native samples matches the published table
+PASS HYB-120 W2: q_pos_C re-integrated from the native samples matches the published table
+PASS HYB-120 W2: q_neg_C re-integrated from the native samples matches the published table
+PASS HYB-120 W2: the flat part re-integrates to the published figure
+PASS HYB-120 W2: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS HYB-120 W2: the last 100 ns of that pure-off region holds the published leak peak
+PASS HYB-120 W2: the peak current and its instant come from the same samples
+PASS HYB-120 W2: the flat mean is the flat charge over the flat span
+PASS HYB-120 W2: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS HYB-120 W2: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS HYB-120 W2: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS HYB-120 W2: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS HYB-120 W2: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS HYB-120 W2: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS HYB-120 W2: the last sample outside the DC band, re-read from the samples, is the published one
+PASS HYB-120 W2: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS HYB-120 W3: the table carries the case reference tick, not its own length
+PASS HYB-120 W3: the rising 0.9 V edge re-derived from the samples is the published one
+PASS HYB-120 W3: the falling 0.9 V edge re-derived from the samples is the published one
+PASS HYB-120 W3: T50 is the interval between the two native edges
+PASS HYB-120 W3: the delivered run copy names the same 50 % edges as the native samples
+PASS HYB-120 W3: q_full_C re-integrated from the native samples matches the published table
+PASS HYB-120 W3: q_pos_C re-integrated from the native samples matches the published table
+PASS HYB-120 W3: q_neg_C re-integrated from the native samples matches the published table
+PASS HYB-120 W3: the flat part re-integrates to the published figure
+PASS HYB-120 W3: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS HYB-120 W3: the last 100 ns of that pure-off region holds the published leak peak
+PASS HYB-120 W3: the peak current and its instant come from the same samples
+PASS HYB-120 W3: the flat mean is the flat charge over the flat span
+PASS HYB-120 W3: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS HYB-120 W3: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS HYB-120 W3: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS HYB-120 W3: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS HYB-120 W3: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS HYB-120 W3: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS HYB-120 W3: the last sample outside the DC band, re-read from the samples, is the published one
+PASS HYB-120 W3: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS HYB-120 BLACK_B0: the table carries the case reference tick, not its own length
+PASS HYB-120 BLACK_B0: the black window charge re-integrates over the whole window
+PASS HYB-120 BLACK_B0: max(abs(I)) over the whole black window is the published leak figure
+PASS HYB-120 BLACK_B0: a black window carries no invented T50 and a zero target
+PASS HYB-120 BLACK_B0: the black error is its own charge over the same fixed QLSB
+PASS HYB-120 BLACK_POSTFAULT_A: the table carries the case reference tick, not its own length
+PASS HYB-120 BLACK_POSTFAULT_A: the black window charge re-integrates over the whole window
+PASS HYB-120 BLACK_POSTFAULT_A: max(abs(I)) over the whole black window is the published leak figure
+PASS HYB-120 BLACK_POSTFAULT_A: a black window carries no invented T50 and a zero target
+PASS HYB-120 BLACK_POSTFAULT_A: the black error is its own charge over the same fixed QLSB
+PASS HYB-200 W0: the table carries the case reference tick, not its own length
+PASS HYB-200 W0: the rising 0.9 V edge re-derived from the samples is the published one
+PASS HYB-200 W0: the falling 0.9 V edge re-derived from the samples is the published one
+PASS HYB-200 W0: T50 is the interval between the two native edges
+PASS HYB-200 W0: the delivered run copy names the same 50 % edges as the native samples
+PASS HYB-200 W0: q_full_C re-integrated from the native samples matches the published table
+PASS HYB-200 W0: q_pos_C re-integrated from the native samples matches the published table
+PASS HYB-200 W0: q_neg_C re-integrated from the native samples matches the published table
+PASS HYB-200 W0: the flat part re-integrates to the published figure
+PASS HYB-200 W0: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS HYB-200 W0: the last 100 ns of that pure-off region holds the published leak peak
+PASS HYB-200 W0: the peak current and its instant come from the same samples
+PASS HYB-200 W0: the flat mean is the flat charge over the flat span
+PASS HYB-200 W0: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS HYB-200 W0: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS HYB-200 W0: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS HYB-200 W0: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS HYB-200 W0: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS HYB-200 W0: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS HYB-200 W0: the last sample outside the DC band, re-read from the samples, is the published one
+PASS HYB-200 W0: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS HYB-200 W1: the table carries the case reference tick, not its own length
+PASS HYB-200 W1: the rising 0.9 V edge re-derived from the samples is the published one
+PASS HYB-200 W1: the falling 0.9 V edge re-derived from the samples is the published one
+PASS HYB-200 W1: T50 is the interval between the two native edges
+PASS HYB-200 W1: the delivered run copy names the same 50 % edges as the native samples
+PASS HYB-200 W1: q_full_C re-integrated from the native samples matches the published table
+PASS HYB-200 W1: q_pos_C re-integrated from the native samples matches the published table
+PASS HYB-200 W1: q_neg_C re-integrated from the native samples matches the published table
+PASS HYB-200 W1: the flat part re-integrates to the published figure
+PASS HYB-200 W1: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS HYB-200 W1: the last 100 ns of that pure-off region holds the published leak peak
+PASS HYB-200 W1: the peak current and its instant come from the same samples
+PASS HYB-200 W1: the flat mean is the flat charge over the flat span
+PASS HYB-200 W1: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS HYB-200 W1: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS HYB-200 W1: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS HYB-200 W1: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS HYB-200 W1: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS HYB-200 W1: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS HYB-200 W1: the last sample outside the DC band, re-read from the samples, is the published one
+PASS HYB-200 W1: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS HYB-200 W2: the table carries the case reference tick, not its own length
+PASS HYB-200 W2: the rising 0.9 V edge re-derived from the samples is the published one
+PASS HYB-200 W2: the falling 0.9 V edge re-derived from the samples is the published one
+PASS HYB-200 W2: T50 is the interval between the two native edges
+PASS HYB-200 W2: the delivered run copy names the same 50 % edges as the native samples
+PASS HYB-200 W2: q_full_C re-integrated from the native samples matches the published table
+PASS HYB-200 W2: q_pos_C re-integrated from the native samples matches the published table
+PASS HYB-200 W2: q_neg_C re-integrated from the native samples matches the published table
+PASS HYB-200 W2: the flat part re-integrates to the published figure
+PASS HYB-200 W2: the tail re-integrates from the native fall to the end of the pure-off region the deck declares
+PASS HYB-200 W2: the last 100 ns of that pure-off region holds the published leak peak
+PASS HYB-200 W2: the peak current and its instant come from the same samples
+PASS HYB-200 W2: the flat mean is the flat charge over the flat span
+PASS HYB-200 W2: the nominal target is (code+1) x 1.875 uA x the re-derived T50
+PASS HYB-200 W2: the DC target is the accepted DC table current x the re-derived T50, never the measured charge
+PASS HYB-200 W2: err_nominal_LSB re-derived from the samples and the frozen targets is the published one
+PASS HYB-200 W2: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one
+PASS HYB-200 W2: the last sample outside the nominal band, re-read from the samples, is the published one
+PASS HYB-200 W2: every sample from the published settling instant to the deadline is inside the nominal band, and it is held at least 10 ns
+PASS HYB-200 W2: the last sample outside the DC band, re-read from the samples, is the published one
+PASS HYB-200 W2: every sample from the published settling instant to the deadline is inside the DC band, and it is held at least 10 ns
+PASS HYB-200 BLACK_B0: the table carries the case reference tick, not its own length
+PASS HYB-200 BLACK_B0: the black window charge re-integrates over the whole window
+PASS HYB-200 BLACK_B0: max(abs(I)) over the whole black window is the published leak figure
+PASS HYB-200 BLACK_B0: a black window carries no invented T50 and a zero target
+PASS HYB-200 BLACK_B0: the black error is its own charge over the same fixed QLSB
+PASS the 27 emission windows of the seven prepared cases are all present and no more
+PASS the published table holds exactly 37 window keys, 34 emission and 3 black
+PASS RS-FULL/TR-LONG W0: both sides of the pair are windows this run re-integrated from samples
+PASS RS-FULL/TR-LONG W0: the pair divides by 1.875 uA times the reference tick of both sides
+PASS RS-FULL/TR-LONG W0: dQ over QLSB re-derived and judged against the frozen 0.01
+PASS RS-FULL/TR-LONG W1: both sides of the pair are windows this run re-integrated from samples
+PASS RS-FULL/TR-LONG W1: the pair divides by 1.875 uA times the reference tick of both sides
+PASS RS-FULL/TR-LONG W1: dQ over QLSB re-derived and judged against the frozen 0.01
+PASS RS-FULL/TR-LONG W2: both sides of the pair are windows this run re-integrated from samples
+PASS RS-FULL/TR-LONG W2: the pair divides by 1.875 uA times the reference tick of both sides
+PASS RS-FULL/TR-LONG W2: dQ over QLSB re-derived and judged against the frozen 0.01
+PASS RS-FULL/TR-LONG W3: both sides of the pair are windows this run re-integrated from samples
+PASS RS-FULL/TR-LONG W3: the pair divides by 1.875 uA times the reference tick of both sides
+PASS RS-FULL/TR-LONG W3: dQ over QLSB re-derived and judged against the frozen 0.01
+PASS RS-FULL/TR-LONG W4: both sides of the pair are windows this run re-integrated from samples
+PASS RS-FULL/TR-LONG W4: the pair divides by 1.875 uA times the reference tick of both sides
+PASS RS-FULL/TR-LONG W4: dQ over QLSB re-derived and judged against the frozen 0.01
+PASS RS-FULL/TR-LONG W5: both sides of the pair are windows this run re-integrated from samples
+PASS RS-FULL/TR-LONG W5: the pair divides by 1.875 uA times the reference tick of both sides
+PASS RS-FULL/TR-LONG W5: dQ over QLSB re-derived and judged against the frozen 0.01
+PASS RS-FULL/TR-LONG W6: both sides of the pair are windows this run re-integrated from samples
+PASS RS-FULL/TR-LONG W6: the pair divides by 1.875 uA times the reference tick of both sides
+PASS RS-FULL/TR-LONG W6: dQ over QLSB re-derived and judged against the frozen 0.01
+PASS RS-FULL/TR-LONG W7: both sides of the pair are windows this run re-integrated from samples
+PASS RS-FULL/TR-LONG W7: the pair divides by 1.875 uA times the reference tick of both sides
+PASS RS-FULL/TR-LONG W7: dQ over QLSB re-derived and judged against the frozen 0.01
+PASS RS-LOW/TR-120 W0: both sides of the pair are windows this run re-integrated from samples
+PASS RS-LOW/TR-120 W0: the pair divides by 1.875 uA times the reference tick of both sides
+PASS RS-LOW/TR-120 W0: dQ over QLSB re-derived and judged against the frozen 0.01
+PASS RS-SWITCH/TR-OFFCODE W0: both sides of the pair are windows this run re-integrated from samples
+PASS RS-SWITCH/TR-OFFCODE W0: the pair divides by 1.875 uA times the reference tick of both sides
+PASS RS-SWITCH/TR-OFFCODE W0: dQ over QLSB re-derived and judged against the frozen 0.01
+PASS RS-SWITCH/TR-OFFCODE W1: both sides of the pair are windows this run re-integrated from samples
+PASS RS-SWITCH/TR-OFFCODE W1: the pair divides by 1.875 uA times the reference tick of both sides
+PASS RS-SWITCH/TR-OFFCODE W1: dQ over QLSB re-derived and judged against the frozen 0.01
+PASS RS-SWITCH/TR-OFFCODE W2: both sides of the pair are windows this run re-integrated from samples
+PASS RS-SWITCH/TR-OFFCODE W2: the pair divides by 1.875 uA times the reference tick of both sides
+PASS RS-SWITCH/TR-OFFCODE W2: dQ over QLSB re-derived and judged against the frozen 0.01
+PASS RS-SWITCH/TR-OFFCODE W3: both sides of the pair are windows this run re-integrated from samples
+PASS RS-SWITCH/TR-OFFCODE W3: the pair divides by 1.875 uA times the reference tick of both sides
+PASS RS-SWITCH/TR-OFFCODE W3: dQ over QLSB re-derived and judged against the frozen 0.01
+PASS the published convergence table carries 13 rows over three step pairs
+PASS the status EXECUTION_COMPLETENESS is published exactly once
+PASS the status EVIDENCE_INTEGRITY is published exactly once
+PASS the status DYNAMIC_CHARGE_STATUS is published exactly once
+PASS the status NOMINAL_CHARGE_STATUS is published exactly once
+PASS the status SETTLING_STATUS is published exactly once
+PASS the status SHUTOFF_STATUS is published exactly once
+PASS the status CONVERGENCE_STATUS is published exactly once
+PASS the status NATIVE_SEQUENCE_REINTEGRATION is published exactly once
+PASS the status RTL_INPUT_PROVENANCE is published exactly once
+PASS the status BUDGET_ACCOUNTING_STATUS is published exactly once
+PASS the dynamic verdict is FAIL exactly when a re-derived error passes half an LSB
+PASS the nominal verdict is FAIL exactly when a re-derived nominal error passes half an LSB, decided on its own column
+PASS both charge columns are published side by side for every window, each against its own target
+PASS the shutoff verdict is FAIL exactly when an off tail or a black window breaks the frozen 1.5e-07 A leak limit
+PASS the shutoff expectation counts emission tails and black windows together
+PASS the settling verdict agrees with the per-window states re-read from the samples
+PASS the convergence verdict is FAIL exactly when a re-derived dQ breaks the limit
+PASS the approved task authorises 24 Spectre processes in total
+PASS the main ledger holds 19 rows and the recorded strays 2 processes, against the task total of 24
+PASS every launch row is in a state the account admits
+PASS an UNCERTAIN row keeps its charge: it is counted and never refunded
+PASS the launch ids are one unbroken run of T-numbers
+PASS the RTL account never exceeds the four starts the task authorises
+PASS an RTL row is counted as a process only by the executable digest it carries, never by subtracting one from a row count
+PASS the joint-control input provenance is published as it was measured
+PASS five rows that each carry process evidence are five starts, never four
+PASS RTL_PROCESS_COUNT is only claimed where each start has its own process evidence
+RECOMPUTE_R1 gate 838/838
+

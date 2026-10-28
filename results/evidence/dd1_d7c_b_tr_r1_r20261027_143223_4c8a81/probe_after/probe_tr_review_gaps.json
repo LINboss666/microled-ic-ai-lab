@@ -1,0 +1,153 @@
+{
+  "repo": "D:\\ic617_d7c_b_tr_r1",
+  "scratch": "D:\\d7cb_tr_r1_parts_staging\\probe_after_final_20261028_021221\\probe_pkxsex0t",
+  "native_launches": 0,
+  "rtl_simulations": 0,
+  "probes": {
+    "stale_account_overwrites_a_charged_reservation": {
+      "reproduced": false,
+      "ceiling": 1,
+      "successful_reservations": 1,
+      "disk_rows": 1,
+      "disk_case": "TR-120",
+      "refused": true
+    },
+    "native_wrong_current_unit_accepted": {
+      "reproduced": false,
+      "refusal": "Refuse: TR-120: Ip_branch:current carries unit 'V', the probe current is exported in amperes and nothing is re-scaled to pretend otherwise"
+    },
+    "native_zero_vdd18_accepted": {
+      "reproduced": false,
+      "refusal": "Refuse: TR-120: vdd18 reads at most 1.8 V from the deck value 1.8, over the exported tolerance 1e-09 V"
+    },
+    "native_nonincreasing_time_accepted": {
+      "reproduced": false,
+      "refusal": "Refuse: TR-120: the axis is not strictly increasing at sample 2 (1000.0000000000001 after 2000.0000000000002), so an integral over it has no meaning"
+    },
+    "ten_ns_late_hybrid_enable_accepted": {
+      "reproduced": false,
+      "refusal": "HYB-200: the accepted protocol is not met: HYB-200 frame L1: data_en rises at [15995000] while the reference edge that consumes the first accepted tick is 15985000 ps; the endpoints are compared in the trace's own integer units, with no tolerance | HYB-200 frame L1: data_en falls at [16195000] while a 1-interval window opened at 15985000 ps ends at 16185000 ps | HYB-200 frame M2: data_en rises at [30695000] while the reference edge that consumes the first accepted tick is 30685000 ps; the endpoints are compared in the trace's own integer units, with no tolerance | HYB-200 frame M2: data_en falls at [31095000] while a 2-interval window opened at 30685000 ps ends at 31085000 ps | HYB-200 frame F63: data_en rises at [45395000] while the reference edge that consumes the first accepted tick is 45385000 ps; the endpoints are compared in the trace's own integer units, with no tolerance | HYB-200 frame F63: data_en falls at [58195000] while a 64-interval window opened at 45385000 ps ends at 58185000 ps"
+    },
+    "black_window_one_uA_peak_ignored_by_shutoff_status": {
+      "reproduced": false,
+      "black_peak_A": 1e-06,
+      "frozen_limit_A": 1.5e-07,
+      "shutoff": {
+        "status": "SHUTOFF_STATUS",
+        "verdict": "FAIL",
+        "measured": 34,
+        "expected": 37,
+        "note": "max(abs(I_sink)) <= 1.5e-07 A over the last 100 ns of every emission pure-off window AND over the whole of every black window, where a net charge of zero never excuses a current peak"
+      }
+    },
+    "generated_recompute_accepts_forged_dc_target_and_dynamic_PASS": {
+      "rc": 0,
+      "summary": [
+        "RECOMPUTE 198/198"
+      ],
+      "log": "D:\\d7cb_tr_r1_parts_staging\\probe_after_final_20261028_021221\\probe_pkxsex0t\\forged_dc_target_and_dynamic_PASS\\replay.log",
+      "reproduced": true
+    },
+    "generated_recompute_accepts_wrong_reference_tick_1000ns": {
+      "rc": 0,
+      "summary": [
+        "RECOMPUTE 198/198"
+      ],
+      "log": "D:\\d7cb_tr_r1_parts_staging\\probe_after_final_20261028_021221\\probe_pkxsex0t\\wrong_reference_tick_1000ns\\replay.log",
+      "reproduced": true
+    },
+    "generated_recompute_accepts_five_process_evidence_rows_as_four": {
+      "rc": 0,
+      "summary": [
+        "RECOMPUTE 198/198"
+      ],
+      "log": "D:\\d7cb_tr_r1_parts_staging\\probe_after_final_20261028_021221\\probe_pkxsex0t\\five_process_evidence_rows_as_four\\replay.log",
+      "reproduced": true
+    }
+  },
+  "positive_controls": {
+    "valid_psf": {
+      "accepted": true,
+      "unit": "A"
+    },
+    "synthetic_hybrid_converter": {
+      "accepted": true,
+      "source": "SYNTHETIC_NOT_MEASURED",
+      "frame_count": 4
+    },
+    "submitted_tables": {
+      "windows": 37,
+      "integrity": {
+        "verdict": "PASS",
+        "measured": 37,
+        "expected": 37,
+        "note": "37 rows bound to a confirmed launch and the delivered deck; 9 cases carry the two-terminal check",
+        "problems": []
+      },
+      "statuses": [
+        {
+          "status": "EXECUTION_COMPLETENESS",
+          "verdict": "PASS",
+          "measured": 18,
+          "expected": 18,
+          "note": "18 of 18 planned launches confirmed, 19 account rows charged, 2 stray processes charged from the recorded budget adjustment, effective ceiling 22 of the approved 24, 4 vvp processes charged of the approved 4; rows kept charged and not refunded: T001"
+        },
+        {
+          "status": "EVIDENCE_INTEGRITY",
+          "verdict": "PASS",
+          "measured": 37,
+          "expected": 37,
+          "note": "37 rows bound to a confirmed launch and the delivered deck; 9 cases carry the two-terminal check"
+        },
+        {
+          "status": "DYNAMIC_CHARGE_STATUS",
+          "verdict": "FAIL",
+          "measured": 33,
+          "expected": 37,
+          "note": "abs(error_dynamic_LSB) <= 0.5, the frozen criterion of this task"
+        },
+        {
+          "status": "NOMINAL_CHARGE_STATUS",
+          "verdict": "FAIL",
+          "measured": 23,
+          "expected": 37,
+          "note": "abs(error_nominal_LSB) <= 0.5 reported independently; a dynamic pass is never presented as an uncalibrated grey-scale pass"
+        },
+        {
+          "status": "SETTLING_STATUS",
+          "verdict": "PASS",
+          "measured": 34,
+          "expected": 34,
+          "note": "against the DC target with a +/-5 % band, at least 10 ns, deadline flat_stop"
+        },
+        {
+          "status": "SHUTOFF_STATUS",
+          "verdict": "PASS",
+          "measured": 37,
+          "expected": 37,
+          "note": "max(abs(I_sink)) <= 1.5e-07 A over the last 100 ns of every emission pure-off window AND over the whole of every black window, where a net charge of zero never excuses a current peak"
+        },
+        {
+          "status": "CONVERGENCE_STATUS",
+          "verdict": "PASS",
+          "measured": 13,
+          "expected": 0,
+          "note": "abs(dQ)/QLSB <= 0.01 on the three declared pairs"
+        }
+      ]
+    },
+    "original_generated_recompute": {
+      "rc": 0,
+      "summary": [
+        "RECOMPUTE 198/198"
+      ],
+      "log": "D:\\d7cb_tr_r1_parts_staging\\probe_after_final_20261028_021221\\probe_pkxsex0t\\recompute_original\\replay.log"
+    }
+  },
+  "all_named_defects_reproduced": false,
+  "positive_controls_pass": true,
+  "permitted_processes": [
+    "git",
+    "python.exe"
+  ]
+}

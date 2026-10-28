@@ -1,0 +1,41 @@
+a synthetic four-state trace converts to four PWL waves            PASS 
+the synthetic frame count matches the plan                         PASS 
+the F63 frame conducts 64 intervals, not 63                        PASS 
+the black frame has no conducting segment and is kept as a window  PASS 
+t0 is the consuming clock edge, never the leading tick             PASS 
+every converted edge sits on its own 50 % point with the frozen 2 ns width PASS 
+the converted wave of the black frame still carries its two rail levels only PASS 
+an x on the enable after the first reference edge is refused before the bench PASS 
+a pam move inside a frame is refused, not interpolated across the window PASS 
+a frame that stops short of its 65 boundary events is refused      PASS 
+a trace with the wrong number of frames is refused                 PASS 
+a loaded code that disagrees with the contract is refused          PASS 
+an accepted tick that is not one tick period after its neighbour is refused PASS 
+one accepted LATCH per frame steps cfg_version by exactly one at its latch edge PASS 
+a second cfg_version step inside one frame is refused, not read as a harmless re-latch PASS 
+the safety frame is measured by its actual fault edge, not the planned 64T PASS 
+a safety fault that is not at t0 + 2.5T + 3 ns is refused          PASS 
+the marker list of the run that wrote the trace passes the cross-check PASS 
+markers read from the log of another group are refused, with the group named PASS 
+markers from a five-frame run against a four-frame trace are refused PASS 
+a marker list that marks a safety branch the trace does not show is refused PASS 
+a marker list without the safety lines of an aborted frame is refused PASS 
+a log whose ledger row is not on disk is refused before its markers are used PASS 
+a legacy case-named log is honoured when the ledger row carries exactly its digest PASS 
+a legacy log that no row binds to a start is refused               PASS 
+a legacy log whose digest differs from the one the row settled with is refused PASS 
+the zero-code frame becomes one black window of exactly 64 ticks   PASS 
+the black window starts at the consuming edge of the first accepted tick, shifted as the waves are PASS 
+the derived black window overlaps no emission window of the delivered PWL PASS 
+the black window carries the code the frame actually held          PASS 
+an aborted safety frame adds its own post-fault black window, never merged into it PASS 
+a fault falling edge in a frame that never armed is not read as an aborted window PASS 
+the post-fault window is declared only for the frame whose kind is safety PASS 
+the post-fault window begins at the actual fault closing edge and ends with the run PASS 
+the post-fault window is at least the black hold the contract asks for PASS 
+every derived black window names the function that derived it      PASS 
+the converter refuses a case it does not own                       PASS 
+the testbench scope declares all twenty signals the conversion reads PASS 
+a recorded name the converter cannot find is caught before any simulation PASS 
+the compile entry refuses a testbench with a missing recorded signal PASS 
+TR_TRACE_SELFTEST 40/40

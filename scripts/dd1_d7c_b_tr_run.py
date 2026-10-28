@@ -87,28 +87,83 @@ def staging():
     return directory
 
 
+def answer_name(run_id, case_id, role, tag, launch_id=''):
+    """the pulled file of one attempt: the ledger row is part of the name from this round on"""
+    if launch_id:
+        return '%s_%s_%s_%s.%s' % (run_id, case_id, role, launch_id, tag)
+    return '%s_%s_%s.%s' % (run_id, case_id, role, tag)
+
+
+def legacy_answer_name(run_id, case_id, role, tag):
+    return '%s_%s_%s.%s' % (run_id, case_id, role, tag)
+
+
+def find_answer(directory, run_id, case_id, role, tag='raw', launch_id=''):
+    """the answer of a recorded launch, preferring the name that carries its own row id
+
+    The nine answers of the first native round were pulled before the row id was part of the name, so
+    the legacy spelling is resolved as well. A candidate is accepted only when the account names it:
+    guessing at a file whose digest the ledger does not hold is how a wrong answer gets measured.
+    """
+    candidates = ([os.path.join(directory, answer_name(run_id, case_id, role, tag, launch_id))]
+                  if launch_id else [])
+    candidates.append(os.path.join(directory, legacy_answer_name(run_id, case_id, role, tag)))
+    if not launch_id:
+        for suffix in range(1, 999):
+            path = os.path.join(directory,
+                                answer_name(run_id, case_id, role, tag, '%s%03d' % ('T', suffix)))
+            if os.path.isfile(path):
+                candidates.insert(0, path)
+    return [path for path in candidates if os.path.isfile(path)]
+
+
 class Account(object):
     """append-only, one writer, reserve before the start, no refund, ceiling from the approved task"""
+
+    def _read_rows(self):
+        """the account as it is actually on disk, validated the way a freshly built one is
+
+        The lock keeps two writers out of each other, but it does not make an in-memory view true. A
+        reservation therefore re-reads the file inside the lock and a stale snapshot is refused rather
+        than written over the row another object already charged.
+        """
+        rows = []
+        if not os.path.isfile(self.path):
+            return rows
+        lines = io.open(self.path, encoding='utf-8', newline='').read().split('\n')
+        if lines[0].strip() != ','.join(self.header):
+            raise Refuse('the account %s has a different header than this round writes'
+                         % os.path.basename(self.path))
+        for number, line in enumerate([row for row in lines[1:] if row.strip()], 2):
+            cells = line.split(',')
+            if len(cells) != len(self.header):
+                raise Refuse('the account row on line %d carries %d fields against a %d field header'
+                             % (number, len(cells), len(self.header)))
+            rows.append(dict(zip(self.header, cells)))
+        for index, row in enumerate(rows, 1):
+            want = '%s%03d' % (self.prefix, index)
+            if row[self.header[0]] != want:
+                raise Refuse('the account jumps at row %d: id %s, expected %s'
+                             % (index, row[self.header[0]], want))
+            if row['state'] not in ACCOUNT_STATES:
+                raise Refuse('row %s carries state %r, outside %s'
+                             % (row[self.header[0]], row['state'], ','.join(ACCOUNT_STATES)))
+            recorded = row.get('ceiling', '')
+            if recorded:
+                if not re.match(r'^\d+$', recorded):
+                    raise Refuse('row %s carries a non-numeric ceiling %r'
+                                 % (row[self.header[0]], recorded))
+                if int(recorded) < self.ceiling:
+                    raise Refuse('row %s was booked under ceiling %s, below the enforced %d, so the '
+                                 'ceiling would have been relaxed after the fact'
+                                 % (row[self.header[0]], recorded, self.ceiling))
+        return rows
 
     def __init__(self, path, ceiling, header, prefix, reconcile=None):
         self.path, self.ceiling, self.header, self.prefix = path, int(ceiling), header, prefix
         self.reconcile = reconcile
         self.lock = path + '.lock'
-        self.rows = []
-        if os.path.isfile(path):
-            first = io.open(path, encoding='utf-8', newline='').readline().strip()
-            if first != ','.join(header):
-                raise Refuse('the account %s has a different header than this round writes'
-                             % os.path.basename(path))
-            lines = [line for line in io.open(path, encoding='utf-8', newline='').read()
-                     .split('\n')[1:] if line.strip()]
-            for number, line in enumerate(lines, 2):
-                cells = line.split(',')
-                if len(cells) != len(header):
-                    raise Refuse('the account row on line %d carries %d fields against a %d field '
-                                 'header' % (number, len(cells), len(header)))
-            self.rows = [dict(zip(header, line.split(','))) for line in lines]
-        self._check_ids()
+        self.rows = self._read_rows()
 
     def _check_ids(self):
         for index, row in enumerate(self.rows, 1):
@@ -168,6 +223,7 @@ class Account(object):
     def reserve(self, fields):
         self._acquire()
         try:
+            self.rows = self._read_rows()          # the disk is the authority, not this object
             if self.processes() >= self.ceiling:
                 raise Refuse('LAUNCH_CEILING_REACHED: the account carries %d charged processes of '
                              '%d (rows %d); a failure costs the budget and recovery never refunds it'
@@ -189,14 +245,21 @@ class Account(object):
             raise Refuse('state %r is not one of %s' % (state, ','.join(ACCOUNT_STATES)))
         self._acquire()
         try:
-            if row not in self.rows:
+            self.rows = self._read_rows()
+            named = [item for item in self.rows
+                     if item[self.header[0]] == row[self.header[0]]]
+            if not named:
                 raise Refuse('settle names a launch that is not in the account')
+            target = named[0]
+            if target['state'] != 'REQUESTED':
+                raise Refuse('row %s already settled as %s; a row is settled once'
+                             % (target[self.header[0]], target['state']))
             single = ' | '.join((refusal or '').splitlines()).replace(',', ';')
-            row.update({'state': state, 'ended_utc': now(), 'rc': rc, 'raw_sha256': raw_sha,
-                        'log_sha256': log_sha, 'refusal': single[:180]})
+            target.update({'state': state, 'ended_utc': now(), 'rc': rc, 'raw_sha256': raw_sha,
+                           'log_sha256': log_sha, 'refusal': single[:180]})
             for key, value in extra.items():
                 if key in self.header:
-                    row[key] = value
+                    target[key] = value
             self.flush()
         finally:
             os.remove(self.lock)
@@ -208,8 +271,19 @@ class Account(object):
                 if any(marker in text for marker in (',', '\n', '\r')):
                     raise Refuse('the %s field of %s carries a table delimiter, so nothing is '
                                  'written' % (key, row[self.header[0]]))
-        B7B.write_rows(self.path, [[row.get(key, '') for key in self.header] for row in self.rows],
-                       list(self.header))
+        temporary = self.path + '.writing'
+        B7B.write_rows(temporary, [[row.get(key, '') for key in self.header]
+                                   for row in self.rows], list(self.header))
+        written = io.open(temporary, encoding='utf-8', newline='').read()
+        want = ','.join(self.header) + '\n'
+        if not written.startswith(want):
+            os.remove(temporary)
+            raise Refuse('the account temporary file lost its header, so the account is left as it is')
+        try:
+            os.replace(temporary, self.path)      # the old account survives any failure above this
+        except OSError as error:
+            raise Refuse('the account could not be replaced: %s; the previous account is intact'
+                         % error)
         return self.path
 
 
@@ -229,7 +303,74 @@ def rtl_account(out_dir, run_id=''):
                    reconcile=os.path.join(out_dir, 'rtl_process_reconciliation.json'))
 
 
-def authorisation_problem(role, case_id, done_preflight=None):
+def preflight_condition_match(case_id):
+    """the preflight that vouches for a DUT run has to be this case's own deck, not any preflight"""
+    dut = io.open(deck_for(case_id, 'dut'), encoding='utf-8', newline='').read()
+    want, _facts = DECK.preflight(dut, case_id)
+    got = io.open(deck_for(case_id, 'preflight'), encoding='utf-8', newline='').read()
+    if want != got:
+        return ('%s: the meter preflight run copy in this checkout is not the derivation of the DUT '
+                'run copy of the same case, so it proves nothing about the supplies, the stimulus or '
+                'the analysis this DUT would run under' % case_id)
+    return ''
+
+
+def preflight_binding(out_dir, run_id, case_id):
+    """the meter preflight a DUT run stands on, read back from the round account and its own raw
+
+    A DUT launch with no evidence to point at is a refusal, not a default: the first round accepted
+    done_preflight=None and started the DUT anyway, so the ordering lived only in the prose.
+    """
+    problem = preflight_condition_match(case_id)
+    if problem:
+        return None, problem
+    path = os.path.join(out_dir, 'spectre_launch_account.csv')
+    if not os.path.isfile(path):
+        return None, ('%s: no meter preflight can be read because this run has no %s, so the DUT '
+                      'launch is refused rather than run unchecked'
+                      % (case_id, os.path.basename(path)))
+    try:
+        rows = Account(path, spectre_ceiling(out_dir), ACCOUNT_HEADER, 'T').rows
+    except Refuse as error:
+        return None, str(error)
+    booked = [row for row in rows if row['role'] == 'preflight' and row['case_id'] == case_id
+              and row['run_id'] == run_id]
+    if not booked:
+        return None, ('%s: this run account carries no meter preflight row for the case, so the DUT '
+                      'run is refused' % case_id)
+    passed = [row for row in booked if row['state'] == 'CONFIRMED' and row['rc'] == '0'
+              and row['raw_sha256']]
+    if not passed:
+        return None, ('%s: %d meter preflight row(s) are booked and none is a confirmed pass with a '
+                      'return code of 0 and a raw digest (states seen: %s), so the DUT run is refused'
+                      % (case_id, len(booked),
+                         ','.join(sorted(set(row['state'] for row in booked)))))
+    row = passed[-1]
+    if not row['ended_utc']:
+        return None, ('%s: preflight row %s carries no completion time, so it cannot be the moment '
+                      'this DUT is bound to' % (case_id, row['launch_id']))
+    answers = find_answer(out_dir, run_id, case_id, 'preflight', 'raw', row['launch_id'])
+    if not answers:
+        return None, ('%s: preflight row %s is booked as a confirmed pass but its pulled raw is not '
+                      'beside the account' % (case_id, row['launch_id']))
+    digest = sha_file(answers[0])
+    if digest != row['raw_sha256']:
+        return None, ('%s: the preflight raw on disk is %s while row %s records %s'
+                      % (case_id, digest[:12], row['launch_id'], row['raw_sha256'][:12]))
+    want_deck = expected_preflight_sha(case_id)
+    if row['deck_sha256'] != want_deck:
+        return None, ('%s: preflight row %s charged deck %s but the deck account says this case '
+                      'preflight deck is %s' % (case_id, row['launch_id'], row['deck_sha256'][:12],
+                                                want_deck[:12]))
+    return {'case_id': case_id, 'run_id': run_id, 'launch_id': row['launch_id'],
+            'role': 'preflight', 'rc': row['rc'], 'raw_sha256': row['raw_sha256'],
+            'deck_sha256': row['deck_sha256'], 'requested_utc': row['requested_utc'],
+            'ended_utc': row['ended_utc'], 'samples': row['samples'],
+            'conditions': 'the same supplies, the same PWL, the same span and the same maxstep',
+            'raw_path': os.path.relpath(answers[0], ROOT).replace(os.sep, '/')}, ''
+
+
+def authorisation_problem(role, case_id, out_dir='', run_id=''):
     if os.environ.get(AUTH_VAR) not in ('1', 'YES', 'yes', 'true'):
         return ('%s is not set: no Spectre process may start this round' % AUTH_VAR)
     if case_id not in ORDER:
@@ -239,8 +380,10 @@ def authorisation_problem(role, case_id, done_preflight=None):
     deck = repo('%s/%s.%s' % (DECK_DIR, case_id, 'pre.scs' if role == 'preflight' else 'scs'))
     if not os.path.isfile(deck):
         return '%s has no run copy in the repository; emit the decks first' % deck
-    if role == 'dut' and done_preflight is not None and case_id not in done_preflight:
-        return '%s: its own meter preflight has not passed, so the DUT run is not allowed' % case_id
+    if role == 'dut':
+        _binding, problem = preflight_binding(out_dir, run_id, case_id)
+        if problem:
+            return problem
     return ''
 
 
@@ -363,15 +506,16 @@ def spectre_ceiling(directory):
     return ceiling
 
 
-def launch(case_id, role, out_dir, run_id, timeout=1800, done_preflight=None):
+def launch(case_id, role, out_dir, run_id, timeout=1800):
     """one Spectre process, charged before it starts; a refusal writes nothing into the evidence"""
     if not evidence_dir_of(out_dir):
         return 7, {'refusal': '%s is not this round evidence directory, so no process may start '
                               'under an evidence-shaped account outside it' % out_dir,
                    'case_id': case_id, 'role': role, 'process_started': False}
-    problem = authorisation_problem(role, case_id, done_preflight)
+    problem = authorisation_problem(role, case_id, out_dir, run_id)
     if problem:
         return 5, {'refusal': problem, 'case_id': case_id, 'role': role, 'process_started': False}
+    bound, _problem = preflight_binding(out_dir, run_id, case_id) if role == 'dut' else (None, '')
     deck = deck_for(case_id, role)
     want = expected_preflight_sha(case_id) if role == 'preflight' else expected_dut_sha(case_id)
     if sha_file(deck) != want:
@@ -393,16 +537,20 @@ def launch(case_id, role, out_dir, run_id, timeout=1800, done_preflight=None):
             return 6, {'refusal': DISK_REFUSAL, 'detail': problem, 'guest_free_kb': free,
                        'process_started': False, 'launch_id': row['launch_id']}
         paths, runner_sha = prepare_remote(link, run_id)
-        case_dir = '%s/%s_%s' % (paths['cases'], case_id, role)
+        # every attempt of the same case and role gets its own guest directory and its own pulled
+        # file name, so a retry cannot erase the raw or the log the previous row was digested from
+        case_dir = '%s/%s_%s_%s' % (paths['cases'], case_id, role, row['launch_id'])
         link.run('mkdir -p %s && echo CASE_DIR_OK' % case_dir, 120, 'mkdir-case')
         link.push(deck, '%s/%s' % (case_dir, os.path.basename(deck)), 'deck')
         payload = ('set -a\n. %s/spectre/pdk_local.env\nset +a\n'
                    'export PROJ=%s PDK_ENV=%s QODER_NETLIST_DIR=%s\n'
-                   'LABEL=TR7CB_%s_%s bash %s/run_spectre.sh %s %d\n'
+                   'LABEL=TR7CB_%s_%s_%s bash %s/run_spectre.sh %s %d\n'
                    % (GUEST_PROJECT, GUEST_PROJECT, '%s/spectre/pdk_local.env' % GUEST_PROJECT,
                       paths['masters'], case_id.replace('-', '_'), role.upper(),
-                      paths['scripts'], '%s/%s' % (case_dir, os.path.basename(deck)), timeout))
-        rc, text = link.run(payload, timeout + 240, '%s-%s' % (role, case_id))
+                      row['launch_id'], paths['scripts'],
+                      '%s/%s' % (case_dir, os.path.basename(deck)), timeout))
+        rc, text = link.run(payload, timeout + 240, '%s-%s-%s' % (role, case_id,
+                                                                  row['launch_id']))
     except Refuse as error:
         account.settle(row, 'UNCERTAIN', refusal='REFUSED_DURING_STAGING: %s' % error)
         return 5, {'refusal': str(error), 'launch_id': row['launch_id'], 'process_started': False}
@@ -415,11 +563,11 @@ def launch(case_id, role, out_dir, run_id, timeout=1800, done_preflight=None):
     for key, tag in (('datafile', 'raw'), ('logfile', 'log')):
         remote = parsed.get(key) or ''
         if remote and not remote.startswith('$'):
-            digest = link.pull(remote, os.path.join(out_dir, '%s_%s_%s.%s'
-                                                    % (run_id, case_id, role, tag)))
+            destination = os.path.join(out_dir,
+                                       answer_name(run_id, case_id, role, tag, row['launch_id']))
+            digest = link.pull(remote, destination)
             if tag == 'raw':
-                raw_sha, raw_local = digest, os.path.join(out_dir, '%s_%s_%s.raw'
-                                                          % (run_id, case_id, role))
+                raw_sha, raw_local = digest, destination
             else:
                 log_sha = digest
     ok = rc == 0 and DC.runner_says_ok(parsed)
@@ -432,6 +580,7 @@ def launch(case_id, role, out_dir, run_id, timeout=1800, done_preflight=None):
                               'launch_id': row['launch_id'], 'state': state,
                               'deck_path': os.path.relpath(deck, ROOT).replace(os.sep, '/'),
                               'deck_sha256': sha_file(deck), 'raw': raw_local,
+                              'bound_preflight': bound or 'NOT_REQUIRED_FOR_THIS_ROLE',
                               'raw_sha256': raw_sha, 'log_sha256': log_sha,
                               'runner': parsed, 'guest_base': paths['base'],
                               'executor_sha256': runner_sha, 'guest_free_kb_before': free,
@@ -441,7 +590,9 @@ def launch(case_id, role, out_dir, run_id, timeout=1800, done_preflight=None):
 
 def observe(raw_path, case_id, role, run_id, launch_id, deck_sha):
     """what the native answer actually carries, before any measurement is claimed from it"""
-    data = MEAS.load_raw(raw_path, case_id)
+    data = MEAS.load_for_measurement(
+        raw_path, case_id, role,
+        io.open(deck_for(case_id, role), encoding='utf-8', newline='').read())
     required = [name for name in TRC.contract()['required_signals']['always_extracted']]
     internals = (TRC.contract()['required_signals']['internal_nodes']['en']
                  + TRC.contract()['required_signals']['internal_nodes']['enb']
@@ -524,10 +675,63 @@ def selftest():
                'nine approved cases' in answer['refusal'], answer)
         rc, answer = launch('TR-LONG', 'probe', evidence_like(ROOT), 'r_selftest')
         record('an unknown role is refused', rc == 5, answer)
-        rc, answer = launch('TR-120', 'dut', evidence_like(ROOT), 'r_selftest',
-                            done_preflight=set())
-        record('a DUT run without its own meter preflight is refused',
-               rc == 5 and 'preflight' in answer['refusal'], answer)
+        rc, answer = launch('TR-120', 'dut', evidence_like(ROOT), 'r_selftest')
+        record('a DUT run is refused because the run account it would stand on is not there, '
+               'and an omitted preflight argument is not read as permission to skip the check',
+               rc == 5 and 'preflight' in answer['refusal']
+               and 'spectre_launch_account.csv' in answer['refusal'], answer)
+        record('and that refusal wrote no evidence directory either',
+               not os.path.exists(evidence_like(ROOT)), '')
+
+        def booking(tag, state='CONFIRMED', rc='0', raw='native answer\n', deck=None,
+                    run_id='r_fix'):
+            """one preflight row of a run account, in a fixture directory that is never real evidence"""
+            directory = os.path.join(out, 'preflight_fixture_' + tag)
+            if not os.path.isdir(directory):
+                os.makedirs(directory)
+            account = Account(os.path.join(directory, 'spectre_launch_account.csv'),
+                              spectre_ceiling(directory), ACCOUNT_HEADER, 'T')
+            row = account.reserve({'case_id': 'TR-120', 'role': 'preflight', 'run_id': run_id,
+                                   'deck_sha256': deck or expected_preflight_sha('TR-120')})
+            path = os.path.join(directory, answer_name(run_id, 'TR-120', 'preflight', 'raw',
+                                                       row['launch_id']))
+            digest = ''
+            if raw:
+                io.open(path, 'wb').write(raw.encode('utf-8'))
+                digest = sha_file(path)
+            account.settle(row, state, rc=rc, raw_sha=digest, log_sha='c' * 64)
+            return directory, row
+
+        directory, booked = booking('confirmed')
+        binding, problem = preflight_binding(directory, 'r_fix', 'TR-120')
+        record('a DUT run reads its own passed preflight out of the run account and the raw beside it',
+               binding is not None and binding['launch_id'] == booked['launch_id']
+               and binding['ended_utc'] and binding['raw_sha256'] == sha_file(
+                   os.path.join(directory, answer_name('r_fix', 'TR-120', 'preflight', 'raw',
+                                                       booked['launch_id'])))
+               and authorisation_problem('dut', 'TR-120', directory, 'r_fix') == '',
+               (binding, problem))
+        directory, _row = booking('failed', state='FAILED', rc='1')
+        binding, problem = preflight_binding(directory, 'r_fix', 'TR-120')
+        record('a preflight that did not return zero is not a pass even with its raw digested',
+               binding is None and 'FAILED' in problem, problem)
+        directory, booked = booking('lost_raw')
+        io.open(os.path.join(directory, answer_name('r_fix', 'TR-120', 'preflight', 'raw',
+                                                   booked['launch_id'])),
+                'wb').write(b'the answer changed after the row was written\n')
+        binding, problem = preflight_binding(directory, 'r_fix', 'TR-120')
+        record('a preflight raw that no longer matches its own row does not authorise a DUT run',
+               binding is None and 'while row' in problem, problem)
+        directory, _row = booking('other_deck', deck='e' * 64)
+        binding, problem = preflight_binding(directory, 'r_fix', 'TR-120')
+        record('a preflight row charged against another deck is refused by name',
+               binding is None and 'deck account' in problem, problem)
+        binding, problem = preflight_binding(directory, 'r_other', 'TR-120')
+        record('a preflight booked under another run does not authorise this run',
+               binding is None and 'no meter preflight row' in problem, problem)
+        mismatched = [case for case in ORDER if preflight_condition_match(case)]
+        record('every case preflight copy is the derivation of its own DUT copy, so a pass there is '
+               'a pass under the same supplies, stimulus and analysis', not mismatched, mismatched)
         absent = [case for case in ORDER
                   if not os.path.isfile(os.path.join(repo(DECK_DIR), case + '.scs'))]
         record('a run copy exists for every approved case before any launch', not absent, absent)
@@ -629,6 +833,114 @@ def selftest():
            (disk_refusal(MIN_FREE_KB - 1), disk_refusal(MIN_FREE_KB), disk_refusal(None)))
     record('an unreadable df is recorded, not invented into a verdict',
            disk_refusal(None) == '', disk_refusal(None))
+    # ---- the stale-instance counterexample the review reproduced: the disk, not memory, decides
+    stale_path = os.path.join(out, 'account_stale.csv')
+    for victim in (stale_path, stale_path + '.lock'):
+        if os.path.isfile(victim):
+            os.remove(victim)
+    holder = Account(stale_path, 1, ACCOUNT_HEADER, 'T')
+    stale = Account(stale_path, 1, ACCOUNT_HEADER, 'T')
+    holder.reserve({'case_id': 'TR-120', 'role': 'dut', 'run_id': 'r'})
+    bytes_after_first = io.open(stale_path, 'rb').read()
+    refused = ''
+    try:
+        stale.reserve({'case_id': 'TR-200', 'role': 'dut', 'run_id': 'r'})
+    except Refuse as error:
+        refused = str(error)
+    on_disk = Account(stale_path, 1, ACCOUNT_HEADER, 'T')
+    record('an account object initialised before another reserved cannot overwrite that charge',
+           bool(refused) and io.open(stale_path, 'rb').read() == bytes_after_first
+           and len(on_disk.rows) == 1 and on_disk.rows[0]['case_id'] == 'TR-120',
+           (refused[:80], io.open(stale_path, 'rb').read() == bytes_after_first))
+    more_path = os.path.join(out, 'account_more.csv')
+    if os.path.isfile(more_path):
+        os.remove(more_path)
+    older = Account(more_path, 3, ACCOUNT_HEADER, 'T')       # initialised while one row is on disk
+    room = Account(more_path, 3, ACCOUNT_HEADER, 'T')
+    room.reserve({'case_id': 'TR-120', 'role': 'dut', 'run_id': 'r'})
+    room.reserve({'case_id': 'TR-200', 'role': 'dut', 'run_id': 'r'})
+    older_row = older.reserve({'case_id': 'TR-120', 'role': 'preflight', 'run_id': 'r'})
+    adopted = Account(more_path, 3, ACCOUNT_HEADER, 'T')
+    record('an older object appends in id order when the disk still has room, adopting the newer rows',
+           [row['case_id'] for row in adopted.rows] == ['TR-120', 'TR-200', 'TR-120']
+           and older_row['launch_id'] == 'T003' and adopted.occupied() == 3,
+           ([row['case_id'] for row in adopted.rows], older_row.get('launch_id')))
+    settle_by_id = Account(more_path, 3, ACCOUNT_HEADER, 'T')
+    target = settle_by_id.rows[0]
+    settle_by_id.settle(target, 'CONFIRMED', rc='0', raw_sha='a' * 64, log_sha='b' * 64)
+    after = Account(more_path, 3, ACCOUNT_HEADER, 'T')
+    record('a settle finds its row by id after other writers appended, and settles it once',
+           after.rows[0]['state'] == 'CONFIRMED' and after.rows[1]['state'] == 'REQUESTED',
+           [(row['state']) for row in after.rows])
+    refused = ''
+    try:
+        after.settle(after.rows[0], 'FAILED', rc='1')
+    except Refuse as error:
+        refused = str(error)
+    record('a second settle of the same row is refused instead of rewriting history',
+           'settled once' in refused, refused[:80])
+    broken_state = io.open(more_path, encoding='utf-8', newline='').read().replace(
+        'REQUESTED', 'MAYBE', 1)
+    io.open(more_path + '.bad', 'wb').write(broken_state.encode('utf-8'))
+    refused = ''
+    try:
+        Account(more_path + '.bad', 3, ACCOUNT_HEADER, 'T')
+    except Refuse as error:
+        refused = str(error)
+    record('a state the account does not admit is refused when the file is read',
+           'outside' in refused, refused[:80])
+    relaxed = io.open(more_path, encoding='utf-8', newline='').read().replace(',3,', ',2,', 1)
+    io.open(more_path + '.low', 'wb').write(relaxed.encode('utf-8'))
+    refused = ''
+    try:
+        Account(more_path + '.low', 3, ACCOUNT_HEADER, 'T')
+    except Refuse as error:
+        refused = str(error)
+    record('rows booked under a lower ceiling than the enforced one are refused, not inherited',
+           'relaxed' in refused or 'ceiling' in refused, refused[:90])
+    keep_path = Account(more_path, 3, ACCOUNT_HEADER, 'T')
+    original_bytes = io.open(more_path, 'rb').read()
+    keep_path.rows[1]['case_id'] = 'has,comma'
+    refused = ''
+    try:
+        keep_path.flush()
+    except Refuse as error:
+        refused = str(error)
+    record('a field that would break the table is refused before anything is written',
+           bool(refused) and io.open(more_path, 'rb').read() == original_bytes, refused[:80])
+    blocked = Account(more_path, 3, ACCOUNT_HEADER, 'T')
+    blocked.path = os.path.join(out, 'account_directory')
+    if not os.path.isdir(blocked.path):
+        os.makedirs(blocked.path)
+    blocked.rows = Account(more_path, 3, ACCOUNT_HEADER, 'T').rows
+    refused = ''
+    try:
+        blocked.flush()
+    except Refuse as error:
+        refused = str(error)
+    record('a failed replacement leaves the previous account intact',
+           'previous account is intact' in refused
+           and io.open(more_path, 'rb').read() == original_bytes, refused[:90])
+    for victim in (stale_path, more_path, more_path + '.bad', more_path + '.low'):
+        if os.path.isfile(victim):
+            os.remove(victim)
+    named = answer_name('r1', 'TR-120', 'dut', 'raw', 'T007')
+    legacy = answer_name('r1', 'TR-120', 'dut', 'raw')
+    record('every attempt pulls into a name that carries its own ledger row',
+           named == 'r1_TR-120_dut_T007.raw' and legacy == 'r1_TR-120_dut.raw'
+           and named != legacy and answer_name('r1', 'TR-120', 'dut', 'raw', 'T008') != named,
+           (named, legacy))
+    legacy_raw = os.path.join(out, legacy)
+    row_raw = os.path.join(out, answer_name('r1', 'TR-120', 'dut', 'raw', 'T008'))
+    io.open(legacy_raw, 'wb').write(b'legacy')
+    io.open(row_raw, 'wb').write(b'row')
+    found = find_answer(out, 'r1', 'TR-120', 'dut', 'raw', 'T008')
+    record('the answer named by its row is preferred, and the legacy spelling still resolves',
+           found == [row_raw, legacy_raw]
+           and find_answer(out, 'r1', 'TR-999', 'dut', 'raw') == [],
+           (found, [row_raw, legacy_raw]))
+    os.remove(legacy_raw)
+    os.remove(row_raw)
     return results
 
 

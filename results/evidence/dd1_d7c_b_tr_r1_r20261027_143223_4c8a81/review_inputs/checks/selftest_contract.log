@@ -1,0 +1,36 @@
+a clean contract has no arithmetic problems                    PASS 
+the DC reference agrees with the accepted table                PASS 
+the seven frozen decks and three pairs are consistent          PASS 
+windows read back from the delivered PWL match the frozen table PASS 
+the case plan is nine authorised NOT_RUN cases                 PASS 
+a 120 ns QLSB copied from the 200 ns tick is caught            PASS 
+F63 read as 63 intervals instead of 64 is caught               PASS 
+the old 20 mV guard reintroduced as the tolerance is caught    PASS 
+a nominal current substituted for the measured DC reference is caught PASS 
+a rounded nominal one-LSB current in place of IDC(000) is caught PASS 
+a plan maxstep that disagrees with the frozen schedule is caught PASS 
+a fine-step pair that also changed its tick is caught          PASS 
+a convergence pair carrying its own maxstep is caught          PASS 
+a pair renamed onto the case that has no finer deck is caught  PASS 
+TR-200 claiming a convergence partner is caught                PASS 
+dropping the statement that TR-200 has no fine step is caught  PASS 
+the TR-LONG enable gives eight emission windows                PASS 
+the first emission window starts at the declared 1050 ns rise50 PASS 
+the eighth tail runs to the simulation stop                    PASS 
+every leak window is 100 ns long                               PASS 
+a pure-off window always starts after its own fall ramp ends   PASS 
+a ramp that does not reach the deck high changes the flat readback PASS 
+a pwl wave with an odd token count is refused, not half read   PASS 
+a pwl source is found by the node it drives, not by its instance spelling PASS 
+reading the same node by its instance name returns nothing rather than a guess PASS 
+a pwl time in an undeclared suffix is refused                  PASS 
+the case plan carries nine rows under a header                 PASS 
+every cited primitive resolves to a line of its base blob      PASS 
+every cited symbol resolves to a definition, not a bare mention PASS 
+the interface table covers the reused modules and the frozen sources PASS 
+a reused Pure-specific default is named as not inherited       PASS 
+a cited symbol the base file does not define is refused        PASS 
+a cited module that is not in the base commit is refused       PASS 
+every plan row is USER_APPROVED and NOT_RUN before native work PASS 
+the contract renders as valid json                             PASS 
+TR_CONTRACT_SELFTEST 35/35

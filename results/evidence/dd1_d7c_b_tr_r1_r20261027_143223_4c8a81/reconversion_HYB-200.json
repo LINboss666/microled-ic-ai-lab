@@ -1,0 +1,116 @@
+{
+ "black_windows": [
+  {
+   "accepted_ticks": 65,
+   "basis": "t0 plus 64 intervals of 200 ns, inside a frame that ends at 16698 ns",
+   "code": "000",
+   "declared_by": "scripts/dd1_d7c_b_tr_trace.py measurement_windows",
+   "frame": "B0",
+   "kind": "black_64T",
+   "start_ns": 2366.0,
+   "stop_ns": 15166.0,
+   "window_id": "BLACK_B0"
+  }
+ ],
+ "case_id": "HYB-200",
+ "deck_comparison": {
+  "case_id": "HYB-200",
+  "deck": "spectre/dd1_d7c_b_tr/HYB-200.scs",
+  "deck_sha256": "3cb8e6b77170a74cca7bb65044192342c97dd5cf0bb7183b94460658d799e859",
+  "nodes_compared": [
+   "data_en",
+   "pam0",
+   "pam1",
+   "pam2"
+  ],
+  "note": "the same conversion also re-reads through the deck checker for the edge width, the 50 % points and the uniform 1000 ns shift",
+  "problems": []
+ },
+ "deck_problems": [],
+ "edge_total_ns": 2.0,
+ "endpoints": [
+  {
+   "enable_falls_ps": [],
+   "enable_rises_ps": [],
+   "expected_intervals": 0,
+   "fault_fall_ps": 0,
+   "fault_rise_ps": null,
+   "frame": "B0",
+   "kind": "normal",
+   "pwm_start_rise_ps": [
+    1288000
+   ],
+   "t0_ps": 1366000,
+   "tick_lead_ps": 5000,
+   "tick_rises_after_withdrawal": []
+  },
+  {
+   "enable_falls_ps": [
+    17236000
+   ],
+   "enable_rises_ps": [
+    17036000
+   ],
+   "expected_intervals": 1,
+   "fault_fall_ps": null,
+   "fault_rise_ps": null,
+   "frame": "L1",
+   "kind": "normal",
+   "pwm_start_rise_ps": [
+    16958000
+   ],
+   "t0_ps": 17036000,
+   "tick_lead_ps": 5000,
+   "tick_rises_after_withdrawal": []
+  },
+  {
+   "enable_falls_ps": [
+    33106000
+   ],
+   "enable_rises_ps": [
+    32706000
+   ],
+   "expected_intervals": 2,
+   "fault_fall_ps": null,
+   "fault_rise_ps": null,
+   "frame": "M2",
+   "kind": "normal",
+   "pwm_start_rise_ps": [
+    32628000
+   ],
+   "t0_ps": 32706000,
+   "tick_lead_ps": 5000,
+   "tick_rises_after_withdrawal": []
+  },
+  {
+   "enable_falls_ps": [
+    61176000
+   ],
+   "enable_rises_ps": [
+    48376000
+   ],
+   "expected_intervals": 64,
+   "fault_fall_ps": null,
+   "fault_rise_ps": null,
+   "frame": "F63",
+   "kind": "normal",
+   "pwm_start_rise_ps": [
+    48298000
+   ],
+   "t0_ps": 48376000,
+   "tick_lead_ps": 5000,
+   "tick_rises_after_withdrawal": []
+  }
+ ],
+ "frame_count": 4,
+ "not_a_claim": [
+  "not a MOS implementation of the RTL controller",
+  "not a real-time mixed simulation",
+  "not physical CDC or skew verification"
+ ],
+ "shift_ns": 1000.0,
+ "source": "MEASURED_TRACE",
+ "stop_ns": 63896.0,
+ "vcd": "dd1_d7c_b_tr_hyb_200.vcd",
+ "vcd_sha256": "0798d47c83d22b119e7fa4a678449c2e929f23cf106d540c6c4a181ea7211eb1"
+}

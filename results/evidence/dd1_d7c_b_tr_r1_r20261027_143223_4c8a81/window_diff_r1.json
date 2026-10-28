@@ -1,0 +1,14 @@
+{
+ "added_columns": [
+  "settling_dc_last_out_ns",
+  "settling_dc_left_limit_A",
+  "settling_dc_start_ns",
+  "settling_nominal_last_out_ns",
+  "settling_nominal_left_limit_A",
+  "settling_nominal_start_ns"
+ ],
+ "changed_cells": 222,
+ "keys_compared": 37,
+ "note": "a negative electrical finding stays published as itself: this table is the only place a number may move, and every move names its reason",
+ "same_value_cells": 1369
+}

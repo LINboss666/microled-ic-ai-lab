@@ -1,0 +1,52 @@
+the fixture enable crosses 0.9 V at 1050 ns and 2050 ns            PASS 
+the fixture integrates to exactly 1.875 uA x 1 us                  PASS 
+the dynamic error of the fixture is the hand value -0.2126 LSB     PASS 
+the nominal error of a nominal-current fixture is zero             PASS 
+Qpos and Qneg keep the identity and the sign rule                  PASS 
+a symmetric triangle splits into equal positive and negative areas PASS 
+settling against the DC target holds inside the five percent band  PASS 
+settling against the nominal target settles inside the pulse       PASS 
+a current that never enters the band stays NOT_SETTLED_WITHIN_PULSE PASS 
+a current that leaves the band before flat_stop reports the last out-of-band sample PASS 
+the deadline is the flat stop and is never moved to make a window look settled PASS 
+the iprobe two-terminal rule is expressible at the exported precision PASS 
+a 5 uV offset between the ideal probe terminals is caught by the tightened rule PASS 
+a 0.1 uV difference stays inside the numeric tolerance             PASS 
+the TR-LONG run copy assigns each emission window the code in force at its rise PASS 
+every declared kind of the TR-LONG run copy is measured            PASS 
+the codes of TR-LONG count up in binary with pam0 as the weight-1 bit PASS 
+an identical pair reports a zero difference and passes             PASS 
+a 0.011 LSB difference fails the 0.01 convergence limit            PASS 
+a pair whose reference tick differs is refused, not compared       PASS 
+two sides with no context are refused instead of matching on emptiness PASS 
+a side without a measured Q is not read as a difference of zero    PASS 
+windows present on one side only are reported, not skipped         PASS 
+a black window carries no invented T50 and a zero target           PASS 
+an unlabelled black window says for itself that no converter supplied it PASS 
+a labelled black window publishes the id, kind, basis and author the converter declared PASS 
+a post-fault black window still counts toward the same frozen dynamic criterion PASS 
+a black window clear of every emission window is placed            PASS 
+a black window over an emission window is refused, not silently double counted PASS 
+a black window clipped to the tail of an emission window is refused too PASS 
+two black windows under one id are refused before either is published PASS 
+the six statuses are published separately                          PASS 
+a dynamic pass does not decide the nominal column                  PASS 
+a 0.2 uA tail is a shutoff FAIL, not a rounding note               PASS 
+a window whose enable never rises is refused rather than given a nominal T50 PASS 
+the falling bound is taken in nanoseconds, not mixed with the picosecond rise PASS 
+the two charge columns are reported side by side from one measurement PASS 
+the tail charge is integrated separately over its own window       PASS 
+settling inside measure_window is judged against the target currents, not the charges PASS 
+the settling start is reported and is inside the pulse             PASS 
+a required signal absent from the native answer names itself       PASS 
+the internal-node view is one entry per flat step, at its last 50 ns PASS 
+every flat step is at least the 50 ns the task book asks for       PASS 
+the branch count is cross-checked as code plus one, not as the code value PASS 
+the selected and unselected branch enables are counted off the deck logic rails PASS 
+a selected branch bias is distinguished from an unselected one in the same entry PASS 
+the shared reference node is carried beside the per-branch columns PASS 
+an internal column the answer does not carry is published as NOT_OBSERVED, not dropped PASS 
+a missing enable column is never counted as a conducting branch    PASS 
+a field that contains a comma survives the published table intact  PASS 
+the published table re-reads at the header width on every line     PASS 
+TR_MEASURE_SELFTEST 51/51

@@ -1,0 +1,28 @@
+no authorisation variable means no launch and no file              PASS 
+an unauthorised launch returns rc 5 without starting a process     PASS 
+the refusal path created no evidence directory and no account row  PASS 
+a launch outside the round evidence directory is refused before any process PASS 
+and it left no account file behind                                 PASS 
+a case outside the approved nine is refused by name                PASS 
+an unknown role is refused                                         PASS 
+a DUT run without its own meter preflight is refused               PASS 
+a run copy exists for every approved case before any launch        PASS 
+a meter preflight copy exists for every approved case              PASS 
+the fourth launch past a ceiling of three is refused and stays unwritten PASS 
+a failure keeps its charge: three REQUESTED rows remain            PASS 
+settling a row does not free the budget                            PASS 
+a confirmed row keeps its digest in the account                    PASS 
+an unknown account state is refused                                PASS 
+the account re-reads with the same three ids in order              PASS 
+an account whose ids jump is refused rather than trusted           PASS 
+a duplicate booking is honoured only against a row that carries the process evidence PASS 
+a booking that carries process evidence of its own stays charged   PASS 
+a witness row without an executable cannot vouch for a duplicate   PASS 
+the deck account stamps every run copy with the committed contract digest PASS 
+the two accounts name the ceilings from the approved task          PASS 
+nine cases times two roles is the planned half of the ceiling      PASS 
+the guest write root is this round directory only                  PASS 
+a cleanup without a pulled raw digest is refused                   PASS 
+the disk floor refuses a launch below it and allows one above it   PASS 
+an unreadable df is recorded, not invented into a verdict          PASS 
+TR_RUN_SELFTEST 27/27

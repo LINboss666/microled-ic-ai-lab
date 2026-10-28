@@ -38,8 +38,9 @@ HEADER = ('case_id', 'window_id', 'kind', 'code', 'role', 'tick_ns', 'qlsb_C',
           'flat_start_ns', 'flat_stop_ns', 'q_full_C', 'q_flat_C', 'q_pos_C', 'q_neg_C',
           'abs_q_neg_C', 'peak_A', 'peak_ns', 'flat_mean_A', 'tail_q_C', 'leak_max_abs_A',
           'qtarget_nominal_C', 'qtarget_dc_C', 'err_nominal_LSB', 'err_dynamic_LSB',
-          'settling_nominal', 'settling_dc', 'settling_start_ns', 'settling_last_out_ns',
-          'settling_left_limit_A', 'evidence', 'raw_sha256', 'deck_sha256', 'launch_id', 'run_id',
+          'settling_nominal', 'settling_dc', 'settling_nominal_start_ns',
+          'settling_nominal_last_out_ns', 'settling_nominal_left_limit_A', 'settling_dc_start_ns',
+          'settling_dc_last_out_ns', 'settling_dc_left_limit_A', 'evidence', 'raw_sha256', 'deck_sha256', 'launch_id', 'run_id',
           'window_basis', 'declared_by')
 CONV_HEADER = ('pair', 'refined_case', 'coarse_case', 'window_id', 'code', 'tick_ns', 'qlsb_C',
                'refined_q_C', 'coarse_q_C', 'dq_C', 'abs_dq_over_qlsb', 'status', 'context_match')
@@ -84,6 +85,126 @@ def display_quantum(tokens):
         place = 10.0 ** (exp - len(frac)) if frac else 10.0 ** exp
         worst = max(worst, 0.5 * place)
     return worst
+
+
+def check_answer_format(data, case_id):
+    """the format of a native answer, judged before any number of it is used
+
+    A column that declares volts where the meter current belongs, a time axis that is not strictly
+    increasing, or a length mismatch is a broken artefact, not an electrical result. It is refused
+    here rather than integrated into a number that would look legitimate.
+    """
+    units = data['units']
+    current = data['current_name']
+    if units.get(current) != 'A':
+        raise Refuse('%s: %s carries unit %r, the probe current is exported in amperes and nothing '
+                     'is re-scaled to pretend otherwise' % (case_id, current, units.get(current)))
+    for name in REQUIRED:
+        if name in ('time', 'Ip_branch_current'):
+            continue
+        if units.get(name) != 'V':
+            raise Refuse('%s: %s carries unit %r, a voltage node must declare volts'
+                         % (case_id, name, units.get(name)))
+    times = [pair[0] for pair in data['series']['data_en']]
+    for index in range(1, len(times)):
+        if times[index] <= times[index - 1]:
+            raise Refuse('%s: the axis is not strictly increasing at sample %d (%r after %r), so an '
+                         'integral over it has no meaning'
+                         % (case_id, index, times[index], times[index - 1]))
+    if len(times) < 2:
+        raise Refuse('%s: the answer carries %d samples, too few to measure anything'
+                     % (case_id, len(times)))
+    return {'case_id': case_id, 'samples': len(times), 'current_unit': units.get(current),
+            'time_units': units.get(data['axis']), 'format': 'VALID'}
+
+
+def _failure(action):
+    """the refusal text of an action that must not succeed"""
+    try:
+        action()
+    except (Refuse, ValueError, KeyError) as error:
+        return '%s: %s' % (type(error).__name__, error)
+    return ''
+
+
+def wave_at(wave, time_ns):
+    """the deck's own declared level for one node at one instant, piecewise linear as PWL says"""
+    if not wave:
+        return None
+    if time_ns <= wave[0][0]:
+        return wave[0][1]
+    if time_ns >= wave[-1][0]:
+        return wave[-1][1]
+    for index in range(1, len(wave)):
+        t0, v0 = wave[index - 1]
+        t1, v1 = wave[index]
+        if t0 <= time_ns <= t1:
+            if t1 == t0:
+                return v1
+            return v0 + (v1 - v0) * (time_ns - t0) / (t1 - t0)
+    return wave[-1][1]
+
+
+def check_answer_against_deck(data, case_id, deck_text, role='dut'):
+    """what the bench actually drove, compared sample by sample with what the deck declares
+
+    The supply nodes must be the frozen values, the clamp must be the ideal 1.20 V, and every logic
+    input must sit on the level the run copy declares at that instant within the precision the file
+    exports. A flat 0.9 V would satisfy a nearest-rail reading and hide a driver that never switched,
+    so the comparison is against the declared waveform, not against a threshold.
+    """
+    driven = DECK.driven_logics(deck_text)
+    levels = {}
+    for node in ('data_en', 'pam0', 'pam1', 'pam2'):
+        kind = driven.get(node)
+        if not kind:
+            continue
+        how, volt, wave = kind
+        levels[node] = [(0.0, volt), (float('inf'), volt)] if how == 'dc' else list(wave)
+    tolerance = max(2.0 * data['value_quantum_V'], 1e-9)
+    problems = []
+    for name, want in (('vdd18', TRC.VDD18_V), ('vcas', TRC.VCAS_V), ('vss', TRC.VSS_V),
+                       ('clamp_node', TRC.CLAMP_V)):
+        worst = 0.0
+        for time, value in data['series'][name]:
+            worst = max(worst, abs(value - want))
+        if worst > tolerance:
+            problems.append('%s reads at most %r V from the deck value %r, over the exported '
+                            'tolerance %g V' % (name, worst, want, tolerance))
+    for node, wave in sorted(levels.items()):
+        series = data['series'].get(node) or []
+        worst = 0.0
+        worst_at = None
+        for time_ps, value in series:
+            want = wave_at([(t, v) for t, v in wave if t != float('inf')], time_ps / 1e3)
+            if want is None:
+                continue
+            gap = abs(value - want)
+            if gap > worst:
+                worst, worst_at = gap, time_ps
+        if worst > tolerance:
+            problems.append('%s: %d samples sit up to %g V away from the level the run copy declares '
+                            'for that node (worst at %s ps), so the stimulus actually applied is not '
+                            'the stimulus this case is named for' % (node, len(series), worst,
+                                                                     worst_at))
+    if problems:
+        raise Refuse('%s: %s' % (case_id, '; '.join(problems)))
+    return {'case_id': case_id, 'role': role, 'tolerance_V': tolerance,
+            'value_display_quantum_V': data['value_quantum_V'],
+            'nodes_compared': sorted(list(levels) + ['vdd18', 'vcas', 'vss', 'clamp_node']),
+            'agreement': 'EXACT_WITHIN_EXPORTED_PRECISION'}
+
+
+def load_for_measurement(raw_path, case_id, role, deck_text):
+    """the single import route: an answer is format-checked and deck-checked before any number moves
+
+    Every reachable entry that turns a native answer into a claim goes through here, so a column that
+    declares volts where the amperes belong, a time axis that runs backwards, or a bench that never
+    reached its declared supply cannot be measured into a number at all.
+    """
+    data = load_raw(raw_path, case_id)
+    data['deck_agreement'] = check_answer_against_deck(data, case_id, deck_text, role)
+    return data
 
 
 def load_raw(path, case_id):
@@ -133,11 +254,13 @@ def load_raw(path, case_id):
                          % (case_id, name, len(pairs), len(times)))
         if any(not math.isfinite(value) for _t, value in pairs):
             raise Refuse('%s: %s holds a non-finite sample' % (case_id, name))
-    return {'case_id': case_id, 'axis': axis, 'axis_unit': units.get(axis), 'current_name': current,
+    data = {'case_id': case_id, 'axis': axis, 'axis_unit': units.get(axis), 'current_name': current,
             'units': units, 'quantum_ps': quantum, 'value_quantum_V': volts,
             'series': series, 'columns': sorted(columns),
             'samples': len(times), 't_first_ps': times[0], 't_last_ps': times[-1],
             'path': os.path.basename(path)}
+    data['format'] = check_answer_format(data, case_id)
+    return data
 
 
 def windows_of(case_id, deck_text):
@@ -206,8 +329,10 @@ def measure_window(case_id, window, windows, data, code, role, meta):
            'q_pos_C': '', 'q_neg_C': '', 'abs_q_neg_C': '', 'peak_A': '', 'peak_ns': '',
            'flat_mean_A': '', 'tail_q_C': '', 'leak_max_abs_A': '', 'qtarget_nominal_C': '',
            'qtarget_dc_C': '', 'err_nominal_LSB': '', 'err_dynamic_LSB': '',
-           'settling_nominal': '', 'settling_dc': '', 'settling_start_ns': '',
-           'settling_last_out_ns': '', 'settling_left_limit_A': '',
+           'settling_nominal': '', 'settling_dc': '', 'settling_nominal_start_ns': '',
+           'settling_nominal_last_out_ns': '', 'settling_nominal_left_limit_A': '',
+           'settling_dc_start_ns': '', 'settling_dc_last_out_ns': '',
+           'settling_dc_left_limit_A': '',
            'window_basis': 'the 0.9 V crossings of the native enable, inside the window the delivered '
                            'PWL of this run copy declares',
            'declared_by': 'scripts/dd1_d7c_b_tr_measure.py windows_of'}
@@ -278,9 +403,12 @@ def measure_window(case_id, window, windows, data, code, role, meta):
     settle_dc = settling(current, rise, idc, ns_to_ps(flat['stop_ns']),
                          '%s %s dc' % (case_id, window['window_id']))
     out.update({'settling_nominal': settle['state'], 'settling_dc': settle_dc['state'],
-                'settling_start_ns': settle['settled_ns'] or '',
-                'settling_last_out_ns': settle['last_out_ns'] or '',
-                'settling_left_limit_A': settle['left_limit']})
+                'settling_nominal_start_ns': settle['settled_ns'] or '',
+                'settling_nominal_last_out_ns': settle['last_out_ns'] or '',
+                'settling_nominal_left_limit_A': settle['left_limit'],
+                'settling_dc_start_ns': settle_dc['settled_ns'] or '',
+                'settling_dc_last_out_ns': settle_dc['last_out_ns'] or '',
+                'settling_dc_left_limit_A': settle_dc['left_limit']})
     if leak_max is None:
         raise Refuse('%s %s: the declared leak window carries no native sample'
                      % (case_id, window['window_id']))
@@ -336,7 +464,9 @@ def black_window(case_id, start_ns, stop_ns, data, role, meta, code, label=None)
             'launch_id': meta['launch_id'], 'run_id': meta['run_id'],
             'flat_start_ns': '', 'flat_stop_ns': '', 'q_flat_C': '', 'flat_mean_A': '',
             'tail_q_C': '', 'settling_nominal': 'NOT_APPLICABLE', 'settling_dc': 'NOT_APPLICABLE',
-            'settling_start_ns': '', 'settling_last_out_ns': '', 'settling_left_limit_A': '',
+            'settling_nominal_start_ns': '', 'settling_nominal_last_out_ns': '',
+            'settling_nominal_left_limit_A': '', 'settling_dc_start_ns': '',
+            'settling_dc_last_out_ns': '', 'settling_dc_left_limit_A': '',
             'window_basis': label.get('basis', 'the whole 64-interval window of a zero-code frame'),
             'declared_by': label.get('declared_by',
                                      'hand-declared: no converter supplied this black window')}
@@ -365,7 +495,7 @@ def black_window_placement(case_id, windows, placed_ids, row):
 
 
 def measure_case(case_id, raw_path, deck_text, meta, extra_windows=()):
-    data = load_raw(raw_path, case_id)
+    data = load_for_measurement(raw_path, case_id, meta.get('role', 'dut'), deck_text)
     windows = windows_of(case_id, deck_text)
     codes = codes_of(case_id, deck_text)
     rows = []
@@ -466,7 +596,6 @@ def statuses(rows, conv_rows, observed, completed):
     emission = [row for row in rows if row['kind'] == 'emission']
     black = [row for row in rows if row['kind'].startswith('black')]
     tail = [row for row in rows if row['kind'] == 'emission']
-
     def verdict(values, limit, missing='PARTIAL'):
         if not values:
             return missing, 0
@@ -482,10 +611,13 @@ def statuses(rows, conv_rows, observed, completed):
                                                          for state in settling_states)
                        else ('PARTIAL' if not settling_states else 'FAIL'))
     leak_states = [row['leak_max_abs_A'] for row in tail]
-    shutoff = ('PASS' if leak_states and all(value is not None
-                                             and value <= TRC.LEAK_LIMIT_A
-                                             for value in leak_states)
-               else ('PARTIAL' if not leak_states else 'FAIL'))
+    black_leaks = [row['leak_max_abs_A'] for row in black]
+    off_states = [(value, limit) for value, limit in zip(leak_states + black_leaks,
+                                                         [TRC.LEAK_LIMIT_A] * (len(leak_states)
+                                                                              + len(black_leaks)))]
+    shutoff = ('PASS' if off_states and all(value is not None and value <= limit
+                                            for value, limit in off_states)
+               else ('PARTIAL' if not off_states else 'FAIL'))
     conv_status = ('PASS' if conv_rows and all(row['status'] == 'PASS' for row in conv_rows)
                    else ('PARTIAL' if not conv_rows else 'FAIL'))
     return [
@@ -508,11 +640,12 @@ def statuses(rows, conv_rows, observed, completed):
          'expected': len(emission),
          'note': 'against the DC target with a +/-5 % band, at least 10 ns, deadline flat_stop'},
         {'status': 'SHUTOFF_STATUS', 'verdict': shutoff,
-         'measured': len([value for value in leak_states
-                          if value is not None and value <= TRC.LEAK_LIMIT_A]),
-         'expected': len(tail),
-         'note': 'max(abs(I_sink)) <= %g A over the last %g ns of the pure-off window only'
-                 % (TRC.LEAK_LIMIT_A, TRC.TAIL_NS)},
+         'measured': len([value for value, limit in off_states
+                          if value is not None and value <= limit]),
+         'expected': len(off_states),
+         'note': 'max(abs(I_sink)) <= %g A over the last %g ns of every emission pure-off window '
+                 'AND over the whole of every black window, where a net charge of zero never excuses '
+                 'a current peak' % (TRC.LEAK_LIMIT_A, TRC.TAIL_NS)},
         {'status': 'CONVERGENCE_STATUS', 'verdict': conv_status, 'measured': len(conv_rows),
          'expected': 0, 'note': 'abs(dQ)/QLSB <= %g on the three declared pairs' % TRC.CONV_LIMIT}]
 
@@ -823,7 +956,8 @@ def selftest():
            one['settling_nominal'] == 'SETTLED' and one['settling_dc'] == 'SETTLED',
            (one['settling_nominal'], one['settling_dc']))
     record('the settling start is reported and is inside the pulse',
-           1050.0 <= float(one['settling_start_ns']) < 2000.0, one['settling_start_ns'])
+           1050.0 <= float(one['settling_nominal_start_ns']) < 2000.0,
+           one['settling_nominal_start_ns'])
     record('a required signal absent from the native answer names itself',
            _refuses(lambda: _load_missing()), '')
     # ---- the internal-node view, exercised on a synthetic answer that carries the saved columns
@@ -891,6 +1025,103 @@ def selftest():
         widths.add(len(next(csv.reader([line]))))
     record('the published table re-reads at the header width on every line',
            widths == {len(HEADER)}, (sorted(widths), len(HEADER)))
+    # ---- the import rules the review proved missing: format first, then the deck
+    def probe_psf(path, current_unit='A', vdd=1.8, times=(0.0, 1e-9, 2e-9), en_levels=None,
+                  levels=None):
+        """a complete three-point native answer in the shape this machine exports, one fact at a time"""
+        names = [name for name in REQUIRED if name not in ('time', 'Ip_branch_current')]
+        names.append('Ip_branch:current')
+        fixed = {'data_en': 0.0, 'pam0': 0.0, 'pam1': 0.0, 'pam2': 0.0, 'vdd18': vdd, 'vss': 0.0,
+                 'vcas': TRC.VCAS_V, 'iref_in': 0.75, 'clamp_node': TRC.CLAMP_V,
+                 'data_out': TRC.CLAMP_V, 'Ip_branch:current': TRC.IUNIT_A}
+        fixed.update(levels or {})
+        lines = ['SWEEP', '"time" "sweep"', '"units" "s"', 'TRACE', '"time" "s"']
+        lines += ['"%s" "%s"' % (name, current_unit if name == 'Ip_branch:current' else 'V')
+                  for name in names]
+        lines += ['VALUE']
+        for index, point in enumerate(times):
+            lines += ['"time" %.15e' % point]
+            for name in names:
+                value = ((en_levels[index] if en_levels else 0.0) if name == 'data_en'
+                         else fixed[name])
+                lines += ['"%s" %.15e' % (name, value)]
+        lines += ['END']
+        io.open(path, 'w', encoding='utf-8', newline='\n').write('\n'.join(lines) + '\n')
+        return path
+
+    staging_dir = os.path.join(ROOT, 'review', 'scratch', 'tr_staging')
+    if not os.path.isdir(staging_dir):
+        os.makedirs(staging_dir)
+    good = probe_psf(os.path.join(staging_dir, 'import_valid.raw'))
+    imported = load_raw(good, 'TR-120')
+    record('a complete native answer is imported with its format checked, as a positive control',
+           imported['format']['format'] == 'VALID' and imported['samples'] == 3
+           and imported['format']['current_unit'] == 'A', imported['format'])
+    refused = _failure(lambda: load_raw(probe_psf(os.path.join(staging_dir, 'import_unit.raw'),
+                                                 current_unit='V'), 'TR-120'))
+    record('a meter current exported in volts is refused at the import, naming the unit',
+           'amperes' in refused, refused[:120])
+    refused = _failure(lambda: load_raw(probe_psf(os.path.join(staging_dir, 'import_time.raw'),
+                                                 times=(0.0, 2e-9, 1e-9)), 'TR-120'))
+    record('a time axis that is not strictly increasing is refused at the import',
+           'strictly increasing' in refused, refused[:120])
+    zero_vdd = load_raw(probe_psf(os.path.join(staging_dir, 'import_vdd.raw'), vdd=0.0), 'TR-120')
+    deck_text = io.open(os.path.join(ROOT, 'spectre', 'dd1_d7c_b_tr', 'TR-120.scs'),
+                        encoding='utf-8', newline='').read()
+    refused = _failure(lambda: check_answer_against_deck(zero_vdd, 'TR-120', deck_text, 'dut'))
+    record('a bench whose supply never reached the frozen 1.8 V is refused before measurement',
+           'vdd18' in refused, refused[:140])
+    driven = DECK.driven_logics(deck_text)
+    wave = driven['data_en'][2]
+    sample_times_ns = (0.0, 1160.0, 1170.0, 1180.0, 1280.0, 1290.0, 1300.0, 2000.0)
+    matched_times = [point * 1e-9 for point in sample_times_ns]
+    matched_en = [wave_at(wave, point) for point in sample_times_ns]
+    exact = load_raw(probe_psf(os.path.join(staging_dir, 'import_exact.raw'), times=matched_times,
+                               en_levels=matched_en), 'TR-120')
+    agreement = check_answer_against_deck(exact, 'TR-120', deck_text, 'dut')
+    record('a stimulus that follows the run copy wave sample for sample is accepted',
+           agreement['agreement'] == 'EXACT_WITHIN_EXPORTED_PRECISION'
+           and 'data_en' in agreement['nodes_compared'], agreement['nodes_compared'])
+    half_railed = load_raw(probe_psf(os.path.join(staging_dir, 'import_half.raw'),
+                                     times=matched_times,
+                                     en_levels=[0.9 if value >= TRC.ENABLE_MID_V else value
+                                                for value in matched_en]),
+                           'TR-120')
+    refused = _failure(lambda: check_answer_against_deck(half_railed, 'TR-120', deck_text, 'dut'))
+    record('an enable parked at half rail is refused rather than rounded up to the high level',
+           'data_en' in refused, refused[:160])
+    record('and the refusal happens at the single import route the measurement entries use',
+           _failure(lambda: load_for_measurement(os.path.join(staging_dir, 'import_vdd.raw'),
+                                                 'TR-120', 'dut', deck_text)) != '',
+           'load_for_measurement must refuse the same answer')
+    fixture_bookkeeping = {'verdict': 'PASS', 'measured': 1, 'expected': 1, 'note': 'fixture'}
+    verdicts_black = dict((row['status'], row['verdict']) for row in
+                          statuses([dict(named, kind='emission'),
+                                    dict(named, kind='black_64T', leak_max_abs_A=1e-6,
+                                         q_full_C=0.0, err_dynamic_LSB=0.0,
+                                         err_nominal_LSB=0.0)],
+                                   [{'window_id': 'W0', 'status': 'PASS'}], fixture_bookkeeping,
+                                   fixture_bookkeeping))
+    record('a black window that carries a microampere peak is a shutoff FAIL even at zero net charge',
+           verdicts_black['SHUTOFF_STATUS'] == 'FAIL', verdicts_black['SHUTOFF_STATUS'])
+    verdicts_clean = dict((row['status'], row['verdict']) for row in
+                          statuses([dict(named, kind='emission'),
+                                    dict(named, kind='black_64T', leak_max_abs_A=1e-12,
+                                         q_full_C=0.0, err_dynamic_LSB=0.0,
+                                         err_nominal_LSB=0.0)],
+                                   [{'window_id': 'W0', 'status': 'PASS'}], fixture_bookkeeping,
+                                   fixture_bookkeeping))
+    record('the same verdict passes when the black window really is dark',
+           verdicts_clean['SHUTOFF_STATUS'] == 'PASS', verdicts_clean['SHUTOFF_STATUS'])
+    counted = statuses([dict(named, kind='emission'),
+                        dict(named, kind='black_post_fault_hold', leak_max_abs_A=1e-12,
+                             q_full_C=0.0, err_dynamic_LSB=0.0, err_nominal_LSB=0.0)],
+                       [{'window_id': 'W0', 'status': 'PASS'}], fixture_bookkeeping,
+                       fixture_bookkeeping)
+    expected_shutoff = [row['expected'] for row in counted
+                        if row['status'] == 'SHUTOFF_STATUS']
+    record('and the shutoff expectation counts emission tails and black windows together',
+           expected_shutoff == [2], expected_shutoff)
     return results
 
 

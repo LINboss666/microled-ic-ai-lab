@@ -40,7 +40,9 @@ NUMERIC = ('tick_ns', 'qlsb_C', 'window_start_ns', 'window_stop_ns', 'rise50_ns'
            't50_ns', 'flat_start_ns', 'flat_stop_ns', 'q_full_C', 'q_flat_C', 'q_pos_C', 'q_neg_C',
            'abs_q_neg_C', 'peak_A', 'peak_ns', 'flat_mean_A', 'tail_q_C', 'leak_max_abs_A',
            'qtarget_nominal_C', 'qtarget_dc_C', 'err_nominal_LSB', 'err_dynamic_LSB',
-           'settling_start_ns', 'settling_last_out_ns', 'settling_left_limit_A')
+           'settling_nominal_start_ns', 'settling_nominal_last_out_ns',
+           'settling_nominal_left_limit_A', 'settling_dc_start_ns', 'settling_dc_last_out_ns',
+           'settling_dc_left_limit_A')
 TRACK_LIMIT_BYTES = 32 * 1024 * 1024
 # written as fragments so the scanner cannot trip on its own source, which is how a secret scanner
 # that whitelists itself would be read as a weakened check
@@ -74,6 +76,10 @@ def number(text):
 
 
 def evidence_dir(name=''):
+    if name and os.path.isabs(name):
+        # the machine-local evidence tree of an earlier round is not under this checkout, and a
+        # read-only re-extraction has to name it in full
+        return name
     if name:
         return repo(os.path.join(EVIDENCE_ROOT, name))
     found = sorted(row for row in os.listdir(repo(EVIDENCE_ROOT))
@@ -85,6 +91,28 @@ def evidence_dir(name=''):
 
 def run_id_of(directory):
     return os.path.basename(directory)[len('dd1_d7c_b_tr_'):]
+
+
+def stored_answer(directory, case_id, role=ROLE, raw_dir=None):
+    """a native answer of this evidence directory, imported through the same checks as a measurement
+
+    The extraction entries below re-run over an already published raw, so they used to call load_raw()
+    straight and skip the deck agreement check. Any reachable entry that skips the import checks is an
+    escape from them, whatever it is only reading.
+    """
+    # a read-only re-extraction reads the answers where they were pulled, which for a later round is
+    # not the directory whose tables are being rewritten; QODER_TR_RAW_DIR names that place for the
+    # offline entries on this machine and is never written to
+    home = raw_dir or os.environ.get('QODER_TR_RAW_DIR') or directory
+    run_id = run_id_of(home)
+    answers = RUN.find_answer(home, run_id, case_id, role, 'raw')
+    if not answers:
+        raise TRC.Refuse('%s: no pulled %s answer of run %s sits in %s, so nothing can be extracted'
+                         % (case_id, role, run_id, home))
+    deck_text = io.open(RUN.deck_for(case_id, role), encoding='utf-8', newline='').read()
+    data = MEAS.load_for_measurement(answers[0], case_id, role, deck_text)
+    data['answer_path'] = answers[0]
+    return data
 
 
 # ---- reading the published tables -------------------------------------------------------------------
@@ -352,15 +380,14 @@ def _boundary(series, level, rise_ps, flat_stop_ps, label):
     return None, 'NEVER_REACHES_LEVEL_IN_WINDOW(peak %g)' % peak
 
 
-def delay_breakdown(directory, case_id):
+def delay_breakdown(directory, case_id, raw_dir=None):
     """where the lost time sits on each step: decoding, bias charge, or current build-up
 
     Each boundary is measured off the native samples with the accepted crossing helper. A boundary
     that does not exist in the samples is reported with the reason and left out of the sum, never
     filled in from a neighbouring column.
     """
-    raw = os.path.join(directory, '%s_%s_%s.raw' % (run_id_of(directory), case_id, ROLE))
-    data = MEAS.load_raw(raw, case_id)
+    data = stored_answer(directory, case_id, raw_dir=raw_dir)
     idc = TRC.dc_idc_by_code()
     emissions = [item for item in case_rows(directory, case_id) if item['kind'] == 'emission']
     out = []
@@ -380,8 +407,10 @@ def delay_breakdown(directory, case_id):
                  'decode_ns': None, 'decode_state': 'NO_NEW_BRANCH',
                  'bias_ns': None, 'bias_state': 'NO_NEW_BRANCH',
                  'build_ns': None, 'build_state': '',
-                 'settling_start_ns': row['settling_start_ns'],
-                 'last_out_ns': row['settling_last_out_ns'],
+                 'settling_nominal_start_ns': row['settling_nominal_start_ns'],
+                 'settling_nominal_last_out_ns': row['settling_nominal_last_out_ns'],
+                 'settling_dc_start_ns': row['settling_dc_start_ns'],
+                 'settling_dc_last_out_ns': row['settling_dc_last_out_ns'],
                  'raw_sha256': row['raw_sha256'], 'launch_id': row['launch_id'],
                  'evidence': 'NATIVE_MEASURED'}
         for branch in newly:
@@ -434,14 +463,13 @@ def _polyline(series, from_ns, to_ns, xs, yscale, base_y):
     return ' '.join('%.2f,%.2f' % ((t - first) * xs, base_y - v * yscale) for t, v in picked)
 
 
-def switch_figure(directory, case_id, from_ns, to_ns, traces, path):
+def switch_figure(directory, case_id, from_ns, to_ns, traces, path, raw_dir=None):
     """internal nodes over the output current, each row scaled by the value printed beside it
 
     No axis is normalised away and no trace is resampled to a fixed grid: every row keeps the native
     sample times, so a delay read off the picture can be re-measured in the row tables.
     """
-    raw = os.path.join(directory, '%s_%s_%s.raw' % (run_id_of(directory), case_id, ROLE))
-    data = MEAS.load_raw(raw, case_id)
+    data = stored_answer(directory, case_id, raw_dir=raw_dir)
     width, row_h, pad_left, plot_h = 1000, 92, 240, 58
     span_ps = MEAS.ns_to_ps(to_ns) - MEAS.ns_to_ps(from_ns)
     xs = width / max(1.0, span_ps)
@@ -471,8 +499,8 @@ def switch_figure(directory, case_id, from_ns, to_ns, traces, path):
         y += row_h
     lines.append('<text x="10" y="%d" font-family="monospace" font-size="11">x: %g..%g ns, linear. '
                  'raw %s deck %s samples %d</text>'
-                 % (y + 14, from_ns, to_ns, sha_of(raw)[:16], deck_sha(case_id)[:16],
-                    data['samples']))
+                 % (y + 14, from_ns, to_ns, sha_of(data['answer_path'])[:16],
+                    deck_sha(case_id)[:16], data['samples']))
     lines.append('</svg>')
     io.open(path, 'w', encoding='utf-8', newline='\n').write('\n'.join(lines) + '\n')
     return path, sha_of(path)
@@ -487,7 +515,8 @@ SWITCH_TRACES = (('data_en', 'V'), ('pam2', 'V'), ('Xdut.en0', 'V'), ('Xdut.en4'
 DELTA_HEADER = ('case_id', 'window_id', 'code', 'branches', 'previous_branches', 'new_branches',
                 'rise50_ns', 'flat_start_ns', 'flat_stop_ns', 't50_ns', 'target_dc_A',
                 'decode_ns', 'decode_state', 'bias_ns', 'bias_state', 'build_ns', 'build_state',
-                'settling_start_ns', 'last_out_ns', 'unattributed', 'evidence', 'raw_sha256',
+                'settling_nominal_start_ns', 'settling_nominal_last_out_ns',
+                'settling_dc_start_ns', 'settling_dc_last_out_ns', 'unattributed', 'evidence',
                 'launch_id')
 INTERNAL_HEADER = ('case_id', 'window_id', 'code', 'from_ns', 'to_ns', 'span_ns',
                    'selected_branches', 'branch_enables_high', 'branch_enable_bars_high',
@@ -500,14 +529,26 @@ def _write(directory, name, rows, header):
     return name, path
 
 
-def deliver_traces(directory):
+def deliver_traces(directory, write=True):
     """the round's own traces, losslessly gzipped so a reviewer can replay the conversion
 
     The vvp logs stay on this machine: they open with the command line, which carries an absolute
     path into the tool tree, and the task book keeps vendor absolute paths out of the repository.
     Their digests and their MARK lines are published here instead, so a log can still be recognised
     byte for byte without being shipped.
+
+    write=False is the judging entry's form: it re-reads the identity that was published by the round
+    that held the trace bytes and creates nothing. A gate that gzip-copies or re-dumps the directory
+    it is judging replaces part of the record it is supposed to test, and the digests it then reports
+    are its own.
     """
+    if not write:
+        published = os.path.join(directory, 'rtl', 'tool_identity.json')
+        if not os.path.isfile(published):
+            raise TRC.Refuse('%s publishes no rtl/tool_identity.json and the judging entry does not '
+                             'create one: the lossless copies belong to the round that held the '
+                             'trace bytes' % directory)
+        return json.loads(io.open(published, encoding='utf-8').read())
     rtl = os.path.join(directory, 'rtl')
     _spectre, rows = ledgers(directory)
     by_id = dict((row['sim_id'], row) for row in rows)
@@ -562,8 +603,36 @@ def deliver_traces(directory):
     return payload
 
 
-def publish(directory):
-    """every derived table the report quotes, written beside the rows it came from"""
+DERIVED_TABLES = ('windows_all.csv', 'convergence.csv', 'convergence_pairs.json',
+                  'delay_attribution.csv', 'delay_attribution.json',
+                  'internal_nodes_all.csv', 'internal_nodes_all.json', 'figures.json')
+
+
+def require_published(directory):
+    """the judging entry reads the tables that were published; it never republishes them
+
+    A later round re-judges the first round's directory as the frozen comparison of its own claims.
+    Re-extracting into it would rewrite the record under review, and an extraction that cannot reach
+    the answers rewrites it *lossily*: this entry was seen to empty the settling columns and drop the
+    raw digest column from the published delay table. A missing derived table is therefore a refusal
+    naming the file and the entry that would create it, never a silent write.
+    """
+    missing = [name for name in DERIVED_TABLES
+               if not os.path.isfile(os.path.join(directory, name))]
+    if missing:
+        raise TRC.Refuse('%s has not been published: %s. Run --publish on the directory this '
+                         'round owns; --gates reads evidence and does not write it'
+                         % (directory, ', '.join(missing)))
+    return missing
+
+
+def publish(directory, raw_dir=None, trace_delivery=True):
+    """every derived table the report quotes, written beside the rows it came from
+
+    A re-extraction reads its answers from the directory they were pulled into, which for a later
+    round is not the directory it publishes; that separation is why raw_dir is a parameter and not a
+    copy of the answers.
+    """
     written = {}
     rows = all_rows(directory)
     written['windows_all.csv'] = _write(directory, 'windows_all.csv', rows, MEAS.HEADER)[1]
@@ -575,7 +644,7 @@ def publish(directory):
            'declared_by': 'scripts/dd1_d7c_b_tr_record.py convergence_table'})
     delta = []
     for case_id in TRC.CASE_ORDER:
-        delta.extend(delay_breakdown(directory, case_id))
+        delta.extend(delay_breakdown(directory, case_id, raw_dir=raw_dir))
     written['delay_attribution.csv'] = _write(
         directory, 'delay_attribution.csv',
         [dict(row, new_branches=','.join(row['new_branches'])) for row in delta],
@@ -586,8 +655,7 @@ def publish(directory):
                    'enable crossed half-rail, measured off the native samples'})
     internals = []
     for case_id in TRC.CASE_ORDER:
-        raw = os.path.join(directory, '%s_%s_%s.raw' % (run_id_of(directory), case_id, ROLE))
-        data = MEAS.load_raw(raw, case_id)
+        data = stored_answer(directory, case_id, raw_dir=raw_dir)
         deck_text = io.open(RUN.deck_for(case_id, ROLE), encoding='utf-8', newline='').read()
         for entry in MEAS.internal_nodes(data, MEAS.windows_of(case_id, deck_text),
                                          MEAS.codes_of(case_id, deck_text)):
@@ -613,13 +681,17 @@ def publish(directory):
            'declared_by': 'scripts/dd1_d7c_b_tr_measure.py internal_nodes'})
     path, digest = switch_figure(directory, SWITCH_WINDOW[0], SWITCH_WINDOW[1], SWITCH_WINDOW[2],
                                  SWITCH_TRACES,
-                                 os.path.join(directory, 'fig_TR-OFFCODE_switch.svg'))
+                                 os.path.join(directory, 'fig_TR-OFFCODE_switch.svg'),
+                                 raw_dir=raw_dir)
     _dump(os.path.join(directory, 'figures.json'),
           [{'file': os.path.basename(path), 'sha256': digest, 'case_id': SWITCH_WINDOW[0],
             'span_ns': [SWITCH_WINDOW[1], SWITCH_WINDOW[2]],
             'traces': [{'signal': name, 'unit': unit} for name, unit in SWITCH_TRACES],
             'scaling': 'each row is scaled by the peak it prints, native samples, no resampling'}])
-    written['tool_identity.json'] = deliver_traces(directory)
+    if trace_delivery:
+        written['tool_identity.json'] = deliver_traces(directory)
+    else:
+        written['native_sequences'] = 'delivered by scripts/dd1_d7c_b_tr_r1_native.py instead'
     return rows, conv, pairs, problems, delta, internals, written
 
 
@@ -780,7 +852,7 @@ def gates(directory):
     keep, _skipped = tracked_candidates()
     total = sum(size for _p, size in keep)
     before = [row['launch_id'] for row in ledgers(directory)[0]]
-    publish(directory)
+    require_published(directory)
     _spectre_rows, rtl_rows = ledgers(directory)
     after = [row['launch_id'] for row in ledgers(directory)[0]]
     contract = TRC.contract()
@@ -923,7 +995,9 @@ def gates(directory):
            [path for path, _s in keep
             if path.endswith(LOCAL_ONLY_SUFFIXES)
             or any(mark in path for mark in LOCAL_ONLY_MARKS)][:4])
-    traces = deliver_traces(directory)['traces']
+    # read-only: the digests below are compared with the deck record, while the lossless claim itself
+    # is the one the round that held the trace bytes recorded when it wrote this identity
+    traces = deliver_traces(directory, write=False)['traces']
     hybrid_inputs = DECK.load_hyb_inputs()[0]
     record('the shipped traces decompress byte for byte and are the traces the decks stamp',
            len(traces) == 2 and all(row['lossless']
@@ -988,7 +1062,8 @@ WINDOW_COLUMNS = ('case_id', 'window_id', 'kind', 'code', 'tick_ns', 'qlsb_C', '
                   'q_full_C', 'q_flat_C', 'q_pos_C', 'q_neg_C', 'abs_q_neg_C', 'peak_A',
                   'flat_mean_A', 'tail_q_C', 'leak_max_abs_A', 'qtarget_nominal_C',
                   'qtarget_dc_C', 'err_nominal_LSB', 'err_dynamic_LSB', 'settling_nominal',
-                  'settling_dc', 'settling_start_ns', 'settling_last_out_ns')
+                  'settling_dc', 'settling_nominal_start_ns', 'settling_nominal_last_out_ns',
+                  'settling_dc_start_ns', 'settling_dc_last_out_ns')
 
 
 def render_report(directory):
@@ -1446,11 +1521,21 @@ def _patch(path, old, new):
     io.open(path, 'w', encoding='utf-8', newline='\n').write(text.replace(old, new, 1))
 
 
-def selftest():
+def _tree_digests(directory):
+    """every file under a directory, as name to digest, for a before-and-after comparison"""
+    found = {}
+    for root, _dirs, files in os.walk(directory):
+        for name in files:
+            path = os.path.join(root, name)
+            found[os.path.relpath(path, directory).replace(os.sep, '/')] = sha_of(path)
+    return found
+
+
+def selftest(real_dir=''):
     """every counterexample below is applied to a copy or to memory, never to published evidence"""
     results = []
     record = lambda name, ok, extra='': results.append((name, bool(ok), '' if ok else str(extra)))
-    real = evidence_dir()
+    real = evidence_dir(real_dir)
     copy = _copy_evidence(real)
     rows = all_rows(copy)
     emission = [row for row in rows if row['kind'] == 'emission']
@@ -1460,6 +1545,19 @@ def selftest():
     record('the copy reads the same rows and the same three pairs as the published evidence',
            len(rows) == len(all_rows(real)) and len(conv) == 13 and len(pairs) == 3,
            (len(rows), len(conv), len(pairs)))
+    held = _tree_digests(copy)
+    judged = gates(copy)
+    record('the judging entry writes nothing into the evidence it judges',
+           _tree_digests(copy) == held,
+           sorted(set(held) ^ set(_tree_digests(copy)))[:3]
+           or sorted(path for path, digest in held.items()
+                     if _tree_digests(copy).get(path) != digest)[:3])
+    # the verdicts of that run are not claimed as PASS here: the directory it judges is the earlier
+    # round's, whose published tables carry that round's header, and a judging entry that rewrote them
+    # to its own schema is exactly the defect this record exists to keep closed
+    record('the judging entry of a later round reports a foreign schema as a verdict, not a rewrite',
+           any('header width' in name and not ok for name, ok, _extra in judged),
+           [name for name, ok, _extra in judged if not ok][:3])
     record('the dynamic verdict and the failing window list cannot disagree',
            bool(failing_dyn) == (by_name['DYNAMIC_CHARGE_STATUS'] == 'FAIL'),
            (failing_dyn[:2], by_name['DYNAMIC_CHARGE_STATUS']))
@@ -1480,14 +1578,18 @@ def selftest():
     cited = rows[0]['launch_id']
     account = RUN.spectre_account(copy, run_id_of(copy))
     row_to_break = [row for row in account.rows if row['launch_id'] == cited][0]
-    account.settle(row_to_break, 'FAILED', rc='1', refusal='TAMPERED BY THE SELFTEST')
+    # settle() now refuses to settle a row twice, so the tamper is written the way a forged ledger
+    # looks: the row is edited in place and flushed
+    row_to_break['state'] = 'FAILED'
+    row_to_break['refusal'] = 'TAMPERED BY THE SELFTEST'
+    account.flush()
     found = integrity(copy)['problems']
     record('a launch that stopped being CONFIRMED cannot keep carrying published rows',
            any('FAILED launch row' in text for text in found), found[:1])
+    citing = [row for row in rows if row['case_id'] == 'TR-LONG']
     record('one broken launch breaks every row that cited it and no row that did not',
-           len(found) == 2 * len([row for row in rows if row['case_id'] == 'TR-LONG'])
-           and all(text.startswith('TR-LONG') for text in found),
-           (len(found), found[:1]))
+           len(found) == len(citing) and all(text.startswith('TR-LONG') for text in found),
+           (len(found), len(citing), found[:1]))
     copy = _copy_evidence(real)      # the ledger above is now broken: everything after this is a copy
     rows = all_rows(copy)
     emission = [row for row in rows if row['kind'] == 'emission']
@@ -1644,6 +1746,18 @@ LOCAL_ONLY_MARKS = ('/guest_logs/',)
 RECOMPUTE_NAME = 'independent_recompute.py'
 
 
+R1_RECOMPUTE = 'scripts/dd1_d7c_b_tr_r1_recompute.py'
+
+
+def independent_recompute_bytes():
+    """the bytes of the standalone recomputer, taken from the committed blob
+
+    The first round shipped a recomputer that started from the published per-window charge, which is
+    the number under test. This round one starts from the exported native samples, so the package
+    root has to carry exactly the file the repository carries."""
+    return DECK.blob_text(R1_RECOMPUTE, git('rev-parse', 'HEAD').strip())
+
+
 def recompute_source():
     """the script shipped inside the package: it re-derives the published numbers from the published
     tables and the frozen formula, so a reviewer does not have to trust this round's own tools"""
@@ -1782,7 +1896,12 @@ def package(base, head, out_root='review'):
     stage_root = repo(out_root)
     stag = os.path.join(stage_root, 'dd1_d7c_b_tr_package_%s' % head[:7])
     if os.path.isdir(stag):
-        shutil.rmtree(stag)
+        # the staging tree of an earlier packaging attempt stays where it is: a package is rebuilt
+        # into a new name rather than by deleting what a previous run left behind
+        stag = '%s_%s' % (stag, utc().replace(':', '').replace('-', '').replace(' ', ''))
+    if os.path.isdir(stag):
+        raise TRC.Refuse('%s already exists, so this round would overwrite its own earlier staging'
+                         % stag)
     gate = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'precommit_safety_check.py'),
                            '--mode', 'history'], cwd=ROOT, stdout=subprocess.PIPE,
                           stderr=subprocess.STDOUT)
@@ -1815,20 +1934,24 @@ def package(base, head, out_root='review'):
         io.open(dest, 'wb').write(data)
         manifest.append((rel, len(data), hashlib.sha256(data).hexdigest()))
     io.open(os.path.join(stag, RECOMPUTE_NAME), 'w', encoding='utf-8',
-            newline='\n').write(recompute_source())
+            newline='\n').write(independent_recompute_bytes())
     os.chmod(os.path.join(stag, RECOMPUTE_NAME), 0o755)
     manifest.append((RECOMPUTE_NAME, os.path.getsize(os.path.join(stag, RECOMPUTE_NAME)),
                      sha_of(os.path.join(stag, RECOMPUTE_NAME))))
     # the repository's own ignore rules keep *.vcd and *.gz out of the object store, so the traces
     # travel in the package instead: copied from the local evidence, and admitted only after their
-    # digest has been checked against the tool identity the report already publishes
+    # digest has been checked against the tool identity the report already publishes. A later round
+    # does not hold those bytes under its own checkout, so the machine-local directory that does is
+    # named once here and nowhere else; the digest, not the path, is what the package proves.
+    trace_root = os.environ.get('QODER_TR_TRACE_DIR') or directory
     identity = json.loads(io.open(os.path.join(directory, 'rtl', 'tool_identity.json'),
                                   encoding='utf-8').read())
     for row in identity['traces']:
         for name in (row['gzip_file'], 'tool_identity.json'):
-            source = os.path.join(directory, 'rtl', name)
+            source = os.path.join(trace_root, 'rtl', name)
             if not os.path.isfile(source):
-                refused.append(('rtl/' + name, 'not on this machine'))
+                refused.append(('rtl/' + name, 'no local copy under %s, so it cannot travel'
+                                % os.path.basename(trace_root)))
                 continue
             digest = sha_of(source)
             expected = row['gzip_sha256'] if name.endswith('.gz') else None
@@ -1856,7 +1979,25 @@ def package(base, head, out_root='review'):
               'tables and the frozen formula, with no import of this round\'s measurement module: '
               '`python independent_recompute.py` prints one line per check and a final count.',
               '- `package_manifest.csv` lists every file here with its digest; nothing else in the '
-              'repository is needed to re-derive a number from the tables that are here.', '',
+              'repository is needed to re-derive a number from the tables that are here.',
+              '- `results/evidence/dd1_d7c_b_tr_r1_*/native_sequences/` carries the native samples as '
+              'base85 text containers around a gzip payload. A container over 240 KiB arrives as '
+              '`<name>.part000.txt`, `<name>.part001.txt` …: concatenate the parts of one name in '
+              'part order, base85-decode everything after the blank line, then gunzip. '
+              '`native_manifest.json` gives the whole and per-part digests, and '
+              '`dd1_d7c_b_tr_r1_native.py --verify <that directory>` does exactly that with no Git '
+              'and no guest.', '',
+              '## Entries that need Git, and what the copy runs instead', '',
+              '- `dd1_d7c_b_tr_record.py --gates` and `--package`: NOT_RUN here, they read the object '
+              'store. The delivered verdicts are the published tables and `statuses.csv`.',
+              '- `dd1_d7c_b_tr_r1_native.py --export`: NOT_RUN here, it reads the machine-local '
+              'answers. What it produced is delivered, and `--verify` proves it rejoins.',
+              '- `dd1_d7c_b_tr_r1_publish.py --restatus`: NOT_RUN here, it re-extracts from the '
+              'answers. Its output is delivered as `recompute_r1.json` and the status table.',
+              '- `scripts/dd1_d7c_b_tr_r1_recompute.py`: the re-integration entry that needs neither '
+              'Git nor a guest; it starts from the samples, and the replay below runs it.',
+              '- the two traces: their bytes are in `results/evidence/dd1_d7c_b_tr_r*/rtl/`, their '
+              're-read against the delivered deck is `reconversion_summary.json`.', '',
               '## What is deliberately not in the package', '',
               '- the raw Spectre answers and the guest logs: they stay on the laboratory machine, '
               'their digests and local paths are in `provenance.json`, and no claim in the report '
@@ -1878,7 +2019,9 @@ def package(base, head, out_root='review'):
                'STOP_REASON=AWAITING_INDEPENDENT_REVIEW', '```']
     io.open(os.path.join(stag, 'PACKAGE_README.md'), 'w', encoding='utf-8',
             newline='\n').write('\n'.join(readme).rstrip('\n') + '\n')
-    zip_path = os.path.join(stage_root, 'dd1_d7c_b_tr_package_%s.zip' % head[:7])
+    # the archive keeps the staging tree's own name: an earlier round's ZIP is a delivery that other
+    # people may already hold the digest of, and a rebuild must never replace those bytes in place
+    zip_path = '%s.zip' % stag
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as archive:
         for here, _sub, names_in_dir in os.walk(stag):
             for name in sorted(names_in_dir):
@@ -1895,7 +2038,7 @@ def main(argv):
     mode = argv[0] if argv else '--gates'
     directory = evidence_dir(argv[1] if len(argv) > 1 else '')
     if mode == '--selftest':
-        results = selftest()
+        results = selftest(argv[1] if len(argv) > 1 else '')
         failures = [name for name, ok, extra in results if not ok]
         for name, ok, extra in results:
             print('%-4s %s%s' % ('PASS' if ok else 'FAIL', name.ljust(66),
@@ -1936,13 +2079,29 @@ def main(argv):
             print('TR_PACKAGE_REFUSED %s: %s' % (rel, reason))
         replay = os.path.join(repo('review'), 'dd1_d7c_b_tr_replay_%s' % head[:7])
         if os.path.isdir(replay):
-            shutil.rmtree(replay)
+            # a replay directory of an earlier attempt is kept as the attempt it was; the new replay
+            # gets its own name instead of deleting what is already there
+            replay = '%s_%s' % (replay, utc().replace(':', '').replace('-', '').replace(' ', ''))
         os.makedirs(replay)
         with zipfile.ZipFile(answer['zip']) as archive:
             archive.extractall(replay)
         rc = subprocess.call([sys.executable, os.path.join(replay, RECOMPUTE_NAME)])
         print('TR_REPLAY rc=%s from %s' % (rc, replay))
-        return 0 if rc == 0 else 1
+        # the delivered directory has to rejoin from its own parts inside the copy, with no Git and
+        # no guest: that is the promise the README makes, so it is run here rather than asserted
+        evidence_root = os.path.join(replay, 'results', 'evidence')
+        delivered = sorted(name for name in os.listdir(evidence_root)
+                           if name.startswith('dd1_d7c_b_tr_r1_')) \
+            if os.path.isdir(evidence_root) else []
+        verify_rc = 2
+        if delivered:
+            verify_rc = subprocess.call(
+                [sys.executable, os.path.join(replay, 'scripts', 'dd1_d7c_b_tr_r1_native.py'),
+                 '--verify', os.path.join(evidence_root, delivered[0])])
+            print('TR_REPLAY_VERIFY rc=%s directory=%s' % (verify_rc, delivered[0]))
+        else:
+            print('TR_REPLAY_VERIFY rc=2 no dd1_d7c_b_tr_r1_ evidence directory travelled')
+        return 0 if rc == 0 and verify_rc == 0 else 1
     results = gates(directory)
     failures = [name for name, ok, extra in results if not ok]
     for name, ok, extra in results:

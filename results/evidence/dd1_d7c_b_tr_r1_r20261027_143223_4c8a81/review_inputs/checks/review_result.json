@@ -1,0 +1,21 @@
+{
+  "task_id": "DATA-7C-B-TR",
+  "review_recommendation": "REWORK",
+  "content_sha": "f49ba9d78190f8c3da2adca9dbd4fb3e48d26841",
+  "delivery_tip_sha": "398c9e852c16db85cbfa4539e859534e117ff0d2",
+  "findings": [
+    "F1_NATIVE_SERIES_AND_INDEPENDENT_RECOMPUTE",
+    "F2_LEDGER_DURABILITY_AND_PROCESS_RECONCILIATION",
+    "F3_HYBRID_ENDPOINT_PHASE",
+    "F4_NATIVE_INPUT_VALIDATION_AND_BLACK_SHUTOFF"
+  ],
+  "blocking_groups": 4,
+  "named_defects_reproduced": 9,
+  "positive_controls_pass": true,
+  "independent_table_checks": 209,
+  "independent_table_failures": 0,
+  "raw_reintegration": "NOT_VERIFIED",
+  "new_native_or_rtl_authorisation": 0,
+  "acceptance_registered": false,
+  "merge_performed": false
+}

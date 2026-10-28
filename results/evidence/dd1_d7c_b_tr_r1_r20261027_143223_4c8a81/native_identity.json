@@ -1,0 +1,2315 @@
+{
+ "cap_bytes": 32505856,
+ "deck_account_identity": "spectre_launch_account.csv of the native run",
+ "native_run_id": "r20261026_132228_3fc148",
+ "observations": [
+  {
+   "case_id": "TR-LONG",
+   "deck_sha256": "5659106e3163e42a7d5daf4615f4cd319a21c4b28930c52a89f8b2c4c1fc0806",
+   "finite": "YES",
+   "launch_id": "T002",
+   "monotonic": "YES",
+   "raw_sha256": "e34c83162e9a7557b21fee96f34dd8e42ba057e1b66eb7e3a2d09ff500f984a8",
+   "refusal": "",
+   "samples": 6680
+  },
+  {
+   "case_id": "TR-LONG",
+   "deck_sha256": "ea80fc0f01cb49cdd7439f5ba38b03034dac4638ff2ae30c409e2f93bf448695",
+   "finite": "YES",
+   "launch_id": "T003",
+   "monotonic": "YES",
+   "raw_sha256": "2c43328d762384214e6cba3261861a4aae1c87a78663841ec2fddc783fa811fd",
+   "refusal": "",
+   "samples": 7675
+  }
+ ],
+ "source_tool": "read from each answer header, recorded per sequence",
+ "starts": [
+  {
+   "bytes": 184037,
+   "case_id": "TR-120",
+   "columns": [
+    "time",
+    "Ip_branch:i",
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2",
+    "vdd18",
+    "vss",
+    "vcas",
+    "iref_in",
+    "clamp_node",
+    "data_out",
+    "Xdut.en0",
+    "Xdut.en1",
+    "Xdut.en2",
+    "Xdut.en3",
+    "Xdut.en4",
+    "Xdut.en5",
+    "Xdut.en6",
+    "Xdut.en7",
+    "Xdut.enb0",
+    "Xdut.enb1",
+    "Xdut.enb2",
+    "Xdut.enb3",
+    "Xdut.enb4",
+    "Xdut.enb5",
+    "Xdut.enb6",
+    "Xdut.enb7",
+    "Xdut.Xu0.vbias_ch",
+    "Xdut.Xu1.vbias_ch",
+    "Xdut.Xu2.vbias_ch",
+    "Xdut.Xu3.vbias_ch",
+    "Xdut.Xu4.vbias_ch",
+    "Xdut.Xu5.vbias_ch",
+    "Xdut.Xu6.vbias_ch",
+    "Xdut.Xu7.vbias_ch",
+    "Xdut.Xu0.node_m",
+    "Xdut.Xu4.node_m"
+   ],
+   "deck_path": "spectre/dd1_d7c_b_tr/TR-120.scs",
+   "deck_sha256": "6a0d368830c81a832976d3b44a2285f0f21358fd824b14ca0950acf8a09b81ae",
+   "ended_utc": "2026-10-26T13:33:14Z",
+   "executor_sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+   "exported": true,
+   "file": "r20261026_132228_3fc148_TR-120_dut.sequence.txt",
+   "fragment_windows": 0,
+   "gzip_bytes": 146986,
+   "gzip_sha256": "4ea615f2b20f104806c1afdf54f0f04da000599bcfe0b54444a686d67a3525ba",
+   "internal_full": true,
+   "launch_id": "T005",
+   "log_sha256": "5fc9672ad675d7ab7508b768d302ceeda5604d3dcf02c693c2e69087eeb5a32e",
+   "native_sha256_verified": "45bb26b4095ba1f3fb857fdc0c4f2396aadaeab4b6c589c2b0bc2ce2500e84bc",
+   "part_files": [],
+   "parts": 1,
+   "plain_bytes": 594510,
+   "raw_name": "r20261026_132228_3fc148_TR-120_dut.raw",
+   "raw_sha256": "45bb26b4095ba1f3fb857fdc0c4f2396aadaeab4b6c589c2b0bc2ce2500e84bc",
+   "requested_utc": "2026-10-26T13:33:08Z",
+   "role": "dut",
+   "run_id": "r20261026_132228_3fc148",
+   "runs": {
+    "Ip_branch:i": 878,
+    "Xdut.Xu0.node_m": 859,
+    "Xdut.Xu0.vbias_ch": 878,
+    "Xdut.Xu1.vbias_ch": 878,
+    "Xdut.Xu2.vbias_ch": 878,
+    "Xdut.Xu3.vbias_ch": 878,
+    "Xdut.Xu4.node_m": 838,
+    "Xdut.Xu4.vbias_ch": 878,
+    "Xdut.Xu5.vbias_ch": 878,
+    "Xdut.Xu6.vbias_ch": 878,
+    "Xdut.Xu7.vbias_ch": 878,
+    "Xdut.en0": 878,
+    "Xdut.en1": 878,
+    "Xdut.en2": 878,
+    "Xdut.en3": 878,
+    "Xdut.en4": 878,
+    "Xdut.en5": 878,
+    "Xdut.en6": 878,
+    "Xdut.en7": 878,
+    "Xdut.enb0": 802,
+    "Xdut.enb1": 676,
+    "Xdut.enb2": 771,
+    "Xdut.enb3": 745,
+    "Xdut.enb4": 753,
+    "Xdut.enb5": 760,
+    "Xdut.enb6": 739,
+    "Xdut.enb7": 799,
+    "clamp_node": 1,
+    "data_en": 123,
+    "data_out": 1,
+    "iref_in": 869,
+    "pam0": 1,
+    "pam1": 1,
+    "pam2": 1,
+    "time": 878,
+    "vcas": 1,
+    "vdd18": 1,
+    "vss": 1
+   },
+   "samples": 878,
+   "sha256": "ca2d185d2303b088ff29b3a4c0844057f4dbb034e40c0e75077ff818dee72003"
+  },
+  {
+   "bytes": 194046,
+   "case_id": "TR-200",
+   "columns": [
+    "time",
+    "Ip_branch:i",
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2",
+    "vdd18",
+    "vss",
+    "vcas",
+    "iref_in",
+    "clamp_node",
+    "data_out",
+    "Xdut.en0",
+    "Xdut.en1",
+    "Xdut.en2",
+    "Xdut.en3",
+    "Xdut.en4",
+    "Xdut.en5",
+    "Xdut.en6",
+    "Xdut.en7",
+    "Xdut.enb0",
+    "Xdut.enb1",
+    "Xdut.enb2",
+    "Xdut.enb3",
+    "Xdut.enb4",
+    "Xdut.enb5",
+    "Xdut.enb6",
+    "Xdut.enb7",
+    "Xdut.Xu0.vbias_ch",
+    "Xdut.Xu1.vbias_ch",
+    "Xdut.Xu2.vbias_ch",
+    "Xdut.Xu3.vbias_ch",
+    "Xdut.Xu4.vbias_ch",
+    "Xdut.Xu5.vbias_ch",
+    "Xdut.Xu6.vbias_ch",
+    "Xdut.Xu7.vbias_ch",
+    "Xdut.Xu0.node_m",
+    "Xdut.Xu4.node_m"
+   ],
+   "deck_path": "spectre/dd1_d7c_b_tr/TR-200.scs",
+   "deck_sha256": "e4efb57a176651874a3b6d21896505e2bdd7f9dc2e7d919f778a1a84040babfe",
+   "ended_utc": "2026-10-26T13:34:04Z",
+   "executor_sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+   "exported": true,
+   "file": "r20261026_132228_3fc148_TR-200_dut.sequence.txt",
+   "fragment_windows": 0,
+   "gzip_bytes": 154993,
+   "gzip_sha256": "06c57fe8999e78ac07b9cafa209805b6c7af05839fd748b2c5aa059674a38ae0",
+   "internal_full": true,
+   "launch_id": "T007",
+   "log_sha256": "a80817c5ea329a143506e5690a644aad7383e94bc12b6044c264ecd57b562607",
+   "native_sha256_verified": "7a5bb25228cbebfd36599a975f74cb86c26b436c106b223358ece25ebe2d6972",
+   "part_files": [],
+   "parts": 1,
+   "plain_bytes": 631739,
+   "raw_name": "r20261026_132228_3fc148_TR-200_dut.raw",
+   "raw_sha256": "7a5bb25228cbebfd36599a975f74cb86c26b436c106b223358ece25ebe2d6972",
+   "requested_utc": "2026-10-26T13:33:57Z",
+   "role": "dut",
+   "run_id": "r20261026_132228_3fc148",
+   "runs": {
+    "Ip_branch:i": 915,
+    "Xdut.Xu0.node_m": 902,
+    "Xdut.Xu0.vbias_ch": 915,
+    "Xdut.Xu1.vbias_ch": 915,
+    "Xdut.Xu2.vbias_ch": 915,
+    "Xdut.Xu3.vbias_ch": 915,
+    "Xdut.Xu4.node_m": 878,
+    "Xdut.Xu4.vbias_ch": 915,
+    "Xdut.Xu5.vbias_ch": 915,
+    "Xdut.Xu6.vbias_ch": 915,
+    "Xdut.Xu7.vbias_ch": 915,
+    "Xdut.en0": 915,
+    "Xdut.en1": 915,
+    "Xdut.en2": 915,
+    "Xdut.en3": 915,
+    "Xdut.en4": 915,
+    "Xdut.en5": 915,
+    "Xdut.en6": 915,
+    "Xdut.en7": 915,
+    "Xdut.enb0": 848,
+    "Xdut.enb1": 904,
+    "Xdut.enb2": 752,
+    "Xdut.enb3": 820,
+    "Xdut.enb4": 879,
+    "Xdut.enb5": 862,
+    "Xdut.enb6": 844,
+    "Xdut.enb7": 888,
+    "clamp_node": 1,
+    "data_en": 121,
+    "data_out": 1,
+    "iref_in": 911,
+    "pam0": 1,
+    "pam1": 1,
+    "pam2": 1,
+    "time": 915,
+    "vcas": 1,
+    "vdd18": 1,
+    "vss": 1
+   },
+   "samples": 915,
+   "sha256": "8a869786b86bde6f2d59c7bc7dda083dc54f352929efa5dfd213ba1adc60f177"
+  },
+  {
+   "bytes": 697433,
+   "case_id": "TR-OFFCODE",
+   "columns": [
+    "time",
+    "Ip_branch:i",
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2",
+    "vdd18",
+    "vss",
+    "vcas",
+    "iref_in",
+    "clamp_node",
+    "data_out",
+    "Xdut.en0",
+    "Xdut.en1",
+    "Xdut.en2",
+    "Xdut.en3",
+    "Xdut.en4",
+    "Xdut.en5",
+    "Xdut.en6",
+    "Xdut.en7",
+    "Xdut.enb0",
+    "Xdut.enb1",
+    "Xdut.enb2",
+    "Xdut.enb3",
+    "Xdut.enb4",
+    "Xdut.enb5",
+    "Xdut.enb6",
+    "Xdut.enb7",
+    "Xdut.Xu0.vbias_ch",
+    "Xdut.Xu1.vbias_ch",
+    "Xdut.Xu2.vbias_ch",
+    "Xdut.Xu3.vbias_ch",
+    "Xdut.Xu4.vbias_ch",
+    "Xdut.Xu5.vbias_ch",
+    "Xdut.Xu6.vbias_ch",
+    "Xdut.Xu7.vbias_ch",
+    "Xdut.Xu0.node_m",
+    "Xdut.Xu4.node_m"
+   ],
+   "deck_path": "spectre/dd1_d7c_b_tr/TR-OFFCODE.scs",
+   "deck_sha256": "6b2a36a989cc637bc364b535807c86b80deeb1db454fc84a4fbd5dca610dd7f1",
+   "ended_utc": "2026-10-26T13:34:49Z",
+   "executor_sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+   "exported": true,
+   "file": "r20261026_132228_3fc148_TR-OFFCODE_dut.sequence.txt",
+   "fragment_windows": 0,
+   "gzip_bytes": 557703,
+   "gzip_sha256": "879b49d5227ce0294e0e1937c9d56b5ef299a3f3c8f9bfa3fb7482b9e0075c05",
+   "internal_full": true,
+   "launch_id": "T009",
+   "log_sha256": "bed64ad57950de6d55946cc11e979e62f4b6f91f4ddae38e6be5ca9cde19c993",
+   "native_sha256_verified": "ed94c910df49e9a610643c2e35299705d0fbaf3b582358d43b63d386891094a9",
+   "part_files": [
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_TR-OFFCODE_dut.sequence.part000.txt",
+     "sha256": "c2e397f6d5e468d11fb40179424f20ccbea5a4f0e922b41a293d20bc81f36113"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_TR-OFFCODE_dut.sequence.part001.txt",
+     "sha256": "02b8362fa3a26f91d3753ddde19f93e3fb28f2b24e7b2348c2d6f2ce34d726fb"
+    },
+    {
+     "bytes": 205913,
+     "part": "r20261026_132228_3fc148_TR-OFFCODE_dut.sequence.part002.txt",
+     "sha256": "b91dda37df88a52e158e02f1b581d4ff156d3fbd2821235326d95a5e400bfa1c"
+    }
+   ],
+   "parts": 3,
+   "plain_bytes": 1782288,
+   "raw_name": "r20261026_132228_3fc148_TR-OFFCODE_dut.raw",
+   "raw_sha256": "ed94c910df49e9a610643c2e35299705d0fbaf3b582358d43b63d386891094a9",
+   "requested_utc": "2026-10-26T13:34:41Z",
+   "role": "dut",
+   "run_id": "r20261026_132228_3fc148",
+   "runs": {
+    "Ip_branch:i": 2518,
+    "Xdut.Xu0.node_m": 2518,
+    "Xdut.Xu0.vbias_ch": 2518,
+    "Xdut.Xu1.vbias_ch": 2518,
+    "Xdut.Xu2.vbias_ch": 2518,
+    "Xdut.Xu3.vbias_ch": 2518,
+    "Xdut.Xu4.node_m": 2518,
+    "Xdut.Xu4.vbias_ch": 2518,
+    "Xdut.Xu5.vbias_ch": 2518,
+    "Xdut.Xu6.vbias_ch": 2518,
+    "Xdut.Xu7.vbias_ch": 2518,
+    "Xdut.en0": 2518,
+    "Xdut.en1": 2518,
+    "Xdut.en2": 2518,
+    "Xdut.en3": 2518,
+    "Xdut.en4": 2518,
+    "Xdut.en5": 2518,
+    "Xdut.en6": 2518,
+    "Xdut.en7": 2518,
+    "Xdut.enb0": 2512,
+    "Xdut.enb1": 2507,
+    "Xdut.enb2": 2500,
+    "Xdut.enb3": 2505,
+    "Xdut.enb4": 2434,
+    "Xdut.enb5": 2355,
+    "Xdut.enb6": 2506,
+    "Xdut.enb7": 2485,
+    "clamp_node": 1,
+    "data_en": 545,
+    "data_out": 1,
+    "iref_in": 2511,
+    "pam0": 166,
+    "pam1": 166,
+    "pam2": 208,
+    "time": 2518,
+    "vcas": 1,
+    "vdd18": 1,
+    "vss": 1
+   },
+   "samples": 2518,
+   "sha256": "bc6a046b78770502835083b73080fd5d2ded2815974bcbc85c822835f47dc381"
+  },
+  {
+   "bytes": 2053431,
+   "case_id": "TR-LONG",
+   "columns": [
+    "time",
+    "Ip_branch:i",
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2",
+    "vdd18",
+    "vss",
+    "vcas",
+    "iref_in",
+    "clamp_node",
+    "data_out",
+    "Xdut.en0",
+    "Xdut.en1",
+    "Xdut.en2",
+    "Xdut.en3",
+    "Xdut.en4",
+    "Xdut.en5",
+    "Xdut.en6",
+    "Xdut.en7",
+    "Xdut.enb0",
+    "Xdut.enb1",
+    "Xdut.enb2",
+    "Xdut.enb3",
+    "Xdut.enb4",
+    "Xdut.enb5",
+    "Xdut.enb6",
+    "Xdut.enb7",
+    "Xdut.Xu0.vbias_ch",
+    "Xdut.Xu1.vbias_ch",
+    "Xdut.Xu2.vbias_ch",
+    "Xdut.Xu3.vbias_ch",
+    "Xdut.Xu4.vbias_ch",
+    "Xdut.Xu5.vbias_ch",
+    "Xdut.Xu6.vbias_ch",
+    "Xdut.Xu7.vbias_ch",
+    "Xdut.Xu0.node_m",
+    "Xdut.Xu4.node_m"
+   ],
+   "deck_path": "spectre/dd1_d7c_b_tr/TR-LONG.scs",
+   "deck_sha256": "ea80fc0f01cb49cdd7439f5ba38b03034dac4638ff2ae30c409e2f93bf448695",
+   "ended_utc": "2026-10-26T13:27:15Z",
+   "executor_sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+   "exported": true,
+   "file": "r20261026_132228_3fc148_TR-LONG_dut.sequence.txt",
+   "fragment_windows": 0,
+   "gzip_bytes": 1642501,
+   "gzip_sha256": "174f6014769d366b8a0dfe3b8c35933808acfa706e1b1e4671f747d36432e5ee",
+   "internal_full": true,
+   "launch_id": "T003",
+   "log_sha256": "8847e932a947ef49fcd5b755174dff6e255d456ec846bea6ee245d31ce538fac",
+   "native_sha256_verified": "2c43328d762384214e6cba3261861a4aae1c87a78663841ec2fddc783fa811fd",
+   "part_files": [
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_TR-LONG_dut.sequence.part000.txt",
+     "sha256": "f747b7d590cb1ea37c19c7511dff6479881270d82eb376fed4e2f7dde2343527"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_TR-LONG_dut.sequence.part001.txt",
+     "sha256": "12bc1325b6c09dfcc7e0e1cda5fae54e0c7bbec147f09a5703cdf0900433a3d3"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_TR-LONG_dut.sequence.part002.txt",
+     "sha256": "1782e08db86b1a98a8ead5037ae59e830c097699bd0821dcacfc1666ee588220"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_TR-LONG_dut.sequence.part003.txt",
+     "sha256": "87bd8e51c1c8bdc7e5dc6430229064e759802262e357272e22db9ff47d09ad80"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_TR-LONG_dut.sequence.part004.txt",
+     "sha256": "8e9629141912d836ab6d63eb50a8238a54e3fd786d2c07a5d5f2e3592f8bd56f"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_TR-LONG_dut.sequence.part005.txt",
+     "sha256": "08d220690a6fa26209a445069b99220052bb8c6b4afdbebf5c9508e44d8aca9c"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_TR-LONG_dut.sequence.part006.txt",
+     "sha256": "f3be8a65c46c3d50bb89e3c67fd466fdee022029df124a15711f061e801ff9ee"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_TR-LONG_dut.sequence.part007.txt",
+     "sha256": "f8fbaa4b8ba9b8d2be80fb7b2df44c169619d785091f542b4d3f9cda9a4fc72a"
+    },
+    {
+     "bytes": 87351,
+     "part": "r20261026_132228_3fc148_TR-LONG_dut.sequence.part008.txt",
+     "sha256": "9b2d3b0333934cc410310019b2b4d176449e7c1b0576dcf6638b49990171222b"
+    }
+   ],
+   "parts": 9,
+   "plain_bytes": 5401450,
+   "raw_name": "r20261026_132228_3fc148_TR-LONG_dut.raw",
+   "raw_sha256": "2c43328d762384214e6cba3261861a4aae1c87a78663841ec2fddc783fa811fd",
+   "requested_utc": "2026-10-26T13:27:07Z",
+   "role": "dut",
+   "run_id": "r20261026_132228_3fc148",
+   "runs": {
+    "Ip_branch:i": 7675,
+    "Xdut.Xu0.node_m": 7651,
+    "Xdut.Xu0.vbias_ch": 7675,
+    "Xdut.Xu1.vbias_ch": 7675,
+    "Xdut.Xu2.vbias_ch": 7675,
+    "Xdut.Xu3.vbias_ch": 7675,
+    "Xdut.Xu4.node_m": 7628,
+    "Xdut.Xu4.vbias_ch": 7675,
+    "Xdut.Xu5.vbias_ch": 7675,
+    "Xdut.Xu6.vbias_ch": 7675,
+    "Xdut.Xu7.vbias_ch": 7675,
+    "Xdut.en0": 7675,
+    "Xdut.en1": 7675,
+    "Xdut.en2": 7675,
+    "Xdut.en3": 7675,
+    "Xdut.en4": 7675,
+    "Xdut.en5": 7675,
+    "Xdut.en6": 7675,
+    "Xdut.en7": 7675,
+    "Xdut.enb0": 7580,
+    "Xdut.enb1": 7631,
+    "Xdut.enb2": 7601,
+    "Xdut.enb3": 7636,
+    "Xdut.enb4": 7661,
+    "Xdut.enb5": 7668,
+    "Xdut.enb6": 7571,
+    "Xdut.enb7": 7635,
+    "clamp_node": 1,
+    "data_en": 1497,
+    "data_out": 1,
+    "iref_in": 7669,
+    "pam0": 351,
+    "pam1": 170,
+    "pam2": 80,
+    "time": 7675,
+    "vcas": 1,
+    "vdd18": 1,
+    "vss": 1
+   },
+   "samples": 7675,
+   "sha256": "944ebd7f0c2d88547e58bbe293dcd0d22910e7115d0bfe43bd32a9692b784f35"
+  },
+  {
+   "bytes": 2583231,
+   "case_id": "RS-LOW",
+   "columns": [
+    "time",
+    "Ip_branch:i",
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2",
+    "vdd18",
+    "vss",
+    "vcas",
+    "iref_in",
+    "clamp_node",
+    "data_out",
+    "Xdut.en0",
+    "Xdut.en1",
+    "Xdut.en2",
+    "Xdut.en3",
+    "Xdut.en4",
+    "Xdut.en5",
+    "Xdut.en6",
+    "Xdut.en7",
+    "Xdut.enb0",
+    "Xdut.enb1",
+    "Xdut.enb2",
+    "Xdut.enb3",
+    "Xdut.enb4",
+    "Xdut.enb5",
+    "Xdut.enb6",
+    "Xdut.enb7",
+    "Xdut.Xu0.vbias_ch",
+    "Xdut.Xu1.vbias_ch",
+    "Xdut.Xu2.vbias_ch",
+    "Xdut.Xu3.vbias_ch",
+    "Xdut.Xu4.vbias_ch",
+    "Xdut.Xu5.vbias_ch",
+    "Xdut.Xu6.vbias_ch",
+    "Xdut.Xu7.vbias_ch",
+    "Xdut.Xu0.node_m",
+    "Xdut.Xu4.node_m"
+   ],
+   "deck_path": "spectre/dd1_d7c_b_tr/RS-LOW.scs",
+   "deck_sha256": "6ae98de17b8a0f6cf89df8c20b6f3cc55d20ddbb37d9912c2106a48c6fe8c174",
+   "ended_utc": "2026-10-26T13:38:48Z",
+   "executor_sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+   "exported": true,
+   "file": "r20261026_132228_3fc148_RS-LOW_dut.sequence.txt",
+   "fragment_windows": 0,
+   "gzip_bytes": 2066341,
+   "gzip_sha256": "46ebc218787e817acd8db93fd45415516d3c4e803531fb89ea7b0a4750990be5",
+   "internal_full": true,
+   "launch_id": "T013",
+   "log_sha256": "44b710ab4e02f560638f0cb259bf08dcfda9286d72a099d728ded537cdf59214",
+   "native_sha256_verified": "b99776c92f4045d943ce568ce69d71d8c590eeafe94068aeafe3c6e60a3e7b40",
+   "part_files": [
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-LOW_dut.sequence.part000.txt",
+     "sha256": "13677641e98b26426f9ae7dcb44a544bbc769359a42d4b7bcc3e6b15f63d219a"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-LOW_dut.sequence.part001.txt",
+     "sha256": "9e910953554edf29f83caa94e0fed5a105f5fd41afbebb0e35d7e84a66c50ea4"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-LOW_dut.sequence.part002.txt",
+     "sha256": "6b62bbd8ca5c48e1788f335be976fe287d03f6cc434acc47d048c6cdbd7f6b77"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-LOW_dut.sequence.part003.txt",
+     "sha256": "91047947d42acb849aaddf26882f9a200f97c7d3f308a9abb779689a1d285f9e"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-LOW_dut.sequence.part004.txt",
+     "sha256": "0eae8f837c462c8eff6e7053a601916abab9eb515d21c5fe7dde724f9697cf59"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-LOW_dut.sequence.part005.txt",
+     "sha256": "146ae5b1812951abb03b070a3590bffd2464892face02522e8915786e840344b"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-LOW_dut.sequence.part006.txt",
+     "sha256": "d7b3e039cdcc6e7cecd2cb5e8da5fd29a93ef2e323399c2f3f60699208a72410"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-LOW_dut.sequence.part007.txt",
+     "sha256": "6574a14bdab60dfd14a8186b6ec2d16872ee04643208862a3894db278e70dd06"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-LOW_dut.sequence.part008.txt",
+     "sha256": "ec6e843ecb2c89da8eca0dbf5976ea484ad1c76e8bd58044a3dd46d8adac953a"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-LOW_dut.sequence.part009.txt",
+     "sha256": "373ff6afa846928011fcf1cb08f3573a04247f5630c6b257ec61caaf72cbd26d"
+    },
+    {
+     "bytes": 125631,
+     "part": "r20261026_132228_3fc148_RS-LOW_dut.sequence.part010.txt",
+     "sha256": "69d54c403964289276c6b5faa9a3bf2a2fdd2e12effda8c0ec1f87d68b013694"
+    }
+   ],
+   "parts": 11,
+   "plain_bytes": 9814946,
+   "raw_name": "r20261026_132228_3fc148_RS-LOW_dut.raw",
+   "raw_sha256": "b99776c92f4045d943ce568ce69d71d8c590eeafe94068aeafe3c6e60a3e7b40",
+   "requested_utc": "2026-10-26T13:38:37Z",
+   "role": "dut",
+   "run_id": "r20261026_132228_3fc148",
+   "runs": {
+    "Ip_branch:i": 15341,
+    "Xdut.Xu0.node_m": 9011,
+    "Xdut.Xu0.vbias_ch": 15341,
+    "Xdut.Xu1.vbias_ch": 15341,
+    "Xdut.Xu2.vbias_ch": 15341,
+    "Xdut.Xu3.vbias_ch": 15341,
+    "Xdut.Xu4.node_m": 8919,
+    "Xdut.Xu4.vbias_ch": 15341,
+    "Xdut.Xu5.vbias_ch": 15341,
+    "Xdut.Xu6.vbias_ch": 15341,
+    "Xdut.Xu7.vbias_ch": 15341,
+    "Xdut.en0": 15341,
+    "Xdut.en1": 15341,
+    "Xdut.en2": 15341,
+    "Xdut.en3": 15341,
+    "Xdut.en4": 15341,
+    "Xdut.en5": 15341,
+    "Xdut.en6": 15341,
+    "Xdut.en7": 15341,
+    "Xdut.enb0": 12642,
+    "Xdut.enb1": 14011,
+    "Xdut.enb2": 13092,
+    "Xdut.enb3": 13278,
+    "Xdut.enb4": 11403,
+    "Xdut.enb5": 10380,
+    "Xdut.enb6": 11376,
+    "Xdut.enb7": 13162,
+    "clamp_node": 1,
+    "data_en": 440,
+    "data_out": 1,
+    "iref_in": 14835,
+    "pam0": 1,
+    "pam1": 1,
+    "pam2": 1,
+    "time": 15341,
+    "vcas": 1,
+    "vdd18": 1,
+    "vss": 1
+   },
+   "samples": 15341,
+   "sha256": "b9488fac13499ec7ebe8461c78e9d916cbb116e3597f838483adc7c256ee389f"
+  },
+  {
+   "bytes": 673298,
+   "case_id": "RS-SWITCH",
+   "columns": [
+    "time",
+    "Ip_branch:i",
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2",
+    "vdd18",
+    "vss",
+    "vcas",
+    "iref_in",
+    "clamp_node",
+    "data_out"
+   ],
+   "deck_path": "spectre/dd1_d7c_b_tr/RS-SWITCH.scs",
+   "deck_sha256": "8508e56ea90b6c998d66d0725a91f05cbd02540154774a9ea35f447d30cbd066",
+   "ended_utc": "2026-10-26T13:39:48Z",
+   "executor_sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+   "exported": true,
+   "file": "r20261026_132228_3fc148_RS-SWITCH_dut.sequence.txt",
+   "fragment_window_count": 8,
+   "fragment_windows": [
+    {
+     "from_ns": 1325.0,
+     "to_ns": 1375.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 1580.0,
+     "to_ns": 1675.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 1925.0,
+     "to_ns": 1975.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 2180.0,
+     "to_ns": 2275.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 2525.0,
+     "to_ns": 2575.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 2780.0,
+     "to_ns": 2875.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 3125.0,
+     "to_ns": 3175.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 3380.0,
+     "to_ns": 3475.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    }
+   ],
+   "gzip_bytes": 538395,
+   "gzip_sha256": "81a48ab0dd39e15bab9a86d90783fee696cdc2a76d37d552135fcff193bb2886",
+   "internal_fragment": {
+    "bytes": 1603951,
+    "columns": [
+     "time",
+     "Ip_branch:i",
+     "data_en",
+     "pam0",
+     "pam1",
+     "pam2",
+     "vdd18",
+     "vss",
+     "vcas",
+     "iref_in",
+     "clamp_node",
+     "data_out",
+     "Xdut.en0",
+     "Xdut.en1",
+     "Xdut.en2",
+     "Xdut.en3",
+     "Xdut.en4",
+     "Xdut.en5",
+     "Xdut.en6",
+     "Xdut.en7",
+     "Xdut.enb0",
+     "Xdut.enb1",
+     "Xdut.enb2",
+     "Xdut.enb3",
+     "Xdut.enb4",
+     "Xdut.enb5",
+     "Xdut.enb6",
+     "Xdut.enb7",
+     "Xdut.Xu0.vbias_ch",
+     "Xdut.Xu1.vbias_ch",
+     "Xdut.Xu2.vbias_ch",
+     "Xdut.Xu3.vbias_ch",
+     "Xdut.Xu4.vbias_ch",
+     "Xdut.Xu5.vbias_ch",
+     "Xdut.Xu6.vbias_ch",
+     "Xdut.Xu7.vbias_ch",
+     "Xdut.Xu0.node_m",
+     "Xdut.Xu4.node_m"
+    ],
+    "file": "r20261026_132228_3fc148_RS-SWITCH_dut.internal_fragment.txt",
+    "fragment_windows": 8,
+    "gzip_bytes": 1282917,
+    "gzip_sha256": "60a4922db062fb4a8ad7b455cc6a57f067a4b69a2603f39cb6c9dcf8a199258c",
+    "part_files": [
+     {
+      "bytes": 245760,
+      "part": "r20261026_132228_3fc148_RS-SWITCH_dut.internal_fragment.part000.txt",
+      "sha256": "e15edc7151cb997dd031e69ad3f4d7cbd77202d51eddad31e43a731e6716ccff"
+     },
+     {
+      "bytes": 245760,
+      "part": "r20261026_132228_3fc148_RS-SWITCH_dut.internal_fragment.part001.txt",
+      "sha256": "a0228a8c3188fb3558b7eecaf7060b3fed4bb6e625f1130b4b437def0d809bbe"
+     },
+     {
+      "bytes": 245760,
+      "part": "r20261026_132228_3fc148_RS-SWITCH_dut.internal_fragment.part002.txt",
+      "sha256": "a1c6d405dc7c66d853013c8eb83a946469ffbb31afd8e361db1dba0e04f32bfe"
+     },
+     {
+      "bytes": 245760,
+      "part": "r20261026_132228_3fc148_RS-SWITCH_dut.internal_fragment.part003.txt",
+      "sha256": "d1998836bdf4e4d2052de82528c0b9a574b3e411ca4de78d2e0e6b1dd3b79d72"
+     },
+     {
+      "bytes": 245760,
+      "part": "r20261026_132228_3fc148_RS-SWITCH_dut.internal_fragment.part004.txt",
+      "sha256": "f7c73ac7ee107ad9de143594482d8b984e3de5d462df4277798ea248b5fbcdd8"
+     },
+     {
+      "bytes": 245760,
+      "part": "r20261026_132228_3fc148_RS-SWITCH_dut.internal_fragment.part005.txt",
+      "sha256": "f47566c1b0e7d4ddd6b249c43cc30b52a58c0e1fec804af53228856157db2b2a"
+     },
+     {
+      "bytes": 129391,
+      "part": "r20261026_132228_3fc148_RS-SWITCH_dut.internal_fragment.part006.txt",
+      "sha256": "7d4e6e2bc9a2bbf78ff0614eed10dae8b265b091a2bacc929835967366643a60"
+     }
+    ],
+    "parts": 7,
+    "plain_bytes": 4229867,
+    "runs": {
+     "Ip_branch:i": 37808,
+     "Xdut.Xu0.node_m": 37808,
+     "Xdut.Xu0.vbias_ch": 37808,
+     "Xdut.Xu1.vbias_ch": 37808,
+     "Xdut.Xu2.vbias_ch": 37808,
+     "Xdut.Xu3.vbias_ch": 37808,
+     "Xdut.Xu4.node_m": 37808,
+     "Xdut.Xu4.vbias_ch": 37808,
+     "Xdut.Xu5.vbias_ch": 37808,
+     "Xdut.Xu6.vbias_ch": 37808,
+     "Xdut.Xu7.vbias_ch": 37808,
+     "Xdut.en0": 37808,
+     "Xdut.en1": 37808,
+     "Xdut.en2": 37808,
+     "Xdut.en3": 37808,
+     "Xdut.en4": 37808,
+     "Xdut.en5": 37808,
+     "Xdut.en6": 37808,
+     "Xdut.en7": 37808,
+     "Xdut.enb0": 35781,
+     "Xdut.enb1": 36800,
+     "Xdut.enb2": 36818,
+     "Xdut.enb3": 36876,
+     "Xdut.enb4": 36465,
+     "Xdut.enb5": 31896,
+     "Xdut.enb6": 35110,
+     "Xdut.enb7": 36954,
+     "clamp_node": 1,
+     "data_en": 3334,
+     "data_out": 1,
+     "iref_in": 37391,
+     "pam0": 168,
+     "pam1": 168,
+     "pam2": 215,
+     "time": 37808,
+     "vcas": 1,
+     "vdd18": 1,
+     "vss": 1
+    },
+    "samples": 37808,
+    "sha256": "aa5e737e1ec7f9557d8663dc1e531a3f9af8ae79c4efc9eb0f2588d5cd8ad695"
+   },
+   "internal_full": false,
+   "launch_id": "T015",
+   "log_sha256": "cec9348ea0327a0103aa533bbf994967292f5af122170676d75da0dd666d2c3e",
+   "native_sha256_verified": "7a1765dc740081a39663d6a345e8fb5ab0ab6a41bb654345f157e5bcd715fb7f",
+   "part_files": [
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-SWITCH_dut.sequence.part000.txt",
+     "sha256": "ae9045d17b765f101b8137ed1a77dc393dae4333c2cd7963d6902d91dbab7cc9"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-SWITCH_dut.sequence.part001.txt",
+     "sha256": "ed5ca6bb216eb8fed586b635a95ea0bc140a96f0f7f3282cf528f860ce830a66"
+    },
+    {
+     "bytes": 181778,
+     "part": "r20261026_132228_3fc148_RS-SWITCH_dut.sequence.part002.txt",
+     "sha256": "84444bedab1eeb450dc9e76ea836f8fac69cb7e2c8006ff10afbcaf4c77b9b56"
+    }
+   ],
+   "parts": 3,
+   "plain_bytes": 2807806,
+   "raw_name": "r20261026_132228_3fc148_RS-SWITCH_dut.raw",
+   "raw_sha256": "7a1765dc740081a39663d6a345e8fb5ab0ab6a41bb654345f157e5bcd715fb7f",
+   "requested_utc": "2026-10-26T13:39:31Z",
+   "role": "dut",
+   "run_id": "r20261026_132228_3fc148",
+   "runs": {
+    "Ip_branch:i": 37808,
+    "clamp_node": 1,
+    "data_en": 3334,
+    "data_out": 1,
+    "iref_in": 37391,
+    "pam0": 168,
+    "pam1": 168,
+    "pam2": 215,
+    "time": 37808,
+    "vcas": 1,
+    "vdd18": 1,
+    "vss": 1
+   },
+   "samples": 37808,
+   "sha256": "bced8e3f952d025bd6c67b11c18dc3703e59a6b20c70f00b80c5f720bc9c6ec3"
+  },
+  {
+   "bytes": 2289799,
+   "case_id": "RS-FULL",
+   "columns": [
+    "time",
+    "Ip_branch:i",
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2",
+    "vdd18",
+    "vss",
+    "vcas",
+    "iref_in",
+    "clamp_node",
+    "data_out"
+   ],
+   "deck_path": "spectre/dd1_d7c_b_tr/RS-FULL.scs",
+   "deck_sha256": "235650f65ff68155dbfbba62e9e938a5681f29a9aa073db2fd7118451ae3e050",
+   "ended_utc": "2026-10-26T13:37:04Z",
+   "executor_sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+   "exported": true,
+   "file": "r20261026_132228_3fc148_RS-FULL_dut.sequence.txt",
+   "fragment_window_count": 24,
+   "fragment_windows": [
+    {
+     "from_ns": 1025.0,
+     "to_ns": 1075.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 1950.0,
+     "to_ns": 2000.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 2025.0,
+     "to_ns": 2075.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 2525.0,
+     "to_ns": 2575.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 3450.0,
+     "to_ns": 3500.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 3525.0,
+     "to_ns": 3575.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 4025.0,
+     "to_ns": 4075.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 4950.0,
+     "to_ns": 5000.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 5025.0,
+     "to_ns": 5075.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 5525.0,
+     "to_ns": 5575.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 6450.0,
+     "to_ns": 6500.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 6525.0,
+     "to_ns": 6575.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 7025.0,
+     "to_ns": 7075.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 7950.0,
+     "to_ns": 8000.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 8025.0,
+     "to_ns": 8075.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 8525.0,
+     "to_ns": 8575.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 9450.0,
+     "to_ns": 9500.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 9525.0,
+     "to_ns": 9575.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 10025.0,
+     "to_ns": 10075.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 10950.0,
+     "to_ns": 11000.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 11025.0,
+     "to_ns": 11075.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 11525.0,
+     "to_ns": 11575.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 12450.0,
+     "to_ns": 12500.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    },
+    {
+     "from_ns": 12525.0,
+     "to_ns": 12575.0,
+     "why": "the last 50 ns of the flat step and 25 ns about each enable edge"
+    }
+   ],
+   "gzip_bytes": 1831596,
+   "gzip_sha256": "c93107235498e22e698722321d1b991b20e48c1ea507e906cd745bc105d06f8f",
+   "internal_fragment": {
+    "bytes": 3145267,
+    "columns": [
+     "time",
+     "Ip_branch:i",
+     "data_en",
+     "pam0",
+     "pam1",
+     "pam2",
+     "vdd18",
+     "vss",
+     "vcas",
+     "iref_in",
+     "clamp_node",
+     "data_out",
+     "Xdut.en0",
+     "Xdut.en1",
+     "Xdut.en2",
+     "Xdut.en3",
+     "Xdut.en4",
+     "Xdut.en5",
+     "Xdut.en6",
+     "Xdut.en7",
+     "Xdut.enb0",
+     "Xdut.enb1",
+     "Xdut.enb2",
+     "Xdut.enb3",
+     "Xdut.enb4",
+     "Xdut.enb5",
+     "Xdut.enb6",
+     "Xdut.enb7",
+     "Xdut.Xu0.vbias_ch",
+     "Xdut.Xu1.vbias_ch",
+     "Xdut.Xu2.vbias_ch",
+     "Xdut.Xu3.vbias_ch",
+     "Xdut.Xu4.vbias_ch",
+     "Xdut.Xu5.vbias_ch",
+     "Xdut.Xu6.vbias_ch",
+     "Xdut.Xu7.vbias_ch",
+     "Xdut.Xu0.node_m",
+     "Xdut.Xu4.node_m"
+    ],
+    "file": "r20261026_132228_3fc148_RS-FULL_dut.internal_fragment.txt",
+    "fragment_windows": 24,
+    "gzip_bytes": 2515970,
+    "gzip_sha256": "524c9dd0cef944d9af3597c04e3f6aef24334db4e9bec764e514fb37209ddb8e",
+    "part_files": [
+     {
+      "bytes": 245760,
+      "part": "r20261026_132228_3fc148_RS-FULL_dut.internal_fragment.part000.txt",
+      "sha256": "c99dbce6e90d8ec80cbb79be49e589ff73618f9bd40ff0529ccd38b2ace6aa37"
+     },
+     {
+      "bytes": 245760,
+      "part": "r20261026_132228_3fc148_RS-FULL_dut.internal_fragment.part001.txt",
+      "sha256": "c2edc47eb891b073ec4f1e969e46c12359d7855d569e71ce36448c86a77a9fa4"
+     },
+     {
+      "bytes": 245760,
+      "part": "r20261026_132228_3fc148_RS-FULL_dut.internal_fragment.part002.txt",
+      "sha256": "9d67c946e0083c8b83b9536bac9ce315bc975671c51e8cadb2c7f205e709eaeb"
+     },
+     {
+      "bytes": 245760,
+      "part": "r20261026_132228_3fc148_RS-FULL_dut.internal_fragment.part003.txt",
+      "sha256": "2abd248f77a75fac5fb5bedb82a8c28bfc4c51eb25a657ebcf6bb6751c34c6f6"
+     },
+     {
+      "bytes": 245760,
+      "part": "r20261026_132228_3fc148_RS-FULL_dut.internal_fragment.part004.txt",
+      "sha256": "cc417a28e476bd0ed741f0fc9864659d6d0ab655e65a7abcceb64d92e4a29b62"
+     },
+     {
+      "bytes": 245760,
+      "part": "r20261026_132228_3fc148_RS-FULL_dut.internal_fragment.part005.txt",
+      "sha256": "db3232e67aced095ff10f40f1037c16acf4973731dc3202fb873489c33fd95ed"
+     },
+     {
+      "bytes": 245760,
+      "part": "r20261026_132228_3fc148_RS-FULL_dut.internal_fragment.part006.txt",
+      "sha256": "f27ceb9386057429691642a0e6ad74574962a9961ba1935c8c794af6d8e9f345"
+     },
+     {
+      "bytes": 245760,
+      "part": "r20261026_132228_3fc148_RS-FULL_dut.internal_fragment.part007.txt",
+      "sha256": "530bb550b3be6357724e9f85c57deac124f371893b3741b129b53e5914253835"
+     },
+     {
+      "bytes": 245760,
+      "part": "r20261026_132228_3fc148_RS-FULL_dut.internal_fragment.part008.txt",
+      "sha256": "b0f470b754c7dfd35f9f6e8c01408144667bc98308d0ec378ea91be70ccb6fa0"
+     },
+     {
+      "bytes": 245760,
+      "part": "r20261026_132228_3fc148_RS-FULL_dut.internal_fragment.part009.txt",
+      "sha256": "989791b056d191a872cd0ca8ad40996beee7f1cdf16ecc53b6ca71d895e11766"
+     },
+     {
+      "bytes": 245760,
+      "part": "r20261026_132228_3fc148_RS-FULL_dut.internal_fragment.part010.txt",
+      "sha256": "4356c962e2c770bf6cee3ab46e2db3857df819112be457937b97835a4149eba7"
+     },
+     {
+      "bytes": 245760,
+      "part": "r20261026_132228_3fc148_RS-FULL_dut.internal_fragment.part011.txt",
+      "sha256": "8aedc4916a5ac5f0e4a597110efc3a8af146f093c24a630471f300537f7753a7"
+     },
+     {
+      "bytes": 196147,
+      "part": "r20261026_132228_3fc148_RS-FULL_dut.internal_fragment.part012.txt",
+      "sha256": "909c05d4c1198961965f48df9305a66e17eebb5ebc880027afda4d92958ddc03"
+     }
+    ],
+    "parts": 13,
+    "plain_bytes": 8726882,
+    "runs": {
+     "Ip_branch:i": 130985,
+     "Xdut.Xu0.node_m": 125472,
+     "Xdut.Xu0.vbias_ch": 130985,
+     "Xdut.Xu1.vbias_ch": 130985,
+     "Xdut.Xu2.vbias_ch": 130985,
+     "Xdut.Xu3.vbias_ch": 130985,
+     "Xdut.Xu4.node_m": 125408,
+     "Xdut.Xu4.vbias_ch": 130985,
+     "Xdut.Xu5.vbias_ch": 130985,
+     "Xdut.Xu6.vbias_ch": 130985,
+     "Xdut.Xu7.vbias_ch": 130985,
+     "Xdut.en0": 130983,
+     "Xdut.en1": 130984,
+     "Xdut.en2": 130983,
+     "Xdut.en3": 130983,
+     "Xdut.en4": 130984,
+     "Xdut.en5": 130985,
+     "Xdut.en6": 130984,
+     "Xdut.en7": 130985,
+     "Xdut.enb0": 128960,
+     "Xdut.enb1": 130396,
+     "Xdut.enb2": 129158,
+     "Xdut.enb3": 129477,
+     "Xdut.enb4": 127698,
+     "Xdut.enb5": 127048,
+     "Xdut.enb6": 128066,
+     "Xdut.enb7": 129444,
+     "clamp_node": 1,
+     "data_en": 16232,
+     "data_out": 1,
+     "iref_in": 130575,
+     "pam0": 376,
+     "pam1": 178,
+     "pam2": 80,
+     "time": 130985,
+     "vcas": 1,
+     "vdd18": 1,
+     "vss": 1
+    },
+    "samples": 130985,
+    "sha256": "341ebff38017f720268892beba262c2def007c247cf437dda2b0225c87225e62"
+   },
+   "internal_full": false,
+   "launch_id": "T011",
+   "log_sha256": "e0d27c2bf708d508224f35c47e6c900d3d339d8b45caa694f5c338badaf3ebdf",
+   "native_sha256_verified": "ced5113d620a497c7e093e51327d149bf8b265a4b1ca33ece467f5b61f408e9f",
+   "part_files": [
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-FULL_dut.sequence.part000.txt",
+     "sha256": "0d310ab8a6245a06da8f68025929a6b046d0a7f900904494a2d0f7dca2c8fe37"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-FULL_dut.sequence.part001.txt",
+     "sha256": "46847c88dd3859959a04e9d56d8b4887f6139dad0fb45e5da5b9e3b1ca9044d4"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-FULL_dut.sequence.part002.txt",
+     "sha256": "845a513570671c9708c277579b0e3be3c9cbb39b260ee75c3095fefd79a73c5e"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-FULL_dut.sequence.part003.txt",
+     "sha256": "908433ec3beb52e87e3aa0bbfe952a723dde7a3b695e03a93181ed9c6cf300fc"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-FULL_dut.sequence.part004.txt",
+     "sha256": "105d0432f2c6e4368602c314d7fd9c514443070723d5ded98e1feff2e2eba144"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-FULL_dut.sequence.part005.txt",
+     "sha256": "dda58cd78f25b3061e20423817eccaaa87594ec34a25eef9c87b87a78f3087eb"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-FULL_dut.sequence.part006.txt",
+     "sha256": "895e4f56ad0133945273ca1bc0df62b0e2fdbc3bb0bf69bd4824aaba2beae963"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-FULL_dut.sequence.part007.txt",
+     "sha256": "bbc783c49346edc0c28686ad24f1171b6b5cfa01ae8ceb038251b885341812bb"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-FULL_dut.sequence.part008.txt",
+     "sha256": "9d37ad5a6c5ce78148591341150137579256e215db316ed132519c80a2acb2e3"
+    },
+    {
+     "bytes": 77959,
+     "part": "r20261026_132228_3fc148_RS-FULL_dut.sequence.part009.txt",
+     "sha256": "f239294c016289f1e9a3346af7f673512d38f532364de8a422731e79a33546e4"
+    }
+   ],
+   "parts": 10,
+   "plain_bytes": 9829923,
+   "raw_name": "r20261026_132228_3fc148_RS-FULL_dut.raw",
+   "raw_sha256": "ced5113d620a497c7e093e51327d149bf8b265a4b1ca33ece467f5b61f408e9f",
+   "requested_utc": "2026-10-26T13:36:18Z",
+   "role": "dut",
+   "run_id": "r20261026_132228_3fc148",
+   "runs": {
+    "Ip_branch:i": 130985,
+    "clamp_node": 1,
+    "data_en": 16232,
+    "data_out": 1,
+    "iref_in": 130575,
+    "pam0": 376,
+    "pam1": 178,
+    "pam2": 80,
+    "time": 130985,
+    "vcas": 1,
+    "vdd18": 1,
+    "vss": 1
+   },
+   "samples": 130985,
+   "sha256": "0c23f122d60d4aed2ed342a748465fb59886fe71e41f87e9e39a204d96466e65"
+  },
+  {
+   "bytes": 6418308,
+   "case_id": "HYB-120",
+   "columns": [
+    "time",
+    "Ip_branch:i",
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2",
+    "vdd18",
+    "vss",
+    "vcas",
+    "iref_in",
+    "clamp_node",
+    "data_out"
+   ],
+   "deck_path": "spectre/dd1_d7c_b_tr/HYB-120.scs",
+   "deck_sha256": "66bf817daf027b4c97ded93aa7eae7bdfd9ae9e59606b6a3ee379b98928671cf",
+   "ended_utc": "2026-10-26T14:32:46Z",
+   "executor_sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+   "exported": true,
+   "file": "r20261026_132228_3fc148_HYB-120_dut.sequence.txt",
+   "fragment_windows": 0,
+   "gzip_bytes": 5134403,
+   "gzip_sha256": "bea5848faec707a20ea2700717caad11676f8c11df2977230acc1261f6e164ae",
+   "internal_fragment": "NOT_VERIFIED",
+   "internal_full": false,
+   "internal_note": "the 26 internal columns of this 447447-sample answer over 8 declared fragments would need 1319679 bytes against the 312249 bytes this round may still track, so the per-step internal detail stays in the published row tables and is not claimed as re-integrable",
+   "launch_id": "T017",
+   "log_sha256": "54b4891050bca0cc554f5673635a6a6ca8d08fb4ca7d7a5c9d88fef14936525f",
+   "native_sha256_verified": "c99af908d455fc5bdcd408b9400643a86deade5ba7616caaa621ebf6e3b75827",
+   "part_files": [
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part000.txt",
+     "sha256": "a7a7359969f55c1e97a2a027d537002e49c685633a694899e2340b8f082b43b0"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part001.txt",
+     "sha256": "5e75dea432db1f77e1f16eb22c658ca96a3955232216e504917da395d669c617"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part002.txt",
+     "sha256": "416e223dbe71e17b81ccec7a626ed66a67e5ee8b746c87a6284e03a6c106dec5"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part003.txt",
+     "sha256": "d4f2ec318417a64cfa3a775c7c5b929296112bbd2f231b9aac14ca453af22162"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part004.txt",
+     "sha256": "ab3acb8fae9540e42d2d6676fe6874690814a43f77d500cd01883629fe92ae16"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part005.txt",
+     "sha256": "07f8ff4170394466345d959424269ff553604c1e4eb5fabe1bc22bc5d5e56168"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part006.txt",
+     "sha256": "076ca54d3e90dee056c78737e91e07c932430905e9f9a8f4dfc84bf3391e0432"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part007.txt",
+     "sha256": "b22c611e61008fadd1e8887be4d26f4a9e0e13b6016f209b92f9983b0ae62281"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part008.txt",
+     "sha256": "f63254023e46f4e02b63021de76a7d500a0c5ea418f47878362422a7d9a804a9"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part009.txt",
+     "sha256": "5b8b43b610df6eb71b1d2d3f0d5b9a14935b94dda7cbd408cc872c8dea419d5b"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part010.txt",
+     "sha256": "892eb036d4f4f033c17f676af0a233d14a9fd077027ee67c559289033d75b7de"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part011.txt",
+     "sha256": "0a3b10c0b50a212610b596d7c6fe686cd2a1556fc918d675e61c0179f4639132"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part012.txt",
+     "sha256": "a12ba3cbace468af9b3b2f1a0349633358ec8d77e40698d2b5ea533eaad25608"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part013.txt",
+     "sha256": "812ed2c6ecdbc8e2a25127849f47fc615201c50d5cc78edf9486b26a95fa5cc8"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part014.txt",
+     "sha256": "32104a228ccd7e464912e18e965666e7b031f2b082d06b2df40764f9908f27ec"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part015.txt",
+     "sha256": "22f6773350c0b0c08214be337935cd237809837de4db1d9776651695ae8a7e1c"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part016.txt",
+     "sha256": "e0c6345e3bd398bf5dc5969ac8fc9496d05c6a0bed7781d373aa4bdceb9df904"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part017.txt",
+     "sha256": "dc66a4526540c2ac613cecd563b86d050a86cc0eabe9f236fa753550a99f136c"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part018.txt",
+     "sha256": "7b15be67d07070fc86a76e7d2deff7a77d6d1dbccbd03255e0f65c83164df07d"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part019.txt",
+     "sha256": "60877f1a153d1bbf312ce7c7520b1b8d1bd8c22caa3773ce5676c842eb6c7830"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part020.txt",
+     "sha256": "78a23eba5a8cbed55fba362998ff404c7ecfb3e17025191aef5207fea361384f"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part021.txt",
+     "sha256": "32b0452427f48d9c3db96684cacf5e34dfb1b31fb572b512f8faa5940b00a185"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part022.txt",
+     "sha256": "960c7751ec4385e40bace5582fb955e6da41145c5368d773a972fe2575d07101"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part023.txt",
+     "sha256": "e2e6985f2a8742715c58c9cc80067fe2d10ec8bbfe6a7208c7a38d168d13912c"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part024.txt",
+     "sha256": "3ad791b77e1c83deb100023f133b9b12a9d780ac8fa524c3082d0af6cc066001"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part025.txt",
+     "sha256": "846de44bc3c89210608be3cfa170725db08cfe0a57ec9f3f906642c593f6e2cd"
+    },
+    {
+     "bytes": 28548,
+     "part": "r20261026_132228_3fc148_HYB-120_dut.sequence.part026.txt",
+     "sha256": "91872f7dc789624fc0b8a60d2b6fd02195f6d59bd18994bcd5cedd15d3fa3263"
+    }
+   ],
+   "parts": 27,
+   "plain_bytes": 32207173,
+   "raw_name": "r20261026_132228_3fc148_HYB-120_dut.raw",
+   "raw_sha256": "c99af908d455fc5bdcd408b9400643a86deade5ba7616caaa621ebf6e3b75827",
+   "requested_utc": "2026-10-26T14:30:23Z",
+   "role": "dut",
+   "run_id": "r20261026_132228_3fc148",
+   "runs": {
+    "Ip_branch:i": 447447,
+    "clamp_node": 1,
+    "data_en": 370,
+    "data_out": 1,
+    "iref_in": 445095,
+    "pam0": 430,
+    "pam1": 430,
+    "pam2": 268,
+    "time": 447447,
+    "vcas": 1,
+    "vdd18": 1,
+    "vss": 1
+   },
+   "samples": 447447,
+   "sha256": "112c5d0b5642cb749bef1957960cafd85c351f92fdb09bcb025f37b453cf39b3"
+  },
+  {
+   "bytes": 8736548,
+   "case_id": "HYB-200",
+   "columns": [
+    "time",
+    "Ip_branch:i",
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2",
+    "vdd18",
+    "vss",
+    "vcas",
+    "iref_in",
+    "clamp_node",
+    "data_out"
+   ],
+   "deck_path": "spectre/dd1_d7c_b_tr/HYB-200.scs",
+   "deck_sha256": "3cb8e6b77170a74cca7bb65044192342c97dd5cf0bb7183b94460658d799e859",
+   "ended_utc": "2026-10-26T14:38:11Z",
+   "executor_sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+   "exported": true,
+   "file": "r20261026_132228_3fc148_HYB-200_dut.sequence.txt",
+   "fragment_windows": 0,
+   "gzip_bytes": 6988995,
+   "gzip_sha256": "cde595294a9f00d26fba1792b5dae6f48fc9a114d827fc785a9f4b6bc406fe4f",
+   "internal_fragment": "NOT_VERIFIED",
+   "internal_full": false,
+   "internal_note": "the 26 internal columns of this 639348-sample answer over 6 declared fragments would need 977397 bytes against the 312249 bytes this round may still track, so the per-step internal detail stays in the published row tables and is not claimed as re-integrable",
+   "launch_id": "T019",
+   "log_sha256": "4f23d4416de15cb598f0df3700d07c50fda0bee14f63a8993ededd196b77a2d2",
+   "native_sha256_verified": "6532f533ba5e94bd82efc010b8f510cd81dd0670ecc8ceb40829644966b206a1",
+   "part_files": [
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part000.txt",
+     "sha256": "2fcbd428b7ac3129e39abd38640857c7688fd37029b616c627051af91067b5ba"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part001.txt",
+     "sha256": "5b79b30e912ce9fd24f454e1ef9fb8a47779a2d82c46eda858c658ee68534b0b"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part002.txt",
+     "sha256": "a35e0af67b5c71e8fb56e149fa4dfb0c04fe3dcb5e20c568418587abec28b0b2"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part003.txt",
+     "sha256": "b1449ce0e440ee5e841ad65e87fd9e958c75b87f27133e0d49c99e9c70f206d5"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part004.txt",
+     "sha256": "1e1f67160cb07801c74c6c305d7252117e0c7b148a2a20f1094e3be6c1bdbb20"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part005.txt",
+     "sha256": "cf5688f1c1483ec7310b814a13857a24d1cfb4f82b00bf21f22793e5ca315a7c"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part006.txt",
+     "sha256": "d50be770da718888fa59e9a78653101a855b4398abe1d117bef2c4eea4eb9213"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part007.txt",
+     "sha256": "a2e0d4d59b2be44de8b2f844ac680d336933aaff8435c7f132f97f61cfe06adf"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part008.txt",
+     "sha256": "614ad70feb4b920d3355fc6aa23dbbf717f571f6485e76af8c1d3abd9f36a1b0"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part009.txt",
+     "sha256": "c4e5ceddeb90099a49673d1ecf981cdfb2a9ecbe910537d4a7ce2b19a9727ce9"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part010.txt",
+     "sha256": "af63525cd86a31011dff377eef6dd23a3cc9c772b5ee9958b9f75a03effcf35a"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part011.txt",
+     "sha256": "25fc956373dd7c22cb2dbc7226662f1ad5ac7bb9d57f666a2bdbda0cf521ad41"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part012.txt",
+     "sha256": "afa0b58eaede78ff1321ae8df37ab52b8fa6ebc0e81f518fa3a933a8e04cb65b"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part013.txt",
+     "sha256": "09b64d473220be6eabb44a73a28ed8f5836d43857c7034ff8a6b72e901f0ce76"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part014.txt",
+     "sha256": "14ea07dcb6e4fc16c756b312641693a7b986a7185acfad3f52f77d8491e847a4"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part015.txt",
+     "sha256": "4603525004e68c74e9703eaa2c6e11d49bb89bdc89253d1f4ae157935714ac55"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part016.txt",
+     "sha256": "e0db5ae128591b5ff03756f24dd4ac2e8b4bb7558806a61f461589dca580113b"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part017.txt",
+     "sha256": "9e392b6e3a507238d56a67a7f8e060c8fe2f7e1c29e575c58fd3a7ebc5b473a9"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part018.txt",
+     "sha256": "262308882fcb14a66991160663f5e8315f26c08f4c5cabb4e4385b9c52acb7c2"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part019.txt",
+     "sha256": "4d4ecdf0348693e0c03a1abd9934a5813327b1e50f3906e924a86d76f3a3f645"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part020.txt",
+     "sha256": "eb5a2ad9645a123dbc5b7eaf6068d584c452799bd6ff5cbba1e1a495befbddd8"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part021.txt",
+     "sha256": "8dc9b144da4f4257342c5abc6ce5afd36a3c88ee9b446b982acfbeefa93121dd"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part022.txt",
+     "sha256": "5cad02af0f748336f862d8980f6e842dc092b68d862064ab0d475ac877ae8d16"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part023.txt",
+     "sha256": "02aabe97ea2e605275fa49ca3819f0148606463b9688e07b24dd894573fa9909"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part024.txt",
+     "sha256": "ef3353b594994588499f99ce213703489d884ce5463688152ca2b13bdc2688d8"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part025.txt",
+     "sha256": "2530976ba44a98dfa68dc52ed237fe3408584619e0e1536a45beebe65277a175"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part026.txt",
+     "sha256": "b34787b0473be3a0e4bf37344bb3a4fb9b6d19da05bad37cf1cf62b1ea61388b"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part027.txt",
+     "sha256": "8de473408fed96fafe621eea901b3e8595010a30904e36efb8610a0d06df539b"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part028.txt",
+     "sha256": "578d22e6350beb9ef17fd55337a8ba417f90c38e3b22e8c37e37a2e09718afee"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part029.txt",
+     "sha256": "b0060450e2f0c9a3f93988636c6750a9720b700415d3045f5c0305d4ce3cbd2d"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part030.txt",
+     "sha256": "43a14fbd2f33b3faa5900ccd124f54aa8c9c6f4c4c954a8b20ff092789f57e54"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part031.txt",
+     "sha256": "e646926163e0b4cc2334011cb8fc9d7532a91ae9e83031bdf5427fb92a71141f"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part032.txt",
+     "sha256": "52d31cb6d54c6d3127fa6d623a4749b09bde59ecbce763be85a6fed181a9a762"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part033.txt",
+     "sha256": "e393245c4c21a2da9c8df294aaa91760d44c5bef2b6d81c6077b7f790668c35c"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part034.txt",
+     "sha256": "ccad28d6b9fac6e0cba98621783a5ba28071dba8ea99991b440dcf68c9727310"
+    },
+    {
+     "bytes": 134948,
+     "part": "r20261026_132228_3fc148_HYB-200_dut.sequence.part035.txt",
+     "sha256": "81213bbfaccdede3641dcb3adc89d909cba7edf239835802c30c08c4930f9dde"
+    }
+   ],
+   "parts": 36,
+   "plain_bytes": 45968637,
+   "raw_name": "r20261026_132228_3fc148_HYB-200_dut.raw",
+   "raw_sha256": "6532f533ba5e94bd82efc010b8f510cd81dd0670ecc8ceb40829644966b206a1",
+   "requested_utc": "2026-10-26T14:34:57Z",
+   "role": "dut",
+   "run_id": "r20261026_132228_3fc148",
+   "runs": {
+    "Ip_branch:i": 639348,
+    "clamp_node": 1,
+    "data_en": 281,
+    "data_out": 1,
+    "iref_in": 635491,
+    "pam0": 255,
+    "pam1": 255,
+    "pam2": 93,
+    "time": 639348,
+    "vcas": 1,
+    "vdd18": 1,
+    "vss": 1
+   },
+   "samples": 639348,
+   "sha256": "2e8c8cdb45fee16dd7acd285c59c790cf6f0c817fbcc7839ab8af6bffb101e5a"
+  },
+  {
+   "bytes": 4519,
+   "case_id": "TR-120",
+   "columns": [
+    "time",
+    "Ip_branch:i",
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2",
+    "vdd18",
+    "vss",
+    "vcas",
+    "iref_in",
+    "clamp_node",
+    "data_out"
+   ],
+   "deck_path": "spectre/dd1_d7c_b_tr/TR-120.pre.scs",
+   "deck_sha256": "4bb3f78039a5d57d64a77db4c882620f5d42a948b42651618b599d8611db120a",
+   "ended_utc": "2026-10-26T13:32:54Z",
+   "executor_sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+   "exported": true,
+   "file": "r20261026_132228_3fc148_TR-120_preflight.sequence.txt",
+   "fragment_windows": 0,
+   "gzip_bytes": 3372,
+   "gzip_sha256": "06a729db27e41bf4d0de683d808dd916b2ed4c25072f1edd303ee0275ea14ae1",
+   "internal_full": true,
+   "launch_id": "T004",
+   "log_sha256": "ebbbeea2cad04723333f33b8247580c93f7b6cbc063a46c165f7c198149db194",
+   "native_sha256_verified": "c8192192eae706df64fe83052e84f83f0e44e0957f01962590e990548a05d962",
+   "part_files": [],
+   "parts": 1,
+   "plain_bytes": 25495,
+   "raw_name": "r20261026_132228_3fc148_TR-120_preflight.raw",
+   "raw_sha256": "c8192192eae706df64fe83052e84f83f0e44e0957f01962590e990548a05d962",
+   "requested_utc": "2026-10-26T13:32:49Z",
+   "role": "preflight",
+   "run_id": "r20261026_132228_3fc148",
+   "runs": {
+    "Ip_branch:i": 1,
+    "clamp_node": 1,
+    "data_en": 27,
+    "data_out": 1,
+    "iref_in": 170,
+    "pam0": 1,
+    "pam1": 1,
+    "pam2": 1,
+    "time": 780,
+    "vcas": 1,
+    "vdd18": 1,
+    "vss": 1
+   },
+   "samples": 780,
+   "sha256": "4a4527e9a4b23d597fe2c79146a3926afcc96f503e10332133d9ea4dc5b63be9"
+  },
+  {
+   "bytes": 4789,
+   "case_id": "TR-200",
+   "columns": [
+    "time",
+    "Ip_branch:i",
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2",
+    "vdd18",
+    "vss",
+    "vcas",
+    "iref_in",
+    "clamp_node",
+    "data_out"
+   ],
+   "deck_path": "spectre/dd1_d7c_b_tr/TR-200.pre.scs",
+   "deck_sha256": "841da2b86c64c852606e220eb87f5db65faf76621693e81560c5e572555a95fc",
+   "ended_utc": "2026-10-26T13:33:47Z",
+   "executor_sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+   "exported": true,
+   "file": "r20261026_132228_3fc148_TR-200_preflight.sequence.txt",
+   "fragment_windows": 0,
+   "gzip_bytes": 3588,
+   "gzip_sha256": "af75e714790e26862b198cbe3d8c827ade926178957ceb85f047ef8d5f0ed5a0",
+   "internal_full": true,
+   "launch_id": "T006",
+   "log_sha256": "4e545c23a4fa9e49db027302e968fef385af26d82fb78b5d3fc2442cb2f29d98",
+   "native_sha256_verified": "ffca6665708b5870b4f90aed1d1496f849dc59c73941be72eb711f22643b12dc",
+   "part_files": [],
+   "parts": 1,
+   "plain_bytes": 34759,
+   "raw_name": "r20261026_132228_3fc148_TR-200_preflight.raw",
+   "raw_sha256": "ffca6665708b5870b4f90aed1d1496f849dc59c73941be72eb711f22643b12dc",
+   "requested_utc": "2026-10-26T13:33:41Z",
+   "role": "preflight",
+   "run_id": "r20261026_132228_3fc148",
+   "runs": {
+    "Ip_branch:i": 1,
+    "clamp_node": 1,
+    "data_en": 27,
+    "data_out": 1,
+    "iref_in": 516,
+    "pam0": 1,
+    "pam1": 1,
+    "pam2": 1,
+    "time": 820,
+    "vcas": 1,
+    "vdd18": 1,
+    "vss": 1
+   },
+   "samples": 820,
+   "sha256": "0bc436a2b815ef3700ab7b49978ab859307970a6f962b98fcd0bcf7f03aec500"
+  },
+  {
+   "bytes": 10451,
+   "case_id": "TR-OFFCODE",
+   "columns": [
+    "time",
+    "Ip_branch:i",
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2",
+    "vdd18",
+    "vss",
+    "vcas",
+    "iref_in",
+    "clamp_node",
+    "data_out"
+   ],
+   "deck_path": "spectre/dd1_d7c_b_tr/TR-OFFCODE.pre.scs",
+   "deck_sha256": "4bbf30f809b9963fec56b923f65cc0eeb86fd282d546a31c69e605a547152f5e",
+   "ended_utc": "2026-10-26T13:34:31Z",
+   "executor_sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+   "exported": true,
+   "file": "r20261026_132228_3fc148_TR-OFFCODE_preflight.sequence.txt",
+   "fragment_windows": 0,
+   "gzip_bytes": 8117,
+   "gzip_sha256": "3cf3ef88e8d2b0c1bb5699de6f7d7d1b110fc4fb66ebadcadc307b4f6cf7a799",
+   "internal_full": true,
+   "launch_id": "T008",
+   "log_sha256": "c3f9367cd6c9ce03ba078498aac7ab579051c706466b83f3d8a83cc4c6aa68a9",
+   "native_sha256_verified": "f9a000234e3689040f8c91516f219621373df0e59120d66875f82db42cf8856b",
+   "part_files": [],
+   "parts": 1,
+   "plain_bytes": 95460,
+   "raw_name": "r20261026_132228_3fc148_TR-OFFCODE_preflight.raw",
+   "raw_sha256": "f9a000234e3689040f8c91516f219621373df0e59120d66875f82db42cf8856b",
+   "requested_utc": "2026-10-26T13:34:25Z",
+   "role": "preflight",
+   "run_id": "r20261026_132228_3fc148",
+   "runs": {
+    "Ip_branch:i": 1,
+    "clamp_node": 1,
+    "data_en": 183,
+    "data_out": 1,
+    "iref_in": 1698,
+    "pam0": 15,
+    "pam1": 15,
+    "pam2": 22,
+    "time": 1959,
+    "vcas": 1,
+    "vdd18": 1,
+    "vss": 1
+   },
+   "samples": 1959,
+   "sha256": "0bc00dceb5d6adab4dba54f8e00972e737181f1c3190facf2d410987894d22c9"
+  },
+  {
+   "bytes": 30697,
+   "case_id": "TR-LONG",
+   "columns": [
+    "time",
+    "Ip_branch:i",
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2",
+    "vdd18",
+    "vss",
+    "vcas",
+    "iref_in",
+    "clamp_node",
+    "data_out"
+   ],
+   "deck_path": "spectre/dd1_d7c_b_tr/TR-LONG.pre.scs",
+   "deck_sha256": "5659106e3163e42a7d5daf4615f4cd319a21c4b28930c52a89f8b2c4c1fc0806",
+   "ended_utc": "2026-10-26T13:26:03Z",
+   "executor_sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+   "exported": true,
+   "file": "r20261026_132228_3fc148_TR-LONG_preflight.sequence.txt",
+   "fragment_windows": 0,
+   "gzip_bytes": 24314,
+   "gzip_sha256": "342bff710e19013c01a2856f8fc48c97585ed49c0f465cce4460f97cf60b02ba",
+   "internal_full": true,
+   "launch_id": "T002",
+   "log_sha256": "1440e2ba672d60bb6dc8f2fbfc5de8b7c7b6c16388c9e648713b483f805a6fdf",
+   "native_sha256_verified": "e34c83162e9a7557b21fee96f34dd8e42ba057e1b66eb7e3a2d09ff500f984a8",
+   "part_files": [],
+   "parts": 1,
+   "plain_bytes": 318354,
+   "raw_name": "r20261026_132228_3fc148_TR-LONG_preflight.raw",
+   "raw_sha256": "e34c83162e9a7557b21fee96f34dd8e42ba057e1b66eb7e3a2d09ff500f984a8",
+   "requested_utc": "2026-10-26T13:25:56Z",
+   "role": "preflight",
+   "run_id": "r20261026_132228_3fc148",
+   "runs": {
+    "Ip_branch:i": 1,
+    "clamp_node": 1,
+    "data_en": 834,
+    "data_out": 1,
+    "iref_in": 5560,
+    "pam0": 65,
+    "pam1": 29,
+    "pam2": 10,
+    "time": 6680,
+    "vcas": 1,
+    "vdd18": 1,
+    "vss": 1
+   },
+   "samples": 6680,
+   "sha256": "263ded78f9d88705c7fe8d25187501aa33f7f0b91f1ef67b53e7a9dec7a3f014"
+  },
+  {
+   "bytes": 45332,
+   "case_id": "RS-LOW",
+   "columns": [
+    "time",
+    "Ip_branch:i",
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2",
+    "vdd18",
+    "vss",
+    "vcas",
+    "iref_in",
+    "clamp_node",
+    "data_out"
+   ],
+   "deck_path": "spectre/dd1_d7c_b_tr/RS-LOW.pre.scs",
+   "deck_sha256": "47f5af303c8bcc93d1f822e999182790fad20a69cc96a71591eab590e618c47d",
+   "ended_utc": "2026-10-26T13:38:26Z",
+   "executor_sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+   "exported": true,
+   "file": "r20261026_132228_3fc148_RS-LOW_preflight.sequence.txt",
+   "fragment_windows": 0,
+   "gzip_bytes": 36022,
+   "gzip_sha256": "3dab3993c079a805b9818a2028289b6f44add4311f51ab7af5b247048985e306",
+   "internal_full": true,
+   "launch_id": "T012",
+   "log_sha256": "f3eb3d9f6e824caaf01ea58e32986bd3a9d7e1715114a3b4ad911dcb904274ff",
+   "native_sha256_verified": "b94522317978cf21cbf35940174307b4fff335f04bb2fdb22ba14be289dbe812",
+   "part_files": [],
+   "parts": 1,
+   "plain_bytes": 520678,
+   "raw_name": "r20261026_132228_3fc148_RS-LOW_preflight.raw",
+   "raw_sha256": "b94522317978cf21cbf35940174307b4fff335f04bb2fdb22ba14be289dbe812",
+   "requested_utc": "2026-10-26T13:38:20Z",
+   "role": "preflight",
+   "run_id": "r20261026_132228_3fc148",
+   "runs": {
+    "Ip_branch:i": 1,
+    "clamp_node": 1,
+    "data_en": 403,
+    "data_out": 1,
+    "iref_in": 5904,
+    "pam0": 1,
+    "pam1": 1,
+    "pam2": 1,
+    "time": 15301,
+    "vcas": 1,
+    "vdd18": 1,
+    "vss": 1
+   },
+   "samples": 15301,
+   "sha256": "a6e958dc2649026f912d94ce8393457993755fcfbb9b732cfdb017c9303f1fc5"
+  },
+  {
+   "bytes": 132649,
+   "case_id": "RS-SWITCH",
+   "columns": [
+    "time",
+    "Ip_branch:i",
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2",
+    "vdd18",
+    "vss",
+    "vcas",
+    "iref_in",
+    "clamp_node",
+    "data_out"
+   ],
+   "deck_path": "spectre/dd1_d7c_b_tr/RS-SWITCH.pre.scs",
+   "deck_sha256": "0015794704175b13e2760349bdf9f3a1d82eccd963f6db78cf2e8e096f9fe284",
+   "ended_utc": "2026-10-26T13:39:17Z",
+   "executor_sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+   "exported": true,
+   "file": "r20261026_132228_3fc148_RS-SWITCH_preflight.sequence.txt",
+   "fragment_windows": 0,
+   "gzip_bytes": 105876,
+   "gzip_sha256": "9e4d0de4338808248802317b690ec225de8351ec2817720daab2b2992f4bdf6e",
+   "internal_full": false,
+   "launch_id": "T014",
+   "log_sha256": "c2252073f7082afada9390370b3464a91b9f4f5445ec6d8182ab629d3a1c4375",
+   "native_sha256_verified": "0a477838e8ab3c1bf61b741b8bde61a9f18e02ad85f97bdf03fe04d467d68f01",
+   "part_files": [],
+   "parts": 1,
+   "plain_bytes": 1569979,
+   "raw_name": "r20261026_132228_3fc148_RS-SWITCH_preflight.raw",
+   "raw_sha256": "0a477838e8ab3c1bf61b741b8bde61a9f18e02ad85f97bdf03fe04d467d68f01",
+   "requested_utc": "2026-10-26T13:39:11Z",
+   "role": "preflight",
+   "run_id": "r20261026_132228_3fc148",
+   "runs": {
+    "Ip_branch:i": 1,
+    "clamp_node": 1,
+    "data_en": 3209,
+    "data_out": 1,
+    "iref_in": 24448,
+    "pam0": 46,
+    "pam1": 46,
+    "pam2": 68,
+    "time": 37511,
+    "vcas": 1,
+    "vdd18": 1,
+    "vss": 1
+   },
+   "samples": 37511,
+   "sha256": "89a64addaa78a42bb9a1e392a7ddd39168cd24583ba347f7d2e6336f8a029c7a"
+  },
+  {
+   "bytes": 494799,
+   "case_id": "RS-FULL",
+   "columns": [
+    "time",
+    "Ip_branch:i",
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2",
+    "vdd18",
+    "vss",
+    "vcas",
+    "iref_in",
+    "clamp_node",
+    "data_out"
+   ],
+   "deck_path": "spectre/dd1_d7c_b_tr/RS-FULL.pre.scs",
+   "deck_sha256": "5014dffaa60f6375195dde2f2c1fd53ffb6b062911dd460d3c64b9727e059b39",
+   "ended_utc": "2026-10-26T13:35:39Z",
+   "executor_sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+   "exported": true,
+   "file": "r20261026_132228_3fc148_RS-FULL_preflight.sequence.txt",
+   "fragment_windows": 0,
+   "gzip_bytes": 395596,
+   "gzip_sha256": "87b3d27897a9712a776d55b52913d60004c45fd3530523a0809f0f58f0ef9683",
+   "internal_full": false,
+   "launch_id": "T010",
+   "log_sha256": "cdec5a2b4bb2ed62298e44cdb67f4b6a2210d4b7ca0255fa8fc7945a3d1d6da5",
+   "native_sha256_verified": "0392a0c191842fe625df33dbc5065e63a2894f7d7dd643c1e447d68445d263ba",
+   "part_files": [
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-FULL_preflight.sequence.part000.txt",
+     "sha256": "3b80cb4d3130c04149f933fc242ccc0cd2caf465b1e866182289ce911788be6f"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_RS-FULL_preflight.sequence.part001.txt",
+     "sha256": "21a7e365afab22f37f10f012e766bb6938fdbb79ed4fcb063666a5e2961dd7af"
+    },
+    {
+     "bytes": 3279,
+     "part": "r20261026_132228_3fc148_RS-FULL_preflight.sequence.part002.txt",
+     "sha256": "6b58b2437825b012348836554a7b599e58fc3664177651ec4ca9ed2aef19ecce"
+    }
+   ],
+   "parts": 3,
+   "plain_bytes": 6379945,
+   "raw_name": "r20261026_132228_3fc148_RS-FULL_preflight.raw",
+   "raw_sha256": "0392a0c191842fe625df33dbc5065e63a2894f7d7dd643c1e447d68445d263ba",
+   "requested_utc": "2026-10-26T13:35:30Z",
+   "role": "preflight",
+   "run_id": "r20261026_132228_3fc148",
+   "runs": {
+    "Ip_branch:i": 1,
+    "clamp_node": 1,
+    "data_en": 16012,
+    "data_out": 1,
+    "iref_in": 118949,
+    "pam0": 160,
+    "pam1": 69,
+    "pam2": 24,
+    "time": 130527,
+    "vcas": 1,
+    "vdd18": 1,
+    "vss": 1
+   },
+   "samples": 130527,
+   "sha256": "ee5cdeb4562f31316012cbf46c9f4a33f6d0c3055c762c6edf778534e2bedf1a"
+  },
+  {
+   "bytes": 1159203,
+   "case_id": "HYB-120",
+   "columns": [
+    "time",
+    "Ip_branch:i",
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2",
+    "vdd18",
+    "vss",
+    "vcas",
+    "iref_in",
+    "clamp_node",
+    "data_out"
+   ],
+   "deck_path": "spectre/dd1_d7c_b_tr/HYB-120.pre.scs",
+   "deck_sha256": "3414710860cfc0a6d315337f16b30ce354ce748e9de9e2c42c65c174d74ef482",
+   "ended_utc": "2026-10-26T14:29:46Z",
+   "executor_sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+   "exported": true,
+   "file": "r20261026_132228_3fc148_HYB-120_preflight.sequence.txt",
+   "fragment_windows": 0,
+   "gzip_bytes": 927119,
+   "gzip_sha256": "14e39afaa756b1a6f9f93159248eb392b5651e1ad591d10f27ff3d639b81d57a",
+   "internal_full": false,
+   "launch_id": "T016",
+   "log_sha256": "1ccd2c4a0c3b4cbaa5f78fa8b36689c596bf09ef5392daf7ef1389b8dcddd721",
+   "native_sha256_verified": "504767580ff2cf4d6a8b419770bb237eaee5257972fc136ec0d517192355b9f3",
+   "part_files": [
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_preflight.sequence.part000.txt",
+     "sha256": "80e91471186f2f7aae34d84306649c1adeb88735b25a14fdef8ce7befb52b212"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_preflight.sequence.part001.txt",
+     "sha256": "9753af0a298c4df67a675a415b24ae89726042651406677e83c8525361a4a1f1"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_preflight.sequence.part002.txt",
+     "sha256": "9bae04a1e5c828f150510461b4ccce8b7959e2f03572f225cb3e118e19d84246"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-120_preflight.sequence.part003.txt",
+     "sha256": "371b8a31458790717c23a646ae723393bcbf5fa912bbf4935a42ebd289b83840"
+    },
+    {
+     "bytes": 176163,
+     "part": "r20261026_132228_3fc148_HYB-120_preflight.sequence.part004.txt",
+     "sha256": "c6a603e57b4bde3b30af4ba8b1f280bd66a4dfd37a382ac1813d25368fa60e49"
+    }
+   ],
+   "parts": 5,
+   "plain_bytes": 21019813,
+   "raw_name": "r20261026_132228_3fc148_HYB-120_preflight.raw",
+   "raw_sha256": "504767580ff2cf4d6a8b419770bb237eaee5257972fc136ec0d517192355b9f3",
+   "requested_utc": "2026-10-26T14:29:32Z",
+   "role": "preflight",
+   "run_id": "r20261026_132228_3fc148",
+   "runs": {
+    "Ip_branch:i": 1,
+    "clamp_node": 1,
+    "data_en": 178,
+    "data_out": 1,
+    "iref_in": 428356,
+    "pam0": 111,
+    "pam1": 111,
+    "pam2": 67,
+    "time": 446913,
+    "vcas": 1,
+    "vdd18": 1,
+    "vss": 1
+   },
+   "samples": 446913,
+   "sha256": "102e1b88c13556c98ab0b3166f716510011779650739532ae3edd239344d5b36"
+  },
+  {
+   "bytes": 1693872,
+   "case_id": "HYB-200",
+   "columns": [
+    "time",
+    "Ip_branch:i",
+    "data_en",
+    "pam0",
+    "pam1",
+    "pam2",
+    "vdd18",
+    "vss",
+    "vcas",
+    "iref_in",
+    "clamp_node",
+    "data_out"
+   ],
+   "deck_path": "spectre/dd1_d7c_b_tr/HYB-200.pre.scs",
+   "deck_sha256": "573463e76f93f727e8faf2ca6af106a83f9f8c0e1bfe8287012e464db0a2d913",
+   "ended_utc": "2026-10-26T14:34:11Z",
+   "executor_sha256": "c837893ae2b32309306d3b260bca01a3f7f1223b8d3a187a2072a1e3c14753f7",
+   "exported": true,
+   "file": "r20261026_132228_3fc148_HYB-200_preflight.sequence.txt",
+   "fragment_windows": 0,
+   "gzip_bytes": 1354854,
+   "gzip_sha256": "57de858b190b97c0ed28fe405ddd2686de73635a5015d08f521f1df327e67c78",
+   "internal_full": false,
+   "launch_id": "T018",
+   "log_sha256": "b81e66209603ff326dfc472dd33079e9fa11fd2a547a88adf53a2b0a712fd4bb",
+   "native_sha256_verified": "5210bfb296f62bbd363498487225f633adc26051179662e16920047dbe93b076",
+   "part_files": [
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_preflight.sequence.part000.txt",
+     "sha256": "aebbb1fd1f5fe213aa7d5175bd43e62873810a07068c23ee153734b8d22d7ea8"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_preflight.sequence.part001.txt",
+     "sha256": "055bc98d24189ffdbf95505530cf2144dc699b14cf307bba382917ca69c02aff"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_preflight.sequence.part002.txt",
+     "sha256": "9d350f52d18414f1a86d43afdffd492aeade9fe4ffed1f84a0bdd16c79bcc434"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_preflight.sequence.part003.txt",
+     "sha256": "77949b62826b5d0dc4a8248c954fb77d825394fa60e0a8da39f52c6095f66d6b"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_preflight.sequence.part004.txt",
+     "sha256": "2d8394b0cebe0550b6464c045de1bee288209efb267417e7984a7bea512684ec"
+    },
+    {
+     "bytes": 245760,
+     "part": "r20261026_132228_3fc148_HYB-200_preflight.sequence.part005.txt",
+     "sha256": "837e8a6244b4af6416c255c148ae39d2ecd78fa48865909ad3960d95dac66fd0"
+    },
+    {
+     "bytes": 219312,
+     "part": "r20261026_132228_3fc148_HYB-200_preflight.sequence.part006.txt",
+     "sha256": "21aaf739103d6feaab171db59ea0ba4426ac1bb2c7c8206a8336e3885833c0da"
+    }
+   ],
+   "parts": 7,
+   "plain_bytes": 29963031,
+   "raw_name": "r20261026_132228_3fc148_HYB-200_preflight.raw",
+   "raw_sha256": "5210bfb296f62bbd363498487225f633adc26051179662e16920047dbe93b076",
+   "requested_utc": "2026-10-26T14:33:55Z",
+   "role": "preflight",
+   "run_id": "r20261026_132228_3fc148",
+   "runs": {
+    "Ip_branch:i": 1,
+    "clamp_node": 1,
+    "data_en": 134,
+    "data_out": 1,
+    "iref_in": 609083,
+    "pam0": 67,
+    "pam1": 67,
+    "pam2": 23,
+    "time": 638997,
+    "vcas": 1,
+    "vdd18": 1,
+    "vss": 1
+   },
+   "samples": 638997,
+   "sha256": "19b22c5d3a7bff25dd9c486e493ff3af23303fd0de81b14a7b57059543eba63d"
+  }
+ ],
+ "tracked_bytes": 32193607
+}

@@ -1,0 +1,99 @@
+{
+ "convergence_context_problems": [],
+ "convergence_pairs": 3,
+ "delay_rows": 34,
+ "diff_added_columns": [
+  "settling_dc_last_out_ns",
+  "settling_dc_left_limit_A",
+  "settling_dc_start_ns",
+  "settling_nominal_last_out_ns",
+  "settling_nominal_left_limit_A",
+  "settling_nominal_start_ns"
+ ],
+ "diff_cells": 222,
+ "extracted": [
+  {
+   "case_id": "TR-LONG",
+   "file": "rows_TR-LONG_dut.csv",
+   "rows": 8
+  },
+  {
+   "case_id": "TR-120",
+   "file": "rows_TR-120_dut.csv",
+   "rows": 1
+  },
+  {
+   "case_id": "TR-200",
+   "file": "rows_TR-200_dut.csv",
+   "rows": 1
+  },
+  {
+   "case_id": "TR-OFFCODE",
+   "file": "rows_TR-OFFCODE_dut.csv",
+   "rows": 4
+  },
+  {
+   "case_id": "RS-FULL",
+   "file": "rows_RS-FULL_dut.csv",
+   "rows": 8
+  },
+  {
+   "case_id": "RS-LOW",
+   "file": "rows_RS-LOW_dut.csv",
+   "rows": 1
+  },
+  {
+   "case_id": "RS-SWITCH",
+   "file": "rows_RS-SWITCH_dut.csv",
+   "rows": 4
+  },
+  {
+   "case_id": "HYB-120",
+   "file": "rows_HYB-120_dut.csv",
+   "rows": 6
+  },
+  {
+   "case_id": "HYB-200",
+   "file": "rows_HYB-200_dut.csv",
+   "rows": 4
+  }
+ ],
+ "gate": {
+  "failures": [],
+  "rc": 0,
+  "refused": "",
+  "summary": "RECOMPUTE_R1 gate 837/837"
+ },
+ "guest_connections": 0,
+ "internal_node_rows": 34,
+ "oa_access": 0,
+ "published_tables": [
+  "convergence.csv",
+  "delay_attribution.csv",
+  "internal_nodes_all.csv",
+  "native_sequences",
+  "windows_all.csv"
+ ],
+ "reconversion": [
+  {
+   "black_windows": 2,
+   "case_id": "HYB-120",
+   "deck_problems": [],
+   "deck_sha256": "66bf817daf027b4c97ded93aa7eae7bdfd9ae9e59606b6a3ee379b98928671cf",
+   "frames": 5,
+   "reconverted": true,
+   "vcd_sha256": "0d07a25a55787e3c6eda262e9c03d9b01c30fb21790ef90d49d3af5d604a191f"
+  },
+  {
+   "black_windows": 1,
+   "case_id": "HYB-200",
+   "deck_problems": [],
+   "deck_sha256": "3cb8e6b77170a74cca7bb65044192342c97dd5cf0bb7183b94460658d799e859",
+   "frames": 4,
+   "reconverted": true,
+   "vcd_sha256": "0798d47c83d22b119e7fa4a678449c2e929f23cf106d540c6c4a181ea7211eb1"
+  }
+ ],
+ "simulator_launches": 0,
+ "task_id": "DATA-7C-B-TR"
+}

@@ -1,0 +1,24 @@
+{
+ "native_evidence": "dd1_d7c_b_tr_r20261026_132228_3fc148",
+ "note": "the converter re-read the trace bytes whose digest the native round recorded and the four PWL sources of the delivered run copy, without starting vvp",
+ "runs": [
+  {
+   "black_windows": 2,
+   "case_id": "HYB-120",
+   "deck_problems": [],
+   "deck_sha256": "66bf817daf027b4c97ded93aa7eae7bdfd9ae9e59606b6a3ee379b98928671cf",
+   "frames": 5,
+   "reconverted": true,
+   "vcd_sha256": "0d07a25a55787e3c6eda262e9c03d9b01c30fb21790ef90d49d3af5d604a191f"
+  },
+  {
+   "black_windows": 1,
+   "case_id": "HYB-200",
+   "deck_problems": [],
+   "deck_sha256": "3cb8e6b77170a74cca7bb65044192342c97dd5cf0bb7183b94460658d799e859",
+   "frames": 4,
+   "reconverted": true,
+   "vcd_sha256": "0798d47c83d22b119e7fa4a678449c2e929f23cf106d540c6c4a181ea7211eb1"
+  }
+ ]
+}

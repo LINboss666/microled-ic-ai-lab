@@ -1,0 +1,49 @@
+{
+  "suites": [
+    {
+      "suite": "contract",
+      "rc": 0,
+      "summary": [
+        "TR_CONTRACT_SELFTEST 35/35"
+      ],
+      "exception": null
+    },
+    {
+      "suite": "decks",
+      "rc": 0,
+      "summary": [
+        "TR_DECK_SELFTEST 19/19"
+      ],
+      "exception": null
+    },
+    {
+      "suite": "trace",
+      "rc": 0,
+      "summary": [
+        "TR_TRACE_SELFTEST 40/40"
+      ],
+      "exception": null
+    },
+    {
+      "suite": "measure",
+      "rc": 0,
+      "summary": [
+        "TR_MEASURE_SELFTEST 51/51"
+      ],
+      "exception": null
+    },
+    {
+      "suite": "run",
+      "rc": 0,
+      "summary": [
+        "TR_RUN_SELFTEST 27/27"
+      ],
+      "exception": null
+    }
+  ],
+  "tracked_paths_changed_after_review": [],
+  "new_spectre_launches": 0,
+  "new_rtl_simulations": 0,
+  "new_oa_access": 0,
+  "guest_connections": 0
+}

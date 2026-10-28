@@ -1,0 +1,66 @@
+{
+ "all_three_refused": true,
+ "cases": {
+  "five_process_evidence_rows_as_four": {
+   "failed": [
+    "RECOMPUTE_R1_FAIL five rows that each carry process evidence are five starts, never four <- rows 5, rows with evidence 5, distinct executables 5",
+    "RECOMPUTE_R1_FAIL RTL_PROCESS_COUNT is only claimed where each start has its own process evidence <- rows 5, rows carrying evidence 5, distinct executables 5, so the count of starts this ledger can prove is 5"
+   ],
+   "failed_lines": 2,
+   "injected": "the fifth RTL row was given an executable digest and a return code of its own",
+   "log": "D:\\d7cb_tr_r1_parts_staging\\probe_forgery_final_20261028_021221\\five_process_evidence_rows_as_four\\replay.log",
+   "rc": 1,
+   "refused": "",
+   "refused_by_name": true,
+   "reproduced": true,
+   "summary": "RECOMPUTE_R1 gate 836/838"
+  },
+  "forged_dc_target_and_dynamic_PASS": {
+   "failed": [
+    "RECOMPUTE_R1_FAIL TR-LONG W0: the DC target is the accepted DC table current x the re-derived T50, never the measured charge <- (1.9228391080000008e-12, '1.9174119716e-12', 1.922839108e-06)",
+    "RECOMPUTE_R1_FAIL TR-LONG W0: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one <- (-0.024120606218339006, '0')",
+    "RECOMPUTE_R1_FAIL TR-LONG W1: the DC target is the accepted DC table current x the re-derived T50, never the measured charge <- (3.845677157000006e-12, '3.83386215653e-12', 3.845677157e-06)",
+    "RECOMPUTE_R1_FAIL TR-LONG W1: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one <- (-0.052511113196903145, '0')",
+    "RECOMPUTE_R1_FAIL TR-LONG W2: the DC target is the accepted DC table current x the re-derived T50, never the measured charge <- (5.768515210999995e-12, '5.74780575742e-12', 5.768515211e-06)",
+    "RECOMPUTE_R1_FAIL TR-LONG W2: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one <- (-0.09204201592887913, '0')"
+   ],
+   "failed_lines": 68,
+   "injected": "every DC target replaced by the measured charge and the dynamic verdict written as PASS",
+   "log": "D:\\d7cb_tr_r1_parts_staging\\probe_forgery_final_20261028_021221\\forged_dc_target_and_dynamic_PASS\\replay.log",
+   "rc": 1,
+   "refused": "",
+   "refused_by_name": true,
+   "reproduced": true,
+   "summary": "RECOMPUTE_R1 gate 770/838"
+  },
+  "wrong_reference_tick_1000ns": {
+   "failed": [
+    "RECOMPUTE_R1_FAIL TR-120 W0: the table carries the case reference tick, not its own length <- ('1000.0', 120.0, '1.8750000000000004e-12', 2.25e-13)",
+    "RECOMPUTE_R1_FAIL TR-120 W0: err_nominal_LSB re-derived from the samples and the frozen targets is the published one <- (-0.0208701140024508, '-0.0025044136805333368')",
+    "RECOMPUTE_R1_FAIL TR-120 W0: err_dynamic_LSB re-derived from the samples and the frozen targets is the published one <- (-0.046384304935784174, '-0.005566116592533328')"
+   ],
+   "failed_lines": 3,
+   "injected": "the TR-120 denominator moved to a 1000 ns tick and both errors recomputed for it",
+   "log": "D:\\d7cb_tr_r1_parts_staging\\probe_forgery_final_20261028_021221\\wrong_reference_tick_1000ns\\replay.log",
+   "rc": 1,
+   "refused": "",
+   "refused_by_name": true,
+   "reproduced": true,
+   "summary": "RECOMPUTE_R1 gate 835/838"
+  }
+ },
+ "clean_package": {
+  "failed": [],
+  "failed_lines": 0,
+  "log": "D:\\d7cb_tr_r1_parts_staging\\probe_forgery_final_20261028_021221\\clean\\replay.log",
+  "rc": 0,
+  "refused": "",
+  "summary": "RECOMPUTE_R1 gate 838/838"
+ },
+ "clean_recomputes": true,
+ "native_evidence": "dd1_d7c_b_tr_r20261026_132228_3fc148",
+ "r1_evidence": "dd1_d7c_b_tr_r1_r20261027_143223_4c8a81",
+ "repo": "D:\\ic617_d7c_b_tr_r1",
+ "rtl_simulations": 0,
+ "simulator_launches": 0
+}

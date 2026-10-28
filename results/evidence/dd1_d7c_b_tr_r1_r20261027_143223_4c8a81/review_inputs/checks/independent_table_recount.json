@@ -1,0 +1,1153 @@
+{
+  "checks": 209,
+  "failed": [],
+  "dynamic_failures": [
+    {
+      "case": "TR-OFFCODE",
+      "window": "W3",
+      "error_LSB": "-0.583518980605"
+    },
+    {
+      "case": "RS-SWITCH",
+      "window": "W3",
+      "error_LSB": "-0.582423831012"
+    },
+    {
+      "case": "HYB-120",
+      "window": "W2",
+      "error_LSB": "-0.563928865408"
+    },
+    {
+      "case": "HYB-120",
+      "window": "W3",
+      "error_LSB": "-0.542063361091"
+    }
+  ],
+  "nominal_failures": [
+    {
+      "case": "TR-LONG",
+      "window": "W2",
+      "error_LSB": "0.545803366293"
+    },
+    {
+      "case": "TR-LONG",
+      "window": "W3",
+      "error_LSB": "0.706280980024"
+    },
+    {
+      "case": "TR-LONG",
+      "window": "W4",
+      "error_LSB": "0.855409556653"
+    },
+    {
+      "case": "TR-LONG",
+      "window": "W5",
+      "error_LSB": "0.99352824459"
+    },
+    {
+      "case": "TR-LONG",
+      "window": "W6",
+      "error_LSB": "1.11571052624"
+    },
+    {
+      "case": "TR-LONG",
+      "window": "W7",
+      "error_LSB": "1.22646919766"
+    },
+    {
+      "case": "RS-FULL",
+      "window": "W2",
+      "error_LSB": "0.545746608818"
+    },
+    {
+      "case": "RS-FULL",
+      "window": "W3",
+      "error_LSB": "0.707088451943"
+    },
+    {
+      "case": "RS-FULL",
+      "window": "W4",
+      "error_LSB": "0.856339651359"
+    },
+    {
+      "case": "RS-FULL",
+      "window": "W5",
+      "error_LSB": "0.992955497702"
+    },
+    {
+      "case": "RS-FULL",
+      "window": "W6",
+      "error_LSB": "1.11662059774"
+    },
+    {
+      "case": "RS-FULL",
+      "window": "W7",
+      "error_LSB": "1.22768574946"
+    },
+    {
+      "case": "HYB-120",
+      "window": "W2",
+      "error_LSB": "12.4990879239"
+    },
+    {
+      "case": "HYB-200",
+      "window": "W2",
+      "error_LSB": "12.7233610002"
+    }
+  ],
+  "max_nominal_error_LSB": "12.7233610002",
+  "max_convergence_qlsb": "0.00121655155556",
+  "spectre_reserved_or_charged": 21,
+  "spectre_ceiling": 24,
+  "spectre_remaining": 3,
+  "rtl_rows": 5,
+  "rtl_count_note": "5 rows; one duplicate booking is an executor reconciliation requiring process evidence, not proof from same-second timestamps alone.",
+  "raw_waveform_reintegration": "NOT_POSSIBLE_FROM_GIT_TABLES_ONLY",
+  "details": [
+    {
+      "name": "37 unique complete row keys",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG expected emission count",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W0 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W0 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W0 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W0 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W0 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W1 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W1 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W1 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W1 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W1 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W2 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W2 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W2 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W2 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W2 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W3 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W3 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W3 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W3 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W3 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W4 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W4 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W4 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W4 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W4 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W5 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W5 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W5 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W5 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W5 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W6 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W6 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W6 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W6 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W6 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W7 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W7 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W7 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W7 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG/W7 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-120 expected emission count",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-120/W0 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-120/W0 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-120/W0 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-120/W0 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-120/W0 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-200 expected emission count",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-200/W0 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-200/W0 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-200/W0 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-200/W0 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-200/W0 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE expected emission count",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W0 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W0 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W0 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W0 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W0 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W1 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W1 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W1 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W1 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W1 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W2 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W2 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W2 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W2 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W2 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W3 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W3 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W3 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W3 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE/W3 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL expected emission count",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W0 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W0 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W0 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W0 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W0 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W1 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W1 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W1 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W1 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W1 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W2 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W2 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W2 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W2 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W2 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W3 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W3 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W3 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W3 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W3 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W4 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W4 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W4 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W4 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W4 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W5 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W5 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W5 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W5 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W5 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W6 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W6 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W6 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W6 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W6 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W7 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W7 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W7 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W7 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/W7 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-LOW expected emission count",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-LOW/W0 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-LOW/W0 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-LOW/W0 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-LOW/W0 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-LOW/W0 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH expected emission count",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W0 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W0 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W0 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W0 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W0 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W1 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W1 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W1 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W1 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W1 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W2 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W2 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W2 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W2 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W2 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W3 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W3 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W3 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W3 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/W3 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120 expected emission count",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W0 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W0 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W0 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W0 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W0 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W1 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W1 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W1 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W1 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W1 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W2 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W2 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W2 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W2 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W2 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W3 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W3 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W3 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W3 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/W3 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-200 expected emission count",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-200/W0 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-200/W0 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-200/W0 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-200/W0 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-200/W0 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-200/W1 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-200/W1 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-200/W1 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-200/W1 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-200/W1 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-200/W2 tick, QLSB, PWL crossings and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-200/W2 targets from independent accepted DC and code",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-200/W2 both derived errors",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-200/W2 signed area identity",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-200/W2 full deck hash",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "13 convergence rows",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/TR-LONG/W0 actual joined charge difference and verdict",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/TR-LONG/W1 actual joined charge difference and verdict",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/TR-LONG/W2 actual joined charge difference and verdict",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/TR-LONG/W3 actual joined charge difference and verdict",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/TR-LONG/W4 actual joined charge difference and verdict",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/TR-LONG/W5 actual joined charge difference and verdict",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/TR-LONG/W6 actual joined charge difference and verdict",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL/TR-LONG/W7 actual joined charge difference and verdict",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-LOW/TR-120/W0 actual joined charge difference and verdict",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/TR-OFFCODE/W0 actual joined charge difference and verdict",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/TR-OFFCODE/W1 actual joined charge difference and verdict",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/TR-OFFCODE/W2 actual joined charge difference and verdict",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH/TR-OFFCODE/W3 actual joined charge difference and verdict",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "Spectre 21 reserved/charged of24",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-LONG confirmed PF precedes DUT in submitted account",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-120 confirmed PF precedes DUT in submitted account",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-200 confirmed PF precedes DUT in submitted account",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "TR-OFFCODE confirmed PF precedes DUT in submitted account",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-FULL confirmed PF precedes DUT in submitted account",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-LOW confirmed PF precedes DUT in submitted account",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "RS-SWITCH confirmed PF precedes DUT in submitted account",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120 confirmed PF precedes DUT in submitted account",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-200 confirmed PF precedes DUT in submitted account",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "four dynamic failures and14 nominal failures retained",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/BLACK_B0 black leakage published below150nA",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-120/BLACK_POSTFAULT_A black leakage published below150nA",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "HYB-200/BLACK_B0 black leakage published below150nA",
+      "pass": true,
+      "details": null
+    },
+    {
+      "name": "task has exact approved body after added provenance preface",
+      "pass": true,
+      "details": null
+    }
+  ]
+}

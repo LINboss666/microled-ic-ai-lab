@@ -1,0 +1,43 @@
+{
+  "git_range_diff_check": {
+    "command": "git diff --check 61621f6e3d887082ecd6a7ecc1c771f8e509a24a..398c9e852c16db85cbfa4539e859534e117ff0d2",
+    "rc": 0,
+    "output_lines": 0
+  },
+  "history_gate": {
+    "command": "python3 scripts/precommit_safety_check.py --mode history",
+    "rc": 0,
+    "commits": 227,
+    "objects_checked": 3025,
+    "PDK_TRACKED_FILES": 0,
+    "CREDENTIAL_TRACKED_FILES": 0,
+    "PRIVATE_KEYS_TRACKED_FILES": 0,
+    "VENDOR_MODEL_TRACKED_FILES": 0,
+    "SAFETY_GATE": "PASS"
+  },
+  "provenance": {
+    "command": "python3 scripts/provenance_check.py",
+    "rc": 0,
+    "files": 555,
+    "labelled_lines": 559,
+    "violations": 0
+  },
+  "remote_readback": {
+    "method": "git ls-remote origin refs/heads/main refs/heads/poc/data-pam-d7c-b-tr refs/heads/poc/data-pam-d7c-b-dc-r1",
+    "rc": 0,
+    "refs": {
+      "refs/heads/main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+      "refs/heads/poc/data-pam-d7c-b-tr": "398c9e852c16db85cbfa4539e859534e117ff0d2",
+      "refs/heads/poc/data-pam-d7c-b-dc-r1": "61621f6e3d887082ecd6a7ecc1c771f8e509a24a"
+    },
+    "independent_github_api_readback": "NOT_PERFORMED"
+  },
+  "executor_zip_exact_bytes_verified": false,
+  "native_actions": {
+    "spectre_launches": 0,
+    "rtl_simulations": 0,
+    "oa_access": 0,
+    "guest_connections": 0
+  },
+  "reviewer_script_erratum": "recount_tables.py initially had an unparenthesised generator in max(..., key=float); compile-time SyntaxError, no numeric verdict from that failed attempt. Fixed before the 209-check run."
+}
