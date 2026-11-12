@@ -1,5 +1,6 @@
 {
- "tip_fixture": "copy of the audited checkout, mutations only in the copy",
+ "probe": "R3",
+ "fixture": "copy of the audited checkout; mutations only in the copy",
  "controls": {
   "clean_verify": 0,
   "clean_recompute": 0,
@@ -9,22 +10,30 @@
   {
    "case": "A1_current_unit_V",
    "rc": 1,
-   "named": []
+   "named": [
+    "TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-120_preflight.sequence.txt: column Ip_branch:i is declared in V, the frozen reader uses A"
+   ]
   },
   {
    "case": "A2_vdd18_nan",
    "rc": 1,
-   "named": []
+   "named": [
+    "TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-120_preflight.sequence.txt: column vdd18 carries 780 non-finite value(s), the first nan"
+   ]
   },
   {
    "case": "A3_sample_count_short",
    "rc": 1,
-   "named": []
+   "named": [
+    "TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-120_preflight.sequence.txt: column time declares 780 values against 779 samples"
+   ]
   },
   {
    "case": "A4_time_not_ordered",
    "rc": 1,
-   "named": []
+   "named": [
+    "TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-120_preflight.sequence.txt: the time axis is not strictly increasing at sample 1 (3.53e-09 then 1.53e-09)"
+   ]
   },
   {
    "case": "B1_ledger_uncertain",
@@ -58,14 +67,12 @@
    "case": "D1_label_without_transcript",
    "rc": 1,
    "named": [
-    "refused: no transcript"
+    "the label alone released no charge"
    ]
   }
  ],
+ "all_refused": true,
  "mock_label_without_transcript": {
-  "files": [
-   "reconcile.json"
-  ],
   "transcript_file_supplied": false,
   "account_duplicates": [],
   "account_processes": 2,
