@@ -40,3 +40,14 @@ review ZIP 的 `native_originals/` 与仓库外 scratch，可用 SHA-256 比对�
 path 数据与全部文本标签均未改动），以满足 `git diff --check`。
 重跑 `checks/render_waveforms.py` / `checks/analyze_analog.py` 会再次产生行尾空格，
 需做同样归一化；图形内容一致。
+
+## R2 新增文件（只读补证）
+
+| 文件 | 说明 |
+|---|---|
+| `mc_native_provenance.csv` | 30 个 MC 样本的原生 PSF 路径、字节数、SHA-256、`Ip_out:i` 原始值 |
+| `mc_native_log_extract.txt` | 脱敏的成功/失败日志要点、逐迭代进度、mapping |
+| `mc_mapping.txt` / `mc_iteration_status.txt` | 迭代映射与 29 条逐迭代进度行 |
+| `waveform_correction_manifest.csv` | 被修正的 2 张 SVG 的新旧 SHA、修正原因、源 VCD SHA |
+| `gui_attempt/gui_evidence.txt` | Virtuoso GUI 自动截图的失败证据（221/177 B、IsUnMapped、import 错误） |
+| `failed_r1/` | R1 的旧图与旧 `analog_summary.json`，作为失败/退役样本保留，未删除 |

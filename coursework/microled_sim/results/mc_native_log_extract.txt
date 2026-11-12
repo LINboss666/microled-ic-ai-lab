@@ -1,0 +1,96 @@
+# Monte Carlo native evidence extract (sanitised; no PDK/model/license/private paths)
+# ---- configuration (from course_mc.scs, unchanged) ----
+//   * therefore variations=all (process + mismatch) is legal here.
+// numruns=30 (task ceiling), one seed, no extra seeds / corners / reruns.
+include "${QODER_PDK_LIB}" section=mos_mc
+mc1 montecarlo numruns=30 seed=20261112 variations=all sampling=standard donominal=yes savefamilyplots=yes savedatainseparatedir=yes scalarfile="mc_scalar.txt" paramfile="mc_param.txt" annotate=status {
+# ---- success start log: key lines ----
+Peak resident memory used = 52.4 Mbytes.
+Peak resident memory used = 58.8 Mbytes.
+Peak resident memory used = 59.3 Mbytes.
+Peak resident memory used = 60.3 Mbytes.
+Monte Carlo Analysis `mc1': iteration = (1 -> 30)
+    donominal = yes
+**** Performing nominal run for `mc1'
+Convergence achieved in 6 iterations.
+Peak resident memory used = 61.4 Mbytes.
+    WARNING (SPECTRE-16006): mc1: Redundant monte carlo analysis was encountered. Neither scalar data nor waveform data will be saved.
+Convergence achieved in 7 iterations.
+Peak resident memory used = 61.6 Mbytes.
+Convergence achieved in 6 iterations.
+Peak resident memory used = 61.6 Mbytes.
+Convergence achieved in 6 iterations.
+Peak resident memory used = 61.6 Mbytes.
+Convergence achieved in 6 iterations.
+Peak resident memory used = 61.6 Mbytes.
+Convergence achieved in 6 iterations.
+Peak resident memory used = 61.6 Mbytes.
+Convergence achieved in 6 iterations.
+Peak resident memory used = 61.6 Mbytes.
+Convergence achieved in 7 iterations.
+Peak resident memory used = 61.6 Mbytes.
+Convergence achieved in 6 iterations.
+Peak resident memory used = 61.6 Mbytes.
+Convergence achieved in 6 iterations.
+Peak resident memory used = 61.6 Mbytes.
+Convergence achieved in 6 iterations.
+Peak resident memory used = 61.6 Mbytes.
+Convergence achieved in 6 iterations.
+Peak resident memory used = 61.7 Mbytes.
+Convergence achieved in 6 iterations.
+Peak resident memory used = 61.7 Mbytes.
+Convergence achieved in 5 iterations.
+Peak resident memory used = 61.7 Mbytes.
+Convergence achieved in 6 iterations.
+Peak resident memory used = 61.7 Mbytes.
+Convergence achieved in 6 iterations.
+Peak resident memory used = 61.7 Mbytes.
+# ---- per-iteration progress (first 6 and last 6) ----
+    mc1: iteration = 2           (3.45 %), step = 1            (3.45 %)
+    mc1: iteration = 3            (6.9 %), step = 1            (3.45 %)
+    mc1: iteration = 4           (10.3 %), step = 1            (3.45 %)
+    mc1: iteration = 5           (13.8 %), step = 1            (3.45 %)
+    mc1: iteration = 6           (17.2 %), step = 1            (3.45 %)
+    mc1: iteration = 7           (20.7 %), step = 1            (3.45 %)
+...
+    mc1: iteration = 25          (82.8 %), step = 1            (3.45 %)
+    mc1: iteration = 26          (86.2 %), step = 1            (3.45 %)
+    mc1: iteration = 27          (89.7 %), step = 1            (3.45 %)
+    mc1: iteration = 28          (93.1 %), step = 1            (3.45 %)
+    mc1: iteration = 29          (96.6 %), step = 1            (3.45 %)
+    mc1: iteration = 30           (100 %), step = 1            (3.45 %)
+# ---- first start (parse failure) ----
+    ERROR (SFE-874): "course_mc.scs" 36: Unexpected identifier "dc_mc". Expected end of line.
+spectre completes with 1 error, 1 warning, and 0 notices.
+spectre terminated prematurely due to fatal error.
+# ---- mapping (1..30) ----
+1	course_mc.raw/mc1_separate/mc1-001/
+2	course_mc.raw/mc1_separate/mc1-002/
+3	course_mc.raw/mc1_separate/mc1-003/
+4	course_mc.raw/mc1_separate/mc1-004/
+5	course_mc.raw/mc1_separate/mc1-005/
+6	course_mc.raw/mc1_separate/mc1-006/
+7	course_mc.raw/mc1_separate/mc1-007/
+8	course_mc.raw/mc1_separate/mc1-008/
+9	course_mc.raw/mc1_separate/mc1-009/
+10	course_mc.raw/mc1_separate/mc1-010/
+11	course_mc.raw/mc1_separate/mc1-011/
+12	course_mc.raw/mc1_separate/mc1-012/
+13	course_mc.raw/mc1_separate/mc1-013/
+14	course_mc.raw/mc1_separate/mc1-014/
+15	course_mc.raw/mc1_separate/mc1-015/
+16	course_mc.raw/mc1_separate/mc1-016/
+17	course_mc.raw/mc1_separate/mc1-017/
+18	course_mc.raw/mc1_separate/mc1-018/
+19	course_mc.raw/mc1_separate/mc1-019/
+20	course_mc.raw/mc1_separate/mc1-020/
+21	course_mc.raw/mc1_separate/mc1-021/
+22	course_mc.raw/mc1_separate/mc1-022/
+23	course_mc.raw/mc1_separate/mc1-023/
+24	course_mc.raw/mc1_separate/mc1-024/
+25	course_mc.raw/mc1_separate/mc1-025/
+26	course_mc.raw/mc1_separate/mc1-026/
+27	course_mc.raw/mc1_separate/mc1-027/
+28	course_mc.raw/mc1_separate/mc1-028/
+29	course_mc.raw/mc1_separate/mc1-029/
+30	course_mc.raw/mc1_separate/mc1-030/

@@ -2,6 +2,15 @@
 
 任务号 `COURSE-MICROLED-SIM-20261112-R1` ｜ 2026-11-12
 课程分支：`course/microled-assignment-sim-20261112`
+
+> **R2 变更（相对 R1）**：只做**只读补证与口径修正**，未改 RTL/TB、未启动新仿真。
+> 新增 MC 原生溯源（`results/mc_native_provenance.csv` 等，30/30 与已导出值一致）、
+> 更正 2 张波形图的 `RUN→S_DONE` 为 **18515 ns**（旧图留在 `figures/failed_r1/`）、
+> 90% 改为有定义的 `first_cross_90pct_of_on_median` + 峰峰值 `0.183752892 µA` + ringing 披露、
+> 预算改 **4/12**、`C12` 标注为"至少一位"、`D3` 明确未闭环。
+> Virtuoso GUI 截图仍为 `MANUAL_SCREENSHOT_REQUIRED`（见 `spectre/MANUAL_SCREENSHOT_REQUIRED.md`）。
+> `D1`（失败仍可能 rc=0）与 `D3` 闭环属第二阶段，**尚未授权**。
+> 本轮 HEAD 以 `git rev-parse HEAD` 与包外 `review_package.sha256` / R2 ZIP 的 manifest 为准。
 性质：**课程作业独立交付，不是任何既有轮次的返工、接受登记或 GO**。
 
 ---

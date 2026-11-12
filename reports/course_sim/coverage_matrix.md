@@ -23,7 +23,7 @@
 | §4 DC / 瞬态真实数值 | `results/dc_i_v.csv`、`tran_i_t.csv`、`figures/spectre_*.svg`、`analog_test_report.md` | DONE | 19 点 DC；426 点瞬态；1.20 V = 14.931905740 µA；t90 = 55.94 ns |
 | §4 PDK include 环境变量注入 | `spectre/*.scs`、`pdk_local.env.example` | DONE | 只用 `${QODER_PDK_LIB}`，真实路径未入库 |
 | §5 原生 Monte Carlo（模型 / seed / 样本 / 统计 / 直方图 / CSV / 脚本） | `monte_carlo_report.md`、`results/mc_samples.csv`、`mc_stats.json`、`figures/mc_histogram.svg`、`checks/analyze_analog.py` | **PARTIAL（待裁定）** | 30/30 样本真实；但两次启动与 `SPECTRE-16006` 需复审裁定，见报告 §3/§7 |
-| §6 执行预算与账本 | `results/execution_ledger.csv` | PARTIAL | ModelSim 3/12；Spectre 3/3；MC 1 正式 job（+1 解析失败启动，披露待裁定）；OA 仅新课程库。见 `known_failures_and_limits.md` |
+| §6 执行预算与账本 | `results/execution_ledger.csv` | PARTIAL | ModelSim **4/12**（含一次 .txt 包装还原后的复现）；Spectre 3/3；MC 1 正式 job（+1 解析失败启动，披露待裁定）；OA 仅新课程库。见 `known_failures_and_limits.md` |
 | §7 README 逐项对应 | `coursework/microled_sim/README.md` | DONE | — |
 | §7 rtl / tb / ModelSim 脚本 | `rtl/`、`tb/run_modelsim.sh` | DONE | 可复现 |
 | §7 spectre / checks / figures / results | `spectre/`、`checks/`、`figures/`、`results/` | DONE | — |

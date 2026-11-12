@@ -24,6 +24,7 @@ from collections import defaultdict
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+matplotlib.rcParams['svg.hashsalt'] = 'course-microled-sim-20261112'
 
 
 VAR_RE = re.compile(r"^\$var\s+(\S+)\s+(\d+)\s+(\S+)\s+(\S+)(?:\s+(\[?\d+\]?))?\s+\$end")
@@ -192,15 +193,15 @@ def build_figure(signals, bus_bits, scale_ns, spec, path, sha):
             bus(ax, t, v, name, t0, t1)
     axes[-1].set_xlabel("Time (ns)  |  source: real ModelSim VCD", fontsize=9)
     axes[-1].set_xlim(t0, t1)
-    for mark, text in spec.get("marks", []):
+    for idx, (mark, text) in enumerate(spec.get("marks", [])):
         for ax in axes:
             ax.axvline(mark, color="#d1242f", linewidth=0.8, linestyle="--", alpha=0.65)
-        axes[0].text(mark, 1.5, text, fontsize=8, color="#d1242f",
-                     ha="center", va="bottom", rotation=0)
+        axes[0].text(mark, 1.45 + 0.38 * (idx % 2), text, fontsize=7.5, color="#d1242f",
+                     ha="center", va="bottom", rotation=90)
     fig.suptitle(spec["title"] + "\nVCD SHA-256 " + sha[:24] + "… (full hash in manifest)",
                  fontsize=10, y=0.995)
     fig.tight_layout(rect=[0.10, 0, 1, 0.96])
-    fig.savefig(path, dpi=160, facecolor="white")
+    fig.savefig(path, dpi=160, facecolor="white", metadata={"Date": None})
     plt.close(fig)
 
 
@@ -220,7 +221,8 @@ SPECS = [
         "window": (10800.0, 18550.0),
         "rows": [("pwm_tick", "bit"), ("obs_tick", "bit"), ("data_en", "bit"),
                  ("win_state", "bus"), ("drive_gate", "bit")],
-        "marks": [(10836.0, "window start"), (18396.0, "window end")],
+        "marks": [(10836.0, "window start"), (18396.0, "last obs_tick (+1ns sample)"),
+                  (18515.0, "RUN->S_DONE")],
     },
     {
         "key": "wave_pwm_boundary_zoom",
@@ -228,7 +230,7 @@ SPECS = [
         "window": (18180.0, 18550.0),
         "rows": [("pwm_tick", "bit"), ("obs_tick", "bit"), ("data_en", "bit"),
                  ("win_state", "bus"), ("drive_gate", "bit")],
-        "marks": [(18396.0, "65th tick -> S_DONE")],
+        "marks": [(18396.0, "last obs_tick"), (18515.0, "RUN->S_DONE (65th tick)")],
     },
     {
         "key": "wave_blank_negative",

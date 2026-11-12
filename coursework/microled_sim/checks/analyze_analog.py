@@ -24,6 +24,7 @@ import statistics
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+matplotlib.rcParams['svg.hashsalt'] = 'course-microled-sim-20261112'
 
 
 def read_csv(path):
@@ -118,6 +119,22 @@ def main():
     # end of high plateau: first sample after 4.0us where vcas has returned to ~0
     off_tail = [v for t, v in zip(tr_t, tr_i) if t > 5.0e-6]
 
+    on_min = min(on); on_max = max(on); on_pp = on_max - on_min
+
+    def band_entry(center, pct, lo_t=1.0e-6, hi_t=4.05e-6):
+        lo, hi = center * (1 - pct / 100.0), center * (1 + pct / 100.0)
+        win = [(ti, vi) for ti, vi in zip(tr_t, tr_i) if lo_t <= ti <= hi_t]
+        last_out = -1
+        for i, (ti, vi) in enumerate(win):
+            if vi < lo or vi > hi:
+                last_out = i
+        if last_out + 1 < len(win):
+            return win[last_out + 1][0]
+        return None
+
+    e1 = band_entry(on_med, 1.0)
+    e5 = band_entry(on_med, 5.0)
+
     analog = {
         "dc_sweep": {
             "points": len(dc_v), "vclamp_start_V": dc_v[0], "vclamp_stop_V": dc_v[-1],
@@ -130,15 +147,34 @@ def main():
         "transient": {
             "samples": len(tr_t), "stop_s": tr_t[-1],
             "off_window_t_lt_0p9us": {"samples": len(off), "mean_uA": off_mean,
-                                       "max_abs_uA": off_absmax},
-            "on_window_2us_to_4us_median_uA": on_med,
-            "settling_90pct_of_on_median_s": t90,
-            "settling_90pct_from_enable_start_us": (t90 - 1.0e-6) * 1e6 if t90 else None,
+                                      "max_abs_uA": off_absmax},
+            "on_window_2us_to_4us": {
+                "samples": len(on), "median_uA": on_med, "min_uA": on_min,
+                "max_uA": on_max, "peak_to_peak_uA": on_pp,
+                "peak_to_peak_pct_of_median": 100.0 * on_pp / on_med,
+                "definition": "raw sample min/max inside the high plateau, no smoothing, no discarded samples",
+            },
+            "first_cross_90pct_of_on_median": {
+                "definition": "first interpolated time at which Iout crosses 0.9 x median(Iout in 2us..4us). "
+                              "This is NOT a 'settled and stayed inside a band' criterion; the VCAS 100 ns "
+                              "rising edge is still in progress at that instant.",
+                "time_s": t90,
+                "from_enable_start_ns": (t90 - 1.0e-6) * 1e9 if t90 else None,
+            },
+            "band_entry_pm1pct_s": e1,
+            "band_entry_pm5pct_s": e5,
+            "band_entry_definition": "first sample time after which Iout never leaves median*(1+/-pct) "
+                                     "within 1.0us..4.05us; None means it never settles in that window",
             "off_tail_after_5us_max_abs_uA": max(abs(v) for v in off_tail),
             "rise_region_has_negative_displacement_current": any(v < -0.01 for v in tr_i),
+            "ringing": {
+                "spectre_notices": 7,
+                "suppressed_notices": 365,
+                "source": "course_tran_en.log (reported from the original run, not re-run in R2)",
+                "meaning": "trapezoidal-integration warning on Xdut.Mcas:int_s; a numerical-method notice, "
+                           "NOT a hardware quality or SOA sign-off",
+            },
             "input_csv_sha256": sha256(os.path.join(args.results, "tran_i_t.csv")),
-            "notices": "trapezoidal ringing on Xdut.Mcas:int_s (7 notices, 365 suppressed); "
-                       "numerical-method notice, not an electrical failure",
         },
         "monte_carlo": {"samples": n, "mean_uA": mean, "stdev_uA": sd,
                         "min_uA": vmin, "max_uA": vmax},
@@ -163,7 +199,7 @@ def main():
     ax.legend(fontsize=9)
     ax.grid(alpha=0.3)
     fig.tight_layout()
-    fig.savefig(os.path.join(args.figures, "mc_histogram.svg"), dpi=160, facecolor="white")
+    fig.savefig(os.path.join(args.figures, "mc_histogram.svg"), dpi=160, facecolor="white", metadata={"Date": None})
     plt.close(fig)
 
     # ---- DC I-V -------------------------------------------------------------
@@ -183,7 +219,7 @@ def main():
     ax.legend(fontsize=9)
     ax.grid(alpha=0.3)
     fig.tight_layout()
-    fig.savefig(os.path.join(args.figures, "spectre_dc_iv.svg"), dpi=160, facecolor="white")
+    fig.savefig(os.path.join(args.figures, "spectre_dc_iv.svg"), dpi=160, facecolor="white", metadata={"Date": None})
     plt.close(fig)
 
     # ---- transient full -----------------------------------------------------
@@ -202,7 +238,7 @@ def main():
     axes[1].legend(fontsize=8, loc="upper right")
     axes[1].grid(alpha=0.3)
     fig.tight_layout()
-    fig.savefig(os.path.join(args.figures, "spectre_tran_wave.svg"), dpi=160, facecolor="white")
+    fig.savefig(os.path.join(args.figures, "spectre_tran_wave.svg"), dpi=160, facecolor="white", metadata={"Date": None})
     plt.close(fig)
 
     # ---- transient settling zoom -------------------------------------------
@@ -221,7 +257,7 @@ def main():
     ax.grid(alpha=0.3)
     fig.tight_layout()
     fig.savefig(os.path.join(args.figures, "spectre_tran_settling_zoom.svg"),
-                dpi=160, facecolor="white")
+                dpi=160, facecolor="white", metadata={"Date": None})
     plt.close(fig)
 
     print("MC n=%d mean=%.9f uA sd=%.9f uA min=%.9f max=%.9f" % (n, mean, sd, vmin, vmax))

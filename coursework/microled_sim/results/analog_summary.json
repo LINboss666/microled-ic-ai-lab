@@ -18,13 +18,32 @@
       "mean_uA": 2.7393478260869566e-07,
       "max_abs_uA": 2.74e-07
     },
-    "on_window_2us_to_4us_median_uA": 14.9319057685,
-    "settling_90pct_of_on_median_s": 1.055938117658122e-06,
-    "settling_90pct_from_enable_start_us": 0.055938117658122004,
+    "on_window_2us_to_4us": {
+      "samples": 100,
+      "median_uA": 14.9319057685,
+      "min_uA": 14.840030356,
+      "max_uA": 15.023783248,
+      "peak_to_peak_uA": 0.1837528920000011,
+      "peak_to_peak_pct_of_median": 1.2306057568863173,
+      "definition": "raw sample min/max inside the high plateau, no smoothing, no discarded samples"
+    },
+    "first_cross_90pct_of_on_median": {
+      "definition": "first interpolated time at which Iout crosses 0.9 x median(Iout in 2us..4us). This is NOT a 'settled and stayed inside a band' criterion; the VCAS 100 ns rising edge is still in progress at that instant.",
+      "time_s": 1.055938117658122e-06,
+      "from_enable_start_ns": 55.938117658122
+    },
+    "band_entry_pm1pct_s": 1.10375e-06,
+    "band_entry_pm5pct_s": 1.057897680887e-06,
+    "band_entry_definition": "first sample time after which Iout never leaves median*(1+/-pct) within 1.0us..4.05us; None means it never settles in that window",
     "off_tail_after_5us_max_abs_uA": 2.116e-06,
     "rise_region_has_negative_displacement_current": true,
-    "input_csv_sha256": "76d426905ba2be1682817868bdaa5ec167f270f3554b3875043cd3733ae2cef3",
-    "notices": "trapezoidal ringing on Xdut.Mcas:int_s (7 notices, 365 suppressed); numerical-method notice, not an electrical failure"
+    "ringing": {
+      "spectre_notices": 7,
+      "suppressed_notices": 365,
+      "source": "course_tran_en.log (reported from the original run, not re-run in R2)",
+      "meaning": "trapezoidal-integration warning on Xdut.Mcas:int_s; a numerical-method notice, NOT a hardware quality or SOA sign-off"
+    },
+    "input_csv_sha256": "76d426905ba2be1682817868bdaa5ec167f270f3554b3875043cd3733ae2cef3"
   },
   "monte_carlo": {
     "samples": 30,

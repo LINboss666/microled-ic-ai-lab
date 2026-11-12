@@ -1,0 +1,41 @@
+# Course OA GUI capture attempt (real run, read-only)
+# Date: 2026-11-12T17:55:00+0800
+# Display: :0 (Xorg running)
+GW_READY_MARKER=present (Virtuoso reached the deferred geOpen)
+
+## Image grabs (all attempts)
+gui/root.png bytes=221 sha256=42126a9ee1ddaa034069430f04a23640ab74a74a92f2996522eb1c857ee5ddfa
+gui/topwindow.png bytes=177 sha256=6be923b026f9ff6608b71969d20edfc4d4e723187cf5212e736bdc555e66db09
+gui/child.png = MISSING (import failed: Resource temporarily unavailable)
+
+## Root window tree (Cadence windows)
+        0x2e002ad ": ("Qt-subapplication" "Virtuoso")  900x690+2+26  +192+35
+        0x2e00020 ": ("Qt-subapplication" "Virtuoso")  795x193+2+26  +278+511
+
+## Top window child list (first 12)
+     0x2e00471 (has no name): ()  640x480+0+0  +192+35
+     0x2e0046f (has no name): ()  183x345+0+94  +192+129
+     0x2e0046d (has no name): ()  640x480+0+0  +192+35
+     0x2e0046b (has no name): ()  183x205+0+445  +192+480
+     0x2e00469 (has no name): ()  640x480+0+0  +192+35
+     0x2e00467 (has no name): ()  640x480+0+0  +192+35
+     0x2e00465 (has no name): ()  197x32+370+62  +562+97
+     0x2e00463 (has no name): ()  178x32+567+62  +759+97
+     0x2e00461 (has no name): ()  216x30+684+32  +876+67
+     0x2e0045f (has no name): ()  132x30+552+32  +744+67
+     0x2e0045d (has no name): ()  420x30+132+32  +324+67
+     0x2e0045b (has no name): ()  132x30+0+32  +192+67
+
+## Largest child geometry / map state
+  Width: 640
+  Height: 480
+  Visual Class: TrueColor
+  Class: InputOutput
+  Map State: IsUnMapped
+
+## import error text
+import: unable to read X window image `0x2e00471': Resource temporarily unavailable @ error/xwindow.c/XImportImage/5037.
+
+## Conclusion
+VIRTUOSO_GUI_SCREENSHOT=MANUAL_SCREENSHOT_REQUIRED
+Reason: top-level Qt window yields a uniform blank PNG; the largest child is IsUnMapped and cannot be read by import. This matches the repository-wide build note in skill/sc1_s3c3_gui_body.il.

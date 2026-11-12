@@ -91,3 +91,23 @@ waveform data will be saved.` —— 因为网表里没有定义 `export` 标量
 1. §3 的两次启动是否应计为超出「1 个正式 MC job」上限？若按最严格口径，本项结论应如何改写？
 2. `SPECTRE-16006` 下从逐迭代 PSF 抽取标量，是否可接受为「原生 MC 数值证据」？
 3. 未定义 `export` 表达式是否应视为 MC 设置不完整（`PARTIAL`），即使 30 个样本数值齐全？
+
+## 8. R2 原生溯源补充（只读导出，未重跑 MC）
+
+为回应独立复审 `A2`，本轮从原生主机只读导出以下脱敏证据，**没有启动任何新的 Spectre/MC job**：
+
+| 文件 | 内容 |
+|---|---|
+| `results/mc_native_provenance.csv` | 30 行：迭代号、`mc1-XXX/mc1_dc_mc.dc` 相对路径、字节数、PSF SHA-256、`Ip_out:i` 原始双精度值（A）与 µA 值 |
+| `results/mc_mapping.txt` | `mc1.mapping` 的 1–30 → 目录映射原文（相对路径） |
+| `results/mc_iteration_status.txt` | 成功日志中的逐迭代进度行（`mc1: iteration = 2..30`） |
+| `results/mc_native_log_extract.txt` | 配置行、成功启动关键日志、逐迭代进度首尾、第一次解析失败日志、完整 mapping |
+
+核验结果（离线复算）：`provenance_rows=30`、`distinct_psf_sha256=30`、`distinct_values=30`、
+与 `mc_samples.csv` 逐条比对 **0 mismatch**；30 个 PSF 合计 49,860 B。
+因此"30 行数值的统计正确"现在可追溯为"30 个不同的原生逐迭代输出文件"。
+
+仍然保留的限制：`SPECTRE-16006`（未定义 `export` 标量表达式）意味着 ADE 风格
+`scalarfile/paramfile` 未生成；数值来自逐迭代 PSF，不是 ADE 标量列。
+两次启动的预算口径（1 次解析失败 + 1 次正式 30 样本）仍为
+`BUDGET_EXCEPTION_PENDING_OWNER_DECISION`，不因本轮补证而改变。
