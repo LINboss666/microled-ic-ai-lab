@@ -1,0 +1,47 @@
+{
+ "task_id": "DATA-7C-B-TR-R2",
+ "run_id": "r20261112_144123_c4e480",
+ "created_utc": "2026-11-12T06:41:23.794500+00:00",
+ "base_sha": "ec107af502b729225e49428e4d2d72bffc389dae",
+ "base_tree": "122e6c579390b03b3b414af63b8cd8d30233f199",
+ "new_branch": "poc/data-pam-d7c-b-tr-r2",
+ "worktree": "D:/ic617_d7c_b_tr_r2",
+ "inputs": {
+  "task_zip": "C:/Users/LMX/Downloads/MicroLED_TR_R2_Offline_Rework_Task_20261112.zip",
+  "task_zip_bytes": 60756,
+  "task_zip_sha256": "e8f2902963f31e2e1e1796c704431967418dfae79f7a13f1fdd6b5bf0a7cc7b1",
+  "review_zip_bytes": 44551,
+  "review_zip_sha256": "67ca995b140784c4bff368e4d7b65624de18ae1b2a29d647fca9334067e9b6c6",
+  "addendum_zip_bytes": 22515,
+  "addendum_zip_sha256": "5538d459c9ec16c70d96cf5a0a40bb4785a1b07db635853602fc90f4ee588b84",
+  "original_package": "D:/ic617_d7c_b_tr_r1/review/dd1_d7c_b_tr_package_d6ad344.zip",
+  "original_package_bytes": 23729459,
+  "original_package_sha256": "b669632e07c9805d3766cb932d9e6a8d5e72968dc4e25cb3ca96070372cbe0ee"
+ },
+ "remote_ref_readback": {
+  "main": "23e471cb936b421ee97e1250c3be06edf96f9937",
+  "dc_r1": "61621f6e3d887082ecd6a7ecc1c771f8e509a24a",
+  "prep_r2": "e51c5320a28bd5043e21d08a0be97e9d5612cd16",
+  "tr": "398c9e852c16db85cbfa4539e859534e117ff0d2",
+  "tr_r1": "ec107af502b729225e49428e4d2d72bffc389dae",
+  "tr_r2": "ABSENT"
+ },
+ "frozen_baseline_files": 3246,
+ "events": [
+  {
+   "stage": "S1",
+   "what": "worktree + branch created from BASE; task book copied; frozen face baseline captured",
+   "status": "DONE"
+  }
+ ],
+ "limits": {
+  "new_spectre_launches": 0,
+  "new_rtl_compilations": 0,
+  "new_rtl_simulations": 0,
+  "new_oa_access": 0,
+  "new_guest_connections": 0,
+  "new_pdk_license_or_credential_reads": 0,
+  "acceptance_registered": false,
+  "merge_performed": false
+ }
+}

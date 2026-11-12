@@ -1,0 +1,59 @@
+{
+ "frozen_files": 3246,
+ "identical": 3242,
+ "changed": [
+  {
+   "path": "scripts/dd1_d7c_b_tr_r1_native.py",
+   "mode_before": "100644",
+   "mode_after": "100644",
+   "sha_before": "6465d1383a6e9cf77243ad321ff8fc022e600505",
+   "sha_after": "674d3413b1fe26b1db3dd1e2cc77515bb117362d"
+  },
+  {
+   "path": "scripts/dd1_d7c_b_tr_r1_recompute.py",
+   "mode_before": "100644",
+   "mode_after": "100644",
+   "sha_before": "331851478371908d77b190bde11e0e81b0f0e670",
+   "sha_after": "2e4c9762a4bc4b445347244f354849b8db43cc95"
+  },
+  {
+   "path": "scripts/dd1_d7c_b_tr_record.py",
+   "mode_before": "100644",
+   "mode_after": "100644",
+   "sha_before": "451aff9b5c3cba7292897d5cb3f661c92e2b696e",
+   "sha_after": "3c041358576255a05bd9441293eb7bc7c814b7bc"
+  },
+  {
+   "path": "scripts/dd1_d7c_b_tr_run.py",
+   "mode_before": "100644",
+   "mode_after": "100644",
+   "sha_before": "26f17eb33342688dfe5d8f4069182ca2c387445e",
+   "sha_after": "3e62112e67b17c7b4ac163e5e392374d87d0b5cb"
+  }
+ ],
+ "missing": [],
+ "new_files": [
+  ".git",
+  "reports/tasks/DATA-7C-B-TR-R2.md",
+  "results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480/b4_regression.txt",
+  "results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480/clean_recompute.txt",
+  "results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480/convergence.csv",
+  "results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480/counterexamples/counterexamples.json",
+  "results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480/frozen_baseline.tsv",
+  "results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480/prefix_recompute_stdout.txt",
+  "results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480/prefix_reproduction.json",
+  "results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480/prefix_verify_stderr.txt",
+  "results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480/prefix_verify_stdout.txt",
+  "results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480/r2_inputs.json",
+  "results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480/rtl/dd1_d7c_b_tr_hyb_120.vcd.gz",
+  "results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480/rtl/dd1_d7c_b_tr_hyb_200.vcd.gz",
+  "results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480/status_diff.json",
+  "results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480/statuses.csv",
+  "results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480/statuses_r1_original.csv",
+  "results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480/task_log.json",
+  "results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480/windows_all.csv",
+  "scripts/dd1_d7c_b_tr_r2_probe.py"
+ ],
+ "new_file_count": 20,
+ "note": "compared by Git blob SHA-1 and mode, not by git status; only allowed script edits and new R2 outputs are expected"
+}

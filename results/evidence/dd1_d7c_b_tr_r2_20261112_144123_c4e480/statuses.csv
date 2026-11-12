@@ -1,0 +1,11 @@
+status,verdict,measured,expected,note
+EXECUTION_COMPLETENESS,PASS,18,18,"9 DUT + 9 preflight = 18 planned launches; UNCERTAIN and failed rows stay charged in the original account; measured/expected are launches, not account rows"
+EVIDENCE_INTEGRITY,PASS,37,37,"37 exact windows bound to a confirmed launch id, delivered raw digest and deck digest; container byte coverage is listed separately"
+DYNAMIC_CHARGE_STATUS,FAIL,33,37,"windows with abs(err_dynamic_LSB)<=0.5 against the frozen threshold; the 4 real electrical failures are retained, not repaired"
+NOMINAL_CHARGE_STATUS,FAIL,23,37,windows with abs(err_nominal_LSB)<=0.5 on its own column; the 14 failures are retained
+SETTLING_STATUS,PASS,34,34,"34 emission windows whose settling_dc and settling_nominal are both SETTLED; measured/expected are windows, not two separate targets"
+SHUTOFF_STATUS,PASS,37,37,34 off-tail windows + 3 all-black windows = 37; max abs(I) <= 150 nA
+CONVERGENCE_STATUS,PASS,13,13,"R1 published 13/0, conflating the 13 checked keys with an expected count of zero; R2 reports passed/required = 13/13"
+NATIVE_SEQUENCE_REINTEGRATION,PASS,37,37,"R1 published 835/835 (an internal tool check count); R2 reports windows actually re-integrated = 37/37, tool check counts listed separately"
+RTL_INPUT_PROVENANCE,PASS,2,2,"2/2 real VCD byte identities verified by decompressed SHA-256; limited to delivered VCD, frozen records and actual deck PWL, not a proof of all historical process registrations"
+BUDGET_ACCOUNTING_STATUS,PARTIAL,21,24,"Spectre total limit 24, main ledger ceiling 22, total occupied 21, kept separate; RTL_PROCESS_COUNT=NOT_INDEPENDENTLY_PROVEN; conservative occupancy 5/4 is a risk allowance not a proven five starts; PARTIAL, no refund, no remaining-budget claim; new native authorisation 0"

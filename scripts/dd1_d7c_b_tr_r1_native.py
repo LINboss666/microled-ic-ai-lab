@@ -23,17 +23,32 @@ ROOT = os.path.dirname(HERE)
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
-import dd1_d7c_b_dc_run as DC
-import dd1_d7c_b_tr_contract as TRC
-import dd1_d7c_b_tr_measure as MEAS
-import dd1_d7c_b_tr_record as REC
-import dd1_d7c_b_tr_run as RUN
+# B5: the verification entry is the portability promise. Nothing that reads the object
+# store may execute at import time: those primitives are loaded only by the producer-side
+# entries (--export / --budget / --selftest), never by --verify.
+DC = TRC = MEAS = REC = RUN = None
+INTERNAL_COLUMNS = ()
+ALWAYS = ()
+
+
+def load_engineering():
+    """Import the Git-bound primitives lazily; --verify never calls this."""
+    global DC, TRC, MEAS, REC, RUN, INTERNAL_COLUMNS, ALWAYS
+    if TRC is not None:
+        return
+    import dd1_d7c_b_dc_run as _DC
+    import dd1_d7c_b_tr_contract as _TRC
+    import dd1_d7c_b_tr_measure as _MEAS
+    import dd1_d7c_b_tr_record as _REC
+    import dd1_d7c_b_tr_run as _RUN
+    DC, TRC, MEAS, REC, RUN = _DC, _TRC, _MEAS, _REC, _RUN
+    nodes = _TRC.contract()['required_signals']['internal_nodes']
+    INTERNAL_COLUMNS = tuple(nodes['en'] + nodes['enb'] + nodes['vbias_ch'] + nodes['node_m'])
+    ALWAYS = tuple(name for name in _TRC.contract()['required_signals']['always_extracted']
+                   if name != 'Ip_branch_current')
+
 
 MAGIC = 'TR1NATIVESEQ 1'
-INTERNAL = TRC.contract()['required_signals']['internal_nodes']
-INTERNAL_COLUMNS = (INTERNAL['en'] + INTERNAL['enb'] + INTERNAL['vbias_ch'] + INTERNAL['node_m'])
-ALWAYS = [name for name in TRC.contract()['required_signals']['always_extracted']
-          if name != 'Ip_branch_current']
 FULL_INTERNAL_SAMPLES = 20000            # a run this short ships every column it printed
 FLAT_TAIL_NS = 50.0                      # the flat-step tail the task book asks for
 EDGE_LOOK_NS = 25.0                      # native samples kept around each enable edge
@@ -438,86 +453,239 @@ def discard_artifact(path):
     return removed
 
 
-def verify(out_dir):
-    """re-join every split artifact this round wrote and prove the parts rebuild it byte for byte
+def _r2_find_root(start):
+    """the package root that carries the frozen contract; no Git involved"""
+    here = os.path.abspath(start)
+    while True:
+        if os.path.isfile(os.path.join(here, 'tests', 'dd1_d7c_b_tr', 'contract.json')):
+            return here
+        parent = os.path.dirname(here)
+        if parent == here:
+            raise Refuse('no frozen contract above %s' % start)
+        here = parent
 
-    The parts exist only to fit the history gate, so the property that matters is that the numbering
-    is continuous without a gap or a repeat and that the concatenation matches the whole-file bytes
-    and digest the manifest records. A part that is missing, duplicated or altered is a problem, not
-    a smaller file to read.
+
+def _r2_payload(folder, part_names):
+    """rejoin declared parts (or one whole), then decode the base85/gzip container"""
+    chunks = []
+    for name in part_names:
+        with io.open(os.path.join(folder, name), 'rb') as handle:
+            chunks.append(handle.read())
+    text = b''.join(chunks).decode('utf-8', 'replace')
+    if text.startswith('TR1CONTAINER 1'):
+        raw = gzip.decompress(base64.b85decode(text.split(chr(10) + chr(10), 1)[1].strip()))
+        return raw.decode('utf-8', 'replace').splitlines()
+    return gzip.decompress(b''.join(chunks)).decode('utf-8', 'replace').splitlines()
+
+
+def _r2_preflight_semantics(lines, entry, env, label, problems):
+    """B1: re-judge a preflight from its own bytes and the frozen environment, not from statuses.csv"""
+    head = {}
+    for line in lines:
+        if line.startswith('column '):
+            break
+        if line.startswith('# ') and '=' in line:
+            key, value = line[2:].split('=', 1)
+            head[key] = value
+    expect_head = {'native_axis_unit': 's', 'native_current_column': 'Ip_branch:i',
+                   'simulator_name': 'spectre', 'role': 'preflight'}
+    for key, value in expect_head.items():
+        if head.get(key) != value:
+            problems.append('%s: preflight declares %s=%r, frozen environment requires %r'
+                            % (label, key, head.get(key), value))
+    for key in ('deck_sha256', 'launch_id', 'raw_sha256', 'log_sha256', 'native_run_id'):
+        if entry.get(key) and head.get(key) != entry[key]:
+            problems.append('%s: preflight %s=%r disagrees with the manifest %r'
+                            % (label, key, head.get(key), entry[key]))
+    declared = head.get('native_samples')
+    if declared != str(entry.get('samples')):
+        problems.append('%s: preflight declares %s samples against the manifest %s'
+                        % (label, declared, entry.get('samples')))
+    frozen = {'vdd18': ('V', env['vdd18_V']), 'vss': ('V', env['vss_V']),
+              'vcas': ('V', env['vcas_V']), 'clamp_node': ('V', env['clamp_V']),
+              'data_out': ('V', env['clamp_V'])}
+    found = {}
+    for index, line in enumerate(lines):
+        if not line.startswith('column '):
+            continue
+        fields = line.split()
+        if len(fields) < 7:
+            continue
+        name, unit, encoding = fields[1], fields[3], fields[5]
+        if encoding != 'CONSTANT' or name not in frozen:
+            continue
+        if index + 1 >= len(lines):
+            problems.append('%s: constant column %s carries no token' % (label, name))
+            continue
+        token = lines[index + 1].split()[-1]
+        try:
+            found[name] = (unit, float(token))
+        except ValueError:
+            problems.append('%s: constant column %s token %r is not a number' % (label, name, token))
+    for name, (unit, value) in frozen.items():
+        if name not in found:
+            problems.append('%s: no constant %s column in the delivered preflight' % (label, name))
+            continue
+        got_unit, got_value = found[name]
+        if got_unit != unit or abs(got_value - value) > 1e-6:
+            problems.append('%s: %s is %r %s against the frozen %r %s'
+                            % (label, name, got_value, got_unit, value, unit))
+
+
+def verify(out_dir):
+    """B1/B5: prove every delivered object against the manifest, with no Git and no project imports.
+
+    R1 only checked isfile() for unsplit containers and never walked internal_fragment, so a
+    same-size corrupted whole or fragment was accepted. R2 checks length + SHA-256 for whole,
+    parts, frozen dependencies and every nested fragment; part numbering and uniqueness; rejoined
+    totals; the exact delivered file set; duplicate evidence identities; and re-judges each
+    preflight from its own sequence bytes and the frozen electrical environment.
     """
+    problems, checked, excluded = [], 0, []
     manifest = json.loads(io.open(os.path.join(out_dir, 'native_manifest.json'),
                                   encoding='utf-8').read())
-    directory = os.path.join(out_dir, 'native_sequences')
-    dependencies = os.path.join(out_dir, 'dependencies')
-    problems, checked, excluded = [], 0, []
-    for entry in manifest['files']:
-        if entry.get('dependency'):
-            # a frozen dependency is shipped as its own bytes, so the property to prove is that the
-            # copy on disk is the digest the manifest and the committed blob both claim
-            name = entry['dependency']
-            path = os.path.join(dependencies, name)
-            if not entry.get('exported'):
-                excluded.append('%s: not delivered (%s)' % (name, entry.get('gap')))
-            elif not os.path.isfile(path):
-                problems.append('%s is recorded as an exported dependency but is not on disk' % name)
-            elif (os.path.getsize(path) != entry['bytes']
-                  or sha_of(path) != entry['sha256']):
-                problems.append('%s is not the digest and byte count the manifest records' % name)
-            else:
-                checked += 1
-            continue
-        # a sequence names its own container; a delivered trace keeps the container under the
-        # 'container_' prefix because its own 'sha256' is the digest of the uncompressed trace
-        name = entry.get('file') or entry.get('container_file')
-        size = entry.get('bytes') if entry.get('file') else entry.get('container_bytes')
-        digest = entry.get('sha256') if entry.get('file') else entry.get('whole_sha256')
-        if entry.get('tracked_copy') is False:
-            excluded.append('%s: recorded by digest only (%s)' % (entry.get('name'),
-                                                                  entry.get('gap')))
-            continue
-        if not entry.get('part_files'):
-            if entry.get('exported') and name:
-                if os.path.isfile(os.path.join(directory, name)):
-                    checked += 1
-                else:
-                    problems.append('%s is recorded as exported but is not on disk' % name)
-            elif not entry.get('exported'):
-                excluded.append('%s: not delivered (%s)' % (name or entry.get('name'),
-                                                            entry.get('gap')))
-            continue
-        names = [item['part'] for item in entry['part_files']]
-        numbers = sorted(int(name.split('.part')[1].split('.txt')[0]) for name in names)
-        if len(set(names)) != len(names):
-            problems.append('%s lists the same part twice' % name)
-            continue
-        if numbers != list(range(len(numbers))):
-            problems.append('%s parts are numbered %s, not a continuous run from zero'
-                            % (name, numbers))
-            continue
-        data = b''
-        for item in sorted(entry['part_files'], key=lambda row: row['part']):
-            path = os.path.join(directory, item['part'])
-            if not os.path.isfile(path):
-                problems.append('%s is named by the manifest and not on disk' % item['part'])
-                break
-            chunk = io.open(path, 'rb').read()
-            if len(chunk) != item['bytes'] or hashlib.sha256(chunk).hexdigest() != item['sha256']:
-                problems.append('%s does not match the bytes and digest recorded for it'
-                                % item['part'])
-                break
-            data += chunk
-        else:
-            if len(data) != size:
-                problems.append('%s rejoins to %d bytes against the recorded %s'
-                                % (name, len(data), size))
-            elif hashlib.sha256(data).hexdigest() != digest:
-                problems.append('%s rejoins to another digest than the manifest records' % name)
-            else:
-                checked += 1
-    return {'artifacts_verified': checked, 'artifacts_recorded': len(manifest['files']),
-            'artifacts_excluded': len(excluded), 'excluded': excluded, 'problems': problems}
+    entries = manifest.get('files')
+    if not isinstance(entries, list) or not entries:
+        raise Refuse('native_manifest.json carries no files list')
+    seq_dir = os.path.join(out_dir, 'native_sequences')
+    dep_dir = os.path.join(out_dir, 'dependencies')
+    folders = {'native_sequences': seq_dir, 'dependencies': dep_dir}
+    declared = {}       # (folder, name) -> (bytes, sha256, label)
+    groups = []         # (label, folder, [part rows], total_bytes, total_sha)
+    preflights = []     # (label, folder, [part names], entry)
+    hex_re = re.compile(r'^[0-9a-f]{64}$')
 
+    def add(folder_key, name, size, digest, label):
+        if (not isinstance(name, str) or not name or os.path.isabs(name) or '\\' in name
+                or '..' in name.split('/')):
+            problems.append('%s declares an unsafe path %r' % (label, name))
+            return False
+        if not isinstance(size, int) or size < 0 or not isinstance(digest, str) \
+                or not hex_re.match(digest):
+            problems.append('%s: %s has no usable byte count and SHA-256' % (label, name))
+            return False
+        key = (folder_key, name)
+        if key in declared:
+            problems.append('%s declares %s twice (duplicate evidence identity)' % (label, name))
+            return False
+        declared[key] = (size, digest, label)
+        return True
+
+    def walk(obj, folder_key, label, entry):
+        global_checked = [0]
+        name = obj.get('file') or obj.get('container_file')
+        size = obj.get('bytes') if obj.get('file') else obj.get('container_bytes')
+        digest = obj.get('sha256') if obj.get('file') else obj.get('whole_sha256')
+        parts = obj.get('part_files') or []
+        if parts:
+            names = [row.get('part') for row in parts]
+            if any(not isinstance(n, str) or not n for n in names) \
+                    or len(set(names)) != len(names):
+                problems.append('%s: parts are unnamed or repeated' % label)
+                return 0
+            numbers = []
+            for part_name in names:
+                found = re.search(r'\.part(\d+)\.txt$', part_name)
+                if not found:
+                    problems.append('%s: part %s is not numbered' % (label, part_name))
+                    return 0
+                numbers.append(int(found.group(1)))
+            if sorted(numbers) != list(range(len(numbers))):
+                problems.append('%s: part numbering %s is not continuous from zero'
+                                % (label, sorted(numbers)))
+                return 0
+            ordered = sorted(parts, key=lambda row: row['part'])
+            if not all(add(folder_key, row['part'], row.get('bytes'), row.get('sha256'), label)
+                       for row in ordered):
+                return 0
+            groups.append((label, folder_key, ordered, size, digest))
+            part_names = [row['part'] for row in ordered]
+        else:
+            if not name:
+                problems.append('%s has no delivered object name' % label)
+                return 0
+            if not add(folder_key, name, size, digest, label):
+                return 0
+            part_names = [name]
+        if entry.get('role') == 'preflight':
+            preflights.append((label, folder_key, part_names, entry))
+        return 1
+
+    for entry in entries:
+        label = entry.get('file') or entry.get('dependency') or entry.get('name') or '<unnamed>'
+        if entry.get('dependency'):
+            if not entry.get('exported'):
+                excluded.append('%s: not delivered (%s)' % (label, entry.get('gap')))
+            elif add('dependencies', entry['dependency'], entry.get('bytes'),
+                     entry.get('sha256'), label):
+                checked += 1
+            continue
+        if entry.get('tracked_copy') is False:
+            excluded.append('%s: recorded by digest only (%s)' % (label, entry.get('gap')))
+            continue
+        if not entry.get('exported'):
+            excluded.append('%s: not delivered (%s)' % (label, entry.get('gap')))
+            continue
+        checked += walk(entry, 'native_sequences', label, entry)
+        nested = entry.get('internal_fragment')
+        if isinstance(nested, dict):
+            checked += walk(nested, 'native_sequences',
+                            label + ' [internal_fragment]', entry)
+        elif nested:
+            excluded.append('%s [internal_fragment]: %s (not a delivered object)'
+                            % (label, nested))
+
+    # the exact delivered file set: no undeclared content, no missing content
+    for folder_key, path in folders.items():
+        if not os.path.isdir(path):
+            problems.append('%s directory is missing' % folder_key)
+            continue
+        actual = set(name for name in os.listdir(path)
+                     if os.path.isfile(os.path.join(path, name)))
+        expected = set(name for (key, name) in declared if key == folder_key)
+        for name in sorted(actual - expected):
+            problems.append('%s/%s is undeclared delivered content' % (folder_key, name))
+        for name in sorted(expected - actual):
+            problems.append('%s/%s is declared by the manifest and not on disk' % (folder_key, name))
+
+    for (folder_key, name), (size, digest, label) in sorted(declared.items()):
+        path = os.path.join(folders[folder_key], name)
+        if not os.path.isfile(path):
+            continue
+        data = io.open(path, 'rb').read()
+        if len(data) != size or hashlib.sha256(data).hexdigest() != digest:
+            problems.append('%s: %s does not match the bytes and digest recorded for it'
+                            % (label, name))
+
+    for label, folder_key, ordered, size, digest in groups:
+        data = b''.join(io.open(os.path.join(folders[folder_key], row['part']), 'rb').read()
+                        for row in ordered
+                        if os.path.isfile(os.path.join(folders[folder_key], row['part'])))
+        if not isinstance(size, int) or not isinstance(digest, str):
+            problems.append('%s: rejoined object has no recorded total size and digest' % label)
+        elif len(data) != size or hashlib.sha256(data).hexdigest() != digest:
+            problems.append('%s: parts rejoin to %d bytes / another digest than the manifest records'
+                            % (label, len(data)))
+
+    if preflights:
+        try:
+            contract = json.loads(io.open(os.path.join(_r2_find_root(out_dir), 'tests',
+                                                       'dd1_d7c_b_tr', 'contract.json'),
+                                         encoding='utf-8').read())
+            env = contract['electrical_environment']
+        except (KeyError, IOError, ValueError) as exc:
+            problems.append('frozen electrical environment is unreadable: %s' % exc)
+            env = None
+        if env:
+            for label, folder_key, part_names, entry in preflights:
+                try:
+                    _r2_preflight_semantics(_r2_payload(folders[folder_key], part_names),
+                                            entry, env, label, problems)
+                except (IOError, ValueError, IndexError) as exc:
+                    problems.append('%s: preflight sequence cannot be decoded: %s' % (label, exc))
+
+    return {'artifacts_verified': checked, 'artifacts_recorded': len(entries),
+            'artifacts_excluded': len(excluded), 'excluded': excluded, 'problems': problems}
 
 def budget(local_dir, old_evidence):
     """what a full export would cost, measured on the real files before anything is written"""
@@ -898,6 +1066,8 @@ def selftest():
 
 def main(argv):
     mode = argv[0] if argv else '--selftest'
+    if mode in ('--selftest', '--budget', '--export'):
+        load_engineering()
     if mode == '--selftest':
         results = selftest()
         failures = [name for name, ok, extra in results if not ok]

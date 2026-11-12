@@ -199,27 +199,57 @@ def completeness(directory):
             'note': note, 'missing': missing}
 
 
-def derive_duplicates(rtl_rows):
-    """the second bookings of an already-charged process, derived from the ledger alone
+def _unique_start_token(row):
+    """B4: the only admissible proof of a double booking is an explicit per-start transcript link"""
+    text = row.get('refusal') or ''
+    marker = 'UNIQUE_START_TRANSCRIPT:'
+    if marker not in text:
+        return None
+    token = text.split(marker, 1)[1].split()[0]
+    return token or None
 
-    A row frees nothing unless the ledger proves it: it must carry no process evidence of its own and
-    name a witness row reserved in the same second for the same case that does carry it. Anything else
-    stays charged, so a recovery can never refund a simulator start by editing a file.
+
+def derive_duplicates(rtl_rows):
+    """B4: a duplicate booking is proven by a mechanical link, never by a missing field.
+
+    R1 inferred a duplicate from "same case, same second, no process fields". One program can
+    start twice, and an UNCERTAIN row with no rc does not prove no subprocess ran. A row frees
+    nothing unless BOTH it and one witness carry the SAME explicit unique-start transcript
+    token, and the witness carries its own executable, rc and log identity. Anything else stays
+    charged. The delivered R1 ledger carries no such token, so this returns no duplicates and
+    the process count is reported as NOT_INDEPENDENTLY_PROVEN.
     """
-    by_id = dict((row['sim_id'], row) for row in rtl_rows)
+    witness_keys = ('exe_sha256', 'rc', 'log_sha256')
     out = []
     for row in rtl_rows:
         if any(row.get(key) for key in RUN.PROCESS_EVIDENCE_KEYS):
             continue
+        token = _unique_start_token(row)
+        if not token:
+            continue
         witnesses = [other for other in rtl_rows
                      if other['sim_id'] != row['sim_id']
-                     and other['case_id'] == row['case_id']
-                     and other['requested_utc'] == row['requested_utc']
-                     and any(other.get(key) for key in RUN.COMPILED_TARGET_KEYS)]
+                     and _unique_start_token(other) == token
+                     and all(other.get(key) for key in witness_keys)]
         if len(witnesses) == 1:
             out.append((row['sim_id'], witnesses[0]['sim_id']))
     return out
 
+
+def rtl_process_finding(rtl_rows):
+    """B4: the honest count, or an explicit refusal to guess from program identities"""
+    duplicates = derive_duplicates(rtl_rows)
+    weak = any(not row.get('rc') or not row.get('exe_sha256') for row in rtl_rows)
+    return {'rtl_process_count': 'NOT_INDEPENDENTLY_PROVEN' if weak
+            else str(len(rtl_rows) - len(duplicates)),
+            'rows': len(rtl_rows), 'rows_with_per_launch_evidence':
+            sum(1 for row in rtl_rows if row.get('rc') and row.get('exe_sha256')
+                and row.get('log_sha256')),
+            'proven_duplicates': [dup for dup, _w in duplicates],
+            'conservative_occupancy': len(rtl_rows),
+            'ceiling': TRC.RTL_LIMIT,
+            'note': 'a conservative occupancy is a risk allowance, not an assertion that '
+                    'that many processes really started; the five original rows are unchanged'}
 
 def reconciliation_file(directory):
     return os.path.join(directory, 'rtl_process_reconciliation.json')

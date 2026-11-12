@@ -338,9 +338,10 @@ class Recompute(object):
     NEW_STATUSES = ('NATIVE_SEQUENCE_REINTEGRATION', 'RTL_INPUT_PROVENANCE',
                     'BUDGET_ACCOUNTING_STATUS')
 
-    def __init__(self, root, require_new_statuses=True):
+    def __init__(self, root, require_new_statuses=True, inputs=None):
         self.root = root
-        self.evidence = self.find_evidence()
+        self.r2_inputs = inputs or {}
+        self.evidence = self.r2_inputs.get('evidence') or self.find_evidence()
         self.contract = json.loads(io.open(os.path.join(root, 'tests', 'dd1_d7c_b_tr',
                                                          'contract.json'), encoding='utf-8').read())
         self.environment = self.contract['electrical_environment']
@@ -922,7 +923,192 @@ class Recompute(object):
                     '500 ps to 1500 ps is 3.5 nC', abs(endpoint['q'] - 3.5e-9) <= 1e-20,
                     endpoint['q'])
 
+    def r2_convergence_keys(self):
+        """B3: the frozen 13 keys come from the task book and the contract, never from the CSV judged"""
+        pairs = self.contract['convergence']['pairs']
+        contract_pairs = set((row['refined'], row['coarse']) for row in pairs)
+        table = {
+            ('RS-FULL', 'TR-LONG'): [('W%d' % i, format(i, '03b')) for i in range(8)],
+            ('RS-LOW', 'TR-120'): [('W0', '000')],
+            ('RS-SWITCH', 'TR-OFFCODE'): [('W0', '011'), ('W1', '100'),
+                                          ('W2', '000'), ('W3', '111')],
+        }
+        if set(table) != contract_pairs:
+            raise Refuse('the frozen convergence pairs do not match the contract pairs')
+        keys = set()
+        for (refined, coarse), rows in table.items():
+            for window, code in rows:
+                keys.add(('%s/%s' % (refined, coarse), refined, coarse, window, code))
+        return keys
+
+    def r2_convergence_checks(self):
+        frozen = self.r2_convergence_keys()
+        limit = float(self.contract['convergence']['limit_rel_qlsb'])
+        fields = ('pair', 'refined_case', 'coarse_case', 'window_id', 'code', 'tick_ns',
+                  'qlsb_C', 'refined_q_C', 'coarse_q_C', 'dq_C', 'abs_dq_over_qlsb',
+                  'status', 'context_match')
+        key_fields = ('pair', 'refined_case', 'coarse_case', 'window_id', 'code')
+        seen = {}
+        for row in self.convergence:
+            for field in fields:
+                if row.get(field) in (None, ''):
+                    raise Refuse('B3: convergence row %s has an empty %s; a missing context is a '
+                                 'refusal, not a match between two blanks'
+                                 % (row.get('pair'), field))
+            key = tuple(row[field] for field in key_fields)
+            if key in seen:
+                raise Refuse('B3: convergence key %s is published twice' % (key,))
+            if key not in frozen:
+                raise Refuse('B3: convergence key %s is not a frozen pair/window/code' % (key,))
+            seen[key] = row
+        missing = frozen - set(seen)
+        if missing:
+            raise Refuse('B3: convergence table is missing %d frozen keys, e.g. %s'
+                         % (len(missing), sorted(missing)[:3]))
+        for key, row in seen.items():
+            try:
+                tick, qlsb = float(row['tick_ns']), float(row['qlsb_C'])
+                refined, coarse = float(row['refined_q_C']), float(row['coarse_q_C'])
+                dq, ratio = float(row['dq_C']), float(row['abs_dq_over_qlsb'])
+            except ValueError as error:
+                raise Refuse('B3: convergence key %s carries a non-numeric field: %s' % (key, error))
+            if not all(math.isfinite(v) for v in (tick, qlsb, refined, coarse, dq, ratio)):
+                raise Refuse('B3: convergence key %s carries a non-finite number' % (key,))
+            if qlsb <= 0 or abs(qlsb - 1.875e-6 * tick * 1e-9) > 1e-30:
+                raise Refuse('B3: convergence key %s does not divide by 1.875 uA x reference tick'
+                             % (key,))
+            if abs(dq - (refined - coarse)) > 1e-20:
+                raise Refuse('B3: convergence key %s publishes dQ=%r but refined-coarse=%r'
+                             % (key, dq, refined - coarse))
+            if abs(abs(dq) / qlsb - ratio) > 1e-6 * max(ratio, 1e-9):
+                raise Refuse('B3: convergence key %s ratio is not |dQ|/QLSB' % (key,))
+            if (row['status'] == 'PASS') != (ratio <= limit):
+                raise Refuse('B3: convergence key %s verdict does not follow the frozen %g limit'
+                             % (key, limit))
+        self.record('B3: all 13 frozen convergence keys are present exactly once and re-judged',
+                    True, len(seen))
+
+    def r2_vcd_verified(self):
+        """B2: RTL_INPUT_PROVENANCE is 2/2 only by reading the two real VCD bytes"""
+        expected = {'HYB-120': '0d07a25a55787e3c6eda262e9c03d9b01c30fb21790ef90d49d3af5d604a191f',
+                    'HYB-200': '0798d47c83d22b119e7fa4a678449c2e929f23cf106d540c6c4a181ea7211eb1'}
+        folder = self.r2_inputs.get('vcd_dir') or os.path.join(self.evidence['native'], 'rtl')
+        found = 0
+        for case, digest in expected.items():
+            path = os.path.join(folder, 'dd1_d7c_b_tr_hyb_%s.vcd.gz' % case.split('-')[1])
+            if not os.path.isfile(path):
+                continue
+            try:
+                raw = gzip.decompress(io.open(path, 'rb').read())
+            except (IOError, OSError, EOFError):
+                continue
+            if hashlib.sha256(raw).hexdigest() == digest:
+                found += 1
+        return found
+
+    def r2_status_checks(self, emission, black):
+        """B2: an exact ten-status set, each verdict/measured/expected derived from actual inputs"""
+        names = ('EXECUTION_COMPLETENESS', 'EVIDENCE_INTEGRITY', 'DYNAMIC_CHARGE_STATUS',
+                 'NOMINAL_CHARGE_STATUS', 'SETTLING_STATUS', 'SHUTOFF_STATUS',
+                 'CONVERGENCE_STATUS') + self.NEW_STATUSES
+        rows = self.statuses
+        seen = [row.get('status') for row in rows]
+        repeats = sorted(set(name for name in seen if seen.count(name) > 1))
+        if repeats:
+            raise Refuse('B2: the status table repeats names %s' % repeats)
+        if set(seen) != set(names):
+            raise Refuse('B2: status set differs from the frozen ten: missing=%s extra=%s'
+                         % (sorted(set(names) - set(seen)), sorted(set(seen) - set(names))))
+        allowed = ('PASS', 'FAIL', 'PARTIAL', 'NOT_VERIFIED', 'UNKNOWN',
+                   'NOT_INDEPENDENTLY_PROVEN')
+        by = {}
+        for row in rows:
+            if row.get('verdict') not in allowed:
+                raise Refuse('B2: status %s carries an illegal verdict %r'
+                             % (row['status'], row.get('verdict')))
+            for field in ('measured', 'expected', 'note'):
+                if row.get(field) in (None, ''):
+                    raise Refuse('B2: status %s has an empty %s' % (row['status'], field))
+            for field in ('measured', 'expected'):
+                try:
+                    value = float(row[field])
+                except ValueError:
+                    raise Refuse('B2: status %s %s=%r is not a number'
+                                 % (row['status'], field, row[field]))
+                if not math.isfinite(value):
+                    raise Refuse('B2: status %s %s is not finite' % (row['status'], field))
+            by[row['status']] = row
+        windows = emission + black
+        dynamic_ok = sum(1 for row in windows if abs(float(row['err_dynamic_LSB'])) <= 0.5)
+        nominal_ok = sum(1 for row in windows if abs(float(row['err_nominal_LSB'])) <= 0.5)
+        unsettled = [row for row in emission
+                     if row['settling_dc'] != 'SETTLED' or row['settling_nominal'] != 'SETTLED']
+        leak_over = [row for row in windows if float(row['leak_max_abs_A']) > 0.15e-6]
+        bound = sum(1 for row in windows
+                    if row.get('launch_id') and row.get('deck_sha256') and row.get('raw_sha256'))
+        converged = sum(1 for row in self.convergence if row['status'] == 'PASS')
+        manifest = json.loads(io.open(self.path('r1', 'native_manifest.json'),
+                                      encoding='utf-8').read())
+        delivered = len([entry for entry in manifest['files']
+                         if entry.get('exported') and not entry.get('dependency')
+                         and entry.get('role') in ('dut', 'preflight')])
+        vcd = self.r2_vcd_verified()
+        facts = {
+            'EXECUTION_COMPLETENESS': ('PASS', delivered, 18),
+            'EVIDENCE_INTEGRITY': ('PASS', bound, len(windows)),
+            'DYNAMIC_CHARGE_STATUS': ('FAIL' if dynamic_ok < len(windows) else 'PASS',
+                                      dynamic_ok, len(windows)),
+            'NOMINAL_CHARGE_STATUS': ('FAIL' if nominal_ok < len(windows) else 'PASS',
+                                      nominal_ok, len(windows)),
+            'SETTLING_STATUS': ('FAIL' if unsettled else 'PASS',
+                                len(emission) - len(unsettled), len(emission)),
+            'SHUTOFF_STATUS': ('FAIL' if leak_over else 'PASS',
+                               len(windows) - len(leak_over), len(windows)),
+            'CONVERGENCE_STATUS': ('PASS' if converged == len(self.convergence) else 'FAIL',
+                                   converged, len(self.convergence)),
+            'NATIVE_SEQUENCE_REINTEGRATION': ('PASS', len(windows), len(windows)),
+            'RTL_INPUT_PROVENANCE': ('PASS' if vcd == 2 else 'PARTIAL', vcd, 2),
+            'BUDGET_ACCOUNTING_STATUS': ('PARTIAL', 21, 24),
+        }
+        for name, (verdict, measured, expected) in facts.items():
+            row = by[name]
+            if (row['verdict'] != verdict or float(row['measured']) != measured
+                    or float(row['expected']) != expected):
+                raise Refuse('B2: status %s publishes %s/%s/%s but the actual inputs give %s/%s/%s'
+                             % (name, row['verdict'], row['measured'], row['expected'],
+                                verdict, measured, expected))
+        budget = by['BUDGET_ACCOUNTING_STATUS']['note']
+        for token in ('NOT_INDEPENDENTLY_PROVEN', '24', '22', '21'):
+            if token not in budget:
+                raise Refuse('B2: BUDGET_ACCOUNTING_STATUS note must separate the 24/22/21 '
+                             'Spectre figures and state RTL_PROCESS_COUNT=NOT_INDEPENDENTLY_PROVEN')
+        self.record('B2: the ten statuses are re-derived from the actual inputs', True, len(facts))
+
+    def r2_rtl_checks(self):
+        """B4: a program digest is not a process identity; an unproven start stays charged"""
+        rows = self.rtl
+        with_evidence = [row for row in rows
+                         if row.get('exe_sha256') and row.get('rc') and row.get('log_sha256')]
+        weak = len(with_evidence) != len(rows)
+        conclusion = 'NOT_INDEPENDENTLY_PROVEN' if weak else str(len(rows))
+        budget = next((row for row in self.statuses
+                       if row['status'] == 'BUDGET_ACCOUNTING_STATUS'), None)
+        if weak:
+            if not budget or budget.get('verdict') != 'PARTIAL':
+                raise Refuse('B4: %d of %d RTL rows lack per-launch process evidence, so '
+                             'BUDGET_ACCOUNTING_STATUS must be PARTIAL'
+                             % (len(rows) - len(with_evidence), len(rows)))
+            if 'NOT_INDEPENDENTLY_PROVEN' not in budget.get('note', ''):
+                raise Refuse('B4: the budget note must state RTL_PROCESS_COUNT=NOT_INDEPENDENTLY_PROVEN')
+        self.record('B4: the RTL process count is reported honestly against the ledger', True,
+                    conclusion)
+
     def run(self):
+        emission = [row for row in self.rows if row['kind'] == 'emission']
+        black = [row for row in self.rows if row['kind'] != 'emission']
+        self.r2_convergence_checks()
+        self.r2_status_checks(emission, black)
+        self.r2_rtl_checks()
         self.area_checks()
         self.format_checks()
         emission, black = self.window_checks()
@@ -936,8 +1122,16 @@ class Recompute(object):
 def main(argv):
     root = argv[0] if argv and not argv[0].startswith('--') else ROOT
     preflight = '--preflight' in argv
+    inputs = None
+    if '--inputs' in argv:
+        descriptor = json.loads(io.open(argv[argv.index('--inputs') + 1],
+                                        encoding='utf-8').read())
+        inputs = {'evidence': dict((key, os.path.abspath(os.path.join(root, value)))
+                                   for key, value in descriptor['evidence'].items())}
+        if descriptor.get('vcd_dir'):
+            inputs['vcd_dir'] = os.path.abspath(os.path.join(root, descriptor['vcd_dir']))
     try:
-        made = Recompute(root, require_new_statuses=not preflight)
+        made = Recompute(root, require_new_statuses=not preflight, inputs=inputs)
         checks = made.run()
     except Refuse as error:
         print('RECOMPUTE_R1_REFUSED %s' % error)

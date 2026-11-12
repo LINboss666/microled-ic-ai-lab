@@ -190,13 +190,22 @@ class Account(object):
         out = []
         for booking in data.get('duplicate_bookings', []):
             duplicate = booking.get(self.header[0]) or booking.get('sim_id')
-            witness = (booking.get('evidence') or {}).get('witness_row')
+            evidence = booking.get('evidence') or {}
+            witness = evidence.get('witness_row')
+            link = evidence.get('unique_start_transcript')
             if duplicate not in by_id or witness not in by_id or duplicate == witness:
                 continue
             dup_row, wit_row = by_id[duplicate], by_id[witness]
             if any(dup_row.get(key) for key in PROCESS_EVIDENCE_KEYS):
                 continue
             if not any(wit_row.get(key) for key in COMPILED_TARGET_KEYS):
+                continue
+            # B4: same case + same second + a missing field is not a process identity. One
+            # executable can start twice. Only an explicit per-start transcript link that
+            # both the booking and the witness carry may de-duplicate exactly one booking.
+            if not link or link != wit_row.get('log_sha256'):
+                continue
+            if dup_row.get('log_sha256'):
                 continue
             if (dup_row.get('requested_utc') != wit_row.get('requested_utc')
                     or dup_row.get('case_id') != wit_row.get('case_id')):
@@ -788,9 +797,11 @@ def selftest():
         settled.rows[0]['requested_utc'])
     settled.rows[2]['case_id'] = settled.rows[1]['case_id']
     settled.rows[1]['deck_sha256'] = 'd' * 64      # the target the process actually ran
+    settled.rows[1]['log_sha256'] = 't' * 64      # B4: a unique per-start transcript
     settled.flush()
     booking = json.dumps({'duplicate_bookings': [
-        {'launch_id': 'T003', 'evidence': {'witness_row': 'T002'}}]}) + '\n'
+        {'launch_id': 'T003',
+         'evidence': {'witness_row': 'T002', 'unique_start_transcript': 't' * 64}}]}) + '\n'
     io.open(reconcile, 'wb').write(booking.encode('utf-8'))
     checked = Account(account_path, 3, ACCOUNT_HEADER, 'T', reconcile=reconcile)
     record('a duplicate booking is honoured only against a row that carries the process evidence',
@@ -805,11 +816,21 @@ def selftest():
            (forged.processes(), forged.remaining()))
     witness = Account(account_path, 3, ACCOUNT_HEADER, 'T')
     witness.rows[1]['deck_sha256'] = ''
+    witness.rows[1]['log_sha256'] = ''
     witness.rows[2]['rc'] = ''
     witness.flush()
     empty_witness = Account(account_path, 3, ACCOUNT_HEADER, 'T', reconcile=reconcile)
     record('a witness row without an executable cannot vouch for a duplicate',
            empty_witness.processes() == 3, empty_witness.processes())
+    same_program = Account(account_path, 3, ACCOUNT_HEADER, 'T')
+    same_program.rows[1]['deck_sha256'] = 'd' * 64
+    same_program.rows[2]['deck_sha256'] = 'd' * 64
+    same_program.rows[2]['rc'] = '0'
+    same_program.rows[2]['log_sha256'] = 'u' * 64
+    same_program.flush()
+    twice = Account(account_path, 3, ACCOUNT_HEADER, 'T', reconcile=reconcile)
+    record('B4: two starts of one executable digest are still two charged processes',
+           twice.processes() == 3, twice.processes())
     os.remove(reconcile)
     record('the deck account stamps every run copy with the committed contract digest',
            not DECK.check_account(account_of_masters(), require_all=False),

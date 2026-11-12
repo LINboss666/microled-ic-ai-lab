@@ -1,0 +1,7 @@
+REAL_LEDGER_FINDING {"ceiling": 4, "conservative_occupancy": 5, "note": "a conservative occupancy is a risk allowance, not an assertion that that many processes really started; the five original rows are unchanged", "proven_duplicates": [], "rows": 5, "rows_with_per_launch_evidence": 2, "rtl_process_count": "NOT_INDEPENDENTLY_PROVEN"}
+B4_WEAK_INFERENCE_REMOVED True
+SAME_EXECUTABLE_TWO_STARTS 2
+UNCERTAIN_WITHOUT_RC_STAYS_CHARGED 2
+MECHANICALLY_LINKED_DUPLICATE_DEDUPS_ONE 1
+WITNESS_NAME_ALONE_DOES_NOT_DEDUPE 2
+B4_MOCK_REGRESSION PASS

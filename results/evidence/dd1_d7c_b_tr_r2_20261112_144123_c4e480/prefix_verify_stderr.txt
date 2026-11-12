@@ -1,0 +1,21 @@
+Traceback (most recent call last):
+  File "D:\_r2_scratch\r20261112_144123_c4e480\prefix_no_git\original_package\scripts\dd1_d7c_b_tr_r1_native.py", line 28, in <module>
+    import dd1_d7c_b_tr_measure as MEAS
+  File "D:\_r2_scratch\r20261112_144123_c4e480\prefix_no_git\original_package\scripts\dd1_d7c_b_tr_measure.py", line 33, in <module>
+    REQUIRED = tuple(TRC.contract()['required_signals']['always_extracted'])
+                     ~~~~~~~~~~~~^^
+  File "D:\_r2_scratch\r20261112_144123_c4e480\prefix_no_git\original_package\scripts\dd1_d7c_b_tr_contract.py", line 327, in contract
+    _CONTRACT_CACHE.append(_contract())
+                           ~~~~~~~~~^^
+  File "D:\_r2_scratch\r20261112_144123_c4e480\prefix_no_git\original_package\scripts\dd1_d7c_b_tr_contract.py", line 353, in _contract
+    row['source_deck_sha256_at_base'] = blob_sha(BASE_SHA, row['source_deck'])
+                                        ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\_r2_scratch\r20261112_144123_c4e480\prefix_no_git\original_package\scripts\dd1_d7c_b_tr_contract.py", line 152, in blob_sha
+    return sha_bytes(blob(rev, relpath))
+                     ~~~~^^^^^^^^^^^^^^
+  File "D:\_r2_scratch\r20261112_144123_c4e480\prefix_no_git\original_package\scripts\dd1_d7c_b_tr_contract.py", line 148, in blob
+    return git('cat-file', 'blob', '%s:%s' % (rev, relpath))
+  File "D:\_r2_scratch\r20261112_144123_c4e480\prefix_no_git\original_package\scripts\dd1_d7c_b_tr_contract.py", line 130, in git
+    raise Refuse('git %s rc=%d: %s' % (' '.join(args), proc.returncode,
+                                       err.decode('utf-8', 'replace').strip()[:160]))
+dd1_d7c_b_tr_contract.Refuse: git cat-file blob 61621f6e3d887082ecd6a7ecc1c771f8e509a24a:spectre/dd1_d7c_b_prep/TR-LONG.scs rc=128: fatal: not a git repository (or any of the parent directories): .git

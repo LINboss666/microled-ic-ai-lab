@@ -1,0 +1,135 @@
+{
+ "note": "field semantics corrected; no electrical window, threshold or frozen DC reference changed",
+ "rows": [
+  {
+   "status": "EXECUTION_COMPLETENESS",
+   "r1": {
+    "verdict": "PASS",
+    "measured": "18",
+    "expected": "18"
+   },
+   "r2": {
+    "verdict": "PASS",
+    "measured": "18",
+    "expected": 18
+   }
+  },
+  {
+   "status": "EVIDENCE_INTEGRITY",
+   "r1": {
+    "verdict": "PASS",
+    "measured": "37",
+    "expected": "37"
+   },
+   "r2": {
+    "verdict": "PASS",
+    "measured": 37,
+    "expected": 37
+   }
+  },
+  {
+   "status": "DYNAMIC_CHARGE_STATUS",
+   "r1": {
+    "verdict": "FAIL",
+    "measured": "33",
+    "expected": "37"
+   },
+   "r2": {
+    "verdict": "FAIL",
+    "measured": 33,
+    "expected": 37
+   }
+  },
+  {
+   "status": "NOMINAL_CHARGE_STATUS",
+   "r1": {
+    "verdict": "FAIL",
+    "measured": "23",
+    "expected": "37"
+   },
+   "r2": {
+    "verdict": "FAIL",
+    "measured": 23,
+    "expected": 37
+   }
+  },
+  {
+   "status": "SETTLING_STATUS",
+   "r1": {
+    "verdict": "PASS",
+    "measured": "34",
+    "expected": "34"
+   },
+   "r2": {
+    "verdict": "PASS",
+    "measured": 34,
+    "expected": 34
+   }
+  },
+  {
+   "status": "SHUTOFF_STATUS",
+   "r1": {
+    "verdict": "PASS",
+    "measured": "37",
+    "expected": "37"
+   },
+   "r2": {
+    "verdict": "PASS",
+    "measured": 37,
+    "expected": 37
+   }
+  },
+  {
+   "status": "CONVERGENCE_STATUS",
+   "r1": {
+    "verdict": "PASS",
+    "measured": "13",
+    "expected": "0"
+   },
+   "r2": {
+    "verdict": "PASS",
+    "measured": 13,
+    "expected": 13
+   }
+  },
+  {
+   "status": "NATIVE_SEQUENCE_REINTEGRATION",
+   "r1": {
+    "verdict": "PASS",
+    "measured": "835",
+    "expected": "835"
+   },
+   "r2": {
+    "verdict": "PASS",
+    "measured": 37,
+    "expected": 37
+   }
+  },
+  {
+   "status": "RTL_INPUT_PROVENANCE",
+   "r1": {
+    "verdict": "PASS",
+    "measured": "2",
+    "expected": "2"
+   },
+   "r2": {
+    "verdict": "PASS",
+    "measured": 2,
+    "expected": 2
+   }
+  },
+  {
+   "status": "BUDGET_ACCOUNTING_STATUS",
+   "r1": {
+    "verdict": "PASS",
+    "measured": "21",
+    "expected": "24"
+   },
+   "r2": {
+    "verdict": "PARTIAL",
+    "measured": 21,
+    "expected": 24
+   }
+  }
+ ]
+}
