@@ -1,0 +1,74 @@
+`timescale 1ns / 1ps
+// TCON column time base — 100 Hz: 1024 column slots per 10 ms frame, each slot
+// is 976 or 977 cycles of the 100 MHz CLK_REF, distributed so that exactly
+// 576 slots are 977 and 448 are 976  (576*977 + 448*976 = 1,000,000).
+//
+// The distribution uses a fractional accumulator with step 576/1024, which
+// produces exactly 576 long slots per 1024 slots. 60 Hz support is left as an
+// interface parameter (BASE_LEN / FRAC_STEP), not implemented here.
+//
+// SCOPE: this is a T1 skeleton. It does NOT receive the 768-byte column and
+// does NOT implement the 2x768 B ping-pong buffer (that is T2).
+module tcon_timebase #(
+    parameter integer BASE_LEN  = 976,     // 100 Hz short slot
+    parameter integer LONG_LEN  = 977,     // 100 Hz long slot
+    parameter integer FRAC_STEP = 576,     // long slots per 1024 slots
+    parameter integer FRAC_MOD  = 1024,
+    parameter integer N_COL     = 1024
+) (
+    input  wire        clk,
+    input  wire        reset_n,
+    input  wire        enable,        // 0 = hold at slot start, column frozen
+    output reg  [10:0] slot_cycle,    // 0 .. slot_len-1
+    output reg  [10:0] slot_len,      // 976 or 977
+    output reg  [9:0]  col_index,     // 0 .. 1023
+    output reg         slot_start,    // high on the first cycle of a slot
+    output reg         slot_last,     // high on the last cycle of a slot
+    output reg         frame_wrap,    // 1-cycle pulse when col_index wraps
+    output wire        slot_long      // current slot is a 977-cycle slot
+);
+
+    reg [9:0] frac;                   // fractional accumulator, 0 .. FRAC_MOD-1
+
+    assign slot_long = (slot_len == LONG_LEN);
+
+    // next-length decision, evaluated when the current slot ends
+    wire        add_frac = (frac + FRAC_STEP) >= FRAC_MOD;
+    wire [9:0]  frac_nxt = add_frac ? (frac + FRAC_STEP - FRAC_MOD) : (frac + FRAC_STEP);
+    wire [10:0] len_nxt  = add_frac ? LONG_LEN : BASE_LEN;
+
+    always @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            slot_cycle <= 11'd0;
+            slot_len   <= BASE_LEN;
+            col_index  <= 10'd0;
+            slot_start <= 1'b1;
+            slot_last  <= 1'b0;
+            frame_wrap <= 1'b0;
+            frac       <= 10'd0;
+        end else if (!enable) begin
+            // Hold at the start of the slot; column index must not advance while
+            // the pipeline is not safe (blank is asserted by tcon_top meanwhile).
+            slot_cycle <= 11'd0;
+            slot_start <= 1'b1;
+            slot_last  <= 1'b0;
+            frame_wrap <= 1'b0;
+        end else begin
+            frame_wrap <= 1'b0;
+            if (slot_cycle == (slot_len - 11'd1)) begin
+                slot_cycle <= 11'd0;
+                slot_len   <= len_nxt;
+                frac       <= frac_nxt;
+                slot_start <= 1'b1;
+                slot_last  <= 1'b0;
+                col_index  <= (col_index == (N_COL - 1)) ? 10'd0 : (col_index + 10'd1);
+                frame_wrap <= (col_index == (N_COL - 1));
+            end else begin
+                slot_cycle <= slot_cycle + 11'd1;
+                slot_start <= 1'b0;
+                slot_last  <= (slot_cycle == (slot_len - 11'd2));
+            end
+        end
+    end
+
+endmodule

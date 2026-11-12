@@ -1,0 +1,18 @@
+RESTORED_SOURCES=4
+=== TCON_T1_RUNNER start 2026-11-12T21:45:36+0800 ===
+SCEN=BOUNDARY  MIN_ASSERTS=14
+RUN_DIR=D:/ic617_course_sim_20261112_native/t1_run7_boundary
+VLIB_RC=0
+VLOG_RC=0
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+Start time: 21:45:37 on Nov 12,2026
+vlog -sv D:/ic617_course_sim_20261112_native/t1_run7_boundary/src/tcon_timebase.v D:/ic617_course_sim_20261112_native/t1_run7_boundary/src/tcon_slot_seq.v D:/ic617_course_sim_20261112_native/t1_run7_boundary/src/tcon_top.v D:/ic617_course_sim_20261112_native/t1_run7_boundary/src/tcon_t1_tb.sv
+-- Compiling module tcon_timebase
+-- Compiling module tcon_slot_seq
+-- Compiling module tcon_top
+-- Compiling module tcon_t1_tb
+
+Top level modules:
+	tcon_t1_tb
+End time: 21:45:37 on Nov 12,2026, Elapsed time: 0:00:00
+Errors: 0, Warnings: 0

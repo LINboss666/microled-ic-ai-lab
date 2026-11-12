@@ -1,0 +1,58 @@
+Reading D:/BaiduNetdiskDownload/FPGA/modelsim_ase/tcl/vsim/pref.tcl
+
+# 10.5b
+
+# vsim -c -do "run -all; quit -f" work.course_selfcheck_tb
+# Start time: 21:23:10 on Nov 12,2026
+# Loading sv_std.std
+# Loading work.course_selfcheck_tb
+# Loading work.course_top
+# Loading work.course_col_scan
+# Loading work.course_data_latch
+# Loading work.dd1_d7a_gray_ctrl
+# run -all
+# COURSE_RTL_TB_START tick_ns=120 blank_ticks=8
+# PASS C01_reset_col_addr_0
+# PASS C01_reset_onehot_pop_0
+# PASS C01_reset_latch_count_0
+# PASS C01_reset_drive_gate_off
+# PASS C01_reset_win_state_idle
+# PASS C01_reset_data_en_off
+# PASS C01_reset_chan_valid_off
+# PASS C02_start_col_0
+# PASS C02_col_0_to_1
+# PASS C02_onehot_pop_is_1
+# PASS C02_onehot_valid
+# PASS C05_col2_even_bank0_ch1
+# PASS C05_col3_odd_bank1_ch1
+# PASS C03_reached_col_1023
+# PASS C03_col1023_odd_bank1_ch511
+# PASS C03_wrap_strobe_high
+# PASS C03_wrapped_to_col_0
+# PASS C03_col0_even_bank0_ch0
+# PASS C04_blank_onehot_pop_0
+# PASS C04_blank_scan_sel_off
+# PASS C04_blank_drive_gate_off
+# PASS C04_unblank_onehot_pop_1
+# PASS C04_onehot_violations_0
+# PASS C06_read_row0_even_ch0
+# PASS C06_read_row1_odd_ch0_no_alias
+# PASS C06_read_row766_even_ch383
+# PASS C06_read_row767_odd_ch383_no_alias
+# PASS C06_row768_out_of_range
+# PASS C08_latch_accepted_in_blank
+# PASS C08_latch_on_column_switch
+# PASS C08_latched_pam_field
+# PASS C08_latched_pwm_field
+# PASS C08_latch_refused_outside_blank
+# FAIL C10_max_code_conducting_ticks_64  (t=18516000)
+# COURSE_RTL_ASSERT_COUNT=34
+# COURSE_RTL_FAIL_COUNT=1
+# COURSE_RTL_RESULT=FAIL
+# COURSE_FAILED_ASSERTION=C10_max_code_conducting_ticks_64
+# ** Fatal: COURSE_ASSERT_FAILED: C10_max_code_conducting_ticks_64
+#    Time: 18516 ns  Scope: course_selfcheck_tb.chk File: D:/ic617_course_sim_20261112_native/t6_run3_neg_inject/src/course_selfcheck_tb.sv Line: 158
+# ** Note: $finish    : D:/ic617_course_sim_20261112_native/t6_run3_neg_inject/src/course_selfcheck_tb.sv(158)
+#    Time: 18516 ns  Iteration: 0  Instance: /course_selfcheck_tb
+# End time: 21:23:11 on Nov 12,2026, Elapsed time: 0:00:01
+# Errors: 1, Warnings: 0

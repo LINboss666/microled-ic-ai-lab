@@ -1,0 +1,107 @@
+RESTORED_SOURCES=4
+=== TCON_T1_RUNNER start 2026-11-12T21:28:48+0800 ===
+SCEN=ALL  MIN_ASSERTS=41
+RUN_DIR=D:/ic617_course_sim_20261112_native/t1_run6_all_final
+VLIB_RC=0
+VLOG_RC=0
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+Start time: 21:28:49 on Nov 12,2026
+vlog -sv D:/ic617_course_sim_20261112_native/t1_run6_all_final/src/tcon_timebase.v D:/ic617_course_sim_20261112_native/t1_run6_all_final/src/tcon_slot_seq.v D:/ic617_course_sim_20261112_native/t1_run6_all_final/src/tcon_top.v D:/ic617_course_sim_20261112_native/t1_run6_all_final/src/tcon_t1_tb.sv
+-- Compiling module tcon_timebase
+-- Compiling module tcon_slot_seq
+-- Compiling module tcon_top
+-- Compiling module tcon_t1_tb
+
+Top level modules:
+	tcon_t1_tb
+End time: 21:28:49 on Nov 12,2026, Elapsed time: 0:00:00
+Errors: 0, Warnings: 0
+VSIM_RC=0
+Reading D:/BaiduNetdiskDownload/FPGA/modelsim_ase/tcl/vsim/pref.tcl
+
+# 10.5b
+
+# vsim -c -do "run -all; quit -f" work.tcon_t1_tb "+SCEN=ALL"
+# Start time: 21:28:50 on Nov 12,2026
+# Loading sv_std.std
+# Loading work.tcon_t1_tb
+# Loading work.tcon_top
+# Loading work.tcon_timebase
+# Loading work.tcon_slot_seq
+# run -all
+# COURSE_TCON_T1_SCENARIO=ALL
+# --- SCENARIO RESET_FAULT ---
+# PASS R1_reset_blank_high
+# PASS R1_reset_col_id_0
+# PASS R1_reset_no_latch
+# PASS R1_reset_no_pwm_start
+# PASS R1_reset_no_scan_stb
+# PASS R1_reset_no_tick
+# PASS R1_reset_no_load
+# PASS R2_unconfigured_blank_high
+# PASS R2_unconfigured_no_stb
+# PASS R3_illegal_mode_blank_high
+# PASS R4_ready_blank_low
+# PASS R4_status_ready
+# PASS R5_fault_blank_within_1_cycle
+# PASS R5_fault_no_scan_stb
+# PASS R5_fault_holds_blank
+# PASS R5_fault_sticky_status
+# PASS R6_recover_blank_low
+# PASS R6_no_tick_while_blanked
+# PASS R6_no_latch_outside_blank
+# --- SCENARIO TIMEBASE ---
+# SLOT1 len=977 ticks=64 latch_off=828 pstart_off=840 stb_off=880 latch_pw=4
+# PASS T1_slot_len_976_or_977
+# PASS T1_ticks_64_per_window
+# PASS T1_latch_offset_828
+# PASS T1_pwm_start_offset_840
+# PASS T1_scan_stb_offset_880
+# PASS T1_latch_pulse_40ns
+# PASS T1_no_tick_in_blank
+# SLOT2 len=977 ticks=64 latch_off=828
+# PASS T2_slot_len_976_or_977
+# PASS T2_ticks_64
+# PASS T2_latch_offset_828
+# SLOT3 len=977 ticks=64 col_id=6
+# PASS T3_slot_len_976_or_977
+# PASS T3_ticks_64
+# PASS T3_col_id_advancing
+# PASS T3_dclk_toggling
+# PASS T3_latch_outside_blank_viol0
+# --- SCENARIO BOUNDARY ---
+# FRAME cycles=998047 long=575 short=447 total_slots=1022
+# FAIL B1_frame_cycles_1e6  (t=10098376000)
+# COURSE_RTL_ASSERT_COUNT=35
+# COURSE_RTL_FAIL_COUNT=1
+# COURSE_RTL_RESULT=FAIL
+# COURSE_FAILED_ASSERTION=B1_frame_cycles_1e6
+# ** Fatal: COURSE_ASSERT_FAILED: B1_frame_cycles_1e6
+#    Time: 10098376 ns  Scope: tcon_t1_tb.chk File: D:/ic617_course_sim_20261112_native/t1_run6_all_final/src/tcon_t1_tb.sv Line: 79
+# ** Note: $finish    : D:/ic617_course_sim_20261112_native/t1_run6_all_final/src/tcon_t1_tb.sv(79)
+#    Time: 10098376 ns  Iteration: 0  Instance: /tcon_t1_tb
+# End time: 21:28:52 on Nov 12,2026, Elapsed time: 0:00:02
+# Errors: 1, Warnings: 0
+=== T6 VERDICTS (1=PASS 0=FAIL) ===
+CHECK0_NO_FATAL_NO_ERRORS=0   (errors=1 fatal=** Fatal: COURSE_ASSERT_FAILED: B1_frame_cycles_1e6)
+CHECK1_PROCESS_RC_ZERO=1   (vsim_rc=0)
+CHECK2_RESULT_MARKER_PASS=0   (COURSE_RTL_RESULT=FAIL)
+CHECK3_FAIL_COUNT_ZERO=0   (fail_count=1)
+CHECK4_ASSERT_COUNT_GE_MIN=0   (assert_count=35 min=41)
+COURSE_FAILED_ASSERTION=B1_frame_cycles_1e6
+RUNNER_VERDICT=FAIL
+RUNNER_EXIT=6
+=== artifacts ===
+total 882
+drwxr-xr-x 1 LMX 197121      0 Nov 12 21:28 .
+drwxr-xr-x 1 LMX 197121      0 Nov 12 21:28 ..
+-rw-r--r-- 1 LMX 197121      0 Nov 12 21:28 01_vlib.log
+-rw-r--r-- 1 LMX 197121    674 Nov 12 21:28 02_vlog.log
+-rw-r--r-- 1 LMX 197121   2269 Nov 12 21:28 03_vsim.stdout
+-rw-r--r-- 1 LMX 197121    405 Nov 12 21:28 05_t6_check.txt
+drwxr-xr-x 1 LMX 197121      0 Nov 12 21:28 src
+-rw-r--r-- 1 LMX 197121 879050 Nov 12 21:28 tcon_t1.vcd
+-rw-r--r-- 1 LMX 197121   2187 Nov 12 21:28 transcript
+drwxr-xr-x 1 LMX 197121      0 Nov 12 21:28 work
+=== TCON_T1_RUNNER end 2026-11-12T21:28:55+0800 ===
+RUNNER_EXIT=6

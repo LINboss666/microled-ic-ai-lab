@@ -139,6 +139,10 @@ module course_selfcheck_tb;
         #1;
     endtask
 
+    // T6 (D1 fix): a failed assertion must terminate the simulation with a
+    // NON-ZERO exit status. The pass criteria themselves are unchanged; only
+    // the failure exit path is added. $fatal(1) makes vsim return non-zero,
+    // which is what the runner and the independent review require.
     task automatic chk(input string nm, input logic cond);
         assert_count = assert_count + 1;
         if (cond) begin
@@ -147,6 +151,11 @@ module course_selfcheck_tb;
         end else begin
             fail_count = fail_count + 1;
             $display("FAIL %s  (t=%0t)", nm, $time);
+            $display("COURSE_RTL_ASSERT_COUNT=%0d", assert_count);
+            $display("COURSE_RTL_FAIL_COUNT=%0d", fail_count);
+            $display("COURSE_RTL_RESULT=FAIL");
+            $display("COURSE_FAILED_ASSERTION=%s", nm);
+            $fatal(1, "COURSE_ASSERT_FAILED: %s", nm);
         end
     endtask
 
@@ -314,6 +323,13 @@ module course_selfcheck_tb;
         // ---------------- C10 PWM maximum code boundary (63 -> 64 ticks) ---
         arm_window(6'd63, 3'd7);
         run_window(cond10, acc10, t_start10, t_end10, 80);
+`ifdef COURSE_FAULT_INJECT
+        // T6 negative-case injection (compile-time only, default build has no
+        // effect): corrupt one measured value so that an EXISTING assertion
+        // must fail. Purpose = prove the harness turns FAIL into a non-zero
+        // exit. This line is never enabled for any functional conclusion.
+        cond10 = cond10 + 1;
+`endif
         chk("C10_max_code_conducting_ticks_64", cond10 === 64);
         chk("C10_max_code_accepted_ticks_65",   win_tick_count === 65);
         chk("C10_window_done_state",            win_state === 3'd3);

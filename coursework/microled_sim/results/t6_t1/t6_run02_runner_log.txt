@@ -1,0 +1,125 @@
+RESTORED_SOURCES=5
+=== COURSE_MODELSIM_RUNNER start 2026-11-12T21:22:55+0800 ===
+COURSE_ROOT=D:/ic617_course_sim_20261112_clone
+RUN_DIR=D:/ic617_course_sim_20261112_native/t6_run2_pos
+VLOG_DEFINES=<none>
+MIN_ASSERTS=55
+VLIB_RC=0
+VLOG_RC=0
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+Start time: 21:22:56 on Nov 12,2026
+vlog -sv D:/ic617_course_sim_20261112_native/t6_run2_pos/src/course_col_scan.v D:/ic617_course_sim_20261112_native/t6_run2_pos/src/course_data_latch.v D:/ic617_course_sim_20261112_native/t6_run2_pos/src/dd1_d7a_gray_ctrl.sv D:/ic617_course_sim_20261112_native/t6_run2_pos/src/course_top.v D:/ic617_course_sim_20261112_native/t6_run2_pos/src/course_selfcheck_tb.sv
+-- Compiling module course_col_scan
+-- Compiling module course_data_latch
+-- Compiling module dd1_d7a_gray_ctrl
+-- Compiling module course_top
+-- Compiling module course_selfcheck_tb
+
+Top level modules:
+	course_selfcheck_tb
+End time: 21:22:56 on Nov 12,2026, Elapsed time: 0:00:00
+Errors: 0, Warnings: 0
+VSIM_RC=0
+Reading D:/BaiduNetdiskDownload/FPGA/modelsim_ase/tcl/vsim/pref.tcl
+
+# 10.5b
+
+# vsim -c -do "run -all; quit -f" work.course_selfcheck_tb
+# Start time: 21:22:57 on Nov 12,2026
+# Loading sv_std.std
+# Loading work.course_selfcheck_tb
+# Loading work.course_top
+# Loading work.course_col_scan
+# Loading work.course_data_latch
+# Loading work.dd1_d7a_gray_ctrl
+# run -all
+# COURSE_RTL_TB_START tick_ns=120 blank_ticks=8
+# PASS C01_reset_col_addr_0
+# PASS C01_reset_onehot_pop_0
+# PASS C01_reset_latch_count_0
+# PASS C01_reset_drive_gate_off
+# PASS C01_reset_win_state_idle
+# PASS C01_reset_data_en_off
+# PASS C01_reset_chan_valid_off
+# PASS C02_start_col_0
+# PASS C02_col_0_to_1
+# PASS C02_onehot_pop_is_1
+# PASS C02_onehot_valid
+# PASS C05_col2_even_bank0_ch1
+# PASS C05_col3_odd_bank1_ch1
+# PASS C03_reached_col_1023
+# PASS C03_col1023_odd_bank1_ch511
+# PASS C03_wrap_strobe_high
+# PASS C03_wrapped_to_col_0
+# PASS C03_col0_even_bank0_ch0
+# PASS C04_blank_onehot_pop_0
+# PASS C04_blank_scan_sel_off
+# PASS C04_blank_drive_gate_off
+# PASS C04_unblank_onehot_pop_1
+# PASS C04_onehot_violations_0
+# PASS C06_read_row0_even_ch0
+# PASS C06_read_row1_odd_ch0_no_alias
+# PASS C06_read_row766_even_ch383
+# PASS C06_read_row767_odd_ch383_no_alias
+# PASS C06_row768_out_of_range
+# PASS C08_latch_accepted_in_blank
+# PASS C08_latch_on_column_switch
+# PASS C08_latched_pam_field
+# PASS C08_latched_pwm_field
+# PASS C08_latch_refused_outside_blank
+# PASS C10_max_code_conducting_ticks_64
+# PASS C10_max_code_accepted_ticks_65
+# PASS C10_window_done_state
+# PASS C09_black_code_no_conduction
+# PASS C09_black_code_window_64_ticks
+# PASS C11_pam000_is_lowest_nonzero
+# PASS C11_pam000_still_conducts_64
+# PASS C07_pre_blank_conduction_seen
+# PASS C07_blank_forces_data_en_off
+# PASS C07_blank_forces_drive_off
+# PASS C07_blank_forces_onehot_zero
+# PASS C07_data_en_b_is_complement
+# PASS C07_blank_aborts_window
+# PASS C12_illegal_mode_recorded
+# PASS C12_illegal_latch_recorded
+# PASS C12_stale_or_incomplete_recorded
+# PASS C12_start_refused_recorded
+# PASS C12_no_display_authorised
+# TIMING_BUDGET tick_ns=120 conducting_ticks=64 blank_ticks=8
+# TIMING_BUDGET col_period_60Hz_ns=16276.042 col_period_100Hz_ns=9765.625
+# TIMING_BUDGET slot_120ns_tick_ns=8640 slot_200ns_tick_ns=14400
+# TIMING_BUDGET fit_120ns_60Hz=YES fit_120ns_100Hz=YES fit_200ns_60Hz=YES fit_200ns_100Hz= NO
+# PASS C13_budget_120ns_60Hz_fits
+# PASS C13_budget_120ns_100Hz_fits
+# PASS C13_budget_200ns_100Hz_does_not_fit
+# PASS C04_onehot_violations_final_0
+# COURSE_RTL_ASSERT_COUNT=55
+# COURSE_RTL_PASS_COUNT=55
+# COURSE_RTL_FAIL_COUNT=0
+# COURSE_RTL_ONEHOT_VIOLATIONS=0
+# COURSE_RTL_RESULT=PASS
+# ** Note: $finish    : D:/ic617_course_sim_20261112_native/t6_run2_pos/src/course_selfcheck_tb.sv(431)
+#    Time: 35236 ns  Iteration: 0  Instance: /course_selfcheck_tb
+# End time: 21:22:58 on Nov 12,2026, Elapsed time: 0:00:01
+# Errors: 0, Warnings: 0
+=== T6 VERDICTS (1=PASS 0=FAIL) ===
+CHECK1_PROCESS_RC_ZERO=1   (vsim_rc=0)
+CHECK2_RESULT_MARKER_PASS=1   (COURSE_RTL_RESULT=PASS)
+CHECK3_FAIL_COUNT_ZERO=1   (fail_count=0)
+CHECK4_ASSERT_COUNT_GE_MIN=1   (assert_count=55 min=55)
+RUNNER_VERDICT=PASS
+=== artifacts ===
+total 200
+drwxr-xr-x 1 LMX 197121      0 Nov 12 21:22 .
+drwxr-xr-x 1 LMX 197121      0 Nov 12 21:22 ..
+-rw-r--r-- 1 LMX 197121      0 Nov 12 21:22 01_vlib.log
+-rw-r--r-- 1 LMX 197121    805 Nov 12 21:22 02_vlog.log
+-rw-r--r-- 1 LMX 197121   2987 Nov 12 21:22 03_vsim.stdout
+-rw-r--r-- 1 LMX 197121   2747 Nov 12 21:22 04_vsim.normalised.txt
+-rw-r--r-- 1 LMX 197121 169531 Nov 12 21:22 course_sim.vcd
+-rw-r--r-- 1 LMX 197121    933 Nov 12 21:22 course_wave_events.csv
+drwxr-xr-x 1 LMX 197121      0 Nov 12 21:22 src
+-rw-r--r-- 1 LMX 197121   2905 Nov 12 21:22 transcript
+drwxr-xr-x 1 LMX 197121      0 Nov 12 21:22 work
+=== COURSE_MODELSIM_RUNNER end 2026-11-12T21:22:59+0800 ===
+RUNNER_EXIT=0

@@ -1,0 +1,48 @@
+`timescale 1ns / 1ps
+// TCON slot sequence generator — produces the BLANK / LATCH / PWM_START /
+// SCAN_STB / PWM_TICK edges of one column slot, on the 100 MHz grid.
+//
+// Phase map (cycle numbers inside the slot, see tcon_t1_edge_table.md §1):
+//   [0,767]     PWM window, tick every 12 cycles => 64 ticks (Hybrid 120 ns)
+//   [768,...]   BLANK high
+//   [828,831]   LATCH pulse            (40 ns, >= 40 ns spec)
+//   [840,843]   PWM_START pulse        (40 ns)
+//   [864,...]   COL_ID stable
+//   [880,883]   SCAN_STB pulse         (COL_ID setup = 16 cycles = 160 ns >= 10 ns)
+//
+// The loader window (384 bytes per port) is NOT generated here: it starts when
+// LATCH falls and runs 768 cycles, i.e. it spans two slots (C interpretation).
+// tcon_top owns that counter.
+//
+// SCOPE: T1 skeleton only. No 768-byte receive, no bank arbitration.
+module tcon_slot_seq #(
+    parameter integer WIN_START    = 768,   // window end / BLANK rise
+    parameter integer LATCH_AT     = 828,
+    parameter integer PWM_START_AT = 840,
+    parameter integer SCAN_STB_AT  = 880,
+    parameter integer PULSE_LEN    = 4,     // 4 x 10 ns = 40 ns
+    parameter integer TICK_DIV     = 12     // 12 x 10 ns = 120 ns (Hybrid @100 Hz)
+) (
+    input  wire [10:0] slot_cycle,
+    input  wire [10:0] slot_len,
+    output wire        window,        // PWM activity window
+    output wire        blank,         // BLANK level (not gated by safety)
+    output wire        latch,
+    output wire        pwm_start,
+    output wire        scan_stb,
+    output wire        tick_base,     // one pulse every TICK_DIV cycles
+    output wire        colid_stable
+);
+
+    assign window = (slot_cycle < WIN_START);
+    assign blank  = (slot_cycle >= WIN_START);
+
+    assign latch      = (slot_cycle >= LATCH_AT)     && (slot_cycle < LATCH_AT + PULSE_LEN);
+    assign pwm_start  = (slot_cycle >= PWM_START_AT) && (slot_cycle < PWM_START_AT + PULSE_LEN);
+    assign scan_stb   = (slot_cycle >= SCAN_STB_AT)  && (slot_cycle < SCAN_STB_AT + PULSE_LEN);
+
+    // 64 ticks inside the 768-cycle window: cycles 0, 12, 24, ... 756
+    assign tick_base    = window && ((slot_cycle % TICK_DIV) == 0);
+    assign colid_stable = (slot_cycle >= (SCAN_STB_AT - 16));
+
+endmodule

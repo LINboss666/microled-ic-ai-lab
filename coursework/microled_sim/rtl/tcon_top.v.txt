@@ -1,0 +1,182 @@
+`timescale 1ns / 1ps
+// TCON top-level skeleton (T1).
+//
+// WHAT THIS IS
+//   * V1.3-shaped functional port list for the TCON, reduced to what T1 owns.
+//   * The TCON now GENERATES its own column time base, BLANK, LATCH,
+//     PWM_START, PWM_TICK, SCAN_STB and COL_ID. Nothing is driven by the TB.
+//   * Safety: whenever video/config/Data readiness is not satisfied, or a fault
+//     is present, BLANK is forced high combinationally (0 cycles, far below the
+//     V1.3 <=50 ns target) and no control pulse can leave the block.
+//
+// WHAT THIS IS NOT (do not read the module name as a chip)
+//   NOT_IMPLEMENTED in T1: 768-byte column reception, 2x768 B ping-pong buffer,
+//   even/odd split, real D0/D1 payload, SPI registers, interrupts, level
+//   shifters, Data/Scan transistor level, array, layout, PVT/SOA, STA.
+//   D0/D1 are tied to 8'h00 in T1 on purpose.
+module tcon_top (
+    input  wire        clk_ref,      // 100 MHz system time base
+    input  wire        reset_n,      // active low, asynchronous assert
+
+    // ---- video front-end (T1: observed only, not yet consumed) --------------
+    input  wire        pclk,
+    input  wire        vsync,
+    input  wire        col_sync,
+    input  wire [7:0]  video_d,
+    input  wire        de,
+
+    // ---- configuration / readiness -----------------------------------------
+    input  wire        cfg_valid,    // configuration has been loaded
+    input  wire [1:0]  cfg_mode,     // 0 = Pure 8-bit PWM, 1 = Hybrid 3+6
+    input  wire        run_en,       // register-block enable
+    input  wire        rx_ready,     // T2 will drive: column data available
+    input  wire        fault_n,      // open-drain wired-AND, active low
+
+    // ---- to dual Scan -------------------------------------------------------
+    output reg  [9:0]  col_id,
+    output wire        scan_stb,
+
+    // ---- to dual Data -------------------------------------------------------
+    output wire        latch,
+    output wire        pwm_start,
+    output wire        pwm_tick,
+    output wire        blank,
+    output wire        dclk,         // 50 MHz continuous
+    output wire        load_active,  // 768-cycle load window (C interpretation)
+    output wire [7:0]  d0,
+    output wire [7:0]  d1,
+
+    // ---- observability ------------------------------------------------------
+    output wire [7:0]  status,
+    output wire        frame_wrap,
+    output wire        slot_long,
+    output wire        slot_start
+);
+
+    // ---------------------------------------------------------------------
+    // readiness / safety (declared first: used by the time-base enable)
+    // ---------------------------------------------------------------------
+    wire mode_ok = (cfg_mode == 2'd0) || (cfg_mode == 2'd1);
+    wire safe    = reset_n && cfg_valid && mode_ok && run_en && rx_ready && fault_n;
+
+    // ---------------------------------------------------------------------
+    // time base
+    // ---------------------------------------------------------------------
+    wire [10:0] slot_cycle;
+    wire [10:0] slot_len;
+    wire [9:0]  tb_col;
+    wire        tb_start, tb_last, tb_wrap;
+
+    tcon_timebase u_tb (
+        .clk        (clk_ref),
+        .reset_n    (reset_n),
+        .enable     (safe),
+        .slot_cycle (slot_cycle),
+        .slot_len   (slot_len),
+        .col_index  (tb_col),
+        .slot_start (tb_start),
+        .slot_last  (tb_last),
+        .frame_wrap (tb_wrap),
+        .slot_long  (slot_long)
+    );
+
+    // ---------------------------------------------------------------------
+    // slot phase sequence
+    // ---------------------------------------------------------------------
+    wire window, blank_seq, latch_seq, pstart_seq, stb_seq, tick_base, colid_stable;
+
+    tcon_slot_seq u_seq (
+        .slot_cycle    (slot_cycle),
+        .slot_len      (slot_len),
+        .window        (window),
+        .blank         (blank_seq),
+        .latch         (latch_seq),
+        .pwm_start     (pstart_seq),
+        .scan_stb      (stb_seq),
+        .tick_base     (tick_base),
+        .colid_stable  (colid_stable)
+    );
+
+    // ---------------------------------------------------------------------
+    // readiness / safety
+    // ---------------------------------------------------------------------
+    reg  fault_seen, vsync_seen, wrap_seen;
+
+    // BLANK must be high whenever the pipeline is not safe. Combinational, so a
+    // fault reaches BLANK in 0 cycles (V1.3 target: <= 50 ns).
+    assign blank = blank_seq || !safe;
+
+    assign latch     = latch_seq  && safe;
+    assign pwm_start = pstart_seq && safe;
+    assign scan_stb  = stb_seq    && safe;
+    assign pwm_tick  = tick_base  && window && safe;
+
+    // 50 MHz continuous DCLK derived from the 100 MHz reference (toggle /1).
+    reg dclk_r;
+    always @(posedge clk_ref or negedge reset_n)
+        if (!reset_n) dclk_r <= 1'b0;
+        else          dclk_r <= ~dclk_r;
+    assign dclk = dclk_r;
+
+    // COL_ID only advances on a completed, safe slot.
+    always @(posedge clk_ref or negedge reset_n)
+        if (!reset_n) col_id <= 10'd0;
+        else if (safe && tb_start) col_id <= tb_col;
+
+    // ---------------------------------------------------------------------
+    // 768-cycle load window: starts the cycle after LATCH falls (C model).
+    // LATCH at 828..831, so load runs 832..1599, i.e. 620-relative in the next
+    // slot; the next LATCH is at 1804. Remaining slack = 200 cycles after
+    // removing the 4-cycle LATCH pulse and the 4-cycle last-data guard.
+    // ---------------------------------------------------------------------
+    reg        latch_d;
+    reg        load_run;
+    reg [9:0]  load_cnt;
+
+    always @(posedge clk_ref or negedge reset_n) begin
+        if (!reset_n) begin
+            latch_d   <= 1'b0;
+            load_run  <= 1'b0;
+            load_cnt  <= 10'd0;
+        end else begin
+            latch_d <= latch;
+            if (latch_d && !latch) begin          // falling edge of LATCH
+                load_run <= 1'b1;
+                load_cnt <= 10'd0;
+            end else if (load_run) begin
+                if (load_cnt == 10'd767) begin    // 768 cycles done
+                    load_run <= 1'b0;
+                    load_cnt <= 10'd0;
+                end else begin
+                    load_cnt <= load_cnt + 10'd1;
+                end
+            end
+        end
+    end
+    assign load_active = load_run;
+
+    // ---------------------------------------------------------------------
+    // status / stickies
+    // ---------------------------------------------------------------------
+    always @(posedge clk_ref or negedge reset_n) begin
+        if (!reset_n) begin
+            fault_seen <= 1'b0;
+            vsync_seen <= 1'b0;
+            wrap_seen  <= 1'b0;
+        end else begin
+            if (!fault_n)  fault_seen <= 1'b1;
+            if (vsync)     vsync_seen <= 1'b1;
+            if (tb_wrap)   wrap_seen  <= 1'b1;
+        end
+    end
+
+    assign status = { 1'b0, slot_long, wrap_seen, vsync_seen,
+                      fault_seen, load_run, blank, safe };
+    assign frame_wrap = tb_wrap;
+    assign slot_start = tb_start;
+
+    // T1: no payload yet. T2 replaces these with the ping-pong buffer outputs.
+    assign d0 = 8'h00;
+    assign d1 = 8'h00;
+
+endmodule
