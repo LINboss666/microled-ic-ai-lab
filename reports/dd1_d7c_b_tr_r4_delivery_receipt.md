@@ -29,14 +29,16 @@
 
 回放前后包内 694 个文件集合与 SHA-256 完全一致。包内探针的 B4 memset 段仍标 `NOT_APPLICABLE`（工程模块按设计读对象库），B4 的三组断言在 Git 检出中完成并留证。
 
-## 发布状态（未完成）
+## 发布状态（已完成）
 
-`poc/data-pam-d7c-b-tr-r3` 与 `poc/data-pam-d7c-b-tr-r4` 两个远端 ref 都还不存在：git 通道 `CONNECT tunnel failed, response 502`，绕开代理直连 `github.com:443` 超时，`gh api` 通道正常。本地提交齐备：
+推送在通道恢复后一次成功，pre-push 全历史闸 PASS（3628 objects）。两个分支都是新建 ref，未触发任何强制推送：
 
-- R3 分支 tip `073c0f3705eb55fba8f017cc9d2927a54b129f9a`
-- R4 分支 tip `7163ac5ddca674e575f21f455b6b9c429e46e1d6`
+| 分支 | 远端 SHA | 通道 |
+|---|---|---|
+| `poc/data-pam-d7c-b-tr-r3` | `073c0f3705eb55fba8f017cc9d2927a54b129f9a` | git 协议 + GitHub API 一致 |
+| `poc/data-pam-d7c-b-tr-r4` | `fab174c45d21a741c35ef15e9a131901d8304ec0` | git 协议 + GitHub API 一致 |
 
-本次结论依据上传的 ZIP，不冒称远端 R3/R4 提交已被核验。
+六个冻结 ref 全部未动：`main` `23e471cb…`、`dc-r1` `61621f6e…`、`prep-r2` `e51c5320…`、`tr` `398c9e85…`、`tr-r1` `ec107af5…`、`tr-r2` `fc7ee7a5…`。回读记录：`D:/IC/MicroLED_R3_R4_remote_readback_20261112.json`（`VERDICT=PASS`）。
 
 ## 保留口径
 
@@ -47,6 +49,6 @@
 ```text
 PACKAGE_OUTSIDE_REPLAY=PASS
 ORIGINAL_R4_ZIP_SHA256=8faeaffd31dce26488fe045d0fc566e1fba60442524ddd7be3bdda2311447d0e
-PUSH_COMPLETED=NO
+PUSH_COMPLETED=YES
 STOP_REASON=AWAITING_INDEPENDENT_REVIEW
 ```
