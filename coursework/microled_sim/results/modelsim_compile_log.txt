@@ -1,0 +1,13 @@
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+Start time: 14:55:58 on Nov 12,2026
+vlog -sv D:/ic617_course_sim_20261112/coursework/microled_sim/rtl/course_col_scan.v D:/ic617_course_sim_20261112/coursework/microled_sim/rtl/course_data_latch.v D:/ic617_course_sim_20261112/coursework/microled_sim/rtl/dd1_d7a_gray_ctrl.sv D:/ic617_course_sim_20261112/coursework/microled_sim/rtl/course_top.v D:/ic617_course_sim_20261112/coursework/microled_sim/tb/course_selfcheck_tb.sv
+-- Compiling module course_col_scan
+-- Compiling module course_data_latch
+-- Compiling module dd1_d7a_gray_ctrl
+-- Compiling module course_top
+-- Compiling module course_selfcheck_tb
+
+Top level modules:
+	course_selfcheck_tb
+End time: 14:55:58 on Nov 12,2026, Elapsed time: 0:00:00
+Errors: 0, Warnings: 0

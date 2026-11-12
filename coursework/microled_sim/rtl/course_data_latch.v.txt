@@ -1,0 +1,112 @@
+`timescale 1ns / 1ps
+// Course-only representative Data row-data / latch / enable controller.
+//
+// SCOPE (must not be read as a whole-chip implementation):
+//   * Implements the 768-row address domain, the even/odd 384-channel Data-chip
+//     partition, a small per-channel configuration register file, and the
+//     latch/enable protocol that ties a row load to a column-switch interval.
+//   * There is NO Data low-side NMOS current-source array, no 384 physical
+//     output pins and no LED load. Those remain NOT_IMPLEMENTED.
+//
+// Partition rule (engineering derivation for this course, NOT a teacher-given
+// spec): row_addr[0] selects the Data chip (even=0, odd=1), row_addr[9:1] is the
+// 9-bit channel index 0..383 inside that chip. Two chips x 384 = 768 rows.
+//
+// The 9-bit control field is [8:6] PAM select + [5:0] 6-bit PWM time code,
+// i.e. the Hybrid 3-bit PAM + 6-bit PWM CONTROL FIELD of the existing project.
+// It is NOT a claim of 9-bit optical effective precision.
+// pam_sel == 3'b000 is the LOWEST NON-ZERO current level; it is NOT a black code.
+// Black is produced by the PWM time code (0) / blank, never by pam_sel == 0.
+module course_data_latch #(
+    parameter N_ROW = 768,
+    parameter ROW_W = 10,
+    parameter N_CH  = 384,
+    parameter CH_W  = 9,
+    parameter DW    = 9
+) (
+    input  wire              clk,
+    input  wire              reset_n,
+    input  wire              blank,          // active high
+    input  wire [ROW_W-1:0]  row_addr,       // 0..767
+    input  wire [DW-1:0]     row_wdata,
+    input  wire              row_wr_en,      // prepare one row's control field
+    input  wire              latch_stb,      // commit the prepared field (blanked)
+    input  wire [9:0]        active_col,     // column address from the scan controller
+    output wire              data_bank,      // 0 = even Data chip, 1 = odd Data chip
+    output wire [CH_W-1:0]   data_ch,        // 0..383 inside that chip
+    output wire [DW-1:0]     latched_ch_data,// combinational read of addressed channel
+    output reg  [2:0]        pam_sel,
+    output reg  [5:0]        pwm_code,
+    output wire              data_out_en,    // latched config is valid and not blanked
+    output reg               chan_valid,
+    output reg               latch_on_switch,// last accepted LATCH followed a column change
+    output reg  [7:0]        latch_count,
+    output wire              row_in_range
+);
+
+    reg [DW-1:0]   mem_even [0:N_CH-1];
+    reg [DW-1:0]   mem_odd  [0:N_CH-1];
+    reg [DW-1:0]   prep_data;
+    reg            prep_bank;
+    reg [CH_W-1:0] prep_ch;
+    reg            prep_valid;
+    reg            latch_prev;
+    reg [9:0]      col_at_last_latch;
+    reg [CH_W-1:0] init_i;
+
+    wire           latched = latch_stb && !latch_prev;
+    wire [ROW_W-1:0] row_safe = (row_addr < N_ROW) ? row_addr : {ROW_W{1'b0}};
+
+    assign data_bank       = row_safe[0];
+    assign data_ch         = row_safe[ROW_W-1:1];
+    assign latched_ch_data = data_bank ? mem_odd[data_ch] : mem_even[data_ch];
+    assign data_out_en     = chan_valid && !blank && reset_n;
+    assign row_in_range    = (row_addr < N_ROW);
+
+    always @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            for (init_i = 0; init_i < N_CH; init_i = init_i + 1) begin
+                mem_even[init_i] <= {DW{1'b0}};
+                mem_odd[init_i]  <= {DW{1'b0}};
+            end
+            prep_data        <= {DW{1'b0}};
+            prep_bank        <= 1'b0;
+            prep_ch          <= {CH_W{1'b0}};
+            prep_valid       <= 1'b0;
+            pam_sel          <= 3'd0;
+            pwm_code         <= 6'd0;
+            chan_valid       <= 1'b0;
+            latch_on_switch  <= 1'b0;
+            latch_count      <= 8'd0;
+            latch_prev       <= 1'b0;
+            col_at_last_latch <= 10'd0;
+        end else begin
+            latch_prev <= latch_stb;
+
+            // One row load prepares (but does not display) one channel's control field.
+            // The bank bit is part of the address, so even/odd chips cannot alias.
+            if (row_wr_en && row_in_range) begin
+                if (row_addr[0]) mem_odd[row_addr[ROW_W-1:1]]  <= row_wdata;
+                else             mem_even[row_addr[ROW_W-1:1]] <= row_wdata;
+                prep_data  <= row_wdata;
+                prep_bank  <= row_addr[0];
+                prep_ch    <= row_addr[ROW_W-1:1];
+                prep_valid <= 1'b1;
+            end
+
+            // A LATCH is accepted only while blanked: this is the physical
+            // relationship between row-data latching and column switching.
+            if (latched && blank && prep_valid) begin
+                pam_sel          <= prep_data[8:6];
+                pwm_code         <= prep_data[5:0];
+                chan_valid       <= 1'b1;
+                latch_count      <= latch_count + 8'd1;
+                latch_on_switch  <= (active_col != col_at_last_latch);
+                col_at_last_latch <= active_col;
+                prep_valid       <= 1'b0;
+            end
+            // A LATCH outside blank is refused and leaves the displayed field untouched.
+        end
+    end
+
+endmodule

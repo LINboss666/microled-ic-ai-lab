@@ -1,0 +1,42 @@
+// COURSE-MICROLED-SIM-20261112-R1 -- native Spectre Monte Carlo (one job, 30 samples).
+//
+// Statistical model availability was VERIFIED, not assumed:
+//   * teacher SMIC 0.18um mmrf spectre model card has `section mos_mc` containing
+//     `statistics { process { ... } }` AND `statistics { mismatch { ... } }`;
+//   * `spectre -h montecarlo` exists on Spectre 15.1.0;
+//   * therefore variations=all (process + mismatch) is legal here.
+//
+// Fixed output bias, one scalar measurement per iteration: Iout through Ip_out
+// with Vclamp = 1.20 V, TT-derived supplies, 27 C, external IREF = 15 uA.
+// numruns=30 (task ceiling), one seed, no extra seeds / corners / reruns.
+// No sample is discarded; failed iterations are reported by annotate=status.
+//
+// The per-iteration PSF files are retained on the native host (not uploaded);
+// the 30 extracted Iout values are exported as a small CSV into results/.
+simulator lang=spectre insensitive=yes
+
+include "${QODER_PDK_LIB}" section=mos_mc
+simopt options temp=27
+
+include "course_sink_unit.scs"
+
+Iref   (irefbus VB)          isource dc=15u
+Viref  (irefbus 0)           vsource dc=0
+Vdd18  (vdd18 0)             vsource dc=1.8
+Vcas   (vcas 0)              vsource dc=1.8
+Vss    (vss 0)               vsource dc=0
+Rvdd   (vdd18 vss)           resistor r=1e6
+Vclamp (clamp_node 0)        vsource dc=1.2
+
+Xdut   (VB vcas data_out vss) course_sink_unit
+Ip_out (clamp_node data_out) iprobe
+
+save Ip_out
+
+// Child analyses must be on their OWN lines after the opening brace on this
+// Spectre build: the one-line form "{ dc_mc dc }" failed with SFE-874
+// (Unexpected identifier "dc_mc". Expected end of line) on the first start,
+// which produced ZERO samples. That failed start is logged verbatim.
+mc1 montecarlo numruns=30 seed=20261112 variations=all sampling=standard donominal=yes savefamilyplots=yes savedatainseparatedir=yes scalarfile="mc_scalar.txt" paramfile="mc_param.txt" annotate=status {
+  dc_mc dc
+}

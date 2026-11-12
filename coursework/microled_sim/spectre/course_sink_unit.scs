@@ -1,0 +1,22 @@
+// Course-only basic Data-side NMOS constant-current pull-down unit.
+// New file written for COURSE-MICROLED-SIM-20261112-R1; NOT a copy of any PDK model.
+//
+// Device numbering / model / explicit D-G-S-B (Spectre MOS order is ( d g s b )):
+//   Mref  (VB      VB   VSS    VSS) n33  l=2e-6 w=2e-5   diode-connected reference
+//   Mout  (NODE_M  VB   VSS    VSS) n33  l=2e-6 w=2e-5   1:1 mirror output device
+//   Mcas  (DATA_OUT VCAS NODE_M VSS) n33  l=2e-6 w=2e-5   cascode, VCAS bias
+//
+// All body terminals are tied to the explicit VSS net; VSS is forced to real 0 V
+// by the top-level testbench (AGENTS.md pitfall 19). Main current direction:
+//   clamp_node -> DATA_OUT -> Mcas -> NODE_M -> Mout -> VSS
+// so a POSITIVE iprobe reading from clamp_node into DATA_OUT is the sink current
+// (I_sink = Ip_out, no negation, no absolute value).
+//
+// Geometry inherited from the limited-accepted data_bias_ref master
+// (source branch poc/data-pam-d7c-b-dc-r1, commit 61621f6e...); it is a
+// single-output unit, NOT the eight-branch PAM ladder and NOT a whole chip.
+subckt course_sink_unit (VB VCAS DATA_OUT VSS)
+  Mref (VB       VB   VSS    VSS) n33 l=2e-6 w=2e-5
+  Mout (NODE_M   VB   VSS    VSS) n33 l=2e-6 w=2e-5
+  Mcas (DATA_OUT VCAS NODE_M VSS) n33 l=2e-6 w=2e-5
+ends course_sink_unit

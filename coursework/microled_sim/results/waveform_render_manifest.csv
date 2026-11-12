@@ -1,0 +1,5 @@
+figure,window_start_ns,window_end_ns,signals,source_vcd_sha256,source_vcd_bytes,renderer
+wave_scan_latch.svg,10290.0,10700.0,col_addr|col_wrap|scan_even_sel|scan_odd_sel|blank|latch_stb|latch_count|drive_gate,1aad00ca8d51566ef6889b3a451b9384c436ddc932f00398a8a286385440bd45,169531,checks/render_waveforms.py
+wave_pwm_full.svg,10800.0,18550.0,pwm_tick|obs_tick|data_en|win_state|drive_gate,1aad00ca8d51566ef6889b3a451b9384c436ddc932f00398a8a286385440bd45,169531,checks/render_waveforms.py
+wave_pwm_boundary_zoom.svg,18180.0,18550.0,pwm_tick|obs_tick|data_en|win_state|drive_gate,1aad00ca8d51566ef6889b3a451b9384c436ddc932f00398a8a286385440bd45,169531,checks/render_waveforms.py
+wave_blank_negative.svg,34250.0,35250.0,blank|data_en|drive_gate|onehot_pop|win_state|proto_err,1aad00ca8d51566ef6889b3a451b9384c436ddc932f00398a8a286385440bd45,169531,checks/render_waveforms.py

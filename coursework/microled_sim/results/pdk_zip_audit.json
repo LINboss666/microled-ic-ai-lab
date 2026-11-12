@@ -1,0 +1,41 @@
+{
+  "exists": true,
+  "size_bytes": 55826083,
+  "sha256": "a3f8217692c7f84e39aa519cbf87969b4124d063b0eebc44b47bf3a6c21d199c",
+  "entry_count": 5331,
+  "crc_test": null,
+  "total_uncompressed_bytes": 108875384,
+  "suspicious_entries": 0,
+  "suspicious_kinds": [],
+  "top_level_counts": {
+    "smic18mmrf": 5150,
+    "models": 89,
+    "Calibre": 47,
+    "docs": 18,
+    "emxkit": 18,
+    "SMIC18MMRF_skillUtility": 3,
+    "stream": 3,
+    "cds.lib": 1,
+    "display.drf": 1,
+    "techfile.tf": 1
+  },
+  "file_entries": 3975,
+  "smic18_hits": 5153,
+  "tsmc_hits": 0,
+  "spectre_hits": 504,
+  "techfile_hits": 4,
+  "model_files_scanned": 80,
+  "stat_syntax_hits": {
+    "statistics_block": 52,
+    "mismatch_block": 37,
+    "vary_stmt": 140,
+    "process_block": 15
+  },
+  "stat_syntax_files": {
+    "statistics_block": 3,
+    "mismatch_block": 3,
+    "vary_stmt": 3,
+    "process_block": 2
+  },
+  "stat_model_verdict": "STAT_MODEL_PRESENT"
+}

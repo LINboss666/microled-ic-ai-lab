@@ -1,0 +1,418 @@
+`timescale 1ns / 1ps
+// Self-checking ModelSim testbench for the course representative top level.
+//
+// Every check drives real ports and reads real outputs. No force/release, no
+// hand-drawn waveforms, no post-hoc expected-value editing. The VCD written by
+// this testbench is the ONLY source of the waveform figures.
+//
+// Cases: C01 reset / C02 col 0->1 / C03 1023->0 / C04 one-column / C05 even-odd
+// 512 Scan partition / C06 even-odd 384 Data mapping / C07 blank force-off /
+// C08 latch-vs-scan-switch / C09 PWM black / C10 PWM max code boundary /
+// C11 pam_sel=000 is NOT black / C12 negative protocol cases /
+// C13 60 Hz & 100 Hz column-time budget.
+module course_selfcheck_tb;
+
+    localparam integer CLK_NS   = 10;    // 100 MHz POC reference
+    localparam integer TICK_CLK = 12;    // 12 clk per grey tick -> 120 ns POC tick
+    localparam integer TICK_NS  = CLK_NS * TICK_CLK;
+    localparam integer BLANK_TICKS = 8;  // POC blanking overhead assumption
+
+    reg         clk = 1'b0;
+    reg         reset_n = 1'b0;
+    reg         blank = 1'b1;
+    reg         fault = 1'b0;
+    reg         scan_en = 1'b0;
+    reg         col_step = 1'b0;
+    reg  [9:0]  row_addr = 10'd0;
+    reg  [8:0]  row_wdata = 9'd0;
+    reg         row_wr_en = 1'b0;
+    reg         latch_stb = 1'b0;
+    reg         system_en = 1'b0;
+    reg  [1:0]  mode = 2'd0;
+    reg  [7:0]  cfg_pure = 8'd0;
+    reg  [5:0]  cfg_hyb_time = 6'd0;
+    reg  [2:0]  cfg_hyb_pam = 3'd0;
+    reg         cfg_valid = 1'b0;
+    reg         gray_latch = 1'b0;
+    reg         pwm_start = 1'b0;
+    reg         tick_en = 1'b0;
+
+    wire        pwm_tick;
+    wire [9:0]  col_addr;
+    wire        scan_bank, scan_even_sel, scan_odd_sel, scan_sel_valid;
+    wire [8:0]  scan_ch;
+    wire [10:0] onehot_pop;
+    wire        onehot_valid, col_wrap;
+    wire        data_bank;
+    wire [8:0]  data_ch;
+    wire [8:0]  latched_ch_data;
+    wire [2:0]  pam_sel_lat;
+    wire [5:0]  pwm_code_lat;
+    wire        data_out_en, chan_valid, latch_on_switch, row_in_range;
+    wire [7:0]  latch_count;
+    wire        data_en, data_en_b, obs_tick;
+    wire [2:0]  pam_sel, win_state;
+    wire [7:0]  cfg_version, proto_err;
+    wire        drive_gate;
+
+    integer assert_count = 0, pass_count = 0, fail_count = 0;
+    integer onehot_violations = 0;
+    // Pre-edge tick counter: obs_tick is combinational and deasserts in the
+    // same delta cycle in which the window ends, so sampling it at +1 ns
+    // cannot see the end-boundary tick. This monitor samples the window state
+    // at the rising edge, before nonblocking state updates take effect.
+    integer win_tick_count = 0;
+    integer prev_win_state = 0;
+    integer fd = 0;
+    integer tick_div = 0;
+    reg         pwm_tick_q = 1'b0;
+    integer     k;
+    integer     cond10, acc10, t_start10, t_end10;
+    integer     cond9,  acc9,  t_start9,  t_end9;
+    integer     cond11, acc11, t_start11, t_end11;
+    integer     cond_part, acc_part;
+    integer     cp60_x1000, cp100_x1000, slot120_i, slot200_i;
+    real        col_period_60_ns, col_period_100_ns, slot_120_ns, slot_200_ns;
+
+    assign pwm_tick = pwm_tick_q;
+
+    course_top dut (
+        .clk(clk), .reset_n(reset_n), .blank(blank), .fault(fault),
+        .scan_en(scan_en), .col_step(col_step), .col_addr(col_addr),
+        .scan_bank(scan_bank), .scan_ch(scan_ch), .scan_even_sel(scan_even_sel),
+        .scan_odd_sel(scan_odd_sel), .scan_sel_valid(scan_sel_valid),
+        .onehot_pop(onehot_pop), .onehot_valid(onehot_valid), .col_wrap(col_wrap),
+        .row_addr(row_addr), .row_wdata(row_wdata), .row_wr_en(row_wr_en),
+        .latch_stb(latch_stb), .data_bank(data_bank), .data_ch(data_ch),
+        .latched_ch_data(latched_ch_data), .pam_sel_lat(pam_sel_lat),
+        .pwm_code_lat(pwm_code_lat), .data_out_en(data_out_en),
+        .chan_valid(chan_valid), .latch_on_switch(latch_on_switch),
+        .latch_count(latch_count), .row_in_range(row_in_range),
+        .system_en(system_en), .mode(mode), .cfg_pure(cfg_pure),
+        .cfg_hyb_time(cfg_hyb_time), .cfg_hyb_pam(cfg_hyb_pam),
+        .cfg_valid(cfg_valid), .gray_latch(gray_latch), .pwm_start(pwm_start),
+        .pwm_tick(pwm_tick), .data_en(data_en), .data_en_b(data_en_b),
+        .obs_tick(obs_tick), .pam_sel(pam_sel), .win_state(win_state),
+        .cfg_version(cfg_version), .proto_err(proto_err), .drive_gate(drive_gate)
+    );
+
+    always #(CLK_NS/2) clk = ~clk;
+
+    // Grey tick is a clock-enable in the same clk domain, generated on the
+    // falling edge so its value is stable at every sampled rising edge.
+    always @(negedge clk) begin
+        if (!reset_n || !tick_en) begin
+            tick_div  <= 0;
+            pwm_tick_q <= 1'b0;
+        end else if (tick_div == TICK_CLK - 1) begin
+            tick_div  <= 0;
+            pwm_tick_q <= 1'b1;
+        end else begin
+            tick_div  <= tick_div + 1;
+            pwm_tick_q <= 1'b0;
+        end
+    end
+
+    // Continuous negative monitor: never more than one column selected.
+    always @(posedge clk) begin
+        if (reset_n && onehot_pop > 11'd1)
+            onehot_violations = onehot_violations + 1;
+    end
+
+    // Counts grey ticks actually consumed by an ARMED/RUN window, including
+    // the final boundary tick that moves the window to DONE.
+    always @(posedge clk) begin
+        if (!reset_n) begin
+            win_tick_count = 0;
+            prev_win_state = 0;
+        end else begin
+            if ((win_state == 3'd1) && (prev_win_state != 3'd1))
+                win_tick_count = 0;
+            else if (pwm_tick && ((win_state == 3'd1) || (win_state == 3'd2)))
+                win_tick_count = win_tick_count + 1;
+            prev_win_state = win_state;
+        end
+    end
+
+    task automatic step(input integer n);
+        repeat (n) @(posedge clk);
+        #1;
+    endtask
+
+    task automatic chk(input string nm, input logic cond);
+        assert_count = assert_count + 1;
+        if (cond) begin
+            pass_count = pass_count + 1;
+            $display("PASS %s", nm);
+        end else begin
+            fail_count = fail_count + 1;
+            $display("FAIL %s  (t=%0t)", nm, $time);
+        end
+    endtask
+
+    task automatic ev(input string nm, input integer v);
+        if (fd != 0) $fdisplay(fd, "%0d,%s,%0d", $time, nm, v);
+    endtask
+
+    task automatic write_row(input [9:0] ra, input [8:0] wd);
+        row_addr  = ra;
+        row_wdata = wd;
+        row_wr_en = 1'b1;
+        step(1);
+        row_wr_en = 1'b0;
+        step(1);
+    endtask
+
+    // Arm one Hybrid grey window following the reused controller's protocol:
+    // safe-phase mode adoption -> complete load -> LATCH -> PWM_START -> unblank.
+    task automatic arm_window(input [5:0] tc, input [2:0] pc);
+        tick_en    = 1'b0;
+        blank      = 1'b1;
+        system_en  = 1'b0;
+        cfg_valid  = 1'b0;
+        gray_latch = 1'b0;
+        pwm_start  = 1'b0;
+        mode       = 2'd1;
+        cfg_hyb_time = tc;
+        cfg_hyb_pam  = pc;
+        step(2);                       // mode adoption in safe phase
+        system_en = 1'b1;
+        cfg_valid = 1'b1;             // rising cfg_valid == complete load
+        step(2);
+        gray_latch = 1'b1;            // accepted LATCH
+        step(1);
+        gray_latch = 1'b0;
+        step(2);
+        pwm_start = 1'b1;             // arm
+        step(1);
+        pwm_start = 1'b0;
+        step(2);
+        tick_en = 1'b1;
+        blank   = 1'b0;               // open the window
+        step(1);
+    endtask
+
+    // Run to S_DONE, counting accepted ticks and conducting ticks with real
+    // timestamps. No expected count is injected; it is measured.
+    task automatic run_window(output integer cond_t, output integer acc_t,
+                              output integer ts, output integer te,
+                              input integer max_ticks);
+        integer guard;
+        cond_t = 0; acc_t = 0; ts = -1; te = -1; guard = 0;
+        while (win_state != 3'd3 && guard < max_ticks * TICK_CLK + 200) begin
+            @(posedge clk); #1;
+            if (obs_tick) begin
+                acc_t = acc_t + 1;
+                if (ts < 0) ts = $time;
+                te = $time;
+                if (data_en) cond_t = cond_t + 1;
+            end
+            guard = guard + 1;
+        end
+        tick_en = 1'b0;
+    endtask
+
+    initial begin
+        fd = $fopen("course_wave_events.csv", "w");
+        if (fd == 0) $display("FATAL: cannot open event CSV");
+        else $fdisplay(fd, "time_ns,event,value");
+        $dumpfile("course_sim.vcd");
+        $dumpvars(1, course_selfcheck_tb);
+        $display("COURSE_RTL_TB_START tick_ns=%0d blank_ticks=%0d", TICK_NS, BLANK_TICKS);
+        ev("tb_start", 0);
+
+        // ---------------- C01 reset / start state ---------------------------
+        step(3);
+        chk("C01_reset_col_addr_0",       col_addr === 10'd0);
+        chk("C01_reset_onehot_pop_0",     onehot_pop === 11'd0);
+        chk("C01_reset_latch_count_0",    latch_count === 8'd0);
+        chk("C01_reset_drive_gate_off",   drive_gate === 1'b0);
+        chk("C01_reset_win_state_idle",   win_state === 3'd0);
+        chk("C01_reset_data_en_off",      data_en === 1'b0);
+        chk("C01_reset_chan_valid_off",   chan_valid === 1'b0);
+        reset_n = 1'b1;
+        step(2);
+        ev("reset_released", 1);
+
+        // ---------------- C02 column 0 -> 1 --------------------------------
+        scan_en = 1'b1;
+        blank   = 1'b0;
+        step(1);
+        chk("C02_start_col_0",            col_addr === 10'd0);
+        col_step = 1'b1; step(1); col_step = 1'b0; step(1);
+        chk("C02_col_0_to_1",             col_addr === 10'd1);
+        chk("C02_onehot_pop_is_1",        onehot_pop === 11'd1);
+        chk("C02_onehot_valid",           onehot_valid === 1'b1);
+        ev("col_0_to_1", 1);
+
+        // ---------------- C05 even/odd 512 Scan partition -------------------
+        col_step = 1'b1; step(1); col_step = 1'b0; step(1);   // col = 2
+        chk("C05_col2_even_bank0_ch1",    (scan_bank === 1'b0) && (scan_ch === 9'd1) &&
+                                          (scan_even_sel === 1'b1) && (scan_odd_sel === 1'b0));
+        col_step = 1'b1; step(1); col_step = 1'b0; step(1);   // col = 3
+        chk("C05_col3_odd_bank1_ch1",     (scan_bank === 1'b1) && (scan_ch === 9'd1) &&
+                                          (scan_even_sel === 1'b0) && (scan_odd_sel === 1'b1));
+        ev("scan_bank_partition_checked", 3);
+
+        // ---------------- C03 column 1023 -> 0 wrap ------------------------
+        col_step = 1'b1;
+        step(1020);                                           // 3 + 1020 = 1023
+        col_step = 1'b0; step(1);
+        chk("C03_reached_col_1023",       col_addr === 10'd1023);
+        chk("C03_col1023_odd_bank1_ch511",(scan_bank === 1'b1) && (scan_ch === 9'd511));
+        col_step = 1'b1;
+        #1;
+        chk("C03_wrap_strobe_high",       col_wrap === 1'b1);
+        ev("col_wrap_1023_to_0", 1023);
+        step(1);
+        col_step = 1'b0; step(1);
+        chk("C03_wrapped_to_col_0",       col_addr === 10'd0);
+        chk("C03_col0_even_bank0_ch0",    (scan_bank === 1'b0) && (scan_ch === 9'd0));
+
+        // ---------------- C04 at most one column / blank -------------------
+        blank = 1'b1; step(2);
+        chk("C04_blank_onehot_pop_0",     onehot_pop === 11'd0);
+        chk("C04_blank_scan_sel_off",     scan_sel_valid === 1'b0);
+        chk("C04_blank_drive_gate_off",   drive_gate === 1'b0);
+        blank = 1'b0; step(2);
+        chk("C04_unblank_onehot_pop_1",   onehot_pop === 11'd1);
+        chk("C04_onehot_violations_0",    onehot_violations === 0);
+        ev("onehot_violations", onehot_violations);
+
+        // ---------------- C06 even/odd 384 Data mapping --------------------
+        write_row(10'd0,   9'h0A5);
+        write_row(10'd1,   9'h05A);
+        write_row(10'd766, 9'h1FF);
+        write_row(10'd767, 9'h0FF);
+        row_addr = 10'd0; step(1);
+        chk("C06_read_row0_even_ch0",     (latched_ch_data === 9'h0A5) && (data_bank === 1'b0) && (data_ch === 9'd0));
+        row_addr = 10'd1; step(1);
+        chk("C06_read_row1_odd_ch0_no_alias", (latched_ch_data === 9'h05A) && (data_bank === 1'b1) && (data_ch === 9'd0));
+        row_addr = 10'd766; step(1);
+        chk("C06_read_row766_even_ch383", (latched_ch_data === 9'h1FF) && (data_bank === 1'b0) && (data_ch === 9'd383));
+        row_addr = 10'd767; step(1);
+        chk("C06_read_row767_odd_ch383_no_alias", (latched_ch_data === 9'h0FF) && (data_bank === 1'b1) && (data_ch === 9'd383));
+        row_addr = 10'd768; step(1);
+        chk("C06_row768_out_of_range",    row_in_range === 1'b0);
+        ev("data_partition_checked", 4);
+
+        // ---------------- C08 latch vs column switch -----------------------
+        blank = 1'b0;
+        col_step = 1'b1; step(3); col_step = 1'b0; step(1);  // advance 3 columns
+        blank = 1'b1; step(1);
+        ev("latch_in_blank_at_col", col_addr);
+        latch_stb = 1'b1; step(1); latch_stb = 1'b0; step(1);
+        chk("C08_latch_accepted_in_blank", (latch_count === 8'd1) && (chan_valid === 1'b1));
+        chk("C08_latch_on_column_switch",  latch_on_switch === 1'b1);
+        chk("C08_latched_pam_field",       pam_sel_lat === 3'b011);   // from 9'h0FF
+        chk("C08_latched_pwm_field",       pwm_code_lat === 6'd63);
+        blank = 1'b0; step(1);
+        latch_stb = 1'b1; step(1); latch_stb = 1'b0; step(1);
+        chk("C08_latch_refused_outside_blank", latch_count === 8'd1);
+        ev("latch_count_after_refusal", latch_count);
+
+        // ---------------- C10 PWM maximum code boundary (63 -> 64 ticks) ---
+        arm_window(6'd63, 3'd7);
+        run_window(cond10, acc10, t_start10, t_end10, 80);
+        chk("C10_max_code_conducting_ticks_64", cond10 === 64);
+        chk("C10_max_code_accepted_ticks_65",   win_tick_count === 65);
+        chk("C10_window_done_state",            win_state === 3'd3);
+        ev("pwm_max_conducting_ticks", cond10);
+        ev("pwm_max_accepted_ticks", acc10);
+        ev("pwm_max_window_ticks_pre_edge", win_tick_count);
+        ev("pwm_max_window_start_ns", t_start10);
+        ev("pwm_max_window_end_ns", t_end10);
+
+        // ---------------- C09 PWM black code -------------------------------
+        arm_window(6'd0, 3'd0);
+        run_window(cond9, acc9, t_start9, t_end9, 80);
+        chk("C09_black_code_no_conduction", cond9 === 0);
+        chk("C09_black_code_window_64_ticks", win_tick_count === 65);
+        ev("pwm_black_conducting_ticks", cond9);
+        ev("pwm_black_accepted_ticks", acc9);
+        ev("pwm_black_window_ticks_pre_edge", win_tick_count);
+
+        // ---------------- C11 pam_sel=000 is NOT a black code --------------
+        arm_window(6'd63, 3'd0);
+        run_window(cond11, acc11, t_start11, t_end11, 80);
+        chk("C11_pam000_is_lowest_nonzero", pam_sel === 3'b000);
+        chk("C11_pam000_still_conducts_64", cond11 === 64);
+        ev("pam000_conducting_ticks", cond11);
+
+        // ---------------- C07 blank force-off during an active window ------
+        arm_window(6'd63, 3'd7);
+        cond_part = 0; acc_part = 0;
+        for (k = 0; k < 60; k = k + 1) begin
+            @(posedge clk); #1;
+            if (obs_tick) begin acc_part = acc_part + 1; if (data_en) cond_part = cond_part + 1; end
+        end
+        chk("C07_pre_blank_conduction_seen", cond_part > 0);
+        blank = 1'b1; step(2);
+        chk("C07_blank_forces_data_en_off",  data_en === 1'b0);
+        chk("C07_blank_forces_drive_off",    drive_gate === 1'b0);
+        chk("C07_blank_forces_onehot_zero",  onehot_pop === 11'd0);
+        chk("C07_data_en_b_is_complement",   data_en_b === 1'b1);
+        chk("C07_blank_aborts_window",       win_state === 3'd4);
+        ev("blank_force_off_conducting_ticks_before", cond_part);
+        tick_en = 1'b0;
+        blank = 1'b0; step(2);
+
+        // ---------------- C12 negative protocol cases ----------------------
+        reset_n = 1'b0; step(2); reset_n = 1'b1; step(2);
+        blank = 1'b1; system_en = 1'b0; mode = 2'd2; cfg_valid = 1'b0;
+        gray_latch = 1'b0; pwm_start = 1'b0;
+        step(2);
+        chk("C12_illegal_mode_recorded",     (proto_err & 8'h08) !== 8'h00);
+        gray_latch = 1'b1; step(1); gray_latch = 1'b0; step(2);
+        chk("C12_illegal_latch_recorded",    (proto_err & 8'h04) !== 8'h00);
+        mode = 2'd1; step(2);
+        system_en = 1'b1; cfg_valid = 1'b0;
+        gray_latch = 1'b1; step(1); gray_latch = 1'b0; step(2);
+        chk("C12_stale_or_incomplete_recorded", (proto_err & 8'h42) !== 8'h00);
+        pwm_start = 1'b1; step(1); pwm_start = 1'b0; step(2);
+        chk("C12_start_refused_recorded",    (proto_err & 8'h10) !== 8'h00);
+        chk("C12_no_display_authorised",     (data_en === 1'b0) && (win_state !== 3'd2));
+        ev("negative_proto_err_bitmap", proto_err);
+
+        // ---------------- C13 60 Hz / 100 Hz column-time budget ------------
+        col_period_60_ns  = 1.0e9 / 60.0  / 1024.0;
+        col_period_100_ns = 1.0e9 / 100.0 / 1024.0;
+        slot_120_ns = (cond10 + BLANK_TICKS) * TICK_NS;
+        slot_200_ns = (cond10 + BLANK_TICKS) * 200;
+        cp60_x1000  = col_period_60_ns  * 1000.0;
+        cp100_x1000 = col_period_100_ns * 1000.0;
+        slot120_i   = slot_120_ns;
+        slot200_i   = slot_200_ns;
+        $display("TIMING_BUDGET tick_ns=%0d conducting_ticks=%0d blank_ticks=%0d", TICK_NS, cond10, BLANK_TICKS);
+        $display("TIMING_BUDGET col_period_60Hz_ns=%0.3f col_period_100Hz_ns=%0.3f", col_period_60_ns, col_period_100_ns);
+        $display("TIMING_BUDGET slot_120ns_tick_ns=%0.0f slot_200ns_tick_ns=%0.0f", slot_120_ns, slot_200_ns);
+        $display("TIMING_BUDGET fit_120ns_60Hz=%s fit_120ns_100Hz=%s fit_200ns_60Hz=%s fit_200ns_100Hz=%s",
+                 (slot_120_ns < col_period_60_ns)  ? "YES" : "NO",
+                 (slot_120_ns < col_period_100_ns) ? "YES" : "NO",
+                 (slot_200_ns < col_period_60_ns)  ? "YES" : "NO",
+                 (slot_200_ns < col_period_100_ns) ? "YES" : "NO");
+        chk("C13_budget_120ns_60Hz_fits",  slot_120_ns < col_period_60_ns);
+        chk("C13_budget_120ns_100Hz_fits", slot_120_ns < col_period_100_ns);
+        chk("C13_budget_200ns_100Hz_does_not_fit", slot_200_ns >= col_period_100_ns);
+        ev("tick_period_ns", TICK_NS);
+        ev("blank_ticks", BLANK_TICKS);
+        ev("col_period_60Hz_ns_x1000", cp60_x1000);
+        ev("col_period_100Hz_ns_x1000", cp100_x1000);
+        ev("slot_120ns_tick_ns", slot120_i);
+        ev("slot_200ns_tick_ns", slot200_i);
+
+        // ---------------- summary ------------------------------------------
+        chk("C04_onehot_violations_final_0", onehot_violations === 0);
+        $display("COURSE_RTL_ASSERT_COUNT=%0d", assert_count);
+        $display("COURSE_RTL_PASS_COUNT=%0d", pass_count);
+        $display("COURSE_RTL_FAIL_COUNT=%0d", fail_count);
+        $display("COURSE_RTL_ONEHOT_VIOLATIONS=%0d", onehot_violations);
+        $display("COURSE_RTL_RESULT=%s", (fail_count == 0) ? "PASS" : "FAIL");
+        ev("assert_count", assert_count);
+        ev("pass_count", pass_count);
+        ev("fail_count", fail_count);
+        if (fd != 0) $fclose(fd);
+        $finish;
+    end
+
+endmodule

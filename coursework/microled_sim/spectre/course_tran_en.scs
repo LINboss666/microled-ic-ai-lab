@@ -1,0 +1,32 @@
+// COURSE-MICROLED-SIM-20261112-R1 -- enable-switch transient (job S3).
+//
+// The enable is the CASCODE BIAS rail driven by a real pulse source:
+//   vcas = 0 V   -> Mcas off -> output branch shut (off-state leakage measured)
+//   vcas = 1.8 V -> Mcas on  -> nominal sink current (turn-on settling measured)
+// SCOPE LIMIT: this is a bias-rail enable, NOT the full DATA_EN digital enable
+// chain / decoder / per-branch pass device of the accepted PAM candidate.
+//
+// vsource type=pulse semantics on this build (AGENTS.md pitfall 20):
+//   delay -> rise -> width (high plateau starts AFTER the rising edge) -> fall
+// delay=1u rise=100n width=3u fall=100n => high plateau 1.1u .. 4.1u, down by 4.2u.
+simulator lang=spectre insensitive=yes
+
+include "${QODER_PDK_LIB}" section=tt
+simopt options temp=27
+
+include "course_sink_unit.scs"
+
+Iref   (irefbus VB)          isource dc=15u
+Viref  (irefbus 0)           vsource dc=0
+Vdd18  (vdd18 0)             vsource dc=1.8
+Vss    (vss 0)               vsource dc=0
+Rvdd   (vdd18 vss)           resistor r=1e6
+Vclamp (clamp_node 0)        vsource dc=1.2
+Vcas   (vcas 0)              vsource type=pulse val0=0 val1=1.8 delay=1u rise=100n width=3u fall=100n period=10u
+
+Xdut   (VB vcas data_out vss) course_sink_unit
+Ip_out (clamp_node data_out) iprobe
+
+save Ip_out vcas data_out VB
+
+tran_en tran stop=8u maxstep=20n

@@ -1,0 +1,36 @@
+{
+  "dc_sweep": {
+    "points": 19,
+    "vclamp_start_V": 0.6,
+    "vclamp_stop_V": 1.5,
+    "at_1p20V_iout_uA": 14.93190574,
+    "delta_vs_15uA_uA": -0.06809426000000052,
+    "delta_vs_15uA_pct": -0.4539617333333368,
+    "min_iout_uA": 14.902507018,
+    "max_iout_uA": 14.932045508,
+    "input_csv_sha256": "e036c11e6da8a2540dfd9d99262de9f42f41f1e5122f8419985697a8905c164f"
+  },
+  "transient": {
+    "samples": 426,
+    "stop_s": 8e-06,
+    "off_window_t_lt_0p9us": {
+      "samples": 46,
+      "mean_uA": 2.7393478260869566e-07,
+      "max_abs_uA": 2.74e-07
+    },
+    "on_window_2us_to_4us_median_uA": 14.9319057685,
+    "settling_90pct_of_on_median_s": 1.055938117658122e-06,
+    "settling_90pct_from_enable_start_us": 0.055938117658122004,
+    "off_tail_after_5us_max_abs_uA": 2.116e-06,
+    "rise_region_has_negative_displacement_current": true,
+    "input_csv_sha256": "76d426905ba2be1682817868bdaa5ec167f270f3554b3875043cd3733ae2cef3",
+    "notices": "trapezoidal ringing on Xdut.Mcas:int_s (7 notices, 365 suppressed); numerical-method notice, not an electrical failure"
+  },
+  "monte_carlo": {
+    "samples": 30,
+    "mean_uA": 14.932017724666668,
+    "stdev_uA": 0.00888785848983161,
+    "min_uA": 14.919569356,
+    "max_uA": 14.955811957
+  }
+}

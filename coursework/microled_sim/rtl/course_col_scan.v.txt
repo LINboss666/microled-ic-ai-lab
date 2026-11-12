@@ -1,0 +1,66 @@
+`timescale 1ns / 1ps
+// Course-only representative column address / strobe timing controller.
+//
+// SCOPE (must not be read as a whole-chip implementation):
+//   * Implements the 1024-column address domain and the even/odd 512-channel
+//     Scan-chip partition as ADDRESS DECODING only.
+//   * There is NO Scan high-side PMOS array, no level shifter, no TCON and no
+//     panel RC/LED load. Those remain NOT_IMPLEMENTED.
+//   * "At most one column selected" is made observable as an explicit popcount
+//     of a real one-hot strobe vector, not as an informal claim.
+//
+// Partition rule (engineering derivation for this course, NOT a teacher-given
+// spec): col_addr[0] selects the Scan chip (even=0, odd=1), col_addr[9:1] is the
+// 9-bit channel index 0..511 inside that chip. Two chips x 512 = 1024 columns.
+module course_col_scan #(
+    parameter N_COL  = 1024,
+    parameter COL_W  = 10
+) (
+    input  wire              clk,
+    input  wire              reset_n,        // active low, this module only
+    input  wire              scan_en,        // global scan enable
+    input  wire              col_step,       // one-column advance (same-domain clock-enable)
+    input  wire              blank,          // active high: forces every strobe off
+    output reg  [COL_W-1:0]  col_addr,       // 0..1023, wraps 1023 -> 0
+    output wire              scan_bank,      // 0 = even Scan chip, 1 = odd Scan chip
+    output wire [COL_W-2:0]  scan_ch,        // 0..511 inside the selected chip
+    output wire              scan_even_sel,
+    output wire              scan_odd_sel,
+    output wire              scan_sel_valid,
+    output reg  [10:0]       onehot_pop,     // popcount of the selected-column vector
+    output wire              onehot_valid,   // exactly 0 or 1 column selected
+    output wire              col_wrap        // high on the step that wraps 1023 -> 0
+);
+
+    reg  [N_COL-1:0] col_onehot;
+    reg  [10:0]      pop_comb;
+    integer          i;
+
+    // Real one-hot strobe vector + explicit popcount. When blanked or disabled
+    // the vector is all-zero, so the selected-column count is 0.
+    always @* begin
+        col_onehot = {N_COL{1'b0}};
+        if (scan_en && !blank && reset_n)
+            col_onehot[col_addr] = 1'b1;
+        pop_comb = 11'd0;
+        for (i = 0; i < N_COL; i = i + 1)
+            pop_comb = pop_comb + {10'd0, col_onehot[i]};
+        onehot_pop = pop_comb;
+    end
+
+    always @(posedge clk or negedge reset_n) begin
+        if (!reset_n)
+            col_addr <= {COL_W{1'b0}};
+        else if (scan_en && col_step && !blank)
+            col_addr <= (col_addr == N_COL - 1) ? {COL_W{1'b0}} : col_addr + 1'b1;
+    end
+
+    assign scan_bank      = col_addr[0];
+    assign scan_ch        = col_addr[COL_W-1:1];
+    assign onehot_valid   = (onehot_pop <= 11'd1);
+    assign scan_sel_valid = scan_en && !blank && reset_n && onehot_valid;
+    assign scan_even_sel  = scan_sel_valid && (scan_bank == 1'b0);
+    assign scan_odd_sel   = scan_sel_valid && (scan_bank == 1'b1);
+    assign col_wrap       = scan_en && col_step && !blank && (col_addr == N_COL - 1);
+
+endmodule

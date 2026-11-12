@@ -1,0 +1,19 @@
+// Course OA schematic IMPORT SOURCE (spiceIn / Analog Schematic Generation).
+// No PDK model content, no bench wiring, no license path, no simulation analysis.
+// This is the SAME 3-device basic NMOS pull-down unit used by the measured
+// course_dc_tt.scs / course_tran_en.scs / course_mc.scs jobs.
+//
+// spiceIn on this IC617 build is the only proven way to create a real OA
+// schematic with electrical connectivity in a batch session (the Schematic
+// Editor package is unavailable in -nograph). CELL names after import:
+//   course_sink_unit   (the unit subckt)
+//   course_sink_top    (the top-level shell that instantiates it)
+simulator lang=spectre
+
+subckt course_sink_unit (VB VCAS DATA_OUT VSS)
+  Mref (VB       VB   VSS    VSS) n33 l=2e-6 w=2e-5
+  Mout (NODE_M   VB   VSS    VSS) n33 l=2e-6 w=2e-5
+  Mcas (DATA_OUT VCAS NODE_M VSS) n33 l=2e-6 w=2e-5
+ends course_sink_unit
+
+Xdut (VB VCAS DATA_OUT VSS) course_sink_unit

@@ -1,0 +1,61 @@
+# Course OA evidence (sanitised; all native host paths removed)
+# spiceIn saved two schematic views; shared library map MD5 unchanged before/after
+# --- spiceIn Check-and-Save / connectivity lines ---
+	Created net VB.
+	Created net VCAS.
+	Created net DATA_OUT.
+	Created net VSS.
+		Master Cellview: 'smic18mmrf.n33:symbol' found.
+		Created instance 'Mref'.
+		Created connection between net 'VB' and term 'D'.
+		Created connection between net 'VB' and term 'G'.
+		Created connection between net 'VSS' and term 'S'.
+		Created connection between net 'VSS' and term 'B'.
+		Created net 'NODE_M'.
+		Master Cellview: 'smic18mmrf.n33:symbol' found.
+		Created instance 'Mout'.
+		Created connection between net 'NODE_M' and term 'D'.
+		Created connection between net 'VB' and term 'G'.
+		Created connection between net 'VSS' and term 'S'.
+		Created connection between net 'VSS' and term 'B'.
+		Master Cellview: 'smic18mmrf.n33:symbol' found.
+		Created instance 'Mcas'.
+		Created connection between net 'DATA_OUT' and term 'D'.
+		Created connection between net 'VCAS' and term 'G'.
+		Created connection between net 'NODE_M' and term 'S'.
+		Created connection between net 'VSS' and term 'B'.
+Saved and closed 'course_sim_20261112.course_sink_unit:netlist_tmp'.
+INFO (SPICEIN-33): Spice In successfully created the schematic view course_sim_20261112.course_sink_unit::schematic. Read the log file
+		Created net 'VB'.
+		Created net 'VCAS'.
+		Created net 'DATA_OUT'.
+		Created net 'VSS'.
+		Master Cellview: 'course_sim_20261112.course_sink_unit:schematic' found.
+		Created instance 'Xdut'.
+		Created connection between net 'VB' and term 'VB'.
+		Created connection between net 'VCAS' and term 'VCAS'.
+		Created connection between net 'DATA_OUT' and term 'DATA_OUT'.
+		Created connection between net 'VSS' and term 'VSS'.
+Saved and closed 'course_sim_20261112.course_sink_top:netlist_tmp'.
+INFO (SPICEIN-33): Spice In successfully created the schematic view course_sim_20261112.course_sink_top::schematic. Read the log file
+INFO (SPICEIN-54): Spice In successfully imported the netlist file '<native-path> You may like to read the
+# --- dbAccess read-only readback ---
+COURSE_OA_READBACK_BEGIN
+COURSE_OA_CELL "course_sink_unit" opened=t
+COURSE_OA_COUNTS cell="course_sink_unit" instances=7 nets=5 terminals=4 shapes=39
+COURSE_OA_NET "course_sink_unit" "VSS"
+COURSE_OA_NET "course_sink_unit" "NODE_M"
+COURSE_OA_NET "course_sink_unit" "DATA_OUT"
+COURSE_OA_NET "course_sink_unit" "VCAS"
+COURSE_OA_NET "course_sink_unit" "VB"
+COURSE_OA_INST "course_sink_unit" name="Mcas" masterCell="n33" masterLib="smic18mmrf"
+COURSE_OA_INST "course_sink_unit" name="Mout" masterCell="n33" masterLib="smic18mmrf"
+COURSE_OA_INST "course_sink_unit" name="Mref" masterCell="n33" masterLib="smic18mmrf"
+COURSE_OA_INST "course_sink_unit" name="PIN3" masterCell="iopin" masterLib="basic"
+COURSE_OA_INST "course_sink_unit" name="PIN2" masterCell="iopin" masterLib="basic"
+COURSE_OA_INST "course_sink_unit" name="PIN1" masterCell="iopin" masterLib="basic"
+COURSE_OA_INST "course_sink_unit" name="PIN0" masterCell="iopin" masterLib="basic"
+# --- GUI screenshot capability (this round) ---
+X_DISPLAY_AVAILABLE=yes (:0, Xorg running)
+ROOT_WINDOW_GRAB_BYTES=221
+VIRTUOSO_GUI_SCREENSHOT=BLOCKED (blank root grab; historical build note documents nested Qt child windows)

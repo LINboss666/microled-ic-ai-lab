@@ -1,0 +1,45 @@
+// COURSE-MICROLED-SIM-20261112-R1 -- DC operating point / clamp sweep (job S1).
+//
+// Comparable baseline conditions, inherited from the limited-accepted
+// DATA-7C-B-DC-R1 single-output TT result (see reports/course_sim/analog_test_report.md):
+//   TT corner, 27 C, vdd18 = VCAS = 1.8 V, VSS = explicit 0 V,
+//   external IREF = 15 uA, output ideal clamp 1.20 V (swept 0.60..1.50 step 0.05).
+// SCOPE LIMIT: this is a NEW 3-device basic unit, NOT the accepted eight-branch
+// PAM ladder, so the historical numbers are a comparison only, not an acceptance
+// criterion for this circuit. No threshold is changed to chase a PASS.
+//
+// No PDK path is present here: QODER_PDK_LIB is injected at run time from the
+// untracked local environment file (spectre/pdk_local.env.example documents the name).
+simulator lang=spectre insensitive=yes
+
+include "${QODER_PDK_LIB}" section=tt
+simopt options temp=27
+
+include "course_sink_unit.scs"
+
+// ---- reference current and supplies; every rail referenced to a real 0 V ----
+Iref   (irefbus VB)          isource dc=15u
+Viref  (irefbus 0)           vsource dc=0
+Vdd18  (vdd18 0)             vsource dc=1.8
+Vcas   (vcas 0)              vsource dc=1.8
+Vss    (vss 0)               vsource dc=0
+// 1.8 V domain static load: keeps the vdd18 rail from floating; NOT a pixel load
+Rvdd   (vdd18 vss)           resistor r=1e6
+
+// output ideal clamp, swept by the dc analysis below
+Vclamp (clamp_node 0)        vsource dc=1.2
+
+Xdut   (VB vcas data_out vss) course_sink_unit
+
+// current measurement direction: positive = sinking out of data_out into the DUT
+Ip_out (clamp_node data_out) iprobe
+
+save VB vcas vdd18 vss data_out clamp_node irefbus
+// iprobe current variable IS the instance name in Spectre 15.1 (`spectre -h iprobe`:
+// "The current variable is given the name of the iprobe instance", op param `i`).
+// The historical `Ip_out:current` suffix produced SPECTRE-8059 / SPECTRE-8287 in
+// the first run and the save was ignored, so no current appeared in the PSF.
+// Fixed to the plain instance name; the failed run is kept verbatim in results/.
+save Ip_out
+
+dc_case dc dev=Vclamp param=dc start=0.600 stop=1.500 step=0.050

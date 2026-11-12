@@ -1,0 +1,104 @@
+`timescale 1ns / 1ps
+// Simplified course top level: connects the column-scan controller, the Data
+// row-data/latch controller and the REUSED Data-7B-R3 grey-scale controller.
+//
+// NOT_IMPLEMENTED (explicit, do not read the module name as a chip):
+//   TCON full chip, Data full 384-channel NMOS current-source array,
+//   Scan full 512-channel high-side PMOS array, level shifters, LED/panel load,
+//   layout, PVT/SOA, optical characterisation and any 9-bit optical precision.
+//
+// Only the ADDRESS DOMAINS (1024 columns x 768 rows) and the control fields are
+// represented. drive_gate is a logic-level representative gating signal, NOT a
+// measured pixel current.
+module course_top (
+    input  wire        clk,            // 100 MHz POC reference (10 ns), same domain for all
+    input  wire        reset_n,        // active low, all three blocks
+    input  wire        blank,          // active high, common blanking
+    input  wire        fault,          // active high, grey controller only
+
+    // ---- column scan / strobe -------------------------------------------------
+    input  wire        scan_en,
+    input  wire        col_step,
+    output wire [9:0]  col_addr,
+    output wire        scan_bank,      // 0 = even Scan chip, 1 = odd Scan chip
+    output wire [8:0]  scan_ch,        // 0..511
+    output wire        scan_even_sel,
+    output wire        scan_odd_sel,
+    output wire        scan_sel_valid,
+    output wire [10:0] onehot_pop,
+    output wire        onehot_valid,
+    output wire        col_wrap,
+
+    // ---- Data row data / latch / enable --------------------------------------
+    input  wire [9:0]  row_addr,
+    input  wire [8:0]  row_wdata,      // [8:6] PAM select, [5:0] PWM time code
+    input  wire        row_wr_en,
+    input  wire        latch_stb,
+    output wire        data_bank,      // 0 = even Data chip, 1 = odd Data chip
+    output wire [8:0]  data_ch,        // 0..383
+    output wire [8:0]  latched_ch_data,
+    output wire [2:0]  pam_sel_lat,
+    output wire [5:0]  pwm_code_lat,
+    output wire        data_out_en,
+    output wire        chan_valid,
+    output wire        latch_on_switch,
+    output wire [7:0]  latch_count,
+    output wire        row_in_range,
+
+    // ---- reused grey-scale controller (dd1_d7a_gray_ctrl, Data-7B-R3 bytes) --
+    input  wire        system_en,
+    input  wire [1:0]  mode,           // 0 = Pure 8-bit PWM, 1 = Hybrid 3+6
+    input  wire [7:0]  cfg_pure,
+    input  wire [5:0]  cfg_hyb_time,
+    input  wire [2:0]  cfg_hyb_pam,
+    input  wire        cfg_valid,
+    input  wire        gray_latch,     // separate strobe: config LATCH, not a row load
+    input  wire        pwm_start,
+    input  wire        pwm_tick,       // grey-window tick (clock-enable in clk domain)
+    output wire        data_en,
+    output wire        data_en_b,
+    output wire        obs_tick,
+    output wire [2:0]  pam_sel,
+    output wire [2:0]  win_state,
+    output wire [7:0]  cfg_version,
+    output wire [7:0]  proto_err,
+
+    // ---- combined representative output --------------------------------------
+    output wire        drive_gate
+);
+
+    course_col_scan #(.N_COL(1024), .COL_W(10)) u_scan (
+        .clk(clk), .reset_n(reset_n), .scan_en(scan_en), .col_step(col_step),
+        .blank(blank), .col_addr(col_addr), .scan_bank(scan_bank),
+        .scan_ch(scan_ch), .scan_even_sel(scan_even_sel), .scan_odd_sel(scan_odd_sel),
+        .scan_sel_valid(scan_sel_valid), .onehot_pop(onehot_pop),
+        .onehot_valid(onehot_valid), .col_wrap(col_wrap)
+    );
+
+    course_data_latch #(.N_ROW(768), .ROW_W(10), .N_CH(384), .CH_W(9), .DW(9)) u_data (
+        .clk(clk), .reset_n(reset_n), .blank(blank),
+        .row_addr(row_addr), .row_wdata(row_wdata), .row_wr_en(row_wr_en),
+        .latch_stb(latch_stb), .active_col(col_addr),
+        .data_bank(data_bank), .data_ch(data_ch),
+        .latched_ch_data(latched_ch_data), .pam_sel(pam_sel_lat),
+        .pwm_code(pwm_code_lat), .data_out_en(data_out_en),
+        .chan_valid(chan_valid), .latch_on_switch(latch_on_switch),
+        .latch_count(latch_count), .row_in_range(row_in_range)
+    );
+
+    dd1_d7a_gray_ctrl u_gray (
+        .clk(clk), .reset_n(reset_n), .system_en(system_en), .tick(pwm_tick),
+        .mode(mode), .cfg_pure(cfg_pure), .cfg_hyb_time(cfg_hyb_time),
+        .cfg_hyb_pam(cfg_hyb_pam), .cfg_valid(cfg_valid),
+        .latch_stb(gray_latch), .pwm_start(pwm_start),
+        .blank(blank), .fault(fault),
+        .data_en(data_en), .data_en_b(data_en_b), .obs_tick(obs_tick),
+        .pam_sel(pam_sel), .win_state(win_state),
+        .cfg_version(cfg_version), .proto_err(proto_err)
+    );
+
+    // Representative gating: PWM conduction request AND a valid latched row AND
+    // exactly one selected column AND not blanked / not faulted.
+    assign drive_gate = data_en && data_out_en && scan_sel_valid && !blank && !fault;
+
+endmodule
