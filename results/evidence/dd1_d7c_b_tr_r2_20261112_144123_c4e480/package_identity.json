@@ -1,0 +1,22 @@
+{
+ "payload_sha": "ff95b20ff08abe14f1b359c41e969bdb8116e134",
+ "delivered_zip": "D:/ic617_d7c_b_tr_r2/review/dd1_d7c_b_tr_r2_package_ff95b20_v3.zip",
+ "delivered_zip_bytes": 24001519,
+ "delivered_zip_sha256": "402330e9a079ae4736f426b16e0f5c1fcd3fdedbedc04edf83035476a8bb1155",
+ "members": 381,
+ "manifest_rows": 379,
+ "zip_crc_test": "PASS",
+ "superseded_packages": [
+  {
+   "path": "D:/ic617_d7c_b_tr_r2/review/dd1_d7c_b_tr_r2_package_ff95b20.zip",
+   "sha256": "173cba355e4b47793435e38f8b7c4e0ed5e021a5c1099f491a3257291b2c5a9c",
+   "defect": "PACKAGE_README.md carried a literal placeholder instead of the payload SHA"
+  },
+  {
+   "path": "D:/ic617_d7c_b_tr_r2/review/dd1_d7c_b_tr_r2_package_ff95b20_v2.zip",
+   "sha256": "d594d74224f4466bf004e4569838e2b8c8787b7df5ad898d19c8f17969172033",
+   "defect": "the packaging closure omitted tests/dd1_d7c_b_dc and the PREP/DC deck directories needed by the in-package probe"
+  }
+ ],
+ "note": "all tracked members in v1/v2/v3 are the byte content of the same payload SHA; only generated README, manifest and closure membership changed. Superseded packages are retained, never overwritten."
+}
