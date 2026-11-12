@@ -1,0 +1,25 @@
+T1 EDGE TABLE SELF CHECK (no simulation)
+------------------------------------------------------------------
+[PASS] window + blank = short slot                  768+208=976
+[PASS] window + blank = long slot                   768+209=977
+[PASS] blank short = 208 cycles                     208
+[PASS] blank long  = 209 cycles                     209
+[PASS] load starts after LATCH pulse                832
+[PASS] load ends inside next slot                   1600 (= 624 in next slot)
+[PASS] data_load_deadline = next LATCH - guard      1800
+[PASS] data_load net slack = 200 cycles             200 cycles = 2.00 us
+[PASS] naive 976-768 = 208                          208
+[PASS] real gap 208-4(LATCH pulse) = 204            204
+[PASS] chain 208-4-4 = 200 net                      200
+[PASS] video_receipt_deadline = 828                 828
+[PASS] video net slack = 60 cycles                  60 cycles = 0.60 us
+[PASS] two deadlines differ by 140 cycles           140
+[PASS] LATCH pulse = 40 ns                          4 cycles
+[PASS] PWM_START pulse = 40 ns                      4 cycles
+[PASS] COL_ID setup = 160 ns >= 10 ns               16 cycles
+[PASS] COL_ID hold covered by 40 ns pulse >= 5 ns   40 ns
+[PASS] frame = 576*977 + 448*976                    1000000
+[PASS] ticks per window = 768/12                    64
+------------------------------------------------------------------
+checks=20 failed=0
+VERDICT: ALL_PASS

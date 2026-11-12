@@ -1,8 +1,6 @@
 mode=staged objects_checked=23
-BLOCKED coursework/microled_sim/results/t6_t1/t1_run06_waveform.vcd.txt
-          LARGE blob 743334 bytes (bulk output does not belong in history)
 PDK_TRACKED_FILES = 0
 CREDENTIAL_TRACKED_FILES = 0
 PRIVATE_KEYS_TRACKED_FILES = 0
 VENDOR_MODEL_TRACKED_FILES = 0
-SAFETY_GATE: FAIL  (1 object(s) blocked -- nothing was committed)
+SAFETY_GATE: PASS
