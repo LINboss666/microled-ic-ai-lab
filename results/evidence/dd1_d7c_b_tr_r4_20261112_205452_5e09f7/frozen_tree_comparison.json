@@ -1,0 +1,65 @@
+{
+ "frozen_files": 3306,
+ "identical": 3302,
+ "changed": [
+  {
+   "path": "scripts/dd1_d7c_b_tr_r1_native.py",
+   "mode_before": "100644",
+   "mode_after": "100644",
+   "sha_before": "75da0a7536142e49c68b5f64a66eefdf513ec0e1",
+   "sha_after": "006cba33b89cac7a40905db1683d6b97a4f1c3a2"
+  },
+  {
+   "path": "scripts/dd1_d7c_b_tr_r1_recompute.py",
+   "mode_before": "100644",
+   "mode_after": "100644",
+   "sha_before": "281ed508e4144c6af00a785517b65dcdf578ace4",
+   "sha_after": "47fd28155a8fd14b60f4c43553a67fae7397e5c4"
+  },
+  {
+   "path": "scripts/dd1_d7c_b_tr_run.py",
+   "mode_before": "100644",
+   "mode_after": "100644",
+   "sha_before": "490ed22c003cebd86847eac6d47d951e17a0d0d6",
+   "sha_after": "8e6791bfd181c654ea0b6375372118c154de4931"
+  }
+ ],
+ "missing": [
+  "scripts/dd1_d7c_b_tr_r3_probe.py"
+ ],
+ "new_file_count": 31,
+ "new_files": [
+  ".git",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/rtl/dd1_d7c_b_tr_hyb_120.vcd.gz",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/rtl/dd1_d7c_b_tr_hyb_200.vcd.gz",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/clean_recompute.txt",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/clean_verify.txt",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/convergence.csv",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/counterexamples/A1_current_unit_V.txt",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/counterexamples/A2_vdd18_nan.txt",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/counterexamples/A3_sample_count_short.txt",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/counterexamples/A4_time_not_ordered.txt",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/counterexamples/A5_current_all_zero.txt",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/counterexamples/A6_enable_all_zero.txt",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/counterexamples/B1_ledger_uncertain.txt",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/counterexamples/B2_budget_occupied_22.txt",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/counterexamples/B3_settling_left_limit_1000A.txt",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/counterexamples/C1_convergence_context_NO.txt",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/counterexamples/C2_ledger_raw_zero_recompute.txt",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/counterexamples/C2_ledger_raw_zero_verify.txt",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/counterexamples/clean_recompute.txt",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/counterexamples/clean_verify.txt",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/counterexamples/counterexamples.json",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/counterexamples/verify_no_subprocess.txt",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/frozen_baseline.txt",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/r4_inputs.json",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/rtl/dd1_d7c_b_tr_hyb_120.vcd.gz",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/rtl/dd1_d7c_b_tr_hyb_200.vcd.gz",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/statuses.csv",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/statuses_r1_original.csv",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/task_log.json",
+  "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7/windows_all.csv",
+  "scripts/dd1_d7c_b_tr_r4_probe.py"
+ ],
+ "note": "compared by Git blob SHA-1 and file mode over every path in the frozen tree"
+}

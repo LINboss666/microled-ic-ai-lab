@@ -1,0 +1,32 @@
+{
+ "task_id": "DATA-7C-B-TR-R4",
+ "run_id": "r20261112_205452_5e09f7",
+ "created_utc": "2026-11-12T12:54:52.337066+00:00",
+ "base_sha": "073c0f3705eb55fba8f017cc9d2927a54b129f9a",
+ "branch": "poc/data-pam-d7c-b-tr-r4",
+ "worktree": "D:/ic617_d7c_b_tr_r4",
+ "review_inputs": {
+  "r3_review_zip": "C:/Users/LMX/Downloads/MicroLED_TR_R3_Independent_Review_REWORK_20261112.zip",
+  "r3_review_bytes": 42628,
+  "r3_review_sha256": "6647bc848bebf7a121d4e908e455a4af0347f0d35f5b433b86f6808717b8c938",
+  "original_r3_package_verified": true,
+  "b5_closed": true,
+  "carried_over": [
+   "B1 preflight instrument and stimulus witness",
+   "B2 ledger identity binding",
+   "B4 transcript event semantics"
+  ]
+ },
+ "note": "the R3 branch was never published: the git channel answered CONNECT 502 for every attempt, so R4 is based on the local R3 tip and the remote ref is still to be created",
+ "frozen_baseline_files": 3306,
+ "limits": {
+  "new_spectre_launches": 0,
+  "new_rtl_compilations": 0,
+  "new_rtl_simulations": 0,
+  "new_oa_access": 0,
+  "new_guest_connections": 0,
+  "new_pdk_license_or_credential_reads": 0,
+  "acceptance_registered": false,
+  "merge_performed": false
+ }
+}

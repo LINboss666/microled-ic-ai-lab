@@ -1,0 +1,1 @@
+RECOMPUTE_R1_REFUSED B2: 1 of 18 planned launches are not confirmed in the ledger: [('TR-120', 'preflight')]

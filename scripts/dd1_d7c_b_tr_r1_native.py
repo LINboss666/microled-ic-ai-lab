@@ -9,6 +9,7 @@ Run-length and constant-column folding are stated in the file itself and expand 
 """
 
 import base64
+import csv
 import decimal
 import gzip
 import hashlib
@@ -577,18 +578,123 @@ def _r2_parse_sequence(lines, label, problems):
     return {'head': head, 'samples': samples, 'columns': columns}
 
 
-def _r2_preflight_semantics(lines, entry, env, label, problems):
-    """B1: re-judge a preflight from its own decoded columns, never from statuses.csv.
+def _r2_find_ledger(root):
+    """B2: the one native account in this package, so a preflight can be bound to its own launch"""
+    base = os.path.join(root, 'results', 'evidence')
+    if not os.path.isdir(base):
+        return None, 'no results/evidence directory to hold the native account'
+    hits = []
+    for name in sorted(os.listdir(base)):
+        path = os.path.join(base, name, 'spectre_launch_account.csv')
+        if os.path.isfile(path):
+            hits.append(path)
+    if not hits:
+        return None, 'the package carries no spectre_launch_account.csv'
+    if len(hits) > 1:
+        return None, 'the package carries %d native accounts, so no preflight can be bound to one' \
+                     % len(hits)
+    rows = {}
+    with io.open(hits[0], encoding='utf-8', newline='') as handle:
+        for row in csv.DictReader(handle):
+            rows[row['launch_id']] = row
+    return rows, None
 
-    Every check below is derived from the delivered bytes and the frozen electrical environment:
-    the column schema is parsed, the column units and counts are judged, the numbers are required
-    to be finite, the time axis is required to be strictly increasing, and the supplies and the
-    stimulus witness are compared with the frozen contract.
+
+def _r2_bind_preflight(head, ledger, label, problems):
+    """B2: a non-empty digest is not an identity; the confirmed row must be this very launch"""
+    if ledger is None:
+        return
+    launch = head.get('launch_id')
+    row = ledger.get(launch)
+    if row is None:
+        problems.append('%s: the native account holds no launch %r' % (label, launch))
+        return
+    if str(row.get('state')) != 'CONFIRMED':
+        problems.append('%s: launch %s is %r in the native account, so the delivered preflight is '
+                        'not a confirmed start' % (label, launch, row.get('state')))
+    for key in ('case_id', 'role'):
+        if str(row.get(key)) != str(head.get(key)):
+            problems.append('%s: the account row says %s=%r against the delivered %r'
+                            % (label, key, row.get(key), head.get(key)))
+    for key in ('run_id', 'deck_sha256', 'raw_sha256', 'log_sha256'):
+        if key not in head:
+            problems.append('%s: the delivered preflight declares no %s' % (label, key))
+        elif str(row.get(key) or '') != str(head[key]):
+            problems.append('%s: %s is %r in the account against %r in the delivered preflight'
+                            % (label, key, row.get(key), head[key]))
+
+
+def _r2_deck_stimulus(root, case, label, problems):
+    """B1: read the frozen preflight deck this case was run from, including every platform"""
+    path = os.path.join(root, 'spectre', 'dd1_d7c_b_tr', case + '.pre.scs')
+    if not os.path.isfile(path):
+        problems.append('%s: the frozen preflight deck spectre/dd1_d7c_b_tr/%s.pre.scs is missing'
+                        % (label, case))
+        return None
+    text = io.open(path, encoding='utf-8').read()
+    found = {'codes': [], 'rises': [], 'falls': []}
+    code_block = re.search(r'pam_sel\s*:\s*([01]{3}(?:\.\.[01]{3})?(?:\s*,\s*[01]{3})*)', text)
+    if not code_block:
+        problems.append('%s: the frozen preflight deck does not declare pam_sel' % label)
+    else:
+        raw = code_block.group(1).replace(' ', '')
+        if '..' in raw:
+            first, last = raw.split('..')
+            found['codes'] = [format(value, '03b')
+                              for value in range(int(first, 2), int(last, 2) + 1)]
+        else:
+            found['codes'] = [item for item in raw.split(',') if item]
+    platform = re.search(r'platform \(rise50/fall50\)\s*:\s*([0-9.;]+)\s*/\s*([0-9.;]+)', text)
+    if not platform:
+        problems.append('%s: the frozen preflight deck does not declare its platform edges' % label)
+    else:
+        found['rises'] = [float(value) for value in platform.group(1).split(';') if value]
+        found['falls'] = [float(value) for value in platform.group(2).split(';') if value]
+        if len(found['rises']) != len(found['falls']):
+            problems.append('%s: the deck declares %d rising against %d falling platforms'
+                            % (label, len(found['rises']), len(found['falls'])))
+        if found['codes'] and len(found['codes']) != len(found['rises']):
+            problems.append('%s: the deck declares %d codes for %d platforms'
+                            % (label, len(found['codes']), len(found['rises'])))
+    enable = re.search(r'DATA_EN form\s*:\s*\S+ at ([0-9.]+) V', text)
+    if not enable:
+        problems.append('%s: the frozen preflight deck does not declare its DATA_EN high level'
+                        % label)
+    else:
+        found['enable_high'] = float(enable.group(1))
+    return found
+
+
+def _r2_crossing(times, values, level, rising, after=None):
+    """B1: the interpolated instant a stimulus crosses a level"""
+    for index in range(len(values) - 1):
+        low, high = values[index], values[index + 1]
+        if rising and not (low < level <= high):
+            continue
+        if not rising and not (low >= level > high):
+            continue
+        if after is not None and times[index] < after:
+            continue
+        span = high - low
+        if span == 0:
+            return times[index]
+        return times[index] + (level - low) / span * (times[index + 1] - times[index])
+    return None
+
+
+def _r2_preflight_semantics(lines, entry, contract, root, label, problems, notes):
+    """B1: re-judge a preflight from its own decoded columns and the frozen contract.
+
+    R3 parsed the schema and the numbers but still accepted a current column rewritten to all
+    zeros and a stimulus rewritten to a flat zero: format-correct, witness-free. The frozen deck
+    rules say what the ideal meter load must read and the frozen deck says what stimulus was
+    applied, so both are now compared with the delivered samples.
     """
     parsed = _r2_parse_sequence(lines, label, problems)
     if parsed is None:
-        return
+        return None
     head, samples, columns = parsed['head'], parsed['samples'], parsed['columns']
+    env = contract['electrical_environment']
     expect_head = {'native_axis_unit': 's', 'native_current_column': 'Ip_branch:i',
                    'simulator_name': 'spectre', 'role': 'preflight'}
     for key, value in expect_head.items():
@@ -635,12 +741,93 @@ def _r2_preflight_semantics(lines, entry, env, label, problems):
         if got_unit != unit or abs(values[0] - value) > 1e-6:
             problems.append('%s: %s is %r %s against the frozen %r %s'
                             % (label, name, values[0], got_unit, value, unit))
-    if 'data_en' in columns:
-        low, high = env['logic_low_V'], env['logic_high_V']
-        values = columns['data_en'][1]
-        if min(values) < low - 1e-6 or max(values) > high + 1e-6:
-            problems.append('%s: the stimulus witness runs from %r to %r V outside the frozen '
-                            'logic rails %r..%r' % (label, min(values), max(values), low, high))
+    _r2_witness(head, columns, contract, root, label, problems, notes)
+    return parsed
+
+
+def _r2_witness(head, columns, contract, root, label, problems, notes):
+    """B1: the meter load and the stimulus must be the ones the frozen deck declares"""
+    rules = contract['deck_rules']['preflight']
+    env = contract['electrical_environment']
+    case = head.get('case_id')
+    expected_current = float(rules['expected']['clamp_current_A'])
+    expected_reference = float(rules['expected']['reference_node_V'])
+    if 'Ip_branch:i' in columns:
+        values = columns['Ip_branch:i'][1]
+        spread = max(values) - min(values)
+        if spread > 1e-6 * max(abs(expected_current), 1e-15):
+            problems.append('%s: the preflight current is not one flat meter reading (spread %r A '
+                            'across %d samples)' % (label, spread, len(values)))
+        if abs(values[0] - expected_current) > 1e-6 * abs(expected_current):
+            problems.append('%s: the clamp current is %r A against the frozen %r A that the %r V '
+                            'clamp over the %r ohm meter load draws'
+                            % (label, values[0], expected_current, env['clamp_V'],
+                               rules['load_ohms']))
+        drawn = env['clamp_V'] / float(rules['load_ohms'])
+        if abs(expected_current - drawn) > 1e-9 * max(abs(drawn), 1e-15):
+            problems.append('%s: the frozen expected current %r A is not %r V over %r ohm'
+                            % (label, expected_current, env['clamp_V'], rules['load_ohms']))
+    if 'iref_in' in columns:
+        values = columns['iref_in'][1]
+        if abs(values[-1] - expected_reference) > 1e-6 * abs(expected_reference):
+            problems.append('%s: the reference node settles at %r V against the frozen %r V'
+                            % (label, values[-1], expected_reference))
+        reference = env['iref_A'] * float(rules['reference_ohms'])
+        if abs(expected_reference - reference) > 1e-9 * max(abs(reference), 1e-15):
+            problems.append('%s: the frozen reference %r V is not %r A over %r ohm'
+                            % (label, expected_reference, env['iref_A'], rules['reference_ohms']))
+    deck = _r2_deck_stimulus(root, case, label, problems)
+    if deck is None:
+        return
+    if 'data_en' not in columns:
+        return
+    values = columns['data_en'][1]
+    times = columns['time'][1]
+    high = deck.get('enable_high', env['logic_high_V'])
+    low = env['logic_low_V']
+    if min(values) > low + 1e-6:
+        problems.append('%s: the stimulus witness never reaches the %r V logic low, its lowest '
+                        'sample is %r V' % (label, low, min(values)))
+    if max(values) < high - 1e-6:
+        problems.append('%s: the stimulus witness never reaches the %r V logic high, its highest '
+                        'sample is %r V' % (label, high, max(values)))
+    level = (low + high) / 2.0
+    rises, falls = [], []
+    for index in range(len(values) - 1):
+        below, above = values[index], values[index + 1]
+        span = above - below
+        if below < level <= above and span:
+            rises.append(times[index] + (level - below) / span * (times[index + 1] - times[index]))
+        if below >= level > above and span:
+            falls.append(times[index] + (level - below) / span * (times[index + 1] - times[index]))
+    want_rises, want_falls = deck.get('rises') or [], deck.get('falls') or []
+    codes = deck.get('codes') or []
+    bits = [name for name in ('pam0', 'pam1', 'pam2') if name in columns]
+    if len(want_rises) == 1 and want_falls:
+        want_rise, want_fall = want_rises[0], want_falls[0]
+        if not rises or abs(rises[0] * 1e9 - want_rise) > 0.5:
+            problems.append('%s: the rising %r V crossing is %r ns against the %r ns the deck '
+                            'declares' % (label, level,
+                                          None if not rises else rises[0] * 1e9, want_rise))
+        if not falls or abs(falls[0] * 1e9 - want_fall) > 0.5:
+            problems.append('%s: the falling %r V crossing is %r ns against the %r ns the deck '
+                            'declares' % (label, level,
+                                          None if not falls else falls[0] * 1e9, want_fall))
+        if codes and len(bits) == 3:
+            middle = (want_rise + want_fall) / 2.0 * 1e-9
+            probe = min(range(len(times)), key=lambda spot: abs(times[spot] - middle))
+            got = ''.join('1' if columns[name][1][probe] >= level else '0'
+                          for name in ('pam2', 'pam1', 'pam0'))
+            if got != codes[0]:
+                problems.append('%s: the platform carries pam2pam1pam0=%s against the deck code %s'
+                                % (label, got, codes[0]))
+    else:
+        if not rises or not falls:
+            problems.append('%s: the delivered stimulus never switches, so the case never ran its '
+                            'platform' % label)
+        notes.append('%s: %d platform(s) are declared and %d rising / %d falling crossings are '
+                     'delivered, so only the rails and the presence of a platform are judged for '
+                     'this case' % (label, len(want_rises), len(rises), len(falls)))
 
 
 def verify(out_dir):
@@ -652,7 +839,7 @@ def verify(out_dir):
     totals; the exact delivered file set; duplicate evidence identities; and re-judges each
     preflight from its own sequence bytes and the frozen electrical environment.
     """
-    problems, checked, excluded = [], 0, []
+    problems, checked, excluded, notes = [], 0, [], []
     manifest = json.loads(io.open(os.path.join(out_dir, 'native_manifest.json'),
                                   encoding='utf-8').read())
     entries = manifest.get('files')
@@ -779,24 +966,33 @@ def verify(out_dir):
                             % (label, len(data)))
 
     if preflights:
+        root = _r2_find_root(out_dir)
         try:
-            contract = json.loads(io.open(os.path.join(_r2_find_root(out_dir), 'tests',
-                                                       'dd1_d7c_b_tr', 'contract.json'),
+            contract = json.loads(io.open(os.path.join(root, 'tests', 'dd1_d7c_b_tr',
+                                                       'contract.json'),
                                          encoding='utf-8').read())
-            env = contract['electrical_environment']
+            contract['electrical_environment']['vdd18_V']
         except (KeyError, IOError, ValueError) as exc:
             problems.append('frozen electrical environment is unreadable: %s' % exc)
-            env = None
-        if env:
+            contract = None
+        ledger, reason = _r2_find_ledger(root)
+        if reason:
+            problems.append('the confirmed launches cannot be bound: %s' % reason)
+        if contract:
             for label, folder_key, part_names, entry in preflights:
                 try:
-                    _r2_preflight_semantics(_r2_payload(folders[folder_key], part_names),
-                                            entry, env, label, problems)
+                    parsed = _r2_preflight_semantics(_r2_payload(folders[folder_key], part_names),
+                                                     entry, contract, root, label, problems,
+                                                     notes)
                 except (IOError, ValueError, IndexError) as exc:
                     problems.append('%s: preflight sequence cannot be decoded: %s' % (label, exc))
+                    parsed = None
+                if parsed is not None:
+                    _r2_bind_preflight(parsed['head'], ledger, label, problems)
 
     return {'artifacts_verified': checked, 'artifacts_recorded': len(entries),
-            'artifacts_excluded': len(excluded), 'excluded': excluded, 'problems': problems}
+            'artifacts_excluded': len(excluded), 'excluded': excluded, 'problems': problems,
+            'notes': notes}
 
 def budget(local_dir, old_evidence):
     """what a full export would cost, measured on the real files before anything is written"""
@@ -1199,6 +1395,8 @@ def main(argv):
             print('TR_R1_VERIFY_PROBLEM %s' % problem)
         for item in answer['excluded'][:8]:
             print('TR_R1_VERIFY_EXCLUDED %s' % item)
+        for note in answer['notes'][:12]:
+            print('TR_R1_VERIFY_NOTE %s' % note)
         return 0 if not answer['problems'] else 1
     if mode == '--export':
         # a fourth word 'package' builds the reviewer staging: the trace containers are written and

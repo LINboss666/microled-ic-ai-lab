@@ -357,6 +357,7 @@ class Recompute(object):
         self.dc = self.dc_table()
         self.sequences = {}
         self.r2_sequences = {}
+        self.r2_heads = None
 
     def path(self, which, *parts):
         if which not in ('r1', 'native', 'tables'):
@@ -1131,6 +1132,52 @@ class Recompute(object):
             checked += 1
         return checked
 
+    def r2_sequence_headers(self):
+        """B2: every delivered dut/preflight header, so a ledger row can be bound to its own bytes"""
+        if self.r2_heads is not None:
+            return self.r2_heads
+        folder = self.path('r1', 'native_sequences')
+        pattern = re.compile(r'_(?P<case>[A-Za-z0-9-]+)_(?P<role>dut|preflight)'
+                             r'\.sequence(?:\.part(?P<part>\d+))?\.txt$')
+        chosen = {}
+        for name in sorted(os.listdir(folder)):
+            found = pattern.search(name)
+            if not found:
+                continue
+            key = (found.group('case'), found.group('role'))
+            part = found.group('part')
+            if part is not None and part != '000':
+                continue
+            chosen.setdefault(key, name)
+        heads = {}
+        for key, name in chosen.items():
+            stem = name[:-4].replace('.part000', '')
+            whole = os.path.join(folder, stem + '.txt')
+            if os.path.isfile(whole):
+                chunks = [io.open(whole, 'rb').read()]
+            else:
+                base = os.path.basename(stem)
+                parts = sorted(item for item in os.listdir(folder)
+                               if item.startswith(base + '.part') and item.endswith('.txt'))
+                if not parts:
+                    continue
+                chunks = [io.open(os.path.join(folder, item), 'rb').read() for item in parts]
+            text = b''.join(chunks).decode('utf-8', 'replace')
+            if not text.startswith('TR1CONTAINER 1'):
+                continue
+            lines = gzip.decompress(base64.b85decode(
+                text.split(chr(10) + chr(10), 1)[1].strip())).decode('utf-8', 'replace').splitlines()
+            head = {}
+            for line in lines:
+                if line.startswith('column '):
+                    break
+                if line.startswith('# ') and '=' in line:
+                    name, value = line[2:].split('=', 1)
+                    head[name] = value
+            heads[key] = head
+        self.r2_heads = heads
+        return heads
+
     def r2_confirmed_launches(self):
         """B2: EXECUTION_COMPLETENESS counts planned launches the ledger actually confirms.
 
@@ -1145,7 +1192,8 @@ class Recompute(object):
                 planned.extend([(case['case_id'], role)] * int(case.get(key) or 0))
         if not planned:
             raise Refuse('B2: the frozen contract declares no planned launch')
-        confirmed = []
+        heads = self.r2_sequence_headers()
+        confirmed = {}
         for row in self.spectre.values():
             if row.get('state') != 'CONFIRMED':
                 continue
@@ -1153,11 +1201,25 @@ class Recompute(object):
                 continue
             if not (row.get('deck_sha256') and row.get('raw_sha256') and row.get('log_sha256')):
                 continue
-            confirmed.append((row.get('case_id'), row.get('role')))
+            confirmed.setdefault((row.get('case_id'), row.get('role')), []).append(row)
         unseen = sorted(pair for pair in set(planned) if pair not in confirmed)
         if unseen:
             raise Refuse('B2: %d of %d planned launches are not confirmed in the ledger: %s'
                          % (len(unseen), len(planned), unseen))
+        for pair in sorted(set(planned)):
+            head = heads.get(pair)
+            if head is None:
+                raise Refuse('B2: %s/%s has no delivered sequence to bind the ledger row to' % pair)
+            for row in confirmed[pair]:
+                if str(row.get('launch_id')) != str(head.get('launch_id')):
+                    raise Refuse('B2: the confirmed row %s for %s/%s is not the delivered launch %r'
+                                 % (row.get('launch_id'), pair[0], pair[1], head.get('launch_id')))
+                for key in ('run_id', 'deck_sha256', 'raw_sha256', 'log_sha256'):
+                    if str(row.get(key) or '') != str(head.get(key) or ''):
+                        raise Refuse('B2: the confirmed row %s carries %s=%r while the delivered '
+                                     '%s/%s sequence records %r'
+                                     % (row.get('launch_id'), key, row.get(key), pair[0], pair[1],
+                                        head.get(key)))
         extra = sorted(pair for pair in set(confirmed) - set(planned))
         if extra:
             raise Refuse('B2: the ledger confirms launches the frozen plan does not contain: %s'

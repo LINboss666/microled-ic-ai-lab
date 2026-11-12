@@ -1,0 +1,1 @@
+RECOMPUTE_R1_REFUSED B3: convergence key ('RS-FULL/TR-LONG', 'RS-FULL', 'TR-LONG', 'W0', '000') publishes context_match='NO' while the delivered windows agree on every measured field except maxstep

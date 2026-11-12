@@ -1,0 +1,50 @@
+{
+ "task_id": "DATA-7C-B-TR-R4",
+ "date": "2026-11-12",
+ "status": "AWAITING_INDEPENDENT_REVIEW",
+ "worktree": "D:/ic617_d7c_b_tr_r4",
+ "branch": "poc/data-pam-d7c-b-tr-r4",
+ "base_sha": "073c0f3705eb55fba8f017cc9d2927a54b129f9a",
+ "base_published": false,
+ "run_id": "r20261112_205452_5e09f7",
+ "evidence_dir": "results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7",
+ "carried_over_closed": {
+  "B5": "closed_by_review",
+  "original_r3_package": "verified_by_review"
+ },
+ "blockers": {
+  "B1": "fixed",
+  "B2": "fixed",
+  "B4": "fixed"
+ },
+ "verification": {
+  "clean_verify": "rc=0 21/21 problems=0 excluded=4 (6 scope notes)",
+  "clean_verify_no_subprocess": "rc=0",
+  "clean_recompute": "rc=0 RECOMPUTE_R1 gate 838/838",
+  "counterexamples": 14,
+  "counterexamples_refused": 14,
+  "frozen_files": 3306,
+  "frozen_identical": 3302,
+  "frozen_changed": 3,
+  "frozen_renamed": 1
+ },
+ "open_question": "the HYB preflight decks declare 8 platforms while 4 and 3 crossings are delivered; recorded as a note, not explained and not claimed aligned",
+ "retained_electrical_fail": {
+  "dynamic": "33/37 FAIL",
+  "nominal": "23/37 FAIL",
+  "threshold_LSB": 0.5
+ },
+ "not_run": {
+  "module_selftests_260": "NOT_RUN: the selftest drives guarded launch()"
+ },
+ "limits": {
+  "new_spectre_launches": 0,
+  "new_rtl_compilations": 0,
+  "new_rtl_simulations": 0,
+  "new_oa_access": 0,
+  "new_guest_connections": 0,
+  "new_pdk_license_or_credential_reads": 0,
+  "acceptance_registered": false,
+  "merge_performed": false
+ }
+}

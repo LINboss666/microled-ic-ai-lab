@@ -1,0 +1,12 @@
+TR_R1_VERIFY 21/21 problems=1 excluded=4
+TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-120_preflight.sequence.txt: the time axis is not strictly increasing at sample 1 (3.53e-09 then 1.53e-09)
+TR_R1_VERIFY_EXCLUDED r20261026_132228_3fc148_HYB-120_dut.sequence.txt [internal_fragment]: NOT_VERIFIED (not a delivered object)
+TR_R1_VERIFY_EXCLUDED r20261026_132228_3fc148_HYB-200_dut.sequence.txt [internal_fragment]: NOT_VERIFIED (not a delivered object)
+TR_R1_VERIFY_EXCLUDED dd1_d7c_b_tr_hyb_120.vcd: recorded by digest only (NOT_TRACKED_BY_RULE)
+TR_R1_VERIFY_EXCLUDED dd1_d7c_b_tr_hyb_200.vcd: recorded by digest only (NOT_TRACKED_BY_RULE)
+TR_R1_VERIFY_NOTE r20261026_132228_3fc148_TR-OFFCODE_preflight.sequence.txt: 4 platform(s) are declared and 4 rising / 4 falling crossings are delivered, so only the rails and the presence of a platform are judged for this case
+TR_R1_VERIFY_NOTE r20261026_132228_3fc148_TR-LONG_preflight.sequence.txt: 8 platform(s) are declared and 8 rising / 8 falling crossings are delivered, so only the rails and the presence of a platform are judged for this case
+TR_R1_VERIFY_NOTE r20261026_132228_3fc148_RS-SWITCH_preflight.sequence.txt: 4 platform(s) are declared and 4 rising / 4 falling crossings are delivered, so only the rails and the presence of a platform are judged for this case
+TR_R1_VERIFY_NOTE r20261026_132228_3fc148_RS-FULL_preflight.sequence.txt: 8 platform(s) are declared and 8 rising / 8 falling crossings are delivered, so only the rails and the presence of a platform are judged for this case
+TR_R1_VERIFY_NOTE r20261026_132228_3fc148_HYB-120_preflight.sequence.txt: 8 platform(s) are declared and 4 rising / 4 falling crossings are delivered, so only the rails and the presence of a platform are judged for this case
+TR_R1_VERIFY_NOTE r20261026_132228_3fc148_HYB-200_preflight.sequence.txt: 8 platform(s) are declared and 3 rising / 3 falling crossings are delivered, so only the rails and the presence of a platform are judged for this case

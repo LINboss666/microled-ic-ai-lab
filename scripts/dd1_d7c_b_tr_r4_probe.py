@@ -141,7 +141,7 @@ def table_mutation(root, run, relative, tag, mutate):
 
 
 def bookkeeping_mock(RUN, REC, out):
-    """B4: a label alone must free nothing, a hashed transcript must free exactly one charge"""
+    """B4: what a transcript must say before one charge is released"""
     mock_dir = os.path.join(out, 'mock')
     os.makedirs(mock_dir)
     rows = [{'sim_id': 'R001', 'case_id': 'HYB-120', 'requested_utc': '2026-01-01T00:00:00Z',
@@ -150,41 +150,55 @@ def bookkeeping_mock(RUN, REC, out):
              'state': 'CONFIRMED', 'exe_sha256': 'a' * 64, 'rc': '0', 'log_sha256': 'b' * 64,
              'refusal': 'UNIQUE_START_TRANSCRIPT:invented_label'}]
     link = os.path.join(mock_dir, 'reconcile.json')
+
+    def account(rows_now):
+        holder = object.__new__(RUN.Account)
+        holder.rows = rows_now
+        holder.header = ('sim_id',)
+        holder.reconcile = link
+        holder.ceiling = 4
+        return holder
+
+    def write(transcript_text, digest):
+        path = os.path.join(mock_dir, 'start.txt')
+        with open(path, 'wb') as handle:
+            handle.write(transcript_text)
+        rows[1]['log_sha256'] = digest
+        with open(link, 'w', encoding='utf-8', newline='\n') as handle:
+            json.dump({'duplicate_bookings': [{'sim_id': 'R001', 'evidence': {
+                'witness_row': 'R002', 'unique_start_transcript': digest,
+                'transcript': 'start.txt'}}]}, handle)
+
     with open(link, 'w', encoding='utf-8', newline='\n') as handle:
         json.dump({'duplicate_bookings': [{'sim_id': 'R001', 'evidence': {
             'witness_row': 'R002', 'unique_start_transcript': 'b' * 64}}]}, handle)
-    account = object.__new__(RUN.Account)
-    account.rows = rows
-    account.header = ('sim_id',)
-    account.reconcile = link
-    account.ceiling = 4
     label_only = {'transcript_file_supplied': False,
-                  'account_duplicates': account.duplicate_bookings(),
-                  'account_processes': account.processes(),
+                  'account_duplicates': account(rows).duplicate_bookings(),
+                  'account_processes': account(rows).processes(),
                   'record_derived_duplicates': REC.derive_duplicates(rows)}
     if label_only['account_duplicates'] or label_only['account_processes'] != 2:
         raise SystemExit('an unverified label still released a charge')
     if label_only['record_derived_duplicates']:
         raise SystemExit('the record path still derived a duplicate from a label')
-    body = b'HYB-120: R001 reserved; R002 started; nothing else refused\n'
-    with open(os.path.join(mock_dir, 'start.txt'), 'wb') as handle:
-        handle.write(body)
-    digest = sha(body)
-    rows[1]['log_sha256'] = digest
-    with open(link, 'w', encoding='utf-8', newline='\n') as handle:
-        json.dump({'duplicate_bookings': [{'sim_id': 'R001', 'evidence': {
-            'witness_row': 'R002', 'unique_start_transcript': digest,
-            'transcript': 'start.txt'}}]}, handle)
-    proven = object.__new__(RUN.Account)
-    proven.rows = rows
-    proven.header = ('sim_id',)
-    proven.reconcile = link
-    proven.ceiling = 4
-    capability = {'account_duplicates': proven.duplicate_bookings(),
-                  'account_processes': proven.processes()}
+
+    contradictory = (b'HYB-120: R001 started pid=101; R002 started pid=102; '
+                     b'two distinct executions completed.\n')
+    write(contradictory, sha(contradictory))
+    two_starts = {'transcript': contradictory.decode().strip(),
+                  'account_duplicates': account(rows).duplicate_bookings(),
+                  'account_processes': account(rows).processes()}
+    if two_starts['account_duplicates'] or two_starts['account_processes'] != 2:
+        raise SystemExit('a transcript recording two starts still released a charge')
+
+    proven_text = (b'HYB-120: R001 stayed in the reserved queue\n'
+                   b'NOT_STARTED R001\n'
+                   b'STARTED R002 pid=4242 rc=0\n')
+    write(proven_text, sha(proven_text))
+    capability = {'account_duplicates': account(rows).duplicate_bookings(),
+                  'account_processes': account(rows).processes()}
     if capability['account_duplicates'] != ['R001'] or capability['account_processes'] != 1:
-        raise SystemExit('a verified transcript no longer releases exactly one charge')
-    return label_only, capability
+        raise SystemExit('a transcript declaring NOT_STARTED no longer releases one charge')
+    return {'label_only': label_only, 'two_starts': two_starts, 'not_started': capability}
 
 
 def main():
@@ -228,6 +242,48 @@ def main():
     container('A4_time_not_ordered',
               lambda text: text.replace('1 1.530000000000000e-09\n1 3.530000000000000e-09',
                                         '1 3.530000000000000e-09\n1 1.530000000000000e-09', 1))
+
+    def zero_current(text):
+        return re.sub(r'(column Ip_branch:i unit A encoding CONSTANT count \d+\n)[^\n]+',
+                      r'\g<1>0.000000000000000e+00', text, count=1)
+
+    def zero_enable(text):
+        line = re.search(r'column data_en unit V encoding RUNS count (\d+) runs (\d+)\n', text)
+        if not line:
+            return text
+        count, runs = int(line.group(1)), int(line.group(2))
+        end = line.end()
+        for _ in range(runs):
+            end = text.index('\n', end) + 1
+        return (text[:line.start()]
+                + 'column data_en unit V encoding RUNS count %d runs 1\n' % count
+                + '%d 0.000000000000000e+00\n' % count
+                + text[end:])
+
+    container('A5_current_all_zero', zero_current)
+    container('A6_enable_all_zero', zero_enable)
+
+    ledger_path = os.path.join(root, OLD.replace('/', os.sep), 'spectre_launch_account.csv')
+    ledger_bytes = open(ledger_path, 'rb').read()
+    with open(ledger_path, newline='', encoding='utf-8') as handle:
+        ledger_rows = list(csv.DictReader(handle))
+    fields = list(ledger_rows[0])
+    target = next(item for item in ledger_rows
+                  if item['case_id'] == 'TR-120' and item['role'] == 'preflight')
+    target['raw_sha256'] = '0' * 64
+    with open(ledger_path, 'w', newline='', encoding='utf-8') as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields, lineterminator='\n')
+        writer.writeheader()
+        writer.writerows(ledger_rows)
+    try:
+        results['C2_ledger_raw_zero_verify'] = run('verify', 'C2_ledger_raw_zero_verify')
+        results['C2_ledger_raw_zero_recompute'] = run('recompute', 'C2_ledger_raw_zero_recompute')
+    finally:
+        open(ledger_path, 'wb').write(ledger_bytes)
+    for tag in ('C2_ledger_raw_zero_verify', 'C2_ledger_raw_zero_recompute'):
+        if results[tag]['rc'] == 0:
+            raise SystemExit('%s was accepted: the identity is still unbound' % tag)
+        cases.append((tag, results[tag]))
 
     def flip_ledger(rows):
         row = next(item for item in rows
@@ -288,29 +344,32 @@ def main():
                        'importable in a Git-less tree: %s: %s'
                        % (type(error).__name__, str(error)[:140]))
     if RUN is not None:
-        label_only, capability = bookkeeping_mock(RUN, REC, out)
-        cases.append(('D1_label_without_transcript',
-                      {'rc': 1, 'summary': ['label freed nothing'],
-                       'named': ['the label alone released no charge']}))
+        mock = bookkeeping_mock(RUN, REC, out)
+        for tag in ('D1_label_without_transcript', 'D2_transcript_two_starts'):
+            cases.append((tag, {'rc': 1, 'summary': ['no charge released'],
+                                'named': ['the transcript did not prove a single start']}))
     else:
-        label_only = {'status': 'NOT_APPLICABLE', 'reason': mock_reason}
-        capability = {'status': 'NOT_APPLICABLE'}
+        mock = {'label_only': {'status': 'NOT_APPLICABLE', 'reason': mock_reason},
+                'two_starts': {'status': 'NOT_APPLICABLE'},
+                'not_started': {'status': 'NOT_APPLICABLE'}}
 
     report = {'probe': 'R3', 'fixture': 'copy of the audited checkout; mutations only in the copy',
               'controls': dict((name, results[name]['rc']) for name in CONTROLS),
               'counterexamples': [{'case': name, 'rc': result['rc'],
                                    'named': result['named']} for name, result in cases],
               'all_refused': all(result['rc'] != 0 for _n, result in cases),
-              'mock_label_without_transcript': label_only,
-              'mock_verified_transcript': capability}
+              'mock_label_without_transcript': mock['label_only'],
+              'mock_transcript_two_starts': mock['two_starts'],
+              'mock_transcript_not_started': mock['not_started']}
     with open(os.path.join(out, 'counterexamples.json'), 'w', encoding='utf-8',
               newline='\n') as handle:
         handle.write(json.dumps(report, ensure_ascii=False, indent=1) + '\n')
     print(json.dumps({'controls': report['controls'],
                       'counterexamples': len(cases),
                       'all_refused': report['all_refused'],
-                      'mock_label_without_transcript': label_only,
-                      'mock_verified_transcript': capability}, ensure_ascii=False, indent=1))
+                      'mock_label_without_transcript': mock['label_only'],
+                      'mock_transcript_two_starts': mock['two_starts'],
+                      'mock_transcript_not_started': mock['not_started']}, ensure_ascii=False, indent=1))
 
 
 if __name__ == '__main__':

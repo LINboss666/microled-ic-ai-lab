@@ -118,6 +118,24 @@ def find_answer(directory, run_id, case_id, role, tag='raw', launch_id=''):
     return [path for path in candidates if os.path.isfile(path)]
 
 
+def _start_evidence(text, sim_id):
+    """B4: a line that records this reservation entering a start path"""
+    pattern = re.compile(r'\b%s\b' % re.escape(sim_id))
+    for line in text.splitlines():
+        if not pattern.search(line):
+            continue
+        if re.search(r'\b(started|launch(ed)?|exec(uted)?|spawn(ed)?|pid\s*=|rc\s*=)', line,
+                     re.I):
+            return True
+    return False
+
+
+def _declared_not_started(text, sim_id):
+    """B4: an explicit machine-readable statement that this reservation never started"""
+    pattern = re.compile(r'^\s*NOT_STARTED\s+%s\b' % re.escape(sim_id))
+    return any(pattern.match(line) for line in text.splitlines())
+
+
 class Account(object):
     """append-only, one writer, reserve before the start, no refund, ceiling from the approved task"""
 
@@ -180,11 +198,12 @@ class Account(object):
         """row ids reconciled as a second booking of one already-charged process.
 
         A recovery never refunds a process that may have started. R2 accepted a self-declared
-        token that merely repeated the witness log digest: a label a row writes about itself is
-        not evidence, and one label can describe a single declaration rather than a second
-        booking that never started. A booking now frees exactly one charge only when the named
-        per-start transcript exists as a readable artifact whose own SHA-256 is the claimed link,
-        and whose text names both rows. Anything else stays charged.
+        token; R3 accepted any readable file whose text merely named both rows, so a transcript
+        that says "R001 started pid=101; R002 started pid=102" still released one charge. Naming a
+        row is not the same as proving it never started. A booking now frees exactly one charge
+        only when the transcript exists, re-hashes to the claimed link, declares the duplicate row
+        NOT_STARTED, carries no start evidence for it, and carries start evidence for the witness.
+        Anything else stays charged.
         """
         if not self.reconcile or not os.path.isfile(self.reconcile):
             return []
@@ -214,6 +233,12 @@ class Account(object):
             if duplicate not in text or witness not in text:
                 continue
             if str(dup_row.get('case_id') or '') and str(dup_row.get('case_id')) not in text:
+                continue
+            if not _declared_not_started(text, duplicate):
+                continue
+            if _start_evidence(text, duplicate):
+                continue
+            if not _start_evidence(text, witness):
                 continue
             if any(dup_row.get(key) for key in PROCESS_EVIDENCE_KEYS):
                 continue
@@ -812,7 +837,7 @@ def selftest():
     settled.rows[2]['case_id'] = settled.rows[1]['case_id']
     settled.rows[1]['deck_sha256'] = 'd' * 64      # the target the process actually ran
     transcript = account_path + '.transcript.txt'
-    body = 'T001 reserved; T002 started; T003 reserved and never executed\n'
+    body = 'T001 reserved\nNOT_STARTED T003\nSTARTED T002 pid=4242 rc=0\n'
     io.open(transcript, 'wb').write(body.encode('utf-8'))
     digest = hashlib.sha256(body.encode('utf-8')).hexdigest()
     settled.rows[1]['log_sha256'] = digest         # the artifact the start is read from
