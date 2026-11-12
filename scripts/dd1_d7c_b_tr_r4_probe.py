@@ -23,14 +23,32 @@ R1 = 'results/evidence/dd1_d7c_b_tr_r1_r20261027_143223_4c8a81'
 R2 = 'results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480'
 OLD = 'results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148'
 R3 = 'results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950'
+R4 = 'results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7'
 FOLDERS = ('scripts', 'tests/dd1_d7c_b_tr', 'tests/dd1_d7c_b_prep', 'tests/dd1_d7c_b_dc',
-           'spectre/dd1_d7c_b_tr', R1, R2, OLD, R3,
+           'spectre/dd1_d7c_b_tr', R1, R2, OLD, R3, R4,
            'results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe')
 CONTROLS = ('clean_verify', 'clean_recompute', 'verify_no_subprocess')
 
 
 def sha(blob):
     return hashlib.sha256(blob).hexdigest()
+
+
+def tables_dir():
+    """B2/B3 tables: the newest round directory this tree actually carries"""
+    for folder in (R4, R3):
+        if os.path.isdir(folder):
+            return folder
+    raise SystemExit('no R3 or R4 evidence directory in %s' % os.getcwd())
+
+
+def descriptor(root):
+    """the input descriptor next to the tables that were copied"""
+    folder = os.path.join(root, tables_dir().replace('/', os.sep))
+    for name in ('r4_inputs.json', 'r3_inputs.json'):
+        if os.path.isfile(os.path.join(folder, name)):
+            return os.path.join(folder, name)
+    raise SystemExit('the copied tables carry no input descriptor')
 
 
 def build(source, root):
@@ -42,12 +60,12 @@ def build(source, root):
     # the two byte-bound real VCDs are not tracked; they travel with the checkout and the package
     for tag in ('120', '200'):
         name = 'dd1_d7c_b_tr_hyb_%s.vcd.gz' % tag
-        candidates = [os.path.join(source, R3.replace('/', os.sep), 'rtl', name),
-                      os.path.join(source, R2.replace('/', os.sep), 'rtl', name)]
+        candidates = [os.path.join(source, folder.replace('/', os.sep), 'rtl', name)
+                      for folder in (R4, R3, R2)]
         src = next((path for path in candidates if os.path.isfile(path)), None)
         if src is None:
             raise SystemExit('missing VCD %s in the source checkout' % name)
-        dst = os.path.join(root, R3.replace('/', os.sep), 'rtl', name)
+        dst = os.path.join(root, tables_dir().replace('/', os.sep), 'rtl', name)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         shutil.copyfile(src, dst)
 
@@ -76,8 +94,7 @@ def make_runner(root, out, block=False):
         if kind == 'verify':
             tail = [script, '--verify', os.path.join(root, R1.replace('/', os.sep))]
         else:
-            tail = [script, root, '--inputs',
-                    os.path.join(root, R3.replace('/', os.sep), 'r3_inputs.json')]
+            tail = [script, root, '--inputs', descriptor(root)]
         proc = subprocess.run(prefix + tail, cwd=root, env=env, stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT, text=True)
         text = proc.stdout
@@ -321,14 +338,14 @@ def main():
         target['settling_dc_left_limit_A'] = '1000'
 
     cases.append(('B3_settling_left_limit_1000A',
-                  table_mutation(root, run, R3 + '/windows_all.csv',
+                  table_mutation(root, run, tables_dir() + '/windows_all.csv',
                                  'B3_settling_left_limit_1000A', push_limit)))
 
     def clear_context(rows):
         rows[0]['context_match'] = 'NO'
 
     cases.append(('C1_convergence_context_NO',
-                  table_mutation(root, run, R3 + '/convergence.csv',
+                  table_mutation(root, run, tables_dir() + '/convergence.csv',
                                  'C1_convergence_context_NO', clear_context)))
 
     # the bookkeeping modules read the object store by design, so a Git-less tree cannot import
