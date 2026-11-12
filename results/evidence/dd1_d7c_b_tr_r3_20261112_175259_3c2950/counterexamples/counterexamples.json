@@ -1,0 +1,80 @@
+{
+ "tip_fixture": "copy of the audited checkout, mutations only in the copy",
+ "controls": {
+  "clean_verify": 0,
+  "clean_recompute": 0,
+  "verify_no_subprocess": 0
+ },
+ "counterexamples": [
+  {
+   "case": "A1_current_unit_V",
+   "rc": 1,
+   "named": []
+  },
+  {
+   "case": "A2_vdd18_nan",
+   "rc": 1,
+   "named": []
+  },
+  {
+   "case": "A3_sample_count_short",
+   "rc": 1,
+   "named": []
+  },
+  {
+   "case": "A4_time_not_ordered",
+   "rc": 1,
+   "named": []
+  },
+  {
+   "case": "B1_ledger_uncertain",
+   "rc": 1,
+   "named": [
+    "RECOMPUTE_R1_REFUSED B2: 1 of 18 planned launches are not confirmed in the ledger: [('TR-120', 'preflight')]"
+   ]
+  },
+  {
+   "case": "B2_budget_occupied_22",
+   "rc": 1,
+   "named": [
+    "RECOMPUTE_R1_REFUSED B2: status BUDGET_ACCOUNTING_STATUS publishes PARTIAL/21/24 but the actual inputs give PARTIAL/22/24"
+   ]
+  },
+  {
+   "case": "B3_settling_left_limit_1000A",
+   "rc": 1,
+   "named": [
+    "RECOMPUTE_R1_REFUSED B2: TR-120 W0 publishes settling_dc_left_limit_A=1000.0 against 1.922842978252656e-06 interpolated at the deadline 1280 ns"
+   ]
+  },
+  {
+   "case": "C1_convergence_context_NO",
+   "rc": 1,
+   "named": [
+    "RECOMPUTE_R1_REFUSED B3: convergence key ('RS-FULL/TR-LONG', 'RS-FULL', 'TR-LONG', 'W0', '000') publishes context_match='NO' while the delivered windows agree on every measured field except maxstep"
+   ]
+  },
+  {
+   "case": "D1_label_without_transcript",
+   "rc": 1,
+   "named": [
+    "refused: no transcript"
+   ]
+  }
+ ],
+ "mock_label_without_transcript": {
+  "files": [
+   "reconcile.json"
+  ],
+  "transcript_file_supplied": false,
+  "account_duplicates": [],
+  "account_processes": 2,
+  "record_derived_duplicates": []
+ },
+ "mock_verified_transcript": {
+  "account_duplicates": [
+   "R001"
+  ],
+  "account_processes": 1
+ }
+}

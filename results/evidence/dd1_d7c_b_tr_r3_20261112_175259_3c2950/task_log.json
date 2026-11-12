@@ -1,0 +1,43 @@
+{
+ "task_id": "DATA-7C-B-TR-R3",
+ "run_id": "r20261112_175259_3c2950",
+ "created_utc": "2026-11-12T09:52:59.722467+00:00",
+ "base_sha": "fc7ee7a59ea3bc70835f511a1f47650887ca9329",
+ "base_tree": "2517b95b2ddcf59c2441629ebc5c3a7007869050",
+ "branch": "poc/data-pam-d7c-b-tr-r3",
+ "worktree": "D:/ic617_d7c_b_tr_r3",
+ "review_inputs": {
+  "r2_review_zip": "C:/Users/LMX/Downloads/MicroLED_TR_R2_Independent_Review_REWORK_20261112.zip",
+  "r2_review_sha256": "6bb583d30bcf5f8b2e59e8cf10745435836fa0f2690263b9fc0b786106156374",
+  "r2_review_bytes": 49259,
+  "addendum_zip": "C:/Users/LMX/Downloads/MicroLED_TR_R2_Original_Package_Review_Addendum_20261112.zip",
+  "addendum_sha256": "d46396d4785366387a55780813fbb40c8a925807f8e8081f0342286609d78c6f",
+  "addendum_bytes": 43407,
+  "original_package_verified": true,
+  "b5_closed": true,
+  "carried_over": [
+   "B1 preflight actual column unit/finiteness",
+   "B2 execution/budget/settling fact derivation",
+   "B3 convergence context",
+   "B4 unverified label dedup and legacy bypass"
+  ]
+ },
+ "frozen_baseline_files": 3278,
+ "events": [
+  {
+   "stage": "S1",
+   "what": "worktree + branch from R2 tip; frozen face baseline captured",
+   "status": "DONE"
+  }
+ ],
+ "limits": {
+  "new_spectre_launches": 0,
+  "new_rtl_compilations": 0,
+  "new_rtl_simulations": 0,
+  "new_oa_access": 0,
+  "new_guest_connections": 0,
+  "new_pdk_license_or_credential_reads": 0,
+  "acceptance_registered": false,
+  "merge_performed": false
+ }
+}

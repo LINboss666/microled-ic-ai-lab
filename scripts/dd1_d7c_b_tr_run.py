@@ -8,6 +8,7 @@ debug). Every real process is persisted as REQUESTED before it starts, a failure
 nothing refunds. A refusal path writes no evidence file at all.
 """
 
+import hashlib
 import io
 import json
 import os
@@ -178,14 +179,17 @@ class Account(object):
     def duplicate_bookings(self):
         """row ids reconciled as a second booking of one already-charged process.
 
-        A recovery never refunds a process that may have started. A booking frees nothing unless the
-        ledger itself proves it: the row must carry no executable digest and no return code, and it
-        must name a witness row reserved in the same second for the same case that does carry the
-        process evidence. Anything else stays charged.
+        A recovery never refunds a process that may have started. R2 accepted a self-declared
+        token that merely repeated the witness log digest: a label a row writes about itself is
+        not evidence, and one label can describe a single declaration rather than a second
+        booking that never started. A booking now frees exactly one charge only when the named
+        per-start transcript exists as a readable artifact whose own SHA-256 is the claimed link,
+        and whose text names both rows. Anything else stays charged.
         """
         if not self.reconcile or not os.path.isfile(self.reconcile):
             return []
         data = json.loads(io.open(self.reconcile, encoding='utf-8').read())
+        base = os.path.dirname(os.path.abspath(self.reconcile))
         by_id = dict((row[self.header[0]], row) for row in self.rows)
         out = []
         for booking in data.get('duplicate_bookings', []):
@@ -193,19 +197,29 @@ class Account(object):
             evidence = booking.get('evidence') or {}
             witness = evidence.get('witness_row')
             link = evidence.get('unique_start_transcript')
+            relative = evidence.get('transcript') or evidence.get('transcript_path')
             if duplicate not in by_id or witness not in by_id or duplicate == witness:
                 continue
+            if not link or not relative:
+                continue
+            path = relative if os.path.isabs(relative) else os.path.join(base, relative)
+            if not os.path.isfile(path):
+                continue
+            blob = io.open(path, 'rb').read()
+            digest = hashlib.sha256(blob).hexdigest()
+            if digest != link or digest != (by_id[witness].get('log_sha256') or ''):
+                continue
+            text = blob.decode('utf-8', 'replace')
             dup_row, wit_row = by_id[duplicate], by_id[witness]
+            if duplicate not in text or witness not in text:
+                continue
+            if str(dup_row.get('case_id') or '') and str(dup_row.get('case_id')) not in text:
+                continue
             if any(dup_row.get(key) for key in PROCESS_EVIDENCE_KEYS):
                 continue
-            if not any(wit_row.get(key) for key in COMPILED_TARGET_KEYS):
-                continue
-            # B4: same case + same second + a missing field is not a process identity. One
-            # executable can start twice. Only an explicit per-start transcript link that
-            # both the booking and the witness carry may de-duplicate exactly one booking.
-            if not link or link != wit_row.get('log_sha256'):
-                continue
             if dup_row.get('log_sha256'):
+                continue
+            if not any(wit_row.get(key) for key in COMPILED_TARGET_KEYS):
                 continue
             if (dup_row.get('requested_utc') != wit_row.get('requested_utc')
                     or dup_row.get('case_id') != wit_row.get('case_id')):
@@ -797,16 +811,29 @@ def selftest():
         settled.rows[0]['requested_utc'])
     settled.rows[2]['case_id'] = settled.rows[1]['case_id']
     settled.rows[1]['deck_sha256'] = 'd' * 64      # the target the process actually ran
-    settled.rows[1]['log_sha256'] = 't' * 64      # B4: a unique per-start transcript
+    transcript = account_path + '.transcript.txt'
+    body = 'T001 reserved; T002 started; T003 reserved and never executed\n'
+    io.open(transcript, 'wb').write(body.encode('utf-8'))
+    digest = hashlib.sha256(body.encode('utf-8')).hexdigest()
+    settled.rows[1]['log_sha256'] = digest         # the artifact the start is read from
     settled.flush()
     booking = json.dumps({'duplicate_bookings': [
         {'launch_id': 'T003',
-         'evidence': {'witness_row': 'T002', 'unique_start_transcript': 't' * 64}}]}) + '\n'
+         'evidence': {'witness_row': 'T002', 'unique_start_transcript': digest,
+                      'transcript': os.path.basename(transcript)}}]}) + '\n'
     io.open(reconcile, 'wb').write(booking.encode('utf-8'))
     checked = Account(account_path, 3, ACCOUNT_HEADER, 'T', reconcile=reconcile)
     record('a duplicate booking is honoured only against a row that carries the process evidence',
            checked.processes() == 2 and checked.remaining() == 1,
            (checked.processes(), checked.remaining()))
+    label_only = json.dumps({'duplicate_bookings': [
+        {'launch_id': 'T003',
+         'evidence': {'witness_row': 'T002', 'unique_start_transcript': digest}}]}) + '\n'
+    io.open(reconcile, 'wb').write(label_only.encode('utf-8'))
+    unread = Account(account_path, 3, ACCOUNT_HEADER, 'T', reconcile=reconcile)
+    record('B4: a transcript label with no transcript artifact frees no charge',
+           unread.processes() == 3, unread.processes())
+    io.open(reconcile, 'wb').write(booking.encode('utf-8'))
     tainted = Account(account_path, 3, ACCOUNT_HEADER, 'T')
     tainted.rows[2]['rc'] = '1'
     tainted.flush()

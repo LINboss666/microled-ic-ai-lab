@@ -1,0 +1,63 @@
+{
+ "task_id": "DATA-7C-B-TR-R3",
+ "date": "2026-11-12",
+ "status": "AWAITING_INDEPENDENT_REVIEW",
+ "worktree": "D:/ic617_d7c_b_tr_r3",
+ "branch": "poc/data-pam-d7c-b-tr-r3",
+ "base_sha": "fc7ee7a59ea3bc70835f511a1f47650887ca9329",
+ "run_id": "r20261112_175259_3c2950",
+ "evidence_dir": "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950",
+ "carried_over_closed": {
+  "B5": "closed_by_review",
+  "original_r2_package": "verified_by_review"
+ },
+ "blockers": {
+  "B1": "fixed",
+  "B2": "fixed",
+  "B3": "fixed",
+  "B4": "fixed"
+ },
+ "verification": {
+  "clean_verify": "rc=0 21/21 problems=0 excluded=4",
+  "clean_verify_no_subprocess": "rc=0",
+  "clean_recompute": "rc=0 RECOMPUTE_R1 gate 838/838",
+  "counterexamples": 9,
+  "counterexamples_refused": 9,
+  "frozen_files": 3278,
+  "frozen_identical": 3274,
+  "frozen_changed": 4,
+  "frozen_missing": 0
+ },
+ "checker_count_change": {
+  "before": 841,
+  "after": 838,
+  "reason": "five parallel rtl_checks records replaced by one r2_rtl_checks record; no evidence changed"
+ },
+ "retained_electrical_fail": {
+  "dynamic": "33/37 FAIL",
+  "nominal": "23/37 FAIL",
+  "threshold_LSB": 0.5
+ },
+ "budget": {
+  "spectre_total_limit": 24,
+  "main_ledger_ceiling": 22,
+  "total_occupied": 21,
+  "rtl_process_count": "NOT_INDEPENDENTLY_PROVEN",
+  "conservative_rtl_occupancy": "5/4",
+  "budget_accounting_status": "PARTIAL"
+ },
+ "not_run": {
+  "module_selftests_260": "NOT_RUN: the selftest drives guarded launch(); zero new launches"
+ },
+ "limits": {
+  "new_spectre_launches": 0,
+  "new_rtl_compilations": 0,
+  "new_rtl_simulations": 0,
+  "new_oa_access": 0,
+  "new_guest_connections": 0,
+  "new_pdk_license_or_credential_reads": 0,
+  "acceptance_registered": false,
+  "merge_performed": false,
+  "next_native_stage_authorised": false
+ }
+}

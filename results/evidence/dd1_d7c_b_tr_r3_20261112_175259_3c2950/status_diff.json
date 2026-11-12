@@ -1,0 +1,145 @@
+{
+ "note": "the published verdicts of the real electrical windows do not change; the corrected fields are the ones that were counting records instead of facts",
+ "rows": [
+  {
+   "status": "EXECUTION_COMPLETENESS",
+   "r1": {
+    "verdict": "PASS",
+    "measured": "18",
+    "expected": "18"
+   },
+   "r3": {
+    "verdict": "PASS",
+    "measured": "18",
+    "expected": "18"
+   },
+   "changed": false
+  },
+  {
+   "status": "EVIDENCE_INTEGRITY",
+   "r1": {
+    "verdict": "PASS",
+    "measured": "37",
+    "expected": "37"
+   },
+   "r3": {
+    "verdict": "PASS",
+    "measured": "37",
+    "expected": "37"
+   },
+   "changed": false
+  },
+  {
+   "status": "DYNAMIC_CHARGE_STATUS",
+   "r1": {
+    "verdict": "FAIL",
+    "measured": "33",
+    "expected": "37"
+   },
+   "r3": {
+    "verdict": "FAIL",
+    "measured": "33",
+    "expected": "37"
+   },
+   "changed": false
+  },
+  {
+   "status": "NOMINAL_CHARGE_STATUS",
+   "r1": {
+    "verdict": "FAIL",
+    "measured": "23",
+    "expected": "37"
+   },
+   "r3": {
+    "verdict": "FAIL",
+    "measured": "23",
+    "expected": "37"
+   },
+   "changed": false
+  },
+  {
+   "status": "SETTLING_STATUS",
+   "r1": {
+    "verdict": "PASS",
+    "measured": "34",
+    "expected": "34"
+   },
+   "r3": {
+    "verdict": "PASS",
+    "measured": "34",
+    "expected": "34"
+   },
+   "changed": false
+  },
+  {
+   "status": "SHUTOFF_STATUS",
+   "r1": {
+    "verdict": "PASS",
+    "measured": "37",
+    "expected": "37"
+   },
+   "r3": {
+    "verdict": "PASS",
+    "measured": "37",
+    "expected": "37"
+   },
+   "changed": false
+  },
+  {
+   "status": "CONVERGENCE_STATUS",
+   "r1": {
+    "verdict": "PASS",
+    "measured": "13",
+    "expected": "0"
+   },
+   "r3": {
+    "verdict": "PASS",
+    "measured": "13",
+    "expected": "13"
+   },
+   "changed": true
+  },
+  {
+   "status": "NATIVE_SEQUENCE_REINTEGRATION",
+   "r1": {
+    "verdict": "PASS",
+    "measured": "835",
+    "expected": "835"
+   },
+   "r3": {
+    "verdict": "PASS",
+    "measured": "37",
+    "expected": "37"
+   },
+   "changed": true
+  },
+  {
+   "status": "RTL_INPUT_PROVENANCE",
+   "r1": {
+    "verdict": "PASS",
+    "measured": "2",
+    "expected": "2"
+   },
+   "r3": {
+    "verdict": "PASS",
+    "measured": "2",
+    "expected": "2"
+   },
+   "changed": false
+  },
+  {
+   "status": "BUDGET_ACCOUNTING_STATUS",
+   "r1": {
+    "verdict": "PASS",
+    "measured": "21",
+    "expected": "24"
+   },
+   "r3": {
+    "verdict": "PARTIAL",
+    "measured": "21",
+    "expected": "24"
+   },
+   "changed": true
+  }
+ ]
+}

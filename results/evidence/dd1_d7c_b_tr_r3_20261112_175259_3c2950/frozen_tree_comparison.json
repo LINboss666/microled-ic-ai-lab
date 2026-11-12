@@ -1,0 +1,65 @@
+{
+ "frozen_files": 3278,
+ "identical": 3274,
+ "changed": [
+  {
+   "path": "scripts/dd1_d7c_b_tr_r1_native.py",
+   "mode_before": "100644",
+   "mode_after": "100644",
+   "sha_before": "674d3413b1fe26b1db3dd1e2cc77515bb117362d",
+   "sha_after": "75da0a7536142e49c68b5f64a66eefdf513ec0e1"
+  },
+  {
+   "path": "scripts/dd1_d7c_b_tr_r1_recompute.py",
+   "mode_before": "100644",
+   "mode_after": "100644",
+   "sha_before": "2e4c9762a4bc4b445347244f354849b8db43cc95",
+   "sha_after": "281ed508e4144c6af00a785517b65dcdf578ace4"
+  },
+  {
+   "path": "scripts/dd1_d7c_b_tr_record.py",
+   "mode_before": "100644",
+   "mode_after": "100644",
+   "sha_before": "3c041358576255a05bd9441293eb7bc7c814b7bc",
+   "sha_after": "e2b179f1313a946babd7efc416888d7bf5afa0b9"
+  },
+  {
+   "path": "scripts/dd1_d7c_b_tr_run.py",
+   "mode_before": "100644",
+   "mode_after": "100644",
+   "sha_before": "3e62112e67b17c7b4ac163e5e392374d87d0b5cb",
+   "sha_after": "490ed22c003cebd86847eac6d47d951e17a0d0d6"
+  }
+ ],
+ "missing": [],
+ "new_file_count": 26,
+ "new_files": [
+  ".git",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/clean_recompute.txt",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/clean_verify.txt",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/convergence.csv",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/counterexamples/A1_current_unit_V.txt",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/counterexamples/A2_vdd18_nan.txt",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/counterexamples/A3_sample_count_short.txt",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/counterexamples/A4_time_not_ordered.txt",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/counterexamples/B1_ledger_uncertain.txt",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/counterexamples/B2_budget_occupied_22.txt",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/counterexamples/B3_settling_left_limit_1000A.txt",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/counterexamples/C1_convergence_context_NO.txt",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/counterexamples/clean_recompute.txt",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/counterexamples/clean_verify.txt",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/counterexamples/counterexamples.json",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/counterexamples/verify_no_subprocess.txt",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/frozen_baseline.txt",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/r3_inputs.json",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/rtl/dd1_d7c_b_tr_hyb_120.vcd.gz",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/rtl/dd1_d7c_b_tr_hyb_200.vcd.gz",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/status_diff.json",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/statuses.csv",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/statuses_r1_original.csv",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/task_log.json",
+  "results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950/windows_all.csv",
+  "scripts/dd1_d7c_b_tr_r3_probe.py"
+ ],
+ "note": "compared by Git blob SHA-1 and file mode over every path in the frozen tree, not by git status; only the four permitted scripts may differ"
+}

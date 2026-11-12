@@ -14,6 +14,7 @@ import gzip
 import hashlib
 import io
 import json
+import math
 import os
 import re
 import sys
@@ -478,15 +479,116 @@ def _r2_payload(folder, part_names):
     return gzip.decompress(b''.join(chunks)).decode('utf-8', 'replace').splitlines()
 
 
-def _r2_preflight_semantics(lines, entry, env, label, problems):
-    """B1: re-judge a preflight from its own bytes and the frozen environment, not from statuses.csv"""
-    head = {}
-    for line in lines:
-        if line.startswith('column '):
-            break
+_R2_COLUMN = re.compile(r'^column (?P<name>\S+) unit (?P<unit>\S+) encoding '
+                        r'(?P<encoding>CONSTANT|RUNS) count (?P<count>\d+)'
+                        r'(?: runs (?P<runs>\d+))?$')
+
+
+def _r2_parse_sequence(lines, label, problems):
+    """B1: read the delivered column schema and every number in it, or refuse.
+
+    R2 only looked at the header comments and at five constant columns, so a current column whose
+    own unit was rewritten to V, or a supply token rewritten to nan, still verified. A declared
+    schema has to be expanded back to the numbers and those numbers have to be finite before any
+    semantic judgement means anything.
+    """
+    head, columns, samples, index = {}, {}, None, 0
+    total = len(lines)
+    while index < total and not lines[index].startswith(('column ', 'samples ')):
+        line = lines[index]
         if line.startswith('# ') and '=' in line:
             key, value = line[2:].split('=', 1)
             head[key] = value
+        index += 1
+    while index < total and not lines[index].startswith('column '):
+        found = re.match(r'^samples (\d+)$', lines[index])
+        if found:
+            samples = int(found.group(1))
+        index += 1
+    if samples is None:
+        problems.append('%s: the preflight does not declare its sample count' % label)
+        return None
+    while index < total:
+        line = lines[index]
+        if not line.strip():
+            index += 1
+            continue
+        parsed = _R2_COLUMN.match(line)
+        if not parsed:
+            problems.append('%s: column header %r is unreadable' % (label, line[:80]))
+            return None
+        name = parsed.group('name')
+        if name in columns:
+            problems.append('%s: column %s is declared twice' % (label, name))
+            return None
+        count = int(parsed.group('count'))
+        if count != samples:
+            problems.append('%s: column %s declares %d values against %d samples'
+                            % (label, name, count, samples))
+            return None
+        index += 1
+        if parsed.group('encoding') == 'CONSTANT':
+            if index >= total:
+                problems.append('%s: constant column %s carries no token' % (label, name))
+                return None
+            token = lines[index].strip()
+            try:
+                values = [float(token)] * count
+            except ValueError:
+                problems.append('%s: constant column %s token %r is not a number'
+                                % (label, name, token))
+                return None
+            index += 1
+        else:
+            runs = parsed.group('runs')
+            if runs is None:
+                problems.append('%s: run-length column %s does not declare its run count'
+                                % (label, name))
+                return None
+            runs = int(runs)
+            values = []
+            for _ in range(runs):
+                if index >= total:
+                    problems.append('%s: column %s ends before its %d runs' % (label, name, runs))
+                    return None
+                token = lines[index].split()
+                if len(token) != 2 or not token[0].isdigit() or int(token[0]) <= 0:
+                    problems.append('%s: column %s run %r is not "<count> <value>"'
+                                    % (label, name, lines[index][:60]))
+                    return None
+                try:
+                    value = float(token[1])
+                except ValueError:
+                    problems.append('%s: column %s run value %r is not a number'
+                                    % (label, name, token[1]))
+                    return None
+                values.extend([value] * int(token[0]))
+                index += 1
+            if len(values) != count:
+                problems.append('%s: column %s expands to %d values against its declared %d'
+                                % (label, name, len(values), count))
+                return None
+        bad = [value for value in values if not math.isfinite(value)]
+        if bad:
+            problems.append('%s: column %s carries %d non-finite value(s), the first %r'
+                            % (label, name, len(bad), bad[0]))
+            return None
+        columns[name] = (parsed.group('unit'), values)
+    return {'head': head, 'samples': samples, 'columns': columns}
+
+
+def _r2_preflight_semantics(lines, entry, env, label, problems):
+    """B1: re-judge a preflight from its own decoded columns, never from statuses.csv.
+
+    Every check below is derived from the delivered bytes and the frozen electrical environment:
+    the column schema is parsed, the column units and counts are judged, the numbers are required
+    to be finite, the time axis is required to be strictly increasing, and the supplies and the
+    stimulus witness are compared with the frozen contract.
+    """
+    parsed = _r2_parse_sequence(lines, label, problems)
+    if parsed is None:
+        return
+    head, samples, columns = parsed['head'], parsed['samples'], parsed['columns']
     expect_head = {'native_axis_unit': 's', 'native_current_column': 'Ip_branch:i',
                    'simulator_name': 'spectre', 'role': 'preflight'}
     for key, value in expect_head.items():
@@ -498,38 +600,47 @@ def _r2_preflight_semantics(lines, entry, env, label, problems):
             problems.append('%s: preflight %s=%r disagrees with the manifest %r'
                             % (label, key, head.get(key), entry[key]))
     declared = head.get('native_samples')
-    if declared != str(entry.get('samples')):
-        problems.append('%s: preflight declares %s samples against the manifest %s'
-                        % (label, declared, entry.get('samples')))
+    if declared != str(samples):
+        problems.append('%s: the header declares %s samples against %d in the body'
+                        % (label, declared, samples))
+    if entry.get('samples') is not None and str(entry['samples']) != str(samples):
+        problems.append('%s: the body carries %d samples against the manifest %s'
+                        % (label, samples, entry['samples']))
+    expect_units = {'time': 's', 'Ip_branch:i': 'A', 'data_en': 'V'}
+    for name, unit in expect_units.items():
+        if name not in columns:
+            problems.append('%s: the delivered preflight has no %s column' % (label, name))
+        elif columns[name][0] != unit:
+            problems.append('%s: column %s is declared in %s, the frozen reader uses %s'
+                            % (label, name, columns[name][0], unit))
+    if 'time' in columns:
+        times = columns['time'][1]
+        for index in range(len(times) - 1):
+            if times[index + 1] <= times[index]:
+                problems.append('%s: the time axis is not strictly increasing at sample %d '
+                                '(%r then %r)' % (label, index, times[index], times[index + 1]))
+                break
     frozen = {'vdd18': ('V', env['vdd18_V']), 'vss': ('V', env['vss_V']),
               'vcas': ('V', env['vcas_V']), 'clamp_node': ('V', env['clamp_V']),
               'data_out': ('V', env['clamp_V'])}
-    found = {}
-    for index, line in enumerate(lines):
-        if not line.startswith('column '):
-            continue
-        fields = line.split()
-        if len(fields) < 7:
-            continue
-        name, unit, encoding = fields[1], fields[3], fields[5]
-        if encoding != 'CONSTANT' or name not in frozen:
-            continue
-        if index + 1 >= len(lines):
-            problems.append('%s: constant column %s carries no token' % (label, name))
-            continue
-        token = lines[index + 1].split()[-1]
-        try:
-            found[name] = (unit, float(token))
-        except ValueError:
-            problems.append('%s: constant column %s token %r is not a number' % (label, name, token))
     for name, (unit, value) in frozen.items():
-        if name not in found:
+        if name not in columns:
             problems.append('%s: no constant %s column in the delivered preflight' % (label, name))
             continue
-        got_unit, got_value = found[name]
-        if got_unit != unit or abs(got_value - value) > 1e-6:
+        got_unit, values = columns[name]
+        if len(set(values)) != 1:
+            problems.append('%s: column %s is declared CONSTANT and carries %d distinct values'
+                            % (label, name, len(set(values))))
+            continue
+        if got_unit != unit or abs(values[0] - value) > 1e-6:
             problems.append('%s: %s is %r %s against the frozen %r %s'
-                            % (label, name, got_value, got_unit, value, unit))
+                            % (label, name, values[0], got_unit, value, unit))
+    if 'data_en' in columns:
+        low, high = env['logic_low_V'], env['logic_high_V']
+        values = columns['data_en'][1]
+        if min(values) < low - 1e-6 or max(values) > high + 1e-6:
+            problems.append('%s: the stimulus witness runs from %r to %r V outside the frozen '
+                            'logic rails %r..%r' % (label, min(values), max(values), low, high))
 
 
 def verify(out_dir):

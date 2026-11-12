@@ -356,6 +356,7 @@ class Recompute(object):
         self.rtl = self.table('rtl_simulation_account.csv', 'native')
         self.dc = self.dc_table()
         self.sequences = {}
+        self.r2_sequences = {}
 
     def path(self, which, *parts):
         if which not in ('r1', 'native', 'tables'):
@@ -874,34 +875,13 @@ class Recompute(object):
                     ids == ['T%03d' % index for index in range(1, len(ids) + 1)], ids[:4])
 
     def rtl_checks(self):
-        ceiling = self.contract['authorisation']['rtl_simulation_total_limit']
-        rows = self.rtl
-        evidence_keys = ('exe_sha256', 'rc', 'vcd_sha256', 'log_sha256')
-        # a row is a process as soon as it carries any evidence of one; requiring all three fields
-        # would let a fifth start hide behind an empty vcd column and still be counted as four
-        with_evidence = [row for row in rows if any(row.get(key) for key in evidence_keys)]
-        distinct = set(row['exe_sha256'] for row in with_evidence if row.get('exe_sha256'))
-        self.record('the RTL account never exceeds the four starts the task authorises',
-                    len(rows) <= ceiling + 1, (len(rows), ceiling))
-        self.record('an RTL row is counted as a process only by the executable digest it carries, '
-                    'never by subtracting one from a row count',
-                    len(distinct) == len(with_evidence) or len(distinct) <= ceiling,
-                    (len(rows), len(with_evidence), len(distinct)))
-        provenance = self.contract.get('not_verified', {})
-        self.record('the joint-control input provenance is published as it was measured',
-                    rows and all(row['case_id'].startswith('HYB') for row in rows),
-                    sorted(set(row['case_id'] for row in rows)))
-        self.record('five rows that each carry process evidence are five starts, never four',
-                    len(with_evidence) == len(distinct) and len(with_evidence) <= ceiling,
-                    'rows %d, rows with evidence %d, distinct executables %d'
-                    % (len(rows), len(with_evidence), len(distinct)))
-        self.record('RTL_PROCESS_COUNT is only claimed where each start has its own process evidence',
-                    len(distinct) <= ceiling and len(with_evidence) <= ceiling,
-                    'rows %d, rows carrying evidence %d, distinct executables %d, so the count of '
-                    'starts this ledger can prove is %s'
-                    % (len(rows), len(with_evidence), len(distinct),
-                       len(distinct) if len(with_evidence) == len(distinct)
-                       else 'NOT_INDEPENDENTLY_PROVEN'))
+        """B4: one fact source. The old path judged the four starts from executable digests.
+
+        Keeping a second, competing proof next to r2_rtl_checks let a digest equality stand in for
+        a process identity and let "four" be asserted from it. The honest reading is delegated now,
+        so no entry can report a count the ledger cannot prove.
+        """
+        self.r2_rtl_checks()
 
     def area_checks(self):
         """the integrator is shown against arithmetic a reviewer can do by hand before it judges any
@@ -944,6 +924,8 @@ class Recompute(object):
     def r2_convergence_checks(self):
         frozen = self.r2_convergence_keys()
         limit = float(self.contract['convergence']['limit_rel_qlsb'])
+        pair_table = dict(((row['refined'], row['coarse']), row)
+                          for row in self.contract['convergence']['pairs'])
         fields = ('pair', 'refined_case', 'coarse_case', 'window_id', 'code', 'tick_ns',
                   'qlsb_C', 'refined_q_C', 'coarse_q_C', 'dq_C', 'abs_dq_over_qlsb',
                   'status', 'context_match')
@@ -985,6 +967,23 @@ class Recompute(object):
             if (row['status'] == 'PASS') != (ratio <= limit):
                 raise Refuse('B3: convergence key %s verdict does not follow the frozen %g limit'
                              % (key, limit))
+            declared = pair_table.get((row['refined_case'], row['coarse_case']))
+            if declared is None:
+                raise Refuse('B3: convergence key %s names a pair the frozen contract does not '
+                             'declare' % (key,))
+            if abs(tick - float(declared['tick_ns'])) > 1e-9:
+                raise Refuse('B3: convergence key %s reports a %r ns reference tick against the '
+                             'frozen %r ns' % (key, tick, declared['tick_ns']))
+            differing = self.r2_context_differences(row['refined_case'], row['coarse_case'],
+                                                    row['window_id'])
+            if differing:
+                raise Refuse('B3: pair %s window %s does not share one measurement context: %s; '
+                             'only maxstep may differ by agreement'
+                             % (row['pair'], row['window_id'], differing[:4]))
+            if row.get('context_match') != 'YES':
+                raise Refuse('B3: convergence key %s publishes context_match=%r while the '
+                             'delivered windows agree on every measured field except maxstep'
+                             % (key, row.get('context_match')))
         self.record('B3: all 13 frozen convergence keys are present exactly once and re-judged',
                     True, len(seen))
 
@@ -1005,6 +1004,217 @@ class Recompute(object):
             if hashlib.sha256(raw).hexdigest() == digest:
                 found += 1
         return found
+
+    def r2_sequence_columns(self, case, role):
+        """B2: decode one delivered sequence (whole or parts) into time and branch current only.
+
+        The deadline left limit is a statement about the waveform, so it can only be judged by
+        interpolating the delivered samples. No project module and no table is consulted.
+        """
+        key = (case, role)
+        if key in self.sequences:
+            return self.r2_sequences[key]
+        folder = self.path('r1', 'native_sequences')
+        stem = None
+        for name in os.listdir(folder):
+            if name.endswith('_%s_%s.sequence.txt' % (case, role)):
+                stem = name
+                break
+            if (name.endswith('_%s_%s.sequence.part000.txt' % (case, role))):
+                stem = name[:-len('.part000.txt')] + '.txt'
+                break
+        if stem is None:
+            self.r2_sequences[key] = None
+            return None
+        if os.path.isfile(os.path.join(folder, stem)):
+            chunks = [io.open(os.path.join(folder, stem), 'rb').read()]
+        else:
+            base = os.path.basename(stem)[:-4]
+            parts = sorted(name for name in os.listdir(folder)
+                           if name.startswith(base + '.part') and name.endswith('.txt'))
+            if not parts:
+                self.r2_sequences[key] = None
+                return None
+            chunks = [io.open(os.path.join(folder, name), 'rb').read() for name in parts]
+        text = b''.join(chunks).decode('utf-8', 'replace')
+        if not text.startswith('TR1CONTAINER 1'):
+            self.r2_sequences[key] = None
+            return None
+        lines = gzip.decompress(base64.b85decode(
+            text.split(chr(10) + chr(10), 1)[1].strip())).decode('utf-8', 'replace').splitlines()
+        wanted = ('time', 'Ip_branch:i')
+        found, index = {}, 0
+        while index < len(lines):
+            line = lines[index]
+            if not line.startswith('column '):
+                index += 1
+                continue
+            fields = line.split()
+            if len(fields) < 8:
+                raise Refuse('B2: unreadable column header %r in %s/%s' % (line[:70], case, role))
+            name, unit, encoding, count = fields[1], fields[3], fields[5], int(fields[7])
+            index += 1
+            if encoding == 'CONSTANT':
+                value = float(lines[index])
+                index += 1
+                values = [value] * count
+            else:
+                runs = int(fields[9])
+                values = []
+                for offset in range(runs):
+                    repeat, value = lines[index + offset].split()
+                    if name in wanted:
+                        values.extend([float(value)] * int(repeat))
+                    else:
+                        values.append(float(value))
+                    if name in wanted and len(values) >= count:
+                        break
+                index += runs
+            if name in wanted:
+                if unit != ('s' if name == 'time' else 'A'):
+                    raise Refuse('B2: %s/%s column %s is delivered in %s' % (case, role, name, unit))
+                found[name] = values
+        if len(found) != 2 or len(found['time']) != len(found['Ip_branch:i']):
+            self.r2_sequences[key] = None
+            return None
+        self.r2_sequences[key] = (found['time'], found['Ip_branch:i'])
+        return self.r2_sequences[key]
+
+    def r2_deadline_current(self, case, deadline_ns):
+        """B2: the interpolated branch current at the frozen settling deadline"""
+        columns = self.r2_sequence_columns(case, 'dut')
+        if columns is None:
+            return None
+        times, currents = columns
+        target = deadline_ns * 1e-9
+        if target < times[0] or target > times[-1]:
+            return None
+        low, high = 0, len(times) - 1
+        while high - low > 1:
+            middle = (low + high) // 2
+            if times[middle] <= target:
+                low = middle
+            else:
+                high = middle
+        span = times[high] - times[low]
+        if span <= 0:
+            return currents[low]
+        return currents[low] + (currents[high] - currents[low]) * (target - times[low]) / span
+
+    def r2_settling_limits(self, emission):
+        """B2: the published deadline left limit must survive interpolation of the delivered run"""
+        checked = 0
+        for row in emission:
+            deadline = row.get('flat_stop_ns')
+            if deadline in (None, ''):
+                raise Refuse('B2: %s %s publishes no settling deadline'
+                             % (row['case_id'], row['window_id']))
+            expected = self.r2_deadline_current(row['case_id'], float(deadline))
+            if expected is None:
+                raise Refuse('B2: %s %s has no delivered dut samples at its deadline, so the '
+                             'published left limit cannot be judged'
+                             % (row['case_id'], row['window_id']))
+            for field in ('settling_dc_left_limit_A', 'settling_nominal_left_limit_A'):
+                text = row.get(field)
+                if text in (None, ''):
+                    raise Refuse('B2: %s %s publishes no %s'
+                                 % (row['case_id'], row['window_id'], field))
+                published = float(text)
+                if not math.isfinite(published):
+                    raise Refuse('B2: %s %s publishes a non-finite %s'
+                                 % (row['case_id'], row['window_id'], field))
+                if abs(published - expected) > 1e-6 * max(abs(expected), 1e-15):
+                    raise Refuse('B2: %s %s publishes %s=%r against %r interpolated at the '
+                                 'deadline %s ns'
+                                 % (row['case_id'], row['window_id'], field, published,
+                                    expected, deadline))
+            checked += 1
+        return checked
+
+    def r2_confirmed_launches(self):
+        """B2: EXECUTION_COMPLETENESS counts planned launches the ledger actually confirms.
+
+        R2 counted manifest entries that were merely exported, so a launch demoted to UNCERTAIN
+        still read 18/18. A planned (case, role) counts only through a CONFIRMED ledger row that
+        carries rc=0 and its own deck, raw and log identity; an uncertain request keeps its charge
+        and never satisfies the plan.
+        """
+        planned = []
+        for case in self.contract['cases']:
+            for role, key in (('dut', 'dut_launches'), ('preflight', 'preflight_launches')):
+                planned.extend([(case['case_id'], role)] * int(case.get(key) or 0))
+        if not planned:
+            raise Refuse('B2: the frozen contract declares no planned launch')
+        confirmed = []
+        for row in self.spectre.values():
+            if row.get('state') != 'CONFIRMED':
+                continue
+            if str(row.get('rc')).strip() != '0':
+                continue
+            if not (row.get('deck_sha256') and row.get('raw_sha256') and row.get('log_sha256')):
+                continue
+            confirmed.append((row.get('case_id'), row.get('role')))
+        unseen = sorted(pair for pair in set(planned) if pair not in confirmed)
+        if unseen:
+            raise Refuse('B2: %d of %d planned launches are not confirmed in the ledger: %s'
+                         % (len(unseen), len(planned), unseen))
+        extra = sorted(pair for pair in set(confirmed) - set(planned))
+        if extra:
+            raise Refuse('B2: the ledger confirms launches the frozen plan does not contain: %s'
+                         % extra)
+        return len(planned)
+
+    def r2_budget_facts(self):
+        """B2: the published budget must follow the ledger arithmetic, not a literal tuple"""
+        adjustments = json.loads(io.open(self.path('native', 'spectre_budget_adjustments.json'),
+                                         encoding='utf-8').read())
+        entries = adjustments.get('adjustments') or []
+        stray = 0
+        for entry in entries:
+            declared = int(entry.get('processes') or 0)
+            listed = len(entry.get('launches') or [])
+            if declared != listed:
+                raise Refuse('B2: an adjustment charges %d processes for %d listed launches'
+                             % (declared, listed))
+            stray += declared
+        occupied = len(self.spectre) + stray
+        ceiling = int(self.contract['accounting']['ceiling_spectre'])
+        approved = adjustments.get('approved_ceiling')
+        if approved is None:
+            raise Refuse('B2: the budget file publishes no approved ceiling')
+        approved = int(approved)
+        if occupied > approved or approved > ceiling:
+            raise Refuse('B2: %d occupied against an approved ceiling of %d and a total limit of %d'
+                         % (occupied, approved, ceiling))
+        return occupied, ceiling, approved
+
+    def r2_context_differences(self, refined_case, coarse_case, window_id):
+        """B3: compare the measured context of a pair; only maxstep may differ by agreement"""
+        fields = ('kind', 'code', 'window_start_ns', 'window_stop_ns', 'rise50_ns', 'fall50_ns',
+                  't50_ns', 'qlsb_C', 'tick_ns', 'qtarget_dc_C')
+        picked = {}
+        for case in (refined_case, coarse_case):
+            row = next((item for item in self.rows
+                        if item['case_id'] == case and item['window_id'] == window_id), None)
+            if row is None:
+                raise Refuse('B3: %s publishes no window %s to compare' % (case, window_id))
+            picked[case] = row
+        differing = []
+        for field in fields:
+            left = picked[refined_case].get(field)
+            right = picked[coarse_case].get(field)
+            if left in (None, '') or right in (None, ''):
+                differing.append('%s is missing' % field)
+                continue
+            try:
+                one, other = float(left), float(right)
+            except ValueError:
+                if str(left) != str(right):
+                    differing.append('%s=%r against %r' % (field, left, right))
+                continue
+            if abs(one - other) > 1e-9 * max(abs(one), abs(other), 1e-30):
+                differing.append('%s=%r against %r' % (field, left, right))
+        return differing
 
     def r2_status_checks(self, emission, black):
         """B2: an exact ten-status set, each verdict/measured/expected derived from actual inputs"""
@@ -1047,14 +1257,12 @@ class Recompute(object):
         bound = sum(1 for row in windows
                     if row.get('launch_id') and row.get('deck_sha256') and row.get('raw_sha256'))
         converged = sum(1 for row in self.convergence if row['status'] == 'PASS')
-        manifest = json.loads(io.open(self.path('r1', 'native_manifest.json'),
-                                      encoding='utf-8').read())
-        delivered = len([entry for entry in manifest['files']
-                         if entry.get('exported') and not entry.get('dependency')
-                         and entry.get('role') in ('dut', 'preflight')])
+        launches = self.r2_confirmed_launches()
+        occupied, limit, approved = self.r2_budget_facts()
+        settled_limits = self.r2_settling_limits(emission)
         vcd = self.r2_vcd_verified()
         facts = {
-            'EXECUTION_COMPLETENESS': ('PASS', delivered, 18),
+            'EXECUTION_COMPLETENESS': ('PASS', launches, launches),
             'EVIDENCE_INTEGRITY': ('PASS', bound, len(windows)),
             'DYNAMIC_CHARGE_STATUS': ('FAIL' if dynamic_ok < len(windows) else 'PASS',
                                       dynamic_ok, len(windows)),
@@ -1068,7 +1276,7 @@ class Recompute(object):
                                    converged, len(self.convergence)),
             'NATIVE_SEQUENCE_REINTEGRATION': ('PASS', len(windows), len(windows)),
             'RTL_INPUT_PROVENANCE': ('PASS' if vcd == 2 else 'PARTIAL', vcd, 2),
-            'BUDGET_ACCOUNTING_STATUS': ('PARTIAL', 21, 24),
+            'BUDGET_ACCOUNTING_STATUS': ('PARTIAL', occupied, limit),
         }
         for name, (verdict, measured, expected) in facts.items():
             row = by[name]
@@ -1078,11 +1286,15 @@ class Recompute(object):
                              % (name, row['verdict'], row['measured'], row['expected'],
                                 verdict, measured, expected))
         budget = by['BUDGET_ACCOUNTING_STATUS']['note']
-        for token in ('NOT_INDEPENDENTLY_PROVEN', '24', '22', '21'):
+        for token in ('NOT_INDEPENDENTLY_PROVEN', str(limit), str(approved), str(occupied)):
             if token not in budget:
-                raise Refuse('B2: BUDGET_ACCOUNTING_STATUS note must separate the 24/22/21 '
-                             'Spectre figures and state RTL_PROCESS_COUNT=NOT_INDEPENDENTLY_PROVEN')
+                raise Refuse('B2: BUDGET_ACCOUNTING_STATUS note must separate the %d/%d/%d '
+                             'Spectre figures and state RTL_PROCESS_COUNT=NOT_INDEPENDENTLY_PROVEN'
+                             % (limit, approved, occupied))
         self.record('B2: the ten statuses are re-derived from the actual inputs', True, len(facts))
+        self.record('B2: %d planned launches are confirmed in the ledger and %d deadline limits '
+                    'interpolate from the delivered samples' % (launches, settled_limits),
+                    launches == len(self.contract['cases']) * 2, launches)
 
     def r2_rtl_checks(self):
         """B4: a program digest is not a process identity; an unproven start stays charged"""

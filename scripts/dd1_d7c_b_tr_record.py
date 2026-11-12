@@ -199,41 +199,18 @@ def completeness(directory):
             'note': note, 'missing': missing}
 
 
-def _unique_start_token(row):
-    """B4: the only admissible proof of a double booking is an explicit per-start transcript link"""
-    text = row.get('refusal') or ''
-    marker = 'UNIQUE_START_TRANSCRIPT:'
-    if marker not in text:
-        return None
-    token = text.split(marker, 1)[1].split()[0]
-    return token or None
-
-
 def derive_duplicates(rtl_rows):
-    """B4: a duplicate booking is proven by a mechanical link, never by a missing field.
+    """B4: a self-declared label is not evidence, so nothing is released from a ledger here.
 
-    R1 inferred a duplicate from "same case, same second, no process fields". One program can
-    start twice, and an UNCERTAIN row with no rc does not prove no subprocess ran. A row frees
-    nothing unless BOTH it and one witness carry the SAME explicit unique-start transcript
-    token, and the witness carries its own executable, rc and log identity. Anything else stays
-    charged. The delivered R1 ledger carries no such token, so this returns no duplicates and
-    the process count is reported as NOT_INDEPENDENTLY_PROVEN.
+    R1 inferred a duplicate from "same case, same second, no process fields". R2 replaced that
+    with an explicit token, but the token was still text a row wrote about itself: two rows
+    carrying the same invented label released one charge without any transcript being read, and
+    a single declaration can carry the same label twice. Without a transcript artifact there is
+    nothing to open, hash or read, so this returns no duplicates and every caller must report the
+    occupancy conservatively. The verified path is Account.duplicate_bookings(), which requires
+    the artifact itself and re-hashes it.
     """
-    witness_keys = ('exe_sha256', 'rc', 'log_sha256')
-    out = []
-    for row in rtl_rows:
-        if any(row.get(key) for key in RUN.PROCESS_EVIDENCE_KEYS):
-            continue
-        token = _unique_start_token(row)
-        if not token:
-            continue
-        witnesses = [other for other in rtl_rows
-                     if other['sim_id'] != row['sim_id']
-                     and _unique_start_token(other) == token
-                     and all(other.get(key) for key in witness_keys)]
-        if len(witnesses) == 1:
-            out.append((row['sim_id'], witnesses[0]['sim_id']))
-    return out
+    return []
 
 
 def rtl_process_finding(rtl_rows):
