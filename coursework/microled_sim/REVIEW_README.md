@@ -29,6 +29,8 @@
 
 ---
 
+> 推送阶段另遇 git HTTPS 代理 502（`gh api` 通道正常），已停止重试并保留完整本地 commit；远端状态以 `git ls-remote` 与包外回执为准，见 `known_failures_and_limits.md` A7。
+
 ## 2. 复现入口
 
 ```bash

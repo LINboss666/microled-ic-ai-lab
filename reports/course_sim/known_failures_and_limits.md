@@ -12,6 +12,7 @@
 | A2 | Spectre DC 首次启动（S1） | `0 errors, 2 warnings`：`save Ip_out:current` 被本 build 判无效并忽略，PSF **无电流数据** | 查 `spectre -h iprobe` 后改成实例名 `save Ip_out`；修复 1 次。原件：沙箱 `S1_first_run.log/.raw/.stdout` |
 | A3 | DC CSV 首次导出 | 提取脚本把 PSF 的 SWEEP/TRACE 声明行也 grep 进来，导致列错位、出现假的 0 行 | 改为只解析 `VALUE` 段，重新导出 19 点并回拉校验；错误版未入库 |
 | A4 | Monte Carlo 第一次启动 | `SFE-874`，子分析写在一行导致解析失败，`rc=2`，**0 样本 0 求解** | 只改换行，第二次启动 30 样本成功。原件：沙箱 `MC_start1_PARSE_FAIL.log/.stdout`。**预算口径见 `monte_carlo_report.md` §3，交复审裁定** |
+| A7 | 最终 `git push` | 本地 commit 完成、pre-commit/pre-push 闸门全部 PASS，但 HTTPS 代理持续返回 `CONNECT tunnel failed, response 502` / `Empty reply from server`；直连超时，HTTP/1.1+openssl 亦 502；同时 `gh api` 通道正常，说明是 git 传输链路问题 | 按任务书失败分支**停止重试**，保留完整本地 commit 与仓库外 review ZIP；**未禁用 hook、未 force、未改 GitHub 邮箱隐私保护、未用 API 绕过造 commit**。远端分支是否最终存在以 `git ls-remote origin refs/heads/course/microled-assignment-sim-20261112` 为准 |
 | A6 | 首次 `git push` | GitHub 返回 `GH007: Your push would publish a private email address`；本轮未推送 commit 用了本地配置的私人邮箱，而仓库所有已发布 commit 均用 GitHub 官方 noreply 邮箱 | 用**与既有已发布 commit 相同**的 `237816241+LINboss666@users.noreply.github.com` 重新创建这个**尚未推送**的 commit（soft reset 到 base 后重新提交）；**未关闭 GitHub 邮箱隐私保护、未改任何已发布历史、未 force** |
 | A5 | Spectre 瞬态 notices | 7 条 `trapezoidal ringing on Xdut.Mcas:int_s`（另 365 条被抑制），数值方法提示 | 如实记录，未隐藏，未改积分方法 |
 
