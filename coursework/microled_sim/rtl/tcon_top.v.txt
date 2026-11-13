@@ -54,6 +54,18 @@ module tcon_top (
 );
 
     // ---------------------------------------------------------------------
+    // timing constants shared by the slot sequencer and the load window
+    // ---------------------------------------------------------------------
+    localparam integer WIN_START    = 768;
+    localparam integer LATCH_AT     = 828;
+    localparam integer PWM_START_AT = 840;
+    localparam integer SCAN_STB_AT  = 880;
+    localparam integer PULSE_LEN    = 4;     // 4 x 10 ns = 40 ns
+    localparam integer TICK_DIV     = 12;    // 120 ns Hybrid @100 Hz
+    localparam integer LOAD_START   = LATCH_AT + PULSE_LEN;  // 832
+    localparam integer LOAD_LEN     = 768;   // 384 bytes/port at 50 MHz
+
+    // ---------------------------------------------------------------------
     // readiness / safety (declared first: used by the time-base enable)
     // ---------------------------------------------------------------------
     wire mode_ok = (cfg_mode == 2'd0) || (cfg_mode == 2'd1);
@@ -85,7 +97,14 @@ module tcon_top (
     // ---------------------------------------------------------------------
     wire window, blank_seq, latch_seq, pstart_seq, stb_seq, tick_base, colid_stable;
 
-    tcon_slot_seq u_seq (
+    tcon_slot_seq #(
+        .WIN_START    (WIN_START),
+        .LATCH_AT     (LATCH_AT),
+        .PWM_START_AT (PWM_START_AT),
+        .SCAN_STB_AT  (SCAN_STB_AT),
+        .PULSE_LEN    (PULSE_LEN),
+        .TICK_DIV     (TICK_DIV)
+    ) u_seq (
         .slot_cycle    (slot_cycle),
         .slot_len      (slot_len),
         .window        (window),
@@ -124,36 +143,50 @@ module tcon_top (
         else if (safe && tb_start) col_id <= tb_col;
 
     // ---------------------------------------------------------------------
-    // 768-cycle load window: starts the cycle after LATCH falls (C model).
-    // LATCH at 828..831, so load runs 832..1599, i.e. 620-relative in the next
-    // slot; the next LATCH is at 1804. Remaining slack = 200 cycles after
-    // removing the 4-cycle LATCH pulse and the 4-cycle last-data guard.
+    // 768-cycle load window, phase-locked to the slot (C interpretation).
+    //
+    //   LATCH      : cycles [828, 832)   -> 4 cycles = 40 ns
+    //   load       : cycles [832, 1600)  -> 768 cycles = 7.68 us  (start = 832)
+    //   next LATCH : cycle 1804          -> 204-cycle gap, 200 net after the
+    //                                       4-cycle last-data guard
+    //
+    // Half-open, cross-slot form relative to the NEXT slot start (976):
+    //   [832-976, 1600-976) = [-144, 624)
+    //
+    // T1R: the previous version detected the FALLING edge of LATCH through a
+    // register, so the window opened one cycle late (833 instead of 832) and a
+    // fault-induced false falling edge could start a phantom transfer. The
+    // window is now derived from slot_cycle only, and gated combinationally by
+    // `safe`, so a fault closes it in the same cycle and clears the counter.
     // ---------------------------------------------------------------------
-    reg        latch_d;
     reg        load_run;
     reg [9:0]  load_cnt;
 
+    // load_start_pt is asserted during cycle 831, i.e. the edge that enters 832
+    wire load_start_pt = (slot_cycle == (LOAD_START - 1));
+
     always @(posedge clk_ref or negedge reset_n) begin
         if (!reset_n) begin
-            latch_d   <= 1'b0;
-            load_run  <= 1'b0;
-            load_cnt  <= 10'd0;
-        end else begin
-            latch_d <= latch;
-            if (latch_d && !latch) begin          // falling edge of LATCH
-                load_run <= 1'b1;
+            load_run <= 1'b0;
+            load_cnt <= 10'd0;
+        end else if (!safe) begin
+            load_run <= 1'b0;                 // no phantom load on a fault
+            load_cnt <= 10'd0;
+        end else if (load_start_pt && !load_run) begin
+            load_run <= 1'b1;                 // high during [832, 1600)
+            load_cnt <= 10'd0;
+        end else if (load_run) begin
+            if (load_cnt == (LOAD_LEN - 1)) begin
+                load_run <= 1'b0;
                 load_cnt <= 10'd0;
-            end else if (load_run) begin
-                if (load_cnt == 10'd767) begin    // 768 cycles done
-                    load_run <= 1'b0;
-                    load_cnt <= 10'd0;
-                end else begin
-                    load_cnt <= load_cnt + 10'd1;
-                end
+            end else begin
+                load_cnt <= load_cnt + 10'd1;
             end
         end
     end
-    assign load_active = load_run;
+
+    // Combinated safety gate: a fault de-asserts load_active in 0 cycles.
+    assign load_active = load_run && safe;
 
     // ---------------------------------------------------------------------
     // status / stickies

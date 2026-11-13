@@ -3,17 +3,24 @@
 // is 976 or 977 cycles of the 100 MHz CLK_REF, distributed so that exactly
 // 576 slots are 977 and 448 are 976  (576*977 + 448*976 = 1,000,000).
 //
-// The distribution uses a fractional accumulator with step 576/1024, which
-// produces exactly 576 long slots per 1024 slots. 60 Hz support is left as an
-// interface parameter (BASE_LEN / FRAC_STEP), not implemented here.
+// T1R fixes (three defects found by independent review):
+//   1) frac is initialised to FRAC_INIT (=576). With frac=0 the FIRST frame
+//      after reset contains only 575 long slots (449 short) = 999,999 cycles,
+//      i.e. 10 ns short. With 576 it is exactly 576/448 = 1,000,000 for every
+//      frame, including the first one after reset.
+//   2) The hold state (enable=0) parked slot_cycle at 0, so on the first
+//      enabled edge it incremented to 1 and slot 0 lasted only 975 cycles.
+//      The rising edge of enable now RESTARTS cycle 0, so the first slot is a
+//      full BASE_LEN slot.
+//   3) Short-slot-first order is preserved: the first slot after reset is 976.
 //
-// SCOPE: this is a T1 skeleton. It does NOT receive the 768-byte column and
-// does NOT implement the 2x768 B ping-pong buffer (that is T2).
+// SCOPE: T1 skeleton. No 768-byte receive, no 2x768 B ping-pong (that is T2).
 module tcon_timebase #(
     parameter integer BASE_LEN  = 976,     // 100 Hz short slot
     parameter integer LONG_LEN  = 977,     // 100 Hz long slot
     parameter integer FRAC_STEP = 576,     // long slots per 1024 slots
     parameter integer FRAC_MOD  = 1024,
+    parameter integer FRAC_INIT = 576,     // T1R: makes the first frame exact
     parameter integer N_COL     = 1024
 ) (
     input  wire        clk,
@@ -29,6 +36,7 @@ module tcon_timebase #(
 );
 
     reg [9:0] frac;                   // fractional accumulator, 0 .. FRAC_MOD-1
+    reg       enable_d;               // detects the rising edge of enable
 
     assign slot_long = (slot_len == LONG_LEN);
 
@@ -45,28 +53,41 @@ module tcon_timebase #(
             slot_start <= 1'b1;
             slot_last  <= 1'b0;
             frame_wrap <= 1'b0;
-            frac       <= 10'd0;
-        end else if (!enable) begin
-            // Hold at the start of the slot; column index must not advance while
-            // the pipeline is not safe (blank is asserted by tcon_top meanwhile).
-            slot_cycle <= 11'd0;
-            slot_start <= 1'b1;
-            slot_last  <= 1'b0;
-            frame_wrap <= 1'b0;
+            frac       <= FRAC_INIT;
+            enable_d   <= 1'b0;
         end else begin
-            frame_wrap <= 1'b0;
-            if (slot_cycle == (slot_len - 11'd1)) begin
+            enable_d <= enable;
+            if (!enable) begin
+                // Hold at the start of the slot; the fractional phase (frac) is
+                // preserved so a pause does not shift the 576/448 distribution.
                 slot_cycle <= 11'd0;
-                slot_len   <= len_nxt;
-                frac       <= frac_nxt;
                 slot_start <= 1'b1;
                 slot_last  <= 1'b0;
-                col_index  <= (col_index == (N_COL - 1)) ? 10'd0 : (col_index + 10'd1);
-                frame_wrap <= (col_index == (N_COL - 1));
+                frame_wrap <= 1'b0;
+            end else if (!enable_d) begin
+                // Rising edge of enable: restart cycle 0 of the first slot.
+                // Without this the held cycle 0 is consumed and slot 0 would
+                // last 975 instead of 976 cycles (a 10 ns short first frame).
+                slot_cycle <= 11'd0;
+                slot_len   <= BASE_LEN;
+                slot_start <= 1'b1;
+                slot_last  <= 1'b0;
+                frame_wrap <= 1'b0;
             end else begin
-                slot_cycle <= slot_cycle + 11'd1;
-                slot_start <= 1'b0;
-                slot_last  <= (slot_cycle == (slot_len - 11'd2));
+                frame_wrap <= 1'b0;
+                if (slot_cycle == (slot_len - 11'd1)) begin
+                    slot_cycle <= 11'd0;
+                    slot_len   <= len_nxt;
+                    frac       <= frac_nxt;
+                    slot_start <= 1'b1;
+                    slot_last  <= 1'b0;
+                    col_index  <= (col_index == (N_COL - 1)) ? 10'd0 : (col_index + 10'd1);
+                    frame_wrap <= (col_index == (N_COL - 1));
+                end else begin
+                    slot_cycle <= slot_cycle + 11'd1;
+                    slot_start <= 1'b0;
+                    slot_last  <= (slot_cycle == (slot_len - 11'd2));
+                end
             end
         end
     end

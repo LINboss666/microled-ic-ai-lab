@@ -1,16 +1,17 @@
 `timescale 1ns / 1ps
-// TCON T1 skeleton testbench.
+// TCON T1R skeleton testbench.
 //
-// Scenarios (selected with +SCEN=<name>):
-//   RESET_FAULT : reset state, "not ready => BLANK", fault -> BLANK
-//   TIMEBASE    : slot lengths 976/977, latch/pwm_start/scan_stb offsets,
-//                 40 ns pulse widths, 64 PWM ticks per window, COL_ID stepping
-//   BOUNDARY    : one full frame = 1,000,000 CLK_REF cycles, 576 long slots,
-//                 448 short slots, wrap 1023 -> 0
+// Scenarios (+SCEN=...):
+//   RESET_FAULT : reset state, "not ready => BLANK", fault -> BLANK,
+//                 fault DURING the LATCH pulse, fault DURING the load window
+//   TIMEBASE    : slot lengths, LATCH/PWM_START/SCAN_STB offsets and 40 ns
+//                 pulses, 64 ticks per window, load window start/length,
+//                 DCLK period / frequency / 384-edge count
+//   BOUNDARY    : the FIRST frame after reset - 1024 slots, 576 long / 448
+//                 short, exactly 1,000,000 cycles, frame_wrap exactly once
 //
-// Everything is observed from the DUT outputs only: the TB never drives
-// blank / latch / pwm_start / scan_stb / col_id / pwm_tick. That is the point
-// of T1 (V1.3 requires the TCON to generate its own timing).
+// The TB only observes DUT outputs; it never drives blank / latch / pwm_start /
+// scan_stb / col_id / pwm_tick / dclk / load_active.
 //
 // SCOPE: skeleton only. No 768-byte receive, no buffer, no D0/D1 payload.
 module tcon_t1_tb;
@@ -21,7 +22,7 @@ module tcon_t1_tb;
 
     reg        reset_n   = 1'b0;
     reg        cfg_valid = 1'b0;
-    reg  [1:0] cfg_mode  = 2'd1;          // Hybrid
+    reg  [1:0] cfg_mode  = 2'd1;
     reg        run_en    = 1'b0;
     reg        rx_ready  = 1'b0;
     reg        fault_n   = 1'b1;
@@ -52,16 +53,40 @@ module tcon_t1_tb;
     // ---------------- bookkeeping -----------------------------------------
     integer assert_count = 0, pass_count = 0, fail_count = 0;
     integer blk_viol = 0, latch_viol = 0, stb_viol = 0;
-    string  scen;
+    integer dclk_edges = 0, load_edges = 0, load_cycles = 0;
+    integer wrap_events = 0;
+    realtime t_dclk_prev = 0.0, dclk_period = 0.0;
+    reg      wrap_d = 1'b0;
+    string   scen;
 
-    // Black-box safety monitors: a tick must never occur while blanked, and
-    // latch / scan_stb must never leave the BLANK region.
+    // black-box safety monitors
     always @(negedge clk) begin
         if (reset_n) begin
             if (pwm_tick && blank)  blk_viol   = blk_viol   + 1;
             if (latch && !blank)    latch_viol = latch_viol + 1;
             if (scan_stb && !blank) stb_viol   = stb_viol   + 1;
         end
+    end
+
+    // DCLK measurement: period and edge count
+    always @(posedge dclk) begin
+        if (reset_n) begin
+            dclk_edges = dclk_edges + 1;
+            if (t_dclk_prev > 0.0) dclk_period = $realtime - t_dclk_prev;
+            t_dclk_prev = $realtime;
+            if (load_active) load_edges = load_edges + 1;
+        end
+    end
+
+    // load window length in CLK_REF cycles
+    always @(posedge clk) begin
+        if (reset_n && load_active) load_cycles = load_cycles + 1;
+    end
+
+    // frame_wrap must pulse exactly once per frame
+    always @(posedge clk) begin
+        wrap_d <= frame_wrap;
+        if (reset_n && frame_wrap && !wrap_d) wrap_events = wrap_events + 1;
     end
 
     task automatic chk(input string nm, input logic cond);
@@ -84,7 +109,16 @@ module tcon_t1_tb;
         repeat (n) @(negedge clk);
     endtask
 
+    task automatic reset_dut;
+        reset_n = 1'b0; cfg_valid = 1'b0; run_en = 1'b0;
+        rx_ready = 1'b0; fault_n = 1'b1; vsync = 1'b0; col_sync = 1'b0; de = 1'b0;
+        step(20);
+        reset_n = 1'b1;
+        step(40);
+    endtask
+
     // ---------------- scenario 1: reset / fault ---------------------------
+    integer i;
     task automatic scen_reset_fault;
         $display("--- SCENARIO RESET_FAULT ---");
         reset_n = 1'b0; cfg_valid = 1'b0; run_en = 1'b0;
@@ -98,53 +132,65 @@ module tcon_t1_tb;
         chk("R1_reset_no_tick",       pwm_tick === 1'b0);
         chk("R1_reset_no_load",       load_active === 1'b0);
 
-        reset_n = 1'b1;                       // released, still unconfigured
+        reset_n = 1'b1;
         step(40);
         chk("R2_unconfigured_blank_high", blank === 1'b1);
         chk("R2_unconfigured_no_stb",     scan_stb === 1'b0);
 
-        cfg_valid = 1'b1; cfg_mode = 2'd2;    // illegal mode
-        run_en = 1'b1; rx_ready = 1'b1;
+        cfg_valid = 1'b1; cfg_mode = 2'd2; run_en = 1'b1; rx_ready = 1'b1;
         step(40);
         chk("R3_illegal_mode_blank_high", blank === 1'b1);
 
-        cfg_mode = 2'd1;                      // legal -> unblank
+        cfg_mode = 2'd1;
         step(1200);
         chk("R4_ready_blank_low", blank === 1'b0);
         chk("R4_status_ready",    status[0] === 1'b1);
 
-        fault_n = 1'b0;                       // fault -> BLANK immediately
-        step(1);
-        chk("R5_fault_blank_within_1_cycle", blank === 1'b1);
-        chk("R5_fault_no_scan_stb",          scan_stb === 1'b0);
-        step(400);
-        chk("R5_fault_holds_blank",          blank === 1'b1);
-        chk("R5_fault_sticky_status",        status[3] === 1'b1);
+        // ---- fault in the middle of the LATCH pulse -----------------------
+        fault_n = 1'b1;
+        step(1200);
+        i = 0;
+        while ((dut.slot_cycle !== 11'd828) && (i < 3000)) begin
+            @(negedge clk); i = i + 1;
+        end
+        fault_n = 1'b0;
+        @(negedge clk);
+        chk("R5b_fault_during_latch_blank",    blank === 1'b1);
+        chk("R5b_fault_during_latch_no_latch", latch === 1'b0);
+        step(6);
+        chk("R5b_fault_during_latch_no_phantom_load", load_active === 1'b0);
 
-        fault_n = 1'b1;                       // recovery
+        // ---- fault in the middle of the load window ----------------------
+        fault_n = 1'b1;
+        step(1200);
+        i = 0;
+        while (!load_active && (i < 3000)) begin
+            @(negedge clk); i = i + 1;
+        end
+        step(100);                       // 100 cycles into the 768-cycle window
+        chk("R5c_load_running_before_fault",      load_active === 1'b1);
+        fault_n = 1'b0;
+        step(1);
+        chk("R5c_fault_during_load_closes_load",  load_active === 1'b0);
+        chk("R5c_fault_clears_load_counter",      dut.load_cnt === 10'd0);
+        chk("R5c_fault_during_load_blank",        blank === 1'b1);
+
+        // ---- recovery -----------------------------------------------------
+        fault_n = 1'b1;
         step(1200);
         chk("R6_recover_blank_low", blank === 1'b0);
+        chk("R5_fault_sticky_status", status[3] === 1'b1);
         chk("R6_no_tick_while_blanked", blk_viol == 0);
         chk("R6_no_latch_outside_blank", latch_viol == 0);
     endtask
 
-    task automatic reset_dut;
-        reset_n = 1'b0; cfg_valid = 1'b0; run_en = 1'b0;
-        rx_ready = 1'b0; fault_n = 1'b1; vsync = 1'b0; col_sync = 1'b0; de = 1'b0;
-        step(20);
-        reset_n = 1'b1;
-        step(40);
-    endtask
-
-    // ---------------- scenario 2: time base and control pulses ------------
-    integer i;
+    // ---------------- scenario 2: time base, pulses, DCLK, load -----------
     realtime t_start, t_next, t_latch, t_lat_fall, t_pstart, t_stb;
-    integer  len_cycles, tick_cnt, n_long, n_short;
+    integer  len_cycles, tick_cnt;
 
     task automatic measure_slot(output integer len_c, output integer ticks,
                                 output integer latch_off, output integer pstart_off,
                                 output integer stb_off, output integer latch_pw);
-        integer dummy_pw;
         @(posedge slot_start);
         t_start = $realtime;
         t_latch = -1; t_lat_fall = -1; t_pstart = -1; t_stb = -1;
@@ -154,10 +200,10 @@ module tcon_t1_tb;
                 forever begin
                     @(negedge clk);
                     if (pwm_tick) ticks = ticks + 1;
-                    if (latch && t_latch < 0)           t_latch    = $realtime;
-                    if (!latch && t_latch >= 0 && t_lat_fall < 0) t_lat_fall = $realtime;
-                    if (pwm_start && t_pstart < 0)      t_pstart   = $realtime;
-                    if (scan_stb && t_stb < 0)          t_stb      = $realtime;
+                    if (latch && t_latch < 0)                     t_latch    = $realtime;
+                    if (!latch && t_latch >= 0 && t_lat_fall < 0)  t_lat_fall = $realtime;
+                    if (pwm_start && t_pstart < 0)                 t_pstart   = $realtime;
+                    if (scan_stb && t_stb < 0)                     t_stb      = $realtime;
                 end
             end
             begin : stopobs
@@ -166,28 +212,27 @@ module tcon_t1_tb;
             end
         join
         t_next     = $realtime;
-        // NOTE: SystemVerilog rounds a real-to-integer assignment (828.5 -> 829).
-        // The samples sit half a cycle after the slot edge, so $rtoi (truncate)
-        // is required to recover the true cycle index.
         len_c      = $rtoi((t_next  - t_start) / 10.0);
         latch_off  = $rtoi((t_latch - t_start) / 10.0);
         pstart_off = $rtoi((t_pstart - t_start) / 10.0);
         stb_off    = $rtoi((t_stb   - t_start) / 10.0);
         latch_pw   = $rtoi((t_lat_fall - t_latch) / 10.0);
-        dummy_pw   = 0;
     endtask
 
+    integer  len_c, ticks, l_off, p_off, s_off, l_pw, dclk_base, sc_at_load, latch_828;
+    realtime t_load0, t_load1;
+
     task automatic scen_timebase;
-        integer len_c, ticks, l_off, p_off, s_off, l_pw;
         $display("--- SCENARIO TIMEBASE ---");
         reset_dut;
-        reset_n = 1'b1; cfg_valid = 1'b1; cfg_mode = 2'd1;
+        cfg_valid = 1'b1; cfg_mode = 2'd1;
         run_en = 1'b1; rx_ready = 1'b1; fault_n = 1'b1;
         step(1200);
 
         measure_slot(len_c, ticks, l_off, p_off, s_off, l_pw);
-        $display("SLOT1 len=%0d ticks=%0d latch_off=%0d pstart_off=%0d stb_off=%0d latch_pw=%0d",
+        $display("SLOT len=%0d ticks=%0d latch=%0d pstart=%0d stb=%0d pw=%0d",
                  len_c, ticks, l_off, p_off, s_off, l_pw);
+        latch_828 = l_off;
         chk("T1_slot_len_976_or_977",  (len_c == 976) || (len_c == 977));
         chk("T1_ticks_64_per_window",  ticks == 64);
         chk("T1_latch_offset_828",     l_off == 828);
@@ -196,41 +241,54 @@ module tcon_t1_tb;
         chk("T1_latch_pulse_40ns",     l_pw == 4);
         chk("T1_no_tick_in_blank",     blk_viol == 0);
 
-        measure_slot(len_c, ticks, l_off, p_off, s_off, l_pw);
-        $display("SLOT2 len=%0d ticks=%0d latch_off=%0d", len_c, ticks, l_off);
-        chk("T2_slot_len_976_or_977", (len_c == 976) || (len_c == 977));
-        chk("T2_ticks_64",            ticks == 64);
-        chk("T2_latch_offset_828",    l_off == 828);
+        // ---- DCLK: 20 ns period, 50 MHz, 384 edges per load window --------
+        dclk_base = dclk_edges;
+        step(200);
+        chk("T2_dclk_100_edges_per_200_cycles",
+            (dclk_edges - dclk_base) >= 99 && (dclk_edges - dclk_base) <= 101);
+        chk("T2_dclk_period_20ns", dclk_period == 20.0);
 
+        // ---- load window: starts at 832, 768 cycles, 384 DCLK edges --------
+        // NOTE: the load window spans slots ([832, 1600) = [-144, 624) of the
+        // next slot), so at an arbitrary cycle the PREVIOUS slot's load can
+        // still be active. Wait for a RISING edge, never for "level high".
+        @(posedge load_active);
+        #1;
+        t_load0    = $realtime - 1.0;    // back to the rising edge
+        sc_at_load = dut.slot_cycle;
+        load_edges = 0;                  // dclk posedge cannot occur inside 1 ns
+        @(negedge load_active);
+        t_load1     = $realtime;
+        load_cycles = $rtoi((t_load1 - t_load0) / 10.0);
+        chk("T3_load_starts_at_832",      sc_at_load == 832);
+        chk("T3_load_len_768_cycles",     load_cycles == 768);
+        chk("T3_load_384_dclk_edges",     load_edges == 384);
+        chk("T3_load_starts_after_latch", latch_828 == 828);
+
+        // ---- slot 2 / 3 sanity -------------------------------------------
         measure_slot(len_c, ticks, l_off, p_off, s_off, l_pw);
-        $display("SLOT3 len=%0d ticks=%0d col_id=%0d", len_c, ticks, col_id);
-        chk("T3_slot_len_976_or_977", (len_c == 976) || (len_c == 977));
-        chk("T3_ticks_64",            ticks == 64);
-        chk("T3_col_id_advancing",    col_id >= 10'd2);
-        chk("T3_dclk_toggling",       dclk === 1'b0 || dclk === 1'b1);
-        chk("T3_latch_outside_blank_viol0", latch_viol == 0);
+        chk("T4_slot2_len_976_or_977", (len_c == 976) || (len_c == 977));
+        measure_slot(len_c, ticks, l_off, p_off, s_off, l_pw);
+        chk("T5_slot3_len_976_or_977", (len_c == 976) || (len_c == 977));
+        chk("T5_col_id_advancing",     col_id >= 10'd2);
     endtask
 
-    // ---------------- scenario 3: full-frame boundary ---------------------
+    // ---------------- scenario 3: FIRST frame after reset -----------------
     task automatic scen_boundary;
-        integer slots, longs, shorts, prev_len, start_col;
+        integer slots, longs, shorts, prev_len, start_col, first_len, wrap0;
         realtime t_prev, t_now;
-        $display("--- SCENARIO BOUNDARY ---");
+        $display("--- SCENARIO BOUNDARY (first frame after reset) ---");
         reset_dut;
-        reset_n = 1'b1; cfg_valid = 1'b1; cfg_mode = 2'd1;
-        run_en = 1'b1; rx_ready = 1'b1; fault_n = 1'b1;
-        step(1200);
 
-        // The slot-length sequence is periodic with period 1024, so ANY run of
-        // 1024 consecutive slots sums to exactly one frame (1,000,000 cycles)
-        // and contains exactly 576 long / 448 short slots. Counting a fixed
-        // 1024 slots is therefore phase-invariant and needs no frame alignment
-        // (an alignment loop would double the simulated time and timed out).
-        @(posedge slot_start);
+        // enable rises on the next posedge; the time base restarts cycle 0 there
+        cfg_valid = 1'b1; cfg_mode = 2'd1;
+        run_en = 1'b1; rx_ready = 1'b1; fault_n = 1'b1;
+        @(posedge clk);
         t_prev = $realtime;
         #1;
         start_col = dut.col_id;
-        slots = 0; longs = 0; shorts = 0;
+        wrap0 = wrap_events;
+        slots = 0; longs = 0; shorts = 0; first_len = 0;
 
         while (slots < 1024) begin
             @(posedge slot_start);
@@ -238,30 +296,34 @@ module tcon_t1_tb;
             #1;
             prev_len = $rtoi((t_now - t_prev) / 10.0);
             t_prev   = t_now;
+            if (slots == 0) first_len = prev_len;
             if (prev_len == 977)      longs  = longs  + 1;
             else if (prev_len == 976) shorts = shorts + 1;
             slots = slots + 1;
         end
+        step(4);                         // let the wrap monitor settle
 
-        $display("FRAME slots=%0d long=%0d short=%0d cycles=%0d start_col=%0d end_col=%0d",
-                 slots, longs, shorts, longs * 977 + shorts * 976, start_col, dut.col_id);
-        chk("B1_frame_cycles_1e6",  (longs * 977 + shorts * 976) == 1000000);
-        chk("B2_long_slots_576",    longs == 576);
-        chk("B3_short_slots_448",   shorts == 448);
-        chk("B4_total_slots_1024",  slots == 1024);
-        chk("B5_col_id_period_1024", dut.col_id == start_col);
-        chk("B6_tick_viol_zero_over_frame", blk_viol == 0);
-        chk("B7_latch_viol_zero_over_frame", latch_viol == 0);
-        chk("B8_stb_viol_zero_over_frame",   stb_viol == 0);
+        $display("FIRST_FRAME slots=%0d first_len=%0d long=%0d short=%0d cycles=%0d wraps=%0d start_col=%0d end_col=%0d",
+                 slots, first_len, longs, shorts, longs * 977 + shorts * 976,
+                 wrap_events - wrap0, start_col, dut.col_id);
+        chk("B1_first_slot_976_short_first", first_len == 976);
+        chk("B2_first_frame_1024_slots",     slots == 1024);
+        chk("B3_first_frame_cycles_1e6",     (longs * 977 + shorts * 976) == 1000000);
+        chk("B4_first_frame_576_long",       longs == 576);
+        chk("B5_first_frame_448_short",      shorts == 448);
+        chk("B6_frame_wrap_exactly_once",    (wrap_events - wrap0) == 1);
+        chk("B7_col_id_period_1024",         dut.col_id == start_col);
+        chk("B8_no_tick_in_blank_frame",     blk_viol == 0);
+        chk("B9_no_latch_outside_blank_frame", latch_viol == 0);
+        chk("B10_no_stb_outside_blank_frame",  stb_viol == 0);
     endtask
 
     // ---------------- main ------------------------------------------------
     initial begin
-        if (!$value$plusargs("SCEN=%s", scen)) scen = "RESET_FAULT";
+        if (!$value$plusargs("SCEN=%s", scen)) scen = "ALL";
         $display("COURSE_TCON_T1_SCENARIO=%s", scen);
-        // The full-frame scan runs 1,000,000 cycles; dumping it produces a
-        // ~100 MB VCD and made the run hit the wall-clock timeout. Only the
-        // short scenarios are dumped; the boundary scan is judged from counters.
+        // The 1024-slot frame scan must not write a waveform: it takes 10 ms of
+        // simulated time and produced an 8 GB VCD in the previous round.
         if (scen != "BOUNDARY") begin
             $dumpfile("tcon_t1.vcd");
             $dumpvars(0, tcon_t1_tb);
@@ -276,8 +338,6 @@ module tcon_t1_tb;
                 reset_dut;
                 scen_timebase();
                 reset_dut;
-                // keep the waveform small: the 1,000,000-cycle frame scan needs
-                // no waveform, only the counters checked in scen_boundary
                 $dumpoff;
                 scen_boundary();
                 $dumpon;

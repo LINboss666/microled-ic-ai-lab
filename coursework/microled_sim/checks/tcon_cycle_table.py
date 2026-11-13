@@ -31,7 +31,8 @@ next_latch = LATCH_AT + SLOT_S          # 1804
 deadline   = next_latch - GUARD         # 1800
 slack      = deadline - load_end        # 200
 chk("load starts after LATCH pulse", load_start == 832, f"{load_start}")
-chk("load ends inside next slot", load_end == 1600, f"{load_end} (= {load_end-SLOT_S} in next slot)")
+chk("load window = [832,1600) half-open", (load_start, load_end) == (832, 1600), "[832,1600) = 768 cycles")
+chk("load in next-slot coords = [-144,624)", (load_start-SLOT_S, load_end-SLOT_S) == (-144, 624), "[-144,624)")
 chk("data_load_deadline = next LATCH - guard", deadline == 1800, f"{deadline}")
 chk("data_load net slack = 200 cycles", slack == 200, f"{slack} cycles = {slack*CYC*1e6:.2f} us")
 # The naive figure 976-768=208 ignores that the loader cannot start until the

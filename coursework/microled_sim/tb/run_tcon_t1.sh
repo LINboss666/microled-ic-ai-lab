@@ -12,13 +12,16 @@ set -uo pipefail
 COURSE_ROOT="${COURSE_ROOT:-D:/ic617_course_sim_20261112}"
 RUN_DIR="${RUN_DIR:-D:/ic617_course_sim_20261112_native}"
 SCEN="${SCEN:-RESET_FAULT}"
-MIN_ASSERTS="${MIN_ASSERTS:-14}"
+MIN_ASSERTS="${MIN_ASSERTS:-49}"
 SRC="$COURSE_ROOT/coursework/microled_sim"
 
+# Assertion counts are counted from the TB source (chk( occurrences per task):
+#   RESET_FAULT 23 | TIMEBASE 16 | BOUNDARY 10 | ALL 49
 case "$SCEN" in
-    RESET_FAULT) MIN_ASSERTS="${MIN_ASSERTS:-19}" ;;
-    TIMEBASE)    MIN_ASSERTS="${MIN_ASSERTS:-14}" ;;
-    BOUNDARY)    MIN_ASSERTS="${MIN_ASSERTS:-8}"  ;;
+    RESET_FAULT) MIN_ASSERTS="${MIN_ASSERTS:-23}" ;;
+    TIMEBASE)    MIN_ASSERTS="${MIN_ASSERTS:-16}" ;;
+    BOUNDARY)    MIN_ASSERTS="${MIN_ASSERTS:-10}" ;;
+    ALL)         MIN_ASSERTS="${MIN_ASSERTS:-49}" ;;
 esac
 
 mkdir -p "$RUN_DIR" || exit 9
