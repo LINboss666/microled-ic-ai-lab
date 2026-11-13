@@ -624,62 +624,146 @@ def _r2_bind_preflight(head, ledger, label, problems):
                             % (label, key, row.get(key), head[key]))
 
 
-def _r2_deck_stimulus(root, case, label, problems):
-    """B1: read the frozen preflight deck this case was run from, including every platform"""
+def _r2_number(token):
+    """B1: a deck token in engineering notation, returned in base units"""
+    text = token.strip().rstrip(',;')
+    scale = {'meg': 1e6, 't': 1e12, 'g': 1e9, 'k': 1e3, 'm': 1e-3, 'u': 1e-6,
+             'n': 1e-9, 'p': 1e-12, 'f': 1e-15}
+    for key in ('meg', 't', 'g', 'k', 'm', 'u', 'n', 'p', 'f'):
+        if text.lower().endswith(key):
+            return float(text[:-len(key)]) * scale[key]
+    return float(text)
+
+
+def _r2_deck_sources(root, case, label, problems):
+    """B1: the executable voltage/current sources of the frozen preflight deck.
+
+    R4 read the `// platform ...` commentary, which is stale for the hybrid decks and hid a
+    stimulus that had been cut down to one platform. The deck's own vsource/isource statements
+    are the executable definition, so those are what the delivered samples are judged against.
+    """
     path = os.path.join(root, 'spectre', 'dd1_d7c_b_tr', case + '.pre.scs')
     if not os.path.isfile(path):
         problems.append('%s: the frozen preflight deck spectre/dd1_d7c_b_tr/%s.pre.scs is missing'
                         % (label, case))
         return None
     text = io.open(path, encoding='utf-8').read()
-    found = {'codes': [], 'rises': [], 'falls': []}
-    code_block = re.search(r'pam_sel\s*:\s*([01]{3}(?:\.\.[01]{3})?(?:\s*,\s*[01]{3})*)', text)
-    if not code_block:
-        problems.append('%s: the frozen preflight deck does not declare pam_sel' % label)
-    else:
-        raw = code_block.group(1).replace(' ', '')
-        if '..' in raw:
-            first, last = raw.split('..')
-            found['codes'] = [format(value, '03b')
-                              for value in range(int(first, 2), int(last, 2) + 1)]
+    sources = {}
+    pattern = re.compile(r'^(?P<name>\S+)\s+\((?P<plus>\S+)\s+(?P<minus>\S+)\)\s+'
+                         r'(?P<kind>vsource|isource)\s+(?P<body>.+)$')
+    for raw in text.splitlines():
+        line = raw.split('//', 1)[0].strip()
+        if not line:
+            continue
+        found = pattern.match(line)
+        if not found:
+            continue
+        body = found.group('body')
+        node = found.group('plus')
+        entry = {'kind': found.group('kind'), 'name': found.group('name')}
+        wave = re.search(r'wave=\[([^\]]*)\]', body)
+        direct = re.search(r'\bdc=([0-9eE.+-]+[a-zA-Z]*)', body)
+        if wave:
+            tokens = wave.group(1).replace(',', ' ').split()
+            if len(tokens) < 4 or len(tokens) % 2:
+                problems.append('%s: source %s declares a wave of %d tokens'
+                                % (label, found.group('name'), len(tokens)))
+                continue
+            points = []
+            for index in range(0, len(tokens), 2):
+                try:
+                    points.append((_r2_number(tokens[index]) * 1e9, _r2_number(tokens[index + 1])))
+                except ValueError:
+                    problems.append('%s: source %s carries an unreadable wave token near %r'
+                                    % (label, found.group('name'), tokens[index]))
+                    points = []
+                    break
+            if points:
+                entry['pwl'] = points
+        elif direct:
+            try:
+                entry['dc'] = _r2_number(direct.group(1))
+            except ValueError:
+                problems.append('%s: source %s carries an unreadable dc value %r'
+                                % (label, found.group('name'), direct.group(1)))
+                continue
         else:
-            found['codes'] = [item for item in raw.split(',') if item]
-    platform = re.search(r'platform \(rise50/fall50\)\s*:\s*([0-9.;]+)\s*/\s*([0-9.;]+)', text)
-    if not platform:
-        problems.append('%s: the frozen preflight deck does not declare its platform edges' % label)
-    else:
-        found['rises'] = [float(value) for value in platform.group(1).split(';') if value]
-        found['falls'] = [float(value) for value in platform.group(2).split(';') if value]
-        if len(found['rises']) != len(found['falls']):
-            problems.append('%s: the deck declares %d rising against %d falling platforms'
-                            % (label, len(found['rises']), len(found['falls'])))
-        if found['codes'] and len(found['codes']) != len(found['rises']):
-            problems.append('%s: the deck declares %d codes for %d platforms'
-                            % (label, len(found['codes']), len(found['rises'])))
-    enable = re.search(r'DATA_EN form\s*:\s*\S+ at ([0-9.]+) V', text)
-    if not enable:
-        problems.append('%s: the frozen preflight deck does not declare its DATA_EN high level'
-                        % label)
-    else:
-        found['enable_high'] = float(enable.group(1))
-    return found
+            problems.append('%s: source %s declares neither a wave nor a dc value'
+                            % (label, found.group('name')))
+            continue
+        if node in sources:
+            # an ideal current source and a 0 V vsource on one node is the sensing idiom: the
+            # voltage source sets the level and the current source injects into it, so keep the
+            # voltage one and never treat the pair as a contradiction
+            if sources[node]['kind'] == 'isource' and entry['kind'] == 'vsource':
+                sources[node] = entry
+            elif sources[node]['kind'] == 'vsource' and entry['kind'] == 'isource':
+                pass
+            else:
+                problems.append('%s: two %s sources drive %s'
+                                % (label, entry['kind'], node))
+            continue
+        sources[node] = entry
+    if not sources:
+        problems.append('%s: the frozen preflight deck declares no readable source' % label)
+        return None
+    return sources
 
 
-def _r2_crossing(times, values, level, rising, after=None):
-    """B1: the interpolated instant a stimulus crosses a level"""
-    for index in range(len(values) - 1):
-        low, high = values[index], values[index + 1]
-        if rising and not (low < level <= high):
-            continue
-        if not rising and not (low >= level > high):
-            continue
-        if after is not None and times[index] < after:
-            continue
-        span = high - low
+def _r2_source_value(source, when_ns):
+    """the level a source holds at an instant, in the same units the deck uses"""
+    if 'pwl' in source:
+        points = source['pwl']
+        if when_ns <= points[0][0]:
+            return points[0][1]
+        if when_ns >= points[-1][0]:
+            return points[-1][1]
+        for index in range(len(points) - 1):
+            left, right = points[index], points[index + 1]
+            if left[0] <= when_ns <= right[0]:
+                span = right[0] - left[0]
+                if span == 0:
+                    return right[1]
+                return left[1] + (right[1] - left[1]) * (when_ns - left[0]) / span
+    return source.get('dc', 0.0)
+
+
+def _r2_source_crossings(source, level):
+    """the rising and falling instants a source crosses a level, from its own wave"""
+    rises, falls = [], []
+    points = source.get('pwl') or []
+    for index in range(len(points) - 1):
+        left, right = points[index], points[index + 1]
+        span = right[1] - left[1]
         if span == 0:
-            return times[index]
-        return times[index] + (level - low) / span * (times[index + 1] - times[index])
-    return None
+            continue
+        if left[1] < level <= right[1]:
+            rises.append(left[0] + (level - left[1]) / span * (right[0] - left[0]))
+        if left[1] >= level > right[1]:
+            falls.append(left[0] + (level - left[1]) / span * (right[0] - left[0]))
+    return rises, falls
+
+
+def _r2_required_columns(head, columns, contract, label, problems):
+    """B1: every signal the frozen contract calls always extracted must be present and sane"""
+    alias = head.get('native_current_column') or 'Ip_branch:i'
+    required = []
+    for name in contract['required_signals']['always_extracted']:
+        required.append(alias if name == 'Ip_branch_current' else name)
+    units = dict((name, 'V') for name in required)
+    units['time'] = 's'
+    units[alias] = 'A'
+    missing = []
+    for name in required:
+        if name not in columns:
+            problems.append('%s: the frozen contract requires the %s column and the delivered '
+                            'preflight does not carry it' % (label, name))
+            missing.append(name)
+            continue
+        if columns[name][0] != units[name]:
+            problems.append('%s: column %s is delivered in %s, the frozen contract requires %s'
+                            % (label, name, columns[name][0], units[name]))
+    return required, missing
 
 
 def _r2_preflight_semantics(lines, entry, contract, root, label, problems, notes):
@@ -726,6 +810,10 @@ def _r2_preflight_semantics(lines, entry, contract, root, label, problems, notes
                 problems.append('%s: the time axis is not strictly increasing at sample %d '
                                 '(%r then %r)' % (label, index, times[index], times[index + 1]))
                 break
+    required, missing = _r2_required_columns(head, columns, contract, label, problems)
+    if missing:
+        # the absence is already a named refusal; the value checks below need those columns
+        return parsed
     frozen = {'vdd18': ('V', env['vdd18_V']), 'vss': ('V', env['vss_V']),
               'vcas': ('V', env['vcas_V']), 'clamp_node': ('V', env['clamp_V']),
               'data_out': ('V', env['clamp_V'])}
@@ -746,89 +834,111 @@ def _r2_preflight_semantics(lines, entry, contract, root, label, problems, notes
 
 
 def _r2_witness(head, columns, contract, root, label, problems, notes):
-    """B1: the meter load and the stimulus must be the ones the frozen deck declares"""
+    """B1: judge the delivered samples against the deck's executable sources, in full.
+
+    R4 compared only the first platform (or, for multi-platform decks, merely counted that one
+    edge existed), and skipped whole checks when a column was absent. The frozen contract lists
+    the signals that must always be extracted, so absence is itself a refusal, and every platform
+    of the executable PWL is compared: count, instant and the pam bit order at its midpoint.
+    """
     rules = contract['deck_rules']['preflight']
     env = contract['electrical_environment']
     case = head.get('case_id')
     expected_current = float(rules['expected']['clamp_current_A'])
     expected_reference = float(rules['expected']['reference_node_V'])
-    if 'Ip_branch:i' in columns:
-        values = columns['Ip_branch:i'][1]
-        spread = max(values) - min(values)
-        if spread > 1e-6 * max(abs(expected_current), 1e-15):
-            problems.append('%s: the preflight current is not one flat meter reading (spread %r A '
-                            'across %d samples)' % (label, spread, len(values)))
-        if abs(values[0] - expected_current) > 1e-6 * abs(expected_current):
-            problems.append('%s: the clamp current is %r A against the frozen %r A that the %r V '
-                            'clamp over the %r ohm meter load draws'
-                            % (label, values[0], expected_current, env['clamp_V'],
-                               rules['load_ohms']))
-        drawn = env['clamp_V'] / float(rules['load_ohms'])
-        if abs(expected_current - drawn) > 1e-9 * max(abs(drawn), 1e-15):
-            problems.append('%s: the frozen expected current %r A is not %r V over %r ohm'
-                            % (label, expected_current, env['clamp_V'], rules['load_ohms']))
-    if 'iref_in' in columns:
-        values = columns['iref_in'][1]
-        if abs(values[-1] - expected_reference) > 1e-6 * abs(expected_reference):
-            problems.append('%s: the reference node settles at %r V against the frozen %r V'
-                            % (label, values[-1], expected_reference))
-        reference = env['iref_A'] * float(rules['reference_ohms'])
-        if abs(expected_reference - reference) > 1e-9 * max(abs(reference), 1e-15):
-            problems.append('%s: the frozen reference %r V is not %r A over %r ohm'
-                            % (label, expected_reference, env['iref_A'], rules['reference_ohms']))
-    deck = _r2_deck_stimulus(root, case, label, problems)
-    if deck is None:
-        return
-    if 'data_en' not in columns:
-        return
-    values = columns['data_en'][1]
-    times = columns['time'][1]
-    high = deck.get('enable_high', env['logic_high_V'])
-    low = env['logic_low_V']
-    if min(values) > low + 1e-6:
-        problems.append('%s: the stimulus witness never reaches the %r V logic low, its lowest '
-                        'sample is %r V' % (label, low, min(values)))
-    if max(values) < high - 1e-6:
-        problems.append('%s: the stimulus witness never reaches the %r V logic high, its highest '
-                        'sample is %r V' % (label, high, max(values)))
-    level = (low + high) / 2.0
-    rises, falls = [], []
-    for index in range(len(values) - 1):
-        below, above = values[index], values[index + 1]
-        span = above - below
-        if below < level <= above and span:
-            rises.append(times[index] + (level - below) / span * (times[index + 1] - times[index]))
-        if below >= level > above and span:
-            falls.append(times[index] + (level - below) / span * (times[index + 1] - times[index]))
-    want_rises, want_falls = deck.get('rises') or [], deck.get('falls') or []
-    codes = deck.get('codes') or []
-    bits = [name for name in ('pam0', 'pam1', 'pam2') if name in columns]
-    if len(want_rises) == 1 and want_falls:
-        want_rise, want_fall = want_rises[0], want_falls[0]
-        if not rises or abs(rises[0] * 1e9 - want_rise) > 0.5:
-            problems.append('%s: the rising %r V crossing is %r ns against the %r ns the deck '
-                            'declares' % (label, level,
-                                          None if not rises else rises[0] * 1e9, want_rise))
-        if not falls or abs(falls[0] * 1e9 - want_fall) > 0.5:
-            problems.append('%s: the falling %r V crossing is %r ns against the %r ns the deck '
-                            'declares' % (label, level,
-                                          None if not falls else falls[0] * 1e9, want_fall))
-        if codes and len(bits) == 3:
-            middle = (want_rise + want_fall) / 2.0 * 1e-9
-            probe = min(range(len(times)), key=lambda spot: abs(times[spot] - middle))
-            got = ''.join('1' if columns[name][1][probe] >= level else '0'
-                          for name in ('pam2', 'pam1', 'pam0'))
-            if got != codes[0]:
-                problems.append('%s: the platform carries pam2pam1pam0=%s against the deck code %s'
-                                % (label, got, codes[0]))
-    else:
-        if not rises or not falls:
-            problems.append('%s: the delivered stimulus never switches, so the case never ran its '
-                            'platform' % label)
-        notes.append('%s: %d platform(s) are declared and %d rising / %d falling crossings are '
-                     'delivered, so only the rails and the presence of a platform are judged for '
-                     'this case' % (label, len(want_rises), len(rises), len(falls)))
+    current = columns['Ip_branch:i'][1]
+    spread = max(current) - min(current)
+    if spread > 1e-6 * max(abs(expected_current), 1e-15):
+        problems.append('%s: the preflight current is not one flat meter reading (spread %r A '
+                        'across %d samples)' % (label, spread, len(current)))
+    if abs(current[0] - expected_current) > 1e-6 * abs(expected_current):
+        problems.append('%s: the clamp current is %r A against the frozen %r A that the %r V '
+                        'clamp over the %r ohm meter load draws'
+                        % (label, current[0], expected_current, env['clamp_V'], rules['load_ohms']))
+    drawn = env['clamp_V'] / float(rules['load_ohms'])
+    if abs(expected_current - drawn) > 1e-9 * max(abs(drawn), 1e-15):
+        problems.append('%s: the frozen expected current %r A is not %r V over %r ohm'
+                        % (label, expected_current, env['clamp_V'], rules['load_ohms']))
+    reference = columns['iref_in'][1]
+    if abs(reference[-1] - expected_reference) > 1e-6 * abs(expected_reference):
+        problems.append('%s: the reference node settles at %r V against the frozen %r V'
+                        % (label, reference[-1], expected_reference))
+    wanted_reference = env['iref_A'] * float(rules['reference_ohms'])
+    if abs(expected_reference - wanted_reference) > 1e-9 * max(abs(wanted_reference), 1e-15):
+        problems.append('%s: the frozen reference %r V is not %r A over %r ohm'
+                        % (label, expected_reference, env['iref_A'], rules['reference_ohms']))
 
+    sources = _r2_deck_sources(root, case, label, problems)
+    if sources is None:
+        return
+    for node, wanted in (('vdd18', env['vdd18_V']), ('vcas', env['vcas_V']),
+                         ('vss', env['vss_V']), ('clamp_node', env['clamp_V'])):
+        source = sources.get(node)
+        if source is None:
+            problems.append('%s: the frozen deck drives no %s source' % (label, node))
+            continue
+        if 'dc' not in source:
+            problems.append('%s: the deck source on %s is not a dc level' % (label, node))
+            continue
+        if abs(source['dc'] - wanted) > 1e-6:
+            problems.append('%s: the deck sets %s to %r V against the frozen %r V'
+                            % (label, node, source['dc'], wanted))
+        delivered = columns[node][1]
+        if len(set(delivered)) != 1 or abs(delivered[0] - source['dc']) > 1e-6:
+            problems.append('%s: %s is delivered as %r V against the %r V the deck sets'
+                            % (label, node, delivered[0], source['dc']))
+
+    enable = sources.get('data_en')
+    if enable is None or 'pwl' not in enable:
+        problems.append('%s: the frozen deck drives data_en with no PWL' % label)
+        return
+    levels = [value for _when, value in enable['pwl']]
+    high, low = max(levels), min(levels)
+    level = (high + low) / 2.0
+    want_rises, want_falls = _r2_source_crossings(enable, level)
+    if not want_rises:
+        problems.append('%s: the deck data_en PWL shows no platform' % label)
+        return
+    delivered = columns['data_en'][1]
+    times = columns['time'][1]
+    if min(delivered) > low + 1e-6 or max(delivered) < high - 1e-6:
+        problems.append('%s: the delivered stimulus spans %r..%r V against the %r..%r V the deck '
+                        'drives' % (label, min(delivered), max(delivered), low, high))
+    rises, falls = [], []
+    for index in range(len(delivered) - 1):
+        below, above = delivered[index], delivered[index + 1]
+        span = above - below
+        if not span:
+            continue
+        when = times[index] + (level - below) / span * (times[index + 1] - times[index])
+        if below < level <= above:
+            rises.append(when * 1e9)
+        elif below >= level > above:
+            falls.append(when * 1e9)
+    for name, got, want in (('rising', rises, want_rises), ('falling', falls, want_falls)):
+        if len(got) != len(want):
+            problems.append('%s: the delivered stimulus shows %d %s %r V crossings against the '
+                            '%d the executable deck PWL contains'
+                            % (label, len(got), name, level, len(want)))
+            continue
+        for index, (one, other) in enumerate(zip(got, want)):
+            if abs(one - other) > 0.5:
+                problems.append('%s: %s crossing %d is %r ns against the %r ns in the deck PWL'
+                                % (label, name, index, one, other))
+
+    for index, (rise, fall) in enumerate(zip(want_rises, want_falls)):
+        middle = (rise + fall) / 2.0
+        probe = min(range(len(times)), key=lambda spot: abs(times[spot] * 1e9 - middle))
+        for bit, name in ((2, 'pam2'), (1, 'pam1'), (0, 'pam0')):
+            source = sources.get(name)
+            if source is None:
+                problems.append('%s: the frozen deck drives no %s source' % (label, name))
+                continue
+            wanted = _r2_source_value(source, middle)
+            got = columns[name][1][probe]
+            if abs(got - wanted) > 1e-6:
+                problems.append('%s: platform %d at %r ns delivers %s=%r V against the %r V the '
+                                'deck PWL sets' % (label, index, middle, name, got, wanted))
 
 def verify(out_dir):
     """B1/B5: prove every delivered object against the manifest, with no Git and no project imports.

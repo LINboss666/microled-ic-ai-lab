@@ -1,0 +1,6 @@
+TR_R1_VERIFY 21/21 problems=1 excluded=4
+TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-120_preflight.sequence.txt: column vdd18 carries 780 non-finite value(s), the first nan
+TR_R1_VERIFY_EXCLUDED r20261026_132228_3fc148_HYB-120_dut.sequence.txt [internal_fragment]: NOT_VERIFIED (not a delivered object)
+TR_R1_VERIFY_EXCLUDED r20261026_132228_3fc148_HYB-200_dut.sequence.txt [internal_fragment]: NOT_VERIFIED (not a delivered object)
+TR_R1_VERIFY_EXCLUDED dd1_d7c_b_tr_hyb_120.vcd: recorded by digest only (NOT_TRACKED_BY_RULE)
+TR_R1_VERIFY_EXCLUDED dd1_d7c_b_tr_hyb_200.vcd: recorded by digest only (NOT_TRACKED_BY_RULE)

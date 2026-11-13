@@ -1,0 +1,7 @@
+TR_R1_VERIFY 21/21 problems=2 excluded=4
+TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-LONG_preflight.sequence.txt: the delivered stimulus shows 1 rising 0.9 V crossings against the 8 the executable deck PWL contains
+TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-LONG_preflight.sequence.txt: the delivered stimulus shows 1 falling 0.9 V crossings against the 8 the executable deck PWL contains
+TR_R1_VERIFY_EXCLUDED r20261026_132228_3fc148_HYB-120_dut.sequence.txt [internal_fragment]: NOT_VERIFIED (not a delivered object)
+TR_R1_VERIFY_EXCLUDED r20261026_132228_3fc148_HYB-200_dut.sequence.txt [internal_fragment]: NOT_VERIFIED (not a delivered object)
+TR_R1_VERIFY_EXCLUDED dd1_d7c_b_tr_hyb_120.vcd: recorded by digest only (NOT_TRACKED_BY_RULE)
+TR_R1_VERIFY_EXCLUDED dd1_d7c_b_tr_hyb_200.vcd: recorded by digest only (NOT_TRACKED_BY_RULE)

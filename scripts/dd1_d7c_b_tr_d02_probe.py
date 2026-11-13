@@ -24,8 +24,9 @@ R2 = 'results/evidence/dd1_d7c_b_tr_r2_20261112_144123_c4e480'
 OLD = 'results/evidence/dd1_d7c_b_tr_r20261026_132228_3fc148'
 R3 = 'results/evidence/dd1_d7c_b_tr_r3_20261112_175259_3c2950'
 R4 = 'results/evidence/dd1_d7c_b_tr_r4_20261112_205452_5e09f7'
+D02 = 'results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d'
 FOLDERS = ('scripts', 'tests/dd1_d7c_b_tr', 'tests/dd1_d7c_b_prep', 'tests/dd1_d7c_b_dc',
-           'spectre/dd1_d7c_b_tr', R1, R2, OLD, R3, R4,
+           'spectre/dd1_d7c_b_tr', R1, R2, OLD, R3, R4, D02,
            'results/evidence/dd1_d7c_b_dc_r1_r20261026_071848_e6c5fe')
 CONTROLS = ('clean_verify', 'clean_recompute', 'verify_no_subprocess')
 
@@ -36,7 +37,7 @@ def sha(blob):
 
 def tables_dir():
     """B2/B3 tables: the newest round directory this tree actually carries"""
-    for folder in (R4, R3):
+    for folder in (D02, R4, R3):
         if os.path.isdir(folder):
             return folder
     raise SystemExit('no R3 or R4 evidence directory in %s' % os.getcwd())
@@ -45,10 +46,109 @@ def tables_dir():
 def descriptor(root):
     """the input descriptor next to the tables that were copied"""
     folder = os.path.join(root, tables_dir().replace('/', os.sep))
-    for name in ('r4_inputs.json', 'r3_inputs.json'):
+    for name in ('d02_inputs.json', 'r4_inputs.json', 'r3_inputs.json'):
         if os.path.isfile(os.path.join(folder, name)):
             return os.path.join(folder, name)
     raise SystemExit('the copied tables carry no input descriptor')
+
+
+def encode_runs(values):
+    runs = []
+    for value in values:
+        if runs and runs[-1][1] == value:
+            runs[-1][0] += 1
+        else:
+            runs.append([1, value])
+    return runs
+
+
+def drop_column(text, name):
+    """B1: remove one delivered column with its own values, as a bad export would"""
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if line.startswith('column %s ' % name):
+            fields = line.split()
+            span = 1 if fields[5] == 'CONSTANT' else int(fields[9])
+            return '\n'.join(lines[:index] + lines[index + 1 + span:]) + '\n'
+    raise SystemExit('column %s is not in the delivered sequence' % name)
+
+
+def replace_runs(text, name, values):
+    """B1: rewrite one run-length column from a value list, keeping the schema honest"""
+    lines = text.splitlines()
+    runs = encode_runs(values)
+    out, index, done = [], 0, False
+    while index < len(lines):
+        line = lines[index]
+        if line.startswith('column %s ' % name):
+            fields = line.split()
+            unit, count, span = fields[3], int(fields[7]), int(fields[9])
+            out.append('column %s unit %s encoding RUNS count %d runs %d'
+                       % (name, unit, count, len(runs)))
+            out.extend('%d %.15e' % (size, value) for size, value in runs)
+            index += 1 + span
+            done = True
+            continue
+        out.append(line)
+        index += 1
+    if not done:
+        raise SystemExit('column %s is not in the delivered sequence' % name)
+    return '\n'.join(out) + '\n'
+
+
+def column_values(text, name):
+    """the expanded values of one column, for a targeted rewrite"""
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if not line.startswith('column %s ' % name):
+            continue
+        fields = line.split()
+        count = int(fields[7])
+        if fields[5] == 'CONSTANT':
+            return [float(lines[index + 1])] * count
+        values = []
+        for offset in range(int(fields[9])):
+            size, value = lines[index + 1 + offset].split()
+            values.extend([float(value)] * int(size))
+        return values
+    raise SystemExit('column %s is not in the delivered sequence' % name)
+
+
+def keep_first_platform(text):
+    """B1: hold the stimulus low after its first platform, leaving the schema intact"""
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if line.startswith('column time '):
+            fields = line.split()
+            times = []
+            if fields[5] == 'CONSTANT':
+                times = [float(lines[index + 1])] * int(fields[7])
+            else:
+                for offset in range(int(fields[9])):
+                    size, value = lines[index + 1 + offset].split()
+                    times.extend([float(value)] * int(size))
+            break
+    else:
+        raise SystemExit('no time column')
+    values = column_values(text, 'data_en')
+    high, low = max(values), min(values)
+    level = (high + low) / 2.0
+    fall = None
+    seen_rise = False
+    for spot in range(len(values) - 1):
+        span = values[spot + 1] - values[spot]
+        if not span:
+            continue
+        when = times[spot] + (level - values[spot]) / span * (times[spot + 1] - times[spot])
+        if values[spot] < level <= values[spot + 1]:
+            seen_rise = True
+        elif seen_rise and values[spot] >= level > values[spot + 1]:
+            fall = when
+            break
+    if fall is None:
+        raise SystemExit('the clean stimulus has no first platform to keep')
+    trimmed = [value if when <= fall else low for when, value in zip(times, values)]
+    return replace_runs(text, 'data_en', trimmed)
 
 
 def build(source, root):
@@ -61,7 +161,7 @@ def build(source, root):
     for tag in ('120', '200'):
         name = 'dd1_d7c_b_tr_hyb_%s.vcd.gz' % tag
         candidates = [os.path.join(source, folder.replace('/', os.sep), 'rtl', name)
-                      for folder in (R4, R3, R2)]
+                      for folder in (D02, R4, R3, R2)]
         src = next((path for path in candidates if os.path.isfile(path)), None)
         if src is None:
             raise SystemExit('missing VCD %s in the source checkout' % name)
@@ -279,6 +379,21 @@ def main():
 
     container('A5_current_all_zero', zero_current)
     container('A6_enable_all_zero', zero_enable)
+
+    cases.append(('B1_iref_missing', container_mutation(
+        root, run, seq, man, seq_bytes, man_bytes, plain, 'B1_iref_missing',
+        lambda text: drop_column(text, 'iref_in'))))
+    cases.append(('B1_pam1_missing', container_mutation(
+        root, run, seq, man, seq_bytes, man_bytes, plain, 'B1_pam1_missing',
+        lambda text: drop_column(text, 'pam1'))))
+
+    long_seq = os.path.join(root, R1.replace('/', os.sep),
+                            'native_sequences/r20261026_132228_3fc148_TR-LONG_preflight.sequence.txt')
+    long_bytes = open(long_seq, 'rb').read()
+    long_plain = gzip.decompress(base64.b85decode(long_bytes.split(b'\n\n', 1)[1].strip())).decode()
+    cases.append(('B1_single_platform', container_mutation(
+        root, run, long_seq, man, long_bytes, man_bytes, long_plain, 'B1_single_platform',
+        keep_first_platform)))
 
     ledger_path = os.path.join(root, OLD.replace('/', os.sep), 'spectre_launch_account.csv')
     ledger_bytes = open(ledger_path, 'rb').read()

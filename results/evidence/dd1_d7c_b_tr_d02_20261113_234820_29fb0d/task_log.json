@@ -1,0 +1,35 @@
+{
+ "task_id": "DATA-7C-B-TR-D02",
+ "run_id": "d20261113_234820_29fb0d",
+ "created_utc": "2026-11-13T15:48:30.816893+00:00",
+ "base_sha": "71fb4ab049bc6aad1421f0b02b6ed27d7a8c07a2",
+ "branch": "poc/data-pam-d7c-b-tr-d02",
+ "worktree": "D:/ic617_d7c_b_tr_d02",
+ "review_inputs": {
+  "r4_review_zip": "C:/Users/LMX/Downloads/MicroLED_TR_R4_Independent_Review_REWORK_20261112.zip",
+  "r4_review_bytes": 48809,
+  "r4_review_sha256": "1807f655198f0f34e5bbb7bcfe55b396d19307e96bc39d5b5f14d0d8da13b176",
+  "closed": [
+   "B2",
+   "B3",
+   "B4",
+   "B5"
+  ],
+  "open": [
+   "B1 required columns",
+   "B1 complete PWL witness"
+  ],
+  "hyb_platform_discrepancy": "explained by the review: the deck commentary is stale, the executable Vdata_en PWL drives 4 and 3 platforms, and the delivered samples match it; no rerun needed"
+ },
+ "frozen_baseline_files": 3336,
+ "limits": {
+  "new_spectre_launches": 0,
+  "new_rtl_compilations": 0,
+  "new_rtl_simulations": 0,
+  "new_oa_access": 0,
+  "new_guest_connections": 0,
+  "new_pdk_license_or_credential_reads": 0,
+  "acceptance_registered": false,
+  "merge_performed": false
+ }
+}

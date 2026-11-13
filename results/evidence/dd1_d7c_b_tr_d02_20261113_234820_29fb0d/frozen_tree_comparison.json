@@ -1,0 +1,51 @@
+{
+ "frozen_files": 3336,
+ "identical": 3334,
+ "changed": [
+  {
+   "path": "scripts/dd1_d7c_b_tr_r1_native.py",
+   "mode_before": "100644",
+   "mode_after": "100644",
+   "sha_before": "006cba33b89cac7a40905db1683d6b97a4f1c3a2",
+   "sha_after": "e73d3b6a08debc2bd3a149b542d73e805a390ee8"
+  }
+ ],
+ "missing": [
+  "scripts/dd1_d7c_b_tr_r4_probe.py"
+ ],
+ "new_file_count": 32,
+ "new_files": [
+  ".git",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/clean_recompute.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/clean_verify.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/convergence.csv",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/A1_current_unit_V.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/A2_vdd18_nan.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/A3_sample_count_short.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/A4_time_not_ordered.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/A5_current_all_zero.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/A6_enable_all_zero.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/B1_iref_missing.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/B1_ledger_uncertain.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/B1_pam1_missing.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/B1_single_platform.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/B2_budget_occupied_22.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/B3_settling_left_limit_1000A.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/C1_convergence_context_NO.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/C2_ledger_raw_zero_recompute.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/C2_ledger_raw_zero_verify.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/clean_recompute.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/clean_verify.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/counterexamples.json",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/counterexamples/verify_no_subprocess.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/d02_inputs.json",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/frozen_baseline.txt",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/rtl/dd1_d7c_b_tr_hyb_120.vcd.gz",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/rtl/dd1_d7c_b_tr_hyb_200.vcd.gz",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/statuses.csv",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/statuses_r1_original.csv",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/task_log.json",
+  "results/evidence/dd1_d7c_b_tr_d02_20261113_234820_29fb0d/windows_all.csv",
+  "scripts/dd1_d7c_b_tr_d02_probe.py"
+ ]
+}

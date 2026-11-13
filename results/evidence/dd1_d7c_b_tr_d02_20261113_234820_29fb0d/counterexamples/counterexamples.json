@@ -1,0 +1,151 @@
+{
+ "probe": "R3",
+ "fixture": "copy of the audited checkout; mutations only in the copy",
+ "controls": {
+  "clean_verify": 0,
+  "clean_recompute": 0,
+  "verify_no_subprocess": 0
+ },
+ "counterexamples": [
+  {
+   "case": "A1_current_unit_V",
+   "rc": 1,
+   "named": [
+    "TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-120_preflight.sequence.txt: column Ip_branch:i is declared in V, the frozen reader uses A",
+    "TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-120_preflight.sequence.txt: column Ip_branch:i is delivered in V, the frozen contract requires A"
+   ]
+  },
+  {
+   "case": "A2_vdd18_nan",
+   "rc": 1,
+   "named": [
+    "TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-120_preflight.sequence.txt: column vdd18 carries 780 non-finite value(s), the first nan"
+   ]
+  },
+  {
+   "case": "A3_sample_count_short",
+   "rc": 1,
+   "named": [
+    "TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-120_preflight.sequence.txt: column time declares 780 values against 779 samples"
+   ]
+  },
+  {
+   "case": "A4_time_not_ordered",
+   "rc": 1,
+   "named": [
+    "TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-120_preflight.sequence.txt: the time axis is not strictly increasing at sample 1 (3.53e-09 then 1.53e-09)"
+   ]
+  },
+  {
+   "case": "A5_current_all_zero",
+   "rc": 1,
+   "named": [
+    "TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-120_preflight.sequence.txt: the clamp current is 0.0 A against the frozen 1.4999999999999999e-05 A that the 1.2 V clamp over the 80000.0 ohm meter load draws"
+   ]
+  },
+  {
+   "case": "A6_enable_all_zero",
+   "rc": 1,
+   "named": [
+    "TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-120_preflight.sequence.txt: the delivered stimulus spans 0.0..0.0 V against the 0.0..1.8 V the deck drives",
+    "TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-120_preflight.sequence.txt: the delivered stimulus shows 0 rising 0.9 V crossings against the 1 the executable deck PWL contains"
+   ]
+  },
+  {
+   "case": "B1_iref_missing",
+   "rc": 1,
+   "named": [
+    "TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-120_preflight.sequence.txt: the frozen contract requires the iref_in column and the delivered preflight does not carry it"
+   ]
+  },
+  {
+   "case": "B1_pam1_missing",
+   "rc": 1,
+   "named": [
+    "TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-120_preflight.sequence.txt: the frozen contract requires the pam1 column and the delivered preflight does not carry it"
+   ]
+  },
+  {
+   "case": "B1_single_platform",
+   "rc": 1,
+   "named": [
+    "TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-LONG_preflight.sequence.txt: the delivered stimulus shows 1 rising 0.9 V crossings against the 8 the executable deck PWL contains",
+    "TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-LONG_preflight.sequence.txt: the delivered stimulus shows 1 falling 0.9 V crossings against the 8 the executable deck PWL contains"
+   ]
+  },
+  {
+   "case": "C2_ledger_raw_zero_verify",
+   "rc": 1,
+   "named": [
+    "TR_R1_VERIFY_PROBLEM r20261026_132228_3fc148_TR-120_preflight.sequence.txt: raw_sha256 is '0000000000000000000000000000000000000000000000000000000000000000' in the account against 'c8192192eae706df64fe83052e84f83f0e44e0957f01962590e990548a05d962' in the delivered preflight"
+   ]
+  },
+  {
+   "case": "C2_ledger_raw_zero_recompute",
+   "rc": 1,
+   "named": [
+    "RECOMPUTE_R1_REFUSED B2: the confirmed row T004 carries raw_sha256='0000000000000000000000000000000000000000000000000000000000000000' while the delivered TR-120/preflight sequence records 'c8192192eae706df64fe83052e84f83f0e44e0957f01962590e990548a05d962'"
+   ]
+  },
+  {
+   "case": "B1_ledger_uncertain",
+   "rc": 1,
+   "named": [
+    "RECOMPUTE_R1_REFUSED B2: 1 of 18 planned launches are not confirmed in the ledger: [('TR-120', 'preflight')]"
+   ]
+  },
+  {
+   "case": "B2_budget_occupied_22",
+   "rc": 1,
+   "named": [
+    "RECOMPUTE_R1_REFUSED B2: status BUDGET_ACCOUNTING_STATUS publishes PARTIAL/21/24 but the actual inputs give PARTIAL/22/24"
+   ]
+  },
+  {
+   "case": "B3_settling_left_limit_1000A",
+   "rc": 1,
+   "named": [
+    "RECOMPUTE_R1_REFUSED B2: TR-120 W0 publishes settling_dc_left_limit_A=1000.0 against 1.922842978252656e-06 interpolated at the deadline 1280 ns"
+   ]
+  },
+  {
+   "case": "C1_convergence_context_NO",
+   "rc": 1,
+   "named": [
+    "RECOMPUTE_R1_REFUSED B3: convergence key ('RS-FULL/TR-LONG', 'RS-FULL', 'TR-LONG', 'W0', '000') publishes context_match='NO' while the delivered windows agree on every measured field except maxstep"
+   ]
+  },
+  {
+   "case": "D1_label_without_transcript",
+   "rc": 1,
+   "named": [
+    "the transcript did not prove a single start"
+   ]
+  },
+  {
+   "case": "D2_transcript_two_starts",
+   "rc": 1,
+   "named": [
+    "the transcript did not prove a single start"
+   ]
+  }
+ ],
+ "all_refused": true,
+ "mock_label_without_transcript": {
+  "transcript_file_supplied": false,
+  "account_duplicates": [],
+  "account_processes": 2,
+  "record_derived_duplicates": []
+ },
+ "mock_transcript_two_starts": {
+  "transcript": "HYB-120: R001 started pid=101; R002 started pid=102; two distinct executions completed.",
+  "account_duplicates": [],
+  "account_processes": 2
+ },
+ "mock_transcript_not_started": {
+  "account_duplicates": [
+   "R001"
+  ],
+  "account_processes": 1
+ }
+}
