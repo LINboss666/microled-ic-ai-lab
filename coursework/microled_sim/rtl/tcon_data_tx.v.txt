@@ -21,6 +21,15 @@
 // SETUP / HOLD: launching on the CLK_REF falling edge gives 5 ns / 5 ns around
 // every sampling edge in this ideal RTL phase model. That is a *model* result,
 // not a static timing sign-off (STA stays NOT_RUN).
+//
+// T2AR2 (independent review 2026-11-14, second pass)
+//   `revoke`: the received column was voided AFTER byte 0 was pre-fetched
+//   (a 769th byte arriving inside the load window). Bytes already launched
+//   cannot be recalled, so the transmitter switches to zero payload for the
+//   rest of the window and flags load_blank; tcon_top disarms the whole slot so
+//   this partial payload can never be selected. A revoke always refers to the
+//   column being loaded: the two banks alternate, so parity_q (latched at the
+//   pre-fetch) can only match the revoking column inside the same slot.
 module tcon_data_tx #(
     parameter integer LOAD_START = 832,
     parameter integer LOAD_LEN   = 768,
@@ -29,6 +38,7 @@ module tcon_data_tx #(
     input  wire        clk,
     input  wire        reset_n,
     input  wire        safe,
+    input  wire        revoke,
 
     input  wire [10:0] slot_cycle,
     input  wire [9:0]  col_index,
@@ -70,21 +80,36 @@ module tcon_data_tx #(
     reg [9:0]  load_cnt;
     reg        parity_q;
     reg        valid_q;
+    reg        revoked_q;     // this window was voided after the pre-fetch
     reg [8:0]  tx_k;
     reg        prefetched;
     reg [8:0]  launched;
 
+    // NOTE (T2AR2, run-1 finding T7): d0/d1 may ONLY change on a CLK_REF falling
+    // edge while DCLK is low - that is the interface rule the byte launch obeys.
+    // The revoke is therefore handled in the posedge domain as a *flag*
+    // (`revoked_q`); the payload turns to zero at the next legal launch, not at
+    // the moment the revoke arrives. The first T2AR2 run failed T7 precisely
+    // because an earlier version cleared d0/d1 directly in the revoke branch,
+    // which could land on a falling edge with DCLK high.
     always @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
-            load_run <= 1'b0;
-            load_cnt <= 10'd0;
+            load_run  <= 1'b0;
+            load_cnt  <= 10'd0;
+            revoked_q <= 1'b0;
         end else if (!safe) begin
-            load_run <= 1'b0;
-            load_cnt <= 10'd0;
+            load_run  <= 1'b0;
+            load_cnt  <= 10'd0;
+            revoked_q <= 1'b1;
         end else if (start_pt) begin
-            load_run <= 1'b1;
-            load_cnt <= 10'd0;
+            load_run  <= 1'b1;
+            load_cnt  <= 10'd0;
+            revoked_q <= 1'b0;            // fresh column, fresh permission
         end else if (load_run) begin
+            // The revoke must NOT steal a count: run-2 showed the window growing
+            // from 768 to 769 cycles (385 DCLK edges) because the revoke was an
+            // else-if branch of the counter. It is a nested flag update now.
+            if (revoke && (col_index[0] == parity_q)) revoked_q <= 1'b1;
             if (load_cnt == (LOAD_LEN - 1)) begin
                 load_run <= 1'b0;
                 load_cnt <= 10'd0;
@@ -152,8 +177,10 @@ module tcon_data_tx #(
             tx_k       <= tx_k + 9'd1;
             launched   <= launched + 9'd1;
             bytes_sent <= launched + 9'd1;
-            d0         <= valid_q ? bk_d0 : 8'h00;
-            d1         <= valid_q ? bk_d1 : 8'h00;
+            // payload is zero once the window is void (invalid bank or revoke)
+            d0         <= (valid_q && !revoked_q) ? bk_d0 : 8'h00;
+            d1         <= (valid_q && !revoked_q) ? bk_d1 : 8'h00;
+            load_blank <= !(valid_q && !revoked_q);
         end
     end
 

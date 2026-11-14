@@ -14,21 +14,32 @@
 //   8          600 bytes + sync     -> underrun
 //   9          fault_n low during reception
 //   10         fault_n low during the load window
-//   11         fault_n low during LATCH
-//   12,14..19  normal (recovery / padding)
+//   11         fault_n low during LATCH   -> SCAN_STB/PWM_START must stay off
+//   12,14,15   normal (recovery / padding)
 //   13         normal + VSYNC phase anomaly
+//   16         premature COL_SYNC (600) then a legal one (830) -> protocol invalid
+//   17         normal control column (proves the zero checks are not vacuous)
+//   18         fault across the column boundary, recovery at cycle 100
+//              -> BLANK must stay high for the WHOLE slot (T2AR2 P0-1/P0-2)
+//   19         768 + SYNC@830 + 769th byte at 834 (AFTER the pre-fetch)
+//              -> column voided after launch -> whole slot disarmed (P0-3)
 //   20         COL_SYNC at cycle 830  -> ACCEPTED (last legal edge)
 //   21         COL_SYNC at cycle 831  -> late, rejected
 //   22         COL_SYNC at cycle 832  -> late, rejected
-//   23         768 + SYNC + 769th byte -> column revoked
-//   24         fault covering the column boundary, recovery at cycle 6
-//   25         fault covering the column boundary, recovery at cycle 600
-//   26         normal (recovery)
+//   23         768 + SYNC + 769th byte at 800 (BEFORE the pre-fetch) -> revoked
+//   24         normal (recovery)
+//   25         fault covering the column boundary, recovery at cycle 6
+//   26         fault covering the column boundary, recovery at cycle 600
+//   27         normal (recovery)
 //   then a full frame for the 1022/1023/0 bank-ownership check
 //
 // The TB never drives time base or control outputs.
-// Frame time base is measured with a TB-side CLK_REF edge counter (independent
-// of the DUT slot_cycle/slot_len). Setup/hold are measured from timestamps.
+// Frame time base is measured TWICE, both independent of the DUT:
+//   * a TB-side CLK_REF edge counter for the absolute slot marks, and
+//   * a reference model that reproduces the 576/448 spec arithmetic and is
+//     compared against the DUT cycle by cycle (X31), so a fault that moved the
+//     time base could not hide behind DUT-derived numbers.
+// Setup/hold are measured from timestamps.
 module tcon_t2a_tb;
 
     reg clk_ref;
@@ -72,6 +83,7 @@ module tcon_t2a_tb;
 
     wire [9:0] col_id_s;
     wire       wrap_s;
+    wire [5:0] err_now_s;       // T2AR2: was unconnected -> vsim-3017/3722 warnings
     tcon_top #(.N_COL(8)) dut_small (
         .clk_ref (clk_ref), .reset_n (reset_n), .pclk (clk_ref),
         .vsync (1'b0), .col_sync (1'b0), .video_d (8'h00), .de (1'b0),
@@ -80,8 +92,8 @@ module tcon_t2a_tb;
         .col_id (col_id_s), .scan_stb (), .latch (), .pwm_start (),
         .pwm_tick (), .blank (), .dclk (), .load_active (), .d0 (), .d1 (),
         .status (), .frame_wrap (wrap_s), .slot_long (), .slot_start (),
-        .err_flags (), .bank_valid (), .bytes_rcvd (), .bytes_sent (),
-        .load_blank (), .load_cnt ()
+        .err_flags (), .err_now (err_now_s), .bank_valid (), .bytes_rcvd (),
+        .bytes_sent (), .load_blank (), .load_cnt ()
     );
 
     // ------------------------------------------------------------------
@@ -108,10 +120,13 @@ module tcon_t2a_tb;
     endfunction
 
     // columns whose payload must be all zero (invalid bank / revoked)
+    // NOTE: column 19 is NOT here - it really does launch a few valid bytes
+    // before the 769th byte revokes it, and those cannot be recalled. Its
+    // expectation is "zeros from the revoke onwards" (checked by X24..X27).
     function integer exp_zero_col(input integer c);
         case (c)
-            4, 5, 7, 8, 9, 21, 22, 23, 25, 26: exp_zero_col = 1;
-            default:                           exp_zero_col = 0;
+            4, 5, 7, 8, 9, 16, 18, 21, 22, 23, 25, 26: exp_zero_col = 1;
+            default:                                     exp_zero_col = 0;
         endcase
     endfunction
 
@@ -127,6 +142,7 @@ module tcon_t2a_tb;
 
     // ------------------------------------------------------------------
     integer tb_col, drv_i, cfg_n, cfg_pa, cfg_pl, cfg_ns, cfg_sync_at, cfg_extra_at;
+    integer cfg_sync2_at;       // T2AR2: second, independently scheduled COL_SYNC
     integer sync_pulses, sync_gap, stall_left;
     reg     tail_done;
     reg [10:0] nxt_cyc;
@@ -152,7 +168,7 @@ module tcon_t2a_tb;
             tb_col = 0; drv_i = 0; sync_pulses = 0; sync_gap = 0;
             tail_done = 0; stall_left = 0;
             cfg_n = 768; cfg_pa = -1; cfg_pl = 0; cfg_ns = 1;
-            cfg_sync_at = -1; cfg_extra_at = -1;
+            cfg_sync_at = -1; cfg_sync2_at = -1; cfg_extra_at = -1;
         end else begin
             col_sync <= 1'b0;
             vsync    <= 1'b0;
@@ -164,7 +180,7 @@ module tcon_t2a_tb;
                 drv_i = 0; sync_pulses = 0; sync_gap = 0;
                 tail_done = 0; stall_left = 0;
                 cfg_n = 768; cfg_pa = -1; cfg_pl = 0; cfg_ns = 1;
-                cfg_sync_at = -1; cfg_extra_at = -1;
+                cfg_sync_at = -1; cfg_sync2_at = -1; cfg_extra_at = -1;
                 case (tb_col)
                     3:  begin cfg_pa = 400; cfg_pl = 20; end
                     4:  begin cfg_n = 767; end
@@ -172,6 +188,11 @@ module tcon_t2a_tb;
                     6:  begin cfg_ns = 2; end
                     7:  begin cfg_ns = 0; end
                     8:  begin cfg_n = 600; end
+                    // T2AR2 R02: premature sync, then a legal one at 830
+                    16: begin cfg_sync_at = 600; cfg_sync2_at = 830; end
+                    // T2AR2 P0-3: commit at 830, then a 769th byte at 834,
+                    // i.e. after the pre-fetch point and inside the load window
+                    19: begin cfg_sync_at = 830; cfg_extra_at = 834; end
                     20: cfg_sync_at = 830;
                     21: cfg_sync_at = 831;
                     22: cfg_sync_at = 832;
@@ -192,6 +213,11 @@ module tcon_t2a_tb;
             if (tb_col == 25 && nxt_cyc == 11'd6)   fault_hold = 1'b0;
             if (tb_col == 26 && nxt_cyc == 11'd0)   fault_hold = 1'b1;   // poison col 26
             if (tb_col == 26 && nxt_cyc == 11'd600) fault_hold = 1'b0;
+            // T2AR2: fault exactly across a column boundary, released at cycle
+            // 100 of the new column, i.e. BEFORE LATCH - the case where the old
+            // RTL let BLANK fall again inside the same slot.
+            if (tb_col == 18 && nxt_cyc == 11'd0)   fault_hold = 1'b1;
+            if (tb_col == 18 && nxt_cyc == 11'd100) fault_hold = 1'b0;
             if (fault_hold) fault_req = 1;
             fault_n <= ~fault_req;
 
@@ -234,6 +260,9 @@ module tcon_t2a_tb;
                     sync_gap     = 4;
                 end
             end
+            // T2AR2: second sync at an independent cycle (premature-then-legal)
+            if (cfg_sync2_at >= 0 && nxt_cyc == (cfg_sync2_at + 1))
+                col_sync <= 1'b1;
         end
     end
 
@@ -263,6 +292,73 @@ module tcon_t2a_tb;
     end
 
     // ------------------------------------------------------------------
+    // T2AR2: INDEPENDENT reference time base.
+    // It reproduces the 576/448 spec arithmetic inside the TB and never reads
+    // slot_cycle / slot_len / slot_start from the DUT. Cycle by cycle it
+    // predicts (a) the slot cycle number and (b) whether this cycle starts a
+    // column, then compares. A fault that shifted the absolute frame time base
+    // would show up here immediately - the old TB derived tb_col from the DUT
+    // itself, so it could not prove the axis had not moved (review P0-C).
+    // ------------------------------------------------------------------
+    integer rf_on, rf_cyc, rf_len, rf_frac, rf_col, rf_bad, rf_col_bad, rf_slots;
+    reg     rf_bound;
+    reg     rf_arm;
+
+    // ALIGNMENT (T2AR2 run-2 finding): the TB drives cfg_valid/run_en/rx_ready
+    // just AFTER a posedge, so a `#1` sampling of those same variables already
+    // sees them one cycle before the DUT latches them. Starting the reference
+    // there made it exactly one cycle ahead of the DUT for the whole run
+    // (1,010,995 mismatches). rf_arm is registered on the posedge, so the
+    // reference starts on the edge where the DUT time base really restarts.
+    always @(posedge clk_ref) begin
+        if (!reset_n) rf_arm <= 1'b0;
+        else          rf_arm <= cfg_valid && run_en && rx_ready;
+    end
+
+    initial begin
+        rf_on = 0; rf_cyc = 0; rf_len = 976; rf_frac = 576;
+        rf_col = 0; rf_bad = 0; rf_col_bad = 0; rf_slots = 0; rf_bound = 1'b1;
+        rf_arm = 1'b0;
+    end
+
+    always @(posedge clk_ref) begin
+        #1;
+        if (!reset_n) begin
+            rf_on = 0;
+        end else if (!rf_on) begin
+            if (rf_arm) begin
+                rf_on    = 1; rf_cyc = 0; rf_len = 976; rf_frac = 576;
+                rf_col   = 0; rf_slots = 0; rf_bound = 1'b1;
+                if ((dut.slot_cycle !== 11'd0) || (dut.slot_start !== 1'b1))
+                    rf_bad = rf_bad + 1;
+            end
+        end else begin
+            // advance the reference FIRST, then compare: on a boundary edge the
+            // DUT has already wrapped to cycle 0 and raised slot_start.
+            rf_cyc = rf_cyc + 1;
+            if (rf_cyc == rf_len) begin
+                rf_cyc   = 0;
+                rf_slots = rf_slots + 1;
+                rf_col   = (rf_col == 1023) ? 0 : (rf_col + 1);
+                if ((rf_frac + 576) >= 1024) begin
+                    rf_len  = 977;
+                    rf_frac = rf_frac + 576 - 1024;
+                end else begin
+                    rf_len  = 976;
+                    rf_frac = rf_frac + 576;
+                end
+                rf_bound = 1'b1;
+            end else begin
+                rf_bound = 1'b0;
+            end
+
+            if (dut.slot_cycle !== rf_cyc)       rf_bad = rf_bad + 1;
+            if (dut.slot_start !== rf_bound)     rf_bad = rf_bad + 1;
+            if (scan_stb && (col_id !== rf_col)) rf_col_bad = rf_col_bad + 1;
+        end
+    end
+
+    // ------------------------------------------------------------------
     // per-column records. A record is committed only when its window CLOSES,
     // so a trailing window that never closes cannot corrupt an earlier record.
     // ------------------------------------------------------------------
@@ -274,6 +370,8 @@ module tcon_t2a_tb;
     integer col_win   [0:31];
     integer col_fe    [0:31];
     integer err_delta [0:31];
+    integer col_lb    [0:31];   // T2AR2: load_blank was asserted in this window
+    integer col_pbn   [0:31];   // T2AR2: non-zero bytes AFTER load_blank rose
 
     integer i;
     initial begin
@@ -282,12 +380,43 @@ module tcon_t2a_tb;
             col_bytes[i] = 0; col_len[i] = 0; col_start[i] = 0;
             col_err[i] = 0; col_zero[i] = 1; col_win[i] = 0;
             col_fe[i] = -1; err_delta[i] = 0;
+            col_lb[i] = 0; col_pbn[i] = 0;
+        end
+    end
+
+    // ------------------------------------------------------------------
+    // T2AR2 per-slot control counters. BLANK level is counted directly, so the
+    // "BLANK re-opened after recovery" defect is measured instead of inferred.
+    // ------------------------------------------------------------------
+    integer blk_low [0:31];
+    integer stb_cnt [0:31];
+    integer lat_cnt [0:31];
+    integer pst_cnt [0:31];
+    integer sb_at900;
+
+    initial begin
+        for (i = 0; i < 32; i = i + 1) begin
+            blk_low[i] = 0; stb_cnt[i] = 0; lat_cnt[i] = 0; pst_cnt[i] = 0;
+        end
+        sb_at900 = -1;
+    end
+
+    always @(posedge clk_ref) begin
+        #1;
+        if (reset_n) begin
+            if (tb_col >= 0 && tb_col < 32) begin
+                if (!blank)    blk_low[tb_col] = blk_low[tb_col] + 1;
+                if (scan_stb)  stb_cnt[tb_col] = stb_cnt[tb_col] + 1;
+                if (latch)     lat_cnt[tb_col] = lat_cnt[tb_col] + 1;
+                if (pwm_start) pst_cnt[tb_col] = pst_cnt[tb_col] + 1;
+            end
+            if (tb_col == 19 && dut.slot_cycle == 11'd900) sb_at900 = dut.status[7];
         end
     end
 
     reg        la_d;
     integer    busy, win_idx, win_col, dclk_k;
-    integer    cur_err, cur_zero, cur_fe, cur_start;
+    integer    cur_err, cur_zero, cur_fe, cur_start, cur_lb, cur_pbn;
     realtime   t_win0, t_chg, t_edge_prev;
     integer    mismatches, colid_bad, period_bad, change_high;
     realtime   min_setup, min_hold;
@@ -297,6 +426,7 @@ module tcon_t2a_tb;
     initial begin
         la_d = 1'b0; busy = 0; win_idx = -1; win_col = 0; dclk_k = 0;
         cur_err = 0; cur_zero = 1; cur_fe = -1; cur_start = 0;
+        cur_lb = 0; cur_pbn = 0;
         t_win0 = 0.0; t_chg = 0.0; t_edge_prev = -1.0;
         mismatches = 0; colid_bad = 0; period_bad = 0; change_high = 0;
         min_setup = 1.0e9; min_hold = 1.0e9; err_seen = 6'b0;
@@ -325,16 +455,22 @@ module tcon_t2a_tb;
             end
 
             if (load_active && !la_d) begin
-                if (acc(dut.col_id, frame_no) < 0)
-                    $display("T2A_NOTE window not indexed: col_id=%0d frame_no=%0d t=%0t",
-                             dut.col_id, frame_no, $time);
+                // T2AR2: index the window by the TB's own slot counter, not by
+                // COL_ID. A disarmed slot deliberately keeps the previous
+                // column number, so indexing by COL_ID would file that window
+                // under the wrong column (and hide the new boundary cases).
+                if (acc(tb_col, frame_no) < 0)
+                    $display("T2A_NOTE window not indexed: slot_col=%0d col_id=%0d frame_no=%0d t=%0t",
+                             tb_col, dut.col_id, frame_no, $time);
                 busy        = 1;
-                win_idx     = acc(dut.col_id, frame_no);
-                win_col     = dut.col_id;
+                win_idx     = acc(tb_col, frame_no);
+                win_col     = tb_col;
                 cur_start   = dut.slot_cycle;
                 cur_err     = 0;
                 cur_zero    = 1;
                 cur_fe      = -1;
+                cur_lb      = 0;
+                cur_pbn     = 0;
                 dclk_k      = 0;
                 t_win0      = $realtime - 1.0;
                 t_edge_prev = -1.0;
@@ -342,15 +478,18 @@ module tcon_t2a_tb;
 
             if (busy && load_active && dclk) begin
                 if (win_idx >= 0) begin
+                    // T2AR2: once the transmitter flags "this window is blank",
+                    // no further real byte may be launched (P0-3).
+                    if (dut.load_blank) cur_lb = 1;
                     begin : cmp
                         reg [7:0] e0, e1;
-                        // A slot whose boundary was crossed while unsafe keeps the
-                        // PREVIOUS column number (that is the whole point of the
-                        // P0-C policy), so col_id alone cannot tell which payload is
-                        // on the bus. When the transmitter itself flags "no valid
-                        // bank" the only correct expectation is zero bytes; the
-                        // per-column assertions (X1/X12 require zero=0) still catch
-                        // a wrongly blanked column.
+                        // win_col is the TB's own slot number (T2AR2), so a
+                        // disarmed slot is still attributed to the column it
+                        // really belongs to. Payload expectation: zero when the
+                        // transmitter flags a blank window or the column is one
+                        // of the deliberately invalid ones; the real pattern
+                        // otherwise. X1/X12/X32 require zero=0 on valid columns,
+                        // so this cannot be satisfied by blanking everything.
                         if (dut.load_blank || exp_zero_col(win_col)) begin
                             e0 = 8'h00;
                             e1 = 8'h00;
@@ -369,6 +508,8 @@ module tcon_t2a_tb;
                             if (cur_fe < 0) cur_fe = dclk_k;
                         end
                         if ((d0 !== 8'h00) || (d1 !== 8'h00)) cur_zero = 0;
+                        if (cur_lb && ((d0 !== 8'h00) || (d1 !== 8'h00)))
+                            cur_pbn = cur_pbn + 1;
                     end
                 end
                 if ((($realtime - 1.0) - t_chg) < min_setup)
@@ -388,6 +529,8 @@ module tcon_t2a_tb;
                     col_err[win_idx]   = cur_err;
                     col_zero[win_idx]  = cur_zero;
                     col_fe[win_idx]    = cur_fe;
+                    col_lb[win_idx]    = cur_lb;
+                    col_pbn[win_idx]   = cur_pbn;
                 end
                 busy    = 0;
                 win_idx = -1;
@@ -478,6 +621,17 @@ module tcon_t2a_tb;
         end
         $display("T2A_SUMMARY stb25=%0d lat25=%0d stb26=%0d colid25=%0d",
                  s_stb_25, lat_25, s_stb_26, colid_25);
+        $display("T2AR2_SUMMARY rf_slots=%0d rf_bad=%0d rf_col_bad=%0d", rf_slots, rf_bad, rf_col_bad);
+        $display("T2AR2_SUMMARY col18 blank_low=%0d stb=%0d lat=%0d pst=%0d",
+                 blk_low[18], stb_cnt[18], lat_cnt[18], pst_cnt[18]);
+        $display("T2AR2_SUMMARY col11 stb=%0d lat=%0d pst=%0d blank_low=%0d",
+                 stb_cnt[11], lat_cnt[11], pst_cnt[11], blk_low[11]);
+        $display("T2AR2_SUMMARY col19 stb=%0d pst=%0d lb=%0d pbn=%0d slot_bad@900=%0d bytes=%0d",
+                 stb_cnt[19], pst_cnt[19], col_lb[19], col_pbn[19], sb_at900, col_bytes[19]);
+        $display("T2AR2_SUMMARY col16 zero=%0d bytes=%0d err=%0d delta=%b",
+                 col_zero[16], col_bytes[16], col_err[16], err_delta[16]);
+        $display("T2AR2_SUMMARY col15 zero=%0d bytes=%0d err=%0d",
+                 col_zero[15], col_bytes[15], col_err[15]);
 
         deltas_bad = 0;
         for (k = 2; k < slot_n; k = k + 1) begin
@@ -559,6 +713,37 @@ module tcon_t2a_tb;
         chk("X16_wrap_col1023_valid",         col_win[29] == 1 && col_bytes[29] == 384 && col_err[29] == 0);
         chk("X17_wrap_col0_frame1_valid",     col_win[30] == 1 && col_bytes[30] == 384 && col_err[30] == 0);
         chk("X18_setup_hold_ideal_rtl",       min_setup >= 3.0 && min_hold >= 1.0);
+
+        // ---------------- T2AR2 fault-gating / protocol set ----------------
+        // P0-1 + P0-2: fault across the boundary, recovered at cycle 100. The
+        // old RTL let BLANK fall again inside the same slot (9,320 ns in the
+        // T2AR VCD) and still emitted the strobes.
+        chk("X19_fault_recovery_blank_held_col18",  blk_low[18] == 0);
+        chk("X20_fault_recovery_no_strobe_col18",
+            lat_cnt[18] == 0 && pst_cnt[18] == 0 && stb_cnt[18] == 0);
+        chk("X21_fault_recovery_zero_col18",
+            col_win[18] == 1 && col_bytes[18] == 384 && col_err[18] == 0 && col_zero[18] == 1);
+        // P0-2: LATCH interrupted at 828 by a fault -> no PWM_START / SCAN_STB
+        chk("X22_latch_interrupted_no_scan_stb_col11", stb_cnt[11] == 0);
+        chk("X23_latch_interrupted_no_pwm_start_col11",
+            pst_cnt[11] == 0 && lat_cnt[11] < 4);
+        // P0-3: 769th byte AFTER the pre-fetch -> void + whole slot disarmed
+        chk("X24_post_prefetch_extra_byte_overflow_col19", err_delta[19][1] == 1'b1);
+        chk("X25_post_prefetch_extra_byte_no_strobe_col19",
+            stb_cnt[19] == 0 && pst_cnt[19] == 0);
+        chk("X26_post_prefetch_extra_byte_slot_disarmed_col19", sb_at900 == 1);
+        chk("X27_post_prefetch_extra_byte_zeros_after_blank_col19",
+            col_lb[19] == 1 && col_pbn[19] == 0);
+        // R02: premature sync then a legal sync -> protocol invalid column
+        chk("X28_premature_sync_protocol_invalid_col16", err_delta[16][0] == 1'b1);
+        chk("X29_premature_sync_zero_col16",
+            col_win[16] == 1 && col_bytes[16] == 384 && col_err[16] == 0 && col_zero[16] == 1);
+        // Independent axis / column checks
+        chk("X30_scan_stb_col_id_matches_reference", rf_col_bad == 0);
+        chk("X31_abs_timebase_lockstep_reference",   rf_bad == 0);
+        // causal control: a normal column really does carry non-zero payload
+        chk("X32_normal_control_col15_nonzero",
+            col_win[15] == 1 && col_bytes[15] == 384 && col_err[15] == 0 && col_zero[15] == 0);
 
         $display("COURSE_RTL_ASSERT_COUNT=%0d", assert_count);
         $display("COURSE_RTL_FAIL_COUNT=%0d", fail_count);

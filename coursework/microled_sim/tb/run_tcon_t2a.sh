@@ -15,10 +15,10 @@ SRC="$COURSE_ROOT/coursework/microled_sim"
 WALL_LIMIT_S="${WALL_LIMIT_S:-600}"
 VCD_LIMIT_MB="${VCD_LIMIT_MB:-60}"
 
-# Assertion floor: the single "ALL" phase covers both the T2A regression set and
-# the T2AR boundary set, 49 checks (T1-T8, C1-C5, E1-E11, R1-R4, W1, S1-S2,
-# X1-X18). Never lower it.
-FLOOR=49
+# Assertion floor: the single "ALL" phase covers the T2A regression set, the
+# T2AR boundary set and the T2AR2 fault-gating/protocol set: 63 checks
+# (T1-T8, C1-C5, E1-E11, R1-R4, W1, S1-S2, X1-X32). Never lower it.
+FLOOR=63
 
 # the TB must still contain at least as many checks as the declared floor
 SRC_TB="$SRC/tb/tcon_t2a_tb.sv.txt"

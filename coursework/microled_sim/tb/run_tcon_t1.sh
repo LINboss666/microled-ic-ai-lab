@@ -13,6 +13,7 @@ COURSE_ROOT="${COURSE_ROOT:-D:/ic617_course_sim_20261112}"
 RUN_DIR="${RUN_DIR:-D:/ic617_course_sim_20261112_native}"
 SCEN="${SCEN:-RESET_FAULT}"
 SRC="$COURSE_ROOT/coursework/microled_sim"
+WALL_LIMIT_S="${WALL_LIMIT_S:-900}"
 
 # Assertion floors are resolved by ONE shared, unit-tested function.
 # T1R review F1: the previous inline `MIN_ASSERTS="${MIN_ASSERTS:-49}"` made the
@@ -47,7 +48,7 @@ echo "RESTORED_SOURCES=$(ls -1 "$RESTORE" | wc -l)"
 
 echo "=== TCON_T1_RUNNER start $(date '+%Y-%m-%dT%H:%M:%S%z') ==="
 echo "SCEN=$SCEN  MIN_ASSERTS=$MIN_ASSERTS"
-echo "RUN_DIR=$RUN_DIR"
+echo "RUN_DIR=$RUN_DIR  WALL_LIMIT_S=$WALL_LIMIT_S"
 
 rm -rf work
 vlib work > 01_vlib.log 2>&1
@@ -66,10 +67,15 @@ echo "VLOG_RC=$VLOG_RC"
 cat 02_vlog.log
 [ "$VLOG_RC" -eq 0 ] || { echo "RUNNER_VERDICT=COMPILE_FAILED"; echo "RUNNER_EXIT=2"; exit 2; }
 
-vsim -c -do "run -all; quit -f" work.tcon_t1_tb +SCEN="$SCEN" > 03_vsim.stdout 2>&1
+timeout "${WALL_LIMIT_S}s" vsim -c -do "run -all; quit -f" work.tcon_t1_tb +SCEN="$SCEN" > 03_vsim.stdout 2>&1
 VSIM_RC=$?
 echo "VSIM_RC=$VSIM_RC"
 cat 03_vsim.stdout
+if [ "$VSIM_RC" -eq 124 ]; then
+    echo "RUNNER_VERDICT=WALL_CLOCK_TIMEOUT"
+    echo "RUNNER_EXIT=124"
+    exit 124
+fi
 
 CHECKER="$COURSE_ROOT/coursework/microled_sim/tb/t6_check_transcript.sh"
 bash "$CHECKER" 03_vsim.stdout "$MIN_ASSERTS" "$VSIM_RC" | tee 05_t6_check.txt

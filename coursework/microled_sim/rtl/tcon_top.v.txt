@@ -20,6 +20,19 @@
 //      we do NOT reset the time base to hide the problem.
 //   3. DCLK is continuous again (T2A had gated it to the load window).
 //
+// T2AR2 CHANGES (independent review 2026-11-14, second pass — see
+// rtl/tcon_t2ar2_edge_table.md)
+//   4. `slot_bad` is now STICKY INSIDE THE SLOT and it also drives BLANK.
+//      Before: `blank = blank_seq || !safe`, so after a boundary fault recovered
+//      BLANK fell again inside the same slot (the reviewer measured 9,320 ns of
+//      `slot_bad=1, safe=1, blank=0` in the raw VCD) and a LATCH that had been
+//      interrupted by the fault was still followed by SCAN_STB at cycle 880.
+//      Now the slot stays blanked and strobe-free until the next clean boundary.
+//      The time base is still never reset (that would hide the fault).
+//   5. A column voided AFTER the transmit pre-fetch (`col_revoke`, load window
+//      already running) also disarms the slot: the bytes already launched cannot
+//      be recalled, so the only safe answer is "this column is not selected".
+//
 // WHAT IS NOT IMPLEMENTED (do not read the module name as a chip)
 //   SPI/register file, interrupts, CDC, 384/512-channel transistor-level array,
 //   grey-scale physical engine (belongs to the Data driver), level shifters,
@@ -144,14 +157,28 @@ module tcon_top #(
     // ---------------------------------------------------------------------
     // slot disarm: a column boundary taken while unsafe disables the whole slot
     // so that no strobe can ever carry the stale COL_ID (review P0-C).
+    //
+    // T2AR2: the flag is sticky for the REST of the slot. One fault anywhere in
+    // a slot - in the receive window, across the LATCH pulse, or in the load
+    // window - means the column cannot be trusted, so BLANK must stay asserted
+    // and LATCH / PWM_START / SCAN_STB / PWM_TICK must stay inhibited until the
+    // next column boundary re-evaluates `safe`. Only the slot is dropped; the
+    // time base keeps running, so absolute frame timing never shifts.
     // ---------------------------------------------------------------------
+    wire col_revoke;      // rx: a committed column was voided (769th byte)
     reg slot_bad;
+
     always @(posedge clk_ref or negedge reset_n) begin
-        if (!reset_n)    slot_bad <= 1'b0;
-        else if (tb_start) slot_bad <= !safe;
+        if (!reset_n)          slot_bad <= 1'b0;
+        else if (tb_start)     slot_bad <= !safe;                     // re-judge
+        else if (!safe)        slot_bad <= 1'b1;                      // sticky
+        else if (col_revoke && (slot_cycle >= (LOAD_START - 1)))
+                               slot_bad <= 1'b1;   // voided after pre-fetch
     end
 
-    assign blank     = blank_seq || !safe;
+    // BLANK must never re-open inside a disarmed slot (review: 9,320 ns of
+    // slot_bad=1 / safe=1 / blank=0 in the T2AR VCD).
+    assign blank     = blank_seq || !safe || slot_bad;
     assign latch     = latch_seq  && safe && !slot_bad;
     assign pwm_start = pstart_seq && safe && !slot_bad;
     assign scan_stb  = stb_seq    && safe && !slot_bad;
@@ -191,7 +218,8 @@ module tcon_top #(
         .err_flags  (err_flags),
         .err_now    (err_now),
         .bytes_rcvd (bytes_rcvd),
-        .col_ok     ()
+        .col_ok     (),
+        .col_revoke (col_revoke)
     );
 
     tcon_col_bank u_bank (
@@ -217,6 +245,7 @@ module tcon_top #(
         .clk         (clk_ref),
         .reset_n     (reset_n),
         .safe        (safe),
+        .revoke      (col_revoke),
         .slot_cycle  (slot_cycle),
         .col_index   (tb_col),
         .col_valid   (col_valid),
@@ -234,7 +263,12 @@ module tcon_top #(
     );
 
     // ---------------------------------------------------------------------
-    // COL_ID: advances only on a clean (safe) column boundary
+    // COL_ID: advances only on a clean (safe) column boundary.
+    // During a disarmed slot COL_ID deliberately keeps the previous column
+    // number, but that slot emits no SCAN_STB at all (see the gating above), so
+    // a stale number can never reach the Scan driver. The next clean boundary
+    // re-synchronises it to tb_col. Assertion X30 checks "every SCAN_STB beats
+    // the independent reference column", so this is measured, not assumed.
     // ---------------------------------------------------------------------
     always @(posedge clk_ref or negedge reset_n)
         if (!reset_n) col_id <= 10'd0;

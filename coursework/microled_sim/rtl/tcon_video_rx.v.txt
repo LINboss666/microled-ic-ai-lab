@@ -39,6 +39,20 @@
 //        bank valid; it now revokes ok/col_ok while keeping had_sync, so the
 //        deadline branch does not mis-report "missing sync" afterwards.
 //
+// ---- T2AR2 (independent review 2026-11-14, second pass) --------------------
+//   P0-3 `col_revoke`: a (RX_LEN+1)-th byte that arrives AFTER the column was
+//        committed now also emits a one-cycle revoke pulse. tcon_top uses it to
+//        disarm the slot once the transmit prefetch has already happened
+//        (see tcon_t2ar2_edge_table.md §2, case B2). Revocation before the
+//        prefetch keeps the old, accepted behaviour: the column is voided and
+//        the transmitter emits 384 zero bytes.
+//   R02  `proto_bad`: a COL_SYNC seen before the column is complete (< RX_LEN
+//        bytes) makes the whole column protocol-invalid. Previously a later
+//        COL_SYNC at the legal cycle could still commit it, which contradicts
+//        T2A_INTERFACE_CONTRACT.md §5 (a column is 768 B + exactly one sync).
+//        No new error bit is added: err_flags[0] already carries "byte count /
+//        sync phase wrong" and the 6-bit status contract stays frozen.
+//
 // SCOPE: receive + classify only. No frame buffer, no transpose (V1.3 §3/§9).
 module tcon_video_rx #(
     parameter integer RX_LEN      = 768,
@@ -68,13 +82,15 @@ module tcon_video_rx #(
     output reg  [5:0]  err_flags,
     output reg  [5:0]  err_now,     // bits set on THIS cycle (per-column attribution)
     output reg  [9:0]  bytes_rcvd,
-    output reg         col_ok
+    output reg         col_ok,
+    output reg         col_revoke   // 1 cycle: a committed column was voided
 );
 
     reg [9:0] idx;
     reg       sync_d;
     reg       ovf;
     reg       had_sync;      // a legal commit happened for this column
+    reg       proto_bad;     // a sync arrived before the column was complete
 
     reg [9:0] owner0, owner1;
     reg       ok0, ok1;
@@ -87,8 +103,10 @@ module tcon_video_rx #(
     wire full         = (idx == RX_LEN);
     wire past_deadline = (slot_cycle > ACCEPT_LAST);
     // a sync captured on this edge is usable if the column is complete, not
-    // already committed, not overflowed and not past the acceptance window
-    wire sync_commit  = sync_p && !col_ok && !had_sync && full && !ovf && !past_deadline;
+    // already committed, not overflowed, not protocol-invalid and not past the
+    // acceptance window
+    wire sync_commit  = sync_p && !col_ok && !had_sync && full && !ovf &&
+                        !past_deadline && !proto_bad;
 
     assign wr_bank    = col_index[0];
     assign wr_en      = wr_en_r;
@@ -104,6 +122,7 @@ module tcon_video_rx #(
             sync_d     <= 1'b0;
             ovf        <= 1'b0;
             had_sync   <= 1'b0;
+            proto_bad  <= 1'b0;
             wr_en_r    <= 1'b0;
             wr_idx_r   <= 10'd0;
             wr_data_r  <= 8'h00;
@@ -115,25 +134,29 @@ module tcon_video_rx #(
             err_now    <= 6'b000000;
             bytes_rcvd <= 10'd0;
             col_ok     <= 1'b0;
+            col_revoke <= 1'b0;
         end else begin
-            sync_d  <= col_sync;
-            wr_en_r <= 1'b0;
-            err_now <= 6'b000000;
+            sync_d     <= col_sync;
+            wr_en_r    <= 1'b0;
+            err_now    <= 6'b000000;
+            col_revoke <= 1'b0;
 
             if (!safe) begin
                 idx        <= 10'd0;
                 col_ok     <= 1'b0;
                 ovf        <= 1'b0;
                 had_sync   <= 1'b0;
+                proto_bad  <= 1'b0;
                 bytes_rcvd <= 10'd0;
                 if (col_index[0]) ok1 <= 1'b0;
                 else              ok0 <= 1'b0;
             end else begin
                 // ---------------- column boundary (priority) ----------------
                 if (slot_last) begin
-                    col_ok   <= 1'b0;
-                    ovf      <= 1'b0;
-                    had_sync <= 1'b0;
+                    col_ok    <= 1'b0;
+                    ovf       <= 1'b0;
+                    had_sync  <= 1'b0;
+                    proto_bad <= 1'b0;
                     if (de) begin
                         wr_en_r    <= 1'b1;
                         wr_idx_r   <= 10'd0;
@@ -158,6 +181,10 @@ module tcon_video_rx #(
                         err_now[1]   <= 1'b1;
                         ovf          <= 1'b1;
                         col_ok       <= 1'b0;
+                        // T2AR2: tell the transmitter/top level that a column
+                        // which had already been committed is now void. Only a
+                        // committed column can have launched real bytes.
+                        col_revoke   <= had_sync;
                         if (col_index[0]) ok1 <= 1'b0;
                         else              ok0 <= 1'b0;
                     end
@@ -186,6 +213,10 @@ module tcon_video_rx #(
                     end else begin
                         err_flags[0] <= 1'b1;              // underrun / overflow
                         err_now[0]   <= 1'b1;
+                        // R02: a sync before the column is complete makes the
+                        // column protocol-invalid; a later, well-placed sync
+                        // must not resurrect it (T2A_INTERFACE_CONTRACT §5).
+                        proto_bad    <= 1'b1;
                         if (col_index[0]) ok1 <= 1'b0;
                         else              ok0 <= 1'b0;
                     end
