@@ -1,0 +1,188 @@
+`timescale 1ns / 1ps
+// TCON video receiver (T2A) — 768 bytes per column, 1 byte per CLK_REF cycle.
+//
+// Column boundary is defined by COL_SYNC; the *byte* count decides whether a
+// column is usable, not the arrival phase. A column is committed to its bank
+// (bank = col_index[0]) only when exactly RX_LEN bytes were seen and COL_SYNC
+// arrives. Everything else is classified and the submission is blocked, which
+// makes the data transmitter emit zeros for that column (black, no optical
+// output) without disturbing the frame time base.
+//
+// Software-visible error bits (sticky until reset):
+//   [0] underrun         COL_SYNC before RX_LEN bytes
+//   [1] overflow         a (RX_LEN+1)-th byte arrived
+//   [2] duplicate sync   a second COL_SYNC in the same column
+//   [3] missing sync     no COL_SYNC by the architectural deadline (cycle 831,
+//                        i.e. before the load window opens at 832)
+//   [4] vsync phase      VSYNC while COL_ID != 0
+//
+// TWO DEFECTS FOUND BY THE T2A RUNS AND FIXED HERE
+//
+//  1) Boundary collision (runs 1-2). The first byte of a column can arrive on
+//     the very edge that opens the column (slot_last). On that edge the previous
+//     column had already counted RX_LEN bytes, so `if (idx < RX_LEN)` classified
+//     the new column's byte 0 as the 769th byte of the old one: overflow was
+//     flagged and a perfect column was thrown away. The boundary now has
+//     explicit priority and treats that byte as index 0 of the NEW column.
+//
+//  2) Stale bank presented as valid (run 3). Validity used to be one bit per
+//     BANK, so a column that never completed still found the bank flagged valid
+//     from two columns earlier and the transmitter replayed stale pixels. A bank
+//     now carries the COLUMN NUMBER it holds plus a per-bank valid bit, and
+//     `col_valid` is "this bank holds exactly this column AND is valid".
+//     A stale bank can therefore never be presented as current data.
+//
+// SCOPE: receive + classify only. No frame buffer, no transpose (V1.3 §3/§9).
+module tcon_video_rx #(
+    parameter integer RX_LEN     = 768,
+    parameter integer LOAD_START = 832
+) (
+    input  wire        clk,
+    input  wire        reset_n,
+    input  wire        safe,        // machine safe: a fault aborts the column
+
+    // time base context
+    input  wire        slot_last,   // last cycle of the slot -> next is cycle 0
+    input  wire [10:0] slot_cycle,
+    input  wire [9:0]  col_index,
+
+    // video front-end (PCLK is the same 100 MHz as clk in this course model)
+    input  wire        vsync,
+    input  wire        col_sync,
+    input  wire [7:0]  video_d,
+    input  wire        de,
+
+    // to the column bank
+    output wire        wr_en,
+    output wire [9:0]  wr_idx,
+    output wire [7:0]  wr_data,
+    output wire        wr_bank,
+
+    // status
+    output wire [1:0]  bank_valid,  // per-bank valid bit (observability)
+    output wire        col_valid,   // CURRENT column is present and valid
+    output reg  [4:0]  err_flags,
+    output reg  [9:0]  bytes_rcvd,
+    output reg         col_ok
+);
+
+    reg [9:0] idx;          // 0 .. RX_LEN
+    reg       sync_d;       // COL_SYNC edge detect
+    reg       ovf;          // a (RX_LEN+1)-th byte arrived in this column
+
+    // per-bank ownership: which column does this bank currently hold?
+    reg [9:0] owner0, owner1;
+    reg       ok0, ok1;
+
+    // The bank write is REGISTERED with the index captured in the same cycle as
+    // the byte. Driving the bank with the live `idx` would be off by one,
+    // because idx is incremented on the very edge that performs the write.
+    reg        wr_en_r;
+    reg [9:0]  wr_idx_r;
+    reg [7:0]  wr_data_r;
+
+    wire sync_p = col_sync && !sync_d;
+    wire full   = (idx == RX_LEN);
+
+    assign wr_bank   = col_index[0];
+    assign wr_en     = wr_en_r;
+    assign wr_idx    = wr_idx_r;
+    assign wr_data   = wr_data_r;
+    assign bank_valid = {ok1, ok0};
+    assign col_valid  = col_index[0] ? (ok1 && (owner1 == col_index))
+                                     : (ok0 && (owner0 == col_index));
+
+    always @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            idx           <= 10'd0;
+            sync_d        <= 1'b0;
+            ovf           <= 1'b0;
+            wr_en_r       <= 1'b0;
+            wr_idx_r      <= 10'd0;
+            wr_data_r     <= 8'h00;
+            owner0        <= 10'd0;
+            owner1        <= 10'd0;
+            ok0           <= 1'b0;
+            ok1           <= 1'b0;
+            err_flags     <= 5'b00000;
+            bytes_rcvd    <= 10'd0;
+            col_ok        <= 1'b0;
+        end else begin
+            sync_d  <= col_sync;
+            wr_en_r <= 1'b0;
+
+            if (!safe) begin
+                // A fault aborts the column being received; its bank must not be
+                // presented as valid.
+                idx        <= 10'd0;
+                col_ok     <= 1'b0;
+                ovf        <= 1'b0;
+                bytes_rcvd <= 10'd0;
+                if (col_index[0]) ok1 <= 1'b0;
+                else              ok0 <= 1'b0;
+            end else begin
+                // ---------------- column boundary (priority) ----------------
+                if (slot_last) begin
+                    col_ok <= 1'b0;
+                    ovf    <= 1'b0;
+                    if (de) begin
+                        // this byte is byte 0 of the NEW column
+                        wr_en_r    <= 1'b1;
+                        wr_idx_r   <= 10'd0;
+                        wr_data_r  <= video_d;
+                        idx        <= 10'd1;
+                        bytes_rcvd <= 10'd1;
+                    end else begin
+                        idx        <= 10'd0;
+                        bytes_rcvd <= 10'd0;
+                    end
+                end else if (de) begin
+                    if (!full) begin
+                        wr_en_r    <= 1'b1;
+                        wr_idx_r   <= idx;
+                        wr_data_r  <= video_d;
+                        idx        <= idx + 10'd1;
+                        bytes_rcvd <= idx + 10'd1;
+                    end else begin
+                        err_flags[1] <= 1'b1;   // 769th byte
+                        ovf          <= 1'b1;
+                    end
+                end
+
+                // ---------------- COL_SYNC classification ---------------------
+                if (sync_p) begin
+                    if (col_ok) begin
+                        err_flags[2] <= 1'b1;   // duplicate COL_SYNC
+                    end else if (full && !ovf) begin
+                        if (col_index[0]) begin
+                            owner1 <= col_index;
+                            ok1    <= 1'b1;
+                        end else begin
+                            owner0 <= col_index;
+                            ok0    <= 1'b1;
+                        end
+                        col_ok <= 1'b1;
+                    end else begin
+                        err_flags[0] <= 1'b1;   // underrun / overflow
+                        if (col_index[0]) ok1 <= 1'b0;
+                        else              ok0 <= 1'b0;
+                    end
+                end
+
+                // ---------------- architectural deadline ----------------------
+                // The bank must hold this column and be valid before the load
+                // window opens at LOAD_START. Evaluated on cycle LOAD_START-1.
+                if ((slot_cycle == (LOAD_START - 1)) && !col_ok) begin
+                    err_flags[3] <= 1'b1;
+                    if (col_index[0]) ok1 <= 1'b0;
+                    else              ok0 <= 1'b0;
+                end
+
+                if (vsync && (col_index != 10'd0)) begin
+                    err_flags[4] <= 1'b1;
+                end
+            end
+        end
+    end
+
+endmodule

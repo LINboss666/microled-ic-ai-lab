@@ -5,7 +5,8 @@ T1 EDGE TABLE SELF CHECK (no simulation)
 [PASS] blank short = 208 cycles                     208
 [PASS] blank long  = 209 cycles                     209
 [PASS] load starts after LATCH pulse                832
-[PASS] load ends inside next slot                   1600 (= 624 in next slot)
+[PASS] load window = [832,1600) half-open           [832,1600) = 768 cycles
+[PASS] load in next-slot coords = [-144,624)        [-144,624)
 [PASS] data_load_deadline = next LATCH - guard      1800
 [PASS] data_load net slack = 200 cycles             200 cycles = 2.00 us
 [PASS] naive 976-768 = 208                          208
@@ -21,5 +22,5 @@ T1 EDGE TABLE SELF CHECK (no simulation)
 [PASS] frame = 576*977 + 448*976                    1000000
 [PASS] ticks per window = 768/12                    64
 ------------------------------------------------------------------
-checks=20 failed=0
+checks=21 failed=0
 VERDICT: ALL_PASS

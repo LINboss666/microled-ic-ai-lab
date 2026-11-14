@@ -1,27 +1,32 @@
 `timescale 1ns / 1ps
-// TCON top-level skeleton (T1).
+// TCON top level — T2A: real data path.
 //
-// WHAT THIS IS
-//   * V1.3-shaped functional port list for the TCON, reduced to what T1 owns.
-//   * The TCON now GENERATES its own column time base, BLANK, LATCH,
-//     PWM_START, PWM_TICK, SCAN_STB and COL_ID. Nothing is driven by the TB.
-//   * Safety: whenever video/config/Data readiness is not satisfied, or a fault
-//     is present, BLANK is forced high combinationally (0 cycles, far below the
-//     V1.3 <=50 ns target) and no control pulse can leave the block.
+// WHAT IS IMPLEMENTED
+//   * column time base (1024 slots / 576x977 + 448x976 = 1,000,000 cycles)
+//   * BLANK / LATCH / PWM_START / PWM_TICK / SCAN_STB / COL_ID generated here
+//   * 768-byte column reception with per-column classification
+//     (underrun / overflow / duplicate sync / missing sync / vsync phase)
+//   * two 768 B column banks, ping-pong by column parity
+//   * 384 bytes per Data port per load window on a 50 MHz DCLK, even/odd row
+//     split (D0 = row 2k, D1 = row 2k+1), 5 ns setup / 5 ns hold
 //
-// WHAT THIS IS NOT (do not read the module name as a chip)
-//   NOT_IMPLEMENTED in T1: 768-byte column reception, 2x768 B ping-pong buffer,
-//   even/odd split, real D0/D1 payload, SPI registers, interrupts, level
-//   shifters, Data/Scan transistor level, array, layout, PVT/SOA, STA.
-//   D0/D1 are tied to 8'h00 in T1 on purpose.
-module tcon_top (
+// WHAT IS NOT IMPLEMENTED (do not read the module name as a chip)
+//   SPI/register file, interrupts, CDC, 384/512-channel transistor-level array,
+//   grey-scale physical engine (belongs to the Data driver), level shifters,
+//   layout, STA, PVT/SOA, whole chip.
+//
+// NOTE ON PCLK: PCLK is the same 100 MHz as CLK_REF in this course model. No
+// claim of a verified clock-domain crossing is made anywhere in this design.
+module tcon_top #(
+    parameter integer N_COL = 1024
+) (
     input  wire        clk_ref,      // 100 MHz system time base
     input  wire        reset_n,      // active low, asynchronous assert
 
-    // ---- video front-end (T1: observed only, not yet consumed) --------------
-    input  wire        pclk,
+    // ---- video front-end ----------------------------------------------------
+    input  wire        pclk,         // = clk_ref in this model
     input  wire        vsync,
-    input  wire        col_sync,
+    input  wire        col_sync,     // pulse after the 768th byte of a column
     input  wire [7:0]  video_d,
     input  wire        de,
 
@@ -29,7 +34,7 @@ module tcon_top (
     input  wire        cfg_valid,    // configuration has been loaded
     input  wire [1:0]  cfg_mode,     // 0 = Pure 8-bit PWM, 1 = Hybrid 3+6
     input  wire        run_en,       // register-block enable
-    input  wire        rx_ready,     // T2 will drive: column data available
+    input  wire        rx_ready,     // MODE-level front-end ready (not per column)
     input  wire        fault_n,      // open-drain wired-AND, active low
 
     // ---- to dual Scan -------------------------------------------------------
@@ -41,20 +46,25 @@ module tcon_top (
     output wire        pwm_start,
     output wire        pwm_tick,
     output wire        blank,
-    output wire        dclk,         // 50 MHz continuous
-    output wire        load_active,  // 768-cycle load window (C interpretation)
-    output wire [7:0]  d0,
-    output wire [7:0]  d1,
+    output wire        dclk,         // 50 MHz inside the load window only
+    output wire        load_active,  // 768-cycle load window
+    output wire [7:0]  d0,           // even rows  2k
+    output wire [7:0]  d1,           // odd  rows  2k+1
 
     // ---- observability ------------------------------------------------------
     output wire [7:0]  status,
     output wire        frame_wrap,
     output wire        slot_long,
-    output wire        slot_start
+    output wire        slot_start,
+    output wire [4:0]  err_flags,
+    output wire [1:0]  bank_valid,
+    output wire [9:0]  bytes_rcvd,
+    output wire [8:0]  bytes_sent,
+    output wire        load_blank
 );
 
     // ---------------------------------------------------------------------
-    // timing constants shared by the slot sequencer and the load window
+    // timing constants (single source of truth)
     // ---------------------------------------------------------------------
     localparam integer WIN_START    = 768;
     localparam integer LATCH_AT     = 828;
@@ -64,12 +74,29 @@ module tcon_top (
     localparam integer TICK_DIV     = 12;    // 120 ns Hybrid @100 Hz
     localparam integer LOAD_START   = LATCH_AT + PULSE_LEN;  // 832
     localparam integer LOAD_LEN     = 768;   // 384 bytes/port at 50 MHz
+    localparam integer NB_PORT      = 384;
 
     // ---------------------------------------------------------------------
-    // readiness / safety (declared first: used by the time-base enable)
+    // readiness / safety
+    //
+    // rx_ready is deliberately MODE-level ("the video front-end is up"), not
+    // "this column is complete". Per-column completeness is carried by
+    // bank_valid, so a column that is still arriving never freezes the machine
+    // and never truncates the previous column's transfer (T1R review F4).
     // ---------------------------------------------------------------------
     wire mode_ok = (cfg_mode == 2'd0) || (cfg_mode == 2'd1);
-    wire safe    = reset_n && cfg_valid && mode_ok && run_en && rx_ready && fault_n;
+
+    // mode_en  : does the machine run at all?  (configuration-level only)
+    // safe     : may control pulses leave the block?  (mode_en + readiness)
+    //
+    // A fault must NOT stop or restart the column time base: tcon_timebase
+    // restarts at slot_cycle 0 on the rising edge of `enable`, so gating the
+    // time base with fault_n would shift every following column of the frame.
+    // `fault_n` and `rx_ready` therefore gate the OUTPUTS only (BLANK, LATCH,
+    // PWM_START, SCAN_STB, load window), which is exactly the V1.3 behaviour
+    // (<= 50 ns to BLANK) without corrupting the frame time base.
+    wire mode_en = reset_n && cfg_valid && mode_ok && run_en;
+    wire safe    = mode_en && rx_ready && fault_n;
 
     // ---------------------------------------------------------------------
     // time base
@@ -79,10 +106,10 @@ module tcon_top (
     wire [9:0]  tb_col;
     wire        tb_start, tb_last, tb_wrap;
 
-    tcon_timebase u_tb (
+    tcon_timebase #(.N_COL(N_COL)) u_tb (
         .clk        (clk_ref),
         .reset_n    (reset_n),
-        .enable     (safe),
+        .enable     (mode_en),
         .slot_cycle (slot_cycle),
         .slot_len   (slot_len),
         .col_index  (tb_col),
@@ -116,81 +143,97 @@ module tcon_top (
         .colid_stable  (colid_stable)
     );
 
-    // ---------------------------------------------------------------------
-    // readiness / safety
-    // ---------------------------------------------------------------------
-    reg  fault_seen, vsync_seen, wrap_seen;
-
-    // BLANK must be high whenever the pipeline is not safe. Combinational, so a
-    // fault reaches BLANK in 0 cycles (V1.3 target: <= 50 ns).
-    assign blank = blank_seq || !safe;
-
+    assign blank     = blank_seq || !safe;
     assign latch     = latch_seq  && safe;
     assign pwm_start = pstart_seq && safe;
     assign scan_stb  = stb_seq    && safe;
     assign pwm_tick  = tick_base  && window && safe;
 
-    // 50 MHz continuous DCLK derived from the 100 MHz reference (toggle /1).
-    reg dclk_r;
-    always @(posedge clk_ref or negedge reset_n)
-        if (!reset_n) dclk_r <= 1'b0;
-        else          dclk_r <= ~dclk_r;
-    assign dclk = dclk_r;
+    // ---------------------------------------------------------------------
+    // video receive -> column bank
+    // ---------------------------------------------------------------------
+    wire       wr_en, wr_bank, col_valid;
+    wire [9:0] wr_idx;
+    wire [7:0] wr_data;
+    wire       rd_bank;
+    wire [8:0] rd_idx;
+    wire [7:0] bk_d0, bk_d1;
 
-    // COL_ID only advances on a completed, safe slot.
+    tcon_video_rx #(
+        .RX_LEN     (768),
+        .LOAD_START (LOAD_START)
+    ) u_rx (
+        .clk        (clk_ref),
+        .reset_n    (reset_n),
+        .safe       (safe),
+        .slot_last  (tb_last),
+        .slot_cycle (slot_cycle),
+        .col_index  (tb_col),
+        .vsync      (vsync),
+        .col_sync   (col_sync),
+        .video_d    (video_d),
+        .de         (de),
+        .wr_en      (wr_en),
+        .wr_idx     (wr_idx),
+        .wr_data    (wr_data),
+        .wr_bank    (wr_bank),
+        .bank_valid (bank_valid),
+        .col_valid  (col_valid),
+        .err_flags  (err_flags),
+        .bytes_rcvd (bytes_rcvd),
+        .col_ok     ()
+    );
+
+    tcon_col_bank u_bank (
+        .clk     (clk_ref),
+        .wr_en   (wr_en),
+        .wr_bank (wr_bank),
+        .wr_idx  (wr_idx),
+        .wr_data (wr_data),
+        .rd_bank (rd_bank),
+        .rd_idx  (rd_idx),
+        .rd_d0   (bk_d0),
+        .rd_d1   (bk_d1)
+    );
+
+    // ---------------------------------------------------------------------
+    // Data transmit (DCLK + D0/D1 + load window)
+    // ---------------------------------------------------------------------
+    tcon_data_tx #(
+        .LOAD_START (LOAD_START),
+        .LOAD_LEN   (LOAD_LEN),
+        .NB_PORT    (NB_PORT)
+    ) u_tx (
+        .clk         (clk_ref),
+        .reset_n     (reset_n),
+        .safe        (safe),
+        .slot_cycle  (slot_cycle),
+        .col_index   (tb_col),
+        .col_valid   (col_valid),
+        .rd_bank     (rd_bank),
+        .rd_idx      (rd_idx),
+        .bk_d0       (bk_d0),
+        .bk_d1       (bk_d1),
+        .load_active (load_active),
+        .dclk        (dclk),
+        .d0          (d0),
+        .d1          (d1),
+        .bytes_sent  (bytes_sent),
+        .load_blank  (load_blank)
+    );
+
+    // ---------------------------------------------------------------------
+    // COL_ID: only advances on a completed, safe slot
+    // ---------------------------------------------------------------------
     always @(posedge clk_ref or negedge reset_n)
         if (!reset_n) col_id <= 10'd0;
         else if (safe && tb_start) col_id <= tb_col;
 
     // ---------------------------------------------------------------------
-    // 768-cycle load window, phase-locked to the slot (C interpretation).
-    //
-    //   LATCH      : cycles [828, 832)   -> 4 cycles = 40 ns
-    //   load       : cycles [832, 1600)  -> 768 cycles = 7.68 us  (start = 832)
-    //   next LATCH : cycle 1804          -> 204-cycle gap, 200 net after the
-    //                                       4-cycle last-data guard
-    //
-    // Half-open, cross-slot form relative to the NEXT slot start (976):
-    //   [832-976, 1600-976) = [-144, 624)
-    //
-    // T1R: the previous version detected the FALLING edge of LATCH through a
-    // register, so the window opened one cycle late (833 instead of 832) and a
-    // fault-induced false falling edge could start a phantom transfer. The
-    // window is now derived from slot_cycle only, and gated combinationally by
-    // `safe`, so a fault closes it in the same cycle and clears the counter.
-    // ---------------------------------------------------------------------
-    reg        load_run;
-    reg [9:0]  load_cnt;
-
-    // load_start_pt is asserted during cycle 831, i.e. the edge that enters 832
-    wire load_start_pt = (slot_cycle == (LOAD_START - 1));
-
-    always @(posedge clk_ref or negedge reset_n) begin
-        if (!reset_n) begin
-            load_run <= 1'b0;
-            load_cnt <= 10'd0;
-        end else if (!safe) begin
-            load_run <= 1'b0;                 // no phantom load on a fault
-            load_cnt <= 10'd0;
-        end else if (load_start_pt && !load_run) begin
-            load_run <= 1'b1;                 // high during [832, 1600)
-            load_cnt <= 10'd0;
-        end else if (load_run) begin
-            if (load_cnt == (LOAD_LEN - 1)) begin
-                load_run <= 1'b0;
-                load_cnt <= 10'd0;
-            end else begin
-                load_cnt <= load_cnt + 10'd1;
-            end
-        end
-    end
-
-    // Combinated safety gate: a fault de-asserts load_active in 0 cycles.
-    assign load_active = load_run && safe;
-
-    // ---------------------------------------------------------------------
     // status / stickies
     // ---------------------------------------------------------------------
+    reg fault_seen, vsync_seen, wrap_seen;
+
     always @(posedge clk_ref or negedge reset_n) begin
         if (!reset_n) begin
             fault_seen <= 1'b0;
@@ -203,13 +246,9 @@ module tcon_top (
         end
     end
 
-    assign status = { 1'b0, slot_long, wrap_seen, vsync_seen,
-                      fault_seen, load_run, blank, safe };
+    assign status     = { 1'b0, slot_long, wrap_seen, vsync_seen,
+                          fault_seen, load_active, blank, safe };
     assign frame_wrap = tb_wrap;
     assign slot_start = tb_start;
-
-    // T1: no payload yet. T2 replaces these with the ping-pong buffer outputs.
-    assign d0 = 8'h00;
-    assign d1 = 8'h00;
 
 endmodule

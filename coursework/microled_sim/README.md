@@ -3,6 +3,13 @@
 任务号 `COURSE-MICROLED-SIM-20261112-R1` ｜ 分支 `course/microled-assignment-sim-20261112`
 状态：`WAITING_FOR_INDEPENDENT_REVIEW`（**执行方不宣布整体验收通过**）
 
+> **T2A 状态（2026-11-14）**：TCON 首次具备真实数据通路 —— 768 B 列接收 → 2×768 B ping-pong →
+> 两颗 Data 各 384 B（D0=偶数行 2k，D1=奇数行 2k+1）→ 50 MHz DCLK 逐沿输出。
+> `SCEN=ALL` 实测 **29/29 PASS**、逐字节 **0 失配**、`err_flags=11111` 五类错误全部被真实触发。
+> 详见 `T2A_REPORT.md` 与 `rtl/T2A_INTERFACE_CONTRACT.md`；四次运行（3 次失败）全部入库。
+> 本轮同时把 `mode_en`（驱动时基）与 `safe`（只关门控）拆开，故障不再移动帧时序。
+> 未实现：SPI/中断/CDC/阵列/灰阶物理/STA/整芯片。停 `WAITING_FOR_T2A_INDEPENDENT_REVIEW`。
+
 > **R2 状态（2026-11-12）**：独立复审判 `REWORK`。本轮只执行**第一阶段（只读补证）**：
 > 补 MC 原生溯源（30 个 PSF 的字节/SHA/原始值）、把 2 张波形图的 `S_DONE` 标注从 18396 更正为
 > **18515 ns**、把「90 % 建立」改为有定义的 `first_cross_90pct_of_on_median` 并补峰峰值与 ringing 披露、

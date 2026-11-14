@@ -12,17 +12,23 @@ set -uo pipefail
 COURSE_ROOT="${COURSE_ROOT:-D:/ic617_course_sim_20261112}"
 RUN_DIR="${RUN_DIR:-D:/ic617_course_sim_20261112_native}"
 SCEN="${SCEN:-RESET_FAULT}"
-MIN_ASSERTS="${MIN_ASSERTS:-49}"
 SRC="$COURSE_ROOT/coursework/microled_sim"
 
-# Assertion counts are counted from the TB source (chk( occurrences per task):
-#   RESET_FAULT 23 | TIMEBASE 16 | BOUNDARY 10 | ALL 49
-case "$SCEN" in
-    RESET_FAULT) MIN_ASSERTS="${MIN_ASSERTS:-23}" ;;
-    TIMEBASE)    MIN_ASSERTS="${MIN_ASSERTS:-16}" ;;
-    BOUNDARY)    MIN_ASSERTS="${MIN_ASSERTS:-10}" ;;
-    ALL)         MIN_ASSERTS="${MIN_ASSERTS:-49}" ;;
-esac
+# Assertion floors are resolved by ONE shared, unit-tested function.
+# T1R review F1: the previous inline `MIN_ASSERTS="${MIN_ASSERTS:-49}"` made the
+# per-scenario case branches dead code, so every scenario silently demanded 49.
+# shellcheck source=tb/scen_min_asserts.sh
+. "$SRC/tb/scen_min_asserts.sh"
+
+RESOLVED_MIN=$(resolve_min_asserts "$SCEN" "${MIN_ASSERTS:-}")
+RESOLVE_RC=$?
+echo "SCEN_MIN_RESOLVE=$RESOLVED_MIN rc=$RESOLVE_RC"
+if [ "$RESOLVE_RC" -ne 0 ]; then
+    echo "RUNNER_VERDICT=BAD_MIN_ASSERTS"
+    echo "RUNNER_EXIT=9"
+    exit 9
+fi
+MIN_ASSERTS="$RESOLVED_MIN"
 
 mkdir -p "$RUN_DIR" || exit 9
 cd "$RUN_DIR" || exit 9

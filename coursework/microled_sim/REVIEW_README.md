@@ -3,6 +3,12 @@
 任务号 `COURSE-MICROLED-SIM-20261112-R1` ｜ 2026-11-12
 课程分支：`course/microled-assignment-sim-20261112`
 
+> **T2A（2026-11-14，最新）**：新增 `tcon_video_rx` / `tcon_col_bank` / `tcon_data_tx` 并改造 `tcon_top`，
+> 数据通路首次真实贯通。实测 29/29 PASS、逐字节 0 失配。请先读 `T2A_REPORT.md` §3（四次运行与三个真实缺陷）
+> 与 §4（时基使能拆分）——这两节说明本轮改的不只是"加功能"，还修了三个会在真实芯片上出错的缺陷。
+> `rtl/T2A_INTERFACE_CONTRACT.md` 是实现的合同，§5 列出与 V1.3 的两处已知偏离（窗内 DCLK、同源 PCLK）。
+> 证据：`results/t2a/`（含两次失败 transcript 与逐字节 CSV）、`figures/t2a_datapath.svg`。
+
 > **R2 变更（相对 R1）**：只做**只读补证与口径修正**，未改 RTL/TB、未启动新仿真。
 > 新增 MC 原生溯源（`results/mc_native_provenance.csv` 等，30/30 与已导出值一致）、
 > 更正 2 张波形图的 `RUN→S_DONE` 为 **18515 ns**（旧图留在 `figures/failed_r1/`）、

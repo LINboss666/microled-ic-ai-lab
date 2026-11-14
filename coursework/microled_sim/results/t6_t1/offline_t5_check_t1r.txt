@@ -1,0 +1,50 @@
+=== T1R close-out: offline five-condition check on ARCHIVED transcripts ===
+checker : tb/t6_check_transcript.sh (unchanged)
+date    : 2026-11-14T09:37:35+0800
+note    : no ModelSim process was started for this section
+
+----- POSITIVE_course_55 (t6_run02_positive_vsim.txt, min=55) -----
+=== T6 VERDICTS (1=PASS 0=FAIL) ===
+CHECK0_NO_FATAL_NO_ERRORS=1   (errors=0 fatal=none)
+CHECK1_PROCESS_RC_ZERO=1   (vsim_rc=0)
+CHECK2_RESULT_MARKER_PASS=1   (COURSE_RTL_RESULT=PASS)
+CHECK3_FAIL_COUNT_ZERO=1   (fail_count=0)
+CHECK4_ASSERT_COUNT_GE_MIN=1   (assert_count=55 min=55)
+RUNNER_VERDICT=PASS
+RUNNER_EXIT=0
+checker_exit=0
+
+----- NEGATIVE_fault_injected (t6_run03_negative_inject_vsim.txt, min=55) -----
+=== T6 VERDICTS (1=PASS 0=FAIL) ===
+CHECK0_NO_FATAL_NO_ERRORS=0   (errors=1 fatal=** Fatal: COURSE_ASSERT_FAILED: C10_max_code_conducting_ticks_64)
+CHECK1_PROCESS_RC_ZERO=1   (vsim_rc=0)
+CHECK2_RESULT_MARKER_PASS=0   (COURSE_RTL_RESULT=FAIL)
+CHECK3_FAIL_COUNT_ZERO=0   (fail_count=1)
+CHECK4_ASSERT_COUNT_GE_MIN=0   (assert_count=34 min=55)
+COURSE_FAILED_ASSERTION=C10_max_code_conducting_ticks_64
+RUNNER_VERDICT=FAIL
+RUNNER_EXIT=6
+checker_exit=6
+
+----- T1R_RUN02_ALL_49 (t1r_run02_all_pass_vsim.txt, min=49) -----
+=== T6 VERDICTS (1=PASS 0=FAIL) ===
+CHECK0_NO_FATAL_NO_ERRORS=1   (errors=0 fatal=none)
+CHECK1_PROCESS_RC_ZERO=1   (vsim_rc=0)
+CHECK2_RESULT_MARKER_PASS=1   (COURSE_RTL_RESULT=PASS)
+CHECK3_FAIL_COUNT_ZERO=1   (fail_count=0)
+CHECK4_ASSERT_COUNT_GE_MIN=1   (assert_count=49 min=49)
+RUNNER_VERDICT=PASS
+RUNNER_EXIT=0
+checker_exit=0
+
+----- T1R_RUN01_T3_MEASURE_DEFECT (t1r_run01_fail_T3_measure_vsim.txt, min=49) -----
+=== T6 VERDICTS (1=PASS 0=FAIL) ===
+CHECK0_NO_FATAL_NO_ERRORS=0   (errors=1 fatal=** Fatal: COURSE_ASSERT_FAILED: T3_load_starts_at_832)
+CHECK1_PROCESS_RC_ZERO=1   (vsim_rc=0)
+CHECK2_RESULT_MARKER_PASS=0   (COURSE_RTL_RESULT=FAIL)
+CHECK3_FAIL_COUNT_ZERO=0   (fail_count=1)
+CHECK4_ASSERT_COUNT_GE_MIN=0   (assert_count=33 min=49)
+COURSE_FAILED_ASSERTION=T3_load_starts_at_832
+RUNNER_VERDICT=FAIL
+RUNNER_EXIT=6
+checker_exit=6

@@ -1,0 +1,52 @@
+`timescale 1ns / 1ps
+// TCON column bank (T2A) — two 768-byte column buffers, 1536 B total.
+//
+// Layout per bank, chosen so that the two Data ports need ONE read address each:
+//   byte index 2k   -> even rows -> D0 lane (mem_e*)
+//   byte index 2k+1 -> odd  rows -> D1 lane (mem_o*)
+// so the k-th DCLK sample of a load window reads mem_e[bank][k] and
+// mem_o[bank][k] with the same address. This is the even/odd mapping frozen in
+// rtl/T2A_INTERFACE_CONTRACT.md §3 (D0 = row 2k, D1 = row 2k+1).
+//
+// Bank usage: column N always uses bank N[0]. While bank A is being read for
+// column N, bank B receives column N+1, so two banks are sufficient and no
+// column can ever be overwritten while it is still being loaded.
+//
+// SCOPE: storage only. Validity/arbitration live in tcon_video_rx / tcon_top.
+module tcon_col_bank (
+    input  wire        clk,
+
+    // receive side
+    input  wire        wr_en,
+    input  wire        wr_bank,
+    input  wire [9:0]  wr_idx,      // 0 .. 767
+    input  wire [7:0]  wr_data,
+
+    // load side
+    input  wire        rd_bank,
+    input  wire [8:0]  rd_idx,      // 0 .. 383
+    output wire [7:0]  rd_d0,       // even row 2k
+    output wire [7:0]  rd_d1        // odd  row 2k+1
+);
+
+    reg [7:0] mem_e0 [0:383];
+    reg [7:0] mem_o0 [0:383];
+    reg [7:0] mem_e1 [0:383];
+    reg [7:0] mem_o1 [0:383];
+
+    always @(posedge clk) begin
+        if (wr_en) begin
+            if (wr_bank) begin
+                if (wr_idx[0]) mem_o1[wr_idx[9:1]] <= wr_data;
+                else           mem_e1[wr_idx[9:1]] <= wr_data;
+            end else begin
+                if (wr_idx[0]) mem_o0[wr_idx[9:1]] <= wr_data;
+                else           mem_e0[wr_idx[9:1]] <= wr_data;
+            end
+        end
+    end
+
+    assign rd_d0 = rd_bank ? mem_e1[rd_idx] : mem_e0[rd_idx];
+    assign rd_d1 = rd_bank ? mem_o1[rd_idx] : mem_o0[rd_idx];
+
+endmodule

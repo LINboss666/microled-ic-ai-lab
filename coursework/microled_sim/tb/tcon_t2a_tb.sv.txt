@@ -1,0 +1,607 @@
+`timescale 1ns / 1ps
+// TCON T2A self-checking testbench — real data path.
+//
+// The TB NEVER drives time-base or control outputs. It drives only the video
+// front-end (vsync / col_sync / de / video_d) and the readiness inputs, then
+// observes everything the DUT generates.
+//
+// INDEPENDENCE: the expected byte value is a pure function of (column, byte
+// index). The TB keeps its own column counter, so it can catch a wrong COL_ID
+// instead of following the DUT. Every DCLK sampling edge compares D0 against
+// byte 2k and D1 against byte 2k+1 for the column under load.
+//
+// COVERAGE (columns)
+//   0,1,2      normal, consecutive (pipelining)
+//   3          DE pause of 20 cycles, still completes before the deadline
+//   4          767 bytes  -> underrun
+//   5          769 bytes  -> overflow
+//   6          duplicate COL_SYNC (data still valid)
+//   7          no COL_SYNC -> missing sync
+//   8          600 bytes + sync -> severe underrun
+//   9          fault_n low during reception
+//   10         fault_n low during the load window -> truncated transfer
+//   11         fault_n low during LATCH -> no transfer at all
+//   12..15     recovery / steady state
+//
+// A second, 8-column instance checks the 1023->0 wrap equivalence cheaply
+// (parameter override N_COL=8) instead of simulating a full 1,000,000-cycle
+// frame -- the full frame is already covered by the T1 run.
+module tcon_t2a_tb;
+
+    // ------------------------------------------------------------------
+    // reference clock: 100 MHz
+    // ------------------------------------------------------------------
+    reg clk_ref;
+    initial clk_ref = 1'b0;
+    always #5 clk_ref = ~clk_ref;
+
+    // ------------------------------------------------------------------
+    // DUT signals
+    // ------------------------------------------------------------------
+    reg         reset_n;
+    reg         vsync, col_sync, de;
+    reg  [7:0]  video_d;
+    reg         cfg_valid, run_en, rx_ready, fault_n;
+    reg  [1:0]  cfg_mode;
+
+    wire [9:0]  col_id;
+    wire        scan_stb, latch, pwm_start, pwm_tick, blank;
+    wire        dclk, load_active;
+    wire [7:0]  d0, d1, status;
+    wire        frame_wrap, slot_long, slot_start;
+    wire [4:0]  err_flags;
+    wire [1:0]  bank_valid;
+    wire [9:0]  bytes_rcvd;
+    wire [8:0]  bytes_sent;
+    wire        load_blank;
+
+    tcon_top dut (
+        .clk_ref     (clk_ref),
+        .reset_n     (reset_n),
+        .pclk        (clk_ref),
+        .vsync       (vsync),
+        .col_sync    (col_sync),
+        .video_d     (video_d),
+        .de          (de),
+        .cfg_valid   (cfg_valid),
+        .cfg_mode    (cfg_mode),
+        .run_en      (run_en),
+        .rx_ready    (rx_ready),
+        .fault_n     (fault_n),
+        .col_id      (col_id),
+        .scan_stb    (scan_stb),
+        .latch       (latch),
+        .pwm_start   (pwm_start),
+        .pwm_tick    (pwm_tick),
+        .blank       (blank),
+        .dclk        (dclk),
+        .load_active (load_active),
+        .d0          (d0),
+        .d1          (d1),
+        .status      (status),
+        .frame_wrap  (frame_wrap),
+        .slot_long   (slot_long),
+        .slot_start  (slot_start),
+        .err_flags   (err_flags),
+        .bank_valid  (bank_valid),
+        .bytes_rcvd  (bytes_rcvd),
+        .bytes_sent  (bytes_sent),
+        .load_blank  (load_blank)
+    );
+
+    // 8-column instance: cheap 1023->0 wrap equivalence check
+    wire [9:0]  col_id_s;
+    wire        wrap_s;
+
+    tcon_top #(.N_COL(8)) dut_small (
+        .clk_ref     (clk_ref),
+        .reset_n     (reset_n),
+        .pclk        (clk_ref),
+        .vsync       (1'b0),
+        .col_sync    (1'b0),
+        .video_d     (8'h00),
+        .de          (1'b0),
+        .cfg_valid   (1'b1),
+        .cfg_mode    (2'd1),
+        .run_en      (1'b1),
+        .rx_ready    (1'b1),
+        .fault_n     (1'b1),
+        .col_id      (col_id_s),
+        .scan_stb    (),
+        .latch       (),
+        .pwm_start   (),
+        .pwm_tick    (),
+        .blank       (),
+        .dclk        (),
+        .load_active (),
+        .d0          (),
+        .d1          (),
+        .status      (),
+        .frame_wrap  (wrap_s),
+        .slot_long   (),
+        .slot_start  (),
+        .err_flags   (),
+        .bank_valid  (),
+        .bytes_rcvd  (),
+        .bytes_sent  (),
+        .load_blank  ()
+    );
+
+    // ------------------------------------------------------------------
+    // assertion plumbing (same convention as the T6 self-check TB)
+    // ------------------------------------------------------------------
+    integer assert_count = 0;
+    integer pass_count   = 0;
+    integer fail_count   = 0;
+    integer fd;
+
+    task automatic chk(input string nm, input logic cond);
+        assert_count = assert_count + 1;
+        if (cond) begin
+            pass_count = pass_count + 1;
+            $display("PASS %s", nm);
+        end else begin
+            fail_count = fail_count + 1;
+            $display("FAIL %s  (t=%0t)", nm, $time);
+            $display("COURSE_RTL_ASSERT_COUNT=%0d", assert_count);
+            $display("COURSE_RTL_FAIL_COUNT=%0d", fail_count);
+            $display("COURSE_RTL_RESULT=FAIL");
+            $display("COURSE_FAILED_ASSERTION=%s", nm);
+            $fatal(1, "COURSE_ASSERT_FAILED: %s", nm);
+        end
+    endtask
+
+    // ------------------------------------------------------------------
+    // deterministic data pattern
+    // ------------------------------------------------------------------
+    function [7:0] pat(input [9:0] c, input [9:0] i);
+        pat = c[7:0] + (i[7:0] * 8'd13) + 8'h5A;
+    endfunction
+
+    function integer exp_zero(input integer c);
+        case (c)
+            4, 5, 7, 8, 9: exp_zero = 1;
+            default:       exp_zero = 0;
+        endcase
+    endfunction
+
+    function integer exp_nowin(input integer c);
+        case (c)
+            11:      exp_nowin = 1;
+            default: exp_nowin = 0;
+        endcase
+    endfunction
+
+    // ------------------------------------------------------------------
+    // TB state
+    // ------------------------------------------------------------------
+    integer tb_col;          // expected column of the slot in progress
+    integer drv_i;           // bytes launched for the current column
+    integer cfg_n;           // bytes this column will send
+    integer cfg_pa, cfg_pl;  // pause point / length
+    integer cfg_ns;          // COL_SYNC pulses
+    integer sync_pulses, sync_gap;
+    integer stall_left;      // cycles left in the DE pause
+    reg     tail_done;       // one idle cycle must pass after the last byte
+
+    reg [10:0] nxt_cyc;      // cycle number of the NEXT clk_ref cycle
+
+    always @* begin
+        if (dut.slot_cycle == (dut.slot_len - 11'd1)) nxt_cyc = 11'd0;
+        else                                          nxt_cyc = dut.slot_cycle + 11'd1;
+    end
+
+    // ------------------------------------------------------------------
+    // video front-end driver (negedge domain: values are stable at the
+    // following posedge, so the DUT samples exactly the cycle they belong to)
+    // ------------------------------------------------------------------
+    always @(negedge clk_ref) begin
+        if (!reset_n) begin
+            de       <= 1'b0;
+            col_sync <= 1'b0;
+            vsync    <= 1'b0;
+            video_d  <= 8'h00;
+            tb_col    = 0;
+            drv_i     = 0;
+            sync_pulses = 0;
+            sync_gap    = 0;
+            tail_done   = 1'b0;
+            stall_left  = 0;
+            cfg_n  = 768;
+            cfg_pa = -1;
+            cfg_pl = 0;
+            cfg_ns = 1;
+        end else begin
+            col_sync <= 1'b0;
+            vsync    <= 1'b0;
+            if (sync_gap > 0) sync_gap = sync_gap - 1;
+
+            if (nxt_cyc == 11'd0) begin
+                tb_col = tb_col + 1;
+                if (tb_col > 1023) tb_col = 0;
+                drv_i = 0;
+                sync_pulses = 0;
+                sync_gap    = 0;
+                tail_done   = 1'b0;
+                stall_left  = 0;
+                cfg_pa = -1;
+                cfg_pl = 0;
+                cfg_ns = 1;
+                case (tb_col)
+                    3:       begin cfg_n = 768; cfg_pa = 400; cfg_pl = 20; cfg_ns = 1; end
+                    4:       begin cfg_n = 767; end
+                    5:       begin cfg_n = 769; end
+                    6:       begin cfg_n = 768; cfg_ns = 2; end
+                    7:       begin cfg_n = 768; cfg_ns = 0; end
+                    8:       begin cfg_n = 600; end
+                    default: begin cfg_n = 768; end
+                endcase
+            end
+
+            // ---- VSYNC: correct at column 0, deliberately wrong at column 13
+            if ((tb_col == 0 && nxt_cyc < 11'd4) || (tb_col == 13 && nxt_cyc == 11'd2))
+                vsync <= 1'b1;
+
+            // ---- byte drive, only inside the receive window [0,832)
+            // The pause is a COUNTDOWN, not a value range: a range test on drv_i
+            // never ends, because drv_i does not advance while the pause runs
+            // (that mistake stalled column 3 for the whole slot in run 3).
+            if (nxt_cyc < 11'd832 && drv_i < cfg_n) begin
+                if (stall_left > 0) begin
+                    de         <= 1'b0;
+                    stall_left  = stall_left - 1;
+                end else if (cfg_pa >= 0 && drv_i == cfg_pa) begin
+                    de         <= 1'b0;
+                    stall_left  = cfg_pl - 1;
+                    cfg_pa      = -1;            // one-shot
+                end else begin
+                    de      <= 1'b1;
+                    video_d <= pat(tb_col[9:0], drv_i[9:0]);
+                    drv_i    = drv_i + 1;
+                end
+            end else begin
+                de <= 1'b0;
+            end
+
+            // ---- COL_SYNC pulses
+            // COL_SYNC marks the END of the burst, so it must be presented in
+            // the cycle AFTER the last byte. Asserting it in the same cycle
+            // (drv_i reaches cfg_n at the same negedge that launches the last
+            // byte) made the receiver see 767 bytes and report underrun.
+            if (drv_i >= cfg_n) begin
+                if (!tail_done) begin
+                    tail_done = 1'b1;
+                end else if (sync_pulses < cfg_ns && sync_gap == 0) begin
+                    col_sync    <= 1'b1;
+                    sync_pulses  = sync_pulses + 1;
+                    sync_gap     = 4;
+                end
+            end
+        end
+    end
+
+    // ------------------------------------------------------------------
+    // fault_n injection
+    // ------------------------------------------------------------------
+    always @(posedge clk_ref) begin
+        if (!reset_n) fault_n <= 1'b1;
+        else begin
+            fault_n <= 1'b1;
+            case (tb_col)
+                9:  if (dut.slot_cycle >= 11'd100 && dut.slot_cycle < 11'd120) fault_n <= 1'b0;
+                10: if (dut.slot_cycle >= 11'd900 && dut.slot_cycle < 11'd920) fault_n <= 1'b0;
+                11: if (dut.slot_cycle >= 11'd828 && dut.slot_cycle < 11'd836) fault_n <= 1'b0;
+                default: ;
+            endcase
+        end
+    end
+
+    // ------------------------------------------------------------------
+    // per-column bookkeeping
+    // ------------------------------------------------------------------
+    integer col_bytes [0:63];   // DCLK sampling edges inside the window
+    integer col_len   [0:63];   // window length in cycles
+    integer col_start [0:63];   // window start cycle inside the slot
+    integer col_err   [0:63];   // byte mismatches
+    integer col_zero  [0:63];   // 1 = every compared byte was 0x00
+    integer col_win   [0:63];   // 1 = a load window was seen
+    integer col_fe    [0:63];   // first mismatch edge index, -1 = none
+
+    integer i;
+    initial begin
+        for (i = 0; i < 64; i = i + 1) begin
+            col_bytes[i] = 0;
+            col_len[i]   = 0;
+            col_start[i] = 0;
+            col_err[i]   = 0;
+            col_zero[i]  = 1;
+            col_win[i]   = 0;
+            col_fe[i]    = -1;
+        end
+    end
+
+    // ------------------------------------------------------------------
+    // main observer: runs 1 ns after each clk_ref edge so that every
+    // non-blocking update of that edge is already visible
+    // ------------------------------------------------------------------
+    reg        la_d;
+    integer    win_col, dclk_k;
+    realtime   t_win0, t_d0;
+    integer    dclk_k_prev;
+    realtime   t_dclk_prev;
+    integer    mismatches, colid_bad, setup_bad, change_high, period_bad;
+    integer    cur_col;
+    reg [7:0]  exp0, exp1;
+
+    // byte-by-byte capture for the evidence CSV (columns 0 and 3)
+    reg [7:0]  act0 [0:3][0:383];
+    reg [7:0]  act1 [0:3][0:383];
+
+    initial begin
+        la_d = 1'b0; win_col = -1; dclk_k = 0;
+        t_win0 = 0.0; t_d0 = 0.0;
+        dclk_k_prev = -1; t_dclk_prev = 0.0;
+        mismatches = 0; colid_bad = 0; setup_bad = 0;
+        change_high = 0; period_bad = 0;
+    end
+
+    // data must only change while DCLK is low (5 ns setup / 5 ns hold)
+    always @(d0) begin
+        if (reset_n && load_active && (dclk === 1'b1)) change_high = change_high + 1;
+        t_d0 = $realtime;
+    end
+    always @(d1) begin
+        if (reset_n && load_active && (dclk === 1'b1)) change_high = change_high + 1;
+    end
+
+    always @(posedge clk_ref) begin
+        #1;                                  // settle after the edge
+        if (!reset_n) begin
+            la_d = 1'b0;
+        end else begin
+            // ---- COL_ID must equal the TB's own column counter
+            if (dut.safe && dut.slot_cycle == 11'd2) begin
+                if (col_id !== tb_col[9:0]) colid_bad = colid_bad + 1;
+            end
+
+            // ---- window start
+            if (load_active && !la_d) begin
+                win_col = dut.col_id;
+                col_win[win_col]   = 1;
+                col_start[win_col] = dut.slot_cycle;
+                col_bytes[win_col] = 0;
+                col_err[win_col]   = 0;
+                col_fe[win_col]    = -1;
+                col_zero[win_col]  = 1;
+                dclk_k = 0;
+                t_win0 = $realtime - 1.0;
+            end
+
+            // ---- sampling edges
+            if (load_active && dclk) begin
+                cur_col = win_col;
+                if (exp_zero(cur_col)) begin
+                    exp0 = 8'h00;
+                    exp1 = 8'h00;
+                end else begin
+                    exp0 = pat(cur_col[9:0], dclk_k[9:0] * 2);
+                    exp1 = pat(cur_col[9:0], dclk_k[9:0] * 2 + 1);
+                end
+                if (d0 !== exp0) begin
+                    mismatches = mismatches + 1;
+                    col_err[cur_col] = col_err[cur_col] + 1;
+                    if (col_fe[cur_col] < 0) col_fe[cur_col] = dclk_k;
+                end
+                if (d1 !== exp1) begin
+                    mismatches = mismatches + 1;
+                    col_err[cur_col] = col_err[cur_col] + 1;
+                    if (col_fe[cur_col] < 0) col_fe[cur_col] = dclk_k;
+                end
+                if ((d0 !== 8'h00) || (d1 !== 8'h00)) col_zero[cur_col] = 0;
+                if (cur_col == 0 || cur_col == 3) begin
+                    act0[cur_col][dclk_k] = d0;
+                    act1[cur_col][dclk_k] = d1;
+                end
+
+                // DCLK period check between consecutive sampling edges
+                if (dclk_k > 0) begin
+                    if (($realtime - t_dclk_prev) != 20.0) period_bad = period_bad + 1;
+                end
+                t_dclk_prev = $realtime;
+                dclk_k = dclk_k + 1;
+            end
+
+            // ---- window end
+            if (!load_active && la_d && win_col >= 0) begin
+                col_bytes[win_col] = dclk_k;
+                col_len[win_col]   = ((($realtime - 1.0) - t_win0) / 10.0);
+                win_col = -1;
+            end
+
+            la_d = load_active;
+        end
+    end
+
+    // ------------------------------------------------------------------
+    // control-pulse measurement (LATCH / PWM_START / SCAN_STB)
+    // ------------------------------------------------------------------
+    integer cyc_latch, cyc_pstart, cyc_stb, pw_latch, pw_pstart, pw_stb;
+    integer blank_rise_cyc;
+    reg l_d, p_d, s_d, b_d;
+    realtime t_l, t_p, t_s, t_b;
+
+    initial begin
+        cyc_latch = -1; cyc_pstart = -1; cyc_stb = -1;
+        pw_latch = 0; pw_pstart = 0; pw_stb = 0;
+        blank_rise_cyc = -1;
+        l_d = 0; p_d = 0; s_d = 0; b_d = 0;
+        t_l = 0.0; t_p = 0.0; t_s = 0.0; t_b = 0.0;
+    end
+
+    always @(posedge clk_ref) begin
+        #1;
+        if (reset_n && dut.safe) begin
+            // capture only during column 1..2 (steady, no fault)
+            if (latch && !l_d && tb_col < 3) begin
+                cyc_latch = dut.slot_cycle;
+                t_l = $realtime - 1.0;
+            end
+            if (!latch && l_d && tb_col < 3) pw_latch = (($realtime - 1.0) - t_l) / 10.0;
+
+            if (pwm_start && !p_d && tb_col < 3) begin
+                cyc_pstart = dut.slot_cycle;
+                t_p = $realtime - 1.0;
+            end
+            if (!pwm_start && p_d && tb_col < 3) pw_pstart = (($realtime - 1.0) - t_p) / 10.0;
+
+            if (scan_stb && !s_d && tb_col < 3) begin
+                cyc_stb = dut.slot_cycle;
+                t_s = $realtime - 1.0;
+            end
+            if (!scan_stb && s_d && tb_col < 3) pw_stb = (($realtime - 1.0) - t_s) / 10.0;
+
+            if (blank && !b_d && tb_col < 3) begin
+                blank_rise_cyc = dut.slot_cycle;
+                t_b = $realtime - 1.0;
+            end
+        end
+        l_d = latch; p_d = pwm_start; s_d = scan_stb; b_d = blank;
+    end
+
+    // ------------------------------------------------------------------
+    // small-frame wrap monitor
+    // ------------------------------------------------------------------
+    integer small_wraps, small_max_col, small_bad;
+    initial begin
+        small_wraps = 0; small_max_col = 0; small_bad = 0;
+    end
+    always @(posedge clk_ref) begin
+        #1;
+        if (reset_n) begin
+            if (wrap_s) small_wraps = small_wraps + 1;
+            if (col_id_s > small_max_col) small_max_col = col_id_s;
+            if (col_id_s > 7) small_bad = small_bad + 1;
+        end
+    end
+
+    // ------------------------------------------------------------------
+    // main sequence
+    // ------------------------------------------------------------------
+    initial begin
+        reset_n   = 1'b0;
+        cfg_valid = 1'b0;
+        run_en    = 1'b0;
+        rx_ready  = 1'b0;
+        cfg_mode  = 2'd1;
+        fault_n   = 1'b1;
+        vsync     = 1'b0;
+        col_sync  = 1'b0;
+        de        = 1'b0;
+        video_d   = 8'h00;
+
+        fd = $fopen("t2a_byte_samples.csv", "w");
+        // header is written once, together with the rows (a second header here
+        // produced a duplicated first line in run 4's file)
+
+        // Waveform is recorded for columns 0..2 only (~3k cycles). The long tail
+        // (error injection + recovery) is judged from counters; dumping it would
+        // produce a multi-hundred-megabyte VCD (this exact mistake cost a run in
+        // the T1 round).
+        $dumpfile("tcon_t2a.vcd");
+        $dumpvars(0, tcon_t2a_tb);
+
+        repeat (20) @(posedge clk_ref);
+        reset_n   = 1'b1;
+        cfg_valid = 1'b1;
+        run_en    = 1'b1;
+        rx_ready  = 1'b1;
+
+        // let the pipeline run across columns 0..17
+        wait (tb_col >= 5);
+        $dumpoff;
+        wait (tb_col >= 18);
+        repeat (2000) @(posedge clk_ref);
+
+        $display("T2A_SUMMARY col_bytes[0]=%0d col_len[0]=%0d col_start[0]=%0d",
+                 col_bytes[0], col_len[0], col_start[0]);
+        $display("T2A_SUMMARY col_bytes[3]=%0d col_bytes[4]=%0d col_bytes[5]=%0d col_bytes[6]=%0d",
+                 col_bytes[3], col_bytes[4], col_bytes[5], col_bytes[6]);
+        $display("T2A_SUMMARY col_bytes[7]=%0d col_bytes[8]=%0d col_bytes[9]=%0d col_bytes[10]=%0d col_bytes[11]=%0d col_bytes[12]=%0d",
+                 col_bytes[7], col_bytes[8], col_bytes[9], col_bytes[10], col_bytes[11], col_bytes[12]);
+        $display("T2A_SUMMARY col_win[0..12]=%0d%0d%0d%0d%0d%0d%0d%0d%0d%0d%0d%0d%0d",
+                 col_win[0], col_win[1], col_win[2], col_win[3], col_win[4], col_win[5],
+                 col_win[6], col_win[7], col_win[8], col_win[9], col_win[10], col_win[11], col_win[12]);
+        $display("T2A_SUMMARY err_flags=%b bank_valid=%b bytes_rcvd=%0d", err_flags, bank_valid, bytes_rcvd);
+        $display("T2A_SUMMARY cyc_latch=%0d cyc_pstart=%0d cyc_stb=%0d blank_rise=%0d",
+                 cyc_latch, cyc_pstart, cyc_stb, blank_rise_cyc);
+        $display("T2A_SUMMARY pw_latch=%0d pw_pstart=%0d pw_stb=%0d", pw_latch, pw_pstart, pw_stb);
+        $display("T2A_SUMMARY small_wraps=%0d small_max_col=%0d small_bad=%0d",
+                 small_wraps, small_max_col, small_bad);
+        $display("T2A_SUMMARY mismatches=%0d colid_bad=%0d change_high=%0d period_bad=%0d",
+                 mismatches, colid_bad, change_high, period_bad);
+        for (i = 0; i < 14; i = i + 1)
+            $display("T2A_COL col=%0d win=%0d bytes=%0d len=%0d start=%0d err=%0d zero=%0d first_err=%0d",
+                     i, col_win[i], col_bytes[i], col_len[i], col_start[i], col_err[i], col_zero[i], col_fe[i]);
+
+        // ---- byte-by-byte evidence CSV: D0 = byte 2k, D1 = byte 2k+1 -------
+        $fwrite(fd, "column,edge_k,row_d0,row_d1,expected_d0,expected_d1,actual_d0,actual_d1\n");
+        for (i = 0; i < 384; i = i + 1) begin
+            $fwrite(fd, "0,%0d,%0d,%0d,%0d,%0d,%0d,%0d\n",
+                    i, 2*i, 2*i+1,
+                    pat(10'd0, i[9:0]*2), pat(10'd0, i[9:0]*2 + 1),
+                    act0[0][i], act1[0][i]);
+        end
+        for (i = 0; i < 384; i = i + 1) begin
+            $fwrite(fd, "3,%0d,%0d,%0d,%0d,%0d,%0d,%0d\n",
+                    i, 2*i, 2*i+1,
+                    pat(10'd3, i[9:0]*2), pat(10'd3, i[9:0]*2 + 1),
+                    act0[3][i], act1[3][i]);
+        end
+
+        $fclose(fd);   // flush before any assertion can $fatal
+
+        // ---------------- assertions ----------------
+        chk("T1_col_id_matches_tb_counter",   colid_bad == 0);
+        chk("T2_load_starts_at_832",          col_start[0] == 832 && col_start[1] == 832);
+        chk("T3_load_window_768_cycles",      col_len[0] == 768 && col_len[1] == 768);
+        chk("T4_dclk_period_20ns",            period_bad == 0);
+        chk("T5_edges_per_window_384",        col_bytes[0] == 384 && col_bytes[1] == 384);
+        chk("T6_bytes_sent_384",              col_bytes[2] == 384);
+        chk("T7_setup_no_change_while_dclk_high", change_high == 0);
+        chk("T8_byte_mismatch_zero_all_columns",  mismatches == 0);
+
+        chk("C1_latch_at_828",                cyc_latch == 828);
+        chk("C2_pwm_start_at_840",            cyc_pstart == 840);
+        chk("C3_scan_stb_at_880",             cyc_stb == 880);
+        chk("C4_pulse_width_4_cycles",        pw_latch == 4 && pw_pstart == 4 && pw_stb == 4);
+        chk("C5_blank_rises_at_768",          blank_rise_cyc == 768);
+
+        chk("E1_underrun_flag",               err_flags[0] == 1'b1);
+        chk("E2_overflow_flag",               err_flags[1] == 1'b1);
+        chk("E3_duplicate_sync_flag",         err_flags[2] == 1'b1);
+        chk("E4_missing_sync_flag",           err_flags[3] == 1'b1);
+        chk("E5_vsync_phase_flag",            err_flags[4] == 1'b1);
+
+        chk("E6_invalid_bank_outputs_zero_col4", col_bytes[4] == 384 && col_err[4] == 0 && col_zero[4] == 1);
+        chk("E7_invalid_bank_outputs_zero_col5", col_bytes[5] == 384 && col_err[5] == 0 && col_zero[5] == 1);
+        chk("E8_invalid_bank_outputs_zero_col7", col_bytes[7] == 384 && col_err[7] == 0 && col_zero[7] == 1);
+        chk("E9_invalid_bank_outputs_zero_col9", col_bytes[9] == 384 && col_err[9] == 0 && col_zero[9] == 1);
+
+        chk("E10_fault_in_load_truncates_col10", col_win[10] == 1 && col_bytes[10] < 384);
+        chk("E11_fault_in_latch_no_transfer_col11", col_win[11] == 0);
+
+        chk("R1_recovery_col12_full_transfer", col_win[12] == 1 && col_bytes[12] == 384 && col_err[12] == 0);
+        chk("R2_consecutive_columns_0_1_2",    col_bytes[0] == 384 && col_bytes[1] == 384 && col_bytes[2] == 384);
+        chk("R3_pause_column_still_completes", col_bytes[3] == 384 && col_err[3] == 0);
+        chk("R4_dup_sync_column_data_valid",   col_bytes[6] == 384 && col_err[6] == 0);
+
+        chk("W1_small_frame_wrap_seen",        small_wraps >= 1 && small_max_col == 7 && small_bad == 0);
+
+        $display("COURSE_TCON_T2A_ASSERTS=%0d", assert_count);
+        $display("COURSE_RTL_ASSERT_COUNT=%0d", assert_count);
+        $display("COURSE_RTL_FAIL_COUNT=%0d", fail_count);
+        $display("COURSE_RTL_RESULT=%s", (fail_count == 0) ? "PASS" : "FAIL");
+        $finish;
+    end
+
+endmodule
