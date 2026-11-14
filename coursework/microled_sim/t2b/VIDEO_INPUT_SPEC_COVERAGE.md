@@ -1,6 +1,6 @@
 # VIDEO_INPUT_SPEC_COVERAGE — V1.3 视频输入要求逐条覆盖与证据状态
 
-**任务** `TCON-T2B-20261114` B 段 ｜ 基线 `e21af5c` ｜ **本轮 ModelSim 预算 3/3 已用尽，全部失败**
+**任务** `TCON-T2B-20261114` B 段 ｜ 基线 `84a1a71` ｜ **本轮 ModelSim 预算 3/3 已用尽，全部失败**
 **状态口径**：`VERIFIED` = 有本轮原生 ModelSim PASS；`EXERCISED_FAIL` = 跑过但失败；`COMPILED_ONLY` = 只过 `vlog`（0 error 0 warning）；`NOT_RUN` = 没跑
 
 > **先读这一句**：本轮**没有**任何一条 V1.3 输入要求达到 `VERIFIED`。所有实现都已写成、编译通过，但联合验证在 3 次预算内没有取得 PASS，T1 回归一次也没跑。下面每条都按实际状态标注，不写"应该没问题"。

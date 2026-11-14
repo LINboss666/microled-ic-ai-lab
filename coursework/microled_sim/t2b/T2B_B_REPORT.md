@@ -1,6 +1,6 @@
 # T2B-B 执行报告 — V1.3 输入合同、标签与锁存熄屏（含 3 次仿真账本）
 
-**任务** `TCON-T2B-20261114` B 段 ｜ 基线 `e21af5c` ｜ 分支 `course/microled-assignment-sim-20261112`
+**任务** `TCON-T2B-20261114` B 段 ｜ 基线 `84a1a71` ｜ 分支 `course/microled-assignment-sim-20261112`
 **裁定执行** Q1=A（只做 V1.3 列首同步，无正式双模式）、Q2=A（Scan 地址取实际显示 bank 标签）、Q3=B（锁存熄屏直到清故障＋合法帧＋两级预充）
 **ModelSim 预算 3/3 已用尽，三次均未取得 PASS** ｜ **T1 回归 NOT_RUN**
 **最终状态 `WAITING_FOR_T2B_B_INDEPENDENT_REVIEW`**（不自签 GO）

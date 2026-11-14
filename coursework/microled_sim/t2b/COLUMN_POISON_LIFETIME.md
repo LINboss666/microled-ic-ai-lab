@@ -1,5 +1,12 @@
 # COLUMN_POISON_LIFETIME — 被污染列的寿命：从输入到"不可追回的显示许可"
 
+
+> **版本对应说明（B 段完成后补注）**：本文的行号引用以 A 段基线 `d17c5de` 为准。
+> 按 Q1=A / Q2=A / Q3=B 裁定，B 段已重写 `tcon_video_rx` / `tcon_top` / `tcon_data_tx`，
+> 因此这些行号**不再对应现仓库代码**；本文的结论（三个 CONFLICT）是 B 段的输入，
+> 其落实与验证状态见 `T2B_B_REPORT.md` 与 `VIDEO_INPUT_SPEC_COVERAGE.md`。
+> 提交 SHA 已因作者邮箱改写而变化：`d17c5de → 2d49108`、`e21af5c → 84a1a71`。
+
 **任务** `TCON-T2B-20261114` 第 A.4 段（只读，**未仿真、未改 RTL**）
 **基线** `d17c5de`｜数据取自 run03 原始 VCD（`tcon_t2a_run03.vcd`）与 `t2ar2_d0d1_samples.csv`
 **规格依据** V1.3 §9 段 0323（流水）、§20 段 0917-0920（数据错误→当前/后续列全关，恢复合法帧后才重启）、§9 段 0317（"均锁存熄屏"）

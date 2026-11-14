@@ -1,5 +1,12 @@
 # VIDEO_CONTRACT_DIFF — V1.3 视频输入协议 vs 当前 TCON 实现
 
+
+> **版本对应说明（B 段完成后补注）**：本文的行号引用以 A 段基线 `d17c5de` 为准。
+> 按 Q1=A / Q2=A / Q3=B 裁定，B 段已重写 `tcon_video_rx` / `tcon_top` / `tcon_data_tx`，
+> 因此这些行号**不再对应现仓库代码**；本文的结论（三个 CONFLICT）是 B 段的输入，
+> 其落实与验证状态见 `T2B_B_REPORT.md` 与 `VIDEO_INPUT_SPEC_COVERAGE.md`。
+> 提交 SHA 已因作者邮箱改写而变化：`d17c5de → 2d49108`、`e21af5c → 84a1a71`。
+
 **任务** `TCON-T2B-20261114` 第 A.2 段（只读核查，**未运行任何仿真，未改 RTL**）
 **基线** `d17c5de22a0d0879ccf2767ca20a9613d18947f1`（分支 `course/microled-assignment-sim-20261112`）
 **规格原件** `V1.3_20261019_from_handoff.docx`，3,412,105 B，SHA-256 `6b61e4abf49616be12cd491bafe0003daad1ce0f69a20243bafa72c55354afaa`（与 T0R 已认定的真原件一致）
