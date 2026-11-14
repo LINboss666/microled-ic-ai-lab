@@ -1,14 +1,24 @@
 `timescale 1ns / 1ps
-// TCON top level — T2A: real data path.
+// TCON top level — T2A / T2AR: real data path.
 //
 // WHAT IS IMPLEMENTED
 //   * column time base (1024 slots / 576x977 + 448x976 = 1,000,000 cycles)
 //   * BLANK / LATCH / PWM_START / PWM_TICK / SCAN_STB / COL_ID generated here
 //   * 768-byte column reception with per-column classification
-//     (underrun / overflow / duplicate sync / missing sync / vsync phase)
 //   * two 768 B column banks, ping-pong by column parity
-//   * 384 bytes per Data port per load window on a 50 MHz DCLK, even/odd row
-//     split (D0 = row 2k, D1 = row 2k+1), 5 ns setup / 5 ns hold
+//   * 384 bytes per Data port per load window on a CONTINUOUS 50 MHz DCLK,
+//     even/odd row split (D0 = row 2k, D1 = row 2k+1)
+//
+// T2AR CHANGES (independent review 2026-11-14)
+//   1. `mode_en` (time base) and `safe` (output gating) are separate, so a fault
+//      never shifts the frame time base.
+//   2. `slot_bad`: if a fault is present when a new column boundary is taken, the
+//      whole slot is disarmed (no LATCH / PWM_START / SCAN_STB). COL_ID keeps
+//      its old value for that slot, and because no strobe is emitted, a scan
+//      strobe can never carry a stale column number. The next clean boundary
+//      re-synchronises COL_ID. This is the recovery policy for review P0-C:
+//      we do NOT reset the time base to hide the problem.
+//   3. DCLK is continuous again (T2A had gated it to the load window).
 //
 // WHAT IS NOT IMPLEMENTED (do not read the module name as a chip)
 //   SPI/register file, interrupts, CDC, 384/512-channel transistor-level array,
@@ -20,20 +30,20 @@
 module tcon_top #(
     parameter integer N_COL = 1024
 ) (
-    input  wire        clk_ref,      // 100 MHz system time base
-    input  wire        reset_n,      // active low, asynchronous assert
+    input  wire        clk_ref,
+    input  wire        reset_n,
 
     // ---- video front-end ----------------------------------------------------
     input  wire        pclk,         // = clk_ref in this model
     input  wire        vsync,
-    input  wire        col_sync,     // pulse after the 768th byte of a column
+    input  wire        col_sync,
     input  wire [7:0]  video_d,
     input  wire        de,
 
     // ---- configuration / readiness -----------------------------------------
-    input  wire        cfg_valid,    // configuration has been loaded
+    input  wire        cfg_valid,
     input  wire [1:0]  cfg_mode,     // 0 = Pure 8-bit PWM, 1 = Hybrid 3+6
-    input  wire        run_en,       // register-block enable
+    input  wire        run_en,
     input  wire        rx_ready,     // MODE-level front-end ready (not per column)
     input  wire        fault_n,      // open-drain wired-AND, active low
 
@@ -46,21 +56,23 @@ module tcon_top #(
     output wire        pwm_start,
     output wire        pwm_tick,
     output wire        blank,
-    output wire        dclk,         // 50 MHz inside the load window only
-    output wire        load_active,  // 768-cycle load window
-    output wire [7:0]  d0,           // even rows  2k
-    output wire [7:0]  d1,           // odd  rows  2k+1
+    output wire        dclk,         // continuous 50 MHz
+    output wire        load_active,
+    output wire [7:0]  d0,
+    output wire [7:0]  d1,
 
     // ---- observability ------------------------------------------------------
     output wire [7:0]  status,
     output wire        frame_wrap,
     output wire        slot_long,
     output wire        slot_start,
-    output wire [4:0]  err_flags,
+    output wire [5:0]  err_flags,
+    output wire [5:0]  err_now,
     output wire [1:0]  bank_valid,
     output wire [9:0]  bytes_rcvd,
     output wire [8:0]  bytes_sent,
-    output wire        load_blank
+    output wire        load_blank,
+    output wire [9:0]  load_cnt       // observability alias (T1 TB reads it)
 );
 
     // ---------------------------------------------------------------------
@@ -72,29 +84,15 @@ module tcon_top #(
     localparam integer SCAN_STB_AT  = 880;
     localparam integer PULSE_LEN    = 4;     // 4 x 10 ns = 40 ns
     localparam integer TICK_DIV     = 12;    // 120 ns Hybrid @100 Hz
-    localparam integer LOAD_START   = LATCH_AT + PULSE_LEN;  // 832
+    localparam integer LOAD_START   = LATCH_AT + PULSE_LEN;   // 832
     localparam integer LOAD_LEN     = 768;   // 384 bytes/port at 50 MHz
     localparam integer NB_PORT      = 384;
+    localparam integer ACCEPT_LAST  = LOAD_START - 2;         // 830
 
     // ---------------------------------------------------------------------
     // readiness / safety
-    //
-    // rx_ready is deliberately MODE-level ("the video front-end is up"), not
-    // "this column is complete". Per-column completeness is carried by
-    // bank_valid, so a column that is still arriving never freezes the machine
-    // and never truncates the previous column's transfer (T1R review F4).
     // ---------------------------------------------------------------------
     wire mode_ok = (cfg_mode == 2'd0) || (cfg_mode == 2'd1);
-
-    // mode_en  : does the machine run at all?  (configuration-level only)
-    // safe     : may control pulses leave the block?  (mode_en + readiness)
-    //
-    // A fault must NOT stop or restart the column time base: tcon_timebase
-    // restarts at slot_cycle 0 on the rising edge of `enable`, so gating the
-    // time base with fault_n would shift every following column of the frame.
-    // `fault_n` and `rx_ready` therefore gate the OUTPUTS only (BLANK, LATCH,
-    // PWM_START, SCAN_STB, load window), which is exactly the V1.3 behaviour
-    // (<= 50 ns to BLANK) without corrupting the frame time base.
     wire mode_en = reset_n && cfg_valid && mode_ok && run_en;
     wire safe    = mode_en && rx_ready && fault_n;
 
@@ -143,11 +141,21 @@ module tcon_top #(
         .colid_stable  (colid_stable)
     );
 
+    // ---------------------------------------------------------------------
+    // slot disarm: a column boundary taken while unsafe disables the whole slot
+    // so that no strobe can ever carry the stale COL_ID (review P0-C).
+    // ---------------------------------------------------------------------
+    reg slot_bad;
+    always @(posedge clk_ref or negedge reset_n) begin
+        if (!reset_n)    slot_bad <= 1'b0;
+        else if (tb_start) slot_bad <= !safe;
+    end
+
     assign blank     = blank_seq || !safe;
-    assign latch     = latch_seq  && safe;
-    assign pwm_start = pstart_seq && safe;
-    assign scan_stb  = stb_seq    && safe;
-    assign pwm_tick  = tick_base  && window && safe;
+    assign latch     = latch_seq  && safe && !slot_bad;
+    assign pwm_start = pstart_seq && safe && !slot_bad;
+    assign scan_stb  = stb_seq    && safe && !slot_bad;
+    assign pwm_tick  = tick_base  && window && safe && !slot_bad;
 
     // ---------------------------------------------------------------------
     // video receive -> column bank
@@ -160,8 +168,9 @@ module tcon_top #(
     wire [7:0] bk_d0, bk_d1;
 
     tcon_video_rx #(
-        .RX_LEN     (768),
-        .LOAD_START (LOAD_START)
+        .RX_LEN      (768),
+        .ACCEPT_LAST (ACCEPT_LAST),
+        .LOAD_START  (LOAD_START)
     ) u_rx (
         .clk        (clk_ref),
         .reset_n    (reset_n),
@@ -180,6 +189,7 @@ module tcon_top #(
         .bank_valid (bank_valid),
         .col_valid  (col_valid),
         .err_flags  (err_flags),
+        .err_now    (err_now),
         .bytes_rcvd (bytes_rcvd),
         .col_ok     ()
     );
@@ -197,7 +207,7 @@ module tcon_top #(
     );
 
     // ---------------------------------------------------------------------
-    // Data transmit (DCLK + D0/D1 + load window)
+    // Data transmit (continuous DCLK + D0/D1 + load window)
     // ---------------------------------------------------------------------
     tcon_data_tx #(
         .LOAD_START (LOAD_START),
@@ -219,11 +229,12 @@ module tcon_top #(
         .d0          (d0),
         .d1          (d1),
         .bytes_sent  (bytes_sent),
-        .load_blank  (load_blank)
+        .load_blank  (load_blank),
+        .load_cnt_o  (load_cnt)
     );
 
     // ---------------------------------------------------------------------
-    // COL_ID: only advances on a completed, safe slot
+    // COL_ID: advances only on a clean (safe) column boundary
     // ---------------------------------------------------------------------
     always @(posedge clk_ref or negedge reset_n)
         if (!reset_n) col_id <= 10'd0;
@@ -246,7 +257,7 @@ module tcon_top #(
         end
     end
 
-    assign status     = { 1'b0, slot_long, wrap_seen, vsync_seen,
+    assign status     = { slot_bad, slot_long, wrap_seen, vsync_seen,
                           fault_seen, load_active, blank, safe };
     assign frame_wrap = tb_wrap;
     assign slot_start = tb_start;

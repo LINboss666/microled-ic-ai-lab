@@ -1,0 +1,44 @@
+Reading D:/BaiduNetdiskDownload/FPGA/modelsim_ase/tcl/vsim/pref.tcl
+
+# 10.5b
+
+# vsim -c -do "run -all; quit -f" work.tcon_t2a_tb "+PHASE=BOUNDARY"
+# Start time: 10:27:44 on Nov 14,2026
+# Loading sv_std.std
+# Loading work.tcon_t2a_tb
+# Loading work.tcon_top
+# Loading work.tcon_timebase
+# Loading work.tcon_slot_seq
+# Loading work.tcon_video_rx
+# Loading work.tcon_col_bank
+# Loading work.tcon_data_tx
+# run -all
+# COURSE_TCON_T2A_PHASE=BOUNDARY
+# T2A_SUMMARY phase=BOUNDARY col0_bytes=384 col0_len=768 col0_start=832
+# T2A_SUMMARY mismatches=954 colid_bad=0 period_bad=0 change_high=0
+# T2A_SUMMARY min_setup_ns=5.00 min_hold_ns=15.00
+# T2A_SUMMARY err_flags=111001 frame_no=1 slot_n=1051 small_wraps=128 small_max=7
+# T2A_COL idx=0 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000010000
+# T2A_COL idx=1 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=2 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=3 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=4 bytes=0 len=768 start=832 err=189 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=5 bytes=69 len=139 start=832 err=0 zero=1 delta=00000000000000000000000000101000
+# T2A_COL idx=8 bytes=384 len=768 start=832 err=0 zero=1 delta=00000000000000000000000000000000
+# T2A_COL idx=9 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=20 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=21 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_SUMMARY frame1024 longs=576 shorts=448 cycles=1000000 deltas_bad=21
+# PASS X1_sync_at_830_accepted
+# PASS X2_sync_at_830_no_error_bits
+# FAIL X3_sync_at_831_rejected_zero  (t=10049485000)
+# COURSE_RTL_ASSERT_COUNT=3
+# COURSE_RTL_FAIL_COUNT=1
+# COURSE_RTL_RESULT=FAIL
+# COURSE_FAILED_ASSERTION=X3_sync_at_831_rejected_zero
+# ** Fatal: COURSE_ASSERT_FAILED: X3_sync_at_831_rejected_zero
+#    Time: 10049485 ns  Scope: tcon_t2a_tb.chk File: D:/ic617_course_sim_20261112_native/t2ar_run01_boundary/src/tcon_t2a_tb.sv Line: 92
+# ** Note: $finish    : D:/ic617_course_sim_20261112_native/t2ar_run01_boundary/src/tcon_t2a_tb.sv(92)
+#    Time: 10049485 ns  Iteration: 1  Instance: /tcon_t2a_tb
+# End time: 10:27:55 on Nov 14,2026, Elapsed time: 0:00:11
+# Errors: 1, Warnings: 0

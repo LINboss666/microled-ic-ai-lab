@@ -1,23 +1,26 @@
 `timescale 1ns / 1ps
-// TCON data transmitter (T2A) — 384 bytes per Data port per load window.
+// TCON data transmitter (T2A/T2AR) — 384 bytes per Data port per load window.
 //
-// Cycle map for the loading column N (see rtl/T2A_INTERFACE_CONTRACT.md §2/§3):
-//   cycle 831, falling edge   : PRE-FETCH byte 0 onto D0/D1
-//   cycle 832 .. 1599         : load_active high (768 cycles = 7.68 us)
-//   DCLK rising at 832,834,.. : 384 edges; edge k samples byte k
-//   D0 = even byte 2k (row 2k), D1 = odd byte 2k+1 (row 2k+1)
+// DCLK is a CONTINUOUS 50 MHz clock (100 MHz / 2). T2A gated DCLK to the load
+// window to make the first sampling edge deterministic; that was an unnecessary
+// deviation from the real Data interface and it also invalidated the T1
+// continuous-DCLK assertion. T2AR removes it: DCLK runs all the time and the
+// byte launch is aligned to the DCLK phase instead.
 //
-// DCLK is derived as `load_run && !load_cnt[0]`, so the FIRST rising edge is
-// hard-anchored at cycle 832 regardless of the slot length (976 or 977).
-// Data is launched on the falling edge of CLK_REF, which gives 5 ns setup and
-// 5 ns hold around every sampling edge (V1.3 targets: 3 ns / 1 ns).
+// PHASE HANDLING (why the first edge is 832 OR 833)
+//   A 768-cycle window always contains exactly 384 DCLK rising edges, whatever
+//   the phase. Slot lengths alternate 976/977, so the absolute parity of cycle
+//   832 flips once per long slot; the first rising edge inside the window is
+//   therefore at 832 or at 833, and both cases still give 384 edges.
+//   The byte-0 pre-fetch happens on the CLK_REF falling edge whose NEXT rising
+//   edge is that first sampling edge, i.e. on the falling edge of cycle 831
+//   (DCLK low during 831) or of cycle 832 (DCLK high during 831).
+//   Every later byte is launched on the falling edges where DCLK is low, which
+//   is exactly one launch per sampling edge: 1 + 383 = 384.
 //
-// KNOWN DEVIATION: a real Data interface normally receives a continuously
-// running DCLK. Here DCLK only toggles inside the load window so that the first
-// sampling edge is deterministic and testable. Documented, not hidden.
-//
-// If the selected bank is not valid the whole window transmits 8'h00 (the
-// column stays dark) and the frame time base is NOT disturbed.
+// SETUP / HOLD: launching on the CLK_REF falling edge gives 5 ns / 5 ns around
+// every sampling edge in this ideal RTL phase model. That is a *model* result,
+// not a static timing sign-off (STA stays NOT_RUN).
 module tcon_data_tx #(
     parameter integer LOAD_START = 832,
     parameter integer LOAD_LEN   = 768,
@@ -39,27 +42,38 @@ module tcon_data_tx #(
 
     // Data interface
     output wire        load_active,
-    output wire        dclk,
+    output wire        dclk,          // continuous 50 MHz
     output reg  [7:0]  d0,
     output reg  [7:0]  d1,
 
     // observability
-    output reg  [8:0]  bytes_sent,   // 1..384
-    output reg         load_blank    // loaded column had no valid bank
+    output reg  [8:0]  bytes_sent,    // 1..384
+    output reg         load_blank,    // loaded column had no valid bank
+    output wire [9:0]  load_cnt_o
 );
 
-    // start_pt is high during cycle LOAD_START-1 (=831)
-    wire start_pt = (slot_cycle == (LOAD_START - 1));
+    // ------------------------------------------------------------------
+    // continuous 50 MHz DCLK
+    // ------------------------------------------------------------------
+    reg dclk_r;
+    always @(posedge clk or negedge reset_n)
+        if (!reset_n) dclk_r <= 1'b0;
+        else          dclk_r <= ~dclk_r;
+    assign dclk = dclk_r;
+
+    // ------------------------------------------------------------------
+    // window counter
+    // ------------------------------------------------------------------
+    wire start_pt = (slot_cycle == (LOAD_START - 1));   // cycle 831
 
     reg        load_run;
     reg [9:0]  load_cnt;
-    reg        parity_q;    // bank latched at start (col_index changes mid-window)
+    reg        parity_q;
     reg        valid_q;
     reg [8:0]  tx_k;
+    reg        prefetched;
+    reg [8:0]  launched;
 
-    // ------------------------------------------------------------------
-    // window counter (posedge domain)
-    // ------------------------------------------------------------------
     always @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
             load_run <= 1'b0;
@@ -81,14 +95,23 @@ module tcon_data_tx #(
     end
 
     assign load_active = load_run && safe;
-    assign dclk        = load_run && !load_cnt[0] && safe;
+    assign load_cnt_o  = load_cnt;
 
     // ------------------------------------------------------------------
-    // byte launch (negedge domain: 5 ns before every DCLK sampling edge)
+    // pre-fetch point: the falling edge that precedes the first sampling edge
     // ------------------------------------------------------------------
-    assign rd_bank = start_pt ? col_index[0] : parity_q;
-    assign rd_idx  = start_pt ? 9'd0
-                              : ((tx_k == (NB_PORT - 1)) ? (NB_PORT - 1) : (tx_k + 9'd1));
+    wire pre_pt = ((slot_cycle == (LOAD_START - 1)) ||
+                   (slot_cycle ==  LOAD_START)) && !dclk_r;
+    wire do_pre = pre_pt && !prefetched;
+
+    assign rd_bank = do_pre ? col_index[0] : parity_q;
+    assign rd_idx  = do_pre ? 9'd0
+                            : ((tx_k == (NB_PORT - 1)) ? (NB_PORT - 1) : (tx_k + 9'd1));
+
+    // ------------------------------------------------------------------
+    // byte launch (falling-edge domain: 5 ns before every sampling edge)
+    // ------------------------------------------------------------------
+    localparam [8:0] NB_LAST = NB_PORT - 1;
 
     always @(negedge clk or negedge reset_n) begin
         if (!reset_n) begin
@@ -99,23 +122,36 @@ module tcon_data_tx #(
             valid_q    <= 1'b0;
             bytes_sent <= 9'd0;
             load_blank <= 1'b0;
+            prefetched <= 1'b0;
+            launched   <= 9'd0;
         end else if (!safe) begin
             tx_k       <= 9'd0;
             d0         <= 8'h00;
             d1         <= 8'h00;
             bytes_sent <= 9'd0;
             load_blank <= 1'b1;
-        end else if (start_pt) begin
+            prefetched <= 1'b0;
+            launched   <= 9'd0;
+        end else if (slot_cycle == (LOAD_START - 2)) begin
+            // one cycle before the pre-fetch window: arm a fresh transfer
+            prefetched <= 1'b0;
+            launched   <= 9'd0;
+            tx_k       <= 9'd0;
+        end else if (do_pre) begin
+            prefetched <= 1'b1;
             parity_q   <= col_index[0];
             valid_q    <= col_valid;
             load_blank <= !col_valid;
             tx_k       <= 9'd0;
+            launched   <= 9'd1;
             bytes_sent <= 9'd1;
             d0         <= col_valid ? bk_d0 : 8'h00;
             d1         <= col_valid ? bk_d1 : 8'h00;
-        end else if (load_run && load_cnt[0] && (tx_k != (NB_PORT - 1))) begin
+        end else if (load_run && !dclk_r && prefetched && (launched <= NB_LAST) &&
+                     (tx_k != NB_LAST)) begin
             tx_k       <= tx_k + 9'd1;
-            bytes_sent <= tx_k + 9'd2;
+            launched   <= launched + 9'd1;
+            bytes_sent <= launched + 9'd1;
             d0         <= valid_q ? bk_d0 : 8'h00;
             d1         <= valid_q ? bk_d1 : 8'h00;
         end

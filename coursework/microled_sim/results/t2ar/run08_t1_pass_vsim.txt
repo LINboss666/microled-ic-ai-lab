@@ -1,0 +1,88 @@
+Reading D:/BaiduNetdiskDownload/FPGA/modelsim_ase/tcl/vsim/pref.tcl
+
+# 10.5b
+
+# vsim -c -do "run -all; quit -f" work.tcon_t1_tb "+SCEN=ALL"
+# Start time: 14:52:30 on Nov 14,2026
+# Loading sv_std.std
+# Loading work.tcon_t1_tb
+# Loading work.tcon_top
+# Loading work.tcon_timebase
+# Loading work.tcon_slot_seq
+# Loading work.tcon_video_rx
+# Loading work.tcon_col_bank
+# Loading work.tcon_data_tx
+# ** Warning: (vsim-3017) D:/ic617_course_sim_20261112_native/t2ar_run08_t1/src/tcon_t1_tb.sv(39): [TFMPC] - Too few port connections. Expected 33, found 26.
+#    Time: 0 ps  Iteration: 0  Instance: /tcon_t1_tb/dut File: D:/ic617_course_sim_20261112_native/t2ar_run08_t1/src/tcon_top.v
+# ** Warning: (vsim-3722) D:/ic617_course_sim_20261112_native/t2ar_run08_t1/src/tcon_t1_tb.sv(39): [TFMPC] - Missing connection for port 'err_flags'.
+# ** Warning: (vsim-3722) D:/ic617_course_sim_20261112_native/t2ar_run08_t1/src/tcon_t1_tb.sv(39): [TFMPC] - Missing connection for port 'err_now'.
+# ** Warning: (vsim-3722) D:/ic617_course_sim_20261112_native/t2ar_run08_t1/src/tcon_t1_tb.sv(39): [TFMPC] - Missing connection for port 'bank_valid'.
+# ** Warning: (vsim-3722) D:/ic617_course_sim_20261112_native/t2ar_run08_t1/src/tcon_t1_tb.sv(39): [TFMPC] - Missing connection for port 'bytes_rcvd'.
+# ** Warning: (vsim-3722) D:/ic617_course_sim_20261112_native/t2ar_run08_t1/src/tcon_t1_tb.sv(39): [TFMPC] - Missing connection for port 'bytes_sent'.
+# ** Warning: (vsim-3722) D:/ic617_course_sim_20261112_native/t2ar_run08_t1/src/tcon_t1_tb.sv(39): [TFMPC] - Missing connection for port 'load_blank'.
+# ** Warning: (vsim-3722) D:/ic617_course_sim_20261112_native/t2ar_run08_t1/src/tcon_t1_tb.sv(39): [TFMPC] - Missing connection for port 'load_cnt'.
+# run -all
+# COURSE_TCON_T1_SCENARIO=ALL
+# --- SCENARIO RESET_FAULT ---
+# PASS R1_reset_blank_high
+# PASS R1_reset_col_id_0
+# PASS R1_reset_no_latch
+# PASS R1_reset_no_pwm_start
+# PASS R1_reset_no_scan_stb
+# PASS R1_reset_no_tick
+# PASS R1_reset_no_load
+# PASS R2_unconfigured_blank_high
+# PASS R2_unconfigured_no_stb
+# PASS R3_illegal_mode_blank_high
+# PASS R4_ready_blank_low
+# PASS R4_status_ready
+# PASS R5b_fault_during_latch_blank
+# PASS R5b_fault_during_latch_no_latch
+# PASS R5b_fault_during_latch_no_phantom_load
+# PASS R5c_load_running_before_fault
+# PASS R5c_fault_during_load_closes_load
+# PASS R5c_fault_clears_load_counter
+# PASS R5c_fault_during_load_blank
+# PASS R6_recover_blank_low
+# PASS R5_fault_sticky_status
+# PASS R6_no_tick_while_blanked
+# PASS R6_no_latch_outside_blank
+# --- SCENARIO TIMEBASE ---
+# SLOT len=976 ticks=64 latch=828 pstart=840 stb=880 pw=4
+# PASS T1_slot_len_976_or_977
+# PASS T1_ticks_64_per_window
+# PASS T1_latch_offset_828
+# PASS T1_pwm_start_offset_840
+# PASS T1_scan_stb_offset_880
+# PASS T1_latch_pulse_40ns
+# PASS T1_no_tick_in_blank
+# PASS T2_dclk_100_edges_per_200_cycles
+# PASS T2_dclk_period_20ns
+# PASS T3_load_starts_at_832
+# PASS T3_load_len_768_cycles
+# PASS T3_load_384_dclk_edges
+# PASS T3_load_starts_after_latch
+# PASS T4_slot2_len_976_or_977
+# PASS T5_slot3_len_976_or_977
+# PASS T5_col_id_advancing
+# --- SCENARIO BOUNDARY (first frame after reset) ---
+# FIRST_FRAME slots=1024 first_len=976 long=576 short=448 cycles=1000000 wraps=1 start_col=0 end_col=0
+# PASS B1_first_slot_976_short_first
+# PASS B2_first_frame_1024_slots
+# PASS B3_first_frame_cycles_1e6
+# PASS B4_first_frame_576_long
+# PASS B5_first_frame_448_short
+# PASS B6_frame_wrap_exactly_once
+# PASS B7_col_id_period_1024
+# PASS B8_no_tick_in_blank_frame
+# PASS B9_no_latch_outside_blank_frame
+# PASS B10_no_stb_outside_blank_frame
+# COURSE_RTL_ASSERT_COUNT=49
+# COURSE_RTL_PASS_COUNT=49
+# COURSE_RTL_FAIL_COUNT=0
+# COURSE_RTL_RESULT=PASS
+# COURSE_TCON_T1_SCENARIO_DONE=ALL
+# ** Note: $finish    : D:/ic617_course_sim_20261112_native/t2ar_run08_t1/src/tcon_t1_tb.sv(356)
+#    Time: 10134300 ns  Iteration: 1  Instance: /tcon_t1_tb
+# End time: 14:52:34 on Nov 14,2026, Elapsed time: 0:00:04
+# Errors: 0, Warnings: 8

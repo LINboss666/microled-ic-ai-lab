@@ -35,7 +35,12 @@ cd "$RUN_DIR" || exit 9
 
 RESTORE="$RUN_DIR/src"
 mkdir -p "$RESTORE" || exit 9
-for n in rtl/tcon_timebase.v rtl/tcon_slot_seq.v rtl/tcon_top.v tb/tcon_t1_tb.sv; do
+# R04 (T2AR): tcon_top now instantiates the three T2A modules, so the T1
+# runner must copy and compile them too - otherwise elaboration fails and the
+# 49 T1 assertions are never actually exercised against the current top.
+for n in rtl/tcon_timebase.v rtl/tcon_slot_seq.v rtl/tcon_video_rx.v \
+         rtl/tcon_col_bank.v rtl/tcon_data_tx.v rtl/tcon_top.v \
+         tb/tcon_t1_tb.sv; do
     cp "$SRC/$n.txt" "$RESTORE/$(basename "$n")" || exit 9
 done
 echo "RESTORED_SOURCES=$(ls -1 "$RESTORE" | wc -l)"
@@ -51,6 +56,9 @@ echo "VLIB_RC=$?"
 vlog -sv \
     "$RESTORE/tcon_timebase.v" \
     "$RESTORE/tcon_slot_seq.v" \
+    "$RESTORE/tcon_video_rx.v" \
+    "$RESTORE/tcon_col_bank.v" \
+    "$RESTORE/tcon_data_tx.v" \
     "$RESTORE/tcon_top.v" \
     "$RESTORE/tcon_t1_tb.sv" > 02_vlog.log 2>&1
 VLOG_RC=$?

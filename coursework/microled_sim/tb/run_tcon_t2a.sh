@@ -1,27 +1,30 @@
 #!/usr/bin/env bash
-# TCON T2A runner — one scenario, hard wall-clock timeout, output size capped.
+# TCON T2A / T2AR runner — one phase per run, hard wall-clock timeout, VCD capped.
 #
-#   COURSE_ROOT=<course worktree> RUN_DIR=<scratch> [MIN_ASSERTS=n] bash run_tcon_t2a.sh
+#   COURSE_ROOT=<worktree> RUN_DIR=<scratch> [MIN_ASSERTS=n]
 #
 # Restores the ".txt"-wrapped sources into scratch with their real extensions,
-# compiles the whole T2A RTL + TB, runs the single scenario and delegates the
-# PASS/FAIL decision to the same five-condition checker used by T6/T1.
+# compiles the whole T2A RTL + TB, runs ONE phase and delegates the PASS/FAIL
+# decision to the same five-condition checker used by T6/T1.
 set -uo pipefail
 
 COURSE_ROOT="${COURSE_ROOT:-D:/ic617_course_sim_20261112}"
 RUN_DIR="${RUN_DIR:-D:/ic617_course_sim_20261112_native/t2a}"
 SRC="$COURSE_ROOT/coursework/microled_sim"
 
-# Hard limits (T1R review F6: the 8 GB VCD incident must not be repeatable)
-WALL_LIMIT_S="${WALL_LIMIT_S:-300}"
+WALL_LIMIT_S="${WALL_LIMIT_S:-600}"
 VCD_LIMIT_MB="${VCD_LIMIT_MB:-60}"
 
-# Assertion floor is derived from the TB source so it can never drift below the
-# number of checks the TB actually contains.
+# Assertion floor: the single "ALL" phase covers both the T2A regression set and
+# the T2AR boundary set, 49 checks (T1-T8, C1-C5, E1-E11, R1-R4, W1, S1-S2,
+# X1-X18). Never lower it.
+FLOOR=49
+
+# the TB must still contain at least as many checks as the declared floor
 SRC_TB="$SRC/tb/tcon_t2a_tb.sv.txt"
-FLOOR=$(grep -c 'chk("' "$SRC_TB")
-if [ "$FLOOR" -lt 1 ]; then
-    echo "RUNNER_VERDICT=BAD_ASSERT_FLOOR"
+TOTAL=$(grep -c 'chk("' "$SRC_TB")
+if [ "$TOTAL" -lt "$FLOOR" ]; then
+    echo "RUNNER_VERDICT=TB_HAS_FEWER_CHECKS_THAN_FLOOR ($TOTAL < $FLOOR)"
     echo "RUNNER_EXIT=9"
     exit 9
 fi
@@ -52,7 +55,7 @@ done
 echo "RESTORED_SOURCES=$(ls -1 "$RESTORE" | wc -l)"
 
 echo "=== TCON_T2A_RUNNER start $(date '+%Y-%m-%dT%H:%M:%S%z') ==="
-echo "MIN_ASSERTS=$MIN_ASSERTS (floor from TB source = $FLOOR)"
+echo "MIN_ASSERTS=$MIN_ASSERTS (floor $FLOOR, TB has $TOTAL checks)"
 echo "WALL_LIMIT_S=$WALL_LIMIT_S  VCD_LIMIT_MB=$VCD_LIMIT_MB"
 echo "RUN_DIR=$RUN_DIR"
 
@@ -78,7 +81,6 @@ timeout "${WALL_LIMIT_S}s" vsim -c -do "run -all; quit -f" work.tcon_t2a_tb > 03
 VSIM_RC=$?
 T1=$(date +%s)
 echo "VSIM_RC=$VSIM_RC  ELAPSED_S=$((T1 - T0))"
-echo "ELAPSED_S=$((T1 - T0))"
 if [ "$VSIM_RC" -eq 124 ]; then
     echo "RUNNER_VERDICT=WALL_CLOCK_TIMEOUT"
     echo "RUNNER_EXIT=124"

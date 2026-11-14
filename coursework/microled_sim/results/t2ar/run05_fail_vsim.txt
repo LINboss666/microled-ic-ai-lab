@@ -1,0 +1,110 @@
+Reading D:/BaiduNetdiskDownload/FPGA/modelsim_ase/tcl/vsim/pref.tcl
+
+# 10.5b
+
+# vsim -c -do "run -all; quit -f" work.tcon_t2a_tb
+# Start time: 14:49:08 on Nov 14,2026
+# Loading sv_std.std
+# Loading work.tcon_t2a_tb
+# Loading work.tcon_top
+# Loading work.tcon_timebase
+# Loading work.tcon_slot_seq
+# Loading work.tcon_video_rx
+# Loading work.tcon_col_bank
+# Loading work.tcon_data_tx
+# ** Warning: (vsim-3017) D:/ic617_course_sim_20261112_native/t2ar_run05_all/src/tcon_t2a_tb.sv(75): [TFMPC] - Too few port connections. Expected 33, found 32.
+#    Time: 0 ps  Iteration: 0  Instance: /tcon_t2a_tb/dut_small File: D:/ic617_course_sim_20261112_native/t2ar_run05_all/src/tcon_top.v
+# ** Warning: (vsim-3722) D:/ic617_course_sim_20261112_native/t2ar_run05_all/src/tcon_t2a_tb.sv(75): [TFMPC] - Missing connection for port 'err_now'.
+# run -all
+# COURSE_TCON_T2A_PHASE=ALL
+# T2A_SUMMARY col0_bytes=384 col0_len=768 col0_start=832
+# T2A_SUMMARY mismatches=0 colid_bad=0 period_bad=0 change_high=0
+# T2A_SUMMARY min_setup_ns=5.00 min_hold_ns=15.00
+# T2A_SUMMARY err_flags=111111 frame_no=1 slot_n=1031 small_wraps=128 small_max=7
+# T2A_COL idx=0 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000010000
+# T2A_COL idx=1 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=2 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=3 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=4 bytes=384 len=768 start=832 err=0 zero=1 delta=00000000000000000000000000001001
+# T2A_COL idx=5 bytes=384 len=768 start=832 err=0 zero=1 delta=00000000000000000000000000001011
+# T2A_COL idx=6 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000100
+# T2A_COL idx=7 bytes=384 len=768 start=832 err=0 zero=1 delta=00000000000000000000000000001000
+# T2A_COL idx=8 bytes=123 len=245 start=832 err=0 zero=1 delta=00000000000000000000000000001001
+# T2A_COL idx=9 bytes=384 len=768 start=832 err=0 zero=1 delta=00000000000000000000000000001001
+# T2A_COL idx=10 bytes=34 len=68 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=12 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=13 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000010000
+# T2A_COL idx=14 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=15 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=16 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=17 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=18 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=19 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=20 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=21 bytes=384 len=768 start=832 err=0 zero=1 delta=00000000000000000000000000101000
+# T2A_COL idx=22 bytes=384 len=768 start=832 err=0 zero=1 delta=00000000000000000000000000101000
+# T2A_COL idx=23 bytes=384 len=768 start=832 err=0 zero=1 delta=00000000000000000000000000000010
+# T2A_COL idx=24 bytes=384 len=768 start=832 err=0 zero=1 delta=00000000000000000000000000000000
+# T2A_COL idx=27 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=28 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_COL idx=29 bytes=384 len=768 start=832 err=0 zero=0 delta=00000000000000000000000000000000
+# T2A_SUMMARY stb25=0 lat25=0 stb26=0 colid25=24
+# T2A_SUMMARY frame1024 longs=576 shorts=448 cycles=1000000 deltas_bad=0
+# PASS T1_col_id_matches_tb_counter
+# PASS T2_load_starts_at_832
+# PASS T3_load_window_768_cycles
+# PASS T4_dclk_period_20ns
+# PASS T5_edges_per_window_384
+# PASS T6_bytes_sent_384
+# PASS T7_no_change_while_dclk_high
+# PASS T8_byte_mismatch_zero
+# PASS C1_latch_at_828
+# PASS C2_pwm_start_at_840
+# PASS C3_scan_stb_at_880
+# PASS C4_pulse_width_4_cycles
+# PASS C5_blank_rises_at_768
+# PASS E1_underrun_col4
+# PASS E2_overflow_col5
+# PASS E3_duplicate_sync_col6
+# PASS E4_missing_sync_col7
+# PASS E5_vsync_phase_col13
+# PASS E6_invalid_bank_zero_col4
+# PASS E7_invalid_bank_zero_col5
+# PASS E8_invalid_bank_zero_col7
+# PASS E9_invalid_bank_zero_col9
+# PASS E10_fault_in_load_truncates_col10
+# PASS E11_fault_in_latch_no_window_col11
+# PASS R1_recovery_col12_full
+# PASS R2_consecutive_0_1_2
+# PASS R3_pause_col3_completes
+# PASS R4_dup_sync_col6_data_valid
+# PASS W1_small_frame_wrap
+# PASS S1_setup_min_ge_3ns
+# PASS S2_hold_min_ge_1ns
+# PASS X1_sync_at_830_accepted
+# PASS X2_sync_at_830_no_error_bits
+# PASS X3_sync_at_831_rejected_zero
+# PASS X4_sync_at_831_missing_and_late
+# PASS X5_sync_at_832_rejected_zero
+# PASS X6_sync_at_832_late_flagged
+# PASS X7_extra_byte_after_sync_revokes
+# PASS X8_extra_byte_overflow_flagged
+# PASS X9_fault_at_boundary_no_strobe_col25
+# PASS X10_fault_at_boundary_colid_frozen_col25
+# PASS X11_fault_recovery_before_880_no_stb_col26
+# PASS X12_recovery_col27_valid
+# PASS X13_slot_lengths_never_shift
+# PASS X14_frame_1024_slots_1e6
+# PASS X15_wrap_col1022_valid
+# PASS X16_wrap_col1023_valid
+# FAIL X17_wrap_col0_frame1_valid  (t=10049485000)
+# COURSE_RTL_ASSERT_COUNT=48
+# COURSE_RTL_FAIL_COUNT=1
+# COURSE_RTL_RESULT=FAIL
+# COURSE_FAILED_ASSERTION=X17_wrap_col0_frame1_valid
+# ** Fatal: COURSE_ASSERT_FAILED: X17_wrap_col0_frame1_valid
+#    Time: 10049485 ns  Scope: tcon_t2a_tb.chk File: D:/ic617_course_sim_20261112_native/t2ar_run05_all/src/tcon_t2a_tb.sv Line: 102
+# ** Note: $finish    : D:/ic617_course_sim_20261112_native/t2ar_run05_all/src/tcon_t2a_tb.sv(102)
+#    Time: 10049485 ns  Iteration: 1  Instance: /tcon_t2a_tb
+# End time: 14:49:19 on Nov 14,2026, Elapsed time: 0:00:11
+# Errors: 1, Warnings: 2
