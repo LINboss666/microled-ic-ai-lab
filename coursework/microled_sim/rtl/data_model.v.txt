@@ -1,39 +1,41 @@
 `timescale 1ns / 1ps
-// data_model — course verification stand-in for ONE Data Driver (T2B).
+// data_model — course verification stand-in for ONE Data Driver (T2B-BR).
 //
 // This is NOT a 384-channel electrical implementation and it is NOT a new
 // physical interface. It receives exactly what a real Data driver receives:
 //   DCLK (continuous 50 MHz), one 8-bit lane (D0 for chip 0, D1 for chip 1),
-//   LATCH, BLANK. Everything else it derives by itself.
+//   LATCH, BLANK. It has NO reference clock any more: the T2B-B review showed
+//   that the old `posedge clk` + registered dclk_d detector was a hidden
+//   100 MHz clock that sampled the bus one reference cycle late.
 //
-// FRAMING (why LATCH edges are enough):
-//   LATCH rises at cycle 828 and is 4 cycles wide. The 384-byte transfer for a
-//   column occupies [832, 1600) - exactly 384 DCLK rising edges, starting right
-//   after LATCH falls. So the model arms its capture on the LATCH FALLING edge,
-//   takes exactly 384 DCLK edges, and commits that buffer on the NEXT LATCH
-//   rising edge. No byte counter is fed from outside, so a truncated transfer
-//   (fault) simply never reaches 384 and the bank is committed as invalid.
+// FRAMING (all of it derived from the two pins, as V1.3 摘录 0447-0466 requires):
+//   the LATCH level is sampled on the DCLK rising edge, so:
+//     * LATCH 0->1 seen at a sampling edge  = commit the window that just ended
+//     * LATCH 1->0 seen at a sampling edge  = that edge is the FIRST sampling
+//       edge of the new transfer, so byte 0 is taken there;
+//     * the next 383 sampling edges give bytes 1..383 (384 in total);
+//   Any window that does not reach 384 bytes (fault / truncated transfer) is
+//   committed as "no display permit", never as valid.
 //
 // SELF-IDENTIFYING PAYLOAD (tags, not pins):
-//   byte 0 = col[7:0], byte 1 = {2'b00, col[9:8], frame_id[5:0]},
+//   byte 0 = col[7:0], byte 1 = {col[9:8], frame[5:0]},
 //   byte i (i>=2) = pixel of row r = 2*i + CHIP:
 //       pix = ((col & 0xFF) + 13*(r & 0xFF) + 7*(frame & 0xFF) + 0x5A) & 0xFF
-//   The model decodes (frame, col) from its own first two bytes and then checks
-//   the remaining 382 against the formula. So `disp_col` is derived from the
-//   DATA, not from a counter shared with the TCON: a TCON that put the wrong
-//   column on the bus cannot make this model agree with it for free.
+//   (frame, col) are decoded by the model itself from its own first two bytes,
+//   so a TCON that put the wrong column on the bus cannot make this model agree
+//   with it for free.
 //
-// A mismatch detected while capturing sets `cap_bad` immediately (that is how a
-// partly-received / zero-filled column is proven detectable, e.g. column 19).
+// The 1 ns `#1` after a DCLK edge is only a delta-cycle settle so that LATCH and
+// DIN, which change in the same simulation instant as the edge, are read at
+// their post-edge value. Nothing is sampled on any other event.
 module data_model #(
     parameter integer CHIP = 0
 ) (
-    input  wire        clk,        // 100 MHz reference (same source as the TCON)
     input  wire        reset_n,
     input  wire        dclk,
     input  wire [7:0]  din,
     input  wire        latch,
-    input  wire        blank,
+    input  wire        blank,      // observation only
 
     // simulation observation only - NOT a physical chip interface
     output reg         disp_valid,
@@ -42,80 +44,86 @@ module data_model #(
     output reg  [5:0]  disp_frame,
     output reg  [8:0]  cap_cnt,
     output reg         cap_bad,
-    output reg  [8:0]  n_commit
+    output reg  [15:0] n_commit
 );
 
     reg [7:0] cap   [0:383];
     reg [7:0] dbank [0:383];
 
     reg       armed;
-    reg [8:0] wcnt;
-    reg       dclk_d, latch_d;
-
-    wire dclk_p = dclk && !dclk_d;
-    wire lat_p  = latch && !latch_d;
-    wire lat_n  = !latch && latch_d;
+    reg       latch_d;
+    integer   wcnt;
+    integer   i;
 
     function automatic [7:0] pix(input integer f, input integer c, input integer r);
         pix = ((c & 255) + 13 * (r & 255) + 7 * (f & 255) + 8'h5A) & 255;
     endfunction
 
-    integer i;
+    initial begin
+        armed = 1'b0; latch_d = 1'b0; wcnt = 0;
+        disp_valid = 1'b0; disp_corrupt = 1'b0; disp_col = 10'd0;
+        disp_frame = 6'd0; cap_cnt = 9'd0; cap_bad = 1'b0; n_commit = 16'd0;
+        for (i = 0; i < 384; i = i + 1) begin
+            cap[i] = 8'h00;
+            dbank[i] = 8'h00;
+        end
+    end
 
-    always @(posedge clk or negedge reset_n) begin
+    always @(posedge dclk or negedge reset_n) begin
+        #1;
         if (!reset_n) begin
-            armed        <= 1'b0;
-            wcnt         <= 9'd0;
-            dclk_d       <= 1'b0;
-            latch_d      <= 1'b0;
-            disp_valid   <= 1'b0;
-            disp_corrupt <= 1'b0;
-            disp_col     <= 10'd0;
-            disp_frame   <= 6'd0;
-            cap_cnt      <= 9'd0;
-            cap_bad      <= 1'b0;
-            n_commit     <= 9'd0;
-            for (i = 0; i < 384; i = i + 1) begin
-                cap[i]   <= 8'h00;
-                dbank[i] <= 8'h00;
-            end
+            armed        = 1'b0;
+            latch_d      = 1'b0;
+            wcnt         = 0;
+            disp_valid   = 1'b0;
+            disp_corrupt = 1'b0;
+            disp_col     = 10'd0;
+            disp_frame   = 6'd0;
+            cap_cnt      = 9'd0;
+            cap_bad      = 1'b0;
+            n_commit     = 16'd0;
         end else begin
-            dclk_d  <= dclk;
-            latch_d <= latch;
-
-            if (lat_p) begin
+            if (latch && !latch_d) begin
                 // LATCH rising: atomically switch the captured bank in
-                if (armed && (wcnt == 9'd384)) begin
-                    for (i = 0; i < 384; i = i + 1) dbank[i] <= cap[i];
-                    disp_col     <= {cap[1][7:6], cap[0]};
-                    disp_frame   <= cap[1][5:0];
-                    disp_valid   <= 1'b1;
-                    disp_corrupt <= cap_bad;
-                    n_commit     <= n_commit + 9'd1;
-                end else begin
-                    // nothing complete to switch to: keep the old content but
-                    // declare it unusable for display
-                    disp_valid   <= 1'b0;
-                    disp_corrupt <= 1'b1;
+                if (armed) begin
+                    if (wcnt == 384) begin
+                        for (i = 0; i < 384; i = i + 1) dbank[i] = cap[i];
+                        disp_col     = {cap[1][7:6], cap[0]};
+                        disp_frame   = cap[1][5:0];
+                        disp_valid   = 1'b1;
+                        disp_corrupt = cap_bad;
+                        n_commit     = n_commit + 16'd1;
+                    end else begin
+                        // nothing complete to switch to: keep the old content
+                        // but declare it unusable for display
+                        disp_valid   = 1'b0;
+                        disp_corrupt = 1'b1;
+                    end
                 end
-                wcnt    <= 9'd0;
-                armed   <= 1'b0;
-                cap_bad <= 1'b0;
-            end else if (lat_n) begin
-                // LATCH falling: the 384-byte transfer starts now
-                armed   <= 1'b1;
-                wcnt    <= 9'd0;
-                cap_bad <= 1'b0;
-            end else if (dclk_p && armed && (wcnt < 9'd384)) begin
-                cap[wcnt] <= din;
-                wcnt      <= wcnt + 9'd1;
-                cap_cnt   <= wcnt + 9'd1;
-                if (wcnt >= 9'd2) begin
+                armed   = 1'b0;
+                wcnt    = 0;
+                cap_bad = 1'b0;
+            end else if (!latch && latch_d) begin
+                // LATCH falling: this sampling edge is byte 0 of the transfer,
+                // so arm here and let the common capture below take it
+                armed   = 1'b1;
+                wcnt    = 0;
+                cap_bad = 1'b0;
+                cap_cnt = 9'd0;
+            end
+
+            if (armed && (wcnt < 384)) begin
+                cap[wcnt] = din;
+                if (wcnt >= 2) begin
                     if (din !== pix(cap[1][5:0], {cap[1][7:6], cap[0]},
                                     (wcnt * 2) + CHIP))
-                        cap_bad <= 1'b1;
+                        cap_bad = 1'b1;
                 end
+                wcnt    = wcnt + 1;
+                cap_cnt = wcnt;
             end
+
+            latch_d = latch;
         end
     end
 

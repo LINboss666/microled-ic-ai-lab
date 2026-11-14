@@ -15,8 +15,8 @@ SRC="$COURSE_ROOT/coursework/microled_sim"
 WALL_LIMIT_S="${WALL_LIMIT_S:-900}"
 VCD_LIMIT_MB="${VCD_LIMIT_MB:-120}"
 
-# Assertion floor: T2B joint set (P01..P38). Never lower it.
-FLOOR=39
+# Assertion floor: T2B joint set (P01..P51). Never lower it.
+FLOOR=51
 
 SRC_TB="$SRC/tb/tcon_t2b_tb.sv.txt"
 TOTAL=$(grep -c 'chk("' "$SRC_TB")
@@ -40,10 +40,18 @@ RESTORE="$RUN_DIR/src"
 mkdir -p "$RESTORE" || exit 9
 for n in rtl/tcon_timebase.v rtl/tcon_slot_seq.v rtl/tcon_video_rx.v \
          rtl/tcon_col_bank.v rtl/tcon_data_tx.v rtl/tcon_top.v \
-         rtl/data_model.v rtl/scan_model.v tb/tcon_t2b_tb.sv; do
+         rtl/data_model.v rtl/scan_model.v \
+         rtl/data_pin_mon.v rtl/scan_pin_mon.v tb/tcon_t2b_tb.sv; do
     cp "$SRC/$n.txt" "$RESTORE/$(basename "$n")" || exit 9
 done
 echo "RESTORED_SOURCES=$(ls -1 "$RESTORE" | wc -l)"
+echo "--- source SHA-256 (identity of what is simulated) ---"
+( cd "$RESTORE" && sha256sum * ) | tee 00_source_sha256.txt
+echo "--- expected quantities (printed BEFORE the run, so it cannot be fitted) ---"
+echo "EXPECT asserts=$TOTAL floor=$FLOOR  windows_phase1=10  bytes_per_window=384"
+echo "EXPECT phase1: windows=10 bytes_per_window=384 strobes=10 core=9 prech=1 skip=0"
+echo "EXPECT phase5(1027 slots): strobes=1026 core=1025 prech=1 skip=0 wraps=1"
+echo "EXPECT anti-false-pass assertions: P15,P16,P17,P18,P19,P46,P47,P48,P49,P50,P51"
 
 echo "=== TCON_T2B_RUNNER start $(date '+%Y-%m-%dT%H:%M:%S%z') ==="
 echo "MIN_ASSERTS=$MIN_ASSERTS (floor $FLOOR, TB has $TOTAL checks)"
@@ -63,6 +71,8 @@ vlog -sv \
     "$RESTORE/tcon_top.v" \
     "$RESTORE/data_model.v" \
     "$RESTORE/scan_model.v" \
+    "$RESTORE/data_pin_mon.v" \
+    "$RESTORE/scan_pin_mon.v" \
     "$RESTORE/tcon_t2b_tb.sv" > 02_vlog.log 2>&1
 VLOG_RC=$?
 echo "VLOG_RC=$VLOG_RC"

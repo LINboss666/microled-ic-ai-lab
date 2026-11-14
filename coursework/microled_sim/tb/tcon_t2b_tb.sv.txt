@@ -1,25 +1,38 @@
 `timescale 1ns / 1ps
 // TCON T2B joint testbench — V1.3 column-start input, Data x2 / Scan x2 models.
 //
-// The core acceptance check is the one the review asked for:
+// The core acceptance check is the one the review asked for, and it is taken at
+// the PIN, not at an internal counter:
 //
-//     at every valid SCAN_STB :  scan_col == data0.disp_col == data1.disp_col
-//                                frame ids equal, bank valid, not corrupt
-//     during the emission window the same equality must still hold, and the
-//     display-bank CONTENT must equal the pattern of the selected column.
+//     at every SCAN_STB rising edge, with the display permit expected:
+//         COL_ID == data0.disp_col == data1.disp_col
+//         data0.disp_frame == data1.disp_frame
+//         both banks valid and not corrupt
+//         SCAN_STB happened inside BLANK
+//     and the display-bank CONTENT equals the pattern of the selected column.
 //
-// Neither side may "agree by construction":
-//   * scan_col comes from TCON COL_ID, latched by an independent Scan model;
+// INDEPENDENCE
+//   * COL_ID is the TCON output pin;
 //   * disp_col is decoded by each Data model from the two tag bytes it received
-//     itself, and the other 382 bytes are checked against the formula for that
-//     (frame, col) - so a mixed/zero-filled column shows up as cap_bad instead of
-//     being silently "assumed safe".
+//     on its own lane, and the other 382 bytes are checked against the formula
+//     for that (frame, col), so a mixed / zero-filled column shows up as
+//     cap_bad instead of being silently "assumed safe";
+//   * two pin-level monitors (scan_pin_mon, data_pin_mon) observe only pins:
+//     posedge scan_stb / posedge dclk / latch level / COL_ID / BLANK / DIN.
+//     Neither of them reads the DUT's slot_cycle.
+//
+// NON-VACUITY
+//   `exp_n` counts every strobe in a healthy phase, `prech_n` the ones before
+//   the first Data commit (precharge, nothing to display yet), `skip_n` the ones
+//   that SHOULD have been compared but were skipped. The run fails if
+//   skip_n != 0 or if core_n + prech_n + skip_n != exp_n, so "900 of 1024
+//   columns silently skipped" can no longer be reported as PASS.
 //
 // PAYLOAD LAYOUT (per column, 768 bank bytes = 768 rows):
 //   row 0 -> col[7:0]                       (Data chip 0 tag 0)
-//   row 2 -> {2'b00, col[9:8], frame[5:0]}   (Data chip 0 tag 1)
+//   row 2 -> {col[9:8], frame[5:0]}         (Data chip 0 tag 1)
 //   row 1 -> col[7:0]                       (Data chip 1 tag 0)
-//   row 3 -> {2'b00, col[9:8], frame[5:0]}   (Data chip 1 tag 1)
+//   row 3 -> {col[9:8], frame[5:0]}         (Data chip 1 tag 1)
 //   row r (r>=4) -> ((col&255) + 13*(r&255) + 7*(frame&255) + 0x5A) & 255
 // Chip 0 takes rows 0,2,4..766 and chip 1 rows 1,3,5..767, so each chip carries
 // its own complete tag pair.
@@ -79,19 +92,18 @@ module tcon_t2b_tb;
     wire        dm0_valid, dm0_corrupt, dm0_capbad, dm1_valid, dm1_corrupt, dm1_capbad;
     wire [9:0]  dm0_col, dm1_col;
     wire [5:0]  dm0_frame, dm1_frame;
-    wire [8:0]  dm0_cap, dm1_cap, dm0_ncom, dm1_ncom;
+    wire [8:0]  dm0_cap, dm1_cap;
+    wire [15:0] dm0_ncom, dm1_ncom;
 
     data_model #(.CHIP(0)) dm0 (
-        .clk (clk), .reset_n (reset_n), .dclk (dclk), .din (d0),
-        .latch (latch), .blank (blank),
+        .reset_n (reset_n), .dclk (dclk), .din (d0), .latch (latch), .blank (blank),
         .disp_valid (dm0_valid), .disp_corrupt (dm0_corrupt),
         .disp_col (dm0_col), .disp_frame (dm0_frame),
         .cap_cnt (dm0_cap), .cap_bad (dm0_capbad), .n_commit (dm0_ncom)
     );
 
     data_model #(.CHIP(1)) dm1 (
-        .clk (clk), .reset_n (reset_n), .dclk (dclk), .din (d1),
-        .latch (latch), .blank (blank),
+        .reset_n (reset_n), .dclk (dclk), .din (d1), .latch (latch), .blank (blank),
         .disp_valid (dm1_valid), .disp_corrupt (dm1_corrupt),
         .disp_col (dm1_col), .disp_frame (dm1_frame),
         .cap_cnt (dm1_cap), .cap_bad (dm1_capbad), .n_commit (dm1_ncom)
@@ -99,20 +111,55 @@ module tcon_t2b_tb;
 
     wire        sm0_valid, sm1_valid, sm0_oob, sm1_oob, sm0_chg, sm1_chg;
     wire [9:0]  sm0_col, sm1_col;
-    wire [8:0]  sm0_chan, sm1_chan, sm0_nstb, sm1_nstb, sm0_nlat, sm1_nlat;
+    wire [8:0]  sm0_chan, sm1_chan;
+    wire [15:0] sm0_nstb, sm1_nstb, sm0_nlat, sm1_nlat;
 
     scan_model #(.CHIP(0)) sm0 (
-        .clk (clk), .reset_n (reset_n), .blank (blank), .scan_stb (scan_stb),
-        .col_id (col_id), .sel_valid (sm0_valid), .sel_col (sm0_col),
-        .sel_chan (sm0_chan), .n_stb (sm0_nstb), .n_latch (sm0_nlat),
+        .reset_n (reset_n), .blank (blank), .scan_stb (scan_stb), .col_id (col_id),
+        .sel_valid (sm0_valid), .sel_col (sm0_col), .sel_chan (sm0_chan),
+        .n_stb (sm0_nstb), .n_latch (sm0_nlat),
         .err_outside_blank (sm0_oob), .err_change_unblank (sm0_chg)
     );
 
     scan_model #(.CHIP(1)) sm1 (
-        .clk (clk), .reset_n (reset_n), .blank (blank), .scan_stb (scan_stb),
-        .col_id (col_id), .sel_valid (sm1_valid), .sel_col (sm1_col),
-        .sel_chan (sm1_chan), .n_stb (sm1_nstb), .n_latch (sm1_nlat),
+        .reset_n (reset_n), .blank (blank), .scan_stb (scan_stb), .col_id (col_id),
+        .sel_valid (sm1_valid), .sel_col (sm1_col), .sel_chan (sm1_chan),
+        .n_stb (sm1_nstb), .n_latch (sm1_nlat),
         .err_outside_blank (sm1_oob), .err_change_unblank (sm1_chg)
+    );
+
+    // ---------------- pin-level monitors (no reference clock) -------------
+    wire [15:0] spm_nstb, spm_oob, spm_setbad, spm_holdbad;
+    wire [9:0]  spm_col;
+    wire        spm_blank;
+    wire [31:0] spm_setup_ps, spm_hold_ps;
+
+    scan_pin_mon spm (
+        .reset_n (reset_n), .scan_stb (scan_stb), .col_id (col_id), .blank (blank),
+        .n_stb (spm_nstb), .n_outside_blank (spm_oob),
+        .n_setup_bad (spm_setbad), .n_hold_bad (spm_holdbad),
+        .last_col (spm_col), .last_blank (spm_blank),
+        .setup_min_ps (spm_setup_ps), .hold_min_ps (spm_hold_ps)
+    );
+
+    wire [15:0] dpm0_win, dpm0_badlen, dpm0_bytebad, dpm0_edge;
+    wire [15:0] dpm1_win, dpm1_badlen, dpm1_bytebad, dpm1_edge;
+    wire [9:0]  dpm0_bytes, dpm1_bytes, dpm0_col, dpm1_col;
+    wire [5:0]  dpm0_frm, dpm1_frm;
+    wire        dpm0_x, dpm1_x;
+
+    data_pin_mon #(.CHIP(0)) dpm0 (
+        .reset_n (reset_n), .dclk (dclk), .din (d0), .latch (latch),
+        .n_win (dpm0_win), .n_win_badlen (dpm0_badlen), .n_byte_bad (dpm0_bytebad),
+        .n_edge (dpm0_edge), .last_bytes (dpm0_bytes),
+        .last_col (dpm0_col), .last_frame (dpm0_frm), .any_x (dpm0_x)
+    );
+
+    data_pin_mon #(.CHIP(1)) dpm1 (
+        .reset_n (reset_n), .dclk (dclk), .din (d1), .latch (latch),
+        .n_win (dpm1_win), .n_win_badlen (dpm1_badlen), .n_byte_bad (dpm1_bytebad),
+        .n_edge (dpm1_edge), .last_bytes (dpm1_bytes),
+        .last_col (dpm1_col), .last_frame (dpm1_frm), .any_x (dpm1_x)
     );
 
     // ---------------- payload pattern --------------------------------------
@@ -123,7 +170,7 @@ module tcon_t2b_tb;
     function [7:0] row_byte(input integer f, input integer c, input integer r);
         begin
             if (r == 0 || r == 1)      row_byte = c & 255;                 // tag 0
-            else if (r == 2 || r == 3) row_byte = {c[9:8], f[5:0]};          // tag 1
+            else if (r == 2 || r == 3) row_byte = {c[9:8], f[5:0]};         // tag 1
             else                       row_byte = pix(f, c, r);
         end
     endfunction
@@ -221,36 +268,35 @@ module tcon_t2b_tb;
         end
     endtask
 
-    // ---------------- monitors --------------------------------------------
-    reg        stb_d, blank_d, lat_d;
-    integer    n_stb, lbl_bad, frm_bad, dv_bad, lit_bad, content_bad;
-    integer    stb_outside_blank;
+    // ---------------- counters --------------------------------------------
+    integer    n_stb_tot;          // every pin strobe, all phases
+    integer    exp_n, core_n, prech_n, skip_n, cont_n;
+    integer    lbl_bad, frm_bad, dv_bad, blank_bad, lit_bad, content_bad;
     integer    f_stb, f_latch, f_tick, f_blanklow, f_dnz;
     integer    mon_fault;
-    reg [9:0]  cur_sel, first_sel;
-    reg        cur_sel_v;
-    reg        pend;        // strobe observed, model read one cycle later
-    reg [9:0]  pend_col;
+    reg [9:0]  first_sel, first_core;
+    reg        healthy;
     integer    i2;
 
     integer    ph_stb, ph_lat_at, ph_pst_at, ph_stb_at;
-    integer    core_n;
     reg        seen_f1, seen_f2;
     integer    wraps, tick_cnt, win_ticks, win_edges;
     realtime   t_dclk, dclk_period_min, dclk_period_max;
+    integer    idle_blanklow;      // cycles with blank low while NOT in ACTIVE
+    integer    w0, w1;
+    reg        blank_d, lat_d, stb_d;
 
     initial begin
-        stb_d = 1'b0; blank_d = 1'b0; lat_d = 1'b0;
-        n_stb = 0; lbl_bad = 0; frm_bad = 0; dv_bad = 0; lit_bad = 0;
-        content_bad = 0; stb_outside_blank = 0;
+        n_stb_tot = 0; exp_n = 0; core_n = 0; prech_n = 0; skip_n = 0; cont_n = 0;
+        lbl_bad = 0; frm_bad = 0; dv_bad = 0; blank_bad = 0; lit_bad = 0;
+        content_bad = 0;
         f_stb = 0; f_latch = 0; f_tick = 0; f_blanklow = 0; f_dnz = 0;
-        mon_fault = 0;
-        cur_sel = 10'd0; first_sel = 10'd0; cur_sel_v = 1'b0;
-        pend = 1'b0; pend_col = 10'd0;
+        mon_fault = 0; healthy = 1'b0;
+        first_sel = 10'd0; first_core = 10'd0;
         ph_stb = 0; ph_lat_at = -1; ph_pst_at = -1; ph_stb_at = -1;
         wraps = 0; tick_cnt = 0; win_ticks = 0; win_edges = 0;
         t_dclk = 0.0; dclk_period_min = 1.0e9; dclk_period_max = 0.0;
-        seen_f1 = 1'b0; seen_f2 = 1'b0; core_n = 0;
+        seen_f1 = 1'b0; seen_f2 = 1'b0; idle_blanklow = 0;
         sp_col = -1; sp_kind = 0;
     end
 
@@ -269,61 +315,65 @@ module tcon_t2b_tb;
         if (reset_n && pwm_tick) win_ticks = win_ticks + 1;
     end
 
+    // ---------------- CORE: pin-level SCAN_STB check -----------------------
+    // A real Scan chip latches COL_ID on the SCAN_STB rising edge. The 1 ns
+    // settle only lets the models' blocking updates land; it is not a clock.
+    always @(posedge scan_stb) begin
+        #1;
+        if (reset_n) begin
+            n_stb_tot = n_stb_tot + 1;
+            if (n_stb_tot == 1) first_sel = col_id;
+
+            if (healthy) begin
+                exp_n = exp_n + 1;
+                if (!(dm0_valid && dm1_valid)) begin
+                    // nothing committed yet -> legitimate precharge column
+                    if ((dm0_ncom != 0) || (dm1_ncom != 0)) skip_n = skip_n + 1;
+                    else                                    prech_n = prech_n + 1;
+                end else begin
+                    core_n = core_n + 1;
+                    if (core_n == 1) first_core = col_id;
+                    // ---- the acceptance equality, at the pin ----
+                    if ((col_id !== dm0_col) || (col_id !== dm1_col)) lbl_bad = lbl_bad + 1;
+                    if (dm0_frame !== dm1_frame)                      frm_bad = frm_bad + 1;
+                    if (dm0_corrupt || dm1_corrupt)                   dv_bad  = dv_bad + 1;
+                    if (!blank)                                       blank_bad = blank_bad + 1;
+                    if (dm0_frame == 6'd1) seen_f1 = 1'b1;
+                    if (dm0_frame == 6'd2) seen_f2 = 1'b1;
+
+                    // ---- display-bank content of the selected column ----
+                    if (dm0.dbank[0]   !== (col_id & 255))                        content_bad = content_bad + 1;
+                    if (dm0.dbank[1]   !== {col_id[9:8], dm0_frame[5:0]})         content_bad = content_bad + 1;
+                    if (dm0.dbank[2]   !== pix(dm0_frame, col_id, 4))             content_bad = content_bad + 1;
+                    if (dm0.dbank[383] !== pix(dm0_frame, col_id, 766))           content_bad = content_bad + 1;
+                    if (dm1.dbank[0]   !== (col_id & 255))                        content_bad = content_bad + 1;
+                    if (dm1.dbank[1]   !== {col_id[9:8], dm1_frame[5:0]})         content_bad = content_bad + 1;
+                    if (dm1.dbank[2]   !== pix(dm1_frame, col_id, 5))             content_bad = content_bad + 1;
+                    if (dm1.dbank[383] !== pix(dm1_frame, col_id, 767))           content_bad = content_bad + 1;
+                    cont_n = cont_n + 8;
+                end
+            end
+        end
+    end
+
+    // ---------------- bookkeeping on the reference clock -------------------
     always @(posedge clk) begin
         #1;
         if (reset_n) begin
-            // SCAN_STB is combinational from the slot_cycle register, so it rises
-            // *after* the clock edge. A real Scan chip - and therefore the Scan
-            // model - latches it on the NEXT edge. The observation is therefore
-            // taken one cycle after the strobe; this is a sampling-timing fix,
-            // not a relaxation of any criterion.
-            if (scan_stb && !stb_d) begin
-                n_stb = n_stb + 1;
-                ph_stb = ph_stb + 1;
-                if (!blank) stb_outside_blank = stb_outside_blank + 1;
-                pend     = 1'b1;
-                pend_col = col_id;
-            end else if (pend) begin
-                pend = 1'b0;
-                if (pend_col[0] == 1'b0) begin
-                    cur_sel = sm0_col;  cur_sel_v = sm0_valid;
-                end else begin
-                    cur_sel = sm1_col;  cur_sel_v = sm1_valid;
-                end
-                if (n_stb == 1) first_sel = cur_sel;
-                if (n_stb <= 6)
-                    $display("STROBE %0d t=%0t col_id=%0d cur_sel=%0d sel_v=%0d dm0_col=%0d dm0_frm=%0d dm0_v=%0d sm0_nlat=%0d sm1_nlat=%0d blank=%0d",
-                             n_stb, $time, pend_col, cur_sel, cur_sel_v, dm0_col, dm0_frame,
-                             dm0_valid, sm0_nlat, sm1_nlat, blank);
+            if (scan_stb && !stb_d) ph_stb = ph_stb + 1;
 
-                if (cur_sel_v) begin
-                    core_n = core_n + 1;
-                    // ---- CORE: scan column == both display-bank columns ----
-                    if ((cur_sel !== dm0_col) || (cur_sel !== dm1_col)) lbl_bad = lbl_bad + 1;
-                    if (dm0_frame !== dm1_frame) frm_bad = frm_bad + 1;
-                    if (dm0_frame == 6'd1) seen_f1 = 1'b1;
-                    if (dm0_frame == 6'd2) seen_f2 = 1'b1;
-                    if (!dm0_valid || dm0_corrupt || !dm1_valid || dm1_corrupt) dv_bad = dv_bad + 1;
-                end
+            // emission window starts: the label must still point at the bank
+            if (!blank && blank_d && disp_valid && dm0_valid && dm1_valid) begin
+                if (disp_col !== col_id) lit_bad = lit_bad + 1;
             end
 
-            if (!blank && blank_d && cur_sel_v) begin
-                // emission window starts: label still consistent, content correct
-                if (disp_col !== cur_sel) lit_bad = lit_bad + 1;
-                if (dm0.dbank[0] !== (cur_sel & 255))                        content_bad = content_bad + 1;
-                if (dm0.dbank[1] !== {cur_sel[9:8], dm0_frame[5:0]})         content_bad = content_bad + 1;
-                if (dm1.dbank[0] !== (cur_sel & 255))                        content_bad = content_bad + 1;
-                if (dm1.dbank[1] !== {cur_sel[9:8], dm1_frame[5:0]})         content_bad = content_bad + 1;
-                for (i2 = 2; i2 < 384; i2 = i2 + 1) begin
-                    if (dm0.dbank[i2] !== pix(dm0_frame, cur_sel, 2 * i2))     content_bad = content_bad + 1;
-                    if (dm1.dbank[i2] !== pix(dm1_frame, cur_sel, 2 * i2 + 1)) content_bad = content_bad + 1;
-                end
-            end
+            // honest count of "BLANK low while no legal frame / no permit"
+            if (!blank && (fsm_state != 2'd2)) idle_blanklow = idle_blanklow + 1;
 
             if (fsm_state == 2'd3) begin
-                if (scan_stb)              f_stb     = f_stb + 1;
-                if (latch)                 f_latch   = f_latch + 1;
-                if (pwm_tick)              f_tick    = f_tick + 1;
+                if (scan_stb)              f_stb      = f_stb + 1;
+                if (latch)                 f_latch    = f_latch + 1;
+                if (pwm_tick)              f_tick     = f_tick + 1;
                 if (!blank)                f_blanklow = f_blanklow + 1;
                 if ((d0 !== 8'h00) || (d1 !== 8'h00)) f_dnz = f_dnz + 1;
             end
@@ -343,7 +393,6 @@ module tcon_t2b_tb;
             lat_d   = latch;
         end
     end
-
 
     // ======================================================================
     // stimulus helpers
@@ -378,6 +427,26 @@ module tcon_t2b_tb;
         end
     endtask
 
+    // run until N load windows have been committed by both Data models, or
+    // until max_slots slots have elapsed (bounded, never a hang)
+    task automatic run_until_win(input integer n, input integer max_slots);
+        integer start;
+        begin
+            start = slot_done;
+            while (((dm0_ncom < n) || (dm1_ncom < n)) && ((slot_done - start) < max_slots))
+                @(posedge clk);
+        end
+    endtask
+
+    task automatic clr_phase;
+        begin
+            ph_stb = 0; lbl_bad = 0; frm_bad = 0; dv_bad = 0; blank_bad = 0;
+            lit_bad = 0; content_bad = 0;
+            exp_n = 0; core_n = 0; prech_n = 0; skip_n = 0; cont_n = 0;
+            win_ticks = 0; win_edges = 0;
+        end
+    endtask
+
     // ======================================================================
     // scenario phases
     // ======================================================================
@@ -386,20 +455,26 @@ module tcon_t2b_tb;
         sp_col = -1; sp_kind = 0;
 
         // waveform only for the phase-1 head (precharge + normal columns);
-        // the 1024-column frame scan is never dumped (size control)
+        // the 1024-column frame scan is never dumped (size control).
+        // Level 1 = this scope only: the DUT pins and the model/monitor outputs,
+        // never the 384-byte internal buffers.
         $dumpfile("tcon_t2b.vcd");
-        $dumpvars(0, tcon_t2b_tb);
+        $dumpvars(1, tcon_t2b_tb);
 
         // ---------------- Phase 1: precharge + normal columns --------------
         do_reset(1);
-        ph_stb = 0; content_bad = 0; lbl_bad = 0; frm_bad = 0; dv_bad = 0; lit_bad = 0;
+        clr_phase;
+        ph_lat_at = -1; ph_pst_at = -1; ph_stb_at = -1;
+        healthy = 1'b1;
         start_drive(0, 1);
-        run_slots(10);
+        run_until_win(10, 14);          // 10 COMPLETE load windows, not "10 slots"
         drv_on = 0;
+        healthy = 1'b0;
         $dumpoff;
-        $display("PH1 slots=%0d strobes=%0d first_sel=%0d lbl_bad=%0d frm_bad=%0d dv_bad=%0d lit=%0d content=%0d ticks=%0d edges=%0d",
-                 slot_done, ph_stb, first_sel, lbl_bad, frm_bad, dv_bad, lit_bad, content_bad,
-                 win_ticks, win_edges);
+        w0 = dpm0_win; w1 = dpm1_win;
+        $display("PH1 slots=%0d strobes=%0d exp=%0d core=%0d prech=%0d skip=%0d content=%0d edges=%0d win0=%0d win_bytes0=%0d win_bad0=%0d byte_bad0=%0d first_strobe_col=%0d first_core_col=%0d",
+                 slot_done, ph_stb, exp_n, core_n, prech_n, skip_n, cont_n, win_edges,
+                 w0, dpm0_bytes, dpm0_badlen, dpm0_bytebad, first_sel, first_core);
 
         chk("P01_fsm_active",                   fsm_state == 2'd2);
         chk("P02_first_strobe_is_col0",         first_sel == 10'd0);
@@ -408,12 +483,25 @@ module tcon_t2b_tb;
         chk("P05_banks_valid_and_clean",        dv_bad == 0);
         chk("P06_window_col_eq_scan_col",       lit_bad == 0);
         chk("P07_content_matches_pattern",      content_bad == 0);
-        chk("P08_strobe_only_in_blank",         stb_outside_blank == 0);
-        chk("P09_strobe_count_9",               ph_stb == 9);
+        chk("P08_strobe_only_in_blank",         blank_bad == 0 && spm_oob == 0);
+        chk("P09_strobe_count_10",              ph_stb == 10);
         chk("P10_dclk_20ns",                    dclk_period_min == 20.0 && dclk_period_max == 20.0);
         chk("P11_latch_at_828",                 ph_lat_at == 828);
         chk("P12_pwm_start_at_840",             ph_pst_at == 840);
         chk("P13_scan_stb_at_880",              ph_stb_at == 880);
+        // ---- load-window statistics: 10 COMPLETE windows of 384 bytes -----
+        chk("P14_ten_complete_windows",         w0 == 10 && w1 == 10);
+        chk("P15_every_window_384_bytes",       dpm0_badlen == 0 && dpm1_badlen == 0 &&
+                                                dpm0_bytes == 384 && dpm1_bytes == 384);
+        // A complete load window is 384 DCLK edges but it SPANS two slots
+        // (it starts at cycle 832 and ends at cycle 622 of the next slot), so a
+        // per-slot edge count would be 72+312, not 384. The 384 figure is
+        // checked per window by the pin monitor (P15), never by win_edges.
+        chk("P16_only_the_precharge_column_skipped", prech_n == 1 && skip_n == 0);
+        chk("P17_payload_byte_exact",           dpm0_bytebad == 0 && dpm1_bytebad == 0);
+        chk("P18_core_compare_covers_all",      core_n == exp_n - prech_n && skip_n == 0);
+        chk("P19_pin_scan_setup_hold",          spm_setup_ps >= 10000 && spm_hold_ps >= 5000 &&
+                                                spm_setbad == 0 && spm_holdbad == 0);
 
         // ---------------- Phase 2: 769th byte AFTER the pre-fetch ----------
         do_reset(1);
@@ -426,76 +514,96 @@ module tcon_t2b_tb;
         $display("PH2 state=%0d err=%b cap0=%0d capbad0=%0d f_stb=%0d f_latch=%0d f_tick=%0d f_blanklow=%0d f_dnz=%0d",
                  fsm_state, err_flags, dm0_cap, dm0_capbad, f_stb, f_latch, f_tick, f_blanklow, f_dnz);
 
-        chk("P14_post_prefetch_overflow_bit",  err_flags[1] == 1'b1);
-        chk("P15_post_prefetch_latches_fault", fsm_state == 2'd3);
-        chk("P16_fault_blocks_all_strobes",    f_stb == 0 && f_latch == 0);
-        chk("P17_fault_blocks_ticks",          f_tick == 0);
-        chk("P18_fault_holds_blank",           f_blanklow == 0);
-        chk("P19_fault_forces_zero_payload",   (d0 == 8'h00) && (d1 == 8'h00));
-        chk("P20_poison_detectable_by_data",   (dm0_capbad == 1'b1) || (dm1_capbad == 1'b1));
+        chk("P20_post_prefetch_overflow_bit",  err_flags[1] == 1'b1);
+        chk("P21_post_prefetch_latches_fault", fsm_state == 2'd3);
+        chk("P22_fault_blocks_all_strobes",    f_stb == 0 && f_latch == 0);
+        chk("P23_fault_blocks_ticks",          f_tick == 0);
+        chk("P24_fault_holds_blank",           f_blanklow == 0);
+        chk("P25_fault_forces_zero_payload",   (d0 == 8'h00) && (d1 == 8'h00));
+        chk("P26_poison_detectable_by_data",   (dm0_capbad == 1'b1) || (dm1_capbad == 1'b1));
 
         // ---------------- Phase 3: recovery after reset --------------------
         drv_on = 0; sp_col = -1; mon_fault = 0;
         do_reset(1);
-        lbl_bad = 0; dv_bad = 0; lit_bad = 0; content_bad = 0; ph_stb = 0;
+        clr_phase;
+        healthy = 1'b1;
         start_drive(0, 1);
         run_slots(5);
-        $display("PH3 state=%0d strobes=%0d disp_col=%0d dm0_col=%0d dm1_col=%0d",
-                 fsm_state, ph_stb, disp_col, dm0_col, dm1_col);
+        $display("PH3 state=%0d strobes=%0d core=%0d exp=%0d prech=%0d disp_col=%0d dm0_col=%0d dm1_col=%0d",
+                 fsm_state, ph_stb, core_n, exp_n, prech_n, disp_col, dm0_col, dm1_col);
 
-        chk("P21_recovery_returns_to_active",            fsm_state == 2'd2);
-        chk("P22_recovery_reprecharge_no_early_strobe",  ph_stb == 4);
-        chk("P23_recovery_labels_ok",   lbl_bad == 0 && dv_bad == 0 && lit_bad == 0);
-        chk("P24_recovery_content_ok",  content_bad == 0);
+        chk("P27_recovery_returns_to_active",            fsm_state == 2'd2);
+        chk("P28_recovery_reprecharge_no_early_strobe",  ph_stb == 4);
+        chk("P29_recovery_labels_ok",   lbl_bad == 0 && dv_bad == 0 && lit_bad == 0);
+        chk("P30_recovery_content_ok",  content_bad == 0);
+        chk("P31_recovery_core_not_skipped", core_n == exp_n - prech_n && skip_n == 0);
         drv_on = 0;
+        healthy = 1'b0;
 
         // ---------------- Phase 4: error classification -------------------
         do_reset(1); sp_col = 3; sp_kind = 1;
         start_drive(0, 1); run_slots(6); drv_on = 0;
-        chk("P25_missing_sync_bit",      err_flags[3] == 1'b1);
-        chk("P26_missing_sync_latched",  fsm_state == 2'd3);
+        chk("P32_missing_sync_bit",      err_flags[3] == 1'b1);
+        chk("P33_missing_sync_latched",  fsm_state == 2'd3);
 
         do_reset(1); sp_col = 3; sp_kind = 2;
         start_drive(0, 1); run_slots(6); drv_on = 0;
-        chk("P27_misplaced_sync_bit",    err_flags[5] == 1'b1);
+        chk("P34_misplaced_sync_bit",    err_flags[5] == 1'b1);
 
         do_reset(1); sp_col = 3; sp_kind = 3;
         start_drive(0, 1); run_slots(6); drv_on = 0;
-        chk("P28_underrun_bit",          err_flags[0] == 1'b1);
+        chk("P35_underrun_bit",          err_flags[0] == 1'b1);
 
         do_reset(1); sp_col = 3; sp_kind = 4;
         start_drive(0, 1); run_slots(6); drv_on = 0;
-        chk("P29_duplicate_sync_flagged", err_flags[5] == 1'b1);
+        chk("P36_duplicate_sync_flagged", err_flags[5] == 1'b1);
 
         do_reset(1); sp_col = 3; sp_kind = 6;
         start_drive(0, 1); run_slots(6); drv_on = 0;
-        chk("P30_bad_vsync_bit",         err_flags[4] == 1'b1);
+        chk("P37_bad_vsync_bit",         err_flags[4] == 1'b1);
 
         do_reset(1); sp_col = -1; sp_kind = 0;
         start_drive(0, 1); run_slots(4);
         fault_n = 1'b0; run_slots(2); fault_n = 1'b1; run_slots(3);
         drv_on = 0;
-        chk("P31_faultn_latched_in_active", fsm_state == 2'd3);
+        chk("P38_faultn_latched_in_active", fsm_state == 2'd3);
 
         // ---------------- Phase 5: full frame + wrap ----------------------
         do_reset(1);
-        lbl_bad = 0; frm_bad = 0; dv_bad = 0; lit_bad = 0; content_bad = 0;
-        ph_stb = 0; wraps = 0; seen_f1 = 1'b0; seen_f2 = 1'b0;
+        clr_phase;
+        wraps = 0; seen_f1 = 1'b0; seen_f2 = 1'b0;
+        healthy = 1'b1;
         start_drive(0, 1);
         run_slots(1027);
         drv_on = 0;
-        $display("PH5 slots=%0d wraps=%0d strobes=%0d lbl_bad=%0d frm_bad=%0d dv_bad=%0d content=%0d",
-                 slot_done, wraps, ph_stb, lbl_bad, frm_bad, dv_bad, content_bad);
+        healthy = 1'b0;
+        $display("PH5 slots=%0d wraps=%0d strobes=%0d exp=%0d core=%0d prech=%0d skip=%0d lbl_bad=%0d frm_bad=%0d dv_bad=%0d content=%0d win0=%0d win_bad0=%0d byte_bad0=%0d",
+                 slot_done, wraps, ph_stb, exp_n, core_n, prech_n, skip_n,
+                 lbl_bad, frm_bad, dv_bad, content_bad,
+                 dpm0_win, dpm0_badlen, dpm0_bytebad);
 
-        chk("P33_full_frame_1024_slots",      slot_done >= 1027);
-        chk("P34_frame_wrap_once_per_frame",  wraps == 1);
-        chk("P35_wrap_labels_ok",             lbl_bad == 0 && frm_bad == 0 && dv_bad == 0);
-        chk("P36_wrap_content_ok",            content_bad == 0);
-        chk("P37_no_selection_change_unblank", (sm0_chg == 1'b0) && (sm1_chg == 1'b0));
-        chk("P38_channel_in_range",            (sm0_chan <= 9'd511) && (sm1_chan <= 9'd511));
-        chk("P39_frame_tag_propagates_across_wrap", seen_f1 == 1'b1 && seen_f2 == 1'b1);
-        chk("P40_core_check_not_vacuous",          core_n > 100);
+        chk("P39_full_frame_1024_slots",      slot_done >= 1027);
+        chk("P40_frame_wrap_once_per_frame",  wraps == 1);
+        chk("P41_wrap_labels_ok",             lbl_bad == 0 && frm_bad == 0 && dv_bad == 0);
+        chk("P42_wrap_content_ok",            content_bad == 0);
+        chk("P43_no_selection_change_unblank", (sm0_chg == 1'b0) && (sm1_chg == 1'b0));
+        chk("P44_channel_in_range",            (sm0_chan <= 9'd511) && (sm1_chan <= 9'd511));
+        chk("P45_frame_tag_propagates_across_wrap", seen_f1 == 1'b1 && seen_f2 == 1'b1);
+        // ---- non-vacuity: every expected healthy strobe was really compared --
+        chk("P46_core_compare_not_vacuous",    core_n >= 1000 && core_n == exp_n - prech_n);
+        chk("P47_no_expected_strobe_skipped",  skip_n == 0 && prech_n <= 1);
+        chk("P48_pin_scan_setup_hold",         spm_setbad == 0 && spm_holdbad == 0 &&
+                                               spm_setup_ps >= 10000 && spm_hold_ps >= 5000);
+        chk("P49_every_window_384_bytes",      dpm0_badlen == 0 && dpm1_badlen == 0 &&
+                                               dpm0_win == dpm1_win && dpm1_bytes == 384);
+        chk("P50_payload_byte_exact",          dpm0_bytebad == 0 && dpm1_bytebad == 0);
+        chk("P51_no_x_on_data_bus",            dpm0_x == 0 && dpm1_x == 0);
 
+        $display("T2B_COUNTS assert_count=%0d fail_count=%0d strobe_count=%0d valid_strobe_count=%0d skipped_expected=%0d content_compare=%0d precharge=%0d core_n=%0d wraps=%0d f1=%0d f2=%0d first_pixel_col=%0d bytes_per_window=%0d",
+                 assert_count, fail_count, n_stb_tot, core_n, skip_n, cont_n, prech_n,
+                 core_n, wraps, seen_f1, seen_f2, first_core, dpm0_bytes);
+        $display("T2B_IDLE_BLANK idle_blanklow_cycles=%0d (see t2b/IDLE_BLANK_SPEC_CONFLICT.md: registered, NOT compliant)",
+                 idle_blanklow);
         $display("COURSE_RTL_ASSERT_COUNT=%0d", assert_count);
         $display("COURSE_RTL_PASS_COUNT=%0d",   pass_count);
         $display("COURSE_RTL_FAIL_COUNT=%0d",   fail_count);

@@ -1,0 +1,88 @@
+`timescale 1ns / 1ps
+// scan_pin_mon — pin-faithful Scan-address monitor (T2B-BR).
+//
+// WHY THIS EXISTS (T2B-B independent review, finding A):
+//   scan_model used to detect SCAN_STB from a 100 MHz reference clock, so its
+//   latch happened at the NEXT reference edge. That is a property of the model,
+//   not of V1.3, and it cannot be used to prove the external contract.
+//
+// This monitor uses **only pins**: a real `posedge scan_stb`, plus the value of
+// COL_ID and BLANK at that instant. It measures:
+//   * setup  : time from the last COL_ID change to the SCAN_STB rising edge
+//              (V1.3 requires >= 10 ns)
+//   * hold   : time from the SCAN_STB rising edge to the next COL_ID change
+//              (V1.3 requires >= 5 ns)
+//   * whether the strobe occurred while BLANK was asserted
+// Nothing here reads the DUT's internal slot_cycle or any other internal net.
+module scan_pin_mon (
+    input  wire        reset_n,
+    input  wire        scan_stb,
+    input  wire [9:0]  col_id,
+    input  wire        blank,
+
+    // observation only - not a chip interface
+    output reg  [15:0] n_stb,
+    output reg  [15:0] n_outside_blank,
+    output reg  [15:0] n_setup_bad,
+    output reg  [15:0] n_hold_bad,
+    output reg  [9:0]  last_col,
+    output reg         last_blank,
+    output reg  [31:0] setup_min_ps,
+    output reg  [31:0] hold_min_ps
+);
+
+    real t_stb, t_col, d_hold;
+    reg  hold_arm;
+
+    initial begin
+        hold_arm = 1'b0;
+        n_stb = 16'd0; n_outside_blank = 16'd0;
+        n_setup_bad = 16'd0; n_hold_bad = 16'd0;
+        last_col = 10'd0; last_blank = 1'b0;
+        setup_min_ps = 32'd1000000000;
+        hold_min_ps  = 32'd1000000000;
+        t_stb = 0.0; t_col = 0.0;
+    end
+
+    // COL_ID change bookkeeping (also closes the hold window)
+    always @(col_id or negedge reset_n) begin
+        if (!reset_n) begin
+            n_hold_bad  = 16'd0;
+            hold_min_ps = 32'd1000000000;
+            t_col       = 0.0;
+            hold_arm    = 1'b0;
+        end else begin
+            t_col = $realtime;
+            if (hold_arm) begin
+                hold_arm = 1'b0;
+                d_hold   = $realtime - t_stb;
+                if ($rtoi(d_hold * 1000.0) < hold_min_ps)
+                    hold_min_ps = $rtoi(d_hold * 1000.0);
+                if (d_hold < 5.0) n_hold_bad = n_hold_bad + 16'd1;
+            end
+        end
+    end
+
+    // the real SCAN_STB rising edge
+    always @(posedge scan_stb or negedge reset_n) begin
+        if (!reset_n) begin
+            n_stb = 16'd0; n_outside_blank = 16'd0;
+            n_setup_bad = 16'd0; last_col = 10'd0; last_blank = 1'b0;
+            setup_min_ps = 32'd1000000000;
+            t_stb = 0.0;
+        end else begin
+            n_stb      = n_stb + 16'd1;
+            last_col   = col_id;
+            last_blank = blank;
+            t_stb      = $realtime;
+            hold_arm   = 1'b1;
+            if (!blank) n_outside_blank = n_outside_blank + 16'd1;
+            if (t_col > 0.0) begin
+                if ($rtoi(($realtime - t_col) * 1000.0) < setup_min_ps)
+                    setup_min_ps = $rtoi(($realtime - t_col) * 1000.0);
+                if (($realtime - t_col) < 10.0) n_setup_bad = n_setup_bad + 16'd1;
+            end
+        end
+    end
+
+endmodule
