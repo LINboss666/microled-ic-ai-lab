@@ -142,8 +142,10 @@ module tcon_t2b_tb;
         .setup_min_ps (spm_setup_ps), .hold_min_ps (spm_hold_ps)
     );
 
-    wire [15:0] dpm0_win, dpm0_badlen, dpm0_bytebad, dpm0_edge;
-    wire [15:0] dpm1_win, dpm1_badlen, dpm1_bytebad, dpm1_edge;
+    wire [15:0] dpm0_win, dpm0_badlen, dpm0_bytebad;
+    wire [31:0] dpm0_edge;
+    wire [15:0] dpm1_win, dpm1_badlen, dpm1_bytebad;
+    wire [31:0] dpm1_edge;
     wire [9:0]  dpm0_bytes, dpm1_bytes, dpm0_col, dpm1_col;
     wire [5:0]  dpm0_frm, dpm1_frm;
     wire        dpm0_x, dpm1_x;
@@ -272,6 +274,8 @@ module tcon_t2b_tb;
     integer    n_stb_tot;          // every pin strobe, all phases
     integer    exp_n, core_n, prech_n, skip_n, cont_n;
     integer    lbl_bad, frm_bad, dv_bad, blank_bad, lit_bad, content_bad;
+    integer    blank_novalid;      // BLANK low while a Data display bank is unusable
+    reg        seen_f1c0, seen_f1c1, seen_f2c0, seen_f2c1;
     integer    f_stb, f_latch, f_tick, f_blanklow, f_dnz;
     integer    mon_fault;
     reg [9:0]  first_sel, first_core;
@@ -289,7 +293,8 @@ module tcon_t2b_tb;
     initial begin
         n_stb_tot = 0; exp_n = 0; core_n = 0; prech_n = 0; skip_n = 0; cont_n = 0;
         lbl_bad = 0; frm_bad = 0; dv_bad = 0; blank_bad = 0; lit_bad = 0;
-        content_bad = 0;
+        content_bad = 0; blank_novalid = 0;
+        seen_f1c0 = 1'b0; seen_f1c1 = 1'b0; seen_f2c0 = 1'b0; seen_f2c1 = 1'b0;
         f_stb = 0; f_latch = 0; f_tick = 0; f_blanklow = 0; f_dnz = 0;
         mon_fault = 0; healthy = 1'b0;
         first_sel = 10'd0; first_core = 10'd0;
@@ -340,6 +345,12 @@ module tcon_t2b_tb;
                     if (!blank)                                       blank_bad = blank_bad + 1;
                     if (dm0_frame == 6'd1) seen_f1 = 1'b1;
                     if (dm0_frame == 6'd2) seen_f2 = 1'b1;
+                    // a frame's FIRST TWO columns must each survive
+                    // rx -> forward -> Data bank -> Scan with a legal permit
+                    if ((dm0_frame == 6'd1) && (col_id == 10'd0)) seen_f1c0 = 1'b1;
+                    if ((dm0_frame == 6'd1) && (col_id == 10'd1)) seen_f1c1 = 1'b1;
+                    if ((dm0_frame == 6'd2) && (col_id == 10'd0)) seen_f2c0 = 1'b1;
+                    if ((dm0_frame == 6'd2) && (col_id == 10'd1)) seen_f2c1 = 1'b1;
 
                     // ---- display-bank content of the selected column ----
                     if (dm0.dbank[0]   !== (col_id & 255))                        content_bad = content_bad + 1;
@@ -369,6 +380,14 @@ module tcon_t2b_tb;
 
             // honest count of "BLANK low while no legal frame / no permit"
             if (!blank && (fsm_state != 2'd2)) idle_blanklow = idle_blanklow + 1;
+
+            // HARD GATE (T2B-C): BLANK may never be low while either Data
+            // display bank is invalid or corrupt. This is the exact check that
+            // the T2B-BR VCD defeated (7,680 ns of BLANK=0 with both banks
+            // invalid, first valid bank belonging to column 1).
+            if (!blank && (fsm_state == 2'd2) &&
+                !(dm0_valid && dm1_valid && !dm0_corrupt && !dm1_corrupt))
+                blank_novalid = blank_novalid + 1;
 
             if (fsm_state == 2'd3) begin
                 if (scan_stb)              f_stb      = f_stb + 1;
@@ -484,7 +503,7 @@ module tcon_t2b_tb;
         chk("P06_window_col_eq_scan_col",       lit_bad == 0);
         chk("P07_content_matches_pattern",      content_bad == 0);
         chk("P08_strobe_only_in_blank",         blank_bad == 0 && spm_oob == 0);
-        chk("P09_strobe_count_10",              ph_stb == 10);
+        chk("P09_strobe_count_9",               ph_stb == 9);
         chk("P10_dclk_20ns",                    dclk_period_min == 20.0 && dclk_period_max == 20.0);
         chk("P11_latch_at_828",                 ph_lat_at == 828);
         chk("P12_pwm_start_at_840",             ph_pst_at == 840);
@@ -497,11 +516,14 @@ module tcon_t2b_tb;
         // (it starts at cycle 832 and ends at cycle 622 of the next slot), so a
         // per-slot edge count would be 72+312, not 384. The 384 figure is
         // checked per window by the pin monitor (P15), never by win_edges.
-        chk("P16_only_the_precharge_column_skipped", prech_n == 1 && skip_n == 0);
+        chk("P16_no_column_skipped_at_startup", prech_n == 0 && skip_n == 0 && core_n == 9);
         chk("P17_payload_byte_exact",           dpm0_bytebad == 0 && dpm1_bytebad == 0);
         chk("P18_core_compare_covers_all",      core_n == exp_n - prech_n && skip_n == 0);
         chk("P19_pin_scan_setup_hold",          spm_setup_ps >= 10000 && spm_hold_ps >= 5000 &&
                                                 spm_setbad == 0 && spm_holdbad == 0);
+        // T2B-C: the first column that is actually compared must be column 0.
+        // In T2B-BR it was column 1, because column 0 was never captured.
+        chk("P19b_startup_first_column_is_0",   first_core == 10'd0);
 
         // ---------------- Phase 2: 769th byte AFTER the pre-fetch ----------
         do_reset(1);
@@ -590,6 +612,9 @@ module tcon_t2b_tb;
         chk("P44_channel_in_range",            (sm0_chan <= 9'd511) && (sm1_chan <= 9'd511));
         chk("P45_frame_tag_propagates_across_wrap", seen_f1 == 1'b1 && seen_f2 == 1'b1);
         // ---- non-vacuity: every expected healthy strobe was really compared --
+        // one strobe per slot in the frame: this is the check that would have
+        // caught the saturating-counter defect exactly (1026 -> 898 strobes)
+        chk("P39b_one_strobe_per_slot",        ph_stb == slot_done - 1);
         chk("P46_core_compare_not_vacuous",    core_n >= 1000 && core_n == exp_n - prech_n);
         chk("P47_no_expected_strobe_skipped",  skip_n == 0 && prech_n <= 1);
         chk("P48_pin_scan_setup_hold",         spm_setbad == 0 && spm_holdbad == 0 &&
@@ -598,6 +623,12 @@ module tcon_t2b_tb;
                                                dpm0_win == dpm1_win && dpm1_bytes == 384);
         chk("P50_payload_byte_exact",          dpm0_bytebad == 0 && dpm1_bytebad == 0);
         chk("P51_no_x_on_data_bus",            dpm0_x == 0 && dpm1_x == 0);
+        // ---- T2B-C startup-safety hard gates -----------------------------
+        chk("P52_no_unblank_without_data",     blank_novalid == 0);
+        chk("P53_idle_never_unblanks",         idle_blanklow == 0);
+        chk("P54_frame_head_col0_col1_displayed",
+            seen_f1c0 && seen_f1c1 && seen_f2c0 && seen_f2c1);
+        chk("P55_every_compared_column_valid", core_n == exp_n && skip_n == 0);
 
         $display("T2B_COUNTS assert_count=%0d fail_count=%0d strobe_count=%0d valid_strobe_count=%0d skipped_expected=%0d content_compare=%0d precharge=%0d core_n=%0d wraps=%0d f1=%0d f2=%0d first_pixel_col=%0d bytes_per_window=%0d",
                  assert_count, fail_count, n_stb_tot, core_n, skip_n, cont_n, prech_n,

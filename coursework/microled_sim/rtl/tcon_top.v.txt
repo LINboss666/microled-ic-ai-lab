@@ -11,6 +11,12 @@
 //     even/odd row split (D0 = row 2k, D1 = row 2k+1)
 //   * a latch-safe FSM (RESET / IDLE / ACTIVE / FAULT) that withholds the
 //     display permit after any data, load or protocol error until reset_n
+//   * a single `display_permit` contract (T2B-C):
+//        BLANK is high unless  ACTIVE && label valid && 2-stage precharge done
+//     so IDLE never releases BLANK, and no PWM/LATCH-to-display permit exists
+//     before the Data chip has had its precharge LATCH and its first commit.
+//     LATCH itself is a structural timing signal and keeps running inside
+//     BLANK so the Data chip can initialise its load counter (V1.3 §9).
 //   * frame+column tags for the four pipeline stages:
 //        rx(s) = s, fwd(s) = s, disp(s) = s-1, lit(s) = s-2
 //     COL_ID is driven from the tracked Data display-bank label, never from a
@@ -288,9 +294,41 @@ module tcon_top #(
     wire        fw_ok         = fw_sel_valid && !fw_sel_poison;
 
     // ---------------------------------------------------------------------
-    // display-bank label = what the Data driver holds after LATCH
+    // display permit
+    //   V1.3 §9 (段0810) : BLANK may only be released after configuration,
+    //   calibration, buffer precharge and a valid synchronisation.
+    //   The permit therefore needs three things that are all separate:
+    //     1. the FSM is ACTIVE (a legal VSYNC + COL_SYNC frame head was seen)
+    //     2. the tracked display label is valid and not poisoned
+    //     3. the two-stage Data precharge has actually completed. The Data chip
+    //        needs one LATCH to initialise its load counter and a second LATCH
+    //        to switch the first filled buffer into the display bank; before
+    //        those two pulses its display bank cannot hold anything.
+    //
+    //   T2B-C fix: `latch` used to be gated by `fw_ok`, so the very first LATCH
+    //   (the precharge initialisation) was suppressed and column 0 was clocked
+    //   onto the bus but never captured. The independent VCD of the T2B-BR run
+    //   showed BLANK falling for a full 7,680 ns window while both Data banks
+    //   were still invalid, and the first valid bank belonged to column 1.
+    //   LATCH is a structural timing signal - it is issued every slot while the
+    //   clock is safe - and the *permit* is what carries the precharge condition.
     // ---------------------------------------------------------------------
-    wire latch_evt = (slot_cycle == (LATCH_AT - 1));   // LATCH pulse starts next cycle
+    // T2B-C: a SATURATING 2-bit counter, not a free-running one. Run A of this
+    // round caught the free-running version: a 4-bit counter wraps every 16
+    // slots, and on the two slots where it reads 0 or 1 `disp_ok` collapses, so
+    // 2 of every 16 columns silently lose their SCAN_STB (1026 -> 898 strobes,
+    // exactly 2 x 64). The precharge is a one-shot condition, so it saturates.
+    reg [1:0] latch_cnt;                    // LATCH pulses issued since reset, saturating at 2
+
+    wire latch_evt   = (slot_cycle == (LATCH_AT - 1));   // LATCH pulse starts next cycle
+    wire latch_issue = latch_evt && safe && !flt;        // the pulse really goes out
+
+    always @(posedge clk_ref or negedge reset_n) begin
+        if (!reset_n)                                        latch_cnt <= 2'd0;
+        else if (latch_issue && (latch_cnt != 2'd2))         latch_cnt <= latch_cnt + 2'd1;
+    end
+
+    wire precharge_done = (latch_cnt == 2'd2);
 
     always @(posedge clk_ref or negedge reset_n) begin
         if (!reset_n) begin
@@ -309,16 +347,16 @@ module tcon_top #(
         end
     end
 
-    wire disp_ok = disp_valid && !disp_poison;
+    wire disp_ok = disp_valid && !disp_poison && precharge_done;
 
     // ---------------------------------------------------------------------
-    // BLANK / strobes: no display permit without a valid display label
+    // BLANK / strobes: no display permit without (frame, label, precharge)
     // ---------------------------------------------------------------------
-    assign blank     = blank_seq || !safe || flt || (act && !disp_ok);
-    assign latch     = latch_seq  && safe && !flt && (!act || fw_ok);
-    assign pwm_start = pstart_seq && safe && !flt && (!act || disp_ok);
-    assign scan_stb  = stb_seq    && safe && !flt && (!act || disp_ok);
-    assign pwm_tick  = tick_base  && window && safe && !flt && (!act || disp_ok);
+    assign blank     = blank_seq || !safe || flt || !act || (act && !disp_ok);
+    assign latch     = latch_seq  && safe && !flt;
+    assign pwm_start = pstart_seq && safe && !flt && act && disp_ok;
+    assign scan_stb  = stb_seq    && safe && !flt && act && disp_ok;
+    assign pwm_tick  = tick_base  && window && safe && !flt && act && disp_ok;
 
     // ---------------------------------------------------------------------
     // COL_ID: tracked display-bank label in ACTIVE, local column in IDLE

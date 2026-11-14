@@ -25,16 +25,16 @@ chk() { # chk <name> <expected-token> <expected-rc> <scen> [ext]
 }
 
 echo "=== scenario floor resolution ==="
-chk "S1_RESET_FAULT_default_23"  "23"                  0 RESET_FAULT
-chk "S2_TIMEBASE_default_16"     "16"                  0 TIMEBASE
-chk "S3_BOUNDARY_default_10"     "10"                  0 BOUNDARY
-chk "S4_ALL_default_49"          "49"                  0 ALL
+chk "S1_RESET_FAULT_default_27"  "27"                  0 RESET_FAULT
+chk "S2_TIMEBASE_default_17"     "17"                  0 TIMEBASE
+chk "S3_BOUNDARY_default_11"     "11"                  0 BOUNDARY
+chk "S4_ALL_default_55"          "55"                  0 ALL
 
 echo "=== external MIN_ASSERTS handling ==="
-chk "S5_ALL_external_above_ok"     "60"                 0 ALL        60
-chk "S6_RESET_external_equal_ok"   "23"                 0 RESET_FAULT 23
-chk "S7_RESET_external_below_bad"  "ERR_BELOW_FLOOR_23" 7 RESET_FAULT 10
-chk "S8_BOUNDARY_external_below_bad" "ERR_BELOW_FLOOR_10" 7 BOUNDARY 1
+chk "S5_ALL_external_above_ok"     "66"                 0 ALL        66
+chk "S6_RESET_external_equal_ok"   "27"                 0 RESET_FAULT 27
+chk "S7_RESET_external_below_bad"  "ERR_BELOW_FLOOR_27" 7 RESET_FAULT 10
+chk "S8_BOUNDARY_external_below_bad" "ERR_BELOW_FLOOR_11" 7 BOUNDARY 1
 
 echo "=== input validation ==="
 chk "S9_unknown_scenario"        "ERR_UNKNOWN_SCENARIO" 9 NOPE

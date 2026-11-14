@@ -15,8 +15,8 @@ SRC="$COURSE_ROOT/coursework/microled_sim"
 WALL_LIMIT_S="${WALL_LIMIT_S:-900}"
 VCD_LIMIT_MB="${VCD_LIMIT_MB:-120}"
 
-# Assertion floor: T2B joint set (P01..P51). Never lower it.
-FLOOR=51
+# Assertion floor: T2B joint set (P01..P55 + P39b). Never lower it.
+FLOOR=57
 
 SRC_TB="$SRC/tb/tcon_t2b_tb.sv.txt"
 TOTAL=$(grep -c 'chk("' "$SRC_TB")
@@ -49,9 +49,9 @@ echo "--- source SHA-256 (identity of what is simulated) ---"
 ( cd "$RESTORE" && sha256sum * ) | tee 00_source_sha256.txt
 echo "--- expected quantities (printed BEFORE the run, so it cannot be fitted) ---"
 echo "EXPECT asserts=$TOTAL floor=$FLOOR  windows_phase1=10  bytes_per_window=384"
-echo "EXPECT phase1: windows=10 bytes_per_window=384 strobes=10 core=9 prech=1 skip=0"
-echo "EXPECT phase5(1027 slots): strobes=1026 core=1025 prech=1 skip=0 wraps=1"
-echo "EXPECT anti-false-pass assertions: P15,P16,P17,P18,P19,P46,P47,P48,P49,P50,P51"
+echo "EXPECT phase1: windows=10 bytes_per_window=384 strobes=9 core=9 prech=0 skip=0 first_core_col=0"
+echo "EXPECT phase5(1027 slots): strobes=1026 core=1026 prech=0 skip=0 wraps=1 blank_novalid=0 idle_blanklow=0"
+echo "EXPECT anti-false-pass assertions: P15,P16,P17,P18,P19,P19b,P46,P47,P48,P49,P50,P51,P52,P53,P54,P55"
 
 echo "=== TCON_T2B_RUNNER start $(date '+%Y-%m-%dT%H:%M:%S%z') ==="
 echo "MIN_ASSERTS=$MIN_ASSERTS (floor $FLOOR, TB has $TOTAL checks)"

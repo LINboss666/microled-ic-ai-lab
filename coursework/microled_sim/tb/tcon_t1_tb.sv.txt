@@ -1,19 +1,34 @@
 `timescale 1ns / 1ps
-// TCON T1R skeleton testbench.
+// TCON T1 testbench — V1.3 CONTRACT VERSION (T2B-C).
 //
-// Scenarios (+SCEN=...):
-//   RESET_FAULT : reset state, "not ready => BLANK", fault -> BLANK,
-//                 fault DURING the LATCH pulse, fault DURING the load window
-//   TIMEBASE    : slot lengths, LATCH/PWM_START/SCAN_STB offsets and 40 ns
-//                 pulses, 64 ticks per window, load window start/length,
-//                 DCLK period / frequency / 384-edge count
-//   BOUNDARY    : the FIRST frame after reset - 1024 slots, 576 long / 448
-//                 short, exactly 1,000,000 cycles, frame_wrap exactly once
+// THIS IS NOT the original T1. The original 49 checks were written for a
+// "timing skeleton" in which the TCON was allowed to release BLANK and emit
+// LATCH / PWM_START / SCAN_STB / PWM_TICK with NO video at all. V1.3 §9 (段0810)
+// forbids exactly that: BLANK may only be released after configuration,
+// calibration, buffer precharge and a valid synchronisation. Keeping the old
+// expectation as the production acceptance would have meant "the design is
+// allowed to enable the panel with nothing to show".
+//
+// So this TB now
+//   * drives a real V1.3 video stream (COL_SYNC + DE + byte 0 on the same edge,
+//     768 bytes per column, VSYNC on the first column),
+//   * requires BLANK to stay HIGH while the FSM has no legal frame,
+//   * requires BLANK to stay HIGH until TWO LATCH pulses have been issued
+//     (the Data precharge: one to initialise the load counter, one to switch
+//     the first filled buffer into the display bank),
+//   * keeps every timing-skeleton check (slot length, LATCH 828, PWM_START 840,
+//     SCAN_STB 880, 40 ns pulses, 64 ticks, DCLK 20 ns / 384 edges per load
+//     window, 1024 slots, 1,000,000 cycles, 576 long / 448 short).
+//
+// The mapping from the original 49 checks to this file is in
+// t2b/OLD_T1_ASSERTION_MAPPING.md. The original TB is preserved in git history
+// (b02f824 and earlier) and is NOT silently edited into "still 49/49".
 //
 // The TB only observes DUT outputs; it never drives blank / latch / pwm_start /
 // scan_stb / col_id / pwm_tick / dclk / load_active.
 //
-// SCOPE: skeleton only. No 768-byte receive, no buffer, no D0/D1 payload.
+// SCOPE: timing skeleton + startup permit contract. No 768-byte payload check,
+// no Data/Scan behavioural models (that is the T2B joint testbench).
 module tcon_t1_tb;
 
     // ---------------- clock / DUT -----------------------------------------
@@ -36,9 +51,6 @@ module tcon_t1_tb;
     wire [7:0] d0, d1, status;
     wire       frame_wrap, slot_long, slot_start;
 
-    // T2B: every observation port is wired to a dummy net so the elaboration has
-    // no "too few / missing connection" warnings. These nets are not used by any
-    // T1 assertion - T1 only checks the time base and the slot phase sequence.
     wire [5:0]  t1_err_flags, t1_err_now, t1_frame_id;
     wire [1:0]  t1_bank_valid, t1_fsm_state;
     wire [9:0]  t1_bytes_rcvd, t1_load_cnt, t1_in_col, t1_disp_col, t1_fwd_col;
@@ -70,13 +82,71 @@ module tcon_t1_tb;
         .fwd_col (t1_fwd_col), .fwd_frame (t1_fwd_frame), .load_done (t1_load_done)
     );
 
-    // ---------------- bookkeeping -----------------------------------------
+    // ======================================================================
+    // V1.3 video driver: COL_SYNC + DE + byte0 on the same edge, 768 B/column,
+    // VSYNC on the first column. Slot model = the same 576/448 recurrence.
+    // ======================================================================
+    integer vc, vcol, vframe, vlen, vfrac, slot_done;
+    reg     drv_on;
+
+    always @(negedge clk) begin
+        if (!reset_n) begin
+            vc = 0; vcol = 0; vframe = 1; vlen = 976; vfrac = 576;
+            slot_done = 0; drv_on = 0;
+            de <= 1'b0; col_sync <= 1'b0; vsync <= 1'b0; video_d <= 8'h00;
+        end else if (drv_on) begin
+            de       <= (vc < 768);
+            video_d  <= vc[7:0];
+            col_sync <= (vc == 0);
+            vsync    <= (vc == 0) && (vcol == 0);
+            vc = vc + 1;
+            if (vc >= vlen) begin
+                vc = 0;
+                slot_done = slot_done + 1;
+                if (vcol == 1023) begin
+                    vcol   = 0;
+                    vframe = vframe + 1;
+                end else begin
+                    vcol = vcol + 1;
+                end
+                if ((vfrac + 576) >= 1024) begin
+                    vlen  = 977;
+                    vfrac = vfrac + 576 - 1024;
+                end else begin
+                    vlen  = 976;
+                    vfrac = vfrac + 576;
+                end
+            end
+        end
+    end
+
+    task automatic video_on(input integer from_frame);
+        begin
+            vc = 0; vcol = 0; vframe = from_frame;
+            vlen = 976; vfrac = 576;
+            drv_on = 1;
+        end
+    endtask
+
+    task automatic video_off;
+        begin
+            drv_on = 0;
+            de <= 1'b0; col_sync <= 1'b0; vsync <= 1'b0;
+        end
+    endtask
+
+    // ======================================================================
+    // bookkeeping
+    // ======================================================================
     integer assert_count = 0, pass_count = 0, fail_count = 0;
     integer blk_viol = 0, latch_viol = 0, stb_viol = 0;
     integer dclk_edges = 0, load_edges = 0, load_cycles = 0;
     integer wrap_events = 0;
+    integer latch_events = 0;
+    integer idle_viol = 0;        // BLANK low while the FSM is not ACTIVE
+    integer early_unblank = 0;    // BLANK low before TWO LATCH pulses were issued
     realtime t_dclk_prev = 0.0, dclk_period = 0.0;
-    reg      wrap_d = 1'b0;
+    reg      wrap_d = 1'b0, latch_d = 1'b0;
     string   scen;
 
     // black-box safety monitors
@@ -85,6 +155,14 @@ module tcon_t1_tb;
             if (pwm_tick && blank)  blk_viol   = blk_viol   + 1;
             if (latch && !blank)    latch_viol = latch_viol + 1;
             if (scan_stb && !blank) stb_viol   = stb_viol   + 1;
+
+            if (latch && !latch_d) latch_events = latch_events + 1;
+            latch_d = latch;
+
+            // V1.3 §9: no display permit without a legal frame ...
+            if (!blank && (dut.fsm_state != 2'd2)) idle_viol = idle_viol + 1;
+            // ... and none before the two-stage Data precharge is complete
+            if (!blank && (latch_events < 2)) early_unblank = early_unblank + 1;
         end
     end
 
@@ -129,21 +207,46 @@ module tcon_t1_tb;
         repeat (n) @(negedge clk);
     endtask
 
+    // V1.3 段0810 / task book: reset must be held >= 1 us
     task automatic reset_dut;
         reset_n = 1'b0; cfg_valid = 1'b0; run_en = 1'b0;
         rx_ready = 1'b0; fault_n = 1'b1; vsync = 1'b0; col_sync = 1'b0; de = 1'b0;
-        step(20);
+        step(200);                      // 2 us
         reset_n = 1'b1;
         step(40);
+        latch_events = 0;               // precharge is counted from the reset
     endtask
 
-    // ---------------- scenario 1: reset / fault ---------------------------
-    integer i;
+    // enable the DUT and start the V1.3 frame at slot 0
+    task automatic enable_dut(input integer from_frame);
+        begin
+            cfg_valid = 1'b1; cfg_mode = 2'd1;
+            run_en = 1'b1; rx_ready = 1'b1; fault_n = 1'b1;
+            @(posedge clk);             // mode_en rises -> cycle 0 of slot 0
+            video_on(from_frame);
+        end
+    endtask
+
+    // wait (bounded) for BLANK to go low; returns 0 on timeout
+    // max_cycles counts 100 MHz cycles (10 ns each)
+    task automatic wait_blank_low(input integer max_cycles, output integer ok);
+        integer n;
+        begin
+            ok = 0; n = 0;
+            while ((blank !== 1'b0) && (n < max_cycles)) begin
+                @(negedge clk); n = n + 1;
+            end
+            if (blank === 1'b0) ok = 1;
+        end
+    endtask
+
+    // ---------------- scenario 1: reset / startup / fault ------------------
+    integer i, ok;
     task automatic scen_reset_fault;
-        $display("--- SCENARIO RESET_FAULT ---");
+        $display("--- SCENARIO RESET_FAULT (V1.3 contract) ---");
         reset_n = 1'b0; cfg_valid = 1'b0; run_en = 1'b0;
         rx_ready = 1'b0; fault_n = 1'b1; cfg_mode = 2'd1;
-        step(4);
+        step(200);                                   // 2 us reset
         chk("R1_reset_blank_high",    blank === 1'b1);
         chk("R1_reset_col_id_0",      col_id === 10'd0);
         chk("R1_reset_no_latch",      latch === 1'b0);
@@ -161,14 +264,24 @@ module tcon_t1_tb;
         step(40);
         chk("R3_illegal_mode_blank_high", blank === 1'b1);
 
+        // ---- legal configuration but NO video: the FSM stays in IDLE ------
         cfg_mode = 2'd1;
-        step(1200);
-        chk("R4_ready_blank_low", blank === 1'b0);
-        chk("R4_status_ready",    status[0] === 1'b1);
+        @(posedge clk);
+        step(2000);                                  // 20 us (~2 slots) without video
+        chk("R4_idle_no_video_blank_high", blank === 1'b1);
+        chk("R4_idle_no_video_no_strobe",  scan_stb === 1'b0 && pwm_start === 1'b0);
+        chk("R4_status_ready",             status[0] === 1'b1);
+
+        // ---- legal frame: two-stage precharge then the permit ---------------
+        // a fresh reset is required so that the driver's 576/448 recurrence
+        // starts on slot 0 (otherwise the column label drifts from the DUT)
+        reset_dut;
+        enable_dut(1);
+        wait_blank_low(20000, ok);
+        chk("R4b_precharge_never_unblanks_early", (early_unblank == 0) && (latch_events >= 2));
+        chk("R4c_blank_low_after_precharge",      ok == 1 && blank === 1'b0);
 
         // ---- fault in the middle of the LATCH pulse -----------------------
-        fault_n = 1'b1;
-        step(1200);
         i = 0;
         while ((dut.slot_cycle !== 11'd828) && (i < 3000)) begin
             @(negedge clk); i = i + 1;
@@ -180,9 +293,12 @@ module tcon_t1_tb;
         step(6);
         chk("R5b_fault_during_latch_no_phantom_load", load_active === 1'b0);
 
-        // ---- fault in the middle of the load window ----------------------
-        fault_n = 1'b1;
-        step(1200);
+        // ---- fault in the middle of the load window (fresh start) --------
+        // Q3=B latches the fault, so this needs its own reset; the old TB
+        // "recovered" by only restoring fault_n, which V1.3 does not allow.
+        reset_dut;
+        enable_dut(1);
+        wait_blank_low(20000, ok);
         i = 0;
         while (!load_active && (i < 3000)) begin
             @(negedge clk); i = i + 1;
@@ -195,13 +311,20 @@ module tcon_t1_tb;
         chk("R5c_fault_clears_load_counter",      dut.load_cnt === 10'd0);
         chk("R5c_fault_during_load_blank",        blank === 1'b1);
 
-        // ---- recovery -----------------------------------------------------
+        // ---- Q3=B: the fault is LATCHED, restoring fault_n is not a recovery
         fault_n = 1'b1;
         step(1200);
-        chk("R6_recover_blank_low", blank === 1'b0);
-        chk("R5_fault_sticky_status", status[3] === 1'b1);
-        chk("R6_no_tick_while_blanked", blk_viol == 0);
-        chk("R6_no_latch_outside_blank", latch_viol == 0);
+        chk("R6_fault_latched_blank_high", blank === 1'b1);
+        chk("R5_fault_sticky_status",      status[3] === 1'b1);
+        chk("R6_no_tick_while_blanked",    blk_viol == 0);
+        chk("R6_no_latch_outside_blank",   latch_viol == 0);
+
+        // ---- recovery = reset + a new two-stage precharge ------------------
+        reset_dut;
+        enable_dut(1);
+        wait_blank_low(20000, ok);
+        chk("R7_reset_reprecharge_blank_low", ok == 1 && blank === 1'b0);
+        video_off;
     endtask
 
     // ---------------- scenario 2: time base, pulses, DCLK, load -----------
@@ -243,11 +366,11 @@ module tcon_t1_tb;
     realtime t_load0, t_load1;
 
     task automatic scen_timebase;
-        $display("--- SCENARIO TIMEBASE ---");
+        $display("--- SCENARIO TIMEBASE (V1.3 contract: measured in ACTIVE) ---");
         reset_dut;
-        cfg_valid = 1'b1; cfg_mode = 2'd1;
-        run_en = 1'b1; rx_ready = 1'b1; fault_n = 1'b1;
-        step(1200);
+        enable_dut(1);
+        wait_blank_low(20000, ok);
+        chk("T0_permit_before_measure", ok == 1);
 
         measure_slot(len_c, ticks, l_off, p_off, s_off, l_pw);
         $display("SLOT len=%0d ticks=%0d latch=%0d pstart=%0d stb=%0d pw=%0d",
@@ -269,14 +392,11 @@ module tcon_t1_tb;
         chk("T2_dclk_period_20ns", dclk_period == 20.0);
 
         // ---- load window: starts at 832, 768 cycles, 384 DCLK edges --------
-        // NOTE: the load window spans slots ([832, 1600) = [-144, 624) of the
-        // next slot), so at an arbitrary cycle the PREVIOUS slot's load can
-        // still be active. Wait for a RISING edge, never for "level high".
         @(posedge load_active);
         #1;
         t_load0    = $realtime - 1.0;    // back to the rising edge
         sc_at_load = dut.slot_cycle;
-        load_edges = 0;                  // dclk posedge cannot occur inside 1 ns
+        load_edges = 0;
         @(negedge load_active);
         t_load1     = $realtime;
         load_cycles = $rtoi((t_load1 - t_load0) / 10.0);
@@ -291,29 +411,30 @@ module tcon_t1_tb;
         measure_slot(len_c, ticks, l_off, p_off, s_off, l_pw);
         chk("T5_slot3_len_976_or_977", (len_c == 976) || (len_c == 977));
         chk("T5_col_id_advancing",     col_id >= 10'd2);
+        video_off;
     endtask
 
     // ---------------- scenario 3: FIRST frame after reset -----------------
     task automatic scen_boundary;
-        integer slots, longs, shorts, prev_len, start_col, first_len, wrap0;
+        integer slots, longs, shorts, prev_len, first_len, wrap0;
+        integer col_at_slot1, col_at_slot1025;
         realtime t_prev, t_now;
-        $display("--- SCENARIO BOUNDARY (first frame after reset) ---");
+        $display("--- SCENARIO BOUNDARY (first frame after reset, V1.3 video) ---");
         reset_dut;
-
-        // enable rises on the next posedge; the time base restarts cycle 0 there
-        cfg_valid = 1'b1; cfg_mode = 2'd1;
-        run_en = 1'b1; rx_ready = 1'b1; fault_n = 1'b1;
-        @(posedge clk);
-        t_prev = $realtime;
+        enable_dut(1);
+        // the frame scan starts at slot 0: the precharge (slots 0-1) is part of
+        // what is being measured, so we do NOT wait for the permit here
         #1;
-        start_col = dut.col_id;
+        t_prev = $realtime - 1.0;       // = the edge that started slot 0
         wrap0 = wrap_events;
         slots = 0; longs = 0; shorts = 0; first_len = 0;
+        col_at_slot1 = -1;
 
         while (slots < 1024) begin
             @(posedge slot_start);
             t_now = $realtime;
             #1;
+            if (slots == 1) col_at_slot1 = dut.col_id;
             prev_len = $rtoi((t_now - t_prev) / 10.0);
             t_prev   = t_now;
             if (slots == 0) first_len = prev_len;
@@ -321,32 +442,40 @@ module tcon_t1_tb;
             else if (prev_len == 976) shorts = shorts + 1;
             slots = slots + 1;
         end
-        step(4);                         // let the wrap monitor settle
+        // one more slot boundary: the display label lags the input by one slot,
+        // so the period-1024 property is checked one slot later
+        @(posedge slot_start);
+        #1;
+        col_at_slot1025 = dut.col_id;
+        step(4);
 
-        $display("FIRST_FRAME slots=%0d first_len=%0d long=%0d short=%0d cycles=%0d wraps=%0d start_col=%0d end_col=%0d",
+        $display("FIRST_FRAME slots=%0d first_len=%0d long=%0d short=%0d cycles=%0d wraps=%0d col1=%0d col1025=%0d",
                  slots, first_len, longs, shorts, longs * 977 + shorts * 976,
-                 wrap_events - wrap0, start_col, dut.col_id);
+                 wrap_events - wrap0, col_at_slot1, col_at_slot1025);
         chk("B1_first_slot_976_short_first", first_len == 976);
         chk("B2_first_frame_1024_slots",     slots == 1024);
         chk("B3_first_frame_cycles_1e6",     (longs * 977 + shorts * 976) == 1000000);
         chk("B4_first_frame_576_long",       longs == 576);
         chk("B5_first_frame_448_short",      shorts == 448);
         chk("B6_frame_wrap_exactly_once",    (wrap_events - wrap0) == 1);
-        chk("B7_col_id_period_1024",         dut.col_id == start_col);
+        chk("B7_col_id_period_1024_after_wrap", col_at_slot1025 == col_at_slot1);
         chk("B8_no_tick_in_blank_frame",     blk_viol == 0);
         chk("B9_no_latch_outside_blank_frame", latch_viol == 0);
         chk("B10_no_stb_outside_blank_frame",  stb_viol == 0);
+        chk("B0_no_unblank_before_precharge",  early_unblank == 0);
+        video_off;
     endtask
 
     // ---------------- main ------------------------------------------------
     initial begin
         if (!$value$plusargs("SCEN=%s", scen)) scen = "ALL";
         $display("COURSE_TCON_T1_SCENARIO=%s", scen);
-        // The 1024-slot frame scan must not write a waveform: it takes 10 ms of
-        // simulated time and produced an 8 GB VCD in the previous round.
+        $display("COURSE_TCON_T1_CONTRACT=V1.3_STARTUP_SAFETY");
+        // The 1024-slot frame scan must not write a waveform: 10 ms of
+        // simulated time produced an 8 GB VCD in an earlier round.
         if (scen != "BOUNDARY") begin
             $dumpfile("tcon_t1.vcd");
-            $dumpvars(0, tcon_t1_tb);
+            $dumpvars(1, tcon_t1_tb);
         end
 
         case (scen)

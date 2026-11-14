@@ -1,6 +1,6 @@
 # VIDEO_INPUT_SPEC_COVERAGE — V1.3 视频输入要求逐条覆盖与证据状态
 
-**任务** `TCON-T2B-BR-20261114` ｜ 基线 `b1e92cd` ｜ **本轮 ModelSim 1/1 已用（#4 PASS），T1 #5 未授权未跑**
+**任务** `TCON-T2B-C-20261114` ｜ 基线 `b02f824` ｜ **ModelSim 2/2 已用（A 失败 1 次 + A2 PASS 1 次），T1(B) 未跑**
 **状态口径**
 `VERIFIED` = 本轮原生 ModelSim #4 PASS 且判据在**针脚级**成立；
 `PIN_MON_PASS` = 由针脚级监视器在 #4 中实测通过，但证据窗口只覆盖 phase-1 的 10 个窗口；
@@ -32,7 +32,9 @@
 | V13 | 无有效显示标签不得选通（Q2=A 裁定） | `scan_stb = stb_seq && safe && !flt && (!act \|\| disp_ok)` | 预充列只出现 1 次（`prech_n=1`）且当时 `ncom=0` | `VERIFIED` |
 | V14 | 启动预充不丢首列（§9 段0323） | ACTIVE 下首槽 `disp_valid=0` → BLANK 保持、无选通 | `PH1 strobes=10`（11 槽）、`first_strobe_col=0` | `VERIFIED`（首列只"不显示"，未丢数据；见 §3 风险） |
 | V15 | 50 MHz DCLK 连续、384 沿/窗（§12 段0461、§14） | `tcon_data_tx` | `P10` 周期恒定 20 ns；**每窗 384 沿**（`P14/P15/P49`，不再用按槽累加的 `win_edges`） | `VERIFIED` |
-| V16 | 上电/配置/预充/同步有效前保持 BLANK（§9 段0810） | **未实现**：IDLE 下 `blank = blank_seq` | `T2B_IDLE_BLANK idle_blanklow_cycles=20`；`t2b/IDLE_BLANK_SPEC_CONFLICT.md` | `REGISTERED`（**不合规，未修复**） |
+| V16 | 上电/配置/预充/同步有效前保持 BLANK（§9 段0810） | `blank` 含 `!act`；`disp_ok` 含 `precharge_done` | `idle_blanklow_cycles=0`；BLANK 为低而 bank 无效的周期 = 0（`P52`）；`P53` PASS | `VERIFIED` |
+| V17 | 启动两级预充、不丢帧首两列（§9 段0323） | `latch` 不再被 `fw_ok` 门控；`latch_cnt` 饱和计数 | 首个被比较列 = 列 0（`P19b`）；帧 1/帧 2 的列 0、列 1 全部比较（`P54`）；`prech_n=0` | `VERIFIED` |
+| V18 | 整帧每个槽都有一次选通 | `precharge_done` 一次性 | `1026/1026`（`P39b`） | `VERIFIED` |
 
 ---
 
@@ -66,8 +68,8 @@
 
 ## 4. 结论
 
-- V1/V2/V3/V5/V7/V9/V10/V11/V13/V14/V15 达 `VERIFIED`；V8 `PIN_MON_PASS`；
-  V12 限于已注入错误类型；V4/V6 `NOT_RUN`；**V16 `REGISTERED`（不合规）**。
+- V1/V2/V3/V5/V7/V9/V10/V11/V13/V14/V15/V16/V17/V18 达 `VERIFIED`；V8 `PIN_MON_PASS`；
+  V12 限于已注入错误类型；V4/V6 `NOT_RUN`；V16/V17/V18 现已 `VERIFIED`。
 - **T1 49 条回归 `NOT_RUN`**（#5 未授权）。
 - 不得据本文件宣称"T2B 通过""V1.3 全合规""五芯片联动已验证"——
   正确写法是 `T2B_JOINT_CONDITIONAL_PASS`。

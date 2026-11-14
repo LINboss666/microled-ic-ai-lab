@@ -11,13 +11,15 @@
 #   by tb/test_scen_min_asserts.sh (pure shell, no ModelSim).
 
 # Floors are derived by counting `chk("` occurrences inside each TB task:
-#   RESET_FAULT 23 | TIMEBASE 16 | BOUNDARY 10 | ALL 49   (tcon_t1_tb.sv)
+#   RESET_FAULT 27 | TIMEBASE 17 | BOUNDARY 11 | ALL 55   (tcon_t1_tb.sv, T2B-C)
+# The original T1 was 23/16/10/49. The V1.3 contract version adds the startup
+# permit checks (R4b/R4c/R7), T0 and B0; see t2b/OLD_T1_ASSERTION_MAPPING.md.
 scen_floor() {
     case "$1" in
-        RESET_FAULT) echo 23 ;;
-        TIMEBASE)    echo 16 ;;
-        BOUNDARY)    echo 10 ;;
-        ALL)         echo 49 ;;
+        RESET_FAULT) echo 27 ;;
+        TIMEBASE)    echo 17 ;;
+        BOUNDARY)    echo 11 ;;
+        ALL)         echo 55 ;;
         *)           echo "" ;;
     esac
 }

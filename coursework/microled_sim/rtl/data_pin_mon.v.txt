@@ -39,7 +39,7 @@ module data_pin_mon #(
     output reg  [15:0] n_win,        // completed load windows
     output reg  [15:0] n_win_badlen, // completed windows whose byte count != 384
     output reg  [15:0] n_byte_bad,   // payload bytes that disagree with the tags
-    output reg  [15:0] n_edge,       // dclk rising edges captured
+    output reg  [31:0] n_edge,       // dclk rising edges captured
     output reg  [9:0]  last_bytes,   // bytes in the most recent window
     output reg  [9:0]  last_col,
     output reg  [5:0]  last_frame,
@@ -60,7 +60,7 @@ module data_pin_mon #(
     endfunction
 
     initial begin
-        n_win = 16'd0; n_win_badlen = 16'd0; n_byte_bad = 16'd0; n_edge = 16'd0;
+        n_win = 16'd0; n_win_badlen = 16'd0; n_byte_bad = 16'd0; n_edge = 32'd0;
         last_bytes = 10'd0; last_col = 10'd0; last_frame = 6'd0; any_x = 1'b0;
         armed = 1'b0; latch_d = 1'b0; wcnt = 0;
         for (i = 0; i < 384; i = i + 1) cap[i] = 8'h00;
@@ -75,7 +75,7 @@ module data_pin_mon #(
             n_win     = 16'd0;
             n_win_badlen = 16'd0;
             n_byte_bad   = 16'd0;
-            n_edge    = 16'd0;
+            n_edge    = 32'd0;
             last_bytes = 10'd0;
             last_col   = 10'd0;
             last_frame = 6'd0;
@@ -112,7 +112,7 @@ module data_pin_mon #(
             if (armed && (wcnt < 384)) begin
                 cap[wcnt] = din;
                 wcnt      = wcnt + 1;
-                n_edge    = n_edge + 16'd1;
+                n_edge    = n_edge + 32'd1;
                 if (^din === 1'bx) any_x = 1'b1;
             end
 
