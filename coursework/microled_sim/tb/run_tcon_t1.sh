@@ -14,6 +14,10 @@ RUN_DIR="${RUN_DIR:-D:/ic617_course_sim_20261112_native}"
 SCEN="${SCEN:-RESET_FAULT}"
 SRC="$COURSE_ROOT/coursework/microled_sim"
 WALL_LIMIT_S="${WALL_LIMIT_S:-900}"
+# T1-V1.3 round: the task book requires a VCD size guard (suggested 120 MB).
+# This is a runner-only safety threshold: it does not touch the DUT or any
+# assertion, it only refuses to call a run PASS if the waveform got out of hand.
+VCD_LIMIT_MB="${VCD_LIMIT_MB:-120}"
 
 # Assertion floors are resolved by ONE shared, unit-tested function.
 # T1R review F1: the previous inline `MIN_ASSERTS="${MIN_ASSERTS:-49}"` made the
@@ -45,6 +49,8 @@ for n in rtl/tcon_timebase.v rtl/tcon_slot_seq.v rtl/tcon_video_rx.v \
     cp "$SRC/$n.txt" "$RESTORE/$(basename "$n")" || exit 9
 done
 echo "RESTORED_SOURCES=$(ls -1 "$RESTORE" | wc -l)"
+echo "--- source SHA-256 (identity of exactly what is simulated) ---"
+( cd "$RESTORE" && sha256sum * ) | tee 00_source_sha256.txt
 
 echo "=== TCON_T1_RUNNER start $(date '+%Y-%m-%dT%H:%M:%S%z') ==="
 echo "SCEN=$SCEN  MIN_ASSERTS=$MIN_ASSERTS"
@@ -75,6 +81,16 @@ if [ "$VSIM_RC" -eq 124 ]; then
     echo "RUNNER_VERDICT=WALL_CLOCK_TIMEOUT"
     echo "RUNNER_EXIT=124"
     exit 124
+fi
+
+if [ -f tcon_t1.vcd ]; then
+    VCD_MB=$(( $(stat -c%s tcon_t1.vcd) / 1048576 ))
+    echo "VCD_MB=$VCD_MB  VCD_BYTES=$(stat -c%s tcon_t1.vcd)  VCD_LIMIT_MB=$VCD_LIMIT_MB"
+    if [ "$VCD_MB" -gt "$VCD_LIMIT_MB" ]; then
+        echo "RUNNER_VERDICT=VCD_TOO_LARGE"; echo "RUNNER_EXIT=8"; exit 8
+    fi
+else
+    echo "VCD_MB=0  (no waveform written)"
 fi
 
 CHECKER="$COURSE_ROOT/coursework/microled_sim/tb/t6_check_transcript.sh"

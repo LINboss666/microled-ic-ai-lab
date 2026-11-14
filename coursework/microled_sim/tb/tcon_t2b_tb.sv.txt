@@ -633,7 +633,8 @@ module tcon_t2b_tb;
         $display("T2B_COUNTS assert_count=%0d fail_count=%0d strobe_count=%0d valid_strobe_count=%0d skipped_expected=%0d content_compare=%0d precharge=%0d core_n=%0d wraps=%0d f1=%0d f2=%0d first_pixel_col=%0d bytes_per_window=%0d",
                  assert_count, fail_count, n_stb_tot, core_n, skip_n, cont_n, prech_n,
                  core_n, wraps, seen_f1, seen_f2, first_core, dpm0_bytes);
-        $display("T2B_IDLE_BLANK idle_blanklow_cycles=%0d (see t2b/IDLE_BLANK_SPEC_CONFLICT.md: registered, NOT compliant)",
+        // V1.3 §9: this MUST be 0. It was 20 before T2B-C fixed the permit.
+        $display("T2B_IDLE_BLANK idle_blanklow_cycles=%0d (V1.3 requirement: 0; see t2b/IDLE_BLANK_SPEC_CONFLICT.md)",
                  idle_blanklow);
         $display("COURSE_RTL_ASSERT_COUNT=%0d", assert_count);
         $display("COURSE_RTL_PASS_COUNT=%0d",   pass_count);
