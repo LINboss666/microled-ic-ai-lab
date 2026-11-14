@@ -1,0 +1,70 @@
+`timescale 1ns / 1ps
+// scan_model — course verification stand-in for ONE Scan Driver (T2B).
+//
+// Receives only what a real Scan driver receives: COL_ID[9:0], SCAN_STB, BLANK.
+//   COL_ID[0]  selects the chip (0 = even / top, 1 = odd / bottom)
+//   COL_ID[9:1] selects one of 512 local channels
+// A channel may only become selected on a SCAN_STB rising edge **inside BLANK**
+// (V1.3 §12 "BLANK内上升沿锁存列地址"). A strobe outside BLANK, or a selection
+// change while BLANK is low, is recorded as a protocol error - the model does
+// not silently "fix" it.
+//
+// This is a 512-way selection stand-in, not an electrical high-side switch array,
+// and it adds no pin that does not exist in V1.3.
+module scan_model #(
+    parameter integer CHIP = 0
+) (
+    input  wire        clk,
+    input  wire        reset_n,
+    input  wire        blank,
+    input  wire        scan_stb,
+    input  wire [9:0]  col_id,
+
+    // simulation observation only - NOT a physical chip interface
+    output reg         sel_valid,     // this chip currently drives its channel
+    output reg  [9:0]  sel_col,       // column latched by the last valid strobe
+    output reg  [8:0]  sel_chan,      // local channel 0..511
+    output reg  [8:0]  n_stb,         // strobes seen by this chip
+    output reg  [8:0]  n_latch,       // strobes that actually selected this chip
+    output reg         err_outside_blank,
+    output reg         err_change_unblank
+);
+
+    localparam bit MY_SEL = (CHIP == 0) ? 1'b0 : 1'b1;
+
+    reg stb_d;
+
+    always @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            stb_d              <= 1'b0;
+            sel_valid          <= 1'b0;
+            sel_col            <= 10'd0;
+            sel_chan           <= 9'd0;
+            n_stb              <= 9'd0;
+            n_latch            <= 9'd0;
+            err_outside_blank  <= 1'b0;
+            err_change_unblank <= 1'b0;
+        end else begin
+            stb_d <= scan_stb;
+
+            // a selection may only change inside BLANK
+            if (!blank && scan_stb) err_change_unblank <= 1'b1;
+
+            if (scan_stb && !stb_d) begin
+                n_stb <= n_stb + 9'd1;
+                if (!blank) begin
+                    err_outside_blank <= 1'b1;
+                end else if (col_id[0] == MY_SEL) begin
+                    sel_valid <= 1'b1;
+                    sel_col   <= col_id;
+                    sel_chan  <= col_id[9:1];
+                    n_latch   <= n_latch + 9'd1;
+                end else begin
+                    // the other chip is addressed: this one deselects everything
+                    sel_valid <= 1'b0;
+                end
+            end
+        end
+    end
+
+endmodule

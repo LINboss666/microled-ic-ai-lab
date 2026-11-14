@@ -1,35 +1,23 @@
 `timescale 1ns / 1ps
-// TCON data transmitter (T2A/T2AR) — 384 bytes per Data port per load window.
+// TCON data transmitter — 384 bytes per Data port per load window (T2B).
 //
-// DCLK is a CONTINUOUS 50 MHz clock (100 MHz / 2). T2A gated DCLK to the load
-// window to make the first sampling edge deterministic; that was an unnecessary
-// deviation from the real Data interface and it also invalidated the T1
-// continuous-DCLK assertion. T2AR removes it: DCLK runs all the time and the
-// byte launch is aligned to the DCLK phase instead.
+// DCLK is a CONTINUOUS 50 MHz clock (100 MHz / 2). The byte launch is aligned to
+// the DCLK phase: byte 0 is pre-fetched on the CLK_REF falling edge whose next
+// rising edge is the first sampling edge (cycle 831 or 832), every later byte on
+// the following falling edges with DCLK low, so 1 + 383 = 384 launches and every
+// launch has 5 ns setup / 15 ns hold around its sampling edge in this ideal RTL
+// phase model (STA stays NOT_RUN).
 //
-// PHASE HANDLING (why the first edge is 832 OR 833)
-//   A 768-cycle window always contains exactly 384 DCLK rising edges, whatever
-//   the phase. Slot lengths alternate 976/977, so the absolute parity of cycle
-//   832 flips once per long slot; the first rising edge inside the window is
-//   therefore at 832 or at 833, and both cases still give 384 edges.
-//   The byte-0 pre-fetch happens on the CLK_REF falling edge whose NEXT rising
-//   edge is that first sampling edge, i.e. on the falling edge of cycle 831
-//   (DCLK low during 831) or of cycle 832 (DCLK high during 831).
-//   Every later byte is launched on the falling edges where DCLK is low, which
-//   is exactly one launch per sampling edge: 1 + 383 = 384.
+// T2B: the transmitter also publishes the label of what it just forwarded
+// (`fwd_col`, `fwd_frame`, `fwd_poison`, `fwd_valid`) and a one-cycle
+// `load_done` when the 768-cycle window closes. tcon_top uses those to track the
+// label that the Data display bank will hold after LATCH - it never computes
+// "s-1" by hand, because precharge, a missed LATCH, a frame wrap or a fault all
+// make that formula wrong.
 //
-// SETUP / HOLD: launching on the CLK_REF falling edge gives 5 ns / 5 ns around
-// every sampling edge in this ideal RTL phase model. That is a *model* result,
-// not a static timing sign-off (STA stays NOT_RUN).
-//
-// T2AR2 (independent review 2026-11-14, second pass)
-//   `revoke`: the received column was voided AFTER byte 0 was pre-fetched
-//   (a 769th byte arriving inside the load window). Bytes already launched
-//   cannot be recalled, so the transmitter switches to zero payload for the
-//   rest of the window and flags load_blank; tcon_top disarms the whole slot so
-//   this partial payload can never be selected. A revoke always refers to the
-//   column being loaded: the two banks alternate, so parity_q (latched at the
-//   pre-fetch) can only match the revoking column inside the same slot.
+// `fault` is the latched safe state from tcon_top: it closes the window and
+// forces the payload to zero, so a mixed (partly received) column cannot keep
+// being clocked out.
 module tcon_data_tx #(
     parameter integer LOAD_START = 832,
     parameter integer LOAD_LEN   = 768,
@@ -38,11 +26,13 @@ module tcon_data_tx #(
     input  wire        clk,
     input  wire        reset_n,
     input  wire        safe,
-    input  wire        revoke,
+    input  wire        fault,
 
     input  wire [10:0] slot_cycle,
     input  wire [9:0]  col_index,
-    input  wire        col_valid,   // bank holds THIS column and is valid
+    input  wire        col_valid,   // bank holds THIS column and it is clean
+    input  wire        col_poison,
+    input  wire [5:0]  frame_in,
 
     // bank read port
     output wire        rd_bank,
@@ -52,13 +42,20 @@ module tcon_data_tx #(
 
     // Data interface
     output wire        load_active,
-    output wire        dclk,          // continuous 50 MHz
+    output wire        dclk,
     output reg  [7:0]  d0,
     output reg  [7:0]  d1,
 
+    // forward label (the column this window is carrying)
+    output reg  [9:0]  fwd_col,
+    output reg  [5:0]  fwd_frame,
+    output reg         fwd_poison,
+    output reg         fwd_valid,
+    output reg         load_done,
+
     // observability
-    output reg  [8:0]  bytes_sent,    // 1..384
-    output reg         load_blank,    // loaded column had no valid bank
+    output reg  [8:0]  bytes_sent,
+    output reg         load_blank,
     output wire [9:0]  load_cnt_o
 );
 
@@ -80,46 +77,39 @@ module tcon_data_tx #(
     reg [9:0]  load_cnt;
     reg        parity_q;
     reg        valid_q;
-    reg        revoked_q;     // this window was voided after the pre-fetch
+    reg        poisoned_q;
     reg [8:0]  tx_k;
     reg        prefetched;
     reg [8:0]  launched;
 
-    // NOTE (T2AR2, run-1 finding T7): d0/d1 may ONLY change on a CLK_REF falling
-    // edge while DCLK is low - that is the interface rule the byte launch obeys.
-    // The revoke is therefore handled in the posedge domain as a *flag*
-    // (`revoked_q`); the payload turns to zero at the next legal launch, not at
-    // the moment the revoke arrives. The first T2AR2 run failed T7 precisely
-    // because an earlier version cleared d0/d1 directly in the revoke branch,
-    // which could land on a falling edge with DCLK high.
     always @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
             load_run  <= 1'b0;
             load_cnt  <= 10'd0;
-            revoked_q <= 1'b0;
-        end else if (!safe) begin
+            load_done <= 1'b0;
+        end else if (!safe || fault) begin
             load_run  <= 1'b0;
             load_cnt  <= 10'd0;
-            revoked_q <= 1'b1;
+            load_done <= 1'b0;
         end else if (start_pt) begin
             load_run  <= 1'b1;
             load_cnt  <= 10'd0;
-            revoked_q <= 1'b0;            // fresh column, fresh permission
+            load_done <= 1'b0;
         end else if (load_run) begin
-            // The revoke must NOT steal a count: run-2 showed the window growing
-            // from 768 to 769 cycles (385 DCLK edges) because the revoke was an
-            // else-if branch of the counter. It is a nested flag update now.
-            if (revoke && (col_index[0] == parity_q)) revoked_q <= 1'b1;
+            // one-cycle pulse on the cycle that closes the 768-cycle window
+            load_done <= (load_cnt == (LOAD_LEN - 1));
             if (load_cnt == (LOAD_LEN - 1)) begin
                 load_run <= 1'b0;
                 load_cnt <= 10'd0;
             end else begin
                 load_cnt <= load_cnt + 10'd1;
             end
+        end else begin
+            load_done <= 1'b0;
         end
     end
 
-    assign load_active = load_run && safe;
+    assign load_active = load_run && safe && !fault;
     assign load_cnt_o  = load_cnt;
 
     // ------------------------------------------------------------------
@@ -145,11 +135,16 @@ module tcon_data_tx #(
             d1         <= 8'h00;
             parity_q   <= 1'b0;
             valid_q    <= 1'b0;
+            poisoned_q <= 1'b0;
             bytes_sent <= 9'd0;
             load_blank <= 1'b0;
             prefetched <= 1'b0;
             launched   <= 9'd0;
-        end else if (!safe) begin
+            fwd_col    <= 10'd0;
+            fwd_frame  <= 6'd0;
+            fwd_poison <= 1'b0;
+            fwd_valid  <= 1'b0;
+        end else if (!safe || fault) begin
             tx_k       <= 9'd0;
             d0         <= 8'h00;
             d1         <= 8'h00;
@@ -166,21 +161,26 @@ module tcon_data_tx #(
             prefetched <= 1'b1;
             parity_q   <= col_index[0];
             valid_q    <= col_valid;
+            poisoned_q <= col_poison;
             load_blank <= !col_valid;
             tx_k       <= 9'd0;
             launched   <= 9'd1;
             bytes_sent <= 9'd1;
             d0         <= col_valid ? bk_d0 : 8'h00;
             d1         <= col_valid ? bk_d1 : 8'h00;
+            // label of the column this window is carrying
+            fwd_col    <= col_index;
+            fwd_frame  <= frame_in;
+            fwd_poison <= col_poison;
+            fwd_valid  <= col_valid;
         end else if (load_run && !dclk_r && prefetched && (launched <= NB_LAST) &&
                      (tx_k != NB_LAST)) begin
             tx_k       <= tx_k + 9'd1;
             launched   <= launched + 9'd1;
             bytes_sent <= launched + 9'd1;
-            // payload is zero once the window is void (invalid bank or revoke)
-            d0         <= (valid_q && !revoked_q) ? bk_d0 : 8'h00;
-            d1         <= (valid_q && !revoked_q) ? bk_d1 : 8'h00;
-            load_blank <= !(valid_q && !revoked_q);
+            d0         <= valid_q ? bk_d0 : 8'h00;
+            d1         <= valid_q ? bk_d1 : 8'h00;
+            load_blank <= !valid_q;
         end
     end
 

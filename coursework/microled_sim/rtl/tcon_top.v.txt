@@ -1,52 +1,33 @@
 `timescale 1ns / 1ps
-// TCON top level — T2A / T2AR: real data path.
+// TCON top level — T2B: V1.3 column-start input, frame+column tags, latched safe
+// state. See t2b/T2B_V13_FROZEN_INTERFACE.md, t2b/FAULT_RECOVERY_FSM.md.
 //
 // WHAT IS IMPLEMENTED
-//   * column time base (1024 slots / 576x977 + 448x976 = 1,000,000 cycles)
-//   * BLANK / LATCH / PWM_START / PWM_TICK / SCAN_STB / COL_ID generated here
-//   * 768-byte column reception with per-column classification
+//   * column time base (1024 slots, 576x977 + 448x976 = 1,000,000 cycles)
+//   * BLANK / LATCH / PWM_START / PWM_TICK / SCAN_STB generated here
+//   * 768-byte column reception with a COL_SYNC + DE + byte0 start edge (V1.3)
 //   * two 768 B column banks, ping-pong by column parity
 //   * 384 bytes per Data port per load window on a CONTINUOUS 50 MHz DCLK,
 //     even/odd row split (D0 = row 2k, D1 = row 2k+1)
-//
-// T2AR CHANGES (independent review 2026-11-14)
-//   1. `mode_en` (time base) and `safe` (output gating) are separate, so a fault
-//      never shifts the frame time base.
-//   2. `slot_bad`: if a fault is present when a new column boundary is taken, the
-//      whole slot is disarmed (no LATCH / PWM_START / SCAN_STB). COL_ID keeps
-//      its old value for that slot, and because no strobe is emitted, a scan
-//      strobe can never carry a stale column number. The next clean boundary
-//      re-synchronises COL_ID. This is the recovery policy for review P0-C:
-//      we do NOT reset the time base to hide the problem.
-//   3. DCLK is continuous again (T2A had gated it to the load window).
-//
-// T2AR2 CHANGES (independent review 2026-11-14, second pass — see
-// rtl/tcon_t2ar2_edge_table.md)
-//   4. `slot_bad` is now STICKY INSIDE THE SLOT and it also drives BLANK.
-//      Before: `blank = blank_seq || !safe`, so after a boundary fault recovered
-//      BLANK fell again inside the same slot (the reviewer measured 9,320 ns of
-//      `slot_bad=1, safe=1, blank=0` in the raw VCD) and a LATCH that had been
-//      interrupted by the fault was still followed by SCAN_STB at cycle 880.
-//      Now the slot stays blanked and strobe-free until the next clean boundary.
-//      The time base is still never reset (that would hide the fault).
-//   5. A column voided AFTER the transmit pre-fetch (`col_revoke`, load window
-//      already running) also disarms the slot: the bytes already launched cannot
-//      be recalled, so the only safe answer is "this column is not selected".
+//   * a latch-safe FSM (RESET / IDLE / ACTIVE / FAULT) that withholds the
+//     display permit after any data, load or protocol error until reset_n
+//   * frame+column tags for the four pipeline stages:
+//        rx(s) = s, fwd(s) = s, disp(s) = s-1, lit(s) = s-2
+//     COL_ID is driven from the tracked Data display-bank label, never from a
+//     hand-computed "s-1".
 //
 // WHAT IS NOT IMPLEMENTED (do not read the module name as a chip)
 //   SPI/register file, interrupts, CDC, 384/512-channel transistor-level array,
-//   grey-scale physical engine (belongs to the Data driver), level shifters,
-//   layout, STA, PVT/SOA, whole chip.
-//
-// NOTE ON PCLK: PCLK is the same 100 MHz as CLK_REF in this course model. No
-// claim of a verified clock-domain crossing is made anywhere in this design.
+//   grey-scale physical engine, level shifters, layout, STA, PVT/SOA, whole chip.
+//   Data and Scan behaviour models live in the testbench only: they are course
+//   verification stand-ins, not a 384/512-channel electrical implementation.
 module tcon_top #(
     parameter integer N_COL = 1024
 ) (
     input  wire        clk_ref,
     input  wire        reset_n,
 
-    // ---- video front-end ----------------------------------------------------
+    // ---- video front-end (V1.3: COL_SYNC marks the first byte of a column) --
     input  wire        pclk,         // = clk_ref in this model
     input  wire        vsync,
     input  wire        col_sync,
@@ -85,7 +66,21 @@ module tcon_top #(
     output wire [9:0]  bytes_rcvd,
     output wire [8:0]  bytes_sent,
     output wire        load_blank,
-    output wire [9:0]  load_cnt       // observability alias (T1 TB reads it)
+    output wire [9:0]  load_cnt,
+
+    // ---- T2B labels / FSM observation (simulation observation only) --------
+    output wire [1:0]  fsm_state,
+    output wire [5:0]  frame_id,
+    output wire [9:0]  in_col,
+    output reg         disp_valid,
+    output reg         disp_poison,
+    output reg  [9:0]  disp_col,
+    output reg  [5:0]  disp_frame,
+    output wire        fwd_valid,
+    output wire        fwd_poison,
+    output wire [9:0]  fwd_col,
+    output wire [5:0]  fwd_frame,
+    output wire        load_done
 );
 
     // ---------------------------------------------------------------------
@@ -98,9 +93,23 @@ module tcon_top #(
     localparam integer PULSE_LEN    = 4;     // 4 x 10 ns = 40 ns
     localparam integer TICK_DIV     = 12;    // 120 ns Hybrid @100 Hz
     localparam integer LOAD_START   = LATCH_AT + PULSE_LEN;   // 832
-    localparam integer LOAD_LEN     = 768;   // 384 bytes/port at 50 MHz
+    localparam integer LOAD_LEN     = 768;
     localparam integer NB_PORT      = 384;
-    localparam integer ACCEPT_LAST  = LOAD_START - 2;         // 830
+    localparam integer DEADLINE     = LOAD_START - 2;         // 830
+
+    // ---------------------------------------------------------------------
+    // FSM
+    // ---------------------------------------------------------------------
+    localparam [1:0] ST_RESET  = 2'd0;
+    localparam [1:0] ST_IDLE   = 2'd1;   // no frame seen yet: timing skeleton only
+    localparam [1:0] ST_ACTIVE = 2'd2;   // V1.3 mode: tags + display permit
+    localparam [1:0] ST_FAULT  = 2'd3;   // latched safe state (Q3=B)
+
+    reg [1:0] state;
+    assign fsm_state = state;
+
+    wire act = (state == ST_ACTIVE);
+    wire flt = (state == ST_FAULT);
 
     // ---------------------------------------------------------------------
     // readiness / safety
@@ -155,39 +164,9 @@ module tcon_top #(
     );
 
     // ---------------------------------------------------------------------
-    // slot disarm: a column boundary taken while unsafe disables the whole slot
-    // so that no strobe can ever carry the stale COL_ID (review P0-C).
-    //
-    // T2AR2: the flag is sticky for the REST of the slot. One fault anywhere in
-    // a slot - in the receive window, across the LATCH pulse, or in the load
-    // window - means the column cannot be trusted, so BLANK must stay asserted
-    // and LATCH / PWM_START / SCAN_STB / PWM_TICK must stay inhibited until the
-    // next column boundary re-evaluates `safe`. Only the slot is dropped; the
-    // time base keeps running, so absolute frame timing never shifts.
-    // ---------------------------------------------------------------------
-    wire col_revoke;      // rx: a committed column was voided (769th byte)
-    reg slot_bad;
-
-    always @(posedge clk_ref or negedge reset_n) begin
-        if (!reset_n)          slot_bad <= 1'b0;
-        else if (tb_start)     slot_bad <= !safe;                     // re-judge
-        else if (!safe)        slot_bad <= 1'b1;                      // sticky
-        else if (col_revoke && (slot_cycle >= (LOAD_START - 1)))
-                               slot_bad <= 1'b1;   // voided after pre-fetch
-    end
-
-    // BLANK must never re-open inside a disarmed slot (review: 9,320 ns of
-    // slot_bad=1 / safe=1 / blank=0 in the T2AR VCD).
-    assign blank     = blank_seq || !safe || slot_bad;
-    assign latch     = latch_seq  && safe && !slot_bad;
-    assign pwm_start = pstart_seq && safe && !slot_bad;
-    assign scan_stb  = stb_seq    && safe && !slot_bad;
-    assign pwm_tick  = tick_base  && window && safe && !slot_bad;
-
-    // ---------------------------------------------------------------------
     // video receive -> column bank
     // ---------------------------------------------------------------------
-    wire       wr_en, wr_bank, col_valid;
+    wire       wr_en, wr_bank, col_valid, col_poison, col_start_ok;
     wire [9:0] wr_idx;
     wire [7:0] wr_data;
     wire       rd_bank;
@@ -196,13 +175,12 @@ module tcon_top #(
 
     tcon_video_rx #(
         .RX_LEN      (768),
-        .ACCEPT_LAST (ACCEPT_LAST),
-        .LOAD_START  (LOAD_START)
+        .DEADLINE    (DEADLINE)
     ) u_rx (
         .clk        (clk_ref),
         .reset_n    (reset_n),
         .safe       (safe),
-        .slot_last  (tb_last),
+        .active     (act),
         .slot_cycle (slot_cycle),
         .col_index  (tb_col),
         .vsync      (vsync),
@@ -213,13 +191,13 @@ module tcon_top #(
         .wr_idx     (wr_idx),
         .wr_data    (wr_data),
         .wr_bank    (wr_bank),
-        .bank_valid (bank_valid),
         .col_valid  (col_valid),
+        .col_poison (col_poison),
+        .in_col     (in_col),
+        .frame_id   (frame_id),
         .err_flags  (err_flags),
         .err_now    (err_now),
-        .bytes_rcvd (bytes_rcvd),
-        .col_ok     (),
-        .col_revoke (col_revoke)
+        .bytes_rcvd (bytes_rcvd)
     );
 
     tcon_col_bank u_bank (
@@ -235,7 +213,7 @@ module tcon_top #(
     );
 
     // ---------------------------------------------------------------------
-    // Data transmit (continuous DCLK + D0/D1 + load window)
+    // Data transmit
     // ---------------------------------------------------------------------
     tcon_data_tx #(
         .LOAD_START (LOAD_START),
@@ -245,10 +223,12 @@ module tcon_top #(
         .clk         (clk_ref),
         .reset_n     (reset_n),
         .safe        (safe),
-        .revoke      (col_revoke),
+        .fault       (flt),
         .slot_cycle  (slot_cycle),
         .col_index   (tb_col),
         .col_valid   (col_valid),
+        .col_poison  (col_poison),
+        .frame_in    (frame_id),
         .rd_bank     (rd_bank),
         .rd_idx      (rd_idx),
         .bk_d0       (bk_d0),
@@ -257,22 +237,115 @@ module tcon_top #(
         .dclk        (dclk),
         .d0          (d0),
         .d1          (d1),
+        .fwd_col     (fwd_col),
+        .fwd_frame   (fwd_frame),
+        .fwd_poison  (fwd_poison),
+        .fwd_valid   (fwd_valid),
+        .load_done   (load_done),
         .bytes_sent  (bytes_sent),
         .load_blank  (load_blank),
         .load_cnt_o  (load_cnt)
     );
 
     // ---------------------------------------------------------------------
-    // COL_ID: advances only on a clean (safe) column boundary.
-    // During a disarmed slot COL_ID deliberately keeps the previous column
-    // number, but that slot emits no SCAN_STB at all (see the gating above), so
-    // a stale number can never reach the Scan driver. The next clean boundary
-    // re-synchronises it to tb_col. Assertion X30 checks "every SCAN_STB beats
-    // the independent reference column", so this is measured, not assumed.
+    // forward-label bookkeeping: per bank, the last window that completed
     // ---------------------------------------------------------------------
-    always @(posedge clk_ref or negedge reset_n)
-        if (!reset_n) col_id <= 10'd0;
-        else if (safe && tb_start) col_id <= tb_col;
+    reg [1:0]  fw_valid_r;      // per bank
+    reg [1:0]  fw_poison_r;     // per bank
+    reg [9:0]  fw_col0, fw_col1;
+    reg [5:0]  fw_frame0, fw_frame1;
+    reg [1:0]  last_bank;       // bank whose window completed most recently
+
+    always @(posedge clk_ref or negedge reset_n) begin
+        if (!reset_n) begin
+            fw_valid_r  <= 2'b00;
+            fw_poison_r <= 2'b00;
+            fw_col0     <= 10'd0;
+            fw_col1     <= 10'd0;
+            fw_frame0   <= 6'd0;
+            fw_frame1   <= 6'd0;
+            last_bank   <= 2'd0;
+        end else if (load_done) begin
+            last_bank <= {1'b0, fwd_col[0]};
+            if (fwd_col[0]) begin
+                fw_valid_r[1]  <= fwd_valid;
+                fw_poison_r[1] <= fwd_poison;
+                fw_col1        <= fwd_col;
+                fw_frame1      <= fwd_frame;
+            end else begin
+                fw_valid_r[0]  <= fwd_valid;
+                fw_poison_r[0] <= fwd_poison;
+                fw_col0        <= fwd_col;
+                fw_frame0      <= fwd_frame;
+            end
+        end
+    end
+
+    wire        fw_sel_valid  = last_bank[0] ? fw_valid_r[1]  : fw_valid_r[0];
+    wire        fw_sel_poison = last_bank[0] ? fw_poison_r[1] : fw_poison_r[0];
+    wire [9:0]  fw_sel_col    = last_bank[0] ? fw_col1        : fw_col0;
+    wire [5:0]  fw_sel_frame  = last_bank[0] ? fw_frame1      : fw_frame0;
+    wire        fw_ok         = fw_sel_valid && !fw_sel_poison;
+
+    // ---------------------------------------------------------------------
+    // display-bank label = what the Data driver holds after LATCH
+    // ---------------------------------------------------------------------
+    wire latch_evt = (slot_cycle == (LATCH_AT - 1));   // LATCH pulse starts next cycle
+
+    always @(posedge clk_ref or negedge reset_n) begin
+        if (!reset_n) begin
+            disp_col    <= 10'd0;
+            disp_frame  <= 6'd0;
+            disp_valid  <= 1'b0;
+            disp_poison <= 1'b0;
+        end else if (flt) begin
+            // frozen: no display permit can be manufactured while latched
+            disp_valid  <= 1'b0;
+        end else if (act && latch_evt) begin
+            disp_col    <= fw_sel_col;
+            disp_frame  <= fw_sel_frame;
+            disp_valid  <= fw_sel_valid;
+            disp_poison <= fw_sel_poison;
+        end
+    end
+
+    wire disp_ok = disp_valid && !disp_poison;
+
+    // ---------------------------------------------------------------------
+    // BLANK / strobes: no display permit without a valid display label
+    // ---------------------------------------------------------------------
+    assign blank     = blank_seq || !safe || flt || (act && !disp_ok);
+    assign latch     = latch_seq  && safe && !flt && (!act || fw_ok);
+    assign pwm_start = pstart_seq && safe && !flt && (!act || disp_ok);
+    assign scan_stb  = stb_seq    && safe && !flt && (!act || disp_ok);
+    assign pwm_tick  = tick_base  && window && safe && !flt && (!act || disp_ok);
+
+    // ---------------------------------------------------------------------
+    // COL_ID: tracked display-bank label in ACTIVE, local column in IDLE
+    // ---------------------------------------------------------------------
+    always @(posedge clk_ref or negedge reset_n) begin
+        if (!reset_n)        col_id <= 10'd0;
+        else if (flt)        ;                            // frozen
+        else if (!act)       col_id <= tb_col;            // skeleton (no video)
+        else if (latch_evt)  col_id <= fw_sel_col;        // what LATCH just made current
+    end
+
+    // ---------------------------------------------------------------------
+    // FSM transitions
+    // ---------------------------------------------------------------------
+    wire frame_start = vsync && col_sync && (slot_cycle == 11'd0) && safe;
+    wire err_any     = (|err_now);
+    wire fault_evt   = act && (err_any || !fault_n);
+
+    always @(posedge clk_ref or negedge reset_n) begin
+        if (!reset_n)          state <= ST_RESET;
+        else case (state)
+            ST_RESET:          state <= ST_IDLE;
+            ST_IDLE:  if (frame_start) state <= ST_ACTIVE;
+            ST_ACTIVE: if (fault_evt)  state <= ST_FAULT;
+            default:           state <= ST_FAULT;         // latched: reset only
+        endcase
+    end
 
     // ---------------------------------------------------------------------
     // status / stickies
@@ -291,9 +364,10 @@ module tcon_top #(
         end
     end
 
-    assign status     = { slot_bad, slot_long, wrap_seen, vsync_seen,
+    assign status     = { flt, slot_long, wrap_seen, vsync_seen,
                           fault_seen, load_active, blank, safe };
     assign frame_wrap = tb_wrap;
     assign slot_start = tb_start;
+    assign bank_valid = { col_valid && tb_col[0], col_valid && !tb_col[0] };
 
 endmodule

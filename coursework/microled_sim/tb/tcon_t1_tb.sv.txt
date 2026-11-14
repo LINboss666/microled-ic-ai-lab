@@ -36,6 +36,17 @@ module tcon_t1_tb;
     wire [7:0] d0, d1, status;
     wire       frame_wrap, slot_long, slot_start;
 
+    // T2B: every observation port is wired to a dummy net so the elaboration has
+    // no "too few / missing connection" warnings. These nets are not used by any
+    // T1 assertion - T1 only checks the time base and the slot phase sequence.
+    wire [5:0]  t1_err_flags, t1_err_now, t1_frame_id;
+    wire [1:0]  t1_bank_valid, t1_fsm_state;
+    wire [9:0]  t1_bytes_rcvd, t1_load_cnt, t1_in_col, t1_disp_col, t1_fwd_col;
+    wire [8:0]  t1_bytes_sent;
+    wire        t1_load_blank, t1_disp_valid, t1_disp_poison, t1_fwd_valid;
+    wire        t1_fwd_poison, t1_load_done;
+    wire [5:0]  t1_disp_frame, t1_fwd_frame;
+
     tcon_top dut (
         .clk_ref (clk),      .reset_n (reset_n),
         .pclk (clk),         .vsync (vsync),   .col_sync (col_sync),
@@ -47,7 +58,16 @@ module tcon_t1_tb;
         .blank (blank),      .dclk (dclk),           .load_active (load_active),
         .d0 (d0),            .d1 (d1),
         .status (status),    .frame_wrap (frame_wrap),
-        .slot_long (slot_long), .slot_start (slot_start)
+        .slot_long (slot_long), .slot_start (slot_start),
+        .err_flags (t1_err_flags), .err_now (t1_err_now),
+        .bank_valid (t1_bank_valid), .bytes_rcvd (t1_bytes_rcvd),
+        .bytes_sent (t1_bytes_sent), .load_blank (t1_load_blank),
+        .load_cnt (t1_load_cnt),
+        .fsm_state (t1_fsm_state), .frame_id (t1_frame_id), .in_col (t1_in_col),
+        .disp_valid (t1_disp_valid), .disp_poison (t1_disp_poison),
+        .disp_col (t1_disp_col), .disp_frame (t1_disp_frame),
+        .fwd_valid (t1_fwd_valid), .fwd_poison (t1_fwd_poison),
+        .fwd_col (t1_fwd_col), .fwd_frame (t1_fwd_frame), .load_done (t1_load_done)
     );
 
     // ---------------- bookkeeping -----------------------------------------

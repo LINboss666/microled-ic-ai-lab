@@ -1,0 +1,122 @@
+`timescale 1ns / 1ps
+// data_model — course verification stand-in for ONE Data Driver (T2B).
+//
+// This is NOT a 384-channel electrical implementation and it is NOT a new
+// physical interface. It receives exactly what a real Data driver receives:
+//   DCLK (continuous 50 MHz), one 8-bit lane (D0 for chip 0, D1 for chip 1),
+//   LATCH, BLANK. Everything else it derives by itself.
+//
+// FRAMING (why LATCH edges are enough):
+//   LATCH rises at cycle 828 and is 4 cycles wide. The 384-byte transfer for a
+//   column occupies [832, 1600) - exactly 384 DCLK rising edges, starting right
+//   after LATCH falls. So the model arms its capture on the LATCH FALLING edge,
+//   takes exactly 384 DCLK edges, and commits that buffer on the NEXT LATCH
+//   rising edge. No byte counter is fed from outside, so a truncated transfer
+//   (fault) simply never reaches 384 and the bank is committed as invalid.
+//
+// SELF-IDENTIFYING PAYLOAD (tags, not pins):
+//   byte 0 = col[7:0], byte 1 = {2'b00, col[9:8], frame_id[5:0]},
+//   byte i (i>=2) = pixel of row r = 2*i + CHIP:
+//       pix = ((col & 0xFF) + 13*(r & 0xFF) + 7*(frame & 0xFF) + 0x5A) & 0xFF
+//   The model decodes (frame, col) from its own first two bytes and then checks
+//   the remaining 382 against the formula. So `disp_col` is derived from the
+//   DATA, not from a counter shared with the TCON: a TCON that put the wrong
+//   column on the bus cannot make this model agree with it for free.
+//
+// A mismatch detected while capturing sets `cap_bad` immediately (that is how a
+// partly-received / zero-filled column is proven detectable, e.g. column 19).
+module data_model #(
+    parameter integer CHIP = 0
+) (
+    input  wire        clk,        // 100 MHz reference (same source as the TCON)
+    input  wire        reset_n,
+    input  wire        dclk,
+    input  wire [7:0]  din,
+    input  wire        latch,
+    input  wire        blank,
+
+    // simulation observation only - NOT a physical chip interface
+    output reg         disp_valid,
+    output reg         disp_corrupt,
+    output reg  [9:0]  disp_col,
+    output reg  [5:0]  disp_frame,
+    output reg  [8:0]  cap_cnt,
+    output reg         cap_bad,
+    output reg  [8:0]  n_commit
+);
+
+    reg [7:0] cap   [0:383];
+    reg [7:0] dbank [0:383];
+
+    reg       armed;
+    reg [8:0] wcnt;
+    reg       dclk_d, latch_d;
+
+    wire dclk_p = dclk && !dclk_d;
+    wire lat_p  = latch && !latch_d;
+    wire lat_n  = !latch && latch_d;
+
+    function automatic [7:0] pix(input integer f, input integer c, input integer r);
+        pix = ((c & 255) + 13 * (r & 255) + 7 * (f & 255) + 8'h5A) & 255;
+    endfunction
+
+    integer i;
+
+    always @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            armed        <= 1'b0;
+            wcnt         <= 9'd0;
+            dclk_d       <= 1'b0;
+            latch_d      <= 1'b0;
+            disp_valid   <= 1'b0;
+            disp_corrupt <= 1'b0;
+            disp_col     <= 10'd0;
+            disp_frame   <= 6'd0;
+            cap_cnt      <= 9'd0;
+            cap_bad      <= 1'b0;
+            n_commit     <= 9'd0;
+            for (i = 0; i < 384; i = i + 1) begin
+                cap[i]   <= 8'h00;
+                dbank[i] <= 8'h00;
+            end
+        end else begin
+            dclk_d  <= dclk;
+            latch_d <= latch;
+
+            if (lat_p) begin
+                // LATCH rising: atomically switch the captured bank in
+                if (armed && (wcnt == 9'd384)) begin
+                    for (i = 0; i < 384; i = i + 1) dbank[i] <= cap[i];
+                    disp_col     <= {cap[1][7:6], cap[0]};
+                    disp_frame   <= cap[1][5:0];
+                    disp_valid   <= 1'b1;
+                    disp_corrupt <= cap_bad;
+                    n_commit     <= n_commit + 9'd1;
+                end else begin
+                    // nothing complete to switch to: keep the old content but
+                    // declare it unusable for display
+                    disp_valid   <= 1'b0;
+                    disp_corrupt <= 1'b1;
+                end
+                wcnt    <= 9'd0;
+                armed   <= 1'b0;
+                cap_bad <= 1'b0;
+            end else if (lat_n) begin
+                // LATCH falling: the 384-byte transfer starts now
+                armed   <= 1'b1;
+                wcnt    <= 9'd0;
+                cap_bad <= 1'b0;
+            end else if (dclk_p && armed && (wcnt < 9'd384)) begin
+                cap[wcnt] <= din;
+                wcnt      <= wcnt + 9'd1;
+                cap_cnt   <= wcnt + 9'd1;
+                if (wcnt >= 9'd2) begin
+                    if (din !== pix(cap[1][5:0], {cap[1][7:6], cap[0]},
+                                    (wcnt * 2) + CHIP))
+                        cap_bad <= 1'b1;
+                end
+            end
+        end
+    end
+
+endmodule

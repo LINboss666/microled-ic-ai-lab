@@ -1,71 +1,47 @@
 `timescale 1ns / 1ps
-// TCON video receiver (T2A / T2AR) — 768 bytes per column, 1 byte per CLK_REF.
+// TCON video receiver — V1.3 column-start protocol (T2B).
 //
-// A column is committed to its bank (bank = col_index[0]) only when exactly
-// RX_LEN bytes were seen AND COL_SYNC arrives inside the acceptance window.
-// Everything else is classified and the bank is invalidated, which makes the
-// data transmitter emit zeros for that column (black, no optical output)
-// without disturbing the frame time base.
+// V1.3 (SHA 6b61e4ab…afaa):
+//   §12  COL_SYNC = "新列首字节边界，同PCLK采样"
+//   §9   "COL_SYNC与第一个有效字节同一PCLK上升沿采样，DE=1表示有效；
+//         每列必须有且只有768个有效字节。允许短暂停顿但整列必须在规定装载窗内完成"
+//        "VSYNC与新帧第一个COL_SYNC同沿"
 //
-// ---- ACCEPTANCE WINDOW (T2AR, review P0-A) --------------------------------
-//   The last legal COL_SYNC cycle is 830, not 831.
-//   Reason: tcon_data_tx pre-fetches byte 0 on the CLK_REF FALLING edge that
-//   precedes the first DCLK sampling edge, and it latches col_valid there. That
-//   falling edge is at cycle 831 (or 832 when DCLK happens to be high during
-//   831). A commit takes one posedge, so the latest usable sync is the one
-//   present during cycle 830 (commit at posedge 831, 5 ns before the latch).
-//   A sync during 831 or later would commit at posedge 832, after byte 0 has
-//   already been launched -> the column cannot be used. It is therefore
-//   REJECTED and flagged as late_sync (err_flags[5]) instead of being silently
-//   accepted with a zero payload or silently dropped.
-//   The V1.3 "768 B before the load at 832" wording is thus tightened by one
-//   cycle by the pre-fetch edge; this is a contract correction, not a test
-//   threshold change (50 MHz, 64 ticks, LOAD_START=832 are untouched).
+// So a column STARTS on the edge that carries COL_SYNC + DE + byte0. The previous
+// implementation (LEGACY_TAIL_SYNC) waited for 768 bytes and then accepted a
+// COL_SYNC as a completion acknowledgement; that was the interface direction
+// error recorded in T2B-A and is archived under legacy_tail_sync/.
 //
-// ---- ERROR BITS (sticky until reset) --------------------------------------
-//   [0] underrun      COL_SYNC before RX_LEN bytes (inside the window)
-//   [1] overflow      a (RX_LEN+1)-th byte arrived -> column revoked
-//   [2] duplicate     a second COL_SYNC after a legal commit (column kept)
-//   [3] missing       no COL_SYNC at the deadline (end of cycle 830)
-//   [4] vsync phase   VSYNC while COL_ID != 0
-//   [5] late sync     COL_SYNC after the acceptance window -> column rejected
+// CYCLE CONVENTION: `slot_cycle` still holds the PRE-EDGE value inside a posedge
+// block, so "cycle 0" means "the byte that was present during slot cycle 0".
 //
-// ---- REVIEW FINDINGS FIXED HERE ------------------------------------------
-//   P0-A non-blocking collision: a sync exactly on the deadline edge used to
-//        commit (col_ok<=1, okX<=1) and then be invalidated by the deadline
-//        branch reading the OLD col_ok. The deadline now uses the same-cycle
-//        commit condition, and the window moved to 830 (see above).
-//   P0-B overflow after a successful commit used to set the flag but leave the
-//        bank valid; it now revokes ok/col_ok while keeping had_sync, so the
-//        deadline branch does not mis-report "missing sync" afterwards.
+// DEADLINE: the 768th byte must be sampled no later than cycle 830 (DEADLINE).
+//   The transmit pre-fetch happens on the falling edge of cycle 831 (or 832,
+//   depending on the DCLK phase); a byte sampled at 830 is written into the bank
+//   at posedge 831, i.e. 5 ns before the earliest pre-fetch.
 //
-// ---- T2AR2 (independent review 2026-11-14, second pass) --------------------
-//   P0-3 `col_revoke`: a (RX_LEN+1)-th byte that arrives AFTER the column was
-//        committed now also emits a one-cycle revoke pulse. tcon_top uses it to
-//        disarm the slot once the transmit prefetch has already happened
-//        (see tcon_t2ar2_edge_table.md §2, case B2). Revocation before the
-//        prefetch keeps the old, accepted behaviour: the column is voided and
-//        the transmitter emits 384 zero bytes.
-//   R02  `proto_bad`: a COL_SYNC seen before the column is complete (< RX_LEN
-//        bytes) makes the whole column protocol-invalid. Previously a later
-//        COL_SYNC at the legal cycle could still commit it, which contradicts
-//        T2A_INTERFACE_CONTRACT.md §5 (a column is 768 B + exactly one sync).
-//        No new error bit is added: err_flags[0] already carries "byte count /
-//        sync phase wrong" and the 6-bit status contract stays frozen.
+// ERROR BITS (6 bits are frozen; see t2b/T2B_V13_FROZEN_INTERFACE.md §7):
+//   [0] underrun  : legal start but fewer than 768 bytes by DEADLINE
+//   [1] overflow  : 769th byte
+//   [2] duplicate : second COL_SYNC in the same slot OR input column label
+//                   disagrees with the local column (column-order error)
+//   [3] missing   : no COL_SYNC on cycle 0 of a slot (in ACTIVE)
+//   [4] vsync     : VSYNC not on cycle 0, or VSYNC on a non-zero column
+//   [5] misplaced : COL_SYNC on a cycle other than 0
 //
-// SCOPE: receive + classify only. No frame buffer, no transpose (V1.3 §3/§9).
+// Every error also raises `poison` for the current column; tcon_top turns any
+// error pulse into the latched safe state (Q3=B).
 module tcon_video_rx #(
-    parameter integer RX_LEN      = 768,
-    parameter integer ACCEPT_LAST = 830,   // last cycle a COL_SYNC can be used
-    parameter integer LOAD_START  = 832
+    parameter integer RX_LEN   = 768,
+    parameter integer DEADLINE = 830
 ) (
     input  wire        clk,
     input  wire        reset_n,
-    input  wire        safe,
+    input  wire        safe,        // mode-level readiness (not per column)
+    input  wire        active,      // FSM is in ACTIVE (video framing established)
 
-    input  wire        slot_last,
     input  wire [10:0] slot_cycle,
-    input  wire [9:0]  col_index,
+    input  wire [9:0]  col_index,   // local (time base) column
 
     input  wire        vsync,
     input  wire        col_sync,
@@ -77,97 +53,126 @@ module tcon_video_rx #(
     output wire [7:0]  wr_data,
     output wire        wr_bank,
 
-    output wire [1:0]  bank_valid,
-    output wire        col_valid,
-    output reg  [5:0]  err_flags,
-    output reg  [5:0]  err_now,     // bits set on THIS cycle (per-column attribution)
-    output reg  [9:0]  bytes_rcvd,
-    output reg         col_ok,
-    output reg         col_revoke   // 1 cycle: a committed column was voided
+    output wire        col_valid,   // column complete, clean and label-consistent
+    output wire        col_poison,
+    output reg  [9:0]  in_col,      // input column label since VSYNC
+    output reg  [5:0]  frame_id,    // increments on every VSYNC (first frame = 1)
+
+    output reg  [5:0]  err_flags,   // sticky
+    output reg  [5:0]  err_now,     // one-cycle pulses
+    output reg  [9:0]  bytes_rcvd
 );
 
     reg [9:0] idx;
-    reg       sync_d;
-    reg       ovf;
-    reg       had_sync;      // a legal commit happened for this column
-    reg       proto_bad;     // a sync arrived before the column was complete
-
-    reg [9:0] owner0, owner1;
-    reg       ok0, ok1;
+    reg       sync_d, vsync_d;
+    reg       start_seen;      // legal start sync seen in this slot
+    reg       poison_c;        // current column is not displayable
 
     reg        wr_en_r;
     reg [9:0]  wr_idx_r;
     reg [7:0]  wr_data_r;
 
-    wire sync_p       = col_sync && !sync_d;
-    wire full         = (idx == RX_LEN);
-    wire past_deadline = (slot_cycle > ACCEPT_LAST);
-    // a sync captured on this edge is usable if the column is complete, not
-    // already committed, not overflowed, not protocol-invalid and not past the
-    // acceptance window
-    wire sync_commit  = sync_p && !col_ok && !had_sync && full && !ovf &&
-                        !past_deadline && !proto_bad;
+    wire at0    = (slot_cycle == 11'd0);
+    wire sync_p = col_sync && !sync_d;
+    wire vs_p   = vsync && !vsync_d;
+    wire full   = (idx == RX_LEN);
 
-    assign wr_bank    = col_index[0];
-    assign wr_en      = wr_en_r;
-    assign wr_idx     = wr_idx_r;
-    assign wr_data    = wr_data_r;
-    assign bank_valid = {ok1, ok0};
-    assign col_valid  = col_index[0] ? (ok1 && (owner1 == col_index))
-                                     : (ok0 && (owner0 == col_index));
+    // the column label this sync introduces
+    wire [9:0] next_col = vs_p ? 10'd0 : (in_col + 10'd1);
+
+    assign wr_en   = wr_en_r;
+    assign wr_idx  = wr_idx_r;
+    assign wr_data = wr_data_r;
+    // the bank follows the LOCAL column so the receive/forward relationship stays
+    // deterministic even while an error is being reported
+    assign wr_bank = col_index[0];
+
+    assign col_poison = poison_c;
+    assign col_valid  = start_seen && (idx == RX_LEN) && !poison_c &&
+                        (in_col == col_index);
 
     always @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
             idx        <= 10'd0;
             sync_d     <= 1'b0;
-            ovf        <= 1'b0;
-            had_sync   <= 1'b0;
-            proto_bad  <= 1'b0;
+            vsync_d    <= 1'b0;
+            start_seen <= 1'b0;
+            poison_c   <= 1'b0;
+            in_col     <= 10'd0;
+            frame_id   <= 6'd0;
             wr_en_r    <= 1'b0;
             wr_idx_r   <= 10'd0;
             wr_data_r  <= 8'h00;
-            owner0     <= 10'd0;
-            owner1     <= 10'd0;
-            ok0        <= 1'b0;
-            ok1        <= 1'b0;
             err_flags  <= 6'b000000;
             err_now    <= 6'b000000;
             bytes_rcvd <= 10'd0;
-            col_ok     <= 1'b0;
-            col_revoke <= 1'b0;
         end else begin
-            sync_d     <= col_sync;
-            wr_en_r    <= 1'b0;
-            err_now    <= 6'b000000;
-            col_revoke <= 1'b0;
+            sync_d  <= col_sync;
+            vsync_d <= vsync;
+            wr_en_r <= 1'b0;
+            err_now <= 6'b000000;
 
             if (!safe) begin
                 idx        <= 10'd0;
-                col_ok     <= 1'b0;
-                ovf        <= 1'b0;
-                had_sync   <= 1'b0;
-                proto_bad  <= 1'b0;
+                start_seen <= 1'b0;
+                poison_c   <= 1'b0;
                 bytes_rcvd <= 10'd0;
-                if (col_index[0]) ok1 <= 1'b0;
-                else              ok0 <= 1'b0;
             end else begin
-                // ---------------- column boundary (priority) ----------------
-                if (slot_last) begin
-                    col_ok    <= 1'b0;
-                    ovf       <= 1'b0;
-                    had_sync  <= 1'b0;
-                    proto_bad <= 1'b0;
-                    if (de) begin
-                        wr_en_r    <= 1'b1;
-                        wr_idx_r   <= 10'd0;
-                        wr_data_r  <= video_d;
-                        idx        <= 10'd1;
-                        bytes_rcvd <= 10'd1;
+                // ---------------- cycle 0: column start -----------------------
+                if (at0) begin
+                    // a new column starts clean; any error re-sets it below
+                    poison_c <= 1'b0;
+                    if (vs_p) frame_id <= frame_id + 6'd1;
+
+                    if (sync_p) begin
+                        start_seen <= 1'b1;
+                        in_col     <= next_col;
+                        if (de) begin
+                            wr_en_r    <= 1'b1;
+                            wr_idx_r   <= 10'd0;
+                            wr_data_r  <= video_d;
+                            idx        <= 10'd1;
+                            bytes_rcvd <= 10'd1;
+                        end else begin
+                            // sync without byte 0: the edge is not a byte boundary
+                            idx          <= 10'd0;
+                            bytes_rcvd   <= 10'd0;
+                            poison_c     <= 1'b1;
+                            err_now[0]   <= 1'b1;
+                            err_flags[0] <= 1'b1;
+                        end
+                        // column-order / frame-phase checks
+                        if (next_col != col_index) begin
+                            poison_c     <= 1'b1;
+                            err_now[2]   <= 1'b1;
+                            err_flags[2] <= 1'b1;
+                        end
+                        if (vs_p && (col_index != 10'd0)) begin
+                            poison_c     <= 1'b1;
+                            err_now[4]   <= 1'b1;
+                            err_flags[4] <= 1'b1;
+                        end
                     end else begin
+                        start_seen <= 1'b0;
                         idx        <= 10'd0;
                         bytes_rcvd <= 10'd0;
+                        if (active) begin
+                            poison_c     <= 1'b1;
+                            err_now[3]   <= 1'b1;
+                            err_flags[3] <= 1'b1;
+                        end
                     end
-                end else if (de) begin
+                end
+
+                // ---------------- misplaced / duplicate sync -------------------
+                if (sync_p && !at0) begin
+                    poison_c     <= 1'b1;
+                    err_now[5]   <= 1'b1;
+                    err_flags[5] <= 1'b1;
+                end
+
+                // ---------------- data beats -----------------------------------
+                if (!at0 && de) begin
                     if (!full) begin
                         wr_en_r    <= 1'b1;
                         wr_idx_r   <= idx;
@@ -175,67 +180,27 @@ module tcon_video_rx #(
                         idx        <= idx + 10'd1;
                         bytes_rcvd <= idx + 10'd1;
                     end else begin
-                        // 769th byte: the column no longer matches the format,
-                        // so a bank that was already committed must be revoked.
-                        err_flags[1] <= 1'b1;
+                        // 769th byte of this column
+                        poison_c     <= 1'b1;
                         err_now[1]   <= 1'b1;
-                        ovf          <= 1'b1;
-                        col_ok       <= 1'b0;
-                        // T2AR2: tell the transmitter/top level that a column
-                        // which had already been committed is now void. Only a
-                        // committed column can have launched real bytes.
-                        col_revoke   <= had_sync;
-                        if (col_index[0]) ok1 <= 1'b0;
-                        else              ok0 <= 1'b0;
+                        err_flags[1] <= 1'b1;
                     end
                 end
 
-                // ---------------- COL_SYNC classification ---------------------
-                if (sync_p) begin
-                    if (col_ok) begin
-                        err_flags[2] <= 1'b1;              // duplicate, column kept
-                        err_now[2]   <= 1'b1;
-                    end else if (sync_commit) begin
-                        if (col_index[0]) begin
-                            owner1 <= col_index;
-                            ok1    <= 1'b1;
-                        end else begin
-                            owner0 <= col_index;
-                            ok0    <= 1'b1;
-                        end
-                        col_ok   <= 1'b1;
-                        had_sync <= 1'b1;
-                    end else if (past_deadline) begin
-                        err_flags[5] <= 1'b1;              // too late to be used
-                        err_now[5]   <= 1'b1;
-                        if (col_index[0]) ok1 <= 1'b0;
-                        else              ok0 <= 1'b0;
-                    end else begin
-                        err_flags[0] <= 1'b1;              // underrun / overflow
+                // ---------------- deadline -------------------------------------
+                if (slot_cycle == DEADLINE) begin
+                    if (start_seen && (idx != RX_LEN)) begin
+                        poison_c     <= 1'b1;
                         err_now[0]   <= 1'b1;
-                        // R02: a sync before the column is complete makes the
-                        // column protocol-invalid; a later, well-placed sync
-                        // must not resurrect it (T2A_INTERFACE_CONTRACT §5).
-                        proto_bad    <= 1'b1;
-                        if (col_index[0]) ok1 <= 1'b0;
-                        else              ok0 <= 1'b0;
+                        err_flags[0] <= 1'b1;
                     end
                 end
 
-                // ---------------- acceptance deadline --------------------------
-                // Evaluated on the last usable cycle. `sync_commit` keeps a legal
-                // sync captured on this very edge from being invalidated by the
-                // pre-edge value of had_sync (review P0-A).
-                if ((slot_cycle == ACCEPT_LAST) && !had_sync && !sync_commit) begin
-                    err_flags[3] <= 1'b1;
-                    err_now[3]   <= 1'b1;
-                    if (col_index[0]) ok1 <= 1'b0;
-                    else              ok0 <= 1'b0;
-                end
-
-                if (vsync && (col_index != 10'd0)) begin
-                    err_flags[4] <= 1'b1;
+                // ---------------- VSYNC away from the column boundary ----------
+                if (vs_p && !at0 && active) begin
+                    poison_c     <= 1'b1;
                     err_now[4]   <= 1'b1;
+                    err_flags[4] <= 1'b1;
                 end
             end
         end
