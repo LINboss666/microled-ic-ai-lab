@@ -71,18 +71,25 @@ module tcon_t3_tb;
         end
     end
 
-    // the frozen slot waveform; stim_en=0 forces the safe idle state
-    always @(*) begin
+    // the frozen slot waveform, REGISTERED at negedge clk (run03 precheck).
+    // A combinational decode changes every pin at the same instant as a DCLK
+    // rising edge (dclk is generated from posedge clk), which is a setup
+    // violation by construction and makes the DUT (pre-edge sampling) and the
+    // data_model oracle (post-edge +1 ns sampling) read DIFFERENT values.
+    // Driving every DUT-facing pin from negedge clk gives 5 ns of setup and
+    // 5 ns of hold around every DCLK edge, so both models see identical bytes.
+    // stim_en=0 forces the safe idle state.
+    always @(negedge clk) begin
         if (!reset_n || !stim_en) begin
-            blank     = 1'b1;
-            latch     = 1'b0;
-            pwm_start = 1'b0;
-            pwm_tick  = 1'b0;
+            blank     <= 1'b1;
+            latch     <= 1'b0;
+            pwm_start <= 1'b0;
+            pwm_tick  <= 1'b0;
         end else begin
-            blank     = (cyc >= 768);
-            latch     = (cyc >= 828) && (cyc < 832);          // 40 ns
-            pwm_start = (cyc >= 840) && (cyc < 844);          // 40 ns
-            pwm_tick  = (cyc < 768) && ((cyc % 12) == 0);     // 64 ticks / window
+            blank     <= (cyc >= 768);
+            latch     <= (cyc >= 828) && (cyc < 832);          // 40 ns
+            pwm_start <= (cyc >= 840) && (cyc < 844);          // 40 ns
+            pwm_tick  <= (cyc < 768) && ((cyc % 12) == 0);     // 64 ticks / window
         end
     end
 
@@ -114,24 +121,79 @@ module tcon_t3_tb;
         end
     end
 
-    // window bookkeeping: opens on the LATCH falling edge, takes win_nb bytes
-    always @(posedge clk) begin
-        latch_d <= latch;
-        if (reset_n && latch_d && !latch) begin
-            win      <= 1'b1;
-            sent     <= 0;
-            win_col  <= cur_col;
-            win_mode <= cur_mode;
-            win_nb   <= cur_nb;
-            win_frm  <= cur_frm;
+    // window bookkeeping (run03 precheck + phase-drift fix).
+    //
+    // WHY THE PHASE MATTERS: slot_len alternates 976/977 (odd!), so the LATCH
+    // fall - which is registered at negedge clk - drifts by 10 ns against the
+    // negedge-dclk grid. In one phase the fall lands BEFORE the negedge dclk
+    // that precedes the arming posedge, in the other phase AFTER it. If `sent`
+    // simply incremented at every negedge while !latch, the second phase would
+    // advance `sent` one step too early and the byte stream would be shifted by
+    // one for exactly those columns - which is precisely why run03 showed
+    // col0/col1 agreeing with the oracle and col2 disagreeing.
+    //
+    // FIX: `win` opens when the LATCH RISE is detected (long before the fall, so
+    // it is always set in time), and `sent` only starts counting at the ARMING
+    // POSEDGE (the first posedge where the DUT sees latch fall), flagged by
+    // `started`. din_valid = win && !latch && sent<win_nb is therefore 1 at the
+    // arming edge in BOTH phases, and the DUT (pre-edge sample) and the oracle
+    // (post-edge +1 ns sample) read the same byte for the whole window.
+    reg latch_p = 1'b0;
+    reg started = 1'b0;
+    always @(posedge dclk) begin
+        latch_p <= latch;
+        if (latch_p && !latch) started <= 1'b1;   // arming edge: byte 0 consumed
+    end
+
+    integer win_edges = 0;
+    integer win_edges_seen = 0;
+    integer win_edges_min = 1000000;
+    integer win_edges_max = 0;
+    reg     win_q    = 1'b0;
+    integer win_nb_q = 0;
+    reg     win_norm = 1'b0;
+
+    always @(negedge dclk) begin
+        if (!reset_n) begin
+            latch_d <= 1'b0; win <= 1'b0; sent <= 0; started <= 1'b0;
+            win_norm <= 1'b0; win_q <= 1'b0; win_nb_q <= 0; win_edges = 0;
+            win_col <= 0; win_mode <= 0; win_nb <= 384; win_frm <= 1;
+        end else begin
+            latch_d <= latch;
+            win_q   <= win;
+            if (latch && !latch_d) begin               // LATCH rise: prepare
+                win      <= 1'b1;
+                win_norm <= 1'b0;
+                started  <= 1'b0;
+                sent     <= 0;
+                win_col  <= cur_col;
+                win_mode <= cur_mode;
+                win_nb   <= cur_nb;
+                win_frm  <= cur_frm;
+            end else if (win && started) begin          // byte stream running
+                if (sent < win_nb) sent <= sent + 1;
+                else begin win <= 1'b0; win_norm <= 1'b1; end
+            end
+            // census snapshot on a NORMAL close (a close caused by reset or by
+            // a new window is discarded - run03's min=81 was exactly that)
+            if (win_q && !win && win_norm) begin
+                if (win_nb_q == 384) begin
+                    if (win_edges < win_edges_min) win_edges_min = win_edges;
+                    if (win_edges > win_edges_max) win_edges_max = win_edges;
+                    win_edges_seen = win_edges_seen + 1;
+                end
+                win_edges = 0;
+                win_norm  <= 1'b0;
+            end else if (win_q && !win) begin
+                win_edges = 0;
+            end
+            win_nb_q <= win_nb;
         end
     end
 
+    // census counts the DCLK edges on which a byte was REALLY presented
     always @(posedge dclk) begin
-        if (win && (sent < win_nb)) begin
-            if (sent == win_nb - 1) win <= 1'b0;
-            sent <= sent + 1;
-        end
+        if (din_valid) win_edges = win_edges + 1;
     end
 
     function automatic [7:0] exp_byte(input integer col, input integer frm,
@@ -153,9 +215,9 @@ module tcon_t3_tb;
     endfunction
 
     // din is combinational from `sent`, so it is always valid at the DCLK edge
-    wire [7:0] din = (win && (sent < win_nb))
+    wire [7:0] din = (win && !latch && (sent < win_nb))
                    ? exp_byte(win_col, win_frm, sent, win_mode) : 8'h00;
-    assign din_valid = (win && (sent < win_nb));
+    assign din_valid = (win && !latch && (sent < win_nb));
 
     // ---------------- DUT ------------------------------------------------
     wire [383:0]   ch_en;
@@ -234,16 +296,6 @@ module tcon_t3_tb;
         if (counting && reset_n && (slot_idx == count_slot))
             for (i_on = 0; i_on < 384; i_on = i_on + 1)
                 if (ch_en[i_on]) on_cnt[i_on] = on_cnt[i_on] + 1;
-    end
-
-    // ---------------- one-shot diagnostics --------------------------------
-    integer dbg_edges = 0;
-    always @(posedge dclk) begin
-        if (reset_n && stim_en && win && (dbg_edges < 6)) begin
-            $display("DBG_EDGE t=%0t sent=%0d nb=%0d dut_wcnt=%0d armed=%0d dv=%0d din=%02X",
-                     $time, sent, win_nb, dut.wcnt, dut.armed, din_valid, din);
-            dbg_edges = dbg_edges + 1;
-        end
     end
 
     always @(posedge clk) begin
@@ -450,6 +502,12 @@ module tcon_t3_tb;
         repeat (40) @(negedge clk);
 
         // ================= global safety monitors ===========================
+        // reviewer request: the per-window byte count must be measured on REAL
+        // DCLK rising edges, by the TB itself, without touching any DUT signal
+        chk("D42_window_384_dclk_edges",
+            win_edges_seen >= 8 && win_edges_min == 384 && win_edges_max == 384);
+        $display("T3_WINDOW_CENSUS windows=%0d min=%0d max=%0d",
+                 win_edges_seen, win_edges_min, win_edges_max);
         chk("D38_never_on_while_blank",       n_blank_viol == 0);
         chk("D39_never_on_without_valid_col", n_novalid_viol == 0);
         chk("D41_on_samples_not_vacuous",     n_on_samples > 3000);
