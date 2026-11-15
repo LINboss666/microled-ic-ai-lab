@@ -66,18 +66,35 @@ def main():
 
     print("\n=== 5. sampling-phase agreement (reviewer finding) ===")
     # 5a win/sent must be driven only at negedge dclk
-    bad = [m.start() for m in re.finditer(r"always\s*@\(\s*posedge\s+dclk\s*\)", tb)]
-    # the only posedge-dclk blocks allowed are the two TB-side bookkeeping
-    # counters (started flag + window census); neither may drive a DUT-facing
-    # input, which is checked by scanning both bodies for assignments to
-    # din / din_valid / latch / blank / pwm_*
+    # --- single-writer audit (reviewer RUN04 pre-check #3) -----------------
+    # every TB state variable must be assigned in exactly ONE always block
+    pos_bodies = re.findall(r"always\s*@\(\s*posedge\s+dclk\s*\) begin(.*?)\n    end", tb, re.S)
+    neg_bodies = re.findall(r"always\s*@\(\s*negedge\s+dclk\s*\) begin(.*?)\n    end", tb, re.S)
+    def assigns(body):
+        out = set()
+        for m in re.finditer(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*(?:\[[^\]]*\])?\s*(?:<=|=(?!=))", body, re.M):
+            out.add(m.group(1))
+        return out
+    allb = [("posedge", b) for b in pos_bodies] + [("negedge", b) for b in neg_bodies]
+    owners = {}
+    for dom, b in allb:
+        for v in assigns(b):
+            owners.setdefault(v, []).append(dom)
+    dual = {v: d for v, d in owners.items() if len(d) > 1}
+    print("  TB dclk-domain state variables: %d, dual-writer variables: %s"
+          % (len(owners), sorted(dual) or "none"))
+    ok &= not dual
+    print("  TB posedge-dclk blocks: %d, negedge-dclk blocks: %d"
+          % (len(pos_bodies), len(neg_bodies)))
     pin_names = ("din", "din_valid", "latch", "blank", "pwm_start", "pwm_tick")
-    bodies = re.findall(r"always\s*@\(\s*posedge\s+dclk\s*\) begin(.*?)\n    end", tb, re.S)
     drives_pin = any(any(("%s <=" % n) in b or ("%s =" % n) in b for n in pin_names)
-                     for b in bodies)
-    print("  TB posedge-dclk blocks: %d (census/flag only, no pin driving) -> %s"
-          % (len(bad), "ok" if (len(bad) == 2 and not drives_pin) else "VIOLATION"))
-    ok &= (len(bad) == 2 and not drives_pin)
+                     for _, b in allb)
+    print("  no TB block drives a DUT-facing input: %s" % (not drives_pin))
+    ok &= not drives_pin
+    # started must be written only inside the posedge-dclk block
+    sw = all(("started" not in assigns(b)) for d, b in allb if d == "negedge")
+    print("  started written in exactly one domain (posedge dclk): %s" % sw)
+    ok &= sw
     neg_win = "always @(negedge dclk)" in tb and "sent     <= 0;" in tb
     print("  win/sent updated at negedge dclk: %s" % neg_win)
     ok &= neg_win

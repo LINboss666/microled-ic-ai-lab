@@ -138,62 +138,83 @@ module tcon_t3_tb;
     // `started`. din_valid = win && !latch && sent<win_nb is therefore 1 at the
     // arming edge in BOTH phases, and the DUT (pre-edge sample) and the oracle
     // (post-edge +1 ns sample) read the same byte for the whole window.
+    // ---------------------------------------------------------------------
+    // SINGLE-WRITER RULE (reviewer RUN04 pre-check #3): every TB state
+    // variable is assigned in exactly ONE always block.
+    //   posedge-dclk block : latch_p, started, and the WHOLE window census
+    //                        (win_edges + snapshot + opened/closed/dropped)
+    //   negedge-dclk block : latch_d, win, sent, win_col/mode/nb/frm
+    // `started` used to be set at posedge dclk and cleared at negedge dclk
+    // (two writers). It is now a pure posedge-dclk state machine:
+    //     LATCH rise  (latch && !latch_p) -> started <= 0   (new window prep)
+    //     arming edge (!latch && latch_p) -> started <= 1   (byte 0 consumed)
+    // so the byte stream can only start after the DUT has really taken byte 0,
+    // in BOTH 976 and 977 slot phases.
+    // ---------------------------------------------------------------------
     reg latch_p = 1'b0;
     reg started = 1'b0;
-    always @(posedge dclk) begin
-        latch_p <= latch;
-        if (latch_p && !latch) started <= 1'b1;   // arming edge: byte 0 consumed
-    end
-
     integer win_edges = 0;
     integer win_edges_seen = 0;
     integer win_edges_min = 1000000;
     integer win_edges_max = 0;
+    integer win_open_384   = 0;   // windows OPENED with a 384-byte plan
+    integer win_closed_384 = 0;   // ... closed NORMALLY with exactly 384 edges
+    integer win_dropped    = 0;   // closed by reset / superseded (excluded)
     reg     win_q    = 1'b0;
     integer win_nb_q = 0;
     reg     win_norm = 1'b0;
 
+    always @(posedge dclk) begin
+        latch_p <= latch;
+        if (latch && !latch_p)      started <= 1'b0;   // LATCH rise: new window
+        else if (!latch && latch_p) started <= 1'b1;   // arming edge: byte 0
+
+        // window census, entirely in this domain: the counted edges and the
+        // snapshot share the same clock, so a window's lifetime is counted 1:1
+        // with the DCLK edges on which a byte was really presented.
+        if (win) begin
+            if (din_valid) win_edges = win_edges + 1;
+        end else if (win_q && !win) begin
+            if (win_norm) begin
+                if (win_nb_q == 384) begin
+                    if (win_edges < win_edges_min) win_edges_min = win_edges;
+                    if (win_edges > win_edges_max) win_edges_max = win_edges;
+                    win_edges_seen = win_edges_seen + 1;
+                    win_closed_384 = win_closed_384 + 1;
+                end
+            end else begin
+                win_dropped = win_dropped + 1;   // reset / superseded: excluded
+            end
+            win_edges = 0;
+        end
+        win_q    <= win;
+        win_nb_q <= win_nb;   // RUN04 fix: this line was lost in the run03
+                              // refactor, so win_nb_q stayed 0 and the
+                              // win_nb_q==384 guard silently discarded every
+                              // normally-closed window (closed384=0 despite
+                              // the probes proving sent=384 closes)
+    end
+
     always @(negedge dclk) begin
         if (!reset_n) begin
-            latch_d <= 1'b0; win <= 1'b0; sent <= 0; started <= 1'b0;
-            win_norm <= 1'b0; win_q <= 1'b0; win_nb_q <= 0; win_edges = 0;
+            latch_d <= 1'b0; win <= 1'b0; sent <= 0; win_norm <= 1'b0;
             win_col <= 0; win_mode <= 0; win_nb <= 384; win_frm <= 1;
         end else begin
             latch_d <= latch;
-            win_q   <= win;
             if (latch && !latch_d) begin               // LATCH rise: prepare
                 win      <= 1'b1;
                 win_norm <= 1'b0;
-                started  <= 1'b0;
                 sent     <= 0;
                 win_col  <= cur_col;
                 win_mode <= cur_mode;
                 win_nb   <= cur_nb;
                 win_frm  <= cur_frm;
+                if (cur_nb == 384) win_open_384 = win_open_384 + 1;
             end else if (win && started) begin          // byte stream running
                 if (sent < win_nb) sent <= sent + 1;
                 else begin win <= 1'b0; win_norm <= 1'b1; end
             end
-            // census snapshot on a NORMAL close (a close caused by reset or by
-            // a new window is discarded - run03's min=81 was exactly that)
-            if (win_q && !win && win_norm) begin
-                if (win_nb_q == 384) begin
-                    if (win_edges < win_edges_min) win_edges_min = win_edges;
-                    if (win_edges > win_edges_max) win_edges_max = win_edges;
-                    win_edges_seen = win_edges_seen + 1;
-                end
-                win_edges = 0;
-                win_norm  <= 1'b0;
-            end else if (win_q && !win) begin
-                win_edges = 0;
-            end
-            win_nb_q <= win_nb;
         end
-    end
-
-    // census counts the DCLK edges on which a byte was REALLY presented
-    always @(posedge dclk) begin
-        if (din_valid) win_edges = win_edges + 1;
     end
 
     function automatic [7:0] exp_byte(input integer col, input integer frm,
@@ -502,12 +523,24 @@ module tcon_t3_tb;
         repeat (40) @(negedge clk);
 
         // ================= global safety monitors ===========================
-        // reviewer request: the per-window byte count must be measured on REAL
-        // DCLK rising edges, by the TB itself, without touching any DUT signal
+        // reviewer request (RUN04): the per-window byte count must be measured
+        // on REAL DCLK rising edges by the TB itself, AND the number of windows
+        // that should have completed must match the number actually counted -
+        // otherwise a census that silently drops windows could fake a PASS.
+        //   opened384   : windows whose plan was 384 bytes (counted at the
+        //                 LATCH-rise preparation)
+        //   closed384   : ... that closed NORMALLY with exactly 384 edges
+        //   dropped     : ... aborted by the final reset (must be <= 1)
+        // so opened384 == closed384 + dropped must hold exactly.
         chk("D42_window_384_dclk_edges",
-            win_edges_seen >= 8 && win_edges_min == 384 && win_edges_max == 384);
-        $display("T3_WINDOW_CENSUS windows=%0d min=%0d max=%0d",
-                 win_edges_seen, win_edges_min, win_edges_max);
+            (win_open_384 == win_closed_384 + win_dropped) &&
+            (win_dropped <= 1) &&
+            (win_closed_384 >= 8) &&
+            (win_edges_seen == win_closed_384) &&
+            (win_edges_min == 384) && (win_edges_max == 384));
+        $display("T3_WINDOW_CENSUS opened384=%0d closed384=%0d counted=%0d min=%0d max=%0d dropped=%0d",
+                 win_open_384, win_closed_384, win_edges_seen,
+                 win_edges_min, win_edges_max, win_dropped);
         chk("D38_never_on_while_blank",       n_blank_viol == 0);
         chk("D39_never_on_without_valid_col", n_novalid_viol == 0);
         chk("D41_on_samples_not_vacuous",     n_on_samples > 3000);

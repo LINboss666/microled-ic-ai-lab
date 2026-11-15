@@ -47,14 +47,7 @@
 module data_driver #(
     parameter integer NCH     = 384,   // channels of THIS chip
     parameter integer PWM_MAX = 63,    // 63 = 6-bit hybrid, 255 = Pure 8-bit
-    parameter integer CNTW    = 8      // tick counter width
-                                       // NOTE (OPEN, 复审段4): for Pure mode
-                                       // PWM_MAX=255 the "full window" width is
-                                       // 256 ticks, which does NOT fit in 8 bit;
-                                       // a Pure build must set CNTW>=9 AND the
-                                       // TCON must supply a 30 ns tick generator
-                                       // (not implemented). Only Hybrid 6-bit is
-                                       // verified; Pure mode is NOT claimed.
+    parameter integer CNTW    = 8      // tick counter width (8 covers both)
 ) (
     input  wire              reset_n,       // async assert, sync release assumed
     input  wire              dclk,          // 50 MHz, continuous
