@@ -1,0 +1,470 @@
+`timescale 1ns / 1ps
+// tcon_t3_tb — single-module verification of the Data Driver digital core (T3).
+//
+// WHAT IS BEING TESTED
+//   rtl/data_driver.v: 384 channels, raw 384x8 + mapped 384x9 dual banks,
+//   256x9 dual-bank gray LUT with a commit interlock, ONE shared PWM counter
+//   with 384 comparators, and the BLANK/FAULT hardware-priority gate.
+//
+// WHAT IS NOT BEING TESTED
+//   The analog current source (8 PAM tiers, I_PAM0..7, trim, 15 uA compliance),
+//   the array RC, optical gray levels, SPI, interrupts, UVLO/OTP. A digital PASS
+//   here says NOTHING about analog PVT/SOA/LED load.
+//
+// STIMULUS PROVENANCE
+//   The pin timing is generated HERE from the frozen V1.3 numbers, not taken from
+//   the TCON: slot 976/977, BLANK from cycle 768, LATCH 828..831 (40 ns),
+//   PWM_START 840..843 (40 ns), PWM_TICK every 12 cycles (120 ns), DCLK 20 ns,
+//   and one column per slot:
+//       slot s   : window opens at the LATCH falling edge, win_nb bytes
+//       slot s+1 : LATCH rising edge commits column s
+//       slot s+2 : window displays column s
+//   i.e. the accepted rx=s / disp=s-1 / lit=s-2 pipeline.
+//
+// INDEPENDENT ORACLE
+//   The accepted behavioural model `data_model` (T2B-BR) is instantiated next to
+//   the new RTL and fed the same D0/DCLK/LATCH pins. Its display bank must equal
+//   the RTL's raw display bank, and its self-decoded (frame, column) tag must
+//   equal the column the TB actually sent. It shares no internal signal with the
+//   RTL, so this is a differential check, not a mirror.
+module tcon_t3_tb;
+
+    // ---------------- clocks ----------------------------------------------
+    reg clk  = 1'b0;
+    reg dclk = 1'b0;
+    always #5 clk = ~clk;                       // 10 ns, 100 MHz
+    always @(posedge clk) dclk <= ~dclk;        // 20 ns, 50 MHz
+
+    // ---------------- DUT pins --------------------------------------------
+    reg         reset_n   = 1'b0;
+    reg         fault_n   = 1'b1;
+    reg         blank, latch, pwm_start, pwm_tick;
+    wire        din_valid;
+
+    reg         cfg_hybrid     = 1'b1;
+    reg         cfg_lut_we     = 1'b0;
+    reg  [7:0]  cfg_lut_addr   = 8'd0;
+    reg  [8:0]  cfg_lut_data   = 9'd0;
+    reg         cfg_lut_commit = 1'b0;
+
+    // ---------------- slot time base (frozen V1.3 numbers) ----------------
+    integer cyc      = 0;
+    integer slot_len = 976;
+    integer frac     = 576;
+    integer slot_idx = 0;
+    reg     stim_en  = 1'b0;
+    reg     slot_rst = 1'b0;
+
+    always @(posedge clk) begin
+        if (!reset_n || slot_rst) begin
+            cyc <= 0; slot_len <= 976; frac <= 576; slot_idx <= 0;
+        end else if (cyc == slot_len - 1) begin
+            cyc      <= 0;
+            slot_idx <= slot_idx + 1;
+            if ((frac + 576) >= 1024) begin
+                slot_len <= 977; frac <= frac + 576 - 1024;
+            end else begin
+                slot_len <= 976; frac <= frac + 576;
+            end
+        end else begin
+            cyc <= cyc + 1;
+        end
+    end
+
+    // the frozen slot waveform; stim_en=0 forces the safe idle state
+    always @(*) begin
+        if (!reset_n || !stim_en) begin
+            blank     = 1'b1;
+            latch     = 1'b0;
+            pwm_start = 1'b0;
+            pwm_tick  = 1'b0;
+        end else begin
+            blank     = (cyc >= 768);
+            latch     = (cyc >= 828) && (cyc < 832);          // 40 ns
+            pwm_start = (cyc >= 840) && (cyc < 844);          // 40 ns
+            pwm_tick  = (cyc < 768) && ((cyc % 12) == 0);     // 64 ticks / window
+        end
+    end
+
+    // ---------------- per-slot payload plan -------------------------------
+    // mode 0 = self-identifying tag payload (matches data_model's expectation)
+    // mode 1 = ramp: channel i carries byte (i & 255), so ONE column exercises
+    //          all 256 LUT entries at once
+    localparam integer NSLOT = 16;
+    integer pcol  [0:NSLOT-1];
+    integer pmode [0:NSLOT-1];
+    integer pnb   [0:NSLOT-1];
+    integer pfrm  [0:NSLOT-1];
+
+    integer cur_col = 0, cur_mode = 0, cur_nb = 384, cur_frm = 1;
+    integer win_col = 0, win_mode = 0, win_nb = 384, win_frm = 1;
+    integer sent    = 0;
+    reg     win     = 1'b0;
+    reg     latch_d = 1'b0;
+
+    // at the last cycle of a slot, arm the plan for the NEXT slot
+    always @(posedge clk) begin
+        if (!reset_n || slot_rst) begin
+            cur_col <= 0; cur_mode <= 0; cur_nb <= 384; cur_frm <= 1;
+        end else if ((cyc == slot_len - 1) && ((slot_idx + 1) < NSLOT)) begin
+            cur_col  <= pcol [slot_idx + 1];
+            cur_mode <= pmode[slot_idx + 1];
+            cur_nb   <= pnb  [slot_idx + 1];
+            cur_frm  <= pfrm [slot_idx + 1];
+        end
+    end
+
+    // window bookkeeping: opens on the LATCH falling edge, takes win_nb bytes
+    always @(posedge clk) begin
+        latch_d <= latch;
+        if (reset_n && latch_d && !latch) begin
+            win      <= 1'b1;
+            sent     <= 0;
+            win_col  <= cur_col;
+            win_mode <= cur_mode;
+            win_nb   <= cur_nb;
+            win_frm  <= cur_frm;
+        end
+    end
+
+    always @(posedge dclk) begin
+        if (win && (sent < win_nb)) begin
+            if (sent == win_nb - 1) win <= 1'b0;
+            sent <= sent + 1;
+        end
+    end
+
+    function automatic [7:0] exp_byte(input integer col, input integer frm,
+                                      input integer idx, input integer md);
+        integer r;
+        begin
+            if (md == 0) begin
+                if (idx == 0)      exp_byte = col[7:0];
+                else if (idx == 1) exp_byte = {col[9:8], frm[5:0]};
+                else begin
+                    r = 2 * idx;                       // chip 0 -> rows 0,2,4..
+                    exp_byte = ((col & 255) + 13*(r & 255) + 7*(frm & 255)
+                                + 8'h5A) & 255;
+                end
+            end else begin
+                exp_byte = idx & 255;
+            end
+        end
+    endfunction
+
+    // din is combinational from `sent`, so it is always valid at the DCLK edge
+    wire [7:0] din = (win && (sent < win_nb))
+                   ? exp_byte(win_col, win_frm, sent, win_mode) : 8'h00;
+    assign din_valid = (win && (sent < win_nb));
+
+    // ---------------- DUT ------------------------------------------------
+    wire [383:0]   ch_en;
+    wire [1151:0]  ch_pam;
+    wire [7:0]     tick_cnt;
+    wire           col_valid;
+    wire [9:0]     bytes_rcvd;
+    wire           lut_valid;
+    wire           lut_bank;
+    wire           lut_cmt_bad;
+    wire [5:0]     err_flags;
+
+    data_driver #(.NCH(384), .PWM_MAX(63), .CNTW(8)) dut (
+        .reset_n (reset_n), .dclk (dclk), .din (din), .din_valid (din_valid),
+        .latch (latch), .blank (blank), .fault_n (fault_n),
+        .pwm_start (pwm_start), .pwm_tick (pwm_tick),
+        .cfg_hybrid (cfg_hybrid), .cfg_lut_we (cfg_lut_we),
+        .cfg_lut_addr (cfg_lut_addr), .cfg_lut_data (cfg_lut_data),
+        .cfg_lut_commit (cfg_lut_commit),
+        .ch_en (ch_en), .ch_pam (ch_pam), .tick_cnt (tick_cnt),
+        .col_valid (col_valid), .bytes_rcvd (bytes_rcvd),
+        .lut_valid (lut_valid), .lut_bank (lut_bank),
+        .lut_cmt_bad (lut_cmt_bad), .err_flags (err_flags)
+    );
+
+    // ---------------- independent oracle ----------------------------------
+    wire        or_valid, or_corrupt;
+    wire [9:0]  or_col;
+    wire [5:0]  or_frame;
+    wire [8:0]  or_capcnt;
+    wire        or_capbad;
+    wire [15:0] or_ncommit;
+
+    data_model #(.CHIP(0)) u_oracle (
+        .reset_n (reset_n), .dclk (dclk), .din (din), .latch (latch),
+        .blank (blank),
+        .disp_valid (or_valid), .disp_corrupt (or_corrupt),
+        .disp_col (or_col), .disp_frame (or_frame),
+        .cap_cnt (or_capcnt), .cap_bad (or_capbad), .n_commit (or_ncommit)
+    );
+
+    // ---------------- gray table + assertions -----------------------------
+    reg [8:0] lut_tab [0:255];
+    integer   assert_count = 0, pass_count = 0, fail_count = 0;
+
+    task automatic chk(input string nm, input logic cond);
+        begin
+            assert_count = assert_count + 1;
+            if (cond) begin
+                pass_count = pass_count + 1;
+                $display("PASS %s", nm);
+            end else begin
+                fail_count = fail_count + 1;
+                $display("FAIL %s  (t=%0t cyc=%0d slot=%0d)", nm, $time, cyc, slot_idx);
+            end
+        end
+    endtask
+
+    // ---------------- safety monitors -------------------------------------
+    integer n_blank_viol = 0, n_novalid_viol = 0, n_on_samples = 0;
+    always @(negedge clk) begin
+        if (reset_n && stim_en) begin
+            if (blank && (|ch_en))      n_blank_viol   = n_blank_viol + 1;
+            if (!col_valid && (|ch_en)) n_novalid_viol = n_novalid_viol + 1;
+            if (|ch_en)                 n_on_samples   = n_on_samples + 1;
+        end
+    end
+
+    // per-channel on-time counters, counted once per PWM_TICK
+    integer on_cnt [0:383];
+    integer i_on;
+    integer count_slot = -1;
+    reg     counting   = 1'b0;
+    always @(posedge pwm_tick) begin
+        #1;
+        if (counting && reset_n && (slot_idx == count_slot))
+            for (i_on = 0; i_on < 384; i_on = i_on + 1)
+                if (ch_en[i_on]) on_cnt[i_on] = on_cnt[i_on] + 1;
+    end
+
+    // ---------------- one-shot diagnostics --------------------------------
+    integer dbg_edges = 0;
+    always @(posedge dclk) begin
+        if (reset_n && stim_en && win && (dbg_edges < 6)) begin
+            $display("DBG_EDGE t=%0t sent=%0d nb=%0d dut_wcnt=%0d armed=%0d dv=%0d din=%02X",
+                     $time, sent, win_nb, dut.wcnt, dut.armed, din_valid, din);
+            dbg_edges = dbg_edges + 1;
+        end
+    end
+
+    always @(posedge clk) begin
+        if (reset_n && stim_en && (slot_idx < 4) && (latch !== latch_d)) begin
+            $display("DBG_LATCH t=%0t latch=%0d slot=%0d cyc=%0d cur_nb=%0d win=%0d sent=%0d dut_wcnt=%0d colv=%0d orc=%0d",
+                     $time, latch, slot_idx, cyc, cur_nb, win, sent, dut.wcnt, col_valid, or_ncommit);
+        end
+    end
+
+    // ---------------- helpers ---------------------------------------------
+    task automatic goto_slot(input integer s);
+        begin
+            while (!((slot_idx == s) && (cyc == 0))) @(posedge clk);
+        end
+    endtask
+
+    task automatic run_to_window_end;
+        begin
+            @(posedge clk);
+            while (cyc != 768) @(posedge clk);
+        end
+    endtask
+
+    task automatic lut_write(input integer a, input integer d);
+        begin
+            @(negedge dclk);
+            cfg_lut_we = 1'b1; cfg_lut_addr = a[7:0]; cfg_lut_data = d[8:0];
+            @(negedge dclk);
+            cfg_lut_we = 1'b0;
+            @(negedge dclk);
+        end
+    endtask
+
+    task automatic lut_commit_pulse;
+        begin
+            @(negedge dclk);
+            cfg_lut_commit = 1'b1;
+            @(negedge dclk);
+            cfg_lut_commit = 1'b0;
+            @(negedge dclk);
+        end
+    endtask
+
+    function automatic integer e_eff(input integer b);
+        integer c;
+        begin
+            c = lut_tab[b][5:0];
+            if (c == 0)       e_eff = 0;
+            else if (c == 63) e_eff = 64;
+            else              e_eff = c;
+        end
+    endfunction
+
+    // ---------------- scenario --------------------------------------------
+    integer i, k, bad, col_expect, n_pam_bad, n_map_bad;
+
+    initial begin
+        $display("COURSE_TCON_T3_SCENARIO=DATA_DRIVER_INTERNAL");
+        $display("COURSE_TCON_T3_CONTRACT=V13_DATA_DRIVER_DIGITAL");
+
+        // ---- the whole slot plan is fixed BEFORE any stimulus runs ---------
+        for (i = 0; i < NSLOT; i = i + 1) begin
+            pcol[i] = i; pmode[i] = 0; pnb[i] = 384; pfrm[i] = 1;
+        end
+        pmode[3] = 1;                     // slot 3 = ramp  -> displayed in slot 5
+        pnb[5]   = 383;                   // short column  -> displayed in slot 7
+        pnb[7]   = 385;                   // over-long     -> displayed in slot 9
+        for (i = 0; i < 384; i = i + 1) on_cnt[i] = 0;
+
+        // ---- the gray LUT image (V1.3 段0236 derivation, see GRAY_CODE_MAPPING)
+        $readmemh("t3_lut.hex", lut_tab);
+
+        // ================= phase 0: reset =================
+        $display("--- P0 reset ---");
+        reset_n = 1'b0;
+        repeat (200) @(negedge clk);
+        chk("D01_reset_no_channel_on", (|ch_en) === 1'b0);
+        chk("D02_reset_col_invalid",   col_valid === 1'b0);
+        chk("D03_reset_lut_invalid",   lut_valid === 1'b0);
+        chk("D04_reset_tick_zero",     tick_cnt === 8'd0);
+        reset_n = 1'b1;
+        repeat (40) @(negedge clk);
+        chk("D05_no_channel_on_after_reset", (|ch_en) === 1'b0);
+
+        // ================= phase 1: LUT banks + commit interlock =============
+        $display("--- P1 LUT dual bank / commit interlock ---");
+        stim_en = 1'b0;                       // idle: BLANK high, no LATCH
+        repeat (20) @(negedge clk);
+        chk("D06_idle_blank_high", blank === 1'b1);
+
+        // (a) an illegal image: entry 0 has PWM=5, so "black must be fully off"
+        //     is violated -> the commit has to be refused
+        for (i = 0; i < 256; i = i + 1) begin
+            if (i == 0) lut_write(i, 9'h005);
+            else        lut_write(i, lut_tab[i]);
+        end
+        chk("D07_bad_image_not_active", lut_valid === 1'b0 && lut_bank === 1'b0);
+        lut_commit_pulse;
+        repeat (10) @(negedge clk);
+        chk("D08_commit_refused_black_rule", lut_cmt_bad === 1'b1 && lut_bank === 1'b0);
+
+        // (b) fix entry 0; the deferred commit must now be accepted
+        lut_write(0, lut_tab[0]);
+        repeat (20) @(negedge clk);
+        chk("D09_commit_accepted_after_fix", lut_bank === 1'b1 && lut_valid === 1'b1);
+        chk("D10_black_and_full_codes_frozen",
+            lut_tab[0] === 9'h000 && lut_tab[255] === 9'h1FF);
+
+        // ================= align the slot counter to slot 0 =================
+        slot_rst = 1'b1;
+        repeat (2) @(posedge clk);
+        slot_rst = 1'b0;
+        stim_en  = 1'b1;
+        // from here: slot s carries column s, is committed at slot s+1's LATCH
+        // and is displayed in slot s+2's window.
+
+        // ================= phase 2: normal columns (tag payload) ============
+        $display("--- P2 columns 0..2 with the tag payload ---");
+        n_pam_bad = 0; n_map_bad = 0;
+        for (k = 0; k < 3; k = k + 1) begin
+            col_expect = k;
+            goto_slot(k + 2);
+            bad = 0;
+            for (i = 0; i < 384; i = i + 1)
+                if (dut.raw_disp[i] !== exp_byte(col_expect, 1, i, 0)) bad = bad + 1;
+            chk($sformatf("D11_col%0d_payload_384_bytes", col_expect), bad == 0);
+            chk($sformatf("D12_col%0d_valid", col_expect), col_valid === 1'b1);
+            for (i = 0; i < 384; i = i + 1) begin
+                if (dut.map_disp[i] !== lut_tab[dut.raw_disp[i]]) n_map_bad = n_map_bad + 1;
+                if (ch_pam[i*3 +: 3] !== lut_tab[dut.raw_disp[i]][8:6]) n_pam_bad = n_pam_bad + 1;
+            end
+            bad = 0;
+            for (i = 0; i < 384; i = i + 1)
+                if (dut.raw_disp[i] !== u_oracle.dbank[i]) bad = bad + 1;
+            chk($sformatf("D13_col%0d_oracle_bank_match", col_expect), bad == 0);
+            chk($sformatf("D14_col%0d_oracle_tag_col", col_expect), or_col === col_expect[9:0]);
+            chk($sformatf("D15_col%0d_oracle_not_corrupt", col_expect), or_corrupt === 1'b0);
+        end
+        chk("D16_mapped_bank_follows_lut", n_map_bad == 0);
+        chk("D17_pam_code_follows_lut",    n_pam_bad == 0);
+
+        // ================= phase 3: gray engine on the ramp column ===========
+        $display("--- P3 gray engine: ramp column exercises all 256 codes ---");
+        goto_slot(4);
+        for (i = 0; i < 384; i = i + 1) on_cnt[i] = 0;
+        count_slot = 5; counting = 1'b1;         // count slot 5's window = column 3
+        goto_slot(5);
+        run_to_window_end;
+        counting = 1'b0; count_slot = -1;
+        chk("D18_ramp_column_valid", col_valid === 1'b1);
+        bad = 0;
+        for (i = 0; i < 384; i = i + 1)
+            if (on_cnt[i] != e_eff(i & 255)) bad = bad + 1;
+        chk("D19_all_384_on_time_matches_lut", bad == 0);
+        chk("D20_black_code_never_on",  on_cnt[0] == 0);
+        chk("D21_full_code_64_ticks",   on_cnt[255] == 64);
+        chk("D22_tick_counter_saturates", tick_cnt <= 8'd63);
+        chk("D23_gray_engine_active",   n_on_samples > 0);
+
+        // ================= phase 4: short / over-long columns ================
+        $display("--- P4 illegal column length ---");
+        goto_slot(7);                            // display of column 5 (short)
+        chk("D24_short_column_not_displayed", col_valid === 1'b0);
+        chk("D25_short_column_no_channel",    (|ch_en) === 1'b0);
+        chk("D29_short_sets_underrun_flag",   err_flags[0] === 1'b1);
+        goto_slot(9);                            // display of column 7 (over-long)
+        chk("D26_overlong_column_not_displayed", col_valid === 1'b0);
+        chk("D27_overlong_sets_overflow_flag",   err_flags[1] === 1'b1);
+        chk("D28_overlong_no_channel",           (|ch_en) === 1'b0);
+        goto_slot(10);                           // display of column 8 (recovers)
+        chk("D30_valid_column_after_illegal",    col_valid === 1'b1);
+
+        // ================= phase 5: fault hardware priority =================
+        $display("--- P5 fault hardware priority ---");
+        goto_slot(11);
+        chk("D31_display_valid_in_window", col_valid === 1'b1);
+        // stay inside the first 12-cycle tick interval: tick_cnt is still 0, so
+        // every channel whose code is non-zero must be conducting
+        repeat (8) @(negedge clk);
+        chk("D32_channel_on_before_fault", (|ch_en) === 1'b1);
+        fault_n = 1'b0;
+        #1;
+        chk("D33_fault_kills_output_same_cycle", (|ch_en) === 1'b0);
+        repeat (5) @(negedge clk);
+        chk("D34_fault_holds_off", (|ch_en) === 1'b0);
+        fault_n = 1'b1;
+        repeat (5) @(negedge clk);
+        chk("D35_recover_after_fault", (|ch_en) === 1'b1);
+
+        // the oracle's own commit counter is cleared by the reset below, so it
+        // must be sampled here and not after P6
+        bad = or_ncommit;
+        chk("D40_oracle_committed_columns", bad >= 8);
+
+        // ================= phase 6: reset ===================================
+        $display("--- P6 reset mid-display ---");
+        reset_n = 1'b0;
+        #1;
+        chk("D36_reset_kills_output", (|ch_en) === 1'b0);
+        repeat (20) @(negedge clk);
+        chk("D37_reset_clears_valid",  col_valid === 1'b0);
+        reset_n = 1'b1;
+        stim_en = 1'b0;
+        repeat (40) @(negedge clk);
+
+        // ================= global safety monitors ===========================
+        chk("D38_never_on_while_blank",       n_blank_viol == 0);
+        chk("D39_never_on_without_valid_col", n_novalid_viol == 0);
+        chk("D41_on_samples_not_vacuous",     n_on_samples > 3000);
+
+        $display("COURSE_RTL_ASSERT_COUNT=%0d", assert_count);
+        $display("COURSE_RTL_PASS_COUNT=%0d",   pass_count);
+        $display("COURSE_RTL_FAIL_COUNT=%0d",   fail_count);
+        if (fail_count == 0) begin
+            $display("COURSE_RTL_RESULT=PASS");
+            $display("COURSE_TCON_T3_SCENARIO_DONE=DATA_DRIVER_INTERNAL");
+        end else begin
+            $display("COURSE_RTL_RESULT=FAIL");
+            $fatal(1, "COURSE_ASSERT_FAILED: %0d of %0d checks", fail_count, assert_count);
+        end
+        $finish;
+    end
+
+endmodule

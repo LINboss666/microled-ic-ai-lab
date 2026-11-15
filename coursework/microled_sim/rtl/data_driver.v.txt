@@ -1,0 +1,291 @@
+`timescale 1ns / 1ps
+// data_driver — synthesizable 384-channel Data Driver digital core (T3).
+//
+// WHAT THIS IS
+//   The digital half of ONE Data Driver IC, as specified by V1.3 §10 + §12:
+//     384 independent cathode-current channels, first chip = rows 0,2,..766,
+//     second chip = rows 1,3,..767 (the row split is done by TCON's D0/D1 lanes,
+//     so this module only ever sees its own 384 bytes per column).
+//
+// WHAT THIS IS NOT
+//   Not an analog current source. The 8 PAM tiers, I_PAM0..7, the trim codes,
+//   the 15 uA compliance, the array RC and the optical calibration are all
+//   OUTSIDE this module; it only produces the 3-bit tier code and the per-channel
+//   conduction enable. A digital PASS says nothing about analog PVT/SOA/LED load.
+//
+// DATA PATH (V1.3 段0333/0335/0359)
+//   raw  : 384 x 8 load  + 384 x 8 display   (768 B)  - Pure-mode fallback / A-B
+//   map  : 384 x 9 load  + 384 x 9 display   (864 B)  - LUT applied DURING load,
+//          so raw and mapped switch on the SAME LATCH edge (doing it after LATCH
+//          would need 384 / 50 MHz = 7.68 us > the 2.085625 us blanking budget)
+//   lut  : 256 x 9, TWO banks (576 B), one active, one writable
+//
+// FRAMING (identical to the accepted data_model, so the two can be diffed)
+//   LATCH is sampled ONLY on a DCLK rising edge:
+//     LATCH 1->0 at an edge  -> that edge is the FIRST sampling edge of the new
+//                               transfer, so byte 0 is taken there
+//     LATCH 0->1 at an edge  -> commit atomically (only if exactly 384 bytes
+//                               arrived and nothing overflowed)
+//   Any column that is short or over-long is NOT committed: the display bank
+//   keeps its old content and col_valid drops, so no channel can conduct.
+//
+// GRAY ENGINE (段0338/0339/0467-0476)
+//   ONE shared up-counter per chip plus 384 comparators. The counter lives in the
+//   PWM_TICK event domain (a real tick is a 10 ns event at 8.333 MHz, i.e.
+//   shorter than a 20 ns DCLK period, so sampling it with DCLK would drop ticks).
+//   PWM_START is a 40 ns pulse in the DCLK domain; it crosses into the tick
+//   domain as a TOGGLE (level, not pulse) so the handshake cannot miss it.
+//   Time code semantics (段0218): 0 = off, 1..MAX-1 = that many ticks,
+//   MAX (=63 hybrid / 255 pure) = MAX+1 ticks, i.e. the full window.
+//
+// SAFETY (段0355/0477-0481)
+//   BLANK, fault_n and the "no valid column" condition gate the channel enable
+//   COMBINATIONALLY at the output, so BLANK has priority in the same cycle and
+//   cannot be deferred by a clock. Same for reset (asynchronous assert).
+//   OPEN_ASYNC_BLANK: that asynchronous gate is a real async path; glitch and
+//   CDC sign-off is NOT part of this module's verification.
+module data_driver #(
+    parameter integer NCH     = 384,   // channels of THIS chip
+    parameter integer PWM_MAX = 63,    // 63 = 6-bit hybrid, 255 = Pure 8-bit
+    parameter integer CNTW    = 8      // tick counter width (8 covers both)
+) (
+    input  wire              reset_n,       // async assert, sync release assumed
+    input  wire              dclk,          // 50 MHz, continuous
+    input  wire [7:0]        din,           // D0 for chip0 / D1 for chip1
+    input  wire              din_valid,     // byte valid at this dclk edge
+    input  wire              latch,         // only switches banks inside BLANK
+    input  wire              blank,         // async, active high, safety priority
+    input  wire              fault_n,       // 0 = fault, hardware priority off
+    input  wire              pwm_start,     // sampled with DCLK, primes counter
+    input  wire              pwm_tick,      // 8.333 MHz event (10 ns pulse)
+
+    // configuration (in the chip these come from the SPI register file)
+    input  wire              cfg_hybrid,    // 1 = Hybrid (LUT), 0 = Pure (raw byte)
+    input  wire              cfg_lut_we,    // write one entry into the INACTIVE bank
+    input  wire [7:0]        cfg_lut_addr,
+    input  wire [8:0]        cfg_lut_data,  // [8:6] PAM_LEVEL, [5:0] PWM_CODE
+    input  wire              cfg_lut_commit,// W1P: arm a commit of the inactive bank
+
+    // ---- to the analog slice / observation ----
+    output wire [NCH-1:0]    ch_en,         // 1 = this channel may conduct now
+    output wire [NCH*3-1:0]  ch_pam,        // 3-bit tier code per channel
+    output wire [CNTW-1:0]   tick_cnt,      // shared PWM counter (observation)
+    output reg               col_valid,     // a complete column is in the display bank
+    output reg  [9:0]        bytes_rcvd,
+    output wire              lut_valid,     // the ACTIVE bank holds a committed image
+    output reg               lut_bank,      // active bank
+    output reg               lut_cmt_bad,   // sticky: a commit was refused
+    output reg  [5:0]        err_flags
+);
+
+    // ---------------------------------------------------------------------
+    // storage
+    // ---------------------------------------------------------------------
+    reg [7:0] raw_load [0:NCH-1];
+    reg [7:0] raw_disp [0:NCH-1];
+    reg [8:0] map_load [0:NCH-1];
+    reg [8:0] map_disp [0:NCH-1];
+
+    reg [8:0]   lut_a [0:255];             // bank 0
+    reg [8:0]   lut_b [0:255];             // bank 1
+    reg [255:0] mask_a;                    // which entries of bank 0 were written
+    reg [255:0] mask_b;
+    reg         ok_a, ok_b;                // that bank holds a committed image
+
+    // ---------------------------------------------------------------------
+    // DCLK-domain framing state
+    // ---------------------------------------------------------------------
+    reg         armed;
+    reg         latch_d;
+    reg  [9:0]  wcnt;
+    reg         ovf;
+    reg         cmt_pend;
+    integer     i;
+
+    wire rising  = latch && !latch_d;      // commit edge  (pre-edge level)
+    wire falling = !latch && latch_d;      // window opens here, byte 0 is taken
+    // a window is open at this edge when it already was (and this is not the
+    // commit edge), or when this edge is exactly the falling edge
+    wire win_open = falling | (armed & ~rising);
+
+    wire [8:0] lut_q       = lut_bank ? lut_b[din] : lut_a[din];   // load-path lookup
+    wire [8:0] map_now     = cfg_hybrid ? lut_q : {1'b0, din};
+    wire [255:0] inact_mask = lut_bank ? mask_a : mask_b;
+    wire [8:0] inact_0      = lut_bank ? lut_a[8'd0]   : lut_b[8'd0];
+    wire [8:0] inact_255    = lut_bank ? lut_a[8'd255] : lut_b[8'd255];
+    wire black_ok = (inact_0[5:0] == 6'd0);
+    wire full_ok  = (inact_255[8:6] == 3'd7) && (inact_255[5:0] == 6'd63);
+    // 段0359: the bank may only change while SAFE and while no transfer is in
+    // flight (otherwise one column would mix two mapping versions).
+    wire safe_cfg = fault_n && blank && !win_open;
+    wire cmt_ok   = safe_cfg && (&inact_mask) && (!cfg_hybrid || (black_ok && full_ok));
+
+    always @(posedge dclk or negedge reset_n) begin
+        if (!reset_n) begin
+            armed      <= 1'b0;
+            latch_d    <= 1'b0;
+            wcnt       <= 10'd0;
+            ovf        <= 1'b0;
+            cmt_pend   <= 1'b0;
+            col_valid  <= 1'b0;
+            bytes_rcvd <= 10'd0;
+            lut_bank   <= 1'b0;
+            ok_a       <= 1'b0;
+            ok_b       <= 1'b0;
+            lut_cmt_bad<= 1'b0;
+            mask_a     <= 256'd0;
+            mask_b     <= 256'd0;
+            err_flags  <= 6'b000000;
+            for (i = 0; i < NCH; i = i + 1) begin
+                raw_load[i] <= 8'h00;
+                raw_disp[i] <= 8'h00;
+                map_load[i] <= 9'h000;
+                map_disp[i] <= 9'h000;
+            end
+        end else begin
+            latch_d <= latch;
+
+            // ---- LUT write: always into the INACTIVE bank (段0680/0690) ------
+            if (cfg_lut_we) begin
+                if (lut_bank) begin
+                    lut_a[cfg_lut_addr]   <= cfg_lut_data;
+                    mask_a[cfg_lut_addr]  <= 1'b1;
+                end else begin
+                    lut_b[cfg_lut_addr]   <= cfg_lut_data;
+                    mask_b[cfg_lut_addr]  <= 1'b1;
+                end
+            end
+
+            // ---- deferred COMMIT -------------------------------------------
+            if (cfg_lut_commit) cmt_pend <= 1'b1;
+            if (cmt_pend && cmt_ok) begin
+                cmt_pend <= 1'b0;
+                lut_bank <= ~lut_bank;
+                // the bank just committed becomes the active one ...
+                if (lut_bank) ok_a <= 1'b1;
+                else          ok_b <= 1'b1;
+                // ... and the bank just left becomes writable again; its mask
+                // and its "committed" flag both restart
+                if (lut_bank) begin mask_b <= 256'd0; ok_b <= 1'b0; end
+                else          begin mask_a <= 256'd0; ok_a <= 1'b0; end
+            end else if (cmt_pend && safe_cfg && !(&inact_mask)) begin
+                lut_cmt_bad <= 1'b1;          // incomplete image: refused
+            end else if (cmt_pend && safe_cfg && cfg_hybrid && !(black_ok && full_ok)) begin
+                lut_cmt_bad <= 1'b1;          // black/full-scale rule violated
+            end
+
+            // ---- LATCH transitions -----------------------------------------
+            if (rising) begin
+                if (armed && (wcnt == NCH) && !ovf) begin
+                    for (i = 0; i < NCH; i = i + 1) begin
+                        raw_disp[i] <= raw_load[i];
+                        map_disp[i] <= map_load[i];
+                    end
+                    col_valid <= 1'b1;
+                end else begin
+                    // short / over-long: never commit -> no display permit
+                    col_valid <= 1'b0;
+                    if (armed) err_flags[0] <= 1'b1;
+                end
+                armed <= 1'b0;
+                wcnt  <= 10'd0;
+                ovf   <= 1'b0;
+            end else if (falling) begin
+                // the window opens; the DISPLAY bank still holds the previous
+                // column and stays valid until a commit replaces it (a bad
+                // column clears it only at the commit attempt, not here)
+                armed     <= 1'b1;
+                wcnt      <= 10'd0;
+                ovf       <= 1'b0;
+            end
+
+            // ---- byte capture (MUST come AFTER the LATCH-edge block) --------
+            // Both this block and the `falling` branch assign wcnt, and inside
+            // one always block the LAST non-blocking assignment wins. With the
+            // capture first, the arming edge wrote byte 0 into raw_load[0],
+            // incremented wcnt to 1 and then had it overwritten back to 0 - the
+            // window therefore ended with 383 bytes and lost byte 0 (T3 run #1/#2
+            // measured dut_wcnt=383 while the same window delivered 384 bytes to
+            // the independent oracle). Keeping the capture last makes the arming
+            // edge count as byte 0, exactly as V1.3 段0462 and data_model define.
+            if (win_open && din_valid) begin
+                if (wcnt < NCH) begin
+                    raw_load[wcnt] <= din;
+                    map_load[wcnt] <= map_now;
+                    wcnt       <= wcnt + 10'd1;
+                    bytes_rcvd <= wcnt + 10'd1;
+                end else begin
+                    ovf          <= 1'b1;
+                    err_flags[1] <= 1'b1;        // more than NCH bytes in one column
+                end
+            end else if (!win_open) begin
+                bytes_rcvd <= 10'd0;
+            end
+        end
+    end
+
+    assign lut_valid = lut_bank ? ok_b : ok_a;
+
+    // ---------------------------------------------------------------------
+    // PWM_START -> tick domain handshake (toggle, so a narrow pulse cannot be
+    // lost and a 10 ns event is never sampled by a 20 ns clock)
+    // ---------------------------------------------------------------------
+    reg pstart_d, pstart_tgl;
+    always @(posedge dclk or negedge reset_n) begin
+        if (!reset_n) begin
+            pstart_d   <= 1'b0;
+            pstart_tgl <= 1'b0;
+        end else begin
+            pstart_d <= pwm_start;
+            if (pwm_start && !pstart_d) pstart_tgl <= ~pstart_tgl;
+        end
+    end
+
+    reg          tgl_s1, tgl_s2, primed;
+    reg [CNTW-1:0] cnt_q;
+    wire prime_act = (tgl_s2 != pstart_tgl);
+
+    always @(posedge pwm_tick or negedge reset_n) begin
+        if (!reset_n) begin
+            tgl_s1 <= 1'b0;
+            tgl_s2 <= 1'b0;
+            primed <= 1'b0;
+            cnt_q  <= {CNTW{1'b0}};
+        end else begin
+            tgl_s1 <= pstart_tgl;
+            tgl_s2 <= tgl_s1;
+            if (prime_act && !primed) begin
+                cnt_q  <= {CNTW{1'b0}};   // interval 0 starts at count 0
+                primed <= 1'b1;
+            end else begin
+                if (!prime_act) primed <= 1'b0;
+                cnt_q <= (cnt_q == PWM_MAX) ? PWM_MAX : (cnt_q + 1'b1);
+            end
+        end
+    end
+
+    assign tick_cnt = cnt_q;
+
+    // ---------------------------------------------------------------------
+    // per-channel comparator + safety gate (段0338/0339/0355)
+    // ---------------------------------------------------------------------
+    wire disp_ok = col_valid;          // a complete, unpoisoned column is loaded
+    wire hw_en   = disp_ok && !blank && fault_n;
+
+    genvar gi;
+    generate
+        for (gi = 0; gi < NCH; gi = gi + 1) begin : g_ch
+            // time code: hybrid -> 6-bit PWM from the mapped bank
+            //            pure   -> the raw 8-bit byte itself (段0218)
+            wire [CNTW-1:0] code = cfg_hybrid ? {2'b00, map_disp[gi][5:0]}
+                                             : raw_disp[gi];
+            // 0 = off, MAX = full window (MAX+1 ticks), else the code itself
+            wire [CNTW-1:0] w_eff = (code == {CNTW{1'b0}}) ? {CNTW{1'b0}}
+                                  : (code == PWM_MAX)      ? (PWM_MAX + 1'b1)
+                                                           : code;
+            assign ch_pam[gi*3 +: 3] = cfg_hybrid ? map_disp[gi][8:6] : 3'b000;
+            assign ch_en[gi] = hw_en && (w_eff != {CNTW{1'b0}}) && (cnt_q < w_eff);
+        end
+    endgenerate
+
+endmodule
