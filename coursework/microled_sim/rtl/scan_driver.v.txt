@@ -1,0 +1,82 @@
+`timescale 1ns / 1ps
+// scan_driver — synthesizable 512-way Scan Driver digital core (T4).
+//
+// ONE chip owns HALF of the 1024 global columns:
+//   CHIP_ID=0 -> even columns (col_id[0]==0), local channels 0..511
+//   CHIP_ID=1 -> odd  columns (col_id[0]==1), local channels 0..511
+//   local channel = col_id[9:1]                       (V1.3 段0369-0370)
+//
+// THE STROBE IS THE CLOCK. There is deliberately NO reference clock port: V1.3
+// requires the address to be latched on the REAL rising edge of SCAN_STB while
+// BLANK is asserted (段0487-0491). Sampling SCAN_STB with a 100 MHz clock would
+// latch one reference cycle late - that was T2B-B review finding A, and this
+// module must not repeat it.
+//
+// SAFETY IS COMBINATIONAL, NOT CLOCKED:
+//   reset_n=0 | fault_n=0 | blank=1  =>  all 512 outputs are 0 in the same
+//   delta; no SCAN_STB and no clock edge is needed to shut the array off
+//   (段0376/0379/0477-0481).
+//
+// OUT OF SCOPE (documented, not implemented here): 512 high-side MOS devices,
+// 8.68 ohm output resistance, discharge of unselected columns, FAULT_n open
+// drain reporting to the TCON, SPI clear of a latched fault, UVLO/OTP sensors.
+// A digital PASS says nothing about those.
+module scan_driver #(
+    parameter integer CHIP_ID = 0          // 0 or 1 (片号)
+) (
+    input  wire         reset_n,           // async assert, safe state
+    input  wire         blank,             // high active, asynchronous gate
+    input  wire         fault_n,           // low active, asynchronous gate
+    input  wire         scan_stb,          // REAL rising edge latches the address
+    input  wire [9:0]   col_id,            // global column 0..1023
+
+    output wire [511:0] col_a,             // 512 high-side selects, one-hot
+
+    // observation only - NOT a physical chip interface
+    output wire         sel_valid,         // this chip is currently driving a column
+    output reg  [9:0]   sel_col,           // address seen at the last legal strobe
+    output reg  [8:0]   sel_chan,          // its local channel
+    output reg          err_stb_outside_blank   // sticky protocol error, cleared by reset
+);
+
+    localparam [0:0] MY_DIE = (CHIP_ID == 0) ? 1'b0 : 1'b1;
+
+    reg       armed;        // a legal strobe addressed THIS chip; latch holds
+    reg [8:0] lat_chan;     // local channel latched by that strobe
+
+    // hardware-priority output permission (no clock, no state beyond `armed`)
+    wire gate_ok = reset_n && armed && !blank && fault_n;
+
+    // ---- address latch: the real SCAN_STB rising edge --------------------
+    always @(posedge scan_stb or negedge reset_n) begin
+        if (!reset_n) begin
+            armed                 <= 1'b0;
+            lat_chan              <= 9'd0;
+            sel_col               <= 10'd0;
+            sel_chan              <= 9'd0;
+            err_stb_outside_blank <= 1'b0;
+        end else if (!blank) begin
+            // V1.3 §12: the strobe must fall inside BLANK. A strobe outside
+            // BLANK must not create a selection: drop the arm, keep the pins
+            // dark, and flag the violation until the next reset. This mirrors
+            // the accepted scan_model safe policy (DERIVED_SAFE, see
+            // SCAN_PIN_CONTRACT.md §4) instead of inventing a new behaviour.
+            err_stb_outside_blank <= 1'b1;
+            armed                 <= 1'b0;
+        end else begin
+            sel_col  <= col_id;
+            sel_chan <= col_id[9:1];
+            if (col_id[0] == MY_DIE) begin
+                armed    <= 1'b1;          // addressed: this chip drives its channel
+                lat_chan <= col_id[9:1];
+            end else begin
+                armed    <= 1'b0;          // the other chip is addressed: all off
+            end
+        end
+    end
+
+    // ---- 512-bit one-hot decoder + asynchronous safety gate --------------
+    assign col_a     = gate_ok ? (512'd1 << lat_chan) : 512'd0;
+    assign sel_valid = gate_ok;
+
+endmodule

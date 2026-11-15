@@ -1,0 +1,52 @@
+`timescale 1ns / 1ps
+// scan_exp — independent PIN-LEVEL expected-output model for ONE Scan Driver (T4).
+//
+// Clean-room behavioural derivation of SCAN_PIN_CONTRACT.md, written from the
+// pins only (reset_n/blank/fault_n/scan_stb/col_id). It shares NO signal with
+// scan_driver beyond the pins, so comparing the two is a differential check.
+//
+// Deliberately structured differently from the RTL (dataflow decode + a single
+// arm flag) so that a copy/paste mistake cannot make both agree by accident.
+//
+// Semantics (same frozen contract, see doc):
+//   * posedge scan_stb latches col_id[9:1] only if blank=1 and col_id[0]==DIE
+//   * a strobe outside BLANK arms nothing (safe policy, DERIVED_SAFE)
+//   * a strobe for the OTHER chip de-selects this one
+//   * output = one-hot(latched channel) gated by reset_n && !blank && fault_n
+module scan_exp #(
+    parameter integer CHIP_ID = 0
+) (
+    input  wire         reset_n,
+    input  wire         blank,
+    input  wire         fault_n,
+    input  wire         scan_stb,
+    input  wire [9:0]   col_id,
+    output wire [511:0] exp_out
+);
+
+    localparam [0:0] DIE = (CHIP_ID == 0) ? 1'b0 : 1'b1;
+
+    reg         have;
+    reg  [8:0]  channel;
+    reg  [511:0] bitmask;
+
+    always @(posedge scan_stb or negedge reset_n) begin
+        if (!reset_n) begin
+            have    <= 1'b0;
+            channel <= 9'd0;
+        end else if (blank && (col_id[0] == DIE)) begin
+            have    <= 1'b1;
+            channel <= col_id[9:1];
+        end else begin
+            have    <= 1'b0;        // other chip addressed, or illegal strobe
+        end
+    end
+
+    always @(*) begin
+        bitmask = 512'd0;
+        bitmask[channel] = 1'b1;
+    end
+
+    assign exp_out = (reset_n && have && !blank && fault_n) ? bitmask : 512'd0;
+
+endmodule
