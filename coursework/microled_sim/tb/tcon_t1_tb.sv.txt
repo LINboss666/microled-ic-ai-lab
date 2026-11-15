@@ -444,7 +444,20 @@ module tcon_t1_tb;
     // ---------------- scenario 3: FIRST frame after reset -----------------
     task automatic scen_boundary;
         integer slots, longs, shorts, prev_len, first_len, wrap0;
-        integer col_at_slot1, col_at_slot1025;
+        // SLOT INDEX ARITHMETIC (T1-V13B rework; the previous version compared
+        // two boundaries only 1023 slots apart and called it "period 1024").
+        //
+        // `slots` counts COMPLETED observations, and the loop body runs AFTER
+        // the wait, so the iteration with slots==k observes the START OF SLOT
+        // k+1 (the first @(posedge slot_start) after the slot-0 boundary is the
+        // start of slot 1). Therefore:
+        //     slots==1  -> start of slot 2     (base sample, col_slot2)
+        //     slots==1023 -> start of slot 1024 (last loop iteration)
+        //     +1 wait   -> start of slot 1025  (col_slot1025, must be 1023)
+        //     +2 waits  -> start of slot 1026  (col_slot1026, must be 0 again)
+        // slot 2 and slot 1026 are exactly 1024 slot boundaries apart, so the
+        // period-1024 property is asserted between samples 1024 slots apart.
+        integer col_slot2, col_slot1025, col_slot1026;
         realtime t_prev, t_now;
         $display("--- SCENARIO BOUNDARY (first frame after reset, V1.3 video) ---");
         reset_dut;
@@ -455,13 +468,13 @@ module tcon_t1_tb;
         t_prev = $realtime - 1.0;       // = the edge that started slot 0
         wrap0 = wrap_events;
         slots = 0; longs = 0; shorts = 0; first_len = 0;
-        col_at_slot1 = -1;
+        col_slot2 = -1; col_slot1025 = -1; col_slot1026 = -1;
 
         while (slots < 1024) begin
             @(posedge slot_start);
             t_now = $realtime;
             #1;
-            if (slots == 1) col_at_slot1 = dut.col_id;
+            if (slots == 1) col_slot2 = dut.col_id;      // observed: slot 2 start
             prev_len = $rtoi((t_now - t_prev) / 10.0);
             t_prev   = t_now;
             if (slots == 0) first_len = prev_len;
@@ -469,23 +482,36 @@ module tcon_t1_tb;
             else if (prev_len == 976) shorts = shorts + 1;
             slots = slots + 1;
         end
-        // one more slot boundary: the display label lags the input by one slot,
-        // so the period-1024 property is checked one slot later
+        // slot 1025 start: one boundary later than the last one measured. The
+        // display label lags the input by two slots, so this must read 1023 -
+        // the highest column actually reached in the first frame. That check is
+        // what stops "col_id stuck at 0" from making B7 pass.
         @(posedge slot_start);
         #1;
-        col_at_slot1025 = dut.col_id;
+        col_slot1025 = dut.col_id;
+        // slot 1026 start: exactly 1024 boundaries after the base sample.
+        @(posedge slot_start);
+        #1;
+        col_slot1026 = dut.col_id;
         step(4);
 
-        $display("FIRST_FRAME slots=%0d first_len=%0d long=%0d short=%0d cycles=%0d wraps=%0d col1=%0d col1025=%0d",
+        $display("FIRST_FRAME slots=%0d first_len=%0d long=%0d short=%0d cycles=%0d wraps=%0d",
                  slots, first_len, longs, shorts, longs * 977 + shorts * 976,
-                 wrap_events - wrap0, col_at_slot1, col_at_slot1025);
+                 wrap_events - wrap0);
+        $display("FIRST_FRAME_COLID col_slot2=%0d col_slot1025=%0d col_slot1026=%0d (expect 0, 1023, 0)",
+                 col_slot2, col_slot1025, col_slot1026);
         chk("B1_first_slot_976_short_first", first_len == 976);
         chk("B2_first_frame_1024_slots",     slots == 1024);
         chk("B3_first_frame_cycles_1e6",     (longs * 977 + shorts * 976) == 1000000);
         chk("B4_first_frame_576_long",       longs == 576);
         chk("B5_first_frame_448_short",      shorts == 448);
         chk("B6_frame_wrap_exactly_once",    (wrap_events - wrap0) == 1);
-        chk("B7_col_id_period_1024_after_wrap", col_at_slot1025 == col_at_slot1);
+        // periodicity between boundaries exactly 1024 slots apart, plus the two
+        // absolute values the reviewer asked to be recorded and checked
+        chk("B7_col_id_period_1024_after_wrap",
+            (col_slot1026 == col_slot2) &&
+            (col_slot1025 == 10'd1023) &&
+            (col_slot1026 == 10'd0));
         chk("B8_no_tick_in_blank_frame",     blk_viol == 0);
         chk("B9_no_latch_outside_blank_frame", latch_viol == 0);
         chk("B10_no_stb_outside_blank_frame",  stb_viol == 0);
