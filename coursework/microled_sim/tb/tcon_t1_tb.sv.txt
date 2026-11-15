@@ -141,12 +141,14 @@ module tcon_t1_tb;
     integer assert_count = 0, pass_count = 0, fail_count = 0;
     integer blk_viol = 0, latch_viol = 0, stb_viol = 0;
     integer dclk_edges = 0, load_edges = 0, load_cycles = 0;
+    integer win_e = 0, win_e_last = 0;      // DCLK edges inside one load window
     integer wrap_events = 0;
     integer latch_events = 0;
     integer idle_viol = 0;        // BLANK low while the FSM is not ACTIVE
     integer early_unblank = 0;    // BLANK low before TWO LATCH pulses were issued
     realtime t_dclk_prev = 0.0, dclk_period = 0.0;
     reg      wrap_d = 1'b0, latch_d = 1'b0;
+    reg      la_e   = 1'b0;                 // load_active at the previous DCLK edge
     string   scen;
 
     // black-box safety monitors
@@ -166,13 +168,35 @@ module tcon_t1_tb;
         end
     end
 
-    // DCLK measurement: period and edge count
+    // DCLK measurement: period, total edges, and edges inside ONE load window.
+    //
+    // T1-V13 rework (reviewer-approved option A). The old code was
+    //       @(posedge load_active); #1; load_edges = 0;
+    // which cleared the counter 1 ns AFTER the window opened and therefore threw
+    // away the DCLK edge that coincides with the opening boundary (11 of 13
+    // windows in the failed run). Nothing is cleared now: the window is counted
+    // on the DCLK grid itself, using la_e = load_active at the PREVIOUS edge:
+    //       la & !la_e  -> first sampling edge of the window  (count it)
+    //       la &  la_e  -> interior edge                      (count it)
+    //      !la &  la_e  -> edge at/after the closing boundary (do not count)
+    // That is exactly the half-open interval [load_active↑, load_active↓):
+    // an edge coincident with the opening boundary counts, one coincident with
+    // the closing boundary does not. It is phase-independent - a window that is
+    // 384 DCLK periods wide yields 384 either way - and there is no second
+    // "clear" statement that could race with a sample.
     always @(posedge dclk) begin
         if (reset_n) begin
             dclk_edges = dclk_edges + 1;
             if (t_dclk_prev > 0.0) dclk_period = $realtime - t_dclk_prev;
             t_dclk_prev = $realtime;
-            if (load_active) load_edges = load_edges + 1;
+            if (load_active && !la_e) begin
+                win_e = 1;                       // first edge inside this window
+            end else if (load_active && la_e) begin
+                win_e = win_e + 1;               // interior edge
+            end else if (!load_active && la_e) begin
+                win_e_last = win_e;              // window closed: publish the count
+            end
+            la_e = load_active;
         end
     end
 
@@ -396,10 +420,13 @@ module tcon_t1_tb;
         #1;
         t_load0    = $realtime - 1.0;    // back to the rising edge
         sc_at_load = dut.slot_cycle;
-        load_edges = 0;
         @(negedge load_active);
         t_load1     = $realtime;
         load_cycles = $rtoi((t_load1 - t_load0) / 10.0);
+        // the close of the window is observed on the DCLK grid, at most one
+        // period after load_active falls; two edges are a safe, race-free wait
+        repeat (2) @(posedge dclk);
+        load_edges = win_e_last;
         chk("T3_load_starts_at_832",      sc_at_load == 832);
         chk("T3_load_len_768_cycles",     load_cycles == 768);
         chk("T3_load_384_dclk_edges",     load_edges == 384);
