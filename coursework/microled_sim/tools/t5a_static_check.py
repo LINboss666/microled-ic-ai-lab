@@ -24,7 +24,7 @@ R = "D:/ic617_course_sim_20261112_clone"
 S = os.path.join(R, "coursework/microled_sim")
 
 ACCEPTED = {
-    "rtl/data_driver.v.txt": "4ea897deebe39b6437acb40821b035bd98526f78f8e7a5da03abda2a1911c8be",
+    "rtl/data_driver.v.txt": "6d0c5f831423e16c8d76bf583730d11a77d92fa35c203635b346ba678ba359ab",  # T3-H2
     "rtl/scan_driver.v.txt": "6ee3ad38b3a9c2c1a65b37900537875ff52d33ca165145a246dafb0a782229a4",
     "rtl/data_model.v.txt": "604915355a79dfe5e0d8cc5aa4e9d14913d33c1962069ed394de21e71ef5506a",
 }
@@ -60,12 +60,23 @@ dd = read(os.path.join(S, "rtl/data_driver.v.txt"))
 shell = read(os.path.join(S, "tb/t5_five_chip_shell.sv.txt"))
 v13 = read("D:/ic617_tcon_t2ar2_20261114/v13_fulltext.txt")
 ck("load_active" not in v13, "load_active appears 0 times in V1.3 (grep)")
-ck(".load_active (load_active_obs)" in shell and
-   ".din_valid (dv_stub)" in shell,
-   "shell wires din_valid from dv_stub, load_active to an unused observation net")
+ck(".load_active (load_active_obs)" in shell,
+   "load_active goes to an unused observation net")
+ck(".din_valid (dv_stub)" not in shell and "wire dv_stub" not in shell,
+   "the 385-edge dv_stub is gone from the shell LOGIC (comment mentions allowed)")
+ck(shell.count(".din_valid (1'b0)") == 2,
+   "both Data instances tie din_valid to a constant (V1.3: no such pin)")
+ck(shell.count("USE_DIN_VALID(0)") == 2,
+   "both Data instances run the self-delimiting mode")
 ck(not re.search(r"\.din_valid\s*\(\s*load_active", shell),
    "load_active is NOT connected to din_valid")
-ck("din_valid" in dd and "V1.3" in dd or True, "data_driver still declares din_valid (kept for T3 tests)")
+def has_din_valid(text):
+    return re.search(r"input\s+wire\s+din_valid", text) is not None
+ck(has_din_valid(dd), "data_driver still declares din_valid as an INPUT (T3 legacy port)")
+# negative control: the SAME predicate must fail on a doctored copy, otherwise
+# it is not a check at all (reviewer T5-A finding P1: `or True`)
+ck(not has_din_valid(dd.replace("input  wire              din_valid,", "")),
+   "NEGATIVE CONTROL: removing that port makes the predicate FAIL")
 # shell port list must not contain a VALID-style physical port
 ports = re.findall(r"^\s*(?:input|output)\s+wire[^;]*?(\w+)\s*(?:,|$)", shell, re.M)
 ck(not any(p.lower() in ("valid", "d_valid", "data_valid") for p in ports),
@@ -83,18 +94,26 @@ ck(shell.count(".blank (blank)") >= 4, "blank goes to all four drivers")
 ck(".col_id (col_id_w)" in shell and ".scan_stb (scan_stb_w)" in shell,
    "col_id / scan_stb distributed to both Scan chips")
 
-print("\n=== 4. deliverables present, patch still a proposal ===")
+print("\n=== 4. deliverables present, T3-H2 patch state ===")
 for d in DOCS:
     ck(os.path.exists(os.path.join(S, d)), "deliverable %s" % d)
-ck("USE_DIN_VALID" not in dd, "RTL does NOT yet contain the proposed USE_DIN_VALID")
-ck("col_valid <= 1'b0;" not in dd.split("if (cmt_pend && cmt_ok) begin")[1].split("end")[0],
-   "RTL does NOT yet contain the proposed COMMIT->col_valid invalidation")
+# T3-H2 has since been applied: this tool now confirms the *contract* it was
+# written to protect (no invented pin, mode-0 wrapper, no off-by-one stub) while
+# the RTL patch details themselves are owned by tools/t3h2_precheck.py.
+ck("USE_DIN_VALID" in dd, "T3-H2 parameter is present (patch applied)")
+ck("if (commit_fire) col_valid <= 1'b0;" in dd,
+   "T3-H2 display invalidation is present (patch applied)")
+ck("wire dv_stub" not in shell and "arming ||" not in shell,
+   "shell no longer carries the 385-edge stub (no dv_stub logic)")
 
 print("\n=== 5. working tree (RTL must be unmodified) ===")
 st = subprocess.run(["git", "-C", R, "status", "--porcelain"],
                     capture_output=True, text=True, check=False).stdout.splitlines()
 touched_rtl = [l for l in st if "/rtl/" in l and l.strip()]
-ck(not touched_rtl, "no rtl/ file is modified (%d paths in status)" % len(st))
+allowed = {"coursework/microled_sim/rtl/data_driver.v.txt"}
+unexpected = [l for l in touched_rtl if l.split()[-1] not in allowed]
+ck(not unexpected,
+   "only data_driver.v.txt may be modified in rtl/ (%d unexpected)" % len(unexpected))
 for l in st:
     print("    %s" % l)
 

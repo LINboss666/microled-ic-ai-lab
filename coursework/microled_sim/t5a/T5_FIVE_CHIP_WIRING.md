@@ -28,16 +28,17 @@
 | `u_tcon.col_id[9:0]` | 两颗 Scan | 全局列号；`[0]` 分片、`[9:1]` 本地 |
 | `u_tcon.scan_stb` | 两颗 Scan | BLANK 内上升沿锁存 |
 | `u_tcon.load_active` | **不接任何东西** | RTL 内部观测；**禁止**当 VALID 引脚 |
-| `dv_stub`（壳内生成） | 两颗 Data 的 `din_valid` | **占位模型**，非芯片引脚（见 §3） |
+| —（**无**，已删除） | 两颗 Data 的 `din_valid` 接 **常量 1'b0** | T3-H2 的 `USE_DIN_VALID=0` 让芯片自己数 384 沿；壳不再生成任何 valid |
 
-## 3. `din_valid` 的诚实处理（P0-2 未收口前）
+## 3. `din_valid` 的处理（T3-H2 之后）
 
 - V1.3 段 0548 明确"无需额外 VALID 线"，且 `load_active` 在 V1.3 中出现 **0** 次。
-- 壳里**没有**把 `load_active` 接到 `din_valid`；`din_valid` 由壳内的 `dv_stub` 驱动，
-  该 stub 是"LATCH 定界 + 384 沿计数"的**壳侧模型**。
-- 因此：用当前壳跑出的任何结果都只能叫 **shell-delimited**，不能叫 **chip-delimited**。
-  T5-A 建议的 `USE_DIN_VALID` 参数（见 `T5A_RTL_PATCH_PROPOSAL.md`）获批后，T5 应把 DUT
-  实例化为 V1.3 模式，届时才可声称"芯片自己数到 384"。
+- 壳里**没有**把 `load_active` 接到 `din_valid`；两颗 Data 现在都以 `USE_DIN_VALID=0` 实例化，
+  `din_valid` 端口接 **常量 1'b0** —— 与最终芯片 wrapper 的用法一致。
+- 旧 `dv_stub`（壳侧"LATCH + 384 沿"模型）**已删除**：它实际产生 **385** 个有效沿
+  （arming 沿 + 之后 384 沿），复审 T5-A 已给出逐沿反例。
+- 因此 384 沿定界现在完全由芯片内部完成；T5 里才可以说 "chip-delimited"。
+  但在 T3-H2 独立复审通过前，壳只是**编译草稿**，不构成任何 T5 证据。
 
 ## 4. 观测口（供 scoreboard 与 VCD）
 

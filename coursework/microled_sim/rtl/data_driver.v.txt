@@ -45,12 +45,26 @@
 //   T3-H adds one more term to the same combinational permit: in Hybrid mode
 //   the active LUT bank must hold a COMMITTED image (lut_valid), otherwise a
 //   complete column would conduct with an uncommitted / never-written mapping.
+//   T3-H2 adds two things:
+//     (a) USE_DIN_VALID=0 makes the byte window self-delimiting per V1.3 段0548
+//         (LATCH delimits, the chip stops itself after 384 DCLK edges), so the
+//         chip needs no external VALID pin;
+//     (b) a LUT COMMIT invalidates the display bank, with the invalidation
+//         applied LAST in the same always block so it also wins when the COMMIT
+//         fires on the same DCLK edge as a legal LATCH commit.
 //   OPEN_ASYNC_BLANK: that asynchronous gate is a real async path; glitch and
 //   CDC sign-off is NOT part of this module's verification.
 module data_driver #(
     parameter integer NCH     = 384,   // channels of THIS chip
     parameter integer PWM_MAX = 63,    // 63 = 6-bit hybrid, 255 = Pure 8-bit
-    parameter integer CNTW    = 8      // tick counter width (8 covers both)
+    parameter integer CNTW    = 8,     // tick counter width (8 covers both)
+    // T3-H2: 1 = the byte window is gated by the `din_valid` input (the
+    // historical T3 unit-test protocol, byte-for-byte unchanged);
+    //        0 = V1.3 段0548 self-delimiting receiver: LATCH delimits the
+    //            transfer and the chip itself stops after 384 DCLK edges, so
+    //            `din_valid` is ignored (the final chip wrapper ties it low;
+    //            it is NOT a V1.3 pin).
+    parameter integer USE_DIN_VALID = 1
 ) (
     input  wire              reset_n,       // async assert, sync release assumed
     input  wire              dclk,          // 50 MHz, continuous
@@ -122,6 +136,14 @@ module data_driver #(
     // flight (otherwise one column would mix two mapping versions).
     wire safe_cfg = fault_n && blank && !win_open;
     wire cmt_ok   = safe_cfg && (&inact_mask) && (!cfg_hybrid || (black_ok && full_ok));
+    // T3-H2: ONE definition used both by the bank switch and by the display
+    // invalidation at the very end of this always block.
+    wire commit_fire = cmt_pend && cmt_ok;
+    // T3-H2: in self-delimiting mode the byte window is defined by the chip's
+    // own 384-edge counter, not by an external VALID pin. byte 0 is the arming
+    // edge (wcnt still holds 0 there, because the previous commit reset it), and
+    // once wcnt==NCH the 385th and every following edge is ignored.
+    wire byte_valid = USE_DIN_VALID ? din_valid : (wcnt < NCH);
 
     always @(posedge dclk or negedge reset_n) begin
         if (!reset_n) begin
@@ -160,8 +182,13 @@ module data_driver #(
             end
 
             // ---- deferred COMMIT -------------------------------------------
+            // T3-H2: this may fire on the SAME DCLK edge as `rising` (a legal
+            // LATCH commit): win_open=0 makes safe_cfg true exactly then. The
+            // display invalidation is therefore applied at the END of this
+            // always block (see below), so that it wins the NBA race against
+            // the `col_valid <= 1'b1` written by the LATCH branch.
             if (cfg_lut_commit) cmt_pend <= 1'b1;
-            if (cmt_pend && cmt_ok) begin
+            if (commit_fire) begin
                 cmt_pend <= 1'b0;
                 lut_bank <= ~lut_bank;
                 // the bank just committed becomes the active one ...
@@ -211,7 +238,7 @@ module data_driver #(
             // measured dut_wcnt=383 while the same window delivered 384 bytes to
             // the independent oracle). Keeping the capture last makes the arming
             // edge count as byte 0, exactly as V1.3 段0462 and data_model define.
-            if (win_open && din_valid) begin
+            if (win_open && byte_valid) begin
                 if (wcnt < NCH) begin
                     raw_load[wcnt] <= din;
                     map_load[wcnt] <= map_now;
@@ -224,6 +251,16 @@ module data_driver #(
             end else if (!win_open) begin
                 bytes_rcvd <= 10'd0;
             end
+
+            // ---- T3-H2: LUT COMMIT invalidates the display bank -------------
+            // MUST be the LAST assignment to col_valid in this block. When a
+            // COMMIT is pending and a legal column is being committed on the
+            // SAME edge, the LATCH branch above has just written col_valid=1
+            // with the OLD mapping; this last write makes the result 0, so the
+            // chip can never show data mapped by a previous LUT image. A new
+            // display needs a column that was LOADED after the bank switch and
+            // then committed by a later LATCH.
+            if (commit_fire) col_valid <= 1'b0;
         end
     end
 

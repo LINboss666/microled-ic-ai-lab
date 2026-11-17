@@ -14,16 +14,16 @@
 // DELIBERATELY NOT CONNECTED to `din_valid` here: doing so would invent a
 // physical pin.
 //
-// What is connected instead is `dv_stub` below: a SHELL-SIDE MODEL of the
-// V1.3 self-timed byte window (LATCH fall + 384-edge counter). It is labelled
-// as a model, it is not a chip pin, and its presence means:
-//   * the wiring is exercisable today,
-//   * the Data chip's own ability to self-delimit is NOT proven by this shell.
-// T5-A proposes making that self-delimiting capability selectable in the RTL
-// (parameter USE_DIN_VALID, default 1 = current behaviour) so that T5 can run
-// the DUT in its V1.3 mode instead of relying on this stub. Until that patch is
-// approved and separately verified, any T5 result obtained with this stub must
-// be reported as "shell-delimited", never as "chip-delimited".
+// What is connected instead: NOTHING. Both Data instances run with
+// `USE_DIN_VALID=0` (the V1.3 self-delimiting receiver added by T3-H2) and
+// their `din_valid` port is tied to 1'b0, exactly as the final chip wrapper
+// does. The 384-edge demarcation is therefore performed INSIDE the chip and no
+// shell logic can fabricate a byte-valid signal. The earlier `dv_stub` was
+// withdrawn because it produced 385 valid edges (reviewer T5-A finding P0).
+//
+// STATUS: this file compiles only against the T3-H2 RTL (parameter
+// USE_DIN_VALID). It is a wiring draft for T5 and is NOT evidence of anything
+// until T3-H2 is independently reviewed and T5 is separately authorized.
 // =======================================================================
 module t5_five_chip_shell #(
     parameter integer N_COL = 1024
@@ -97,37 +97,20 @@ module t5_five_chip_shell #(
     assign tcon_col_id   = col_id_w;
     assign tcon_scan_stb = scan_stb_w;
 
-    // ---- SHELL MODEL of the V1.3 byte window (NOT a chip pin) -----------
-    // Byte 0 is the first DCLK rising edge with LATCH low after a LATCH fall;
-    // bytes 1..383 follow; the 385th edge is not captured.
-    reg        latch_q = 1'b0;
-    reg        bw_arm  = 1'b0;
-    reg  [9:0] bw_cnt  = 10'd0;
-
-    wire arming = (!latch) && latch_q;          // true AT the arming edge
-
-    always @(posedge dclk or negedge reset_n) begin
-        if (!reset_n) begin
-            latch_q <= 1'b0;
-            bw_arm  <= 1'b0;
-            bw_cnt  <= 10'd0;
-        end else begin
-            latch_q <= latch;
-            if (arming) begin
-                bw_arm <= 1'b1;
-                bw_cnt <= 10'd0;
-            end else if (bw_arm) begin
-                if (bw_cnt < 10'd383) bw_cnt <= bw_cnt + 10'd1;
-                else                  bw_arm <= 1'b0;   // 384 edges done: stop
-            end
-        end
-    end
-
-    wire dv_stub = arming || (bw_arm && (bw_cnt < 10'd384));
+    // ---- NO byte-window stub any more (reviewer T5-A finding P0) ----------
+    // The previous `dv_stub` produced 385 valid edges (arming edge + 384 more)
+    // and was therefore never a proof of the 384-byte protocol. It is gone:
+    // both Data instances now run with USE_DIN_VALID=0 and their `din_valid`
+    // port tied to 1'b0, so the 384-edge delimiting is done INSIDE the chip and
+    // nothing in this shell can fabricate it.
+    //
+    // Consequence: this shell is only exercisable after the T3-H2 patch is
+    // accepted; until then `vlog` still compiles it but the parameter does not
+    // exist in the accepted RTL. Do not cite this file as T5 evidence.
 
     // ---- Data #0 (even rows 0,2,..766) ----------------------------------
-    data_driver #(.NCH(384), .PWM_MAX(63), .CNTW(8)) u_data0 (
-        .reset_n (reset_n), .dclk (dclk), .din (d0), .din_valid (dv_stub),
+    data_driver #(.NCH(384), .PWM_MAX(63), .CNTW(8), .USE_DIN_VALID(0)) u_data0 (
+        .reset_n (reset_n), .dclk (dclk), .din (d0), .din_valid (1'b0),
         .latch (latch), .blank (blank), .fault_n (fault_n),
         .pwm_start (pwm_start), .pwm_tick (pwm_tick),
         .cfg_hybrid (cfg_hybrid),
@@ -139,8 +122,8 @@ module t5_five_chip_shell #(
     );
 
     // ---- Data #1 (odd rows 1,3,..767) -----------------------------------
-    data_driver #(.NCH(384), .PWM_MAX(63), .CNTW(8)) u_data1 (
-        .reset_n (reset_n), .dclk (dclk), .din (d1), .din_valid (dv_stub),
+    data_driver #(.NCH(384), .PWM_MAX(63), .CNTW(8), .USE_DIN_VALID(0)) u_data1 (
+        .reset_n (reset_n), .dclk (dclk), .din (d1), .din_valid (1'b0),
         .latch (latch), .blank (blank), .fault_n (fault_n),
         .pwm_start (pwm_start), .pwm_tick (pwm_tick),
         .cfg_hybrid (cfg_hybrid),

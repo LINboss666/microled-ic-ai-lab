@@ -264,6 +264,36 @@ module tcon_t3_tb;
         .lut_cmt_bad (lut_cmt_bad), .err_flags (err_flags)
     );
 
+    // ---------------- DUT #2: the V1.3 self-delimiting receiver -------------
+    // Same pins as `dut`, but USE_DIN_VALID=0: it must produce the same bytes
+    // from LATCH + its own 384-edge counter, and must ignore din_valid.
+    wire [383:0]   ch_en0;
+    wire [1151:0]  ch_pam0;
+    wire [7:0]     tick_cnt0;
+    wire           col_valid0;
+    wire [9:0]     bytes_rcvd0;
+    wire           lut_valid0;
+    wire           lut_bank0;
+    wire           lut_cmt_bad0;
+    wire [5:0]     err_flags0;
+
+    data_driver #(.NCH(384), .PWM_MAX(63), .CNTW(8), .USE_DIN_VALID(0)) dut0 (
+        .reset_n (reset_n), .dclk (dclk), .din (din),
+        // V1.3 段0548: the chip has no external valid pin. Tying the legacy
+        // port to a constant is exactly how the final wrapper uses it; if the
+        // =0 mode secretly depended on it, this instance would receive nothing.
+        .din_valid (1'b0),
+        .latch (latch), .blank (blank), .fault_n (fault_n),
+        .pwm_start (pwm_start), .pwm_tick (pwm_tick),
+        .cfg_hybrid (cfg_hybrid), .cfg_lut_we (cfg_lut_we),
+        .cfg_lut_addr (cfg_lut_addr), .cfg_lut_data (cfg_lut_data),
+        .cfg_lut_commit (cfg_lut_commit),
+        .ch_en (ch_en0), .ch_pam (ch_pam0), .tick_cnt (tick_cnt0),
+        .col_valid (col_valid0), .bytes_rcvd (bytes_rcvd0),
+        .lut_valid (lut_valid0), .lut_bank (lut_bank0),
+        .lut_cmt_bad (lut_cmt_bad0), .err_flags (err_flags0)
+    );
+
     // ---------------- independent oracle ----------------------------------
     wire        or_valid, or_corrupt;
     wire [9:0]  or_col;
@@ -398,8 +428,95 @@ module tcon_t3_tb;
         end
     endfunction
 
+    // ---------------- T3-H2: a SECOND, different LUT image ------------------
+    // Table B halves every PWM code (black stays black, full stays full so the
+    // black/full commit rule still holds). It exists only to prove that after a
+    // bank switch the display bank really comes from the NEW image; it is not a
+    // calibrated table and is never used for a functional pass criterion.
+    reg [8:0] lut_b [0:255];
+
+    function automatic integer e_eff_b(input integer b);
+        integer c;
+        begin
+            c = lut_b[b][5:0];
+            if (c == 0)       e_eff_b = 0;
+            else if (c == 63) e_eff_b = 64;
+            else              e_eff_b = c;
+        end
+    endfunction
+
+    // commit-edge observer: proves WHEN a commit fired and what the LATCH /
+    // byte counter looked like on that very edge (pre-edge values).
+    reg     lut_valid_q = 1'b0;
+    reg     ce_l        = 1'b0;   // LATCH level at the commit edge
+    integer ce_wcnt     = 0;      // byte counter at the commit edge
+    integer commit_count = 0;
+    wire    latch_obs   = latch;  // observation alias (keeps the TB-side pin
+                                  // driver audit free of false positives)
+    always @(posedge dclk) begin
+        lut_valid_q <= lut_valid;
+        if (lut_valid && !lut_valid_q) begin
+            ce_l  = latch_obs;
+            ce_wcnt = dut.wcnt;       // observation only, not an oracle
+            commit_count = commit_count + 1;
+        end
+    end
+
+    // ---- bounded waits (never hang; the chk after them decides) ----------
+    task automatic wait_col_valid1(input integer maxc);
+        integer n; begin
+            n = 0;
+            while ((col_valid !== 1'b1) && (n < maxc)) begin @(posedge dclk); n = n + 1; end
+        end
+    endtask
+
+    task automatic wait_col_valid0(input integer maxc);
+        integer n; begin
+            n = 0;
+            while ((col_valid !== 1'b0) && (n < maxc)) begin @(posedge dclk); n = n + 1; end
+        end
+    endtask
+
+    task automatic wait_dut0_valid(input integer maxc);
+        integer n; begin
+            n = 0;
+            while ((col_valid0 !== 1'b1) && (n < maxc)) begin @(posedge dclk); n = n + 1; end
+        end
+    endtask
+
+    task automatic wait_lut_valid1(input integer maxc);
+        integer n; begin
+            n = 0;
+            while ((lut_valid !== 1'b1) && (n < maxc)) begin @(posedge dclk); n = n + 1; end
+        end
+    endtask
+
+    task automatic wait_commit_count(input integer target, input integer maxc);
+        integer n; begin
+            n = 0;
+            while ((commit_count < target) && (n < maxc)) begin @(posedge dclk); n = n + 1; end
+        end
+    endtask
+
+    // enter a display window (BLANK low) and settle 30 clocks into it
+    task automatic wait_display(input integer maxc);
+        integer n; begin
+            n = 0;
+            while ((blank !== 1'b0) && (n < maxc)) begin @(posedge clk); n = n + 1; end
+            repeat (30) @(posedge clk);
+        end
+    endtask
+
+    task automatic wait_wcnt384(input integer maxc);
+        integer n; begin
+            n = 0;
+            while ((dut0.wcnt !== 10'd384) && (n < maxc)) begin @(posedge dclk); n = n + 1; end
+        end
+    endtask
+
     // ---------------- scenario --------------------------------------------
     integer i, k, bad, col_expect, n_pam_bad, n_map_bad;
+    integer k0;
 
     initial begin
         $display("COURSE_TCON_T3_SCENARIO=DATA_DRIVER_INTERNAL");
@@ -416,6 +533,12 @@ module tcon_t3_tb;
 
         // ---- the gray LUT image (V1.3 段0236 derivation, see GRAY_CODE_MAPPING)
         $readmemh("t3_lut.hex", lut_tab);
+        // T3-H2 table B: same PAM tier, half the PWM width (black/full kept)
+        for (i = 0; i < 256; i = i + 1) begin
+            if (i == 0)        lut_b[i] = 9'h000;
+            else if (i == 255) lut_b[i] = 9'h1FF;
+            else               lut_b[i] = {lut_tab[i][8:6], (lut_tab[i][5:0] >> 1)};
+        end
 
         // ================= phase 0: reset =================
         $display("--- P0 reset ---");
@@ -648,6 +771,116 @@ module tcon_t3_tb;
         reset_n = 1'b0; #1;
         chk("D59_t3h_b3_reset_kills_active", (|ch_en) === 1'b0);
         reset_n = 1'b1;
+        stim_en = 1'b0;
+        repeat (20) @(negedge clk);
+
+        // ================= phase 8 (T3-H2) ==================================
+        // Reviewer T3-H2. Runs after P7 (reset pulsed -> lut_valid=0, col_valid=0)
+        // and before the D42 census, so every window opened here is counted.
+        //   dut0 = USE_DIN_VALID=0 (V1.3 段0548 self-delimiting receiver)
+        //   commit is always armed INSIDE a display window, so the only safe_cfg
+        //   edge is the 828 LATCH-rise edge: the same-edge collision is therefore
+        //   deterministic, not accidental.
+        $display("--- P8 T3-H2: mode-0 self-delimit + COMMIT/RELOAD interlock ---");
+        for (i = 0; i < NSLOT; i = i + 1) begin
+            pcol[i] = i; pmode[i] = 1; pnb[i] = 384; pfrm[i] = 1;
+        end
+        slot_rst = 1'b1;
+        repeat (2) @(posedge clk);
+        slot_rst = 1'b0;
+        stim_en  = 1'b1;
+
+        // ---- (a) boot: a complete column with the LUT never committed -------
+        wait_col_valid1(4000);
+        wait_display(4000);
+        chk("D60_t3h2_boot_column_without_lut",
+            (col_valid === 1'b1) && (lut_valid === 1'b0) &&
+            (col_valid0 === 1'b1) && (lut_valid0 === 1'b0));
+        chk("D61_t3h2_boot_both_chips_dark",
+            ((|ch_en) === 1'b0) && ((|ch_en0) === 1'b0));
+
+        // ---- (b) COMMIT table A, forced onto the LATCH-rise edge ------------
+        for (i = 0; i < 256; i = i + 1) lut_write(i, lut_tab[i]);
+        wait_display(6000);              // land early inside a display window
+        lut_commit_pulse;                // safe_cfg=0 here, so it must wait
+        wait_lut_valid1(2000);           // ... and fire on the 828 edge
+        #1;
+        chk("D62_t3h2_commit_fires_on_latch_edge",
+            (lut_valid === 1'b1) && (ce_l === 1'b1) && (ce_wcnt == 384));
+        chk("D63_t3h2_commit_same_edge_clears_valid",
+            (col_valid === 1'b0) && (col_valid0 === 1'b0));
+
+        wait_display(4000);
+        chk("D64_t3h2_commit_without_reload_window_dark",
+            (col_valid === 1'b0) && ((|ch_en) === 1'b0) && ((|ch_en0) === 1'b0));
+
+        // ---- (c) a column LOADED after the switch must re-enable display ----
+        wait_col_valid1(4000);
+        chk("D65_t3h2_reload_reenables_valid",
+            (col_valid === 1'b1) && (lut_valid === 1'b1));
+        wait_display(4000);
+        bad = 0;
+        for (i = 0; i < 384; i = i + 1)
+            if (dut.map_disp[i] !== lut_tab[i & 255]) bad = bad + 1;
+        chk("D66_t3h2_reload_bank_uses_committed_table", bad == 0);
+        chk("D67_t3h2_reload_conduction_nonzero",
+            ((|ch_en) === 1'b1) && ((|ch_en0) === 1'b1));
+        // scenario validity: table B must really differ, otherwise D66 proves
+        // nothing about "the display bank came from the NEW image"
+        bad = 0;
+        for (i = 0; i < 384; i = i + 1)
+            if (lut_b[i & 255] !== lut_tab[i & 255]) bad = bad + 1;
+        chk("D68_t3h2_table_b_really_differs", bad > 100);
+
+        // ---- (d) the 385th DCLK edge must be ignored ------------------------
+        wait_wcnt384(4000);
+        repeat (60) @(posedge dclk);
+        chk("D69_t3h2_edge385_ignored",
+            (dut0.wcnt === 10'd384) && (dut0.ovf === 1'b0) && (dut.ovf === 1'b0));
+
+        // ---- (e) mode 0 must have received the same 384 bytes with its
+        //          din_valid PORT TIED TO 1'b0 (structural, cannot be faked) --
+        bad = 0;
+        for (i = 0; i < 384; i = i + 1) if (dut0.raw_disp[i] !== dut.raw_disp[i]) bad = bad + 1;
+        chk("D70_t3h2_mode0_matches_with_valid_tied_low",
+            (col_valid === 1'b1) && (col_valid0 === 1'b1) && (bad == 0));
+        bad = 0;
+        for (i = 0; i < 384; i = i + 1) if (dut0.raw_disp[i] === 8'h00) bad = bad + 1;
+        chk("D71_t3h2_mode0_payload_not_all_zero", bad < 384);
+
+        // ---- (f) COMMIT table B while FAULT is asserted ---------------------
+        // This is the real A->B switch: the active image becomes lut_b, which
+        // differs from lut_tab on every non-zero code.
+        for (i = 0; i < 256; i = i + 1) lut_write(i, lut_b[i]);
+        fault_n = 1'b0;
+        #10;
+        k0 = commit_count;
+        lut_commit_pulse;
+        repeat (400) @(posedge dclk);
+        chk("D72_t3h2_fault_holds_pending_commit", commit_count == k0);
+
+        fault_n = 1'b1;
+        wait_commit_count(k0 + 1, 4000);
+        #1;
+        chk("D73_t3h2_fault_release_fires_commit", commit_count == k0 + 1);
+        chk("D74_t3h2_fault_commit_invalidates",
+            (col_valid === 1'b0) && (col_valid0 === 1'b0));
+        wait_display(4000);
+        chk("D75_t3h2_post_fault_window_dark",
+            (col_valid === 1'b0) && ((|ch_en) === 1'b0) && ((|ch_en0) === 1'b0));
+        wait_col_valid1(4000);
+        chk("D76_t3h2_post_fault_reload_reenables", col_valid === 1'b1);
+        wait_display(4000);
+        chk("D77_t3h2_post_fault_conduction_nonzero",
+            ((|ch_en) === 1'b1) && ((|ch_en0) === 1'b1));
+        // the displayed bank must now come from table B, not from table A
+        bad = 0;
+        for (i = 0; i < 384; i = i + 1)
+            if (dut.map_disp[i] !== lut_b[i & 255]) bad = bad + 1;
+        chk("D78_t3h2_display_follows_new_table_after_switch", bad == 0);
+
+        // ---- (g) stop outside any byte window (keeps the D42 census exact) --
+        while (!((cyc > 660) && (cyc < 800))) @(posedge clk);
         stim_en = 1'b0;
         repeat (20) @(negedge clk);
 
