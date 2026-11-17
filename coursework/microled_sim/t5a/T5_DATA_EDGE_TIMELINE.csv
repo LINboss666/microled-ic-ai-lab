@@ -1,0 +1,17 @@
+﻿phase,slot_cycle,time_ns_from_slot_start,dclk_edge_in_window,latch,blank,d0_d1_content,data_action,note
+A,768,7680,-,0,1,held (tcON holds last byte),-,BLANK starts; precharge; no byte valid
+A,828,8280,-,1,1,held,COMMIT previous column (needs wcnt==384),LATCH rising edge
+A,829..831,8290..8310,-,1,1,held,-,LATCH pulse is 40 ns [828;832)
+A,832,8320,1 = ARMING,0,1,byte0,write wcnt 0->1,fall is 5 ns before this edge; exactly one arming edge
+A,834..1596,8340..15960,2..384,0,1,byte1..byte383,write wcnt->384,one byte per DCLK rising edge (20 ns)
+A,1598,15980,384 (last),0,1,byte383,write wcnt 383->384,"384th edge = NCH; column complete"
+A,1600,16000,385,0,1,no new byte offered,-,MUST NOT be captured; receiver stopped at 384
+A,next slot 624,next-slot 6240 (623 in a 977 slot),-,-,-,-,-,"window [832;1600) crosses the slot boundary"
+A,next slot 828,next 8280,-,1,1,held,COMMIT this column,LATCH rising edge of slot s+1
+B,768,7680,-,0,1,held,-,same BLANK boundary
+B,828,8280,-,1,1,held,COMMIT previous column,LATCH rising edge
+B,fall+15,see note,-,0,1,held,-,"fall lands 15 ns AFTER a DCLK edge, so that edge is NOT the arming edge (the pre-edge latch was still 1)"
+B,fall+20,first edge after the fall,1 = ARMING,0,1,byte0,write wcnt 0->1,still exactly ONE arming edge; the RTL uses the PRE-EDGE latch level
+B,+384 edges,...,384 (last),0,1,byte383,write wcnt->384,byte stream identical to phase A
+B,+385 edges,...,385,-,-,no new byte,-,must not be captured
+NOTE,,-,-,-,-,-,-,"absolute phase-B cycles depend on the 976/977 slot parity; tools/t3_phase_timeline.py proves byte0..383 framing identical in both phases (T3 RUN05 package evidence/run05_two_phase_timeline_derivation.txt)"
