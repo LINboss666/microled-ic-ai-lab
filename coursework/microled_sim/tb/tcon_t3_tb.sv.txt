@@ -319,6 +319,34 @@ module tcon_t3_tb;
                 if (ch_en[i_on]) on_cnt[i_on] = on_cnt[i_on] + 1;
     end
 
+    // ---------------- T3-H directed monitors -------------------------------
+    // B1 (reviewer P0): while lut_valid==0, a COMPLETE 384-byte non-zero column
+    // is loaded and displayed. Every observable DCLK rising edge in that window
+    // must show ch_en === 384'b0 in FOUR-STATE exact form: an X on ch_en counts
+    // as a violation exactly like a 1 would ("do not let X pass as off",
+    // task book §B1). ch_en is a top-level DUT pin here, not an internal net.
+    reg     t3h_w1 = 1'b0;
+    integer t3h_s1 = 0, t3h_v1 = 0;
+    always @(posedge dclk) begin
+        if (t3h_w1) begin
+            t3h_s1 = t3h_s1 + 1;
+            if (ch_en !== {384{1'b0}}) t3h_v1 = t3h_v1 + 1;
+        end
+    end
+
+    // B3: the NATURAL rising edge of BLANK during an active, LUT-valid display
+    // must kill the array without waiting for any clock edge (checked 1 ns
+    // later - the reference clock period is 10 ns, so no clock can have helped).
+    reg     t3h_w3 = 1'b0;
+    integer t3h_blank_edges = 0, t3h_blank_viol = 0;
+    always @(posedge blank) begin
+        if (t3h_w3) begin
+            #1;
+            t3h_blank_edges = t3h_blank_edges + 1;
+            if ((|ch_en) !== 1'b0) t3h_blank_viol = t3h_blank_viol + 1;
+        end
+    end
+
     always @(posedge clk) begin
         if (reset_n && stim_en && (slot_idx < 4) && (latch !== latch_d)) begin
             $display("DBG_LATCH t=%0t latch=%0d slot=%0d cyc=%0d cur_nb=%0d win=%0d sent=%0d dut_wcnt=%0d colv=%0d orc=%0d",
@@ -521,6 +549,107 @@ module tcon_t3_tb;
         reset_n = 1'b1;
         stim_en = 1'b0;
         repeat (40) @(negedge clk);
+
+        // ================= phase 7 (T3-H): LUT_VALID output gate ============
+        // Reviewer P0 (T3-H task book §B). Runs AFTER P6, so the reset has
+        // cleared ok_a/ok_b and lut_valid is 0, and BEFORE the D42 census so
+        // every window opened here is included in the bookkeeping.
+        //   B1: a COMPLETE 384-byte non-zero column with an UNCOMMITTED LUT
+        //       must hold ch_en at exactly 0 on every sampled edge.
+        //   B2: after a real 256-entry COMMIT and a RELOAD, the same pins must
+        //       conduct again with the LUT's on-times / PAM tiers.
+        //   B3: BLANK / FAULT / RESET keep hardware priority in this mode.
+        $display("--- P7 T3-H: uncommitted LUT must force ch_en == 0 ---");
+        chk("D43_t3h_lut_invalid_after_reset", lut_valid === 1'b0);
+
+        // ---- B1 ------------------------------------------------------------
+        for (i = 0; i < 8; i = i + 1) begin
+            pcol[i] = 8 + i; pmode[i] = 1; pnb[i] = 384; pfrm[i] = 1;
+        end
+        slot_rst = 1'b1;
+        repeat (2) @(posedge clk);
+        slot_rst = 1'b0;
+        stim_en  = 1'b1;
+        goto_slot(2);                        // column 8 committed, now displayed
+        bad = 0;
+        for (i = 0; i < 384; i = i + 1) if (dut.raw_disp[i] !== 8'h00) bad = bad + 1;
+        chk("D45_t3h_b1_raw_payload_nonzero", bad > 0);
+        chk("D44_t3h_b1_complete_column_without_lut",
+            (col_valid === 1'b1) && (lut_valid === 1'b0));
+        t3h_w1 = 1'b1;
+        while (cyc < 700) @(posedge clk);
+        t3h_w1 = 1'b0;
+        $display("T3H_B1_SAMPLES n=%0d violations=%0d", t3h_s1, t3h_v1);
+        chk("D47_t3h_b1_samples_not_vacuous", t3h_s1 > 300);
+        chk("D46_t3h_b1_ch_en_exactly_zero",  t3h_v1 == 0);
+
+        // Stopping mid-window leaves the DUT's `armed` at 1, which would make
+        // safe_cfg false and REFUSE the commit in B2. A reset clears it. No
+        // 384-byte window is aborted here: the byte stream already closed at
+        // cyc 624 (the census counts the same window as closed).
+        stim_en = 1'b0;
+        repeat (10) @(negedge clk);
+        reset_n = 1'b0; #20; reset_n = 1'b1;
+        repeat (10) @(negedge clk);
+
+        // ---- B2: real COMMIT, then RELOAD a legal column --------------------
+        // PLAN ARITHMETIC (important): the plan for slot s is only latched into
+        // cur_* at the END of slot s-1, so slot 0 still uses the initial
+        // cur_mode=0. Display slot s+2 shows the column loaded in slot s, so a
+        // RAMP payload (mode 1) is only guaranteed from slot 1 onwards - hence
+        // B2 checks slot 3's window, never slot 2's.
+        for (i = 0; i < 256; i = i + 1) lut_write(i, lut_tab[i]);
+        lut_commit_pulse;
+        repeat (10) @(negedge dclk);
+        chk("D48_t3h_b2_lut_committed", lut_valid === 1'b1);
+
+        for (i = 0; i < 8; i = i + 1) begin
+            pcol[i] = 12 + i; pmode[i] = 1; pnb[i] = 384; pfrm[i] = 1;
+        end
+        slot_rst = 1'b1;
+        repeat (2) @(posedge clk);
+        slot_rst = 1'b0;
+        stim_en  = 1'b1;
+        for (i = 0; i < 384; i = i + 1) on_cnt[i] = 0;
+        count_slot = 3; counting = 1'b1;
+        goto_slot(3);                        // ramp column displayed, LUT valid
+        chk("D49_t3h_b2_reloaded_column_valid", col_valid === 1'b1);
+        bad = 0;
+        for (i = 0; i < 384; i = i + 1)
+            if (dut.map_disp[i] !== lut_tab[dut.raw_disp[i]]) bad = bad + 1;
+        chk("D50_t3h_b2_map_matches_lut", bad == 0);
+        bad = 0;
+        for (i = 0; i < 384; i = i + 1)
+            if (ch_pam[i*3 +: 3] !== lut_tab[dut.raw_disp[i]][8:6]) bad = bad + 1;
+        chk("D51_t3h_b2_pam_matches_lut", bad == 0);
+        t3h_w3 = 1'b1;                       // watch the natural BLANK rise
+        run_to_window_end;                   // all 64 ticks, BLANK at cyc 768
+        counting = 1'b0; count_slot = -1;
+        #5;
+        t3h_w3 = 1'b0;
+        chk("D55_t3h_b3_blank_kills_at_rising_edge",
+            (t3h_blank_viol == 0) && (t3h_blank_edges >= 1));
+        bad = 0;
+        for (i = 0; i < 384; i = i + 1) if (on_cnt[i] != e_eff(i & 255)) bad = bad + 1;
+        chk("D52_t3h_b2_on_time_matches_lut", bad == 0);
+        bad = 0;
+        for (i = 0; i < 384; i = i + 1) bad = bad + on_cnt[i];
+        chk("D53_t3h_b2_conduction_nonzero", bad > 0);
+        chk("D54_t3h_b2_full_code_64_ticks", on_cnt[255] == 64);
+
+        // ---- B3: fault / reset priority with a valid LUT --------------------
+        goto_slot(4);                        // ramp column displayed, LUT valid
+        while (cyc < 640) @(posedge clk);    // byte window closed at 624
+        chk("D56_t3h_b3_display_active", (|ch_en) === 1'b1);
+        fault_n = 1'b0; #1;
+        chk("D57_t3h_b3_fault_kills_active", (|ch_en) === 1'b0);
+        fault_n = 1'b1; #1;
+        chk("D58_t3h_b3_fault_release_recovers", (|ch_en) === 1'b1);
+        reset_n = 1'b0; #1;
+        chk("D59_t3h_b3_reset_kills_active", (|ch_en) === 1'b0);
+        reset_n = 1'b1;
+        stim_en = 1'b0;
+        repeat (20) @(negedge clk);
 
         // ================= global safety monitors ===========================
         // reviewer request (RUN04): the per-window byte count must be measured

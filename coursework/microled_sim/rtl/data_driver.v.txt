@@ -42,6 +42,9 @@
 //   BLANK, fault_n and the "no valid column" condition gate the channel enable
 //   COMBINATIONALLY at the output, so BLANK has priority in the same cycle and
 //   cannot be deferred by a clock. Same for reset (asynchronous assert).
+//   T3-H adds one more term to the same combinational permit: in Hybrid mode
+//   the active LUT bank must hold a COMMITTED image (lut_valid), otherwise a
+//   complete column would conduct with an uncommitted / never-written mapping.
 //   OPEN_ASYNC_BLANK: that asynchronous gate is a real async path; glitch and
 //   CDC sign-off is NOT part of this module's verification.
 module data_driver #(
@@ -270,7 +273,16 @@ module data_driver #(
     // per-channel comparator + safety gate (段0338/0339/0355)
     // ---------------------------------------------------------------------
     wire disp_ok = col_valid;          // a complete, unpoisoned column is loaded
-    wire hw_en   = disp_ok && !blank && fault_n;
+    // T3-H (reviewer P0): in Hybrid mode the mapped bank is only trustworthy
+    // after a LUT image was COMMITTED. Before that, a complete 384-byte column
+    // still sets col_valid, and the load path has already written lut_q (=
+    // lut_a[din] / lut_b[din], possibly never written) into map_load - so the
+    // display permit must NOT depend on col_valid alone. Pure mode ignores the
+    // LUT entirely and keeps its previous behaviour.
+    // This term is purely combinational: it adds no state and does not reorder
+    // the reset/blank/fault priority (they are still ANDed at the output).
+    wire lut_ok  = (!cfg_hybrid) || lut_valid;
+    wire hw_en   = disp_ok && lut_ok && !blank && fault_n;
 
     genvar gi;
     generate
