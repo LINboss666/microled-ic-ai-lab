@@ -445,20 +445,57 @@ module tcon_t3_tb;
         end
     endfunction
 
-    // commit-edge observer: proves WHEN a commit fired and what the LATCH /
-    // byte counter looked like on that very edge (pre-edge values).
-    reg     lut_valid_q = 1'b0;
-    reg     ce_l        = 1'b0;   // LATCH level at the commit edge
-    integer ce_wcnt     = 0;      // byte counter at the commit edge
-    integer commit_count = 0;
-    wire    latch_obs   = latch;  // observation alias (keeps the TB-side pin
-                                  // driver audit free of false positives)
+    // ---- T3-H2 RUN02: ONE-EDGE PRE/POST commit observer --------------------
+    // The old observer counted `lut_valid` 0->1, which is blind to a second
+    // bank switch (1->1). This one attributes a LUT bank flip to the exact
+    // DCLK edge it happens on: PRE values are read in the active region (before
+    // the NBA update), POST values 1 ns later. No `#0`, no lut_valid counting.
+    reg     pre_bank = 1'b0, pre_lt = 1'b0, pre_ltd = 1'b0, pre_armed = 1'b0;
+    integer pre_wcnt = 0;
+    reg     post_bank = 1'b0;
+    reg [1:0] post_colv = 2'b00;
+    integer commit_events = 0;
+    reg     last_pre_ok = 1'b0;
+    reg [1:0] last_post_colv = 2'b11;
+    reg     last_both_bank_same = 1'b0;
+    wire    latch_obs = latch;   // observation alias (keeps the TB-side pin
+                                 // driver audit free of false positives)
+
     always @(posedge dclk) begin
-        lut_valid_q <= lut_valid;
-        if (lut_valid && !lut_valid_q) begin
-            ce_l  = latch_obs;
-            ce_wcnt = dut.wcnt;       // observation only, not an oracle
-            commit_count = commit_count + 1;
+        pre_bank  = lut_bank;
+        pre_lt    = latch_obs;
+        pre_ltd   = dut.latch_d;
+        pre_armed = dut.armed;
+        pre_wcnt  = dut.wcnt;
+        #1;                                  // after the NBA update of this edge
+        post_bank = lut_bank;
+        if (reset_n && (post_bank !== pre_bank)) begin
+            commit_events = commit_events + 1;
+            // a legal LATCH commit is being made on this very edge when the
+            // pre-edge state already satisfied armed && wcnt==NCH && rising
+            last_pre_ok = (pre_lt === 1'b1) && (pre_ltd === 1'b0) &&
+                          (pre_armed === 1'b1) && (pre_wcnt == 384);
+            last_post_colv = {col_valid0, col_valid};
+            last_both_bank_same = (lut_bank === lut_bank0);
+        end
+    end
+
+    // ---- continuous "must stay dark" observer (COMMIT -> legal reload) ----
+    // Armed right after a COMMIT flip, disarmed by the FIRST col_valid rise,
+    // which is exactly the "new table, 384 bytes, LATCH commit" re-enable.
+    reg     dark_watch = 1'b0, dark_done = 1'b0;
+    integer dark_viol = 0, dark_samples = 0, dark_blank_low = 0;
+    always @(negedge clk) begin
+        #0.1;
+        if (dark_watch && !dark_done && reset_n) begin
+            if (col_valid === 1'b1) begin
+                dark_done = 1'b1;            // legal reload ended the interval
+            end else begin
+                dark_samples = dark_samples + 1;
+                if (blank === 1'b0) dark_blank_low = dark_blank_low + 1;
+                if ((col_valid  !== 1'b0) || (col_valid0 !== 1'b0)) dark_viol = dark_viol + 1;
+                if (((|ch_en)   !== 1'b0) || ((|ch_en0)  !== 1'b0)) dark_viol = dark_viol + 1;
+            end
         end
     end
 
@@ -491,10 +528,10 @@ module tcon_t3_tb;
         end
     endtask
 
-    task automatic wait_commit_count(input integer target, input integer maxc);
+    task automatic wait_commit_events(input integer target, input integer maxc);
         integer n; begin
             n = 0;
-            while ((commit_count < target) && (n < maxc)) begin @(posedge dclk); n = n + 1; end
+            while ((commit_events < target) && (n < maxc)) begin @(posedge dclk); n = n + 1; end
         end
     endtask
 
@@ -517,6 +554,11 @@ module tcon_t3_tb;
     // ---------------- scenario --------------------------------------------
     integer i, k, bad, col_expect, n_pam_bad, n_map_bad;
     integer k0;
+    // T3-H2 RUN02 observation bookkeeping
+    integer len_obs [0:1];
+    reg     bank_at_fault = 1'b0;
+    integer f_samples = 0, f_bank_flip = 0, f_on_viol = 0;
+    reg     f_pend_seen = 1'b0;
 
     initial begin
         $display("COURSE_TCON_T3_SCENARIO=DATA_DRIVER_INTERNAL");
@@ -802,22 +844,31 @@ module tcon_t3_tb;
         // ---- (b) COMMIT table A, forced onto the LATCH-rise edge ------------
         for (i = 0; i < 256; i = i + 1) lut_write(i, lut_tab[i]);
         wait_display(6000);              // land early inside a display window
+        k0 = commit_events;
         lut_commit_pulse;                // safe_cfg=0 here, so it must wait
-        wait_lut_valid1(2000);           // ... and fire on the 828 edge
+        wait_commit_events(k0 + 1, 2000); // bank must actually FLIP on the 828 edge
         #1;
         chk("D62_t3h2_commit_fires_on_latch_edge",
-            (lut_valid === 1'b1) && (ce_l === 1'b1) && (ce_wcnt == 384));
+            (commit_events == k0 + 1) && (last_pre_ok === 1'b1) &&
+            (last_post_colv === 2'b00) && (last_both_bank_same === 1'b1));
         chk("D63_t3h2_commit_same_edge_clears_valid",
             (col_valid === 1'b0) && (col_valid0 === 1'b0));
 
+        dark_samples = 0; dark_viol = 0; dark_blank_low = 0;
+        dark_watch = 1'b1; dark_done = 1'b0;   // continuous "must stay dark"
         wait_display(4000);
+        repeat (150) @(posedge clk);           // dwell inside the dark window
         chk("D64_t3h2_commit_without_reload_window_dark",
-            (col_valid === 1'b0) && ((|ch_en) === 1'b0) && ((|ch_en0) === 1'b0));
+            (col_valid === 1'b0) && ((|ch_en) === 1'b0) && ((|ch_en0) === 1'b0) &&
+            (dark_viol == 0) && (dark_blank_low > 10));
 
         // ---- (c) a column LOADED after the switch must re-enable display ----
         wait_col_valid1(4000);
         chk("D65_t3h2_reload_reenables_valid",
-            (col_valid === 1'b1) && (lut_valid === 1'b1));
+            (col_valid === 1'b1) && (lut_valid === 1'b1) &&
+            (dark_done === 1'b1) && (dark_viol == 0) && (dark_samples > 50));
+        $display("T3H2_DARK_A samples=%0d blank_low=%0d viol=%0d done=%0d",
+                 dark_samples, dark_blank_low, dark_viol, dark_done);
         wait_display(4000);
         bad = 0;
         for (i = 0; i < 384; i = i + 1)
@@ -832,9 +883,35 @@ module tcon_t3_tb;
             if (lut_b[i & 255] !== lut_tab[i & 255]) bad = bad + 1;
         chk("D68_t3h2_table_b_really_differs", bad > 100);
 
+        // ---- (d0, new in RUN02) mode-0 bytes vs the TB's OWN expectation ----
+        // Two consecutive display windows = two consecutive LOAD slots, which
+        // alternate 976/977. Each byte is compared against exp_byte(), i.e. the
+        // TB's prior, never against the other DUT (so "both DUTs wrong the same
+        // way" cannot pass). Indices 0 and 383 are called out explicitly.
+        @(posedge blank);                     // leave the current window
+        for (k = 0; k < 2; k = k + 1) begin
+            wait_display(4000);
+            len_obs[k] = slot_len;
+            bad = 0;
+            for (i = 0; i < 384; i = i + 1)
+                if (dut0.raw_disp[i] !== exp_byte(0, 1, i, 1)) bad = bad + 1;
+            if (dut0.raw_disp[0]   !== exp_byte(0, 1, 0,   1)) bad = bad + 1;
+            if (dut0.raw_disp[383] !== exp_byte(0, 1, 383, 1)) bad = bad + 1;
+            if (k == 0) chk("D79_t3h2_mode0_bytes_exact_phase1", bad == 0);
+            else        chk("D80_t3h2_mode0_bytes_exact_phase2", bad == 0);
+            @(posedge blank);
+        end
+        chk("D81_t3h2_both_slot_phases_covered",
+            ((len_obs[0] == 976) && (len_obs[1] == 977)) ||
+            ((len_obs[0] == 977) && (len_obs[1] == 976)));
+        $display("T3H2_MODE0_PHASES len0=%0d len1=%0d", len_obs[0], len_obs[1]);
+
         // ---- (d) the 385th DCLK edge must be ignored ------------------------
-        wait_wcnt384(4000);
-        repeat (60) @(posedge dclk);
+        // Evaluate inside the load window: the byte stream completes at cyc 624
+        // and wcnt is only cleared at the 828 LATCH rise, so any sample in
+        // [700,800) has already seen ~76..176 extra DCLK edges that must not
+        // have written anything.
+        while (!((cyc >= 700) && (cyc < 800))) @(posedge clk);
         chk("D69_t3h2_edge385_ignored",
             (dut0.wcnt === 10'd384) && (dut0.ovf === 1'b0) && (dut.ovf === 1'b0));
 
@@ -850,26 +927,47 @@ module tcon_t3_tb;
 
         // ---- (f) COMMIT table B while FAULT is asserted ---------------------
         // This is the real A->B switch: the active image becomes lut_b, which
-        // differs from lut_tab on every non-zero code.
+        // differs from lut_tab on every non-zero code. RUN02 replaced the old
+        // (vacuous) old counter-snapshot guard with bank-level evidence.
         for (i = 0; i < 256; i = i + 1) lut_write(i, lut_b[i]);
         fault_n = 1'b0;
         #10;
-        k0 = commit_count;
+        k0 = commit_events;
+        bank_at_fault = lut_bank;
         lut_commit_pulse;
-        repeat (400) @(posedge dclk);
-        chk("D72_t3h2_fault_holds_pending_commit", commit_count == k0);
+        f_samples = 0; f_bank_flip = 0; f_pend_seen = 1'b0; f_on_viol = 0;
+        repeat (400) begin
+            @(posedge dclk);
+            f_samples   = f_samples + 1;
+            if (lut_bank !== bank_at_fault) f_bank_flip = f_bank_flip + 1;
+            if (dut.cmt_pend === 1'b1) f_pend_seen = 1'b1;
+            if (((|ch_en) !== 1'b0) || ((|ch_en0) !== 1'b0)) f_on_viol = f_on_viol + 1;
+        end
+        chk("D72_t3h2_fault_holds_pending_commit",
+            (f_samples >= 400) && (f_bank_flip == 0) && (f_pend_seen === 1'b1) &&
+            (commit_events == k0) && (f_on_viol == 0));
+        $display("T3H2_FAULT_HOLD samples=%0d bank_flip=%0d pend_seen=%0d events=%0d on_viol=%0d",
+                 f_samples, f_bank_flip, f_pend_seen, commit_events, f_on_viol);
 
         fault_n = 1'b1;
-        wait_commit_count(k0 + 1, 4000);
+        wait_commit_events(k0 + 1, 4000);      // wait for a real BANK FLIP
         #1;
-        chk("D73_t3h2_fault_release_fires_commit", commit_count == k0 + 1);
-        chk("D74_t3h2_fault_commit_invalidates",
-            (col_valid === 1'b0) && (col_valid0 === 1'b0));
+        chk("D73_t3h2_fault_release_fires_commit",
+            (commit_events == k0 + 1) && (last_both_bank_same === 1'b1));
+        chk("D74_t3h2_fault_commit_invalidates", last_post_colv === 2'b00);
+
+        dark_samples = 0; dark_viol = 0; dark_blank_low = 0;
+        dark_watch = 1'b1; dark_done = 1'b0;   // continuous dark interval
         wait_display(4000);
+        repeat (150) @(posedge clk);           // dwell inside the dark window
         chk("D75_t3h2_post_fault_window_dark",
-            (col_valid === 1'b0) && ((|ch_en) === 1'b0) && ((|ch_en0) === 1'b0));
+            (col_valid === 1'b0) && ((|ch_en) === 1'b0) && ((|ch_en0) === 1'b0) &&
+            (dark_viol == 0) && (dark_blank_low > 10));
         wait_col_valid1(4000);
-        chk("D76_t3h2_post_fault_reload_reenables", col_valid === 1'b1);
+        chk("D76_t3h2_post_fault_reload_reenables",
+            (col_valid === 1'b1) && (dark_done === 1'b1) && (dark_viol == 0));
+        $display("T3H2_DARK_B samples=%0d blank_low=%0d viol=%0d done=%0d",
+                 dark_samples, dark_blank_low, dark_viol, dark_done);
         wait_display(4000);
         chk("D77_t3h2_post_fault_conduction_nonzero",
             ((|ch_en) === 1'b1) && ((|ch_en0) === 1'b1));
