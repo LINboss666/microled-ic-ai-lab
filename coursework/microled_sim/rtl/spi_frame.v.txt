@@ -1,0 +1,93 @@
+`timescale 1ns / 1ps
+// spi_frame — shared V1.3 SPI front end (SCLK domain), T6-A.
+//
+// V1.3 (段0569): mode 0, SCLK <= 10 MHz, 16-bit command (bit15 = 1 read /
+// 0 write, bit14:0 = BYTE address, MSB first) + 32-bit data (MSB first),
+// 48 SCK in total. Read data is returned in the LAST 32 cycles. A write is only
+// committed on the CS_n rising edge and an incomplete transaction is discarded.
+//
+// WHAT THIS BLOCK DOES NOT DO
+//   * it never touches the 100 MHz domain except through two deliberately
+//     documented single-bit qualifiers (see tcon_spi_regs);
+//   * it does not decide whether a write is legal - that is the register file;
+//   * it does not clock anything from SCLK into the register file.
+//
+// CDC SHAPE (documented, not "bit-synchronised")
+//   rd_addr_hold is frozen at the 16th rising edge and stays constant for the
+//   whole data phase (>= 32 SCLK periods). It is sampled by the main domain
+//   only after the single-bit qualifier rd_req has been synchronised (2 FF),
+//   i.e. classic "stable multi-bit data + synchronised single-bit qualifier".
+//   The 32-bit response comes back the same way: rd_snapshot is produced in the
+//   main domain and is stable before the 16th falling edge where this block
+//   latches its first output bit.
+module spi_frame (
+    input  wire        sclk,        // SPI clock, mode 0, <= 10 MHz
+    input  wire        cs_n,        // active low; its RISING edge commits a write
+    input  wire        mosi,
+    output wire        miso,
+
+    // observation / to the register file
+    output wire [47:0] sh,          // raw frame: {cmd[15:0], data[31:0]}
+    output wire [5:0]  bitcnt,      // saturating 0..48
+    output wire        frame_full,  // exactly 48 bits were clocked in
+    output wire        we,          // sh[47]: 1 = read, 0 = write (V1.3 bit15)
+    output wire [14:0] addr,        // sh[46:32]: byte address
+
+    // read path qualifiers (level, stable for the whole data phase)
+    output wire        rd_req,
+    output reg  [14:0] rd_addr_hold,
+    input  wire [31:0] rd_snapshot  // from the main domain
+);
+
+    reg [47:0] sh_r;
+    reg [5:0]  bc;
+
+    // CS_n low is the frame reset; using it as an asynchronous clear is
+    // synthesizable and guarantees "incomplete transaction discarded".
+    always @(posedge sclk or negedge cs_n) begin
+        if (!cs_n) begin
+            sh_r <= 48'd0;
+            bc   <= 6'd0;
+        end else begin
+            sh_r <= {sh_r[46:0], mosi};
+            if (bc != 6'd48) bc <= bc + 6'd1;
+        end
+    end
+
+    assign sh         = sh_r;
+    assign bitcnt     = bc;
+    assign frame_full = (bc == 6'd48);
+    assign we         = sh_r[47];
+    assign addr       = sh_r[46:32];
+
+    // The address is complete exactly after the 16th rising edge; freeze it.
+    always @(posedge sclk or negedge cs_n) begin
+        if (!cs_n)           rd_addr_hold <= 15'd0;
+        else if (bc == 6'd15) rd_addr_hold <= sh_r[46:32];
+    end
+
+    // single-bit level qualifier: "the address has been frozen, a read is in
+    // progress". Synchronised by the main domain; never used to gate a bus.
+    assign rd_req = !cs_n && (bc >= 6'd16) && !sh_r[47];
+
+    // ---- MISO: mode 0, changed on the FALLING edge ----------------------
+    // data bit 31 must be valid at rising edge #17, so the load happens on the
+    // falling edge with bc == 16, and one more bit is presented on each of the
+    // following 31 falling edges.
+    reg [4:0] dindex;
+    reg       miso_r;
+
+    always @(negedge sclk or negedge cs_n) begin
+        if (!cs_n) begin
+            dindex <= 5'd0;
+            miso_r <= 1'b0;
+        end else if ((bc >= 6'd16) && !sh_r[47]) begin
+            // read transactions only: a write keeps MISO low for all 48 bits
+            miso_r <= rd_snapshot[31 - dindex];
+            if (dindex != 5'd31) dindex <= dindex + 5'd1;
+        end
+    end
+
+    assign miso = miso_r;
+
+endmodule

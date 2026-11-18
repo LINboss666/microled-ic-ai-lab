@@ -1,0 +1,74 @@
+`timescale 1ns / 1ps
+// tcon_spi_top — TCON SPI block: spi_frame (SCLK domain) + tcon_spi_regs (core).
+// T6-A scope: TCON-only register subset. Data/Scan get the same front end later
+// by parameterising CHIP_ID and the register set; that is NOT implemented here.
+module tcon_spi_top (
+    input  wire        clk,           // 100 MHz core
+    input  wire        reset_n,
+
+    // ---- the four V1.3 SPI pins (段0555: SPI4) ---------------------------
+    input  wire        spi_sck,
+    input  wire        spi_mosi,
+    output wire        spi_miso,
+    input  wire        spi_cs_n,
+
+    // ---- real chip status / faults ---------------------------------------
+    input  wire [3:0]  status_in,     // {LUT_VALID, SAFE, ACTIVE, READY}
+    input  wire [10:0] hw_fault,
+    input  wire        test_en,
+    input  wire [9:0]  col_index_in,
+
+    // ---- register outputs -------------------------------------------------
+    output wire        en,
+    output wire        blank_r,
+    output wire        test_mode,
+    output wire        sw_reset_pulse,
+    output wire        fps_sel,
+    output wire [15:0] wdog,
+    output wire [10:0] fault_status,
+    output wire [10:0] int_status,
+    output wire [10:0] int_en,
+    output wire        irq,
+    output wire        err_reg,
+
+    // ---- observation ------------------------------------------------------
+    output wire [5:0]  bitcnt_o,
+    output wire        frame_full_o,
+    output wire [47:0] sh_o,
+    output wire [31:0] rd_snapshot_o
+);
+
+    wire [47:0] sh;
+    wire [5:0]  bitcnt;
+    wire        frame_full, we, rd_req;
+    wire [14:0] addr, rd_addr_hold;
+    wire [31:0] rd_snapshot;
+
+    spi_frame u_frame (
+        .sclk (spi_sck), .cs_n (spi_cs_n), .mosi (spi_mosi), .miso (spi_miso),
+        .sh (sh), .bitcnt (bitcnt), .frame_full (frame_full),
+        .we (we), .addr (addr),
+        .rd_req (rd_req), .rd_addr_hold (rd_addr_hold),
+        .rd_snapshot (rd_snapshot)
+    );
+
+    tcon_spi_regs u_regs (
+        .clk (clk), .reset_n (reset_n),
+        .sh (sh), .frame_full (frame_full), .cs_n (spi_cs_n),
+        .rd_addr_hold (rd_addr_hold), .rd_req (rd_req),
+        .rd_snapshot (rd_snapshot),
+        .status_in (status_in), .hw_fault (hw_fault), .test_en (test_en),
+        .col_index_in (col_index_in),
+        .en (en), .blank_r (blank_r), .test_mode (test_mode),
+        .sw_reset_pulse (sw_reset_pulse), .fps_sel (fps_sel), .wdog (wdog),
+        .fault_status (fault_status), .int_status (int_status), .int_en (int_en),
+        .irq (irq), .err_reg (err_reg),
+        .fault_vis_o ()
+    );
+
+    assign bitcnt_o      = bitcnt;
+    assign frame_full_o  = frame_full;
+    assign sh_o          = sh;
+    assign rd_snapshot_o = rd_snapshot;
+
+endmodule

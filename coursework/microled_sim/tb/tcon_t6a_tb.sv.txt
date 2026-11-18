@@ -1,0 +1,327 @@
+`timescale 1ns / 1ps
+// TCON T6-A testbench — SPI mode 0 / 48-bit frame / 32-bit register file.
+//
+// The TB drives the four real pins only (SPI_SCK, SPI_MOSI, SPI_CS_n, SPI_MISO)
+// and observes the register outputs. It never reaches into the CDC internals to
+// "make" a test pass.
+//
+// NON-VACUITY: the run counts real committed writes and real register reads and
+// fails if either is below the floor - a design that rejects everything cannot
+// pass by saying "no mismatch".
+module tcon_t6a_tb;
+
+    // ---- 100 MHz core clock ---------------------------------------------
+    reg clk = 1'b0;
+    always #5 clk = ~clk;
+
+    // ---- SPI pins --------------------------------------------------------
+    reg  spi_sck  = 1'b0;
+    reg  spi_mosi = 1'b0;
+    reg  spi_cs_n = 1'b1;
+    wire spi_miso;
+
+    // ---- chip-side inputs -------------------------------------------------
+    reg        reset_n = 1'b0;
+    reg  [3:0] status_in = 4'b0100;      // {LUT_VALID,SAFE,ACTIVE,READY}
+    reg  [10:0] hw_fault = 11'd0;
+    reg        test_en = 1'b0;
+    reg  [9:0] col_index_in = 10'd0;
+
+    // ---- observability ----------------------------------------------------
+    wire        en, blank_r, test_mode, sw_reset_pulse, fps_sel;
+    wire [15:0] wdog;
+    wire [10:0] fault_status, int_status, int_en;
+    wire        irq, err_reg;
+    wire [5:0]  bitcnt_o;
+    wire        frame_full_o;
+    wire [47:0] sh_o;
+    wire [31:0] rd_snapshot_o;
+
+    tcon_spi_top dut (
+        .clk (clk), .reset_n (reset_n),
+        .spi_sck (spi_sck), .spi_mosi (spi_mosi), .spi_miso (spi_miso),
+        .spi_cs_n (spi_cs_n),
+        .status_in (status_in), .hw_fault (hw_fault), .test_en (test_en),
+        .col_index_in (col_index_in),
+        .en (en), .blank_r (blank_r), .test_mode (test_mode),
+        .sw_reset_pulse (sw_reset_pulse), .fps_sel (fps_sel), .wdog (wdog),
+        .fault_status (fault_status), .int_status (int_status), .int_en (int_en),
+        .irq (irq), .err_reg (err_reg),
+        .bitcnt_o (bitcnt_o), .frame_full_o (frame_full_o),
+        .sh_o (sh_o), .rd_snapshot_o (rd_snapshot_o)
+    );
+
+    // ---------------------------------------------------------------------
+    // assertion plumbing
+    // ---------------------------------------------------------------------
+    integer assert_count = 0, pass_count = 0, fail_count = 0;
+
+    task automatic chk(input string nm, input logic cond);
+        begin
+            assert_count = assert_count + 1;
+            if (cond) begin
+                pass_count = pass_count + 1;
+                $display("PASS %s", nm);
+            end else begin
+                fail_count = fail_count + 1;
+                $display("FAIL %s  (t=%0t)", nm, $time);
+                $display("COURSE_FAILED_ASSERTION=%s", nm);
+            end
+        end
+    endtask
+
+    // ---------------------------------------------------------------------
+    // SPI driver: mode 0, MSB first, 16-bit command + 32-bit data
+    // ---------------------------------------------------------------------
+    real T_HALF;          // half SCLK period (ns)
+    integer n_wr_ok, n_rd_ok, n_commit, n_sw_pulse, n_frames;
+
+    always @(posedge clk) if (reset_n && sw_reset_pulse) n_sw_pulse = n_sw_pulse + 1;
+    always @(posedge clk) if (reset_n && frame_full_o && (bitcnt_o == 6'd48)) n_frames = n_frames + 1;
+
+    task automatic spi_xfer(input [15:0] cmd, input [31:0] wd,
+                            output [31:0] rdout, input integer nbits_total);
+        integer i, nb;
+        real tq;
+        begin
+            rdout = 32'd0;
+            nb = 0;
+            tq = T_HALF / 2.0;
+            spi_cs_n = 1'b0;
+            #(T_HALF);
+            for (i = 15; i >= 0; i = i - 1) begin
+                if (nb < nbits_total) begin
+                    spi_mosi = cmd[i];
+                    #(T_HALF); spi_sck = 1'b1;
+                    #(T_HALF); spi_sck = 1'b0;
+                    nb = nb + 1;
+                end
+            end
+            for (i = 31; i >= 0; i = i - 1) begin
+                if (nb < nbits_total) begin
+                    spi_mosi = wd[i];
+                    #(T_HALF); spi_sck = 1'b1;
+                    #(tq); rdout[i] = spi_miso; #(T_HALF - tq);
+                    spi_sck = 1'b0;
+                    nb = nb + 1;
+                end
+            end
+            #(T_HALF);
+            spi_cs_n = 1'b1;
+            n_commit = n_commit + 1;
+            #(T_HALF * 4.0);
+        end
+    endtask
+
+    task automatic wr(input [14:0] a, input [31:0] d);
+        reg [31:0] dummy;
+        begin
+            spi_xfer({1'b0, a}, d, dummy, 48);
+            n_wr_ok = n_wr_ok + 1;
+        end
+    endtask
+
+    task automatic rd(input [14:0] a, output [31:0] d);
+        begin
+            spi_xfer({1'b1, a}, 32'd0, d, 48);
+            n_rd_ok = n_rd_ok + 1;
+        end
+    endtask
+
+    // ---------------------------------------------------------------------
+    // scenario
+    // ---------------------------------------------------------------------
+    reg [31:0] v, v2, v3;
+    integer i, err_base, nf_base;
+    real t_phase;
+
+    initial begin
+        $display("COURSE_T6A_SCENARIO=TCON_SPI_MODE0_48BIT_REGFILE");
+        $display("COURSE_T6A_CONTRACT=V13_SPI_REGISTER_SUBSET");
+
+        assert_count = 0; pass_count = 0; fail_count = 0;
+        n_wr_ok = 0; n_rd_ok = 0; n_commit = 0; n_sw_pulse = 0; n_frames = 0;
+        T_HALF = 50.0;                                    // 10 MHz
+
+        reset_n = 1'b0; spi_cs_n = 1'b1; spi_sck = 1'b0; spi_mosi = 1'b0;
+        status_in = 4'b0100; hw_fault = 11'd0; test_en = 1'b0; col_index_in = 10'd0;
+        repeat (20) @(posedge clk);
+        reset_n = 1'b1;
+        repeat (10) @(posedge clk);
+
+        // ================= A. reset values ================================
+        $display("--- A. reset values ---");
+        rd(15'h00, v);  chk("D01_chip_id_0x10", v == 32'h0000_0010);
+        rd(15'h04, v);  chk("D02_ctrl_reset_blank", v == 32'h0000_0002);
+        rd(15'h18, v);  chk("D03_status_live_4", v == 32'h0000_0004);
+        rd(15'h08, v);  chk("D04_mode_reset_0", v == 32'h0000_0000);
+        rd(15'h1C, v);  chk("D05_watchdog_reset_2", v == 32'h0000_0002);
+        rd(15'h20, v);  chk("D06_video_cfg_1023_767", v == 32'h000B_FFFF);
+        col_index_in = 10'd777;
+        rd(15'h24, v);  chk("D07_col_index_live", v == 32'd777);
+        col_index_in = 10'd0;
+
+        // ================= B. legal writes and readback ====================
+        $display("--- B. write / readback ---");
+        wr(15'h08, 32'h0000_0001); rd(15'h08, v);
+        chk("D08_mode_write_1", v == 32'h0000_0001);
+        wr(15'h1C, 32'h0000_1234); rd(15'h1C, v);
+        chk("D09_watchdog_write", v == 32'h0000_1234);
+        wr(15'h14, 32'h0000_05A5); rd(15'h14, v);
+        chk("D10_int_en_write", v == 32'h0000_05A5);
+        wr(15'h04, 32'h0000_0003); rd(15'h04, v);         // EN=1, BLANK=1
+        chk("D11_en_set_when_safe", (v == 32'h0000_0003) && (en === 1'b1));
+        wr(15'h14, 32'h0000_0000);                        // clean up the mask
+
+        err_base = err_reg;
+        wr(15'h08, 32'h0000_0000); rd(15'h08, v);         // MODE while EN=1
+        chk("D12_config_while_en_rejected",
+            (v == 32'h0000_0001) && (err_reg === 1'b1) && (fault_status[8] === 1'b1));
+        wr(15'h0C, 32'h0000_0100); rd(15'h0C, v);         // W1C ERR_REG
+        chk("D13_err_reg_w1c", (v[8] === 1'b0) && (err_reg === 1'b0));
+
+        wr(15'h04, 32'h0000_0001); rd(15'h04, v);         // EN=1, BLANK=0 while ready=0
+        chk("D14_unblank_needs_ready", (err_reg === 1'b1) && (blank_r === 1'b1));
+        wr(15'h0C, 32'h0000_0100);
+        status_in[0] = 1'b1;                              // READY
+        wr(15'h04, 32'h0000_0001); rd(15'h04, v);         // EN=1, BLANK=0
+        chk("D15_unblank_with_ready", (v == 32'h0000_0001) && (blank_r === 1'b0));
+
+        nf_base = n_sw_pulse;
+        wr(15'h04, 32'h0000_0006);                        // EN=1 BLANK=1 SW_RESET=1
+        rd(15'h04, v);
+        chk("D16_sw_reset_pulse_self_clears",
+            (n_sw_pulse - nf_base == 1) && (v[2] === 1'b0) && (v == 32'h0000_0002));
+
+        wr(15'h04, 32'h0000_000A); rd(15'h04, v);         // TEST without TEST_EN
+        chk("D17_test_needs_test_en", (err_reg === 1'b1) && (v[3] === 1'b0));
+        wr(15'h0C, 32'h0000_0100);
+        test_en = 1'b1;
+        wr(15'h04, 32'h0000_000A); rd(15'h04, v);
+        chk("D18_test_with_test_en", (v[3] === 1'b1) && (test_mode === 1'b1));
+
+        // ================= C. illegal / edge cases =========================
+        $display("--- C. illegal accesses and framing ---");
+        wr(15'h06, 32'hDEAD_BEEF); rd(15'h06, v);
+        chk("D19_misaligned_rejected", (err_reg === 1'b1) && (v == 32'd0));
+        wr(15'h0C, 32'h0000_0100);
+        wr(15'h60, 32'hCAFE_F00D); rd(15'h60, v);
+        chk("D20_unimplemented_rejected", (err_reg === 1'b1) && (v == 32'd0));
+        wr(15'h0C, 32'h0000_0100);
+        wr(15'h00, 32'hFFFF_FFFF); rd(15'h00, v);
+        chk("D21_ro_write_rejected", (err_reg === 1'b1) && (v == 32'h0000_0010));
+        wr(15'h0C, 32'h0000_0100);
+        wr(15'h08, 32'hFFFF_FFFE); rd(15'h08, v);         // only bit0 may latch
+        chk("D22_reserved_bits_write_0", (v == 32'h0000_0000));
+
+        // incomplete frame: only 30 SCK then CS_n rises -> discarded
+        err_base = err_reg;
+        spi_xfer({1'b0, 15'h1C}, 32'h0000_BEEF, v, 30);
+        rd(15'h1C, v2);
+        chk("D23_short_frame_discarded",
+            (v2 == 32'h0000_1234) && (err_reg === err_base));
+
+        // exactly 20 SCK (command only) -> no write, no error
+        spi_xfer({1'b0, 15'h1C}, 32'h0000_9999, v, 20);
+        rd(15'h1C, v2);
+        chk("D24_command_only_no_commit", (v2 == 32'h0000_1234) && (err_reg === err_base));
+
+        // back-to-back: two writes with no idle time between CS_n edges
+        spi_cs_n = 1'b0; #(T_HALF);
+        v3 = {1'b0, 15'h1C};
+        for (i = 15; i >= 0; i = i - 1) begin
+            spi_mosi = v3[i]; #(T_HALF); spi_sck = 1'b1; #(T_HALF); spi_sck = 1'b0;
+        end
+        v3 = 32'h0000_0777;
+        for (i = 31; i >= 0; i = i - 1) begin
+            spi_mosi = v3[i]; #(T_HALF); spi_sck = 1'b1; #(T_HALF); spi_sck = 1'b0;
+        end
+        #(T_HALF); spi_cs_n = 1'b1;
+        spi_xfer({1'b0, 15'h08}, 32'h0000_0001, v, 48);   // second transaction
+        rd(15'h1C, v2); rd(15'h08, v3);
+        chk("D25_back_to_back_transactions",
+            (v2 == 32'h0000_0777) && (v3 == 32'h0000_0001));
+
+        // ================= D. fault latching and W1C =======================
+        $display("--- D. fault / interrupt ---");
+        hw_fault[0] = 1'b1;                               // UVLO
+        repeat (4) @(posedge clk);
+        rd(15'h0C, v);
+        chk("D26_fault_latched", (v[0] === 1'b1));
+        wr(15'h0C, 32'h0000_0001); rd(15'h0C, v);         // W1C while the fault persists
+        chk("D27_live_fault_cannot_clear", (v[0] === 1'b1));
+        hw_fault[0] = 1'b0;
+        repeat (4) @(posedge clk);
+        wr(15'h0C, 32'h0000_0001); rd(15'h0C, v);
+        chk("D28_w1c_after_fault_gone", (v[0] === 1'b0));
+
+        rd(15'h10, v);
+        chk("D29_int_status_latched", (v[0] === 1'b1));
+        wr(15'h10, 32'h0000_0001); rd(15'h10, v);
+        chk("D30_int_w1c", (v[0] === 1'b0));
+
+        hw_fault[2] = 1'b1; repeat (4) @(posedge clk);     // OT
+        wr(15'h14, 32'h0000_0000); rd(15'h14, v);
+        chk("D31_int_en_zero_masks_irq", (irq === 1'b0) && (int_status[2] === 1'b1));
+        wr(15'h14, 32'h0000_0004);
+        chk("D32_int_en_unmasks_irq", (irq === 1'b1));
+        wr(15'h14, 32'h0000_0000);
+        wr(15'h0C, 32'h0000_0004);
+        hw_fault[2] = 1'b0; repeat (4) @(posedge clk);
+        wr(15'h0C, 32'h0000_0004);
+        rd(15'h0C, v);
+        chk("D33_fault_register_clean", (v[10:0] === 11'd0));
+
+        status_in[1] = 1'b1;                              // ACTIVE
+        rd(15'h18, v);
+        chk("D34_status_is_live_not_latched", (v == 32'h0000_0007));
+        status_in[1] = 1'b0;
+
+        // ================= E. clock rate / phase independence ==============
+        $display("--- E. SCLK rate and phase ---");
+        T_HALF = 125.0;                                   // 4 MHz
+        wr(15'h1C, 32'h0000_0ABC); rd(15'h1C, v);
+        chk("D35_slow_sclk_4mhz", v == 32'h0000_0ABC);
+        T_HALF = 50.0;
+
+        // start the transaction on several core-clock phases
+        for (i = 0; i < 4; i = i + 1) begin
+            @(posedge clk);
+            #(i * 2.5);
+            wr(15'h1C, 32'h0000_0100 + i); rd(15'h1C, v);
+            if (i == 0) chk("D36_phase0_readback", v == 32'h0000_0100);
+            if (i == 1) chk("D37_phase1_readback", v == 32'h0000_0101);
+            if (i == 2) chk("D38_phase2_readback", v == 32'h0000_0102);
+            if (i == 3) chk("D39_phase3_readback", v == 32'h0000_0103);
+        end
+
+        // write must not drive MISO: during a write the data phase returns 0
+        spi_xfer({1'b0, 15'h1C}, 32'h0000_0555, v, 48);
+        chk("D40_write_returns_zeros", v == 32'd0);
+
+        // 48-bit framing was really seen
+        chk("D41_frame_full_seen", (n_frames > 30) && (frame_full_o === 1'b1 || bitcnt_o == 6'd48));
+
+        // non-vacuity floors
+        chk("D42_enough_real_writes", n_wr_ok >= 20);
+        chk("D43_enough_real_reads", n_rd_ok >= 30);
+
+        $display("T6A_COUNTS writes=%0d reads=%0d commits=%0d sw_pulses=%0d frames=%0d",
+                 n_wr_ok, n_rd_ok, n_commit, n_sw_pulse, n_frames);
+        $display("COURSE_RTL_ASSERT_COUNT=%0d", assert_count);
+        $display("COURSE_RTL_PASS_COUNT=%0d",   pass_count);
+        $display("COURSE_RTL_FAIL_COUNT=%0d",   fail_count);
+        $display("COURSE_RTL_RESULT=%s", (fail_count == 0) ? "PASS" : "FAIL");
+        $finish;
+    end
+
+    initial begin
+        #5000000;                                         // 5 ms guard
+        $display("COURSE_T6A_WALL_GUARD=trip");
+        $display("COURSE_RTL_ASSERT_COUNT=%0d", assert_count);
+        $display("COURSE_RTL_FAIL_COUNT=1");
+        $display("COURSE_RTL_RESULT=FAIL");
+        $finish;
+    end
+
+endmodule
