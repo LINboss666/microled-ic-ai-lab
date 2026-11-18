@@ -168,7 +168,6 @@ module tcon_t5_tb;
     // ======================================================================
     reg [8:0] lut_at [0:255];      // table A - the accepted gray LUT image
     reg [8:0] lut_bt [0:255];      // table B - derived, see build_lut_b
-    integer   cur_tab;             // 0 = A active, 1 = B active (TB's own state)
 
     function automatic [7:0] pixf(input integer f, input integer c, input integer r);
         pixf = ((c & 255) + 13 * (r & 255) + 7 * (f & 255) + 8'h5A) & 255;
@@ -241,18 +240,26 @@ module tcon_t5_tb;
     integer cvc;
 
     // ---- window / scoreboard counters ------------------------------------
-    integer win_active, blank_d, wc, win_slot, win_ecol, win_efr;
+    integer win_active, blank_d, wc, win_slot, win_ecol, win_efr, win_dark_exp;
     integer pwm_ch [0:7];
     integer pwm_act [0:15];
     integer pwm_exp [0:15];
     reg [383:0] pwm_cov0, pwm_cov1;
 
+    integer tab_b_slot;        // columns LOADED in slots >= this use table B (E1)
+    integer win_tab;           // table of the column this window displays
+    integer switch_done;       // a LUT switch happened in this frame epoch
+    integer switch_slot;       // slot whose LATCH edge flipped the active LUT bank
+    integer win_any_on;        // this window had at least one conducting sample
+    integer win_low, win_colv0, win_on_viol;
+    integer dark_windows, dark_slot, dark_low, dark_colv0, dark_on_viol, dark_pwm_bad;
+    integer epoch_a_windows, epoch_b_windows, restart_nonzero, bad_windows;
     integer disp_windows, nohot_bad, sel_bad, tag_bad0, tag_bad1, frm_bad;
     integer byte_bad, cont_n, ch_on_bad, blank_novalid;
     integer idle_blanklow, fault_blanklow, dark_viol, dark_samples;
     reg     must_dark;
     integer chk_en;
-    integer pwm_bad, pwm_windows;
+    integer pwm_bad, pwm_windows, pwm_last_bad;
 
     reg [1023:0] vall;
     reg [511:0]  v0, v1;
@@ -357,10 +364,18 @@ module tcon_t5_tb;
             for (jj = 0; jj < 8; jj = jj + 1) begin
                 pwm_act[jj]     = 0;
                 pwm_act[8 + jj] = 0;
-                code = emap(win_efr, win_ecol, 0, pwm_ch[jj], cur_tab);
-                pwm_exp[jj]     = weff(code[5:0]);
-                code = emap(win_efr, win_ecol, 1, pwm_ch[jj], cur_tab);
-                pwm_exp[8 + jj] = weff(code[5:0]);
+                if (win_dark_exp == 1) begin
+                    // E3: the LUT COMMIT invalidated the display bank, so the
+                    // contract is that NOTHING conducts in this window even
+                    // though BLANK is released for the full 768 cycles.
+                    pwm_exp[jj]     = 0;
+                    pwm_exp[8 + jj] = 0;
+                end else begin
+                    code = emap(win_efr, win_ecol, 0, pwm_ch[jj], win_tab);
+                    pwm_exp[jj]     = weff(code[5:0]);
+                    code = emap(win_efr, win_ecol, 1, pwm_ch[jj], win_tab);
+                    pwm_exp[8 + jj] = weff(code[5:0]);
+                end
             end
         end
     endtask
@@ -369,8 +384,12 @@ module tcon_t5_tb;
         integer jj;
         begin
             pwm_windows = pwm_windows + 1;
+            pwm_last_bad = 0;
             for (jj = 0; jj < 16; jj = jj + 1) begin
-                if (pwm_act[jj] != pwm_exp[jj]) pwm_bad = pwm_bad + 1;
+                if (pwm_act[jj] != pwm_exp[jj]) begin
+                    pwm_bad = pwm_bad + 1;
+                    pwm_last_bad = pwm_last_bad + 1;
+                end
             end
             for (jj = 0; jj < 8; jj = jj + 1) begin
                 pwm_cov0[pwm_ch[jj]] = 1'b1;
@@ -409,12 +428,12 @@ module tcon_t5_tb;
             for (wi = 0; wi < 384; wi = wi + 1) begin
                 wer = pbyte(win_efr, win_ecol, 0, wi);
                 if (dut.u_data0.raw_disp[wi] !== wer[7:0])                wbad = wbad + 1;
-                wem = emap(win_efr, win_ecol, 0, wi, cur_tab);
+                wem = emap(win_efr, win_ecol, 0, wi, win_tab);
                 if (dut.u_data0.map_disp[wi] !== wem)                     wbad = wbad + 1;
                 if (dut.d0_ch_pam[wi*3 +: 3] !== wem[8:6])                wbad = wbad + 1;
                 wer1 = pbyte(win_efr, win_ecol, 1, wi);
                 if (dut.u_data1.raw_disp[wi] !== wer1[7:0])               wbad = wbad + 1;
-                wem1 = emap(win_efr, win_ecol, 1, wi, cur_tab);
+                wem1 = emap(win_efr, win_ecol, 1, wi, win_tab);
                 if (dut.u_data1.map_disp[wi] !== wem1)                    wbad = wbad + 1;
                 if (dut.d1_ch_pam[wi*3 +: 3] !== wem1[8:6])               wbad = wbad + 1;
             end
@@ -430,13 +449,19 @@ module tcon_t5_tb;
                 if ((win_efr == base_frame + 1) && (win_ecol == 0))    seen_nf0   = 1'b1;
             end
 
-            if (((|d0_ch_en) !== 1'b1) && ((|d1_ch_en) !== 1'b1)) ch_on_bad = ch_on_bad + 1;
-            if ((d0_col_valid !== 1'b1) || (d1_col_valid !== 1'b1)) blank_novalid = blank_novalid + 1;
+            // E2: the switch window is EXPECTED to be dark. It is exempt from the
+            // "display implies both banks valid" rule and from "some channel on",
+            // but its 768 bytes and its PAM are still compared above against the
+            // table that was active when the column was LOADED.
+            if (win_dark_exp == 0) begin
+                if (((|d0_ch_en) !== 1'b1) && ((|d1_ch_en) !== 1'b1)) ch_on_bad = ch_on_bad + 1;
+                if ((d0_col_valid !== 1'b1) || (d1_col_valid !== 1'b1)) blank_novalid = blank_novalid + 1;
+            end
 
             if (fd_ledger != 0)
-                $fdisplay(fd_ledger, "%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d",
+                $fdisplay(fd_ledger, "%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d",
                           slot_done, win_ecol, win_efr, gcol, tag0, frm0, tag1, frm1,
-                          wbad, cur_tab);
+                          wbad, win_tab, win_dark_exp);
         end
     endtask
 
@@ -453,8 +478,23 @@ module tcon_t5_tb;
                 win_ecol   = (slot_done >= 2) ? ((slot_done - 2) % 1024) : 0;
                 win_efr    = (slot_done >= 2) ? (((slot_done - 2) / 1024) + base_frame)
                                               : base_frame;
+                // E1: the table follows the LOAD slot of the displayed column,
+                // i.e. slot (S-2), never the wall-clock moment of the COMMIT.
+                win_tab    = ((slot_done >= 2) && ((slot_done - 2) >= tab_b_slot)) ? 1 : 0;
+                // E2: exactly the window right after a switch must be dark
+                win_dark_exp = (switch_done && (slot_done == switch_slot + 1)) ? 1 : 0;
+                win_any_on = 0; win_low = 0; win_colv0 = 0; win_on_viol = 0;
                 pick_channels;
                 pwm_arm;
+            end
+            if (win_active && !tcon_blank) begin
+                // E2: every BLANK-low sample is judged, not one point in time
+                win_low = win_low + 1;
+                if (((|d0_ch_en) !== 1'b0) || ((|d1_ch_en) !== 1'b0)) begin
+                    win_any_on  = 1;
+                    win_on_viol = win_on_viol + 1;
+                end
+                if ((d0_col_valid !== 1'b1) || (d1_col_valid !== 1'b1)) win_colv0 = win_colv0 + 1;
             end
             if (win_active && tcon_pwm_tick) begin
                 for (j = 0; j < 8; j = j + 1) begin
@@ -466,6 +506,20 @@ module tcon_t5_tb;
             if (tcon_blank && (blank_d == 0) && win_active) begin
                 win_active = 0;
                 pwm_judge;
+                if (win_tab == 0) epoch_a_windows = epoch_a_windows + 1;
+                else              epoch_b_windows = epoch_b_windows + 1;
+                if (win_dark_exp == 1) begin
+                    dark_windows = dark_windows + 1;
+                    dark_slot    = win_slot;
+                    dark_low     = win_low;
+                    dark_colv0   = win_colv0;
+                    dark_on_viol = win_on_viol;
+                    dark_pwm_bad = dark_pwm_bad + pwm_last_bad;
+                end else if (win_any_on == 0) begin
+                    bad_windows = bad_windows + 1;   // a dark window that was NOT expected
+                end
+                if ((win_tab == 1) && (win_any_on == 1) &&
+                    (slot_done > switch_slot + 1) && (restart_nonzero == 0)) restart_nonzero = 1;
             end
             if (win_active) wc = wc + 1;
             blank_d = tcon_blank;
@@ -568,6 +622,8 @@ module tcon_t5_tb;
             cfg0_we = 1'b0; cfg1_we = 1'b0; cfg0_cmt = 1'b0; cfg1_cmt = 1'b0;
             req_start = 1'b0;
             must_dark = 1'b0;
+            tab_b_slot = 1000000000;      // E1: an explicit reset starts again from table A
+            switch_done = 0;
             repeat (100) @(posedge clk);
             @(negedge clk); reset_n = 1'b1;
             repeat (6) @(negedge clk);
@@ -598,7 +654,7 @@ module tcon_t5_tb;
     // ======================================================================
     // scenario
     // ======================================================================
-    integer ph_base, nwin_base, nobase, cbase, tbase, sbase, ebase, switch_slot;
+    integer ph_base, nwin_base, nobase, cbase, tbase, sbase, ebase;
 
     initial begin
         $display("COURSE_T5_SCENARIO=FIVE_REAL_RTL_1TCON_2DATA_2SCAN");
@@ -615,11 +671,16 @@ module tcon_t5_tb;
         vc = 0; vcol = 0; vframe = 0; vlen = 976; vfrac = 576; slot_done = 0;
         nbytes = 768; bad_col = -1; bad_nbytes = 768; vsync_now = 0;
         base_frame = 0; start_col = 0; start_frame = 0;
-        cur_tab = 0; chk_en = 1; must_dark = 1'b0;
+        chk_en = 1; must_dark = 1'b0;
+        tab_b_slot = 1000000000; switch_done = 0; win_tab = 0; win_any_on = 0;
+        win_low = 0; win_colv0 = 0; win_on_viol = 0;
+        dark_windows = 0; dark_slot = -1; dark_low = 0; dark_colv0 = 0;
+        dark_on_viol = 0; dark_pwm_bad = 0;
+        epoch_a_windows = 0; epoch_b_windows = 0; restart_nonzero = 0; bad_windows = 0;
         disp_windows = 0; nohot_bad = 0; sel_bad = 0; tag_bad0 = 0; tag_bad1 = 0;
         frm_bad = 0; byte_bad = 0; cont_n = 0; ch_on_bad = 0; blank_novalid = 0;
         idle_blanklow = 0; fault_blanklow = 0; dark_viol = 0; dark_samples = 0;
-        pwm_bad = 0; pwm_windows = 0;
+        pwm_bad = 0; pwm_windows = 0; pwm_last_bad = 0;
         dc_en = 1'b0; dc_first = 1'b0; t_dc = 0.0;
         dc_min = 1.0e9; dc_max = 0.0;
         win_active = 0; blank_d = 0; wc = 0; win_slot = 0; win_ecol = 0; win_efr = 0;
@@ -634,7 +695,7 @@ module tcon_t5_tb;
         end
         fd_ledger = $fopen("t5_column_ledger.csv", "w");
         if (fd_ledger != 0)
-            $fdisplay(fd_ledger, "slot,exp_col,exp_frame,scan_col,tag0,frame0,tag1,frame1,bad_bytes,lut_tab");
+            $fdisplay(fd_ledger, "slot,exp_col,exp_frame,scan_col,tag0,frame0,tag1,frame1,bad_bytes,lut_tab,dark_expected");
 
         $dumpfile("t5.vcd");
         $dumpvars(1, tcon_t5_tb);
@@ -722,6 +783,8 @@ module tcon_t5_tb;
         // Phase C — LUT A -> B switch while running
         // ==================================================================
         $display("--- Phase C: LUT A->B switch ---");
+        $display("T5_VCD_MARK switch_dump_start_ns=%0d", $time);
+        dump_on;
         lut_program(1, 0);                      // table B into the INACTIVE bank
         @(posedge tcon_blank);                  // start of a BLANK interval
         repeat (10) @(negedge clk);             // 100 ns in, far ahead of cycle 828
@@ -745,17 +808,31 @@ module tcon_t5_tb;
             (d0_lut_bank === 1'b0) && (d1_lut_bank === 1'b0));
         chk("D33_switch_invalidates_display",
             (d0_col_valid === 1'b0) && (d1_col_valid === 1'b0));
-        cur_tab = 1;                            // from now on B is the expected image
+        // E1: columns LOADED from this slot onwards are mapped with table B.
+        // The window that is already on screen belongs to an earlier load slot.
+        tab_b_slot = switch_slot;
+        switch_done = 1;
         run_slots(4);
-        chk("D34_one_dark_window_after_switch", (no_win_slots - nobase) == 1);
+        $display("T5_SWITCH_DARK window_slot=%0d low_cycles=%0d invalid_cycles=%0d on_viol=%0d pwm_zero_viol=%0d",
+                 dark_slot, dark_low, dark_colv0, dark_on_viol, dark_pwm_bad);
+        $display("T5_SWITCH_EPOCH epoch_A_windows=%0d epoch_B_windows=%0d",
+                 epoch_a_windows, epoch_b_windows);
+        $display("T5_SWITCH_RESTART recovered_nonzero=%0d bad_windows=%0d", restart_nonzero, bad_windows);
+        chk("D34_one_dark_window_after_switch",
+            (dark_windows == 1) && (dark_slot == switch_slot + 1) &&
+            (dark_low >= 760) && (dark_colv0 == dark_low) &&
+            (dark_on_viol == 0) && (dark_pwm_bad == 0) && (bad_windows == 0));
         chk("D35_display_resumes_with_new_table",
-            ((disp_windows - nwin_base) == 2) && (byte_bad == 0));
+            ((disp_windows - nwin_base) == 3) && (restart_nonzero == 1) &&
+            (epoch_b_windows >= 2) && (byte_bad == 0) && (pwm_bad == 0));
         chk("D36_no_stale_column_after_switch", (sel_bad == 0) && (tag_bad0 == 0));
 
         // ==================================================================
         // Phase D — FAULT with a pending COMMIT (both chips watched)
         // ==================================================================
         $display("--- Phase D: fault + pending commit ---");
+        $display("T5_VCD_MARK fault_dump_start_ns=%0d", $time);
+        dump_on;
         while (!((vc >= 829) && (vc <= 831))) @(negedge clk);
         fault_n = 1'b0;                          // LATCH is still high: it drops now
                                                   // -> the Data window is left open
@@ -793,6 +870,7 @@ module tcon_t5_tb;
             (dut.u_data0.cmt_pend === 1'b1));
         chk("D43_latched_fault_stays_dark", (fault_blanklow == 0) && (tcon_fsm_state === 2'd3));
         chk("D44_no_strobe_no_latch_in_fault", (spm_stb == sbase));
+        dump_off;
 
         // ==================================================================
         // Phase E — explicit recovery: reset + reconfigure + legal frame
@@ -803,7 +881,6 @@ module tcon_t5_tb;
         lut_program(0, 1);
         chk("D46_recovered_lut_committed",
             (d0_lut_valid === 1'b1) && (d1_lut_valid === 1'b1));
-        cur_tab = 0;
         must_dark = 1'b1;
         nwin_base = disp_windows;
         begin_frame(0, 0);
@@ -839,13 +916,14 @@ module tcon_t5_tb;
         bad_col = -1; bad_nbytes = 768;
         power_on_reset;
         lut_program(0, 1);
-        cur_tab = 0;
         nwin_base = disp_windows;
         begin_frame(0, 0);
         run_slots(5);
         chk("D55_reset_recovers_after_poison",
             (tcon_fsm_state === 2'd2) && ((disp_windows - nwin_base) >= 2));
-        chk("D56_final_content_still_exact", (byte_bad == 0) && (sel_bad == 0) && (nohot_bad == 0));
+        chk("D56_final_content_still_exact",
+            (byte_bad == 0) && (pwm_bad == 0) && (sel_bad == 0) &&
+            (nohot_bad == 0) && (tag_bad0 == 0) && (tag_bad1 == 0) && (frm_bad == 0));
 
         // ==================================================================
         // census
