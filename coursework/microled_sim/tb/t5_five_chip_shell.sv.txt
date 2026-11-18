@@ -1,29 +1,22 @@
 `timescale 1ns / 1ps
-// t5_five_chip_shell — 1 TCON + 2 Data + 2 Scan, real RTL, T5-A wiring draft.
+// t5_five_chip_shell — 1 x TCON + 2 x Data + 2 x Scan, REAL RTL, T5-B.
 //
-// STATUS: T5-A (zero-ModelSim). This file is COMPILED but never simulated in
-// this round. It exists to prove the five real modules elaborate together with
-// the V1.3 pin set, and to freeze the wiring table before any T5 budget is
-// spent.
+// STATUS: T5-B integration shell. It carries the frozen V1.3 pin table only;
+// every `output` below is an OBSERVATION PASS-THROUGH of a real pin or of a
+// module output port. No logic, no gating, no stub is inserted anywhere.
 //
 // ============================ PIN HONESTY ==============================
 // Data's `din_valid` is NOT a V1.3 chip pin. V1.3 段0548 says the Data driver
-// itself delimits a transfer by LATCH and counts 384 DCLK edges ("无需额外
-// VALID线 ... 接收384字节，之后停写"). TCON's `load_active` is an RTL-internal
-// observation output (it does not appear anywhere in V1.3), and it is
-// DELIBERATELY NOT CONNECTED to `din_valid` here: doing so would invent a
-// physical pin.
+// delimits a transfer by LATCH and counts 384 DCLK edges ("无需额外VALID线 ...
+// 接收384字节，之后停写"). TCON's `load_active` is an RTL-internal observation
+// output (0 occurrences in V1.3) and is DELIBERATELY NOT CONNECTED to
+// `din_valid`: doing so would invent a physical pin.
 //
-// What is connected instead: NOTHING. Both Data instances run with
-// `USE_DIN_VALID=0` (the V1.3 self-delimiting receiver added by T3-H2) and
-// their `din_valid` port is tied to 1'b0, exactly as the final chip wrapper
-// does. The 384-edge demarcation is therefore performed INSIDE the chip and no
-// shell logic can fabricate a byte-valid signal. The earlier `dv_stub` was
-// withdrawn because it produced 385 valid edges (reviewer T5-A finding P0).
-//
-// STATUS: this file compiles only against the T3-H2 RTL (parameter
-// USE_DIN_VALID). It is a wiring draft for T5 and is NOT evidence of anything
-// until T3-H2 is independently reviewed and T5 is separately authorized.
+// Both Data instances run with `USE_DIN_VALID=0` (the V1.3 self-delimiting
+// receiver added by T3-H2) and their `din_valid` port is tied to 1'b0, exactly
+// as the final chip wrapper does. The 384-edge demarcation is performed INSIDE
+// the chip; nothing in this shell can fabricate a byte-valid signal. The T5-A
+// `dv_stub` (which produced 385 valid edges) is gone and must never return.
 // =======================================================================
 module t5_five_chip_shell #(
     parameter integer N_COL = 1024
@@ -53,7 +46,7 @@ module t5_five_chip_shell #(
     input  wire [8:0]  cfg1_lut_data,
     input  wire        cfg1_lut_commit,
 
-    // ---- observation ----------------------------------------------------
+    // ---- Data observation ----------------------------------------------
     output wire [383:0]  d0_ch_en,
     output wire [383:0]  d1_ch_en,
     output wire [1151:0] d0_ch_pam,
@@ -62,10 +55,56 @@ module t5_five_chip_shell #(
     output wire          d1_col_valid,
     output wire          d0_lut_valid,
     output wire          d1_lut_valid,
+    output wire          d0_lut_bank,
+    output wire          d1_lut_bank,
+    output wire          d0_lut_cmt_bad,
+    output wire          d1_lut_cmt_bad,
+    output wire [9:0]    d0_bytes_rcvd,
+    output wire [9:0]    d1_bytes_rcvd,
+    output wire [5:0]    d0_err_flags,
+    output wire [5:0]    d1_err_flags,
+
+    // ---- Scan observation ----------------------------------------------
     output wire [511:0]  s0_col_a,
     output wire [511:0]  s1_col_a,
-    output wire [9:0]    tcon_col_id,
-    output wire          tcon_scan_stb
+    output wire          s0_sel_valid,
+    output wire          s1_sel_valid,
+    output wire [9:0]    s0_sel_col,
+    output wire [9:0]    s1_sel_col,
+    output wire          s0_err_stb_outside_blank,
+    output wire          s1_err_stb_outside_blank,
+
+    // ---- TCON pins (the wires the four drivers actually see) -----------
+    output wire        tcon_dclk,
+    output wire        tcon_latch,
+    output wire        tcon_blank,
+    output wire        tcon_pwm_start,
+    output wire        tcon_pwm_tick,
+    output wire        tcon_load_active,   // observation only - never a Data pin
+    output wire [7:0]  tcon_d0,
+    output wire [7:0]  tcon_d1,
+    output wire [9:0]  tcon_col_id,
+    output wire        tcon_scan_stb,
+
+    // ---- TCON observation ----------------------------------------------
+    output wire [1:0]  tcon_fsm_state,
+    output wire [5:0]  tcon_err_flags,
+    output wire [5:0]  tcon_err_now,
+    output wire [5:0]  tcon_frame_id,
+    output wire [9:0]  tcon_in_col,
+    output wire [9:0]  tcon_disp_col,
+    output wire [5:0]  tcon_disp_frame,
+    output wire        tcon_disp_valid,
+    output wire        tcon_disp_poison,
+    output wire [9:0]  tcon_fwd_col,
+    output wire [5:0]  tcon_fwd_frame,
+    output wire        tcon_fwd_valid,
+    output wire        tcon_fwd_poison,
+    output wire [9:0]  tcon_bytes_rcvd,
+    output wire [8:0]  tcon_bytes_sent,
+    output wire        tcon_slot_long,
+    output wire        tcon_frame_wrap,
+    output wire        tcon_load_done
 );
 
     // ---- TCON pins carried to the four drivers --------------------------
@@ -85,28 +124,29 @@ module t5_five_chip_shell #(
         .latch (latch), .pwm_start (pwm_start), .pwm_tick (pwm_tick),
         .blank (blank), .dclk (dclk), .load_active (load_active_obs),
         .d0 (d0), .d1 (d1),
-        .status (), .frame_wrap (), .slot_long (), .slot_start (),
-        .err_flags (), .err_now (), .bank_valid (), .bytes_rcvd (),
-        .bytes_sent (), .load_blank (), .load_cnt (),
-        .fsm_state (), .frame_id (), .in_col (),
-        .disp_valid (), .disp_poison (), .disp_col (), .disp_frame (),
-        .fwd_valid (), .fwd_poison (), .fwd_col (), .fwd_frame (),
-        .load_done ()
+        .status (), .frame_wrap (tcon_frame_wrap), .slot_long (tcon_slot_long),
+        .slot_start (), .err_flags (tcon_err_flags), .err_now (tcon_err_now),
+        .bank_valid (), .bytes_rcvd (tcon_bytes_rcvd),
+        .bytes_sent (tcon_bytes_sent), .load_blank (), .load_cnt (),
+        .fsm_state (tcon_fsm_state), .frame_id (tcon_frame_id),
+        .in_col (tcon_in_col),
+        .disp_valid (tcon_disp_valid), .disp_poison (tcon_disp_poison),
+        .disp_col (tcon_disp_col), .disp_frame (tcon_disp_frame),
+        .fwd_valid (tcon_fwd_valid), .fwd_poison (tcon_fwd_poison),
+        .fwd_col (tcon_fwd_col), .fwd_frame (tcon_fwd_frame),
+        .load_done (tcon_load_done)
     );
 
-    assign tcon_col_id   = col_id_w;
-    assign tcon_scan_stb = scan_stb_w;
-
-    // ---- NO byte-window stub any more (reviewer T5-A finding P0) ----------
-    // The previous `dv_stub` produced 385 valid edges (arming edge + 384 more)
-    // and was therefore never a proof of the 384-byte protocol. It is gone:
-    // both Data instances now run with USE_DIN_VALID=0 and their `din_valid`
-    // port tied to 1'b0, so the 384-edge delimiting is done INSIDE the chip and
-    // nothing in this shell can fabricate it.
-    //
-    // Consequence: this shell is only exercisable after the T3-H2 patch is
-    // accepted; until then `vlog` still compiles it but the parameter does not
-    // exist in the accepted RTL. Do not cite this file as T5 evidence.
+    assign tcon_dclk       = dclk;
+    assign tcon_latch      = latch;
+    assign tcon_blank      = blank;
+    assign tcon_pwm_start  = pwm_start;
+    assign tcon_pwm_tick   = pwm_tick;
+    assign tcon_load_active = load_active_obs;
+    assign tcon_d0         = d0;
+    assign tcon_d1         = d1;
+    assign tcon_col_id     = col_id_w;
+    assign tcon_scan_stb   = scan_stb_w;
 
     // ---- Data #0 (even rows 0,2,..766) ----------------------------------
     data_driver #(.NCH(384), .PWM_MAX(63), .CNTW(8), .USE_DIN_VALID(0)) u_data0 (
@@ -117,8 +157,9 @@ module t5_five_chip_shell #(
         .cfg_lut_we (cfg0_lut_we), .cfg_lut_addr (cfg0_lut_addr),
         .cfg_lut_data (cfg0_lut_data), .cfg_lut_commit (cfg0_lut_commit),
         .ch_en (d0_ch_en), .ch_pam (d0_ch_pam), .tick_cnt (),
-        .col_valid (d0_col_valid), .bytes_rcvd (), .lut_valid (d0_lut_valid),
-        .lut_bank (), .lut_cmt_bad (), .err_flags ()
+        .col_valid (d0_col_valid), .bytes_rcvd (d0_bytes_rcvd),
+        .lut_valid (d0_lut_valid), .lut_bank (d0_lut_bank),
+        .lut_cmt_bad (d0_lut_cmt_bad), .err_flags (d0_err_flags)
     );
 
     // ---- Data #1 (odd rows 1,3,..767) -----------------------------------
@@ -130,22 +171,25 @@ module t5_five_chip_shell #(
         .cfg_lut_we (cfg1_lut_we), .cfg_lut_addr (cfg1_lut_addr),
         .cfg_lut_data (cfg1_lut_data), .cfg_lut_commit (cfg1_lut_commit),
         .ch_en (d1_ch_en), .ch_pam (d1_ch_pam), .tick_cnt (),
-        .col_valid (d1_col_valid), .bytes_rcvd (), .lut_valid (d1_lut_valid),
-        .lut_bank (), .lut_cmt_bad (), .err_flags ()
+        .col_valid (d1_col_valid), .bytes_rcvd (d1_bytes_rcvd),
+        .lut_valid (d1_lut_valid), .lut_bank (d1_lut_bank),
+        .lut_cmt_bad (d1_lut_cmt_bad), .err_flags (d1_err_flags)
     );
 
     // ---- Scan #0 (even global columns 0,2,..1022) -----------------------
     scan_driver #(.CHIP_ID(0)) u_scan0 (
         .reset_n (reset_n), .blank (blank), .fault_n (fault_n),
         .scan_stb (scan_stb_w), .col_id (col_id_w), .col_a (s0_col_a),
-        .sel_valid (), .sel_col (), .sel_chan (), .err_stb_outside_blank ()
+        .sel_valid (s0_sel_valid), .sel_col (s0_sel_col), .sel_chan (),
+        .err_stb_outside_blank (s0_err_stb_outside_blank)
     );
 
     // ---- Scan #1 (odd global columns 1,3,..1023) ------------------------
     scan_driver #(.CHIP_ID(1)) u_scan1 (
         .reset_n (reset_n), .blank (blank), .fault_n (fault_n),
         .scan_stb (scan_stb_w), .col_id (col_id_w), .col_a (s1_col_a),
-        .sel_valid (), .sel_col (), .sel_chan (), .err_stb_outside_blank ()
+        .sel_valid (s1_sel_valid), .sel_col (s1_sel_col), .sel_chan (),
+        .err_stb_outside_blank (s1_err_stb_outside_blank)
     );
 
 endmodule
