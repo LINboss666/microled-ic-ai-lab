@@ -37,7 +37,8 @@ def start(kind):
         p.edge(ctrl=0b01, safe=1, ready=1)
         p.edge(hw_fault=0b001)
         p.edge(hw_fault=0)
-        p.edge(hw_fault=0, w1c=0b001)
+        # 捕获位以 COMM_TO(bit7) 的掩码清除，见 FAULT_REARM_PROTOCOL.md
+        p.edge(hw_fault=0, w1c=0b001 | 0x080, fw=True)
         p.edge(hw_fault=0)
     return p
 
@@ -66,8 +67,8 @@ def main():
                     p = start(kind)
                     old = snapshot(p)
                     blk_old = p.hw_blank(hwf)
-                    err = p.edge(hw_fault=hwf,
-                                 ctrl=ctrl, w1c=w1c, safe=1, ready=1)
+                    err = p.edge(hw_fault=hwf, ctrl=ctrl, w1c=w1c,
+                                 safe=1, ready=1, fw=bool(w1c) or ctrl is None)
                     new = snapshot(p)
                     rows.append((kind, ctrl, w1c, hwf, old, blk_old, new,
                                  p.hw_blank(hwf), err))
@@ -115,7 +116,7 @@ def main():
         for f in set(fails):
             print("  -", f)
         return 1
-    print("RESULT=PASS  (24 combinations, NBA order)")
+    print("RESULT=PASS  (%d combinations, NBA order)" % len(rows))
     return 0
 
 

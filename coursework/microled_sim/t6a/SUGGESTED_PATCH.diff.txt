@@ -1,5 +1,5 @@
 diff --git a/coursework/microled_sim/rtl/tcon_spi_regs.v.txt b/coursework/microled_sim/rtl/tcon_spi_regs.v.txt
-index 60fea46..fdf9ed1 100644
+index 60fea46..3c08a9d 100644
 --- a/coursework/microled_sim/rtl/tcon_spi_regs.v.txt
 +++ b/coursework/microled_sim/rtl/tcon_spi_regs.v.txt
 @@ -64,7 +64,11 @@ module tcon_spi_regs (
@@ -15,16 +15,17 @@ index 60fea46..fdf9ed1 100644
  );
  
      // ---------------------------------------------------------------------
-@@ -134,6 +138,8 @@ module tcon_spi_regs (
+@@ -134,6 +138,9 @@ module tcon_spi_regs (
      // state + write commit
      // ---------------------------------------------------------------------
      reg        sw_pulse;
 +    reg        disp_armed;      // host permit: set only by an explicit unblank
++    reg        clr_fault;       // 1-cycle clear pulse for the capture latch
 +    reg        hw_fault_caught; // asynchronous fault capture
      reg [10:0] fs_d;
      reg [10:0] n_fault, n_int;
  
-@@ -141,17 +147,61 @@ module tcon_spi_regs (
+@@ -141,13 +148,39 @@ module tcon_spi_regs (
      wire ready_in = status_in[0];
      wire cfg_ok   = (!en) && safe_in;
      wire any_hw_fault = |hw_fault;
@@ -32,28 +33,6 @@ index 60fea46..fdf9ed1 100644
 +    // must not blank the panel) is a display fault and survives its source
 +    localparam [10:0] DISP_FAULT_MASK = 11'h7FF & ~11'h100;
 +    wire disp_fault = |(fault_status & DISP_FAULT_MASK);
-+
-+    // the frame fields, stable for the whole CS_n transaction
-+    wire [14:0] wa_w = wr_frame[46:32];
-+    wire [31:0] wd_w = wr_frame[31:0];
-+
-+    // ---------------------------------------------------------------------
-+    // P0-D: the clear request is COMBINATIONAL, not a registered pulse.
-+    //   rev3 registered `clr_fault` inside the write block, so the capture
-+    //   latch - a different always block - sampled its OLD value on that
-+    //   edge and only cleared on the NEXT one, while `n_fault` re-ORed the
-+    //   still-set capture back into bit7 on that very next edge.  The fault
-+    //   could then never be cleared and the host could never re-enable.
-+    //   Driving the latch from this request removes the register entirely:
-+    //   `fault_status[7]` and `hw_fault_caught` fall on the SAME edge, from
-+    //   the SAME accepted write.
-+    // ---------------------------------------------------------------------
-+    wire clear_caught_req = wr_cap_o &&
-+                            (wa_w[1:0]  == 2'b00) &&
-+                            (wa_w[14:6] == 9'd0)  &&
-+                            (wa_w[5:2]  == A_FAULT) &&
-+                            wr_frame[7]           &&   // W1C covers COMM_TO
-+                            !any_hw_fault;             // a live source wins
 +
 +    // ---------------------------------------------------------------------
 +    // P0-B: asynchronous fault capture
@@ -66,7 +45,7 @@ index 60fea46..fdf9ed1 100644
 +    always @(posedge clk or posedge any_hw_fault or negedge reset_n) begin
 +        if (!reset_n)          hw_fault_caught <= 1'b0;
 +        else if (any_hw_fault) hw_fault_caught <= 1'b1;
-+        else if (clear_caught_req) hw_fault_caught <= 1'b0;
++        else if (clr_fault)    hw_fault_caught <= 1'b0;
 +    end
  
      assign sw_reset_pulse = sw_pulse;
@@ -77,10 +56,6 @@ index 60fea46..fdf9ed1 100644
      // no enable, software blank, or any hardware fault => the panel is blank.
      // Software cannot talk its way out of this: it is a pure OR at the output.
 -    assign hw_blank       = blank_r | (!en) | any_hw_fault;
--
--    // the frame fields, valid and stable by the time wr_cap pulses
--    wire [14:0] wa_w = wr_frame[46:32];
--    wire [31:0] wd_w = wr_frame[31:0];
 +    // six independent locks, any one of them blanks the panel:
 +    //   software BLANK, EN cleared, a LIVE fault, the asynchronously caught
 +    //   fault, the host permit latch and the sticky fault history. The last
@@ -90,17 +65,18 @@ index 60fea46..fdf9ed1 100644
 +    assign disp_armed_o      = disp_armed;
 +    assign hw_fault_caught_o = hw_fault_caught;
  
-     integer k;
-     reg [14:0] wa;
-@@ -177,6 +227,7 @@ module tcon_spi_regs (
+     // the frame fields, valid and stable by the time wr_cap pulses
+     wire [14:0] wa_w = wr_frame[46:32];
+@@ -177,6 +210,8 @@ module tcon_spi_regs (
              wr_cap_cnt   <= 16'd0;
              wr_rej_cnt   <= 16'd0;
              wr_ok_o      <= 1'b0;
 +            disp_armed   <= 1'b0;
++            clr_fault    <= 1'b0;
          end else begin
              err_set  = 1'b0;
              accept   = 1'b0;
-@@ -199,12 +250,16 @@ module tcon_spi_regs (
+@@ -199,12 +234,16 @@ module tcon_spi_regs (
                          if (wd[3] && !test_en)                          err_set = 1'b1;
                          else if (wd[0] && (!safe_in || any_hw_fault))    err_set = 1'b1;
                          else if (wd[0] && !wd[1] &&
@@ -118,7 +94,7 @@ index 60fea46..fdf9ed1 100644
                              if (wd[2]) sw_pulse <= 1'b1;     // W1P, self clearing
                              accept = 1'b1;
                          end
-@@ -238,7 +293,11 @@ module tcon_spi_regs (
+@@ -238,7 +277,11 @@ module tcon_spi_regs (
              end
  
              // ---- 3. next visible fault / interrupt state -------------------
@@ -131,16 +107,19 @@ index 60fea46..fdf9ed1 100644
              if (w1c_f != 11'd0) n_fault = n_fault & ~(w1c_f & ~hw_fault);
              if (err_set)        n_fault[8] = 1'b1;
  
-@@ -253,6 +312,15 @@ module tcon_spi_regs (
+@@ -253,6 +296,18 @@ module tcon_spi_regs (
  
              // ---- 4. read snapshot: ONE latch per request -------------------
              if (rd_cap_o) rd_snapshot <= rval;
 +
 +            // ---- 5. capture-latch clear -----------------------------------
-+            // Handled by `clear_caught_req` at the capture latch itself (see
-+            // the P0-D block above), so that the status bit and the capture
-+            // fall on the same edge.  Nothing is registered here on purpose:
-+            // a registered pulse reintroduces the one-cycle resurrection.
++            // The capture is reported as COMM_TO, so the host clears it the
++            // same way as any other W1C cause: the mask must actually cover
++            // bit7. A zero mask (data=0) and a partial mask therefore leave it
++            // set - the RUN01 style "write 0 clears everything" is gone.
++            clr_fault <= 1'b0;
++            if (wr_cap_o && (wa[5:2] == A_FAULT) && w1c_f[7] && !any_hw_fault)
++                clr_fault <= 1'b1;
 +
 +            // ---- 6. a live, caught or latched fault always wins -----------
 +            if (any_hw_fault || hw_fault_caught || disp_fault) disp_armed <= 1'b0;

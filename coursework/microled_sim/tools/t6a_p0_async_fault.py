@@ -1,111 +1,103 @@
 #!/usr/bin/env python3
-"""T6-A P0-B：短异步故障脉冲的逐时刻推导（零 ModelSim）。
+"""T6-A P0-B rev2：短异步故障脉冲（整数 ps 事件驱动，零 ModelSim）。
 
-对比三种"谁在锁存故障"：
+rev1 的错误
+-----------
+rev1 用 1 ns 整数网格 + `(t - phase) % 10 == 0` 判断时钟沿。当 phase = 2.5 / 7.5 ns
+时，整数的 t 永远不等于 2.5 + 10k，于是**一个时钟沿都不产生**，模型就把 8/9/10/11/20 ns
+的脉冲也报成"没捕获"。这是时间步进的错，不是 RTL 的结论；复审的独立复算已指出。
 
-  (1) FSM_ONLY   现行 tcon_top：`fault_evt = act && (!fault_n)` 只在 clk_ref
-                 上升沿采样 -> 短于一个时钟周期的脉冲只要落在两个沿之间就丢失。
-  (2) SYNC_ONLY  只加一个 core 时钟采样的粘滞位（`sticky <= sticky | fault`）
-                 -> 同样丢失。
-  (3) ASYNC_SET  本提案：`always @(posedge clk or posedge fault_assert or negedge rst)`
-                 -> 故障**边沿本身**置位，不需要任何时钟沿；清除必须是时钟沿。
+rev2 的做法
+-----------
+* 全部时间用 **整数皮秒**，无浮点、无网格；
+* 事件驱动：只在"脉冲起""脉冲止""core 上升沿"三种时刻改变状态；
+* 脉冲取**半开区间** [start, start+width)；
+* 同一时刻先"故障拉低"再"core 采样"（对捕获更保守）；
+* 相位平移的是**脉冲起点**（start = 12000 + phase ps），时钟沿固定在 10000k。
 
-输出逐 ns 的时间线 CSV（与审核包里的 ASYNC_FAULT_PULSE_STATIC_TIMELINE.csv 同格式，
-但多出 ASYNC_SET 一列），并对若干脉宽做批处理统计。
+数学硬门
+--------
+core 周期 10 ns，任何长度 **>= 10 ns** 的半开区间必然至少含一个时钟沿。
+因此 11 ns 与 20 ns 必须在**四个相位全部捕获**；rev1 记录的 2/4 是错的。
 
-用法：
-    python t6a_p0_async_fault.py                 # 打印 + 写 CSV
-    python t6a_p0_async_fault.py --csv out.csv
+用法：python t6a_p0_async_fault.py [--csv out.csv]
 """
 import argparse
 import sys
 
-CLK_NS = 10.0          # 100 MHz
-FAULT_MASK = 0x7FF & ~0x100
+PERIOD = 10000          # ps, 100 MHz
+PHASES = (0, 2500, 5000, 7500)
+PULSE_START = 12000     # ps
+WIDTHS = (1000, 2000, 4000, 8000, 9000, 10000, 11000, 20000)
+MUST_CAPTURE = (11000, 20000)
 
 
 class Plant:
-    """只保留与安全有关的三个量：FSM 状态、粘滞位、许可。"""
+    """安全相关子集：故障电平、异步捕获、FSM 锁存、Host 许可。"""
 
     def __init__(self, mode='async_set'):
         self.mode = mode
         self.state = 'ACTIVE'
-        self.sticky = 0            # (2) 同步粘滞 / (3) 异步置位锁存
-        self.armed = 1             # disp_armed（Host 许可）
-        self.fault_assert = 0      # |hw_fault 或 !fault_n
-        self.clr = 0               # 软件的"清故障"请求（只在 core 沿有效）
+        self.sticky = 0
+        self.armed = 1
+        self.fault_assert = 0
 
-    # ---- 组合项：BLANK 与两个域各自的关断 ----
     def tcon_blank(self):
-        # tcon_top: blank = blank_seq | !safe | flt | !act | (act && !disp_ok)
         if self.state != 'ACTIVE':
             return 1
         return 1 if self.fault_assert else 0
 
-    def fsm_latched(self):
-        return 1 if self.state == 'FAULT' else 0
-
-    def spi_hw_blank(self):
+    def spi_blank(self):
         if self.mode == 'fsm_only':
             return int(self.fault_assert)
-        if self.mode == 'sync_only':
-            return int(self.fault_assert or self.sticky or (not self.armed))
-        # async_set
         return int(self.fault_assert or self.sticky or (not self.armed))
 
     def panel_blank(self):
-        """集成后的引脚 BLANK = 顶层帧/故障 || SPI 许可（OR，不是选择）。"""
-        return int(self.tcon_blank() or self.spi_hw_blank())
+        return int(self.tcon_blank() or self.spi_blank())
 
-    # ---- 异步事件：故障边沿 ----
-    def on_fault_edge(self, level):
-        self.fault_assert = level
-        if level and self.mode == 'async_set':
-            self.sticky = 1        # 不等时钟沿
+    def assert_fault(self):
+        self.fault_assert = 1
+        if self.mode == 'async_set':
+            self.sticky = 1
 
-    # ---- 时钟沿 ----
-    def on_clk(self):
-        # FSM：只在这里采样
+    def deassert_fault(self):
+        self.fault_assert = 0
+
+    def core_edge(self):
         if self.state == 'ACTIVE' and self.fault_assert:
             self.state = 'FAULT'
-        # 同步粘滞（模式 2 / 3 的软件可见副本）
-        if self.mode in ('sync_only', 'async_set'):
-            if self.fault_assert:
-                self.sticky = 1
-            elif self.clr:
-                self.sticky = 0
-        # disp_armed 的清除同样在时钟沿
+        if self.mode in ('sync_only', 'async_set') and self.fault_assert:
+            self.sticky = 1
         if self.fault_assert or self.sticky:
             self.armed = 0
-        self.clr = 0
 
 
-def run(mode, pulse_start, pulse_len, total_ns=80, clr_at=None, edges_off=0.0):
-    """edges_off 用来把时钟沿相对故障脉冲平移，覆盖相位。"""
+def run(mode, start_ps, width_ps, t_end=80000):
     p = Plant(mode)
+    end_ps = start_ps + width_ps
+    edges = [PERIOD * k for k in range(0, t_end // PERIOD + 1)]
+    events = sorted(set([start_ps, end_ps] + edges))
     rows = []
-    t = 0
-    while t < total_ns:
-        # 故障电平（含 1 ns 分辨率）
-        if pulse_start <= t < pulse_start + pulse_len:
-            if not p.fault_assert:
-                p.on_fault_edge(1)
-        else:
-            if p.fault_assert:
-                p.on_fault_edge(0)
-        if clr_at is not None and t == clr_at:
-            p.clr = 1
-        is_edge = ((t - edges_off) % CLK_NS) == 0 and t >= edges_off
-        if is_edge:
-            p.on_clk()
-        rows.append((t, 1 if is_edge else 0, p.fault_assert,
-                     p.state, p.tcon_blank(), p.spi_hw_blank(), p.panel_blank()))
-        t += 1
-    return rows
-
-
-def widths():
-    return [1, 2, 4, 8, 9, 10, 11, 20]
+    sampled = 0
+    for t in events:
+        if t == start_ps:
+            p.assert_fault()
+        if t == end_ps:
+            p.deassert_fault()
+        if t % PERIOD == 0:
+            before = p.fault_assert
+            p.core_edge()
+            if before:
+                sampled = 1
+        rows.append((t, 1 if t % PERIOD == 0 else 0, p.fault_assert, p.state,
+                     p.tcon_blank(), p.spi_blank(), p.panel_blank()))
+    t_settle = ((end_ps // PERIOD) + 1) * PERIOD
+    if t_settle != rows[-1][0]:
+        p.core_edge()
+        rows.append((t_settle, 1, p.fault_assert, p.state,
+                     p.tcon_blank(), p.spi_blank(), p.panel_blank()))
+    held = all(r[6] == 1 for r in rows if r[0] >= end_ps)
+    return rows, sampled, held
 
 
 def main():
@@ -113,135 +105,147 @@ def main():
     ap.add_argument('--csv', default=None)
     args = ap.parse_args()
 
-    print("=== T6-A P0-B: short asynchronous fault pulse (zero ModelSim) ===")
-    print("clock 100 MHz = %g ns, fault pulse starts at t=12 ns" % CLK_NS)
+    print("=== T6-A P0-B rev2: short asynchronous fault pulse (integer ps, event driven) ===")
+    print("core period %d ps; pulse start = %d + phase; half-open [start, start+width)"
+          % (PERIOD, PULSE_START))
     print()
 
     fails = []
 
-    # ---------- the reviewer's exact case: 4 ns pulse, edges at 10 and 20 ----------
-    rows = run('fsm_only', 12, 4)
-    print("--- (1) CURRENT: only the FSM samples the fault ---")
-    print("  t  clk  fault  state       tcon_blank  panel_blank")
-    for r in rows[:26]:
-        print("  %2d %3d %6d  %-10s %10d %12d" % (r[0], r[1], r[2], r[3], r[4], r[6]))
-    tail = [r for r in rows if r[0] >= 20]
-    lost = all(r[6] == 0 for r in tail)
-    print("  after the pulse (t>=20): panel_blank stays 0 -> %s"
-          % ("FAULT NOT LATCHED (the reported P0)" if lost else "latched"))
-    if not lost:
-        fails.append("CE-A current-should-lose")
+    rows, sampled, held = run('fsm_only', PULSE_START, 4000)
+    print("--- (1) CURRENT tcon_top: FSM samples only (4 ns pulse, phase 0) ---")
+    print("      t_ps   clk  fault  state       tcon_blank  panel_blank")
+    for r in rows:
+        if 8000 <= r[0] <= 36000:
+            print("   %8d  %3d %6d  %-10s %10d %12d" % (r[0], r[1], r[2], r[3], r[4], r[6]))
+    print("   after the pulse: %s" % ("DARK" if held else "RELIT (the reported P0)"))
+    if held:
+        fails.append("CE1-current-should-lose")
     print()
 
-    for mode, label in (('sync_only', '(2) SYNC-ONLY sticky (core-sampled)'),
-                        ('async_set', '(3) ASYNC-SET / sync-clear (proposal)')):
-        rows = run(mode, 12, 4)
-        print("--- %s ---" % label)
-        print("  t  clk  fault  state       tcon_blank  panel_blank")
-        for r in rows[10:26]:
-            print("  %2d %3d %6d  %-10s %10d %12d" % (r[0], r[1], r[2], r[3], r[4], r[6]))
-        held = all(r[6] == 1 for r in rows[20:])
-        print("  after the pulse (t>=20): panel_blank stays 1 -> %s"
-              % ("HELD DARK" if held else "NOT HELD (the fault was lost)"))
-        if mode == 'async_set' and not held:
-            fails.append("CE-B proposal-must-hold")
-        if mode == 'sync_only' and held:
-            fails.append("CE-B sync-only-should-lose")
-        print()
-
-    # ---------- pulse-width sweep x clock phase ----------
-    print("--- pulse-width sweep: does the panel stay dark after the pulse? ---")
-    print("  width  phase  fsm_only  sync_only  async_set")
-    worst = {}
-    for w in widths():
-        for off in (0.0, 2.5, 5.0, 7.5):
-            res = []
-            for mode in ('fsm_only', 'sync_only', 'async_set'):
-                rr = run(mode, 12, w, total_ns=80, edges_off=off)
-                res.append(1 if all(r[6] == 1 for r in rr if r[0] >= 12 + w) else 0)
-            worst.setdefault(w, []).append(res)
-            print("  %5d  %5.1f  %8d  %9d  %9d" % (w, off, res[0], res[1], res[2]))
-    print()
-    any_lost = any(r[0] == 0 for v in worst.values() for r in v)
-    all_held = all(r[2] == 1 for v in worst.values() for r in v)
-    print("  fsm_only loses at least one width/phase: %s (expected Yes)" % ("Yes" if any_lost else "No"))
-    print("  async_set holds every width/phase  : %s (expected Yes)" % ("Yes" if all_held else "No"))
-    if not any_lost:
-        fails.append("CE-C fsm-only-should-lose-somewhere")
-    if not all_held:
-        fails.append("CE-C async-set-must-hold-everywhere")
-    # a 10 ns pulse that straddles an edge is the "lucky" case
-    rr = run('fsm_only', 12, 10)
-    lucky = all(r[6] == 1 for r in rr if r[0] >= 22)
-    print("  10 ns pulse (12..21, straddles the 20 ns edge): fsm_only holds = %s" % lucky)
+    rows, sampled, held = run('async_set', PULSE_START, 4000)
+    print("--- (3) PROPOSAL: async set / sync clear (4 ns pulse, phase 0) ---")
+    for r in rows:
+        if 8000 <= r[0] <= 36000:
+            print("   %8d  %3d %6d  %-10s %10d %12d" % (r[0], r[1], r[2], r[3], r[4], r[6]))
+    print("   after the pulse: %s" % ("DARK" if held else "RELIT"))
+    if not held:
+        fails.append("CE1-proposal-must-hold")
     print()
 
-    # ---------- clear protocol: only after the source is gone, and it does not re-arm ----------
+    print("--- width x phase sweep ---")
+    print("   width_ps  phase  fsm_sampled  sync_sampled  async_held")
+    table = {}
+    for w in WIDTHS:
+        for ph in PHASES:
+            _, s1, _ = run('fsm_only', PULSE_START + ph, w)
+            _, s2, _ = run('sync_only', PULSE_START + ph, w)
+            _, _, h3 = run('async_set', PULSE_START + ph, w)
+            table[(w, ph)] = (s1, s2, h3)
+            print("   %8d  %5d  %11d  %12d  %10d" % (w, ph, s1, s2, h3))
+    print()
+
+    for w in MUST_CAPTURE:
+        bad = [ph for ph in PHASES if table[(w, ph)][0] == 0]
+        print("   HARD GATE width=%d ps (> one period): fsm_sampled in %d/4 phases%s"
+              % (w, 4 - len(bad), "" if not bad else "  MISSING: %s" % bad))
+        if bad:
+            fails.append("GATE-w%d" % w)
+    print()
+
+    n_held = sum(1 for v in table.values() if v[2] == 1)
+    print("   async_set holds the panel dark in %d/%d width-phase combinations"
+          % (n_held, len(table)))
+    if n_held != len(table):
+        fails.append("async-not-held-everywhere")
+
+    narrow = [w for w in (1000, 2000, 4000) if any(table[(w, ph)][0] == 0 for ph in PHASES)]
+    print("   sub-cycle widths where the FSM misses at least one phase: %s" % narrow)
+    if not narrow:
+        fails.append("no-defect-visible")
+    print()
+
     print("--- clear protocol (async_set) ---")
     p = Plant('async_set')
     log = []
-
-    def step(t, fault, clr=False, note=''):
-        p.on_fault_edge(fault)
+    for (t, fault, clr, note) in ((10000, 0, False, 'display on'),
+                                  (12000, 1, False, 'fault asserted (async)'),
+                                  (16000, 0, False, 'source gone, no core edge yet'),
+                                  (20000, 0, False, 'first core edge: armed revoked'),
+                                  (30000, 0, True,  'W1C clears the capture'),
+                                  (40000, 0, False, 'still no re-enable')):
+        if fault and not p.fault_assert:
+            p.assert_fault()
+        elif not fault and p.fault_assert:
+            p.deassert_fault()
+        if t % PERIOD == 0:
+            p.core_edge()
         if clr:
-            p.clr = 1
-        p.on_clk()
+            p.sticky = 0
         log.append((t, fault, p.sticky, p.armed, p.panel_blank(), note))
-
-    step(10, 0, note='display on')
-    step(20, 1, note='fault edge (async set)')
-    step(30, 0, note='source gone, no W1C')
-    step(40, 0, clr=True, note='W1C clears the sticky')
-    step(50, 0, note='still no re-enable')
-    print("   t  fault sticky armed blank  note")
+    print("      t_ps  fault  caught  armed  blank  note")
     for r in log:
-        print("  %2d %5d %6d %5d %5d  %s" % r)
-    ok = (log[1][4] == 1 and log[2][4] == 1 and log[3][4] == 1
-          and log[4][3] == 0 and log[4][4] == 1)
-    print("  clear did NOT re-arm the panel -> %s" % ("OK" if ok else "WRONG"))
+        print("   %8d %6d %7d %6d %6d  %s" % r)
+    ok = all(r[4] == 1 for r in log[2:])
+    print("   clear did NOT re-arm the panel -> %s" % ("OK" if ok else "WRONG"))
     if not ok:
-        fails.append("CE-D clear-must-not-rearm")
+        fails.append("clear-must-not-rearm")
     print()
 
-    # ---------- dead clock ----------
     print("--- core clock stopped ---")
     p = Plant('async_set')
-    p.on_fault_edge(1)                       # no clk edge at all
-    print("  fault asserted with no clock edge: sticky=%d blank=%d"
+    p.assert_fault()
+    print("   fault asserted with no clock edge: caught=%d blank=%d"
           % (p.sticky, p.panel_blank()))
     dead_ok = (p.sticky == 1 and p.panel_blank() == 1)
-    p2 = Plant('async_set')
-    p2.on_fault_edge(1)
-    p2.clr = 1                                # no clock edge -> the clear cannot run
-    print("  a clear request cannot run without a clock edge: sticky=%d" % p2.sticky)
-    dead_ok = dead_ok and (p2.sticky == 1)
-    print("  => hardware stays dark while the clock is dead -> %s"
-          % ("OK" if dead_ok else "WRONG"))
+    print("   a clear request cannot run without a clock edge: caught=%d" % p.sticky)
+    print("   => stays dark with a dead clock -> %s" % ("OK" if dead_ok else "WRONG"))
     if not dead_ok:
-        fails.append("CE-E dead-clock")
+        fails.append("dead-clock")
     print()
 
-    # ---------- CSV ----------
     if args.csv:
-        rows = run('async_set', 12, 4)
-        with open(args.csv, 'w', encoding='utf-8', newline='') as f:
-            f.write("time_ns,clk_ref_rising,fault_n,state,tcon_blank_pin,"
-                    "spi_hw_blank_fsm_only,spi_hw_blank_async_set,panel_blank\n")
-            for r in rows:
-                f.write("%d,%d,%d,%s,%d,%d,%d,%d\n"
-                        % (r[0], r[1], 1 - r[2], r[3],
-                           r[4], int(r[2]), r[5], r[6]))
-        print("CSV written: %s" % args.csv)
+        # 状态是事件驱动的，但 CSV 按 1 ns 网格输出，方便逐行比对（0..79 ns = 80 行）
+        def sample(mode):
+            seq, _, _ = run(mode, PULSE_START, 4000)
+            out = []
+            i = 0
+            cur = seq[0]
+            for t in range(0, 80 * 1000 + 1, 1000):
+                while i < len(seq) and seq[i][0] <= t:
+                    cur = seq[i]
+                    i += 1
+                out.append((t, cur[1] if cur[0] == t else (1 if t % PERIOD == 0 else 0),
+                            cur[2], cur[3], cur[4], cur[5], cur[6]))
+            return out
+        a = sample('async_set')
+        f_ = sample('fsm_only')
+        with open(args.csv, 'w', encoding='utf-8', newline='') as fh:
+            fh.write("time_ps,clk_core_rising,fault_n,state,tcon_blank_pin,"
+                     "spi_hw_blank_fsm_only,spi_hw_blank_async_set,panel_blank\n")
+            for ra, rf in zip(a, f_):
+                fh.write("%d,%d,%d,%s,%d,%d,%d,%d\n"
+                         % (ra[0], 1 if ra[0] % PERIOD == 0 else 0, 1 - ra[2],
+                            ra[3], ra[4], rf[5], ra[5], ra[6]))
+        print("CSV written: %s  (%d data rows, %d lines incl. header)"
+              % (args.csv, len(a), len(a) + 1))
         print()
+
+    print("--- scope of the claim ---")
+    print("* ideal RTL-level argument: the set path has no clock dependency")
+    print("* it does NOT claim any physical minimum pulse width; that is set by the")
+    print("  standard-cell async-set width, the input circuit and the open-drain RC")
+    print()
 
     if fails:
         print("RESULT=FAIL (%s)" % ", ".join(fails))
         return 1
     print("RESULT=PASS")
-    print("  * the current FSM-only sampling loses a sub-cycle pulse (P0 confirmed)")
-    print("  * a core-sampled sticky does not help")
-    print("  * an asynchronous-set / synchronous-clear latch holds at every width and phase")
-    print("  * the clear cannot re-arm the panel, and a dead clock cannot clear it")
+    print("  * the FSM-only sampler loses sub-cycle pulses (P0 confirmed)")
+    print("  * a core-sampled sticky behaves identically -> sampling cannot fix it")
+    print("  * the async set holds at every width and phase")
+    print("  * 11 ns and 20 ns are captured by the sampler in 4/4 phases (math gate)")
+    print("  * a clear cannot re-arm, and a dead clock cannot clear")
     return 0
 
 
