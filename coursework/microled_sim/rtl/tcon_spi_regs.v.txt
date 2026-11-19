@@ -64,7 +64,11 @@ module tcon_spi_regs (
     output reg         wr_ok_o,      // 1-cycle pulse per ACCEPTED write
     output reg  [15:0] wr_rej_cnt,   // rejected writes
     output wire        rd_cap_o,     // 1-cycle pulse per latched read snapshot
-    output wire [10:0] fault_vis_o
+    output wire [10:0] fault_vis_o,
+
+    // ---- safety observation (no functional effect) -------------------------
+    output wire        disp_armed_o,      // host re-enable permit
+    output wire        hw_fault_caught_o  // asynchronous fault capture latch
 );
 
     // ---------------------------------------------------------------------
@@ -134,6 +138,9 @@ module tcon_spi_regs (
     // state + write commit
     // ---------------------------------------------------------------------
     reg        sw_pulse;
+    reg        disp_armed;      // host permit: set only by an explicit unblank
+    reg        clr_fault;       // 1-cycle clear pulse for the capture latch
+    reg        hw_fault_caught; // asynchronous fault capture
     reg [10:0] fs_d;
     reg [10:0] n_fault, n_int;
 
@@ -141,13 +148,38 @@ module tcon_spi_regs (
     wire ready_in = status_in[0];
     wire cfg_ok   = (!en) && safe_in;
     wire any_hw_fault = |hw_fault;
+    // every latched fault EXCEPT ERR_REG (bit8, a register-access error that
+    // must not blank the panel) is a display fault and survives its source
+    localparam [10:0] DISP_FAULT_MASK = 11'h7FF & ~11'h100;
+    wire disp_fault = |(fault_status & DISP_FAULT_MASK);
+
+    // ---------------------------------------------------------------------
+    // P0-B: asynchronous fault capture
+    //   hw_fault is a LEVEL from the analog comparators / the wired-AND
+    //   FAULT_n line. Sampling it only on the core clock loses any pulse
+    //   shorter than one period (a 4 ns glitch between two 100 MHz edges never
+    //   reaches the FSM). The SET path is therefore the assertion edge itself;
+    //   the CLEAR is synchronous, so a dead clock can never clear it.
+    // ---------------------------------------------------------------------
+    always @(posedge clk or posedge any_hw_fault or negedge reset_n) begin
+        if (!reset_n)          hw_fault_caught <= 1'b0;
+        else if (any_hw_fault) hw_fault_caught <= 1'b1;
+        else if (clr_fault)    hw_fault_caught <= 1'b0;
+    end
 
     assign sw_reset_pulse = sw_pulse;
     assign irq            = |(int_status & int_en);
     assign fault_vis_o    = fault_status | hw_fault;
     // no enable, software blank, or any hardware fault => the panel is blank.
     // Software cannot talk its way out of this: it is a pure OR at the output.
-    assign hw_blank       = blank_r | (!en) | any_hw_fault;
+    // six independent locks, any one of them blanks the panel:
+    //   software BLANK, EN cleared, a LIVE fault, the asynchronously caught
+    //   fault, the host permit latch and the sticky fault history. The last
+    //   three stop the panel from coming back on its own.
+    assign hw_blank       = blank_r | (!en) | any_hw_fault | hw_fault_caught |
+                            (!disp_armed) | disp_fault;
+    assign disp_armed_o      = disp_armed;
+    assign hw_fault_caught_o = hw_fault_caught;
 
     // the frame fields, valid and stable by the time wr_cap pulses
     wire [14:0] wa_w = wr_frame[46:32];
@@ -177,6 +209,8 @@ module tcon_spi_regs (
             wr_cap_cnt   <= 16'd0;
             wr_rej_cnt   <= 16'd0;
             wr_ok_o      <= 1'b0;
+            disp_armed   <= 1'b0;
+            clr_fault    <= 1'b0;
         end else begin
             err_set  = 1'b0;
             accept   = 1'b0;
@@ -199,12 +233,16 @@ module tcon_spi_regs (
                         if (wd[3] && !test_en)                          err_set = 1'b1;
                         else if (wd[0] && (!safe_in || any_hw_fault))    err_set = 1'b1;
                         else if (wd[0] && !wd[1] &&
-                                 !(safe_in && ready_in && !any_hw_fault)) err_set = 1'b1;
+                                 !(safe_in && ready_in && !any_hw_fault &&
+                                   !hw_fault_caught && !disp_fault)) err_set = 1'b1;
                         else begin
                             en        <= wd[0];
                             // EN=0 forces BLANK, whatever bit1 asks for
                             blank_r   <= wd[0] ? wd[1] : 1'b1;
                             test_mode <= wd[3];
+                            // re-arm ONLY on an explicit unblank that passed
+                            // every check; EN=0 or BLANK=1 clears the permit
+                            disp_armed <= wd[0] && !wd[1];
                             if (wd[2]) sw_pulse <= 1'b1;     // W1P, self clearing
                             accept = 1'b1;
                         end
@@ -253,6 +291,15 @@ module tcon_spi_regs (
 
             // ---- 4. read snapshot: ONE latch per request -------------------
             if (rd_cap_o) rd_snapshot <= rval;
+
+            // ---- 5. capture-latch clear -----------------------------------
+            // only a FAULT W1C that leaves NOTHING latched, with no live fault
+            clr_fault <= 1'b0;
+            if (wr_cap_o && (wa[5:2] == A_FAULT) && (n_fault == 11'd0) && !any_hw_fault)
+                clr_fault <= 1'b1;
+
+            // ---- 6. a live, caught or latched fault always wins -----------
+            if (any_hw_fault || hw_fault_caught || disp_fault) disp_armed <= 1'b0;
         end
     end
 

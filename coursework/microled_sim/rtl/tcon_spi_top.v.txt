@@ -44,7 +44,9 @@ module tcon_spi_top (
     output wire [15:0] wr_rej_cnt_o,
     output wire        wr_cap_o,
     output wire        wr_ok_o,
-    output wire        rd_cap_o
+    output wire        rd_cap_o,
+    output wire        disp_armed_o,
+    output wire        hw_fault_caught_o
 );
 
     wire [47:0] sh;
@@ -82,7 +84,8 @@ module tcon_spi_top (
         .irq (irq), .err_reg (err_reg),
         .wr_cap_cnt (wr_cap_cnt_o), .wr_cap_o (wr_cap_o),
         .wr_ok_o (wr_ok_o), .wr_rej_cnt (wr_rej_cnt_o),
-        .rd_cap_o (rd_cap_o), .fault_vis_o ()
+        .rd_cap_o (rd_cap_o), .fault_vis_o (),
+        .disp_armed_o (disp_armed_o), .hw_fault_caught_o (hw_fault_caught_o)
     );
 
     assign bitcnt_o      = bitcnt;
