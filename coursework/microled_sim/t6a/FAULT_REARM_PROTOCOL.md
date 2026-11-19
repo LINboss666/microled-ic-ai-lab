@@ -1,108 +1,74 @@
-# T6-A 故障捕获 / 清除 / 再使能协议（rev4，2026-11-19，P0-D）
+# T6-A 故障捕获 / 清除 / 再使能协议（rev5，2026-11-19，P0-E — 合同冻结版）
 
 > 历史：rev1（disp_armed 首案）→ rev2（NBA 语义修正）→ rev3（COMM_TO 映射 + W1C 掩码）
-> → **rev4（本版）**：清除请求改为组合，关闭复审发现的 `W1C_CLEAR_NBA_RACE`。
-> 各版全文见 `_rev1/` `_rev2/` `_rev3/` 子目录。
+> → rev4（组合清除，P0-D）→ **rev5（本版）：故障源归属合同冻结 + 历史回归收口**。
+> 各版全文见 `_rev1.._rev4/` 子目录。
 
-## 1. rev3 遗留的缺陷（复审已独立复现）
+## 1. 冻结的合同（C1–C6）
 
-rev3 的清除是**寄存器脉冲**，而捕获位在**另一个** always 块里：
+| 条款 | 内容 | 依据 |
+|---|---|---|
+| **C1** | 每一路故障源（共享 `FAULT_n` 引脚 + 本地 `hw_fault[10:0]`）各有一条**异步置位、同步清除**的捕获锁存。不依赖最小脉宽或源端锁存承诺。 | V1.3 段0492–0496（开漏/线与/低有效，规格未承诺脉宽）；P0-B 复审要求 |
+| **C2** | **COMM_TO(bit7) 只代表共享 FAULT_n 事件**（引脚路径，极性在 `tcon_spi_top` 折叠一次）。本地 UVLO/OV/OT 的捕获进**各自的状态位**，不进 bit7。 | V1.3 段0704 原文：`TCON 捕获共享 FAULT_n 后置 COMM_TO` |
+| **C3** | W1C 掩码位 k **同拍**清除 `status[k]` 与 `caught[k]`（组合清除请求）；活故障位不可清；零掩码一位不动；**无隐式跨位清除**（bit0/1/2 不清 bit7，反之亦然）。 | V1.3 段0599；P0-D 复审 |
+| **C4** | 恢复 = 清除**全部**锁存原因（每位一次 W1C，可合并掩码）+ 显式 CTRL 再使能；清除本身不点亮；`disp_armed` 被任一活/捕获/锁存显示故障压回 0。 | V1.3 段0907–0912 |
+| **C5** | 清除只走 `posedge clk` 分支 → 死时钟既不清也丢。 | V1.3 段0913–0915 |
+| **C6** | `hw_blank = blank_r \| !en \| any_hw_fault \| caught_any \| !disp_armed \| disp_fault` 六锁不变。 | 已验收设计 |
 
-```verilog
-// 主块，第 N 沿
-clr_fault <= 1'b0;
-if (wr_cap_o && (wa[5:2]==A_FAULT) && w1c_f[7] && !any_hw_fault)
-    clr_fault <= 1'b1;              // NBA：N 沿只"登记"
+**为什么不是"单锁存 OR 进 bit7"**（= P0-D 候选，复审 NC-1 反例）：任何本地故障都会
+置 COMM_TO 且在自己被 W1C 清除后仍锁死 bit7 → 历史 D33（status 全零）失败、
+D53（再使能）被拒——与本轮收到的 `independent_l1_regression_counterexample.csv`
+逐格一致。**为什么不是"删本地捕获"**：亚周期脉冲保护会退化（C1），复审明令禁止。
 
-// 捕获块，同一个第 N 沿
-else if (clr_fault) ...             // 读到的是旧值 0 —— 清不掉
-```
-
-于是按逐沿推演（与 `independent_nba_w1c_replay.csv` 一致）：
-
-| 沿 | FAULT_STATUS[7] | caught | clr_fault | 说明 |
-|---|---:|---:|---:|---|
-| W0（W1C） | 1 → **0** | 1 | 0→1 | 状态清了，捕获块读旧值 |
-| W1 | **0 → 0x080** | 1 → 0 | 1→0 | `n_fault` 把旧 caught OR 回 bit7，**复活** |
-| W2 | 0x080 | 0 | 0 | 永久锁死 |
-| CTRL 再使能 | — | — | — | `disp_fault=1` → **拒绝** |
-
-后果：不是误亮，而是**合法恢复永远做不到**（`FAULT_REARM_R1_R2 = NOT_VERIFIED_IN_RTL`）。
-v3 模型把清除写成了同拍（`fw and (w1c & VIS) -> caught=0`），所以没抓到——v4 模型
-已按真实 RTL 拆成两个块并显式建模 `clr_old`/`clr_next`（见 §4）。
-
-## 2. rev4 修复：组合清除请求，同拍生效
+## 2. 硬件实现（候选分支 `3cdd58c`）
 
 ```verilog
-wire clear_caught_req = wr_cap_o &&
-                        (wa_w[1:0]  == 2'b00) &&
-                        (wa_w[14:6] == 9'd0)  &&
-                        (wa_w[5:2]  == A_FAULT) &&
-                        wr_frame[7]           &&   // W1C 掩码必须覆盖 COMM_TO
-                        !any_hw_fault;             // 活故障压过清除
-
-always @(posedge clk or posedge any_hw_fault or negedge reset_n) begin
-    if (!reset_n)          hw_fault_caught <= 1'b0;
-    else if (any_hw_fault) hw_fault_caught <= 1'b1;    // set 永远赢
-    else if (clear_caught_req) hw_fault_caught <= 1'b0; // 与 fault_status 同沿
-end
+reg [10:0] caught;                       // 每源一条
+generate for (g = 0; g < 11; g = g + 1) begin : g_cap
+    wire clear_caught_req = frame_is_fault_w1c && wr_frame[g] && !hw_fault[g];
+    always @(posedge clk or posedge hw_fault[g] or negedge reset_n) begin
+        if (!reset_n)             caught[g] <= 1'b0;
+        else if (hw_fault[g])     caught[g] <= 1'b1;    // set 永远赢
+        else if (clear_caught_req) caught[g] <= 1'b0;   // 同拍、同掩码位
+    end
+end endgenerate
 ```
 
-要点：
+`n_fault = fault_status | hw_fault | (err_set ? bit8) | caught;`、
+`fault_vis_o = fault_status | hw_fault | caught;`、
+`hw_blank` 与 CTRL 准入使用 `caught_any = |caught`。
+`frame_is_fault_w1c = wr_cap_o && 对齐 && A_FAULT`（与 P0-D 相同的 shake 手）。
+代价：11 个异步置位触发器（原 1 个）；STA 需为 11 条异步置位路径建约束（登记）。
 
-1. **同拍**：`wr_cap_o` 高的那个 core 沿，主块算 `n_fault`（把 caught 旧值 OR 进
-   bit7 后被 W1C 掩掉）→ `fault_status <= 0`；捕获块同时看到 `clear_caught_req=1`
-   → `caught <= 0`。**同一个沿、同一笔写**，没有先后。
-2. **`clr_fault` 寄存器整个删除**——不存在"先登记、下拍执行"。
-3. **清除仍是同步的**：`clear_caught_req` 只进 `posedge clk` 分支，不在敏感列表里；
-   核心时钟停死时既不清也丢不了（段0915 要求）。
-4. **set > clear 双保险**：分支顺序 `any_hw_fault` 在前，且请求本身含 `!any_hw_fault`。
-5. 输入都是寄存器/稳定值（`wr_frame` 整个 CS_n 事务不变；`wr_cap_o` 由同步后的
-   toggle 生成），边沿处无毛刺风险。
-6. 背靠背帧挤掉的场景仍由 `mb_lost` 报告，语义不变。
+## 3. 历史回归重放（`tools/t6a_p0e_model.py`，逐事件、零仿真）
 
-## 3. 修复后的闭环时序
+按原 L1 TB 的**真实交易顺序**重放（TB 行 318–346 / 443–455 / 460–471）：
 
-| 沿 | FAULT_STATUS[7] | caught | 说明 |
-|---|---:|---:|---|
-| W0（W1C=0x080） | 1 → **0** | 1 → **0** | 同沿归零 |
-| W1 / W2 | 0 | 0 | 连续三沿干净（模型 D1） |
-| CTRL EN=1,BLANK=0 | 0 | 0 | 通过全部准入 → `disp_armed=1` |
-| 之后 | 0 | 0 | `hw_blank=0`，连续 3 个许可采样（模型 D2） |
+| 检查 | 合同 | 结果 |
+|---|---|---|
+| D26 UVLO 锁存（bit0，无 bit7） | C2/C3 | PASS |
+| D27 活故障不可清 | C3 | PASS |
+| D28 源撤后 W1C → status 与捕获同拍归零 | C3/C4 | PASS |
+| D29/D30 INT 锁存与 INT 地址 W1C | C2/C3 | PASS |
+| D33 清 OT 后 **status == 0x000** | C2/C3 | **PASS**（复审反例的正面解） |
+| D45/D46 bit1 锁存、读不清、W1C 生效 | C2/C3 | PASS |
+| D53 清理后 CTRL 再使能被接受，hw_blank=0 | C4 | **PASS** |
+| Phase S E01–E20（引脚 4ns 脉冲路径） | C1–C6 | PASS |
 
-不变量（全轮有效）：
-- 捕获 → `FAULT_STATUS[7]` / `INT_STATUS[7]` / `fault_vis_o`（COMM_TO，段0704）；
-- `hw_blank = blank_r | !en | any_hw_fault | caught | !disp_armed | disp_fault`；
-- 活故障 / 捕获 / 锁存任一存在 → 许可清零（块末尾，压过同拍置位）。
+负控五类（任务书 C 指定，全部在同一模型里真实 FAIL）：
 
-## 4. 模型（`tools/t6a_p0_rearm_check.py`，v4）
-
-双块建模，两个 variant：
-- `registered`（= rev3 缺陷）：捕获块读 `clr_old`；
-- `fixed`（= rev4 候选）：捕获块读组合请求。
-
-断言与负控（全部在同一执行里真实 FAIL 过）：
-
-| ID | 内容 |
+| 负控 | 复现的缺陷 |
 |---|---|
-| D0a/b/c | **旧候选反例复现**：`000/1/1 → 080/0/0 → CTRL 拒绝`（与复审逐格一致） |
-| D1a-d | 修复版：同沿归零 + 连续三沿干净 + 无残留 clr + 仍熄屏 |
-| D2a/b | 显式再使能被接受 + **3 个非零许可采样** |
-| D3a-e | W1C=0 不清；0x001 只清 bit0；0x080 清捕获+bit7；活故障清不掉；源撤后一笔覆盖两位的 W1C 清干净 |
-| D4a/b | 其他地址 / 读事务不能清 |
-| D5a/b | 清除沿后 1 ps 出现的脉冲被异步捕获；清除沿当时仍在的脉冲 set 胜 |
-| E17-E22 | 可读性 / 零掩码 / 部分掩码 / 同沿新脉冲 / 死时钟 |
-| R1/R2 | 清除后不许自动亮；显式再使能后可亮 |
-| NC-1 | 还原寄存器延迟 → D1b 失败 |
-| NC-2 | 去掉 caught→bit7 → E17a 失败 |
-| NC-3 | 去掉 W1C bit7 掩码 → D3a 失败 |
-| NC-4 | 去掉异步置位 → E22a 失败 |
+| NC-1 单锁存 OR 进 bit7 | D33 → status=0x080（= 复审反例）；NC-1b D53 被拒 |
+| NC-2 删本地捕获 | 亚周期本地脉冲丢失（C6 退化） |
+| NC-3 误清 COMM_TO | W1C=0x000 也清 bit7 |
+| NC-4 旧注册清除 | bit 复活（P0-C 缺陷） |
+| NC-5 放宽再使能准入 | 锁存未清写被接受（面板仍被 fault-wins 压住——双保险独立有效） |
 
-## 5. 已知限制（不要按已完成理解）
+## 4. 已知限制
 
-- 本文件是**状态规则 + 组合结构**的零仿真证明；L1 定向仿真未获批、未执行；
-- bit7 是**共享原因位**（段0704），只说明"捕获到过一次共享 FAULT_n 事件"，
-  不指明哪一路；逐路原因需要 11 个独立异步锁存（选项 B，未批准）；
-- 物理层：异步单元最小置位脉宽、开漏上拉、`cs_n` 功能时钟的 STA 约束均未做；
-- `hw_blank` → 引脚 `blank` 的连线仍未定（`P0B_FAULT_PATH.md` N9/N10），
-  整颗芯片级短脉冲防护要在 L2 五芯片环境里收口。
+- 状态模型 + 静态门是零仿真证明；**L1 定向仿真仍未获批、未执行**；
+  E01–E20 是计划不是结果；
+- 11 条异步置位路径的 STA 约束、`cs_n` 功能时钟约束、PVT 未做；
+- bit7 仍是共享原因位（只说明"发生过共享 FAULT_n 事件"）；
+- `hw_blank` → 引脚 `blank` 连线、`tcon_top` `ST_FAULT` 退出条件改造留待集成（L2 前）。

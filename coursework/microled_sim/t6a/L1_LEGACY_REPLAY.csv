@@ -1,0 +1,16 @@
+seq,step,hw_fault,w1c,fs_old,caught_old,armed_old,fs_new,caught_new,shared_new,armed_new,hw_blank,err,check,expected,clause
+D26-D33/D45-D53,D26: UVLO level asserted (4 edges),000,,000,000,0,000,000,0,0,1,0,D26,status[0]=1,C2/C3
+D26-D33/D45-D53,D27: W1C 0x001 while UVLO live,001,001,001,001,0,001,001,0,0,1,0,D27,bit0 stays 1,C3
+D26-D33/D45-D53,"D28: UVLO gone, W1C 0x001",000,,001,001,0,001,001,0,0,1,0,,,
+D26-D33/D45-D53,D28: W1C 0x001 (source gone),000,001,001,001,0,000,000,0,0,1,0,D28,bit0=0 AND capture[0]=0,C3/C4
+D26-D33/D45-D53,D29/D30: INT bit0 latched then W1C on INT address,000,,000,000,0,000,000,0,0,1,0,,,
+D26-D33/D45-D53,"D31/D32: OT level, INT_EN mask games (no FAULT_STATUS effect)",000,,000,000,0,000,000,0,0,1,0,,,
+D26-D33/D45-D53,"D33: OT gone, W1C 0x004",000,,004,004,0,004,004,0,0,1,0,,,
+D26-D33/D45-D53,D33: W1C 0x004 (source gone),000,004,004,004,0,000,000,0,0,1,0,D33,status==0x000 (C2: bit7 never set),C2/C3
+D26-D33/D45-D53,D45: OT2(bit1) level asserted then withdrawn,000,,000,000,0,000,000,0,0,1,0,,,
+D26-D33/D45-D53,D45: two reads (must not clear),000,,002,002,0,002,002,0,0,1,0,,,
+D26-D33/D45-D53,D46: W1C 0x002,000,002,002,002,0,000,000,0,0,1,0,D46,"bit1=0, capture[1]=0",C3
+D26-D33/D45-D53,D53: clear ERR_REG then CTRL EN=1 BLANK=0,000,,000,000,0,000,000,0,1,0,0,D53,"accepted, hw_blank=0 (C4)",C4
+PHASE_S,E01 armed,000,,000,000,1,000,000,0,1,0,0,E01,"armed, blank=0",C4
+PHASE_S,fault_n pulse 4ns (no core edge),080,,000,080,1,000,080,0,1,1,0,E02/E03,captured by the async set only,C1
+PHASE_S,W1C 0x080 (same-edge clear),000,080,000,000,0,000,000,0,0,1,0,E08/E09/E10,"status[7]=0, capture[7]=0, same edge",C3
