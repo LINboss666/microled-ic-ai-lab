@@ -1,5 +1,5 @@
 diff --git a/coursework/microled_sim/rtl/tcon_spi_regs.v.txt b/coursework/microled_sim/rtl/tcon_spi_regs.v.txt
-index 60fea46..498688d 100644
+index 60fea46..3c08a9d 100644
 --- a/coursework/microled_sim/rtl/tcon_spi_regs.v.txt
 +++ b/coursework/microled_sim/rtl/tcon_spi_regs.v.txt
 @@ -64,7 +64,11 @@ module tcon_spi_regs (
@@ -25,7 +25,7 @@ index 60fea46..498688d 100644
      reg [10:0] fs_d;
      reg [10:0] n_fault, n_int;
  
-@@ -141,13 +148,38 @@ module tcon_spi_regs (
+@@ -141,13 +148,39 @@ module tcon_spi_regs (
      wire ready_in = status_in[0];
      wire cfg_ok   = (!en) && safe_in;
      wire any_hw_fault = |hw_fault;
@@ -50,7 +50,9 @@ index 60fea46..498688d 100644
  
      assign sw_reset_pulse = sw_pulse;
      assign irq            = |(int_status & int_en);
-     assign fault_vis_o    = fault_status | hw_fault;
+-    assign fault_vis_o    = fault_status | hw_fault;
++    assign fault_vis_o    = fault_status | hw_fault |
++                            (hw_fault_caught ? 11'h080 : 11'd0);
      // no enable, software blank, or any hardware fault => the panel is blank.
      // Software cannot talk its way out of this: it is a pure OR at the output.
 -    assign hw_blank       = blank_r | (!en) | any_hw_fault;
@@ -65,7 +67,7 @@ index 60fea46..498688d 100644
  
      // the frame fields, valid and stable by the time wr_cap pulses
      wire [14:0] wa_w = wr_frame[46:32];
-@@ -177,6 +209,8 @@ module tcon_spi_regs (
+@@ -177,6 +210,8 @@ module tcon_spi_regs (
              wr_cap_cnt   <= 16'd0;
              wr_rej_cnt   <= 16'd0;
              wr_ok_o      <= 1'b0;
@@ -74,7 +76,7 @@ index 60fea46..498688d 100644
          end else begin
              err_set  = 1'b0;
              accept   = 1'b0;
-@@ -199,12 +233,16 @@ module tcon_spi_regs (
+@@ -199,12 +234,16 @@ module tcon_spi_regs (
                          if (wd[3] && !test_en)                          err_set = 1'b1;
                          else if (wd[0] && (!safe_in || any_hw_fault))    err_set = 1'b1;
                          else if (wd[0] && !wd[1] &&
@@ -92,15 +94,31 @@ index 60fea46..498688d 100644
                              if (wd[2]) sw_pulse <= 1'b1;     // W1P, self clearing
                              accept = 1'b1;
                          end
-@@ -253,6 +291,15 @@ module tcon_spi_regs (
+@@ -238,7 +277,11 @@ module tcon_spi_regs (
+             end
+ 
+             // ---- 3. next visible fault / interrupt state -------------------
+-            n_fault = fault_status | hw_fault | (err_set ? 11'h100 : 11'd0);
++            // the asynchronously captured event is reported as COMM_TO
++            // (V1.3 段0704: TCON catching the shared FAULT_n sets COMM_TO).
++            // Without this the panel would go dark and the host would read 0.
++            n_fault = fault_status | hw_fault | (err_set ? 11'h100 : 11'd0) |
++                      (hw_fault_caught ? 11'h080 : 11'd0);
+             if (w1c_f != 11'd0) n_fault = n_fault & ~(w1c_f & ~hw_fault);
+             if (err_set)        n_fault[8] = 1'b1;
+ 
+@@ -253,6 +296,18 @@ module tcon_spi_regs (
  
              // ---- 4. read snapshot: ONE latch per request -------------------
              if (rd_cap_o) rd_snapshot <= rval;
 +
 +            // ---- 5. capture-latch clear -----------------------------------
-+            // only a FAULT W1C that leaves NOTHING latched, with no live fault
++            // The capture is reported as COMM_TO, so the host clears it the
++            // same way as any other W1C cause: the mask must actually cover
++            // bit7. A zero mask (data=0) and a partial mask therefore leave it
++            // set - the RUN01 style "write 0 clears everything" is gone.
 +            clr_fault <= 1'b0;
-+            if (wr_cap_o && (wa[5:2] == A_FAULT) && (n_fault == 11'd0) && !any_hw_fault)
++            if (wr_cap_o && (wa[5:2] == A_FAULT) && w1c_f[7] && !any_hw_fault)
 +                clr_fault <= 1'b1;
 +
 +            // ---- 6. a live, caught or latched fault always wins -----------
@@ -109,10 +127,21 @@ index 60fea46..498688d 100644
      end
  
 diff --git a/coursework/microled_sim/rtl/tcon_spi_top.v.txt b/coursework/microled_sim/rtl/tcon_spi_top.v.txt
-index f517947..8c16beb 100644
+index f517947..9af1009 100644
 --- a/coursework/microled_sim/rtl/tcon_spi_top.v.txt
 +++ b/coursework/microled_sim/rtl/tcon_spi_top.v.txt
-@@ -44,7 +44,9 @@ module tcon_spi_top (
+@@ -15,6 +15,10 @@ module tcon_spi_top (
+     // ---- real chip status / faults ---------------------------------------
+     input  wire [3:0]  status_in,     // {LUT_VALID, SAFE, ACTIVE, READY}
+     input  wire [10:0] hw_fault,
++    // V1.3 §12: FAULT_n is an open-drain, wired-AND, active-low PIN. It is
++    // folded into hw_fault[7] (COMM_TO) here so that the asynchronous
++    // capture really sees the pin and not only an internal bus.
++    input  wire        fault_n,
+     input  wire        test_en,
+     input  wire [9:0]  col_index_in,
+ 
+@@ -44,7 +48,9 @@ module tcon_spi_top (
      output wire [15:0] wr_rej_cnt_o,
      output wire        wr_cap_o,
      output wire        wr_ok_o,
@@ -123,7 +152,24 @@ index f517947..8c16beb 100644
  );
  
      wire [47:0] sh;
-@@ -82,7 +84,8 @@ module tcon_spi_top (
+@@ -52,6 +58,7 @@ module tcon_spi_top (
+     wire        frame_full, we, rd_req;
+     wire [14:0] addr, rd_addr_hold;
+     wire [31:0] rd_snapshot;
++    wire [10:0] hw_fault_i = hw_fault | (fault_n ? 11'd0 : 11'h080);
+     wire [47:0] wr_frame;
+     wire        wr_tog, wr_ack_tog;
+     wire [15:0] wr_frames;
+@@ -73,7 +80,7 @@ module tcon_spi_top (
+         .wr_frame (wr_frame), .wr_tog (wr_tog), .wr_ack_tog (wr_ack_tog),
+         .rd_addr_hold (rd_addr_hold), .rd_req (rd_req),
+         .rd_snapshot (rd_snapshot),
+-        .status_in (status_in), .hw_fault (hw_fault), .test_en (test_en),
++        .status_in (status_in), .hw_fault (hw_fault_i), .test_en (test_en),
+         .col_index_in (col_index_in),
+         .en (en), .blank_r (blank_r), .hw_blank (hw_blank),
+         .test_mode (test_mode),
+@@ -82,7 +89,8 @@ module tcon_spi_top (
          .irq (irq), .err_reg (err_reg),
          .wr_cap_cnt (wr_cap_cnt_o), .wr_cap_o (wr_cap_o),
          .wr_ok_o (wr_ok_o), .wr_rej_cnt (wr_rej_cnt_o),

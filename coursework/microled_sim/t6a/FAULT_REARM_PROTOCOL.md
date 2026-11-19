@@ -1,135 +1,134 @@
-# 故障锁存 / 清除 / 再使能协议（FAULT_REARM_PROTOCOL）— rev2
+# 故障锁存 / 清除 / 再使能协议（FAULT_REARM_PROTOCOL）— rev3
 
-日期：2026-11-19　状态：**候选提案**（只在独立分支试应用；`course/…` 分支 RTL 未改）
-
----
-
-## 1. 规格要求（V1.3 原文，见 `SAFETY_OWNERSHIP.md` §1）
-
-1. 故障出现 → 不等 SPI，当拍关断；
-2. 故障消失 → **不自动点亮**；
-3. Host 清除故障状态 → **仍不自动点亮**；
-4. 只有「Host 显式再使能 + 帧合法 + 重新预充」同时成立，才允许恢复。
-
-rev1 只回答了 2/3/4；**rev2 补上 1 的"任意窄脉冲"部分**（`ASYNC_FAULT_CAPTURE`）。
+日期：2026-11-19　状态：**候选提案**（只在独立分支 `t6a-p0-candidate-20261119` 应用）
+rev3 修的是 rev2 复审指出的两个真缺口：**抓住了但读不到**、**零掩码能清**。
 
 ---
 
-## 2. 状态量（v2）
+## 1. rev2 的两个缺口（复审证据）
 
-| 名称 | 域 | 复位 | 含义 |
-|---|---|---|---|
-| `en` | core | 0 | 软件总使能（CTRL[0]） |
-| `blank_r` | core | 1 | 软件 BLANK 请求（CTRL[1]） |
-| `fault_status[10:0]` | core | 0 | 历史故障锁存（W1C，源未消失不可清） |
-| `disp_armed` | core | **0** | Host 再使能许可 |
-| `hw_fault_caught` | **异步置位 / core 清除** | **0** | 任意窄脉冲的故障捕获（新增） |
-| `clr_fault` | core | 0 | 清除 `hw_fault_caught` 的单拍脉冲 |
+| 缺口 | 现象 |
+|---|---|
+| 可读性 | 4 ns 脉冲 → `hw_fault_caught=1`、`hw_blank=1`，但 `fault_status=0`、`int_status=0`、`fault_vis_o=0`。Host 读 `0x0C` 得到 **0** —— 芯片黑了却没有任何记录 |
+| 清除 | `clr_fault` 只看 `n_fault==0 && !any_hw_fault`，**不看 W1C 掩码**。写 `data=0` 也满足条件 → 下一沿把捕获位清掉 |
+
+后果：显示安全（不会误亮）但**不可诊断、不可恢复**；且清除协议违背 W1C 语义。
 
 ---
 
-## 3. 输出门（六个锁）
+## 2. rev3 的做法：捕获位 = COMM_TO（bit7）
 
-```
-hw_blank = blank_r                      // 软件 BLANK
-         | (!en)                        // 未使能
-         | any_hw_fault                 // 当前活故障（组合，当拍）
-         | hw_fault_caught              // 异步捕获的任意窄脉冲（粘滞）
-         | (!disp_armed)                // Host 从未授权
-         | disp_fault                   // 锁存的显示类故障（除 ERR_REG）
-```
-
-前四项决定"关得多快"，后两项决定"会不会自己亮回来"。
-
-`disp_fault = |(fault_status & 11'h7FF & ~11'h100)`：`ERR_REG`（bit8）是寄存器访问错误，
-不熄屏 —— 一次地址写错不应该黑屏。
-
----
-
-## 4. 异步捕获块
+V1.3 段0704 原文：「**TCON 捕获共享 `FAULT_n` 后置 COMM_TO**」。
+所以"被捕获的共享故障事件"本来就有归属位，**不需要新增地址**。
 
 ```verilog
-always @(posedge clk or posedge any_hw_fault or negedge reset_n) begin
-    if (!reset_n)          hw_fault_caught <= 1'b0;
-    else if (any_hw_fault) hw_fault_caught <= 1'b1;   // 置位 = 故障边沿，不需要时钟
-    else if (clr_fault)    hw_fault_caught <= 1'b0;   // 清除 = 时钟沿
-end
+// tcon_spi_regs
+n_fault = fault_status | hw_fault
+        | (err_set ? 11'h100 : 11'd0)
+        | (hw_fault_caught ? 11'h080 : 11'd0);   // ← rev3 新增
+...
+if (w1c_f != 11'd0) n_fault = n_fault & ~(w1c_f & ~hw_fault);
 ```
 
-- **置位优先**：`any_hw_fault` 仍为 1 时，`clr_fault` 无效（段0600「故障未消失不可清」）；
-- **时钟死掉也不能清**：clear 只在 `posedge clk` 评估（段0915）；
-- **复位最高**：`!reset_n` 异步清 0，上电不发光（段0903）。
+`FAULT_STATUS` 读 mux 本来就返回 `fault_status`，所以：
+**短脉冲 → `fault_status[7]=1` → Host 读 0x0C 得到 0x080 → `int_status[7]=1`。**
 
-`clr_fault` 的产生：
-
-```
-clr_fault <= wr_cap_o && (wa[5:2] == A_FAULT) && (n_fault == 0) && !any_hw_fault
-```
-
-即"一笔 FAULT 的 W1C，清完之后一位都不剩，且当前无活故障"。
-只要还有一位没清，capture 保持 → 满足"逐位区分历史故障"。
+`fault_vis_o` 同步加上这一项，避免"寄存器有、观测口没有"的不一致。
 
 ---
 
-## 5. `disp_armed` 的置位 / 清零
+## 3. 清除协议（rev3 的核心修正）
 
-| 事件 | 动作 | 时机 |
+```verilog
+clr_fault <= 1'b0;
+if (wr_cap_o && (wa[5:2] == A_FAULT) && w1c_f[7] && !any_hw_fault)
+    clr_fault <= 1'b1;
+```
+
+四个条件缺一不可：
+
+| 条件 | 作用 | 去掉会怎样 |
 |---|---|---|
-| CTRL 写 `EN=1,BLANK=0` 且 `SAFE && READY && !any_hw_fault && !hw_fault_caught && !disp_fault` | 置 1 | 同一 core 沿 |
-| 同一写的其它条件不满足 | 整笔拒绝（`ERR_REG`），保持 0 | 同上 |
-| 任意 `any_hw_fault` / `hw_fault_caught` / `disp_fault` | 清 0 | 每个 core 沿（块末，压过置位） |
-| 写 `EN=0` 或 `BLANK=1` | 清 0 | CTRL 写 |
-| `!reset_n` | 清 0 | 异步 |
+| `wr_cap_o` | 必须真的是一笔**被捕获的写帧** | 读事务也能清（P0-4 回归） |
+| `wa == A_FAULT` | 必须是写 FAULT_STATUS | 写别的寄存器误清 |
+| **`w1c_f[7]`** | **掩码必须覆盖 bit7** | `data=0` 或部分掩码就把捕获清掉（rev2 缺陷） |
+| `!any_hw_fault` | 活着时不许清 | 段0600「故障未消失不可清」被违反 |
+
+于是：
+
+| Host 写 | 结果 |
+|---|---|
+| `data = 0x000` | `w1c_f=0` → **不清任何位**，捕获保持（E18） |
+| `data = 0x001`（只清 UVLO） | 只清 bit0；bit7 仍在 → 仍黑（E19） |
+| `data = 0x080` | 若当前无活故障 → 清捕获；`disp_armed` 仍为 0 → 仍黑（R1） |
+| `data = 0x081` | 两个一起清 |
+| 清除当拍又来一个新脉冲 | 异步置位**优先**（always 块里 set 先判）→ 捕获保持（E20） |
+
+**为什么不会死循环**：`fault_status[7]` 不是独立寄存器，而是 `caught` 的派生项；
+W1C 清 `caught` 的同时掩码也把 bit7 从 `n_fault` 里去掉，二者同沿完成，
+不存在"清了又立刻被 caught 重新置起"的循环。
 
 ---
 
-## 6. 单沿状态矩阵（NBA 语义，24 组，`EDGE_MATRIX_CONTROL.csv`）
+## 4. 优先级（从高到低）
 
-RTL 里 `fault_status` 是寄存器，块内所有组合判断读的都是**沿之前**的值，非阻塞赋值在块末才生效。
-下表按这个顺序算出（`blank_old` = 沿前用旧寄存器算的 `hw_blank`；
-`blank_new` = 沿后用新寄存器、**仍给同样的 hw_fault 输入**算的值）。
+```
+1. reset_n 异步复位                              → caught=0, armed=0
+2. 故障异步置位  posedge any_hw_fault            → caught=1（不等时钟）
+3. 同步清除      clr_fault（需掩码 bit7 + 无活故障）→ caught=0
+4. 硬件活故障    any_hw_fault                     → hw_blank=1（组合，当拍）
+5. 软件 BLANK / EN=0                              → hw_blank=1
+6. Host 再使能   disp_armed                       → 只有它为 1 且 1..5 全不成立才可能亮
+```
+
+第 2 条与第 3 条在同一个 always 块里，**set 在前**，所以同沿新故障永远赢。
+
+---
+
+## 5. `disp_armed` 不变（rev2 已评审通过）
+
+置位：一次 CTRL 写，`EN=1,BLANK=0`，且 `SAFE && READY && !any_hw_fault &&
+!hw_fault_caught && !disp_fault`。
+清零：复位 / 活故障 / 捕获位 / 锁存显示故障 / `EN=0` / `BLANK=1`。
+
+---
+
+## 6. 单沿矩阵（36 组，`EDGE_MATRIX_CONTROL.csv`，数值由脚本生成）
 
 | start | ctrl | w1c | hw_fault | blank_old | blank_new | 拒绝 | 新状态 |
 |---|---|---|---:|---:|---:|---:|---|
-| ARMED | – | 0x000 | 0x000 | 0 | 0 | 0 | en=1 blk=0 armed=1 caught=0 |
-| ARMED | – | 0x000 | 0x008 | 1 | 1 | 0 | armed=0 caught=1 fault=0x008 |
-| ARMED | 0x1 | 0x000 | 0x008 | 1 | 1 | **1** | armed=0 caught=1 fault=0x108（ERR_REG） |
-| ARMED | 0x3 | 0x000 | 0x000 | 0 | 1 | 0 | blk=1 armed=0 |
-| DARK | – | 0x001 | 0x000 | 1 | 1 | 0 | **armed=0 caught=0**（清干净也不亮） |
-| DARK | 0x1 | 0x001 | 0x000 | 1 | 1 | **1** | armed=0 caught=1 fault=0x100 |
-| CLEARED | – | 0x001 | 0x000 | 1 | 1 | 0 | armed=0（清状态不自动恢复） |
-| CLEARED | 0x1 | 0x000 | 0x000 | 1 | **0** | 0 | armed=1 ← 唯一允许恢复的入口 |
-| CLEARED | 0x1 | 0x000 | 0x008 | 1 | 1 | **1** | armed=0 caught=1 fault=0x108 |
+| CLEARED | – | 0x000 | 0x000 | 1 | 1 | 0 | armed=0（清完不清许可） |
+| CLEARED | – | 0x001 | 0x000 | 1 | 1 | 0 | armed=0（部分掩码不清捕获） |
+| CLEARED | 0x1 | 0x001 | 0x000 | 1 | **0** | 0 | armed=1 ← 唯一恢复入口 |
+| CLEARED | 0x1 | 0x001 | 0x008 | 1 | 1 | **1** | armed=0 caught=1 |
+| DARK | – | 0x001 | 0x000 | 1 | 1 | 0 | 仍黑 |
 
-三条必须成立的结论（脚本里逐条断言）：
-
-1. **live fault + unblank 一律被拒**，且不会留下 `armed=1`；
-2. **DARK / CLEARED 状态下，没有任何纯 W1C 组合能让 `blank` 从 1 变 0**；
-3. 只有 `CLEARED + ctrl=0x1 + 无故障` 这一种组合能让 `blank` 1→0。
+（完整 36 组在 CSV 里，脚本自己统计行数。）
 
 ---
 
-## 7. 与 v1 的差别（重要）
+## 7. 已知限制（必须随方案一起交）
 
-| 项 | v1 | v2 |
+1. **bit7 是"公共事件"位**：它说明"捕获到过一次故障事件"，**不能说明是哪一路**。
+   要逐路原因，需要 11 个独立的异步锁存（设计选项 B），代价是 11 条异步置位路径，
+   本轮未做、也未批准。
+2. **物理最小脉宽未定**：异步置位的可靠下限由标准单元的 async-set 宽度、
+   输入缓冲和开漏 RC 决定；本轮只声明**理想 RTL 级**行为。
+3. **`clr_fault` 是 core 域的**：停钟时无法清除（这是刻意的安全性质，但也意味着
+   停钟后必须恢复时钟才能服务 Host）。
+4. **未仿真**：以上全部是状态模型结论。
+
+---
+
+## 8. 与 rev2 的差异一览
+
+| 项 | rev2 | rev3 |
 |---|---|---|
-| 故障捕获 | 只在 core 沿 | **异步置位 / 同步清除** |
-| 4 ns 脉冲 | 丢失（`disp_armed` 没被清掉，`fault_status` 没置位） | 捕获并保持 |
-| 模型 | 在判准入前先更新 `fault_status`（**不符合 RTL**） | 严格 NBA：旧值算组合、块末提交 |
-| 状态表 | 无 | 24 组单沿矩阵，可直接对照 RTL |
-
-v1 的原件保留在 `t6a/_rev1_20261119/` 与 `tools/t6a_p0_rearm_check_v1_archive.py`，便于对照。
-
----
-
-## 8. 边界与未完成
-
-| 项 | 状态 |
-|---|---|
-| RTL | 仅独立分支试应用；`course/…` 上四个已验收文件 SHA 未变 |
-| 仿真 | ❌ 零 ModelSim（T6-A 预算 2/2 已用尽） |
-| 57 条旧断言在新候选下的表现 | ❌ **未验证**，需要新预算 |
-| 顶层 `ST_FAULT` 退出策略 | ⏸ 需在 T5 集成阶段按 R3 改，属新预算 |
-| `cs_n` 功能时钟的 STA/CDC | ❌ 未做 |
-
-**任何"P0 已关闭"的说法都必须等到新预算下的定向仿真 + 独立复审。**
+| 短脉冲可读性 | ❌ 读 0 | ✅ 读 0x080（COMM_TO） |
+| INT_STATUS | ❌ 不置 | ✅ 置 bit7 |
+| `fault_vis_o` | ❌ 不含捕获 | ✅ 含 |
+| 零掩码 W1C | ❌ 会清 | ✅ 不清 |
+| 部分掩码 | ❌ 也会清 | ✅ 只清被覆盖的位 |
+| 同沿新故障 | ⚠️ 未定义 | ✅ set 优先 |
+| 引脚 `FAULT_n` | ❌ 未接 | ✅ `tcon_spi_top` 新增端口并折入 bit7 |
+| 矩阵组数 | 声称 24，实际 36 | 36，脚本统计 |

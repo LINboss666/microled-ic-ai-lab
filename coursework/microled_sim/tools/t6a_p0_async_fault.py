@@ -205,19 +205,30 @@ def main():
     print()
 
     if args.csv:
-        rows, _, _ = run('async_set', PULSE_START, 4000)
-        r_fsm, _, _ = run('fsm_only', PULSE_START, 4000)
-        by_t = {r[0]: r for r in r_fsm}
-        with open(args.csv, 'w', encoding='utf-8', newline='') as f:
-            f.write("time_ps,clk_core_rising,fault_n,state,tcon_blank_pin,"
-                    "spi_hw_blank_fsm_only,spi_hw_blank_async_set,panel_blank\n")
-            for r in rows:
-                fsm = by_t.get(r[0])
-                f.write("%d,%d,%d,%s,%d,%d,%d,%d\n"
-                        % (r[0], r[1], 1 - r[2], r[3], r[4],
-                           fsm[5] if fsm else 0, r[5], r[6]))
+        # 状态是事件驱动的，但 CSV 按 1 ns 网格输出，方便逐行比对（0..79 ns = 80 行）
+        def sample(mode):
+            seq, _, _ = run(mode, PULSE_START, 4000)
+            out = []
+            i = 0
+            cur = seq[0]
+            for t in range(0, 80 * 1000 + 1, 1000):
+                while i < len(seq) and seq[i][0] <= t:
+                    cur = seq[i]
+                    i += 1
+                out.append((t, cur[1] if cur[0] == t else (1 if t % PERIOD == 0 else 0),
+                            cur[2], cur[3], cur[4], cur[5], cur[6]))
+            return out
+        a = sample('async_set')
+        f_ = sample('fsm_only')
+        with open(args.csv, 'w', encoding='utf-8', newline='') as fh:
+            fh.write("time_ps,clk_core_rising,fault_n,state,tcon_blank_pin,"
+                     "spi_hw_blank_fsm_only,spi_hw_blank_async_set,panel_blank\n")
+            for ra, rf in zip(a, f_):
+                fh.write("%d,%d,%d,%s,%d,%d,%d,%d\n"
+                         % (ra[0], 1 if ra[0] % PERIOD == 0 else 0, 1 - ra[2],
+                            ra[3], ra[4], rf[5], ra[5], ra[6]))
         print("CSV written: %s  (%d data rows, %d lines incl. header)"
-              % (args.csv, len(rows), len(rows) + 1))
+              % (args.csv, len(a), len(a) + 1))
         print()
 
     print("--- scope of the claim ---")
