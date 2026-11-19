@@ -139,7 +139,6 @@ module tcon_spi_regs (
     // ---------------------------------------------------------------------
     reg        sw_pulse;
     reg        disp_armed;      // host permit: set only by an explicit unblank
-    reg        clr_fault;       // 1-cycle clear pulse for the capture latch
     reg        hw_fault_caught; // asynchronous fault capture
     reg [10:0] fs_d;
     reg [10:0] n_fault, n_int;
@@ -153,6 +152,28 @@ module tcon_spi_regs (
     localparam [10:0] DISP_FAULT_MASK = 11'h7FF & ~11'h100;
     wire disp_fault = |(fault_status & DISP_FAULT_MASK);
 
+    // the frame fields, stable for the whole CS_n transaction
+    wire [14:0] wa_w = wr_frame[46:32];
+    wire [31:0] wd_w = wr_frame[31:0];
+
+    // ---------------------------------------------------------------------
+    // P0-D: the clear request is COMBINATIONAL, not a registered pulse.
+    //   rev3 registered `clr_fault` inside the write block, so the capture
+    //   latch - a different always block - sampled its OLD value on that
+    //   edge and only cleared on the NEXT one, while `n_fault` re-ORed the
+    //   still-set capture back into bit7 on that very next edge.  The fault
+    //   could then never be cleared and the host could never re-enable.
+    //   Driving the latch from this request removes the register entirely:
+    //   `fault_status[7]` and `hw_fault_caught` fall on the SAME edge, from
+    //   the SAME accepted write.
+    // ---------------------------------------------------------------------
+    wire clear_caught_req = wr_cap_o &&
+                            (wa_w[1:0]  == 2'b00) &&
+                            (wa_w[14:6] == 9'd0)  &&
+                            (wa_w[5:2]  == A_FAULT) &&
+                            wr_frame[7]           &&   // W1C covers COMM_TO
+                            !any_hw_fault;             // a live source wins
+
     // ---------------------------------------------------------------------
     // P0-B: asynchronous fault capture
     //   hw_fault is a LEVEL from the analog comparators / the wired-AND
@@ -164,7 +185,7 @@ module tcon_spi_regs (
     always @(posedge clk or posedge any_hw_fault or negedge reset_n) begin
         if (!reset_n)          hw_fault_caught <= 1'b0;
         else if (any_hw_fault) hw_fault_caught <= 1'b1;
-        else if (clr_fault)    hw_fault_caught <= 1'b0;
+        else if (clear_caught_req) hw_fault_caught <= 1'b0;
     end
 
     assign sw_reset_pulse = sw_pulse;
@@ -181,10 +202,6 @@ module tcon_spi_regs (
                             (!disp_armed) | disp_fault;
     assign disp_armed_o      = disp_armed;
     assign hw_fault_caught_o = hw_fault_caught;
-
-    // the frame fields, valid and stable by the time wr_cap pulses
-    wire [14:0] wa_w = wr_frame[46:32];
-    wire [31:0] wd_w = wr_frame[31:0];
 
     integer k;
     reg [14:0] wa;
@@ -211,7 +228,6 @@ module tcon_spi_regs (
             wr_rej_cnt   <= 16'd0;
             wr_ok_o      <= 1'b0;
             disp_armed   <= 1'b0;
-            clr_fault    <= 1'b0;
         end else begin
             err_set  = 1'b0;
             accept   = 1'b0;
@@ -298,13 +314,10 @@ module tcon_spi_regs (
             if (rd_cap_o) rd_snapshot <= rval;
 
             // ---- 5. capture-latch clear -----------------------------------
-            // The capture is reported as COMM_TO, so the host clears it the
-            // same way as any other W1C cause: the mask must actually cover
-            // bit7. A zero mask (data=0) and a partial mask therefore leave it
-            // set - the RUN01 style "write 0 clears everything" is gone.
-            clr_fault <= 1'b0;
-            if (wr_cap_o && (wa[5:2] == A_FAULT) && w1c_f[7] && !any_hw_fault)
-                clr_fault <= 1'b1;
+            // Handled by `clear_caught_req` at the capture latch itself (see
+            // the P0-D block above), so that the status bit and the capture
+            // fall on the same edge.  Nothing is registered here on purpose:
+            // a registered pulse reintroduces the one-cycle resurrection.
 
             // ---- 6. a live, caught or latched fault always wins -----------
             if (any_hw_fault || hw_fault_caught || disp_fault) disp_armed <= 1'b0;
