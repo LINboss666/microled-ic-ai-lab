@@ -65,3 +65,15 @@ NC-D/E 属于 L1 执行日的动态检查。
 - L2（五芯片、真实 `ch_en`、预充恢复）另立预算与环境；
 - `hw_blank → blank` 引脚连线、`tcon_top` `ST_FAULT` 退出条件改造（规格更严）；
 - CDC/STA/PVT 签核；`cs_n` 功能时钟约束。
+
+
+---
+
+## P0-F2 追加（2026-11-19）
+
+- **E20a_phase_s_cleanup_without_rearm**：E20 之后、E21 之前，一次**真实 SPI
+  W1C**（FAULT=0x080）关闭 Phase S 边界；断言同时检查 status==0、捕获==0、
+  **disp_armed==0**（清理不得顺手再使能）、**hw_blank==1**（仍熄屏）。
+- 断言总数 86 = 57 + 20 + 8 + 1；负控 NC-PHASE（删清理 → E21d=0x080/E22 FAIL）、
+  NC-REARM、NC-SOURCE；连续重放 `tools/t6a_p0f2_continuity.py`
+  （单实例 E18→E22，逐拍表 `E18_E22_CONTINUITY.csv`）。
