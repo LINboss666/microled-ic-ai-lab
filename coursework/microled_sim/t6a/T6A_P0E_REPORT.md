@@ -74,4 +74,10 @@ Phase S E01–E20 同模型重放（引脚 4ns 脉冲路径）全过；另加 C6
 - `t6a-p0-candidate-20261119`：`3cdd58c`（RTL）+ tools/docs 同步提交
 - 推送：全部传输层失败 → `REMOTE_PENDING`（`gates.txt` 记录）
 
+> **更正（2026-11-19 晚，P0-F 轮）**：上文"REMOTE_PENDING"写作时推送尚未成功；
+> 当日稍后网络恢复，两个分支最终**推送成功且回读一致**
+> （course `dac56bd..70974fc`、candidate `bbcb831..3cdd58c`），安全闸每次 PASS。
+> 另：上一包 `diff/candidate_rtl_diff.txt` 为空文件属打包失误（生成时序错误），
+> P0-F 包内已重新生成并核验非空。
+
 **终态：`WAITING_FOR_P0E_ZERO_SIM_REVIEW`。** L1 唯一一次预算仍由您裁定。

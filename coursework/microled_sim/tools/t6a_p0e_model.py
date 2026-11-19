@@ -99,12 +99,18 @@ class Regs:
         return 1 if (self.int_status & int_en) else 0
 
     def clear_req(self, hw_fault, w1c, fw, target='FAULT'):
-        """按位组合清除请求：与 W1C 同一拍、读同一笔帧。"""
-        if not fw or hw_fault or target != 'FAULT':
+        """按位组合清除请求（P0-F 修正）：与 W1C 同一拍、读同一笔帧。
+
+        修复复审 C3 反例：能否清除位 k 只由**位 k 自己**的 live 状态决定
+        （`!hw_fault[k]`），其他位上存活的故障不得阻止本位清除。
+        缺陷版（neg 'global_clear_block'）保留旧的全局阻断，用于负控。"""
+        if not fw or target != 'FAULT':
             return 0
         if 'no_mask_check' in self.neg:
-            return 0x7FF
-        return w1c & 0x7FF
+            return 0x7FF & ~hw_fault
+        if 'global_clear_block' in self.neg:
+            return 0 if hw_fault else (w1c & 0x7FF)   # 缺陷版：任一活源全禁
+        return w1c & 0x7FF & ~hw_fault                # 修正版：逐位门控
 
     # ---------------- 一个 core 上升沿 ----------------
     def edge(self, hw_fault=0, ctrl=None, w1c=0, safe=1, ready=1, fw=False,
@@ -401,6 +407,30 @@ def main():
        (r.caught & 0x004) == 0 and (r.visible_fault(0) & 0x004) == 0, fails, 'C3')
     print()
 
+    # ---------- 3b. M：复审的确定性多源矢量（P0-F 硬门二） ----------
+    print('[M] multi-source W1C: fs=caught=0x005, OT(0x004) live, W1C 0x001')
+    m = Regs()
+    m.fault_status = 0x005
+    m.caught = 0x005
+    m.edge(hw_fault=0x004, w1c=0x001, fw=True)
+    seq = [(m.fault_status, m.caught)]
+    print('   W0     : status=0x%03X caught=0x%03X' % seq[0])
+    for k in (1, 2, 3):
+        m.edge(hw_fault=0x004)
+        seq.append((m.fault_status, m.caught))
+        print('   W%d idle: status=0x%03X caught=0x%03X' % (k, seq[-1][0], seq[-1][1]))
+    ck('M1_per_bit_clear_while_ot_live', seq[0] == (0x004, 0x004), fails, 'C3')
+    ck('M2_three_edges_hold_0x004_no_resurrection',
+       all(x == (0x004, 0x004) for x in seq), fails, 'C3')
+    m.edge(hw_fault=0x004, w1c=0x004, fw=True)
+    ck('M3_live_bit2_cannot_clear', (m.visible_fault(0x004) & 0x004) == 0x004,
+       fails, 'C3')
+    m.edge(hw_fault=0)
+    m.edge(hw_fault=0, w1c=0x004, fw=True)
+    ck('M4_all_clear_after_release',
+       (m.fault_status == 0) and (m.caught == 0), fails, 'C3/C4')
+    print()
+
     # ---------- 4. 负控（任务书 C：五类） ----------
     print('[negative controls — each must reproduce a known failure]')
     # NC-1 统一捕获进 bit7（= P0-D 候选）→ 复现 D33/D53 反例
@@ -458,13 +488,23 @@ def main():
        (e == 0) and n5.caught_any(), fails, 'C4')
     ck('NC-5b panel STILL dark (the fault-wins block is independent)',
        n5.hw_blank(0) == 1, fails, 'C6')
+
+    # NC-6: the OLD global gating (any live fault blocks every clear) must
+    # reproduce the reviewer's resurrection counterexample on M.
+    n6 = Regs(neg={'global_clear_block'})
+    n6.fault_status = 0x005
+    n6.caught = 0x005
+    n6.edge(hw_fault=0x004, w1c=0x001, fw=True)
+    n6.edge(hw_fault=0x004)
+    print('   NC-6 global gating     : status=0x%03X caught=0x%03X'
+          % (n6.fault_status, n6.caught))
+    ck('NC-6 global gating -> bit0 resurrects (reviewer C3 counterexample)',
+       (n6.fault_status & 0x001) == 0x001, fails, 'C3')
     print()
 
     # ---------- CSV ----------
     here = os.path.dirname(os.path.abspath(__file__))
     out = os.path.join(here, '..', 't6a', 'L1_LEGACY_REPLAY.csv')
-    if not os.path.isdir(os.path.dirname(out)):
-        out = os.path.join(here, 'L1_LEGACY_REPLAY.csv')   # shipped-copy layout
     if rows:
         with open(out, 'w', encoding='utf-8', newline='') as f:
             w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
@@ -481,7 +521,7 @@ def main():
     if fails:
         print('RESULT=FAIL (%s)' % ', '.join(fails))
         return 1
-    print('RESULT=PASS  legacy D26-D33/D45-D53 and Phase S hold on the P0-E contract;')
+    print('RESULT=PASS  legacy D26-D33/D45-D53, Phase S and the M vector hold;')
     print('             five negative controls reproduce the reviewed failures')
     return 0
 

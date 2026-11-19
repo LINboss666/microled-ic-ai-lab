@@ -1,5 +1,5 @@
 diff --git a/coursework/microled_sim/rtl/tcon_spi_regs.v.txt b/coursework/microled_sim/rtl/tcon_spi_regs.v.txt
-index 60fea46..fdf9ed1 100644
+index 60fea46..b51eda2 100644
 --- a/coursework/microled_sim/rtl/tcon_spi_regs.v.txt
 +++ b/coursework/microled_sim/rtl/tcon_spi_regs.v.txt
 @@ -64,7 +64,11 @@ module tcon_spi_regs (
@@ -15,16 +15,23 @@ index 60fea46..fdf9ed1 100644
  );
  
      // ---------------------------------------------------------------------
-@@ -134,6 +138,8 @@ module tcon_spi_regs (
+@@ -134,6 +138,15 @@ module tcon_spi_regs (
      // state + write commit
      // ---------------------------------------------------------------------
      reg        sw_pulse;
 +    reg        disp_armed;      // host permit: set only by an explicit unblank
-+    reg        hw_fault_caught; // asynchronous fault capture
++    // P0-E: ONE capture latch PER SOURCE. A single latch OR-ed into bit7
++    // made every local UVLO/OV/OT event claim COMM_TO and stay there after
++    // its own W1C, which broke the legacy D33/D53 recovery sequence (see
++    // independent_l1_regression_counterexample.csv). Per V1.3 段0704 bit7
++    // means "the shared FAULT_n event was captured"; local causes report in
++    // their own status bit - each with its own asynchronous set, so no
++    // source loses the sub-cycle-pulse protection.
++    reg [10:0] caught;         // per-source asynchronous capture
      reg [10:0] fs_d;
      reg [10:0] n_fault, n_int;
  
-@@ -141,17 +147,61 @@ module tcon_spi_regs (
+@@ -141,17 +154,69 @@ module tcon_spi_regs (
      wire ready_in = status_in[0];
      wire cfg_ok   = (!en) && safe_in;
      wire any_hw_fault = |hw_fault;
@@ -38,22 +45,21 @@ index 60fea46..fdf9ed1 100644
 +    wire [31:0] wd_w = wr_frame[31:0];
 +
 +    // ---------------------------------------------------------------------
-+    // P0-D: the clear request is COMBINATIONAL, not a registered pulse.
++    // P0-D / P0-E: the clear request is COMBINATIONAL and PER SOURCE.
 +    //   rev3 registered `clr_fault` inside the write block, so the capture
 +    //   latch - a different always block - sampled its OLD value on that
 +    //   edge and only cleared on the NEXT one, while `n_fault` re-ORed the
-+    //   still-set capture back into bit7 on that very next edge.  The fault
-+    //   could then never be cleared and the host could never re-enable.
-+    //   Driving the latch from this request removes the register entirely:
-+    //   `fault_status[7]` and `hw_fault_caught` fall on the SAME edge, from
-+    //   the SAME accepted write.
++    //   still-set capture back into its status bit on that very next edge.
++    //   Driving the latches from these requests removes the register
++    //   entirely: `fault_status[k]` and `caught[k]` fall on the SAME edge,
++    //   from the SAME accepted write.  `hw_fault[k]` live blocks the clear
++    //   of bit k only - other sources may still be cleared by their own
++    //   mask bits in the same write.
 +    // ---------------------------------------------------------------------
-+    wire clear_caught_req = wr_cap_o &&
-+                            (wa_w[1:0]  == 2'b00) &&
-+                            (wa_w[14:6] == 9'd0)  &&
-+                            (wa_w[5:2]  == A_FAULT) &&
-+                            wr_frame[7]           &&   // W1C covers COMM_TO
-+                            !any_hw_fault;             // a live source wins
++    wire frame_is_fault_w1c = wr_cap_o &&
++                              (wa_w[1:0]  == 2'b00) &&
++                              (wa_w[14:6] == 9'd0)  &&
++                              (wa_w[5:2]  == A_FAULT);
 +
 +    // ---------------------------------------------------------------------
 +    // P0-B: asynchronous fault capture
@@ -63,17 +69,26 @@ index 60fea46..fdf9ed1 100644
 +    //   reaches the FSM). The SET path is therefore the assertion edge itself;
 +    //   the CLEAR is synchronous, so a dead clock can never clear it.
 +    // ---------------------------------------------------------------------
-+    always @(posedge clk or posedge any_hw_fault or negedge reset_n) begin
-+        if (!reset_n)          hw_fault_caught <= 1'b0;
-+        else if (any_hw_fault) hw_fault_caught <= 1'b1;
-+        else if (clear_caught_req) hw_fault_caught <= 1'b0;
-+    end
++    genvar g;
++    generate
++        for (g = 0; g < 11; g = g + 1) begin : g_cap
++            wire clear_caught_req = frame_is_fault_w1c &&
++                                    wr_frame[g] &&     // mask covers cause g
++                                    !hw_fault[g];      // a live source wins
++            always @(posedge clk or posedge hw_fault[g] or negedge reset_n) begin
++                if (!reset_n)             caught[g] <= 1'b0;
++                else if (hw_fault[g])     caught[g] <= 1'b1;
++                else if (clear_caught_req) caught[g] <= 1'b0;
++            end
++        end
++    endgenerate
++    wire caught_any = |caught;
  
      assign sw_reset_pulse = sw_pulse;
      assign irq            = |(int_status & int_en);
 -    assign fault_vis_o    = fault_status | hw_fault;
 +    assign fault_vis_o    = fault_status | hw_fault |
-+                            (hw_fault_caught ? 11'h080 : 11'd0);
++                            caught;
      // no enable, software blank, or any hardware fault => the panel is blank.
      // Software cannot talk its way out of this: it is a pure OR at the output.
 -    assign hw_blank       = blank_r | (!en) | any_hw_fault;
@@ -85,14 +100,14 @@ index 60fea46..fdf9ed1 100644
 +    //   software BLANK, EN cleared, a LIVE fault, the asynchronously caught
 +    //   fault, the host permit latch and the sticky fault history. The last
 +    //   three stop the panel from coming back on its own.
-+    assign hw_blank       = blank_r | (!en) | any_hw_fault | hw_fault_caught |
++    assign hw_blank       = blank_r | (!en) | any_hw_fault | caught_any |
 +                            (!disp_armed) | disp_fault;
 +    assign disp_armed_o      = disp_armed;
-+    assign hw_fault_caught_o = hw_fault_caught;
++    assign hw_fault_caught_o = caught_any;   // any captured source
  
      integer k;
      reg [14:0] wa;
-@@ -177,6 +227,7 @@ module tcon_spi_regs (
+@@ -177,6 +242,7 @@ module tcon_spi_regs (
              wr_cap_cnt   <= 16'd0;
              wr_rej_cnt   <= 16'd0;
              wr_ok_o      <= 1'b0;
@@ -100,13 +115,13 @@ index 60fea46..fdf9ed1 100644
          end else begin
              err_set  = 1'b0;
              accept   = 1'b0;
-@@ -199,12 +250,16 @@ module tcon_spi_regs (
+@@ -199,12 +265,16 @@ module tcon_spi_regs (
                          if (wd[3] && !test_en)                          err_set = 1'b1;
                          else if (wd[0] && (!safe_in || any_hw_fault))    err_set = 1'b1;
                          else if (wd[0] && !wd[1] &&
 -                                 !(safe_in && ready_in && !any_hw_fault)) err_set = 1'b1;
 +                                 !(safe_in && ready_in && !any_hw_fault &&
-+                                   !hw_fault_caught && !disp_fault)) err_set = 1'b1;
++                                   !caught_any && !disp_fault)) err_set = 1'b1;
                          else begin
                              en        <= wd[0];
                              // EN=0 forces BLANK, whatever bit1 asks for
@@ -118,37 +133,38 @@ index 60fea46..fdf9ed1 100644
                              if (wd[2]) sw_pulse <= 1'b1;     // W1P, self clearing
                              accept = 1'b1;
                          end
-@@ -238,7 +293,11 @@ module tcon_spi_regs (
+@@ -238,7 +308,12 @@ module tcon_spi_regs (
              end
  
              // ---- 3. next visible fault / interrupt state -------------------
 -            n_fault = fault_status | hw_fault | (err_set ? 11'h100 : 11'd0);
-+            // the asynchronously captured event is reported as COMM_TO
-+            // (V1.3 段0704: TCON catching the shared FAULT_n sets COMM_TO).
-+            // Without this the panel would go dark and the host would read 0.
++            // P0-E contract: each captured source reports in its OWN bit
++            // (bit7 = the shared FAULT_n pin, V1.3 段0704). A single shared
++            // latch OR-ed into bit7 made local UVLO/OT claim COMM_TO and
++            // survive their own W1C, which broke the legacy D33/D53 flow.
 +            n_fault = fault_status | hw_fault | (err_set ? 11'h100 : 11'd0) |
-+                      (hw_fault_caught ? 11'h080 : 11'd0);
++                      caught;
              if (w1c_f != 11'd0) n_fault = n_fault & ~(w1c_f & ~hw_fault);
              if (err_set)        n_fault[8] = 1'b1;
  
-@@ -253,6 +312,15 @@ module tcon_spi_regs (
+@@ -253,6 +328,15 @@ module tcon_spi_regs (
  
              // ---- 4. read snapshot: ONE latch per request -------------------
              if (rd_cap_o) rd_snapshot <= rval;
 +
 +            // ---- 5. capture-latch clear -----------------------------------
-+            // Handled by `clear_caught_req` at the capture latch itself (see
++            // Handled by the per-bit `clear_caught_req` in the generate block (see
 +            // the P0-D block above), so that the status bit and the capture
 +            // fall on the same edge.  Nothing is registered here on purpose:
 +            // a registered pulse reintroduces the one-cycle resurrection.
 +
 +            // ---- 6. a live, caught or latched fault always wins -----------
-+            if (any_hw_fault || hw_fault_caught || disp_fault) disp_armed <= 1'b0;
++            if (any_hw_fault || caught_any || disp_fault) disp_armed <= 1'b0;
          end
      end
  
 diff --git a/coursework/microled_sim/rtl/tcon_spi_top.v.txt b/coursework/microled_sim/rtl/tcon_spi_top.v.txt
-index f517947..9af1009 100644
+index f517947..b023a33 100644
 --- a/coursework/microled_sim/rtl/tcon_spi_top.v.txt
 +++ b/coursework/microled_sim/rtl/tcon_spi_top.v.txt
 @@ -15,6 +15,10 @@ module tcon_spi_top (
@@ -173,15 +189,21 @@ index f517947..9af1009 100644
  );
  
      wire [47:0] sh;
-@@ -52,6 +58,7 @@ module tcon_spi_top (
+@@ -52,6 +58,13 @@ module tcon_spi_top (
      wire        frame_full, we, rd_req;
      wire [14:0] addr, rd_addr_hold;
      wire [31:0] rd_snapshot;
-+    wire [10:0] hw_fault_i = hw_fault | (fault_n ? 11'd0 : 11'h080);
++    // P0-F / C2 enforcement: bit7 (COMM_TO) comes ONLY from the shared pin.
++    // The previous OR let a bus-driven hw_fault[7] claim COMM_TO with
++    // fault_n high (reviewer counterexample row 2); bus bit7 is now masked
++    // off. Bit8 (ERR_REG) is an internal register-access status, not an
++    // analog comparator, so its hw_fault input is tied to zero - a stray
++    // drive there can no longer reach caught_any / hw_blank.
++    wire [10:0] hw_fault_i = {hw_fault[10:9], 1'b0, !fault_n, hw_fault[6:0]};
      wire [47:0] wr_frame;
      wire        wr_tog, wr_ack_tog;
      wire [15:0] wr_frames;
-@@ -73,7 +80,7 @@ module tcon_spi_top (
+@@ -73,7 +86,7 @@ module tcon_spi_top (
          .wr_frame (wr_frame), .wr_tog (wr_tog), .wr_ack_tog (wr_ack_tog),
          .rd_addr_hold (rd_addr_hold), .rd_req (rd_req),
          .rd_snapshot (rd_snapshot),
@@ -190,7 +212,7 @@ index f517947..9af1009 100644
          .col_index_in (col_index_in),
          .en (en), .blank_r (blank_r), .hw_blank (hw_blank),
          .test_mode (test_mode),
-@@ -82,7 +89,8 @@ module tcon_spi_top (
+@@ -82,7 +95,8 @@ module tcon_spi_top (
          .irq (irq), .err_reg (err_reg),
          .wr_cap_cnt (wr_cap_cnt_o), .wr_cap_o (wr_cap_o),
          .wr_ok_o (wr_ok_o), .wr_rej_cnt (wr_rej_cnt_o),
@@ -202,7 +224,7 @@ index f517947..9af1009 100644
      assign bitcnt_o      = bitcnt;
 diff --git a/coursework/microled_sim/tb/run_tcon_t6a_l1.sh b/coursework/microled_sim/tb/run_tcon_t6a_l1.sh
 new file mode 100644
-index 0000000..483ecfa
+index 0000000..7766df6
 --- /dev/null
 +++ b/coursework/microled_sim/tb/run_tcon_t6a_l1.sh
 @@ -0,0 +1,80 @@
@@ -219,7 +241,7 @@ index 0000000..483ecfa
 +
 +WALL_LIMIT_S="${WALL_LIMIT_S:-900}"
 +
-+FLOOR="77"   # 57 (rev2, unchanged) + 20 (Phase S E01..E20)
++FLOOR="85"   # 57 (rev2) + 20 (Phase S E01..E20) + 8 (P0-F E21..E22c)
 +SRC_TB="$SRC/tb/tcon_t6a_l1_tb.sv.txt"
 +TOTAL=$(grep -c 'chk("' "$SRC_TB")
 +if [ "$TOTAL" -lt "$FLOOR" ]; then
@@ -288,10 +310,10 @@ index 0000000..483ecfa
 +exit "$RC"
 diff --git a/coursework/microled_sim/tb/tcon_t6a_l1_tb.sv.txt b/coursework/microled_sim/tb/tcon_t6a_l1_tb.sv.txt
 new file mode 100644
-index 0000000..51ab858
+index 0000000..b6e77c2
 --- /dev/null
 +++ b/coursework/microled_sim/tb/tcon_t6a_l1_tb.sv.txt
-@@ -0,0 +1,632 @@
+@@ -0,0 +1,685 @@
 +`timescale 1ns / 1ps
 +// TCON T6-A **L1** testbench — the rev2 SPI/register suite (57 assertions,
 +// unchanged) PLUS the L1 safety phase E01..E20 (P0-D same-edge clear).
@@ -873,12 +895,16 @@ index 0000000..51ab858
 +        repeat (3) @(posedge clk);
 +        chk("E15_partial_mask_keeps_bit7", (fault_status[7] === 1'b1));
 +
-+        // (7) a still-asserted source cannot be cleared
-+        hw_fault = 11'h080;
++        // (7) a still-asserted source cannot be cleared.
++        // P0-F: the ONLY path into COMM_TO is the shared pin, so the live
++        // source here is fault_n low - NOT hw_fault[7], which the top now
++        // masks off (C2 enforcement).
++        fault_n = 1'b0;
++        repeat (3) @(posedge clk);
 +        wr(15'h0C, 32'h0000_0080);
 +        repeat (3) @(posedge clk);
 +        chk("E16_live_source_cannot_be_cleared", (fault_status[7] === 1'b1));
-+        hw_fault = 11'd0;
++        fault_n = 1'b1;
 +        repeat (2) @(posedge clk);
 +        wr(15'h0C, 32'h0000_0080);
 +        repeat (3) @(posedge clk);
@@ -899,6 +925,55 @@ index 0000000..51ab858
 +        clk_en = 1'b1;
 +        #50;
 +        chk("E20_capture_survived_the_dead_clock", (hw_fault_caught_o === 1'b1));
++
++        // (10) P0-F / C3: the reviewer's deterministic vector. A recovered
++        // cause (bit0: UVLO level asserted then withdrawn) is cleared by its
++        // own mask bit while ANOTHER source (bit2: OT) is still LIVE - the
++        // cleared bit must not resurrect, the live bit must not clear.
++        hw_fault[0] = 1'b1;
++        repeat (3) @(posedge clk);
++        hw_fault[0] = 1'b0;
++        repeat (3) @(posedge clk);
++        chk("E21_pre_uvlo_latched",
++            (fault_status[0] === 1'b1) && (hw_fault_caught_o === 1'b1));
++        hw_fault[2] = 1'b1;                    // OT goes LIVE and stays
++        repeat (3) @(posedge clk);
++        wr(15'h0C, 32'h0000_0001);             // W1C covers ONLY bit0
++        #1;
++        chk("E21_multi_source_partial_clear",
++            (fault_status[0] === 1'b0) && (fault_status[2] === 1'b1) &&
++            (hw_fault_caught_o === 1'b1) && (hw_blank === 1'b1));
++        repeat (30) @(posedge clk);
++        chk("E21b_cleared_cause_does_not_resurrect",
++            (fault_status[0] === 1'b0) && (fault_status[2] === 1'b1));
++        wr(15'h0C, 32'h0000_0004);             // W1C bit2 while it is LIVE
++        repeat (3) @(posedge clk);
++        chk("E21c_live_bit2_cannot_clear", (fault_status[2] === 1'b1));
++        hw_fault[2] = 1'b0;
++        repeat (3) @(posedge clk);
++        wr(15'h0C, 32'h0000_0004);
++        repeat (3) @(posedge clk);
++        chk("E21d_all_clear_after_release",
++            (fault_status === 11'd0) && (hw_fault_caught_o === 1'b0));
++
++        // (11) P0-F / C2: COMM_TO is EXCLUSIVE to the shared pin. Driving
++        // the hw_fault[7] bus bit with fault_n high must do nothing; pulling
++        // the pin must capture immediately.
++        hw_fault[7] = 1'b1;
++        repeat (4) @(posedge clk);
++        chk("E22_bus_bit7_cannot_set_comm_to",
++            (fault_status[7] === 1'b0) && (hw_fault_caught_o === 1'b0));
++        hw_fault[7] = 1'b0;
++        fault_n = 1'b0;
++        repeat (2) @(posedge clk);
++        chk("E22b_pin_pull_still_captures",
++            (fault_status[7] === 1'b1) && (hw_blank === 1'b1));
++        fault_n = 1'b1;
++        repeat (2) @(posedge clk);
++        wr(15'h0C, 32'h0000_0080);
++        repeat (3) @(posedge clk);
++        chk("E22c_pin_cause_clears_by_its_own_mask",
++            (fault_status[7] === 1'b0) && (hw_fault_caught_o === 1'b0));
 +
 +        $display("T6A_L1_SAFETY split_edges=%0d resurrections=%0d permit_samples=%0d",
 +                 split_cnt, resurrect_cnt, perm_samples);
