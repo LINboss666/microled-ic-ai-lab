@@ -169,7 +169,8 @@ module tcon_spi_regs (
 
     assign sw_reset_pulse = sw_pulse;
     assign irq            = |(int_status & int_en);
-    assign fault_vis_o    = fault_status | hw_fault;
+    assign fault_vis_o    = fault_status | hw_fault |
+                            (hw_fault_caught ? 11'h080 : 11'd0);
     // no enable, software blank, or any hardware fault => the panel is blank.
     // Software cannot talk its way out of this: it is a pure OR at the output.
     // six independent locks, any one of them blanks the panel:
@@ -276,7 +277,11 @@ module tcon_spi_regs (
             end
 
             // ---- 3. next visible fault / interrupt state -------------------
-            n_fault = fault_status | hw_fault | (err_set ? 11'h100 : 11'd0);
+            // the asynchronously captured event is reported as COMM_TO
+            // (V1.3 段0704: TCON catching the shared FAULT_n sets COMM_TO).
+            // Without this the panel would go dark and the host would read 0.
+            n_fault = fault_status | hw_fault | (err_set ? 11'h100 : 11'd0) |
+                      (hw_fault_caught ? 11'h080 : 11'd0);
             if (w1c_f != 11'd0) n_fault = n_fault & ~(w1c_f & ~hw_fault);
             if (err_set)        n_fault[8] = 1'b1;
 
@@ -293,9 +298,12 @@ module tcon_spi_regs (
             if (rd_cap_o) rd_snapshot <= rval;
 
             // ---- 5. capture-latch clear -----------------------------------
-            // only a FAULT W1C that leaves NOTHING latched, with no live fault
+            // The capture is reported as COMM_TO, so the host clears it the
+            // same way as any other W1C cause: the mask must actually cover
+            // bit7. A zero mask (data=0) and a partial mask therefore leave it
+            // set - the RUN01 style "write 0 clears everything" is gone.
             clr_fault <= 1'b0;
-            if (wr_cap_o && (wa[5:2] == A_FAULT) && (n_fault == 11'd0) && !any_hw_fault)
+            if (wr_cap_o && (wa[5:2] == A_FAULT) && w1c_f[7] && !any_hw_fault)
                 clr_fault <= 1'b1;
 
             // ---- 6. a live, caught or latched fault always wins -----------

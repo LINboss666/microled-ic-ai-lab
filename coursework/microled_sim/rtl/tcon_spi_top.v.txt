@@ -15,6 +15,10 @@ module tcon_spi_top (
     // ---- real chip status / faults ---------------------------------------
     input  wire [3:0]  status_in,     // {LUT_VALID, SAFE, ACTIVE, READY}
     input  wire [10:0] hw_fault,
+    // V1.3 §12: FAULT_n is an open-drain, wired-AND, active-low PIN. It is
+    // folded into hw_fault[7] (COMM_TO) here so that the asynchronous
+    // capture really sees the pin and not only an internal bus.
+    input  wire        fault_n,
     input  wire        test_en,
     input  wire [9:0]  col_index_in,
 
@@ -54,6 +58,7 @@ module tcon_spi_top (
     wire        frame_full, we, rd_req;
     wire [14:0] addr, rd_addr_hold;
     wire [31:0] rd_snapshot;
+    wire [10:0] hw_fault_i = hw_fault | (fault_n ? 11'd0 : 11'h080);
     wire [47:0] wr_frame;
     wire        wr_tog, wr_ack_tog;
     wire [15:0] wr_frames;
@@ -75,7 +80,7 @@ module tcon_spi_top (
         .wr_frame (wr_frame), .wr_tog (wr_tog), .wr_ack_tog (wr_ack_tog),
         .rd_addr_hold (rd_addr_hold), .rd_req (rd_req),
         .rd_snapshot (rd_snapshot),
-        .status_in (status_in), .hw_fault (hw_fault), .test_en (test_en),
+        .status_in (status_in), .hw_fault (hw_fault_i), .test_en (test_en),
         .col_index_in (col_index_in),
         .en (en), .blank_r (blank_r), .hw_blank (hw_blank),
         .test_mode (test_mode),
