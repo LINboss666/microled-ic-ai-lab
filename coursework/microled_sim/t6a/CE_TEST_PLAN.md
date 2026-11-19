@@ -1,162 +1,162 @@
-# CE 反例测试计划（CE_TEST_PLAN）
+# CE 反例测试计划（CE_TEST_PLAN）— rev2：拆成两层
 
-日期：2026-11-19　状态：**计划，未执行**。T6-A 的 2 次 ModelSim 预算已用尽；
-本文件只是"下一阶段申请预算时要跑什么、怎么判、怎么保证不空洞"的依据。
-
-> 所有 CE 都**不得**登记为 PASS。当前的 P0 关闭证据只有
-> `tools/t6a_p0_rearm_check.py` 的**状态模型**推导，不是仿真。
+日期：2026-11-19　状态：**计划，未执行**。T6-A 的 2 次 ModelSim 已用尽；
+本文件是"下一阶段申请预算时跑什么、怎么判、怎么保证不空洞"的依据。
 
 ---
 
-## 0. 共同前提
+## 0. 为什么拆成两层（rev1 的两处冲突）
 
-| 项 | 值 |
-|---|---|
-| DUT | `tcon_spi_top`（打上 `SUGGESTED_PATCH.diff.txt` 后的版本，需先批准） |
-| 时钟 | core 100 MHz；SCLK 10 MHz 与 4 MHz 两档 |
-| 相位 | core 相位 0 / 2.5 / 5 / 7.5 ns 四种（沿用 RUN02 的做法） |
-| 槽长 | 976 / 977 两种（沿用 T3/T5 的混合槽长） |
-| CS 高间隔 | ≥ 100 ns（合同值），另设一档 100 ns 边界、一档 60 ns（违规） |
-| 观测 | `en`、`blank_r`、`hw_blank`、`fault_status`、`disp_armed`、`int_status`、`irq`、`err_reg`；**以及驱动侧真实的 `ch_en`/`ch_pam`**（非空洞必需） |
-| 采样 | 每个 core 上升沿采一次，四态精确比较（X 与 1 一样算违规） |
+| rev1 的问题 | 事实 | rev2 的处理 |
+|---|---|---|
+| CE3 要求"W1C 与 CTRL 在同一个 core 沿" | 一笔 SPI 事务只有一个地址，`wr_cap_o` 是单拍脉冲，**不可能同沿写两个寄存器** | 改为"**一个合法 CTRL 帧的 CS 上升沿**与**异步故障沿**临界"——这才是真实可达的同沿 |
+| CE1/CE4 要"真实 LED 通道导通/恢复非零" | 被测顶层 `tcon_spi_top` **没有 Data/Scan 输出**，也没有帧/预充 | 拆成 **L1 SPI 单元安全**（只看许可）与 **L2 五芯片系统安全**（看 `ch_en`/PAM），L2 另立预算 |
+
+**结论：`tcon_spi_top` 上的断言只能说"许可为 0/1"，不能说"灯亮/灭"。**
 
 ---
 
-## CE1 显示中故障脉冲撤去后持续熄屏
+## L1 · SPI 单元安全（被测：`tcon_spi_top` + 候选补丁）
 
-**目的**：堵住本轮 P0 的直接反例。
+共同前提：core 100 MHz；SCLK 10/4 MHz；core 相位 0/2.5/5/7.5 ns；
+CS 高间隔 ≥ 100 ns（另设 100 ns 边界一档）；四态精确比较；每个 core 沿采一次。
 
-| 步骤 | 动作 |
+### L1-CE1 故障出现→源撤去→无 W1C→无再使能
+
+| 步 | 动作 |
 |---|---|
 | 1 | 复位释放，`status_in={SAFE,READY}=1` |
-| 2 | 写 `CTRL=0x3`（EN=1,BLANK=1），再写 `CTRL=0x1`（EN=1,BLANK=0）→ 合法显示 |
-| 3 | 注入 `hw_fault[0]`（UVLO）保持 **≥ 1 个 core 沿**（另做 3 沿、10 沿两档） |
-| 4 | 撤去 `hw_fault[0]`，**不发任何 SPI 事务**，持续 ≥ 200 个 core 沿 |
+| 2 | 写 `CTRL=0x3`，再写 `CTRL=0x1` → **记录 `hw_blank=0` 的非空洞样本** |
+| 3 | `hw_fault[0]`（UVLO）保持 3 个 core 沿 |
+| 4 | 撤去故障，**不发任何 SPI 事务**，持续 ≥ 200 沿 |
 
-**判据**
-- 第 3 步：故障出现后 **1 ns 内**（组合门）`hw_blank===1`；
-- 第 4 步：整段 `hw_blank===1`、`en===1`、`blank_r===0`、`fault_status[0]===1`、`disp_armed===0`；
-  **一次 `hw_blank===0` 的采样都不允许**。
+判据：第 3 步后 1 ns 内 `hw_blank===1`；第 4 步全程 `hw_blank===1`、`disp_armed===0`、
+`hw_fault_caught===1`、`fault_status[0]===1`。**不允许出现 `hw_blank===0` 的采样。**
 
-**非空洞**：第 2 步必须实测到 `hw_blank===0` 且驱动侧 `|ch_en===1`（否则"一直是黑的"也能过）。
-建议断言：`lit_samples > 300` 且 `dark_violations == 0`。
+非空洞：第 2 步必须实测到 `hw_blank===0`（`lit_permit_samples > 20`），
+否则"从来没亮过"也能过。**这里是"许可样本"，不是"LED 导通样本"。**
 
-**会失败的负控**：删掉 `disp_armed` 与 `disp_fault` 两项（回到 RUN02 表达式）→ 第 4 步出现 `hw_blank===0` → CE1 报错。
+### L1-CE1a 短脉冲（**本轮的 P0**）
 
----
-
-## CE2 清故障状态但不重新使能，仍熄屏
-
-**目的**：验证 V1.3 段0965「清状态不自动恢复显示」。
-
-| 步骤 | 动作 |
+| 步 | 动作 |
 |---|---|
-| 1 | 同 CE1 步骤 1–3（OV，`hw_fault[1]`） |
+| 1 | 同 CE1 步骤 1–2（`hw_blank=0`） |
+| 2 | `hw_fault` 拉低 **2 ns / 4 ns / 8 ns**，每档分别对齐到 core 沿前 1/3/5/9 ns |
+| 3 | 故障撤去，不发任何 SPI 事务 |
+
+判据：脉冲结束后**立刻**（同一 ns 内）`hw_blank===1` 且 `hw_fault_caught===1`；
+其后 200 沿全程为 1。
+**这一档必须真的让脉冲落在两个沿之间**，TB 要在 transcript 打印脉冲起止与两侧 core 沿时间戳，
+证明没有沿落在脉冲内（否则测的是"侥幸"情形）。
+
+### L1-CE2 清状态但不重新使能
+
+| 步 | 动作 |
+|---|---|
+| 1 | 同 CE1 步骤 1–3 |
 | 2 | 撤去故障源 |
-| 3 | 写 `FAULT_STATUS=0x2`（W1C） |
-| 4 | 读回 `0x0C` 确认 bit1=0；**不写 CTRL**，持续 ≥ 200 沿 |
+| 3 | 写 `FAULT_STATUS=0x1`（W1C），读回确认 bit0=0 |
 
-**判据**：`fault_status[1]===0` 且 `hw_blank===1` 且 `disp_armed===0` 全程成立。
+判据：`fault_status[0]===0` 且 `hw_fault_caught===0`（清干净了）但
+`disp_armed===0`、`hw_blank===1` 全程保持。
+非空洞：读回必须真是 0；且 CE4 证明同一 W1C 之后**加**一次再使能确实能恢复，
+说明 W1C 本身有效（不是写不进去）。
 
-**非空洞**：读回必须真的是 0（不是读失败得 0）；另一方向：CE4 里同样的 W1C 后**加**一次再使能必须能亮，说明 W1C 本身有效。
+### L1-CE3 故障有效时写 CTRL=EN1/BLANK0
 
-**负控**：删掉 `disp_armed` 项、只保留 `disp_fault` → 第 4 步 `hw_blank===0` → 报错。
+判据：`err_reg===1`、`en`/`blank_r` 不变、`disp_armed===0`、`hw_blank===1`。
 
----
+### L1-CE3b 临界沿：CTRL 帧的 CS 上升沿与异步故障重合
 
-## CE3 有故障 / W1C 同沿时写 CTRL 不可点亮
-
-| 步骤 | 动作 |
+| 步 | 动作 |
 |---|---|
-| 1 | 注入 `hw_fault[2]`（OT），保持 |
-| 2 | 写 `CTRL=0x1`（EN=1,BLANK=0），SAFE/READY 都在 |
-| 3 | 另一档：`hw_fault[2]` 撤去与 W1C **同一个 core 沿**，同沿再写 `CTRL=0x1` |
-| 4 | 另一档：`hw_fault[...]` 撤去、W1C 已做，但同一笔写把 `BLANK` 置 1 又置 0（两次连续写） |
+| 1 | `hw_blank=0`（已使能） |
+| 2 | 发一笔**合法** CTRL=0x1，把 CS 上升沿对齐到 `hw_fault[3]` 的下降沿 ±1 ns（三档） |
+| 3 | 故障撤去，等 4 个沿 |
 
-**判据**：`err_reg===1`、`en` 与 `blank_r` 不变、`disp_armed===0`、`hw_blank===1`；
-第 3 档必须保证"同沿"真的同沿（TB 用 `@(posedge clk)` 精确对齐并在 transcript 打印该沿时间戳）。
+判据：`err_reg===1`（写被拒）、`disp_armed===0`、`hw_blank===1` 之后不回落。
+**不允许出现"故障已走、`disp_armed` 却是 1"**——这正是 NC-C 要抓的。
 
----
+### L1-CE4 清状态 + 显式再使能（唯一允许恢复的入口）
 
-## CE4 全部条件满足后才允许由暗到亮（非空洞）
+判据：`disp_armed` 0→1、`hw_blank` 1→0；读回 `CTRL` 确认 `EN=1,BLANK=0` 真写进去了。
+**不判 LED**（那是 L2）。
 
-| 步骤 | 动作 |
-|---|---|
-| 1 | 同 CE1 步骤 1–4（已暗） |
-| 2 | W1C 清故障 |
-| 3 | 写 `CTRL=0x1`（EN=1,BLANK=0），SAFE/READY=1，无故障 |
-| 4 | 给一个合法帧（VSYNC+COL_SYNC+两级预充，若 DUT 只到 SPI 层则此步在 T5 集成用例里做） |
+### L1-CE5 读事务 / 坏帧 / INT_EN=0
 
-**判据**：`disp_armed` 由 0→1；`hw_blank` 由 1→0；**并且**驱动侧 `|ch_en` 出现非零采样
-（`lit_samples > 300`），PAM 档位与 LUT 一致。
+判据：`hw_blank` 恒 1；`disp_armed` 恒 0。
+结构补充（静态门）：`hw_blank` 表达式不含 `rd_*`、`int_en`、`mb_*`。
 
-**这是唯一一个"必须变亮"的用例**——没有它，CE1/CE2 的"一直黑"就能骗过全部判据。
-
----
-
-## CE5 INT_EN=0 / 读事务 / 坏帧都不能绕过
-
-| 步骤 | 动作 |
-|---|---|
-| 1 | 处于故障后熄屏状态 |
-| 2 | 写 `INT_EN=0`；做 5 次读事务（含读 `0x0C`、`0x18`、`0x24`）；发 2 个 30 沿短帧、1 个 49 沿长帧 |
-| 3 | 检查 `hw_blank` |
-
-**判据**：`hw_blank===1` 全程不变；`disp_armed===0`；
-结构性补充：`hw_blank` 表达式里**不存在** `int_en`、`rd_req`、`mb_*` 任何输入（静态门已断言）。
-
----
-
-## CE6 时钟相位与异步复位角落
+### L1-CE6 复位与相位
 
 | 子项 | 内容 |
 |---|---|
-| 6a | `cs_n` 上升沿与 core 沿**同刻/±1 ns**：写帧要么被完整接收、要么完全不接收，不允许"半帧被当帧" |
-| 6b | 复位在故障保持期间异步断言：`hw_blank` 立即为 1，释放后仍为 1（`disp_armed` 复位值 0） |
-| 6c | 复位在显示中异步断言，再释放：必须先写 CTRL 才能亮，不允许自恢复 |
-| 6d | 976/977 两种槽长 × 四种 core 相位 × 两档 SCLK 的组合，各跑一遍 CE1 |
-
-**判据**：所有子项 `hw_blank` 在此期间无 0 采样；6a 另需 `frames_sent == frames_captured`。
+| 6a | 复位在故障保持期间异步断言：`hw_blank` 立即 1；释放后 `disp_armed===0`、`hw_blank===1` |
+| 6b | 复位在显示许可期间断言再释放：必须重新写 CTRL 才能恢复，不许自恢复 |
+| 6c | 976/977 槽长无关（本层不涉及），改为 SCLK 10/4 MHz × 4 相位 × 三档脉宽 |
 
 ---
 
-## 断言清单（新增，预计 14–18 条）
+## L2 · 五芯片系统安全（**另一套环境、另一次预算**）
 
-| 名称（建议） | 判据 |
+需要"带 SPI 的 `tcon_top` + 2×Data + 2×Scan"。本轮**没有**这个环境（P1-D）。
+
+| 用例 | 判据 |
 |---|---|
-| `E01_ce1_fault_gone_stays_dark` | CE1 第 4 步无 `hw_blank===0` 采样 |
-| `E02_ce1_lit_before_fault` | CE1 第 2 步 `lit_samples > 300` |
-| `E03_ce2_w1c_no_reenable_dark` | CE2 全程暗 |
-| `E04_ce3_unblank_during_fault_rejected` | `err_reg===1`、`disp_armed===0` |
-| `E05_ce3_same_edge_w1c_unblank` | 同沿仍被拒 |
-| `E06_ce4_reenable_lights` | `hw_blank` 1→0 且 `lit_samples > 300` |
-| `E07_ce5_int_en_zero_no_bypass` | `hw_blank` 恒 1 |
-| `E08_ce5_bad_frames_no_bypass` | 短帧/长帧后仍暗 |
-| `E09_ce6_async_reset_blank_immediate` | 复位沿后 ≤1 ns `hw_blank===1` |
-| `E10_ce6_no_self_recovery_after_reset` | 释放后仍暗，直到 CTRL 写 |
-| `E11_disp_armed_reset_zero` | 复位后 `disp_armed===0` |
-| `E12_hw_blank_has_no_int_en_term` | 静态：表达式不含 `int_en`/`rd_*` |
+| S1 | 故障前：某列 768 路里有非零 `ch_en`，PAM 与 LUT 一致（非空洞） |
+| S2 | 故障脉冲（4 ns）→ 下一个显示窗 768 路 `ch_en` 全 0，且**连续 ≥ 3 个窗** |
+| S3 | 故障撤去 + W1C + 不再使能 → 继续全暗（≥ 3 窗） |
+| S4 | + 显式再使能 → **重新预充（2 个 LATCH）后**才出现非零导通，且第一窗的列号/帧号正确 |
+| S5 | 复位后：必须重新走完整序列（配置 → 预充 → 使能）才亮 |
 
-**门槛**：`MIN_ASSERTS` 必须等于实际执行条数（沿用 RUN02 的纪律，不许用旧门槛掩盖新增断言）。
+**L2 不得用 L1 的断言冒充**：`hw_blank` 只是两把钥匙中的一把，另一把（帧/预充）在 `tcon_top`。
 
 ---
 
-## 负控（必须能失败）
+## 断言清单（L1，新增，预计 16–20 条）
 
-| 编号 | 注入 | 期望被抓到的地方 |
+| 建议名称 | 判据 |
+|---|---|
+| `E01_ce1_permit_reached_zero` | 步骤 2 有 `hw_blank===0` 采样（≥20） |
+| `E02_ce1_fault_gone_stays_dark` | 步骤 4 无 `hw_blank===0` 采样 |
+| `E03_ce1a_short_pulse_caught` | 脉冲结束时 `hw_blank===1` 且 `hw_fault_caught===1` |
+| `E04_ce1a_pulse_between_edges` | transcript 时间戳证明脉冲内无 core 沿 |
+| `E05_ce1a_2ns/4ns/8ns_all_caught` | 三档 × 四相位全过 |
+| `E06_ce2_w1c_only_stays_dark` | `caught=0 && armed=0 && blank=1` |
+| `E07_ce3_unblank_during_fault_rejected` | `err_reg=1 && armed=0` |
+| `E08_ce3b_critical_edge_rejected` | 同上，三档 ±1 ns |
+| `E09_ce3b_no_late_rearm` | 故障走后 `armed` 仍为 0 |
+| `E10_ce4_reenable_sets_permit` | `armed` 0→1、`hw_blank` 1→0 |
+| `E11_ce4_readback_confirms` | 读回 CTRL = 0x1 |
+| `E12_ce5_int_en_zero_no_bypass` | `hw_blank` 恒 1 |
+| `E13_ce5_reads_no_bypass` | 5 次读事务后仍暗 |
+| `E14_ce5_bad_frames_no_bypass` | 30/47/49 沿帧后仍暗 |
+| `E15_ce6_reset_clears_permit` | 复位后 `armed=0 && blank=1` |
+| `E16_caught_latch_is_sticky` | 单次脉冲后 200 沿仍为 1 |
+
+门槛：`MIN_ASSERTS` 必须等于实际执行条数（沿用 RUN02 纪律）。
+
+---
+
+## 负控（每项都要写清"哪个断言真的会失败"）
+
+| 编号 | 注入 | 必须失败的断言 |
 |---|---|---|
-| NC-1 | 删 `disp_armed` 项，保留 `disp_fault` | CE2 |
-| NC-2 | 删 `disp_fault` 项，保留 `disp_armed` | CE1（若 `disp_armed` 也被错误置位时）/ CE6a |
-| NC-3 | 两项都删（= RUN02 表达式） | CE1 |
-| NC-4 | `disp_armed` 置位条件去掉 `!any_hw_fault` | CE3 |
-| NC-5 | `disp_armed` 清零条件去掉 `disp_fault` | CE2（在 W1C 之前先撤源的那一档） |
+| NC-1 | 删 `disp_armed` 项 | `E06`（W1C 后 `hw_blank` 变 0） |
+| NC-2 | 删 `hw_fault_caught` 项 | `E03`（脉冲结束后 `hw_blank` 变 0） |
+| NC-3 | CTRL 准入去掉 `!any_hw_fault` / `!hw_fault_caught` | `E08` / `E09` |
+| NC-4 | `hw_fault_caught` 的置位改回 `posedge clk` | `E05`（2/4 ns 失败） |
+| NC-5 | `clr_fault` 改为无条件（不看 `n_fault==0`） | `E06`（逐位未清就放行） |
+
+rev1 只写了"预期可能失败"，本轮改为**逐项绑定到具体断言**。
 
 ---
 
 ## 预算与准入
 
-- 本计划**不占用** T6-A 已用尽的 2 次；需**重新申请**一个定向阶段预算（建议 1 次，失败即停）。
-- 准入前必须先通过：静态门（含上述 NC 的文本级注入）+ 状态模型（`t6a_p0_rearm_check.py`
-  扩到 CE1–CE6）+ `vlog` 0/0。
-- 若 `cs_n` 与 core 同沿（6a）无法在数字域给出确定结论，**停在 `WAITING_FOR_SPI_ARCH_REVIEW`**，
-  不得靠试跑碰运气。
+- 不占用 T6-A 已用尽的 2 次；需**新申请 L1 定向预算 1 次**（失败即停）。
+- L2 需要独立环境与独立预算，不与 L1 混合。
+- 准入前必须先通过：`vlog` 0/0、`tools/t6a_p0_rearm_check.py` 与
+  `tools/t6a_p0_async_fault.py` 全过（含三个负控）、静态门（文本级负控）。
+- 若 `cs_n` 与 core 同沿（L1-CE3b）在数字域给不出确定结论，
+  **停在 `WAITING_FOR_P0_ASYNC_CAPTURE_ARCH_DECISION`**，不许试跑碰运气。

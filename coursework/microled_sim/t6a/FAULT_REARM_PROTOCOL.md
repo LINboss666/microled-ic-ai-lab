@@ -1,152 +1,135 @@
-# 故障锁存 / 清除 / 再使能协议（FAULT_REARM_PROTOCOL）
+# 故障锁存 / 清除 / 再使能协议（FAULT_REARM_PROTOCOL）— rev2
 
-日期：2026-11-19　状态：**提案**（未应用到已验收 RTL）
+日期：2026-11-19　状态：**候选提案**（只在独立分支试应用；`course/…` 分支 RTL 未改）
 
 ---
 
-## 1. 规格原文（V1.3 `v13_fulltext.txt`，SHA `6b42b136…`）
+## 1. 规格要求（V1.3 原文，见 `SAFETY_OWNERSHIP.md` §1）
 
-| 段落 | 原文 |
-|---|---|
-| 0903 | 上电/外部复位：RESET_n 低或 POR →「所有LED输出OFF；BLANK有效；SAFE=1」 |
-| 0908 | 掉电/欠压 →「**所有电源恢复且故障清除，不自动点亮**」 |
-| 0912 | 过压/过热 →「**回到滞回恢复区后人工/Host清除再使能**」 |
-| 0916 | 时钟/帧超时 →「**下一合法帧边界并重新预充**」 |
-| 0600 | FAULT_STATUS（W1C）→「**故障锁存；故障未消失不可清**」 |
-| 0606 | INT_STATUS（W1C）→「**TCON事件锁存；清中断不解除熄屏**」 |
-| 0317 | 异常 →「字节计数错误、列序错误、溢出/欠载、时钟丢失、超时、Driver故障均**锁存熄屏**」 |
-| 0965 | 验证 →「**硬件先关；故障锁存；清状态不自动恢复显示**」 |
-| 0810 | 上电序 →「…缓存预充→**EN 和正常同步有效后撤消 BLANK**」 |
-
-四条独立要求，缺一不可：
-1. 故障出现 → **不等 SPI**，当拍关断；
+1. 故障出现 → 不等 SPI，当拍关断；
 2. 故障消失 → **不自动点亮**；
 3. Host 清除故障状态 → **仍不自动点亮**；
-4. 只有"Host 显式再使能 + 帧合法 + 重新预充"同时成立，才允许恢复。
+4. 只有「Host 显式再使能 + 帧合法 + 重新预充」同时成立，才允许恢复。
+
+rev1 只回答了 2/3/4；**rev2 补上 1 的"任意窄脉冲"部分**（`ASYNC_FAULT_CAPTURE`）。
 
 ---
 
-## 2. 状态量
+## 2. 状态量（v2）
 
 | 名称 | 域 | 复位 | 含义 |
 |---|---|---|---|
 | `en` | core | 0 | 软件总使能（CTRL[0]） |
 | `blank_r` | core | 1 | 软件 BLANK 请求（CTRL[1]） |
-| `fault_status[10:0]` | core | 0 | **历史故障锁存**（W1C，源未消失不可清） |
-| `disp_armed`（新增） | core | **0** | **Host 再使能许可**：只在一次通过全部检查的 unblank 写里置 1 |
-| `hw_fault[10:0]` | core | — | 当前硬件故障（组合输入） |
-| `disp_fault`（新增） | core | — | `|(fault_status & ~11'h100)`：锁存的**显示类**故障（ERR_REG 除外） |
-
-`ERR_REG`（bit8）是"寄存器访问错误"，不熄屏（V1.3 段0317 列的是**数据通路**错误）；
-把它排除在 `disp_fault` 之外，否则一次地址写错就会熄屏。
+| `fault_status[10:0]` | core | 0 | 历史故障锁存（W1C，源未消失不可清） |
+| `disp_armed` | core | **0** | Host 再使能许可 |
+| `hw_fault_caught` | **异步置位 / core 清除** | **0** | 任意窄脉冲的故障捕获（新增） |
+| `clr_fault` | core | 0 | 清除 `hw_fault_caught` 的单拍脉冲 |
 
 ---
 
-## 3. 输出门
+## 3. 输出门（六个锁）
 
 ```
-hw_blank = blank_r | (!en) | any_hw_fault | (!disp_armed) | disp_fault
+hw_blank = blank_r                      // 软件 BLANK
+         | (!en)                        // 未使能
+         | any_hw_fault                 // 当前活故障（组合，当拍）
+         | hw_fault_caught              // 异步捕获的任意窄脉冲（粘滞）
+         | (!disp_armed)                // Host 从未授权
+         | disp_fault                   // 锁存的显示类故障（除 ERR_REG）
 ```
 
-五个锁串联，任一成立即关断；**后两个是本次新增**，专门堵住"故障消失后自动恢复"。
+前四项决定"关得多快"，后两项决定"会不会自己亮回来"。
+
+`disp_fault = |(fault_status & 11'h7FF & ~11'h100)`：`ERR_REG`（bit8）是寄存器访问错误，
+不熄屏 —— 一次地址写错不应该黑屏。
 
 ---
 
-## 4. 状态迁移
+## 4. 异步捕获块
 
-### 4.1 `disp_armed` 的置位（唯一的开灯许可）
-
-只在一次 **CTRL 写** 且**全部条件同时成立**时置 1：
-
-```
-wd[0]=1 (EN) 且 wd[1]=0 (BLANK=0)
-且 safe_in=1 且 ready_in=1
-且 any_hw_fault=0            （无当前故障）
-且 disp_fault=0              （无锁存显示故障）
-且 test 位合法（wd[3] → test_en）
+```verilog
+always @(posedge clk or posedge any_hw_fault or negedge reset_n) begin
+    if (!reset_n)          hw_fault_caught <= 1'b0;
+    else if (any_hw_fault) hw_fault_caught <= 1'b1;   // 置位 = 故障边沿，不需要时钟
+    else if (clr_fault)    hw_fault_caught <= 1'b0;   // 清除 = 时钟沿
+end
 ```
 
-任何一条不满足 → **整笔写被拒**（`err_set=1`，`ERR_REG` 置位，寄存器不改变），
-`disp_armed` 保持 0。
+- **置位优先**：`any_hw_fault` 仍为 1 时，`clr_fault` 无效（段0600「故障未消失不可清」）；
+- **时钟死掉也不能清**：clear 只在 `posedge clk` 评估（段0915）；
+- **复位最高**：`!reset_n` 异步清 0，上电不发光（段0903）。
 
-### 4.2 `disp_armed` 的清零（四条独立路径）
+`clr_fault` 的产生：
 
-| 触发 | 时机 | 说明 |
+```
+clr_fault <= wr_cap_o && (wa[5:2] == A_FAULT) && (n_fault == 0) && !any_hw_fault
+```
+
+即"一笔 FAULT 的 W1C，清完之后一位都不剩，且当前无活故障"。
+只要还有一位没清，capture 保持 → 满足"逐位区分历史故障"。
+
+---
+
+## 5. `disp_armed` 的置位 / 清零
+
+| 事件 | 动作 | 时机 |
 |---|---|---|
-| `!reset_n` | 异步 | 上电/复位一律不许发光 |
-| `any_hw_fault` | 每个 core 沿 | **当前**故障；与组合门同拍生效 |
-| `disp_fault` | 每个 core 沿 | **历史**故障仍锁存 |
-| 写 `EN=0` 或 `BLANK=1` | CTRL 写 | 正常关屏也清许可，重新开屏要重新授权 |
-
-清零赋值放在 always 块**最后**，因此故障/关屏永远压过同一拍的置位（非阻塞后写者胜）。
-
-### 4.3 优先级（从高到低）
-
-```
-1. reset_n 异步复位
-2. 硬件故障（当前 any_hw_fault，组合）        ← 不等 SPI，当拍关断
-3. 硬件故障（历史 disp_fault，锁存）
-4. 软件 BLANK / EN=0
-5. Host 再使能许可（disp_armed）
-```
-
-注意第 2 项是**组合**的：故障一出现，`hw_blank` 当拍为 1，不需要等 core 沿；
-第 3 项保证故障撤去后仍然关断。二者叠加 = "立即关 + 不自动开"。
+| CTRL 写 `EN=1,BLANK=0` 且 `SAFE && READY && !any_hw_fault && !hw_fault_caught && !disp_fault` | 置 1 | 同一 core 沿 |
+| 同一写的其它条件不满足 | 整笔拒绝（`ERR_REG`），保持 0 | 同上 |
+| 任意 `any_hw_fault` / `hw_fault_caught` / `disp_fault` | 清 0 | 每个 core 沿（块末，压过置位） |
+| 写 `EN=0` 或 `BLANK=1` | 清 0 | CTRL 写 |
+| `!reset_n` | 清 0 | 异步 |
 
 ---
 
-## 5. 典型序列（与 CE 用例一一对应）
+## 6. 单沿状态矩阵（NBA 语义，24 组，`EDGE_MATRIX_CONTROL.csv`）
 
-| # | 场景 | en | blank_r | hw_fault | fault_status | disp_armed | hw_blank |
-|---|---|---:|---:|---:|---:|---:|---:|
-| A | 正常显示 | 1 | 0 | 0 | 0 | 1 | **0** |
-| B | 故障出现（≥1 core 沿） | 1 | 0 | 1 | 1 | 0 | **1** |
-| C | 故障源撤去，Host 无动作 | 1 | 0 | 0 | 1 | 0 | **1** ✅（旧设计为 0 ❌） |
-| D | + Host W1C 清状态，仍不再使能 | 1 | 0 | 0 | 0 | 0 | **1** ✅ |
-| E | + 显式写 CTRL={EN=1,BLANK=0}，SAFE/READY 有效 | 1 | 0 | 0 | 0 | 1 | **0** |
-| F | 故障仍在时写 CTRL={EN=1,BLANK=0} | 1 | 1 | 1 | 1 | 0 | **1**（写被拒，ERR_REG 置位） |
+RTL 里 `fault_status` 是寄存器，块内所有组合判断读的都是**沿之前**的值，非阻塞赋值在块末才生效。
+下表按这个顺序算出（`blank_old` = 沿前用旧寄存器算的 `hw_blank`；
+`blank_new` = 沿后用新寄存器、**仍给同样的 hw_fault 输入**算的值）。
 
-C/D 两行就是复审的 P0；E 行是"允许恢复"的唯一入口；F 行保证软件无法抢跑。
+| start | ctrl | w1c | hw_fault | blank_old | blank_new | 拒绝 | 新状态 |
+|---|---|---|---:|---:|---:|---:|---|
+| ARMED | – | 0x000 | 0x000 | 0 | 0 | 0 | en=1 blk=0 armed=1 caught=0 |
+| ARMED | – | 0x000 | 0x008 | 1 | 1 | 0 | armed=0 caught=1 fault=0x008 |
+| ARMED | 0x1 | 0x000 | 0x008 | 1 | 1 | **1** | armed=0 caught=1 fault=0x108（ERR_REG） |
+| ARMED | 0x3 | 0x000 | 0x000 | 0 | 1 | 0 | blk=1 armed=0 |
+| DARK | – | 0x001 | 0x000 | 1 | 1 | 0 | **armed=0 caught=0**（清干净也不亮） |
+| DARK | 0x1 | 0x001 | 0x000 | 1 | 1 | **1** | armed=0 caught=1 fault=0x100 |
+| CLEARED | – | 0x001 | 0x000 | 1 | 1 | 0 | armed=0（清状态不自动恢复） |
+| CLEARED | 0x1 | 0x000 | 0x000 | 1 | **0** | 0 | armed=1 ← 唯一允许恢复的入口 |
+| CLEARED | 0x1 | 0x000 | 0x008 | 1 | 1 | **1** | armed=0 caught=1 fault=0x108 |
 
----
+三条必须成立的结论（脚本里逐条断言）：
 
-## 6. 重装载与预充语义（不归本模块，但必须写明）
-
-`disp_armed=1` **只是"Host 授权"**，不等于"可以发光"。真正撤消 BLANK 还需要
-`tcon_top` 的三项条件同时成立（已实现）：
-
-```
-blank = blank_seq || !safe || flt || !act || (act && !disp_ok)
-disp_ok = disp_valid && !disp_poison && precharge_done
-```
-
-集成后应为：
-
-```
-blank_pin = tcon_top.blank || hw_blank        （OR，不是选择）
-```
-
-这样"Host 授权"与"帧/预充"是**两把独立的钥匙**，任一不成立都不亮。
-故障恢复后即使 Host 已经再使能，也必须等到**下一个合法帧边界 + 两级预充完成**
-才会真正点亮 —— 满足段0916。
+1. **live fault + unblank 一律被拒**，且不会留下 `armed=1`；
+2. **DARK / CLEARED 状态下，没有任何纯 W1C 组合能让 `blank` 从 1 变 0**；
+3. 只有 `CLEARED + ctrl=0x1 + 无故障` 这一种组合能让 `blank` 1→0。
 
 ---
 
-## 7. 与 W1C 的关系
+## 7. 与 v1 的差别（重要）
 
-- W1C 只清 `fault_status` 的位，**不清 `disp_armed`**，所以"清状态"永远不会开灯；
-- 源未消失的位清不掉（`n_fault = n_fault & ~(w1c & ~hw_fault)`，已实现）；
-- `INT_STATUS` 的 W1C 与熄屏无关（段0606），因此**不参与** `hw_blank`。
+| 项 | v1 | v2 |
+|---|---|---|
+| 故障捕获 | 只在 core 沿 | **异步置位 / 同步清除** |
+| 4 ns 脉冲 | 丢失（`disp_armed` 没被清掉，`fault_status` 没置位） | 捕获并保持 |
+| 模型 | 在判准入前先更新 `fault_status`（**不符合 RTL**） | 严格 NBA：旧值算组合、块末提交 |
+| 状态表 | 无 | 24 组单沿矩阵，可直接对照 RTL |
+
+v1 的原件保留在 `t6a/_rev1_20261119/` 与 `tools/t6a_p0_rearm_check_v1_archive.py`，便于对照。
 
 ---
 
-## 8. 本次提案的边界
+## 8. 边界与未完成
 
 | 项 | 状态 |
 |---|---|
-| RTL 已改 | ❌ 没有。`SUGGESTED_PATCH.diff.txt` 只做了 `git apply --check` |
-| 仿真验证 | ❌ 没有。T6-A 2/2 预算已用尽，本阶段零 ModelSim |
-| 形式化/等价证明 | ❌ 没有。只有状态模型与反例推导 |
-| 顶层 `ST_FAULT` 退出策略 | ⏸ 需在 T5 集成阶段按 R3 修改，属新预算 |
+| RTL | 仅独立分支试应用；`course/…` 上四个已验收文件 SHA 未变 |
+| 仿真 | ❌ 零 ModelSim（T6-A 预算 2/2 已用尽） |
+| 57 条旧断言在新候选下的表现 | ❌ **未验证**，需要新预算 |
+| 顶层 `ST_FAULT` 退出策略 | ⏸ 需在 T5 集成阶段按 R3 改，属新预算 |
+| `cs_n` 功能时钟的 STA/CDC | ❌ 未做 |
 
-**任何"故障恢复安全已通过"的表述都必须等到新预算下的定向仿真 + 独立复审。**
+**任何"P0 已关闭"的说法都必须等到新预算下的定向仿真 + 独立复审。**

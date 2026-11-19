@@ -1,139 +1,129 @@
-# 安全闸门归属（SAFETY_OWNERSHIP）
+# 安全闸门归属（SAFETY_OWNERSHIP）— rev2
 
-日期：2026-11-19　范围：T6-A `FAULT_AUTO_REENABLE = OPEN_P0` 的架构核对（**零 ModelSim**）
-
----
-
-## 0. 一句话结论
-
-**今天没有任何一条路径能让 `tcon_spi_regs.hw_blank` 单独点亮像素** —— 它根本没有连到引脚。
-但**一旦集成时把它当作最终 BLANK**，复审给出的反例就成立。同时，已验收的 `tcon_top`
-用"只有复位才能退出"的 `flt` 兜底，是**安全但过严**（规格要求 Host 清故障后可再使能，
-不需要整片复位）。所以收口动作是：**把"再使能许可"明确放到 SPI 寄存器块，并规定顶层不得
-把 `hw_blank` 当作唯一的关断源**。
+日期：2026-11-19　范围：`FAULT_AUTO_REENABLE` + `ASYNC_FAULT_CAPTURE` 两个 P0 的架构核对
+（**零 ModelSim**；本轮不修改 T5 已验收顶层）
 
 ---
 
-## 1. 现状：两条独立的安全路径
+## 0. 结论
 
-### 1.1 已验收的 T5 顶层 `tcon_top.v.txt`（SHA `…`，56/56 那版）
+1. **归属澄清成立**：引脚级 BLANK 由 `tcon_top.blank` 唯一驱动，`tcon_spi_regs.hw_blank`
+   目前没有负载 → 上一轮 P0 是**潜伏**缺陷，不是当前误点亮。
+2. **但顶层也有一个洞**：`fault_evt` 只在 `clk_ref` 上升沿采样，
+   **短于一个时钟周期的 `FAULT_n` 脉冲会完全丢失** —— 组合关断闪一下，锁存不进 FSM。
+3. **SPI 块同样有这个洞**（rev1 提案的 `disp_armed` 也只在 core 沿清零）。
+   → 修法不是"再加一个同步粘滞位"，而是**故障边沿本身置位的异步锁存**。
+4. V1.3 **没有**给 `FAULT_n` 任何最小脉宽或源端锁存保证（§12 只说开漏、线与、外部上拉）。
+
+---
+
+## 1. V1.3 原文（`v13_fulltext.txt`，SHA `6b42b136…`）
+
+| 段落 | 原文 |
+|---|---|
+| 0492–0496 | `FAULT_n`：Driver **开漏**→TCON；**开漏／3.3 V／1**；**线与、外部上拉；任一故障拉低熄屏** |
+| 0704 | 「TCON 捕获共享 `FAULT_n` 后置 COMM_TO」 |
+| 0907 | 欠压 →「硬件关高边与恒流；**`FAULT_n` 拉低**」 |
+| 0908 | 「所有电源恢复且故障清除，**不自动点亮**」 |
+| 0912 | 过压/过热 →「回到滞回恢复区后**人工/Host 清除再使能**」 |
+| 0915 | 时钟/帧超时 →「关断、锁存；**不得依赖已停止的 PCLK 检测自身失效**」 |
+| 0916 | 时钟/帧超时 →「**下一合法帧边界并重新预充**」 |
+| 0965 | 验证 →「**硬件先关；故障锁存；清状态不自动恢复显示**」 |
+
+**推导**：`FAULT_n` 是线与开漏 + 外部上拉，是一个**异步电平**；
+规格**没有**规定它至少保持一个 `clk_ref` 周期，也**没有**声明源端一定锁存。
+因此"等一个时钟沿去采样"在合同上不成立。
+
+---
+
+## 2. 三条路径必须分清（任务书 §A.2）
+
+| 路径 | RTL | 触发方式 | 4 ns 脉冲能否捕获 |
+|---|---|---|---|
+| `fault_n` → **组合关断** | `blank = … \|\| !safe \|\| flt \|\| …`，`safe = mode_en && rx_ready && fault_n` | 组合，无时钟 | ✅ 当拍拉高 |
+| `fault_evt` → **FSM 锁存** | `wire fault_evt = act && (err_any \|\| !fault_n);`<br>`ST_ACTIVE: if (fault_evt) state <= ST_FAULT;` | `posedge clk_ref` | ❌ **丢失** |
+| `hw_fault` → **SPI 块关断** | `hw_blank = … \| any_hw_fault` | 组合 | ✅ 当拍 |
+| `hw_fault` → **核心锁存** | `fault_status <= n_fault` | `posedge clk` | ❌ 丢失 |
+| `disp_armed` 清零 | `posedge clk` | ❌ 丢失 |
+
+**"关断"有，"锁存"没有。** 这就是复审给出的：`BLANK` 在 12–15 ns 为 1、16 ns 回 0，
+20 ns 的时钟沿看到 `fault_n=1` → 状态机仍在 ACTIVE。
+
+---
+
+## 3. 逐时刻证据
+
+`tools/t6a_p0_async_fault.py` 产出的时间线（完整 64 行见 `ASYNC_FAULT_TIMELINE.csv`）：
+
+| t (ns) | clk 沿 | fault_n | state | tcon_blank | panel_blank（集成后） |
+|---:|---:|---:|---|---:|---:|
+| 10 | 1 | 1 | ACTIVE | 0 | 0 |
+| 12 | 0 | **0** | ACTIVE | **1** | 1 |
+| 15 | 0 | 0 | ACTIVE | 1 | 1 |
+| 16 | 0 | 1 | **ACTIVE** | **0** | 0 |
+| 20 | 1 | 1 | **ACTIVE** | 0 | **0** ← 故障未被锁存 |
+
+脉宽扫描（1/2/4/8/9/10/11/20 ns × 相位 0/2.5/5/7.5 ns）：
+`fsm_only` 与 `sync_only` 在 **1/2/4 ns 全部丢失**（只有脉宽恰好跨过时钟沿的相位才侥幸捕获）；
+`async_set` 在**全部 32 个组合**保持关断。
+
+---
+
+## 4. 修法：异步置位 / 同步清除
 
 ```verilog
-localparam [1:0] ST_FAULT = 2'd3;             // latched safe state
-wire flt = (state == ST_FAULT);
-wire safe = mode_en && rx_ready && fault_n;
-
-assign blank = blank_seq || !safe || flt || !act || (act && !disp_ok);
-
-ST_ACTIVE: if (fault_evt) state <= ST_FAULT;
-default:                  state <= ST_FAULT;   // latched: reset only
+always @(posedge clk or posedge any_hw_fault or negedge reset_n) begin
+    if (!reset_n)          hw_fault_caught <= 1'b0;
+    else if (any_hw_fault) hw_fault_caught <= 1'b1;   // 置位走故障边沿，不要时钟
+    else if (clr_fault)    hw_fault_caught <= 1'b0;   // 清除必须走时钟沿
+end
 ```
 
-| 事实 | 含义 |
-|---|---|
-| `flt` 一旦置位**只有 `!reset_n` 能退出**（`default` 分支自锁） | 故障后不会自动恢复 —— **这条路径是安全的** |
-| `blank` 是**引脚级** BLANK 的唯一表达式 | 顶层才是"谁最后释放 BLANK"的答案 |
-| `blank` 里已经含 `!act`、`!disp_ok`（帧/预充） | 帧合法性与预充是顶层的第二把钥匙 |
-| `fault_n` 是**引脚**（开漏线与时） | 硬件故障的入口在顶层，不在 SPI 块 |
-
-**副作用**：`flt` 只能靠复位退出，而 V1.3 段0912 要求 OV/OT 恢复后
-"人工/**Host 清除再使能**"，段0965 要求"清状态不自动恢复显示"——
-顶层的策略比规格**更严**（需要整片复位而不是一次 SPI 事务），
-集成时必须统一，否则"Host 再使能"永远做不到。
-
-### 1.2 T6-A 新块 `tcon_spi_regs.v.txt`（RUN02 57/57 那版）
-
-```verilog
-wire any_hw_fault = |hw_fault;
-assign hw_blank   = blank_r | (!en) | any_hw_fault;
-```
-
-| 事实 | 含义 |
-|---|---|
-| `hw_blank` 只在 `tcon_spi_top` 里作为 **output** 存在 | **没有连到 `tcon_top.blank`，也没有连到任何引脚** |
-| `tcon_top` 里没有 SPI 实例，`tcon_spi_regs` 里没有 `blank_seq` | 两者目前是**并联的两套**，不是串联 |
-| `fault_status` 对历史 `hw_fault` 粘滞，但 `hw_blank` **不查它** | 这就是复审的 P0 反例 |
-
----
-
-## 2. 逐网接线：为什么现在"不会真的点亮"
-
-```
-              ┌────────────────────────────┐
-  fault_n ───►│ tcon_top                   │
-  (引脚)      │  state == ST_FAULT  ──► flt│──┐
-              │  safe / act / disp_ok      │  ├──► blank (引脚)  ──► 驱动阵列
-              └────────────────────────────┘  │
-                                              │
-              ┌────────────────────────────┐  │
-  4 线 SPI ──►│ tcon_spi_top               │  │
-              │  u_regs.hw_blank ──► 输出脚 │  ✗  未连接（T6-A 未集成）
-              └────────────────────────────┘
-```
-
-- `tcon_spi_top` 是**独立顶层**，只用于 T6-A 单块验证；
-- T5 的 `tcon_top` 没有 SPI 端口，T6 也没有把 `hw_blank` 接进去；
-- 因此当前 RTL 里 `hw_blank` **不驱动任何发光路径**，P0 是**潜伏缺陷**，
-  不是"现在芯片就会误点亮"。
-
-**但**：`tcon_spi_top` 把 `hw_blank` 注释成"what the panel really sees"，
-`gates.txt` 也称它是最终关断信号。只要集成者按这个注释接线，反例立刻变成真实缺陷。
-**必须在集成前把它写成合同，而不是靠注释。**
-
----
-
-## 3. 集成时必须满足的接线规则（提案）
-
-```
-blank_pin = tcon_blank_frame_level  ||  !spi_display_permit
-            └── 帧/预充/标签（tcon_top，已有）      └── Host 许可（tcon_spi_regs，新增）
-
-spi_display_permit = en && !blank_r && disp_armed && !disp_fault
-```
-
-三条硬规则：
-
-| # | 规则 | 理由 |
+| 性质 | 怎么得到 | 对应条款 |
 |---|---|---|
-| R1 | **`hw_blank` 不得是唯一关断源**：引脚 BLANK 必须是"顶层帧许可"与"SPI 许可"的 **OR** | 任一侧失效另一侧仍能关断；这也是复审要求的"证明它不可独自开灯" |
-| R2 | `spi_display_permit` 里必须含**锁存的再使能位** `disp_armed`，不能是 `!hw_fault` 这种纯组合 | 故障消失 ≠ Host 许可；见 CE1/CE2 |
-| R3 | 顶层的 `ST_FAULT` 退出条件要改成"**Host 显式再使能 + 重新预充 + 合法帧**"，而不是"只能复位" | 否则 V1.3 段0912 的"Host 清除再使能"无法实现 |
+| 任意窄脉冲都能捕获 | 置位是 `posedge any_hw_fault` | 段0496「任一故障拉低熄屏」 |
+| 时钟停了仍然关断 | 置位后 `hw_blank` 是组合 OR；没有时钟就跑不了 clear | 段0915 |
+| 源消失后不自动恢复 | `hw_fault_caught` 粘滞，清它必须写 W1C | 段0908/0965 |
+| 清掉后仍不点亮 | 清的是 `caught`，`disp_armed` 仍需显式 CTRL 写 | 段0912/0965 |
 
-R3 是一条**顶层**改动，属于 T5 已验收代码，本轮**不动**，只登记为集成阶段的必要变更。
+**优先级**：`!reset_n` > 置位（`any_hw_fault`）> `clr_fault`。
+同一 always 块内"先写者优先"，所以 `fault_n` 仍为低时**清不掉**。
+
+`clr_fault` 的产生条件：
+```
+wr_cap_o && wa[5:2]==A_FAULT && (n_fault == 0) && !any_hw_fault
+```
+即"一笔 FAULT 的 W1C，清完之后**一位都不剩**，且当前没有活故障"。
+只要还有一位没清，`caught` 就保持 → 逐位区分的要求成立。
 
 ---
 
-## 4. 三种可选归属，及推荐
+## 5. 归属不变的部分
 
-| 方案 | 做法 | 优点 | 缺点 | 结论 |
-|---|---|---|---|---|
-| A | 只在 `tcon_spi_regs` 里加再使能锁存（本轮提案） | 改动最小、只碰 T6 新模块、可先验证 | 顶层 `flt` 仍需改 R3，否则故障后要整片复位 | **推荐**（先做 A，集成时做 R3） |
-| B | 把 `hw_blank` 直接 OR 进 `tcon_top.blank`，不改 `flt` | 集成最快 | 故障后必须整片复位才能恢复显示，与规格不符；且 `hw_blank` 仍无锁存时 P0 直接生效 | 不推荐 |
-| C | 再使能逻辑全部搬到 `tcon_top` | 单一权威 | 要动已验收的 T5 核心，回归面大 | 不推荐（除非重开 T5 预算） |
+```
+blank_pin = tcon_top.blank  ||  hw_blank     // OR，不是选择
+tcon_top.blank = blank_seq || !safe || flt || !act || (act && !disp_ok)
+hw_blank       = blank_r | !en | any_hw_fault | hw_fault_caught | !disp_armed | disp_fault
+```
 
----
+- 顶层那把钥匙 = **帧合法 + 两级预充 + 标签有效**（`disp_ok`）；
+- SPI 那把钥匙 = **Host 许可**（`disp_armed`）；
+- 任一把不成立都不亮。
 
-## 5. 上电与复位初值（与规格对齐）
-
-| 信号 | 复位值 | 依据 |
-|---|---|---|
-| `en` | 0 | 段0903 "所有 LED 输出 OFF；BLANK 有效" |
-| `blank_r` | 1 | 同上；`CTRL` 复位值 0x0000_0002 |
-| `fault_status` | 0 | §13 复位列 |
-| **`disp_armed`（提案）** | **0** | 上电不允许发光，必须走完段0810 的"SPI 配置与读回 → LUT/电流校准准入 → 缓存预充 → EN 与同步有效 → 撤消 BLANK" |
-
-`disp_armed=0` 与 `en=0` 是**两把独立的锁**：前者是"Host 授权过"，后者是"当前使能中"。
-只有两者同时成立、且无当前/历史显示故障、且顶层帧许可成立，才可能发光。
+**顶层也要改**（R3，属 T5 代码，本轮只提案）：
+`ST_FAULT` 目前只能靠整片复位退出，与段0912 的"Host 清除再使能"不符。
+集成阶段应改为：`ST_FAULT` 只能由**一次显式 Host 再使能 + 重新预充 + 合法帧**退出。
+否则客户要么永远点不亮，要么只能靠复位——两种都不合规格。
 
 ---
 
 ## 6. 本轮证据
 
-- `tools/t6a_p0_rearm_check.py` 的 CE1 表：当前表达式在"故障撤去、Host 无动作"时
-  `hw_blank 1 → 0`，**反例已确认**；
-- 同一脚本对提案门控跑 CE1–CE5 全过，两个负控（删再使能锁存 / 删两把锁）都能被抓到；
-- RTL 一字未改：`rtl/` 工作树 0 处修改，`SUGGESTED_PATCH.diff.txt` 只经 `git apply --check`
-  验证可干净应用，**未应用**。
+| 文件 | 内容 |
+|---|---|
+| `tools/t6a_p0_async_fault.py` | 逐 ns 时间线 + 脉宽/相位扫描 + 清故障协议 + 死时钟 |
+| `tools/t6a_p0_rearm_check.py` | **NBA 语义**状态模型（rev1 的"先更新 `fault_status` 再判准入"已废弃，原件在 `…_v1_archive.py`） |
+| `t6a/ASYNC_FAULT_TIMELINE.csv` | 64 行逐 ns 时间线，含 fsm_only / async_set 两列 |
+| `t6a/SUGGESTED_PATCH.diff.txt` | 候选补丁（`tcon_spi_regs` + `tcon_spi_top`），只在独立分支试应用 |
 
-**结论：`FAULT_AUTO_REENABLE` 的责任归属 = SPI 寄存器块（许可）+ TCON 顶层（帧/预充/锁存），
-两者必须 AND 后才允许发光，任一方都不得单独放行。**
+**RTL 未改**：`course/…` 分支上四个已验收源文件 SHA 与 RUN02 清单逐字节一致。
