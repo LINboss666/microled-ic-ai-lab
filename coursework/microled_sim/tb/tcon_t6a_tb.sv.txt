@@ -1,13 +1,19 @@
 `timescale 1ns / 1ps
-// TCON T6-A testbench — SPI mode 0 / 48-bit frame / 32-bit register file.
+// TCON T6-A testbench rev2 — SPI mode 0 / 48-bit frame / 32-bit register file.
 //
 // The TB drives the four real pins only (SPI_SCK, SPI_MOSI, SPI_CS_n, SPI_MISO)
 // and observes the register outputs. It never reaches into the CDC internals to
 // "make" a test pass.
 //
-// NON-VACUITY: the run counts real committed writes and real register reads and
-// fails if either is below the floor - a design that rejects everything cannot
-// pass by saying "no mismatch".
+// rev2 changes forced by the T6-A RUN01 review (2026-11-19):
+//   * a LEGAL CS_n high gap (CS_GAP, >= the documented 100 ns) between
+//     transactions; rev1 produced a zero-length CS pulse that no synchroniser
+//     can see;
+//   * the write/read counters count what the DUT really did (captured write
+//     frames / latched read snapshots), not what the TB asked for;
+//   * new assertions: read first byte, read-is-not-write, 47/49-edge rejection,
+//     MISO high-Z, snapshot-not-torn, CDC loss/duplicate, EN=0 safety,
+//     fault-blocks-unblank, INT_EN does not mask safety.
 module tcon_t6a_tb;
 
     // ---- 100 MHz core clock ---------------------------------------------
@@ -28,7 +34,7 @@ module tcon_t6a_tb;
     reg  [9:0] col_index_in = 10'd0;
 
     // ---- observability ----------------------------------------------------
-    wire        en, blank_r, test_mode, sw_reset_pulse, fps_sel;
+    wire        en, blank_r, hw_blank, test_mode, sw_reset_pulse, fps_sel;
     wire [15:0] wdog;
     wire [10:0] fault_status, int_status, int_en;
     wire        irq, err_reg;
@@ -36,6 +42,9 @@ module tcon_t6a_tb;
     wire        frame_full_o;
     wire [47:0] sh_o;
     wire [31:0] rd_snapshot_o;
+    wire [15:0] wr_frames_o, wr_cap_cnt_o, wr_rej_cnt_o;
+    wire        mb_lost_o, mb_badlen_o;
+    wire        wr_cap_o, wr_ok_o, rd_cap_o;
 
     tcon_spi_top dut (
         .clk (clk), .reset_n (reset_n),
@@ -43,12 +52,17 @@ module tcon_t6a_tb;
         .spi_cs_n (spi_cs_n),
         .status_in (status_in), .hw_fault (hw_fault), .test_en (test_en),
         .col_index_in (col_index_in),
-        .en (en), .blank_r (blank_r), .test_mode (test_mode),
+        .en (en), .blank_r (blank_r), .hw_blank (hw_blank),
+        .test_mode (test_mode),
         .sw_reset_pulse (sw_reset_pulse), .fps_sel (fps_sel), .wdog (wdog),
         .fault_status (fault_status), .int_status (int_status), .int_en (int_en),
         .irq (irq), .err_reg (err_reg),
         .bitcnt_o (bitcnt_o), .frame_full_o (frame_full_o),
-        .sh_o (sh_o), .rd_snapshot_o (rd_snapshot_o)
+        .sh_o (sh_o), .rd_snapshot_o (rd_snapshot_o),
+        .wr_frames_o (wr_frames_o), .mb_lost_o (mb_lost_o),
+        .mb_badlen_o (mb_badlen_o), .wr_cap_cnt_o (wr_cap_cnt_o),
+        .wr_rej_cnt_o (wr_rej_cnt_o), .wr_cap_o (wr_cap_o),
+        .wr_ok_o (wr_ok_o), .rd_cap_o (rd_cap_o)
     );
 
     // ---------------------------------------------------------------------
@@ -73,43 +87,106 @@ module tcon_t6a_tb;
     // ---------------------------------------------------------------------
     // SPI driver: mode 0, MSB first, 16-bit command + 32-bit data
     // ---------------------------------------------------------------------
-    real T_HALF;          // half SCLK period (ns)
-    integer n_wr_ok, n_rd_ok, n_commit, n_sw_pulse, n_frames;
+    real    T_HALF;                     // half SCLK period (ns)
+    real    CS_GAP;                     // CS_n high time between transactions
+    integer n_wr_ok, n_rd_ok, n_commit, n_sw_pulse, n_frames, n_cap;
+    reg     ff_d = 1'b0;
+    reg [7:0]  rd_first_byte;
+    reg        rd_first_bit;
+    reg        rd_first_def;
+    reg        last_sample = 1'b0;
+    integer    rd_bit_index;
 
+    // real counts: what the DUT actually did
+    always @(posedge clk) if (reset_n && wr_ok_o)   n_wr_ok = n_wr_ok + 1;
+    always @(posedge clk) if (reset_n && rd_cap_o)  n_rd_ok = n_rd_ok + 1;
+    always @(posedge clk) if (reset_n && wr_cap_o)  n_cap    = n_cap + 1;
     always @(posedge clk) if (reset_n && sw_reset_pulse) n_sw_pulse = n_sw_pulse + 1;
-    always @(posedge clk) if (reset_n && frame_full_o && (bitcnt_o == 6'd48)) n_frames = n_frames + 1;
+    // one count per transaction that really reached 48 bits
+    always @(posedge clk) begin
+        ff_d <= frame_full_o;
+        if (reset_n && frame_full_o && !ff_d) n_frames = n_frames + 1;
+    end
+
+    task automatic spi_begin;
+        begin
+            rd_first_bit = 1'b0;
+            rd_first_byte = 8'h00;
+            rd_first_def = 1'b0;
+            rd_bit_index = 0;
+            spi_cs_n = 1'b0;
+            #(T_HALF);
+        end
+    endtask
+
+    // one SCLK period; MOSI is set while SCK is low (mode 0) and MISO is
+    // sampled T/4 after the rising edge - before the slave updates it again.
+    task automatic spi_bit(input b, input sample);
+        begin
+            spi_mosi = b;
+            #(T_HALF); spi_sck = 1'b1;
+            if (sample) begin
+                #(T_HALF * 0.25);
+                last_sample = spi_miso;
+                if (rd_bit_index == 0) begin
+                    rd_first_bit = spi_miso;          // four-state on purpose
+                    rd_first_def = (spi_miso === 1'b0) || (spi_miso === 1'b1);
+                end
+                if (rd_bit_index < 8)
+                    rd_first_byte = {rd_first_byte[6:0], (spi_miso === 1'b1)};
+                rd_bit_index = rd_bit_index + 1;
+                #(T_HALF * 0.75);
+            end else begin
+                #(T_HALF);
+            end
+            spi_sck = 1'b0;
+        end
+    endtask
+
+    task automatic spi_end;
+        begin
+            #(T_HALF);
+            spi_cs_n = 1'b1;
+            #(CS_GAP);                                 // legal inter-transaction gap
+        end
+    endtask
 
     task automatic spi_xfer(input [15:0] cmd, input [31:0] wd,
                             output [31:0] rdout, input integer nbits_total);
         integer i, nb;
-        real tq;
         begin
             rdout = 32'd0;
             nb = 0;
-            tq = T_HALF / 2.0;
-            spi_cs_n = 1'b0;
-            #(T_HALF);
+            spi_begin;
             for (i = 15; i >= 0; i = i - 1) begin
                 if (nb < nbits_total) begin
-                    spi_mosi = cmd[i];
-                    #(T_HALF); spi_sck = 1'b1;
-                    #(T_HALF); spi_sck = 1'b0;
+                    spi_bit(cmd[i], 1'b0);
                     nb = nb + 1;
                 end
             end
             for (i = 31; i >= 0; i = i - 1) begin
                 if (nb < nbits_total) begin
-                    spi_mosi = wd[i];
-                    #(T_HALF); spi_sck = 1'b1;
-                    #(tq); rdout[i] = spi_miso; #(T_HALF - tq);
-                    spi_sck = 1'b0;
+                    spi_bit(wd[i], 1'b1);
+                    if (last_sample === 1'b1) rdout[i] = 1'b1;
+                    else                      rdout[i] = 1'b0;
                     nb = nb + 1;
                 end
             end
-            #(T_HALF);
-            spi_cs_n = 1'b1;
+            spi_end;
             n_commit = n_commit + 1;
-            #(T_HALF * 4.0);
+        end
+    endtask
+
+    // arbitrary length (for the 47 / 49 edge cases)
+    task automatic spi_len(input [15:0] cmd, input [32:0] dta, input integer n);
+        integer k;
+        begin
+            spi_begin;
+            for (k = 0; k < n; k = k + 1) begin
+                if (k < 16) spi_bit(cmd[15 - k], (k >= 16));
+                else        spi_bit(dta[32 - (k - 16)], (k >= 16));
+            end
+            spi_end;
         end
     endtask
 
@@ -117,14 +194,12 @@ module tcon_t6a_tb;
         reg [31:0] dummy;
         begin
             spi_xfer({1'b0, a}, d, dummy, 48);
-            n_wr_ok = n_wr_ok + 1;
         end
     endtask
 
     task automatic rd(input [14:0] a, output [31:0] d);
         begin
             spi_xfer({1'b1, a}, 32'd0, d, 48);
-            n_rd_ok = n_rd_ok + 1;
         end
     endtask
 
@@ -132,7 +207,8 @@ module tcon_t6a_tb;
     // scenario
     // ---------------------------------------------------------------------
     reg [31:0] v, v2, v3;
-    integer i, err_base, nf_base;
+    reg        v_sel;
+    integer i, err_base, nf_base, cap_base;
     real t_phase;
 
     initial begin
@@ -140,8 +216,9 @@ module tcon_t6a_tb;
         $display("COURSE_T6A_CONTRACT=V13_SPI_REGISTER_SUBSET");
 
         assert_count = 0; pass_count = 0; fail_count = 0;
-        n_wr_ok = 0; n_rd_ok = 0; n_commit = 0; n_sw_pulse = 0; n_frames = 0;
+        n_wr_ok = 0; n_rd_ok = 0; n_commit = 0; n_sw_pulse = 0; n_frames = 0; n_cap = 0;
         T_HALF = 50.0;                                    // 10 MHz
+        CS_GAP = 200.0;                                   // >= 100 ns documented
 
         reset_n = 1'b0; spi_cs_n = 1'b1; spi_sck = 1'b0; spi_mosi = 1'b0;
         status_in = 4'b0100; hw_fault = 11'd0; test_en = 1'b0; col_index_in = 10'd0;
@@ -188,7 +265,7 @@ module tcon_t6a_tb;
         chk("D15_unblank_with_ready", (v == 32'h0000_0001) && (blank_r === 1'b0));
 
         nf_base = n_sw_pulse;
-        wr(15'h04, 32'h0000_0006);                        // EN=1 BLANK=1 SW_RESET=1
+        wr(15'h04, 32'h0000_0006);                        // EN=0 BLANK=1 SW_RESET=1
         rd(15'h04, v);
         chk("D16_sw_reset_pulse_self_clears",
             (n_sw_pulse - nf_base == 1) && (v[2] === 1'b0) && (v == 32'h0000_0002));
@@ -226,17 +303,13 @@ module tcon_t6a_tb;
         rd(15'h1C, v2);
         chk("D24_command_only_no_commit", (v2 == 32'h0000_1234) && (err_reg === err_base));
 
-        // back-to-back: two writes with no idle time between CS_n edges
-        spi_cs_n = 1'b0; #(T_HALF);
+        // back-to-back: two writes separated by a LEGAL (>=100 ns) CS_n high gap
+        spi_begin;
         v3 = {1'b0, 15'h1C};
-        for (i = 15; i >= 0; i = i - 1) begin
-            spi_mosi = v3[i]; #(T_HALF); spi_sck = 1'b1; #(T_HALF); spi_sck = 1'b0;
-        end
+        for (i = 15; i >= 0; i = i - 1) spi_bit(v3[i], 1'b0);
         v3 = 32'h0000_0777;
-        for (i = 31; i >= 0; i = i - 1) begin
-            spi_mosi = v3[i]; #(T_HALF); spi_sck = 1'b1; #(T_HALF); spi_sck = 1'b0;
-        end
-        #(T_HALF); spi_cs_n = 1'b1;
+        for (i = 31; i >= 0; i = i - 1) spi_bit(v3[i], 1'b0);
+        spi_end;                                          // CS high for CS_GAP
         spi_xfer({1'b0, 15'h08}, 32'h0000_0001, v, 48);   // second transaction
         rd(15'h1C, v2); rd(15'h08, v3);
         chk("D25_back_to_back_transactions",
@@ -302,12 +375,101 @@ module tcon_t6a_tb;
         // 48-bit framing was really seen
         chk("D41_frame_full_seen", (n_frames > 30) && (frame_full_o === 1'b1 || bitcnt_o == 6'd48));
 
-        // non-vacuity floors
+        // non-vacuity floors (real DUT events, not TB bookkeeping)
         chk("D42_enough_real_writes", n_wr_ok >= 20);
         chk("D43_enough_real_reads", n_rd_ok >= 30);
 
-        $display("T6A_COUNTS writes=%0d reads=%0d commits=%0d sw_pulses=%0d frames=%0d",
-                 n_wr_ok, n_rd_ok, n_commit, n_sw_pulse, n_frames);
+        // ================= F. RUN01 复审新增的非空洞检查 ===================
+        $display("--- F. SPI frame / CDC / safety ---");
+
+        // F1 read first byte: 32 data bits, the first one must be a defined
+        // level (not X/Z from a mis-timed tri-state) and the whole word exact.
+        wr(15'h1C, 32'h0000_A55A);
+        rd(15'h1C, v2);
+        chk("D44_new_read_first_byte_defined",
+            (rd_first_def === 1'b1) && (rd_first_byte === 8'h00) &&
+            (v2 == 32'h0000_A55A) && (rd_first_bit === 1'b0));
+
+        // F2 a READ at a W1C address must never clear anything
+        hw_fault[1] = 1'b1; repeat (4) @(posedge clk); hw_fault[1] = 1'b0;
+        repeat (4) @(posedge clk);
+        rd(15'h0C, v);                                    // latched bit 1
+        v3 = v;
+        rd(15'h0C, v2);                                   // read again, data all-ones
+        chk("D45_new_read_is_not_write",
+            (v3[1] === 1'b1) && (v2[1] === 1'b1) && (fault_status[1] === 1'b1));
+        wr(15'h0C, 32'h0000_0002); rd(15'h0C, v);         // clean up with a real W1C
+        chk("D46_new_w1c_still_works_after_read", (v[1] === 1'b0));
+
+        // F3 47 edges: rejected, no commit, register untouched
+        cap_base = wr_cap_cnt_o;
+        spi_len({1'b0, 15'h1C}, 33'h0_0000_BEEF, 47);
+        rd(15'h1C, v2);
+        chk("D47_new_47_edges_rejected",
+            (v2 == 32'h0000_A55A) && (wr_cap_cnt_o == cap_base) && (mb_badlen_o === 1'b1));
+
+        // F4 49 edges: rejected, no commit, register untouched
+        cap_base = wr_cap_cnt_o;
+        spi_len({1'b0, 15'h1C}, 33'h1_0000_BEEF, 49);
+        rd(15'h1C, v2);
+        chk("D48_new_49_edges_rejected",
+            (v2 == 32'h0000_A55A) && (wr_cap_cnt_o == cap_base));
+
+        // F5 MISO is high-Z while deselected and driven while selected
+        chk("D49_new_miso_hiz_when_deselected", (spi_cs_n === 1'b1) && (spi_miso === 1'bz));
+        spi_begin;
+        #(2.0);
+        v_sel = (spi_miso !== 1'bz);
+        spi_end;
+        chk("D50_new_miso_driven_when_selected", (v_sel === 1'b1));
+
+        // F6 read snapshot must not tear when a live register changes mid-read
+        col_index_in = 10'd321;
+        repeat (2) @(posedge clk);
+        spi_begin;
+        v3 = {1'b1, 15'h24};
+        for (i = 15; i >= 0; i = i - 1) spi_bit(v3[i], 1'b0);
+        v2 = 32'd0;
+        for (i = 31; i >= 0; i = i - 1) begin
+            if (i == 24) col_index_in = 10'd999;           // change mid data phase
+            spi_bit(1'b0, 1'b1);
+            if (last_sample === 1'b1) v2[i] = 1'b1;
+        end
+        spi_end;
+        chk("D51_new_read_snapshot_not_torn", v2 == 32'd321);
+        col_index_in = 10'd0;
+
+        // F7 CDC: no frame lost, none delivered twice
+        chk("D52_new_cdc_no_loss_no_duplicate",
+            (mb_lost_o === 1'b0) && (wr_frames_o == wr_cap_cnt_o) && (n_cap == wr_cap_cnt_o));
+
+        // F8 EN=0 must force BLANK even when the write asks for BLANK=0
+        wr(15'h04, 32'h0000_0003);                        // EN=1, BLANK=1
+        wr(15'h0C, 32'h0000_0100);                        // clear any err
+        wr(15'h04, 32'h0000_0001); rd(15'h04, v);         // EN=1, BLANK=0
+        chk("D53_new_display_enabled", (v == 32'h0000_0001) && (hw_blank === 1'b0));
+        wr(15'h04, 32'h0000_0000); rd(15'h04, v);         // EN=0 + BLANK=0 request
+        chk("D54_new_en_zero_forces_blank",
+            (v == 32'h0000_0002) && (en === 1'b0) && (blank_r === 1'b1) && (hw_blank === 1'b1));
+
+        // F9 a live hardware fault blocks unblanking, whatever INT_EN says
+        hw_fault[3] = 1'b1; repeat (4) @(posedge clk);
+        wr(15'h14, 32'h0000_0000);                        // INT_EN = 0
+        err_base = err_reg;
+        wr(15'h04, 32'h0000_0001); rd(15'h04, v);         // try EN=1, BLANK=0
+        chk("D55_new_fault_blocks_unblank",
+            (en === 1'b0) && (hw_blank === 1'b1) && (err_reg === 1'b1) && (v[0] === 1'b0));
+        chk("D56_new_int_en_zero_keeps_safety", (irq === 1'b0) && (hw_blank === 1'b1));
+        hw_fault[3] = 1'b0; repeat (4) @(posedge clk);
+        wr(15'h0C, 32'h0000_0100);
+
+        // F10 the documented minimum CS_n high time is what the TB actually used
+        chk("D57_new_cs_high_gap_legal", CS_GAP >= 100.0);
+
+        $display("T6A_COUNTS writes=%0d reads=%0d commits=%0d sw_pulses=%0d frames=%0d captured=%0d rejected=%0d",
+                 n_wr_ok, n_rd_ok, n_commit, n_sw_pulse, n_frames, wr_cap_cnt_o, wr_rej_cnt_o);
+        $display("T6A_CDC frames_sent=%0d frames_captured=%0d lost=%0d badlen=%0d",
+                 wr_frames_o, wr_cap_cnt_o, mb_lost_o, mb_badlen_o);
         $display("COURSE_RTL_ASSERT_COUNT=%0d", assert_count);
         $display("COURSE_RTL_PASS_COUNT=%0d",   pass_count);
         $display("COURSE_RTL_FAIL_COUNT=%0d",   fail_count);
@@ -316,7 +478,7 @@ module tcon_t6a_tb;
     end
 
     initial begin
-        #5000000;                                         // 5 ms guard
+        #20000000;                                        // 20 ms guard
         $display("COURSE_T6A_WALL_GUARD=trip");
         $display("COURSE_RTL_ASSERT_COUNT=%0d", assert_count);
         $display("COURSE_RTL_FAIL_COUNT=1");

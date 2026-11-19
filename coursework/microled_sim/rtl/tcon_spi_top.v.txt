@@ -9,7 +9,7 @@ module tcon_spi_top (
     // ---- the four V1.3 SPI pins (段0555: SPI4) ---------------------------
     input  wire        spi_sck,
     input  wire        spi_mosi,
-    output wire        spi_miso,
+    output wire        spi_miso,      // 1'bz while spi_cs_n is high
     input  wire        spi_cs_n,
 
     // ---- real chip status / faults ---------------------------------------
@@ -21,6 +21,7 @@ module tcon_spi_top (
     // ---- register outputs -------------------------------------------------
     output wire        en,
     output wire        blank_r,
+    output wire        hw_blank,      // blank_r | !en | any hw fault
     output wire        test_mode,
     output wire        sw_reset_pulse,
     output wire        fps_sel,
@@ -35,7 +36,15 @@ module tcon_spi_top (
     output wire [5:0]  bitcnt_o,
     output wire        frame_full_o,
     output wire [47:0] sh_o,
-    output wire [31:0] rd_snapshot_o
+    output wire [31:0] rd_snapshot_o,
+    output wire [15:0] wr_frames_o,   // complete write frames seen (cs_n domain)
+    output wire        mb_lost_o,
+    output wire        mb_badlen_o,
+    output wire [15:0] wr_cap_cnt_o,  // write frames captured by the core
+    output wire [15:0] wr_rej_cnt_o,
+    output wire        wr_cap_o,
+    output wire        wr_ok_o,
+    output wire        rd_cap_o
 );
 
     wire [47:0] sh;
@@ -43,32 +52,45 @@ module tcon_spi_top (
     wire        frame_full, we, rd_req;
     wire [14:0] addr, rd_addr_hold;
     wire [31:0] rd_snapshot;
+    wire [47:0] wr_frame;
+    wire        wr_tog, wr_ack_tog;
+    wire [15:0] wr_frames;
+    wire        mb_lost, mb_badlen;
 
     spi_frame u_frame (
+        .reset_n (reset_n),
         .sclk (spi_sck), .cs_n (spi_cs_n), .mosi (spi_mosi), .miso (spi_miso),
         .sh (sh), .bitcnt (bitcnt), .frame_full (frame_full),
         .we (we), .addr (addr),
         .rd_req (rd_req), .rd_addr_hold (rd_addr_hold),
-        .rd_snapshot (rd_snapshot)
+        .rd_snapshot (rd_snapshot),
+        .wr_frame (wr_frame), .wr_tog (wr_tog), .wr_frames (wr_frames),
+        .mb_lost (mb_lost), .mb_badlen (mb_badlen), .wr_ack_tog (wr_ack_tog)
     );
 
     tcon_spi_regs u_regs (
         .clk (clk), .reset_n (reset_n),
-        .sh (sh), .frame_full (frame_full), .cs_n (spi_cs_n),
+        .wr_frame (wr_frame), .wr_tog (wr_tog), .wr_ack_tog (wr_ack_tog),
         .rd_addr_hold (rd_addr_hold), .rd_req (rd_req),
         .rd_snapshot (rd_snapshot),
         .status_in (status_in), .hw_fault (hw_fault), .test_en (test_en),
         .col_index_in (col_index_in),
-        .en (en), .blank_r (blank_r), .test_mode (test_mode),
+        .en (en), .blank_r (blank_r), .hw_blank (hw_blank),
+        .test_mode (test_mode),
         .sw_reset_pulse (sw_reset_pulse), .fps_sel (fps_sel), .wdog (wdog),
         .fault_status (fault_status), .int_status (int_status), .int_en (int_en),
         .irq (irq), .err_reg (err_reg),
-        .fault_vis_o ()
+        .wr_cap_cnt (wr_cap_cnt_o), .wr_cap_o (wr_cap_o),
+        .wr_ok_o (wr_ok_o), .wr_rej_cnt (wr_rej_cnt_o),
+        .rd_cap_o (rd_cap_o), .fault_vis_o ()
     );
 
     assign bitcnt_o      = bitcnt;
     assign frame_full_o  = frame_full;
     assign sh_o          = sh;
     assign rd_snapshot_o = rd_snapshot;
+    assign wr_frames_o   = wr_frames;
+    assign mb_lost_o     = mb_lost;
+    assign mb_badlen_o   = mb_badlen;
 
 endmodule

@@ -1,93 +1,183 @@
 `timescale 1ns / 1ps
-// spi_frame — shared V1.3 SPI front end (SCLK domain), T6-A.
+// spi_frame — V1.3 SPI front end (SCLK domain), T6-A rev2.
 //
-// V1.3 (段0569): mode 0, SCLK <= 10 MHz, 16-bit command (bit15 = 1 read /
-// 0 write, bit14:0 = BYTE address, MSB first) + 32-bit data (MSB first),
-// 48 SCK in total. Read data is returned in the LAST 32 cycles. A write is only
-// committed on the CS_n rising edge and an incomplete transaction is discarded.
+// V1.3 段0569: mode 0, SCLK <= 10 MHz, 16-bit command MSB first
+// (bit15 = 1 read / 0 write, bit14:0 = byte address) followed by 32-bit data
+// MSB first, 48 SCK in total. Read data comes back in the last 32 cycles.
 //
-// WHAT THIS BLOCK DOES NOT DO
-//   * it never touches the 100 MHz domain except through two deliberately
-//     documented single-bit qualifiers (see tcon_spi_regs);
-//   * it does not decide whether a write is legal - that is the register file;
-//   * it does not clock anything from SCLK into the register file.
+// ===========================================================================
+// WHY rev2 EXISTS (T6-A RUN01 失败根因, 复审 2026-11-19)
+//   * rev1 used `always @(posedge sclk or negedge cs_n) if (!cs_n) clear`.
+//     CS_n is LOW for the whole transaction, so every SCLK rising edge hit the
+//     clear branch: nothing ever shifted in (frames=0). The reset must be the
+//     CS_n HIGH level (idle), not the low level.
+//   * rev1 decided read/write from sh_r[47]. Because sh_r is 48 bits wide, the
+//     first command bit only reaches bit47 at the 48th rising edge, so during
+//     the entire data phase sh_r[47] was 0 and a read was taken for a write.
+//     rev2 freezes {R/W, addr} at the 16th rising edge into hdr_read/hdr_addr
+//     and never consults the moving shifter again.
+//   * rev1 captured the address from sh_r[46:32] when bc==15, i.e. from the
+//     still-empty high slice. rev2 rebuilds it from {sr[13:0], mosi}.
+// ===========================================================================
 //
-// CDC SHAPE (documented, not "bit-synchronised")
-//   rd_addr_hold is frozen at the 16th rising edge and stays constant for the
-//   whole data phase (>= 32 SCLK periods). It is sampled by the main domain
-//   only after the single-bit qualifier rd_req has been synchronised (2 FF),
-//   i.e. classic "stable multi-bit data + synchronised single-bit qualifier".
-//   The 32-bit response comes back the same way: rd_snapshot is produced in the
-//   main domain and is stable before the 16th falling edge where this block
-//   latches its first output bit.
-module spi_frame (
-    input  wire        sclk,        // SPI clock, mode 0, <= 10 MHz
-    input  wire        cs_n,        // active low; its RISING edge commits a write
+// CLOCK DOMAINS
+//   sclk  : shifter, header freeze, MISO shift.
+//   cs_n  : the frame mailbox (write commits are only defined at CS_n rising,
+//           where the frame length is finally known). cs_n therefore acts as a
+//           functional clock for one 48-bit hold register and a few flags.
+//           STA must constrain it; this module only claims functional CDC.
+//   core  : see tcon_spi_regs.
+//
+// WRITE MAILBOX (request / acknowledge, single-bit epoch)
+//   posedge cs_n, exactly 48 bits, bit15==0  ->  wr_frame holds the frame and
+//   wr_tog flips. The core sees the flip through 2 FF, then uses wr_frame,
+//   which has been stable since the 48th rising edge (>= 1/2 SCLK before the CS
+//   edge), so the 48-bit bus is never sampled while moving. The core answers by
+//   returning its own epoch (wr_ack_tog); the SCLK domain compares the two and
+//   raises mb_lost if a new frame arrives while the previous one is still
+//   unacknowledged.
+//
+// MINIMUM CS_n HIGH TIME
+//   The acknowledge round trip is 3 core clocks (2 FF + capture) = 30 ns at
+//   100 MHz. MIN_CS_HIGH_NS = 100 ns (10 core clocks) leaves x3 margin, and is
+//   the value the testbench drives between transactions. Shorter gaps may drop
+//   a frame - and if they do, mb_lost says so instead of failing silently.
+module spi_frame #(
+    parameter integer MIN_CS_HIGH_NS = 100
+) (
+    input  wire        reset_n,      // chip async reset (an internal net, NOT a pin)
+    input  wire        sclk,         // SPI clock, mode 0, <= 10 MHz
+    input  wire        cs_n,         // active low; rising edge = end of transaction
     input  wire        mosi,
-    output wire        miso,
+    output wire        miso,         // 1'bz while cs_n is high (V1.3 §12 table)
 
-    // observation / to the register file
-    output wire [47:0] sh,          // raw frame: {cmd[15:0], data[31:0]}
-    output wire [5:0]  bitcnt,      // saturating 0..48
-    output wire        frame_full,  // exactly 48 bits were clocked in
-    output wire        we,          // sh[47]: 1 = read, 0 = write (V1.3 bit15)
-    output wire [14:0] addr,        // sh[46:32]: byte address
+    // ---- observation ------------------------------------------------------
+    output wire [47:0] sh,           // live shifter (0 while cs_n is high)
+    output wire [5:0]  bitcnt,       // live count while selected, last count otherwise
+    output wire        frame_full,   // bitcnt == 48
+    output wire        we,           // frozen command bit15: 1 = read
+    output wire [14:0] addr,         // frozen command bit14:0
 
-    // read path qualifiers (level, stable for the whole data phase)
-    output wire        rd_req,
-    output reg  [14:0] rd_addr_hold,
-    input  wire [31:0] rd_snapshot  // from the main domain
+    // ---- read data phase (SCLK -> core) -----------------------------------
+    output wire        rd_req,       // level, high for the 32 data bits of a read
+    output reg  [14:0] rd_addr_hold, // frozen at the 16th rising edge
+    input  wire [31:0] rd_snapshot,  // from the core, stable before the 16th falling edge
+
+    // ---- write mailbox (cs_n -> core) -------------------------------------
+    output reg  [47:0] wr_frame,
+    output reg         wr_tog,
+    output reg  [15:0] wr_frames,
+    output reg         mb_lost,
+    output reg         mb_badlen,
+    input  wire        wr_ack_tog
 );
 
-    reg [47:0] sh_r;
+    // ======================================================================
+    // shifter / bit counter  (reset = CS_n HIGH = bus idle)
+    // ======================================================================
+    reg [47:0] sr;
     reg [5:0]  bc;
+    reg [5:0]  bc_last;
 
-    // CS_n low is the frame reset; using it as an asynchronous clear is
-    // synthesizable and guarantees "incomplete transaction discarded".
-    always @(posedge sclk or negedge cs_n) begin
-        if (!cs_n) begin
-            sh_r <= 48'd0;
-            bc   <= 6'd0;
+    // Exactly 48 bits are shifted in. bc keeps counting (up to 63) so that an
+    // overlength transaction can be recognised and rejected at the CS edge.
+    always @(posedge sclk or posedge cs_n or negedge reset_n) begin
+        if (!reset_n || cs_n) begin
+            sr <= 48'd0;
+            bc <= 6'd0;
         end else begin
-            sh_r <= {sh_r[46:0], mosi};
-            if (bc != 6'd48) bc <= bc + 6'd1;
+            if (bc < 6'd48) sr <= {sr[46:0], mosi};
+            if (bc != 6'd63) bc <= bc + 6'd1;
         end
     end
 
-    assign sh         = sh_r;
-    assign bitcnt     = bc;
-    assign frame_full = (bc == 6'd48);
-    assign we         = sh_r[47];
-    assign addr       = sh_r[46:32];
-
-    // The address is complete exactly after the 16th rising edge; freeze it.
-    always @(posedge sclk or negedge cs_n) begin
-        if (!cs_n)           rd_addr_hold <= 15'd0;
-        else if (bc == 6'd15) rd_addr_hold <= sh_r[46:32];
+    // last count, kept for observation after CS_n goes back high
+    always @(posedge cs_n or negedge reset_n) begin
+        if (!reset_n) bc_last <= 6'd0;
+        else          bc_last <= bc;
     end
 
-    // single-bit level qualifier: "the address has been frozen, a read is in
-    // progress". Synchronised by the main domain; never used to gate a bus.
-    assign rd_req = !cs_n && (bc >= 6'd16) && !sh_r[47];
+    // ======================================================================
+    // command header freeze, exactly at the 16th rising edge
+    //   before that edge bc == 15 and sr[14:0] holds command bits 15..1,
+    //   so the full command is {sr[14:0], mosi}: [15] = R/W, [14:0] = addr.
+    // ======================================================================
+    reg        hdr_read;
+    reg [14:0] hdr_addr;
 
-    // ---- MISO: mode 0, changed on the FALLING edge ----------------------
-    // data bit 31 must be valid at rising edge #17, so the load happens on the
-    // falling edge with bc == 16, and one more bit is presented on each of the
-    // following 31 falling edges.
-    reg [4:0] dindex;
+    always @(posedge sclk or posedge cs_n or negedge reset_n) begin
+        if (!reset_n || cs_n) begin
+            hdr_read      <= 1'b0;
+            hdr_addr      <= 15'd0;
+            rd_addr_hold  <= 15'd0;
+        end else if (bc == 6'd15) begin
+            hdr_read      <= sr[14];            // command bit15
+            hdr_addr      <= {sr[13:0], mosi};  // command bits 14..0
+            rd_addr_hold  <= {sr[13:0], mosi};
+        end
+    end
+
+    assign sh         = sr;
+    assign bitcnt     = cs_n ? bc_last : bc;
+    assign frame_full = (bitcnt == 6'd48);
+    assign we         = hdr_read;
+    assign addr       = hdr_addr;
+
+    // read phase: from the 16th rising edge (address frozen) to the CS edge
+    assign rd_req = (!cs_n) && hdr_read && (bc >= 6'd16);
+
+    // ======================================================================
+    // MISO, mode 0: change on the falling edge, sampled by the master on the
+    // rising edge. Bit31 must be present at rising edge #17, i.e. it is loaded
+    // on the falling edge that follows rising edge #16 (bc == 16, dindex == 0).
+    // ======================================================================
+    reg [5:0] dindex;
     reg       miso_r;
 
-    always @(negedge sclk or negedge cs_n) begin
-        if (!cs_n) begin
-            dindex <= 5'd0;
-            miso_r <= 1'b0;
-        end else if ((bc >= 6'd16) && !sh_r[47]) begin
-            // read transactions only: a write keeps MISO low for all 48 bits
-            miso_r <= rd_snapshot[31 - dindex];
-            if (dindex != 5'd31) dindex <= dindex + 5'd1;
+    always @(negedge sclk or posedge cs_n or negedge reset_n) begin
+        if (!reset_n || cs_n) begin
+            dindex <= 6'd0;
+            miso_r <= 1'b0;                       // a write keeps MISO at 0
+        end else if (hdr_read && (bc >= 6'd16) && (dindex < 6'd32)) begin
+            miso_r <= rd_snapshot[5'd31 - dindex[4:0]];
+            dindex <= dindex + 6'd1;
         end
     end
 
-    assign miso = miso_r;
+    assign miso = cs_n ? 1'bz : miso_r;           // V1.3 §12: high-Z when deselected
+
+    // ======================================================================
+    // write mailbox
+    // ======================================================================
+    // full 48-bit frame, captured at the 48th rising edge so that the bus is
+    // never taken while it is still moving
+    always @(posedge sclk or negedge reset_n) begin
+        if (!reset_n)                        wr_frame <= 48'd0;
+        else if (!cs_n && (bc == 6'd47))     wr_frame <= {sr[46:0], mosi};
+    end
+
+    // acknowledge epoch, synchronised into the SCLK domain
+    reg ack_s1, ack_s2;
+    always @(posedge sclk or negedge reset_n) begin
+        if (!reset_n) begin ack_s1 <= 1'b0; ack_s2 <= 1'b0; end
+        else          begin ack_s1 <= wr_ack_tog; ack_s2 <= ack_s1; end
+    end
+
+    // frame end: only here is the length known
+    always @(posedge cs_n or negedge reset_n) begin
+        if (!reset_n) begin
+            wr_tog    <= 1'b0;
+            wr_frames <= 16'd0;
+            mb_lost   <= 1'b0;
+            mb_badlen <= 1'b0;
+        end else if (bc == 6'd48 && !hdr_read) begin
+            // a complete write frame
+            if (ack_s2 != wr_tog) mb_lost <= 1'b1;   // previous one not consumed
+            wr_tog    <= ~wr_tog;
+            wr_frames <= wr_frames + 16'd1;
+        end else if (bc != 6'd48) begin
+            if (!hdr_read) mb_badlen <= 1'b1;        // 47 / 49 / short: rejected
+        end
+    end
 
 endmodule

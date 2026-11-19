@@ -1,34 +1,40 @@
 `timescale 1ns / 1ps
-// tcon_spi_regs — TCON 32-bit register file + SPI->core CDC (T6-A).
+// tcon_spi_regs — TCON 32-bit register file + SPI->core CDC (T6-A rev2).
 //
 // V1.3 §13 (段0569-0570, 0704):
-//   * all registers are 32 bit, 4-byte aligned, reserved bits read 0 / write 0;
-//   * unimplemented address: read 0, write ignored and ERR_REG set;
+//   * all registers are 32 bit, 4-byte aligned; reserved bits read 0 / write 0;
+//   * unimplemented or misaligned address: read 0, write ignored, ERR_REG set;
 //   * timing / mode / current / LUT configuration may only be written when
-//     EN = 0 and SAFE = 1; a write that violates this sets ERR_REG and is NOT
-//     committed;
+//     EN = 0 and SAFE = 1; a violation sets ERR_REG and is NOT committed;
 //   * BLANK assertion and EN clearing take effect at any time;
-//   * protection (RESET / hardware FAULT / BLANK) outranks SPI and the
-//     interrupt mask; INT_EN only masks the notification.
+//   * protection (RESET / hardware FAULT / BLANK) outranks SPI and the interrupt
+//     mask; INT_EN only masks the notification.
 //
-// This module owns the 100 MHz side of the SPI interface. It never samples a
-// multi-bit bus without a synchronised single-bit qualifier:
-//   write : the frame bus `sh` is frozen once SCLK stops; the qualifier is the
-//           2-FF synchronised CS_n RISING edge, which is by construction at
-//           least half a SCLK period after the last bit was captured;
-//   read  : the frozen address `rd_addr_hold` is sampled only after the 2-FF
-//           synchronised `rd_req` level is seen; the 32-bit answer goes back as
-//           a stable register that the SPI block latches one falling edge later.
+// ===========================================================================
+// WHAT CHANGED IN rev2 (T6-A RUN01 复审, 2026-11-19)
+//   * a READ transaction can no longer reach the write path at all: writes only
+//     arrive through the mailbox epoch, and only frames with command bit15==0
+//     ever flip that epoch. The W1C paths therefore cannot be triggered by a
+//     read either - not by a qualifier, by construction.
+//   * the 32-bit read answer is latched exactly ONCE per read request (edge of
+//     the synchronised rd_req) instead of being refreshed every core clock, so
+//     a live register (STATUS / COL_INDEX) cannot tear in the middle of the
+//     32 data bits.
+//   * CTRL: clearing EN forces BLANK; unblanking requires SAFE && READY && no
+//     hardware fault, and is decided on the NEW en value, not the old one.
+// ===========================================================================
 module tcon_spi_regs (
     input  wire        clk,          // 100 MHz core clock
     input  wire        reset_n,
 
-    // ---- SPI-side qualifiers (SCLK domain, see spi_frame) ----------------
-    input  wire [47:0] sh,
-    input  wire        frame_full,
-    input  wire        cs_n,
-    input  wire [14:0] rd_addr_hold,
-    input  wire        rd_req,
+    // ---- write mailbox (cs_n domain, see spi_frame) -----------------------
+    input  wire [47:0] wr_frame,     // stable 48-bit frame of the last write
+    input  wire        wr_tog,       // flips once per complete write frame
+    output wire        wr_ack_tog,   // this domain's consumed epoch
+
+    // ---- read request (SCLK domain) ---------------------------------------
+    input  wire [14:0] rd_addr_hold, // frozen from the 16th rising edge
+    input  wire        rd_req,       // level for the 32 data bits
     output reg  [31:0] rd_snapshot,
 
     // ---- real hardware status / faults (NOT constants) --------------------
@@ -40,7 +46,8 @@ module tcon_spi_regs (
 
     // ---- register outputs to the rest of the chip -------------------------
     output reg         en,
-    output reg         blank_r,
+    output reg         blank_r,      // software BLANK request
+    output wire        hw_blank,     // what the panel really sees
     output reg         test_mode,
     output wire        sw_reset_pulse,
     output reg         fps_sel,
@@ -51,12 +58,17 @@ module tcon_spi_regs (
     output wire        irq,
     output reg         err_reg,
 
-    // observation
+    // ---- observation ------------------------------------------------------
+    output reg  [15:0] wr_cap_cnt,   // write frames captured from the mailbox
+    output wire        wr_cap_o,     // 1-cycle pulse per captured write frame
+    output reg         wr_ok_o,      // 1-cycle pulse per ACCEPTED write
+    output reg  [15:0] wr_rej_cnt,   // rejected writes
+    output wire        rd_cap_o,     // 1-cycle pulse per latched read snapshot
     output wire [10:0] fault_vis_o
 );
 
     // ---------------------------------------------------------------------
-    // register addresses (addr[5:2]; °0x00..0x24 of the TCON subset)
+    // register addresses (addr[5:2]); 0x00..0x24 of the TCON subset
     // ---------------------------------------------------------------------
     localparam [3:0] A_CHIPID = 4'h0, A_CTRL  = 4'h1, A_MODE  = 4'h2,
                      A_FAULT  = 4'h3, A_INT   = 4'h4, A_INTEN = 4'h5,
@@ -66,31 +78,34 @@ module tcon_spi_regs (
     localparam [7:0] CHIP_ID_TCON = 8'h10;   // V1.3 §13 reset column 10/21/22/31/32h
 
     // ---------------------------------------------------------------------
-    // CS_n synchroniser + rising-edge detect (the write commit event)
+    // write mailbox epoch: 2 FF synchroniser + consumed-epoch tracking
+    //   wr_cap is a single-cycle pulse per write frame - never per SCLK edge.
     // ---------------------------------------------------------------------
-    reg cs_m, cs_s1, cs_s2;
+    reg tg_s1, tg_s2, tg_seen;
     always @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
-            cs_m <= 1'b1; cs_s1 <= 1'b1; cs_s2 <= 1'b1;
+            tg_s1 <= 1'b0; tg_s2 <= 1'b0; tg_seen <= 1'b0;
         end else begin
-            cs_m  <= cs_n;
-            cs_s1 <= cs_m;
-            cs_s2 <= cs_s1;
+            tg_s1 <= wr_tog;
+            tg_s2 <= tg_s1;
+            if (tg_s2 != tg_seen) tg_seen <= tg_s2;
         end
     end
-    wire cs_rise = cs_s1 && !cs_s2;
+    assign wr_ack_tog = tg_seen;
+    assign wr_cap_o   = (tg_s2 != tg_seen);
 
     // ---------------------------------------------------------------------
-    // rd_req synchroniser (read qualifier)
+    // read request: 2 FF + falling-edge-free single capture
     // ---------------------------------------------------------------------
-    reg rq_s1, rq_s2;
+    reg rq_s1, rq_s2, rq_s3;
     always @(posedge clk or negedge reset_n) begin
-        if (!reset_n) begin rq_s1 <= 1'b0; rq_s2 <= 1'b0; end
-        else          begin rq_s1 <= rd_req; rq_s2 <= rq_s1; end
+        if (!reset_n) begin rq_s1 <= 1'b0; rq_s2 <= 1'b0; rq_s3 <= 1'b0; end
+        else          begin rq_s1 <= rd_req; rq_s2 <= rq_s1; rq_s3 <= rq_s2; end
     end
+    assign rd_cap_o = rq_s2 && !rq_s3;
 
     // ---------------------------------------------------------------------
-    // register read mux (combinational, used for the snapshot)
+    // register read mux (combinational; rd_addr_hold is frozen while in use)
     // ---------------------------------------------------------------------
     wire [3:0] ra = rd_addr_hold[5:2];
     wire       ra_ok = (rd_addr_hold[14:6] == 9'd0) && (rd_addr_hold[1:0] == 2'd0);
@@ -119,21 +134,30 @@ module tcon_spi_regs (
     // state + write commit
     // ---------------------------------------------------------------------
     reg        sw_pulse;
-    reg [10:0] fs_d;                 // previous visible fault state (for INT latch)
+    reg [10:0] fs_d;
     reg [10:0] n_fault, n_int;
 
     wire safe_in  = status_in[2];
     wire ready_in = status_in[0];
     wire cfg_ok   = (!en) && safe_in;
+    wire any_hw_fault = |hw_fault;
 
     assign sw_reset_pulse = sw_pulse;
     assign irq            = |(int_status & int_en);
     assign fault_vis_o    = fault_status | hw_fault;
+    // no enable, software blank, or any hardware fault => the panel is blank.
+    // Software cannot talk its way out of this: it is a pure OR at the output.
+    assign hw_blank       = blank_r | (!en) | any_hw_fault;
+
+    // the frame fields, valid and stable by the time wr_cap pulses
+    wire [14:0] wa_w = wr_frame[46:32];
+    wire [31:0] wd_w = wr_frame[31:0];
 
     integer k;
     reg [14:0] wa;
     reg [31:0] wd;
     reg        err_set;
+    reg        accept;
     reg [10:0] w1c_f, w1c_i;
 
     always @(posedge clk or negedge reset_n) begin
@@ -150,14 +174,20 @@ module tcon_spi_regs (
             err_reg      <= 1'b0;
             rd_snapshot  <= 32'd0;
             fs_d         <= 11'd0;
+            wr_cap_cnt   <= 16'd0;
+            wr_rej_cnt   <= 16'd0;
+            wr_ok_o      <= 1'b0;
         end else begin
-            err_set = 1'b0;
+            err_set  = 1'b0;
+            accept   = 1'b0;
             sw_pulse <= 1'b0;
+            wr_ok_o  <= 1'b0;
 
-            // ---- 1. write commit on the CS_n rising edge -----------------
-            if (cs_rise && frame_full) begin
-                wa = sh[46:32];
-                wd = sh[31:0];
+            // ---- 1. write commit: one pulse per captured write frame -------
+            if (wr_cap_o) begin
+                wa = wa_w;
+                wd = wd_w;
+                wr_cap_cnt <= wr_cap_cnt + 16'd1;
                 if (wa[1:0] != 2'b00) begin
                     err_set = 1'b1;                       // not 4-byte aligned
                 end else if (wa[14:6] != 9'd0) begin
@@ -166,43 +196,48 @@ module tcon_spi_regs (
                     case (wa[5:2])
                     A_CHIPID: err_set = 1'b1;             // RO
                     A_CTRL: begin
-                        if (wd[3] && !test_en)                       err_set = 1'b1;
-                        else if (wd[0] && !safe_in)                  err_set = 1'b1;
-                        else if (!wd[1] && !(en && safe_in && ready_in)) err_set = 1'b1;
+                        if (wd[3] && !test_en)                          err_set = 1'b1;
+                        else if (wd[0] && (!safe_in || any_hw_fault))    err_set = 1'b1;
+                        else if (wd[0] && !wd[1] &&
+                                 !(safe_in && ready_in && !any_hw_fault)) err_set = 1'b1;
                         else begin
                             en        <= wd[0];
-                            blank_r   <= wd[1];
+                            // EN=0 forces BLANK, whatever bit1 asks for
+                            blank_r   <= wd[0] ? wd[1] : 1'b1;
                             test_mode <= wd[3];
-                            if (wd[2]) sw_pulse <= 1'b1;         // W1P, self clearing
+                            if (wd[2]) sw_pulse <= 1'b1;     // W1P, self clearing
+                            accept = 1'b1;
                         end
                     end
                     A_MODE: begin
-                        if (cfg_ok) fps_sel <= wd[0];
-                        else        err_set = 1'b1;
+                        if (cfg_ok) begin fps_sel <= wd[0]; accept = 1'b1; end
+                        else              err_set = 1'b1;
                     end
                     A_WDOG: begin
-                        if (!cfg_ok)                      err_set = 1'b1;
+                        if (!cfg_ok)                            err_set = 1'b1;
                         else if ((wd[15:0] == 16'd0) && !test_en) err_set = 1'b1;
-                        else                              wdog <= wd[15:0];
+                        else begin wdog <= wd[15:0]; accept = 1'b1; end
                     end
-                    A_FAULT: ;                            // handled below (W1C)
-                    A_INT:   ;                            // handled below (W1C)
-                    A_INTEN: int_en <= wd[10:0];
+                    A_FAULT: accept = 1'b1;                  // W1C below
+                    A_INT:   accept = 1'b1;                  // W1C below
+                    A_INTEN: begin int_en <= wd[10:0]; accept = 1'b1; end
                     A_STATUS, A_VIDCFG, A_COLIDX: err_set = 1'b1;   // RO
                     default: err_set = 1'b1;
                     endcase
                 end
+                if (err_set) wr_rej_cnt <= wr_rej_cnt + 16'd1;
+                if (accept)  wr_ok_o    <= 1'b1;
             end
 
-            // ---- 2. W1C masks -------------------------------------------
+            // ---- 2. W1C masks (reachable only from a captured WRITE frame) -
             w1c_f = 11'd0;
             w1c_i = 11'd0;
-            if (cs_rise && frame_full && (wa[1:0] == 2'b00) && (wa[14:6] == 9'd0)) begin
-                if (wa[5:2] == A_FAULT) w1c_f = sh[10:0];
-                if (wa[5:2] == A_INT)   w1c_i = sh[10:0];
+            if (wr_cap_o && (wa[1:0] == 2'b00) && (wa[14:6] == 9'd0)) begin
+                if (wa[5:2] == A_FAULT) w1c_f = wd[10:0];
+                if (wa[5:2] == A_INT)   w1c_i = wd[10:0];
             end
 
-            // ---- 3. next visible fault / interrupt state -----------------
+            // ---- 3. next visible fault / interrupt state -------------------
             n_fault = fault_status | hw_fault | (err_set ? 11'h100 : 11'd0);
             if (w1c_f != 11'd0) n_fault = n_fault & ~(w1c_f & ~hw_fault);
             if (err_set)        n_fault[8] = 1'b1;
@@ -216,8 +251,8 @@ module tcon_spi_regs (
             if (err_set) err_reg <= 1'b1;
             else if (w1c_f[8]) err_reg <= 1'b0;
 
-            // ---- 4. read snapshot (only after the qualifier is seen) -----
-            if (rq_s2) rd_snapshot <= rval;
+            // ---- 4. read snapshot: ONE latch per request -------------------
+            if (rd_cap_o) rd_snapshot <= rval;
         end
     end
 

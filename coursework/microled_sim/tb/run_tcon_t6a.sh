@@ -10,7 +10,7 @@ SRC="$COURSE_ROOT/coursework/microled_sim"
 
 WALL_LIMIT_S="${WALL_LIMIT_S:-900}"
 
-FLOOR=43
+FLOOR=57   # rev2: the floor is the real assertion count, not the RUN01 43
 SRC_TB="$SRC/tb/tcon_t6a_tb.sv.txt"
 TOTAL=$(grep -c 'chk("' "$SRC_TB")
 if [ "$TOTAL" -lt "$FLOOR" ]; then
