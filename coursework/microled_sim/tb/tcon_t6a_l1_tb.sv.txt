@@ -11,7 +11,7 @@
 // "make" a test pass.
 //
 // rev2 changes forced by the T6-A RUN01 review (2026-11-19):
-//   * a LEGAL CS_n high gap (CS_GAP, >= the documented 100 ns) between
+//   * a LEGAL CS_n high gap (cs_gap, >= the documented 100 ns) between
 //     transactions; rev1 produced a zero-length CS pulse that no synchroniser
 //     can see;
 //   * the write/read counters count what the DUT really did (captured write
@@ -100,8 +100,8 @@ module tcon_t6a_l1_tb;
     // ---------------------------------------------------------------------
     // SPI driver: mode 0, MSB first, 16-bit command + 32-bit data
     // ---------------------------------------------------------------------
-    real    T_HALF;                     // half SCLK period (ns)
-    real    CS_GAP;                     // CS_n high time between transactions
+    real    t_half;                     // half SCLK period (ns)
+    real    cs_gap;                     // CS_n high time between transactions
     integer n_wr_ok, n_rd_ok, n_commit, n_sw_pulse, n_frames, n_cap;
     reg     ff_d = 1'b0;
     reg [7:0]  rd_first_byte;
@@ -128,7 +128,7 @@ module tcon_t6a_l1_tb;
             rd_first_def = 1'b0;
             rd_bit_index = 0;
             spi_cs_n = 1'b0;
-            #(T_HALF);
+            #(t_half);
         end
     endtask
 
@@ -137,9 +137,9 @@ module tcon_t6a_l1_tb;
     task automatic spi_bit(input b, input sample);
         begin
             spi_mosi = b;
-            #(T_HALF); spi_sck = 1'b1;
+            #(t_half); spi_sck = 1'b1;
             if (sample) begin
-                #(T_HALF * 0.25);
+                #(t_half * 0.25);
                 last_sample = spi_miso;
                 if (rd_bit_index == 0) begin
                     rd_first_bit = spi_miso;          // four-state on purpose
@@ -148,9 +148,9 @@ module tcon_t6a_l1_tb;
                 if (rd_bit_index < 8)
                     rd_first_byte = {rd_first_byte[6:0], (spi_miso === 1'b1)};
                 rd_bit_index = rd_bit_index + 1;
-                #(T_HALF * 0.75);
+                #(t_half * 0.75);
             end else begin
-                #(T_HALF);
+                #(t_half);
             end
             spi_sck = 1'b0;
         end
@@ -158,9 +158,9 @@ module tcon_t6a_l1_tb;
 
     task automatic spi_end;
         begin
-            #(T_HALF);
+            #(t_half);
             spi_cs_n = 1'b1;
-            #(CS_GAP);                                 // legal inter-transaction gap
+            #(cs_gap);                                 // legal inter-transaction gap
         end
     endtask
 
@@ -267,8 +267,8 @@ module tcon_t6a_l1_tb;
 
         assert_count = 0; pass_count = 0; fail_count = 0;
         n_wr_ok = 0; n_rd_ok = 0; n_commit = 0; n_sw_pulse = 0; n_frames = 0; n_cap = 0;
-        T_HALF = 50.0;                                    // 10 MHz
-        CS_GAP = 200.0;                                   // >= 100 ns documented
+        t_half = 50.0;                                    // 10 MHz
+        cs_gap = 200.0;                                   // >= 100 ns documented
 
         reset_n = 1'b0; spi_cs_n = 1'b1; spi_sck = 1'b0; spi_mosi = 1'b0;
         status_in = 4'b0100; hw_fault = 11'd0; test_en = 1'b0; col_index_in = 10'd0;
@@ -359,7 +359,7 @@ module tcon_t6a_l1_tb;
         for (i = 15; i >= 0; i = i - 1) spi_bit(v3[i], 1'b0);
         v3 = 32'h0000_0777;
         for (i = 31; i >= 0; i = i - 1) spi_bit(v3[i], 1'b0);
-        spi_end;                                          // CS high for CS_GAP
+        spi_end;                                          // CS high for cs_gap
         spi_xfer({1'b0, 15'h08}, 32'h0000_0001, v, 48);   // second transaction
         rd(15'h1C, v2); rd(15'h08, v3);
         chk("D25_back_to_back_transactions",
@@ -402,10 +402,10 @@ module tcon_t6a_l1_tb;
 
         // ================= E. clock rate / phase independence ==============
         $display("--- E. SCLK rate and phase ---");
-        T_HALF = 125.0;                                   // 4 MHz
+        t_half = 125.0;                                   // 4 MHz
         wr(15'h1C, 32'h0000_0ABC); rd(15'h1C, v);
         chk("D35_slow_sclk_4mhz", v == 32'h0000_0ABC);
-        T_HALF = 50.0;
+        t_half = 50.0;
 
         // start the transaction on several core-clock phases
         for (i = 0; i < 4; i = i + 1) begin
@@ -514,7 +514,7 @@ module tcon_t6a_l1_tb;
         wr(15'h0C, 32'h0000_0100);
 
         // F10 the documented minimum CS_n high time is what the TB actually used
-        chk("D57_new_cs_high_gap_legal", CS_GAP >= 100.0);
+        chk("D57_new_cs_high_gap_legal", cs_gap >= 100.0);
 
 
         $display("--- Phase S: L1 safety (capture / read / clear / re-arm) ---");

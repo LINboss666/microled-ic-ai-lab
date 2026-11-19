@@ -11,7 +11,7 @@ SRC="$COURSE_ROOT/coursework/microled_sim"
 
 WALL_LIMIT_S="${WALL_LIMIT_S:-900}"
 
-FLOOR=77   # 57 (rev2, unchanged) + 20 (Phase S E01..E20)
+FLOOR="77"   # 57 (rev2, unchanged) + 20 (Phase S E01..E20)
 SRC_TB="$SRC/tb/tcon_t6a_l1_tb.sv.txt"
 TOTAL=$(grep -c 'chk("' "$SRC_TB")
 if [ "$TOTAL" -lt "$FLOOR" ]; then
