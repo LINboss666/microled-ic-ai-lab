@@ -505,6 +505,8 @@ def main():
     # ---------- CSV ----------
     here = os.path.dirname(os.path.abspath(__file__))
     out = os.path.join(here, '..', 't6a', 'L1_LEGACY_REPLAY.csv')
+    if not os.path.isdir(os.path.dirname(out)):
+        out = os.path.join(here, 'L1_LEGACY_REPLAY.csv')   # shipped-copy layout
     if rows:
         with open(out, 'w', encoding='utf-8', newline='') as f:
             w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
