@@ -58,7 +58,13 @@ module tcon_spi_top (
     wire        frame_full, we, rd_req;
     wire [14:0] addr, rd_addr_hold;
     wire [31:0] rd_snapshot;
-    wire [10:0] hw_fault_i = hw_fault | (fault_n ? 11'd0 : 11'h080);
+    // P0-F / C2 enforcement: bit7 (COMM_TO) comes ONLY from the shared pin.
+    // The previous OR let a bus-driven hw_fault[7] claim COMM_TO with
+    // fault_n high (reviewer counterexample row 2); bus bit7 is now masked
+    // off. Bit8 (ERR_REG) is an internal register-access status, not an
+    // analog comparator, so its hw_fault input is tied to zero - a stray
+    // drive there can no longer reach caught_any / hw_blank.
+    wire [10:0] hw_fault_i = {hw_fault[10:9], 1'b0, !fault_n, hw_fault[6:0]};
     wire [47:0] wr_frame;
     wire        wr_tog, wr_ack_tog;
     wire [15:0] wr_frames;

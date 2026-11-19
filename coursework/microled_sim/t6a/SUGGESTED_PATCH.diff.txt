@@ -164,7 +164,7 @@ index 60fea46..b51eda2 100644
      end
  
 diff --git a/coursework/microled_sim/rtl/tcon_spi_top.v.txt b/coursework/microled_sim/rtl/tcon_spi_top.v.txt
-index f517947..9af1009 100644
+index f517947..b023a33 100644
 --- a/coursework/microled_sim/rtl/tcon_spi_top.v.txt
 +++ b/coursework/microled_sim/rtl/tcon_spi_top.v.txt
 @@ -15,6 +15,10 @@ module tcon_spi_top (
@@ -189,15 +189,21 @@ index f517947..9af1009 100644
  );
  
      wire [47:0] sh;
-@@ -52,6 +58,7 @@ module tcon_spi_top (
+@@ -52,6 +58,13 @@ module tcon_spi_top (
      wire        frame_full, we, rd_req;
      wire [14:0] addr, rd_addr_hold;
      wire [31:0] rd_snapshot;
-+    wire [10:0] hw_fault_i = hw_fault | (fault_n ? 11'd0 : 11'h080);
++    // P0-F / C2 enforcement: bit7 (COMM_TO) comes ONLY from the shared pin.
++    // The previous OR let a bus-driven hw_fault[7] claim COMM_TO with
++    // fault_n high (reviewer counterexample row 2); bus bit7 is now masked
++    // off. Bit8 (ERR_REG) is an internal register-access status, not an
++    // analog comparator, so its hw_fault input is tied to zero - a stray
++    // drive there can no longer reach caught_any / hw_blank.
++    wire [10:0] hw_fault_i = {hw_fault[10:9], 1'b0, !fault_n, hw_fault[6:0]};
      wire [47:0] wr_frame;
      wire        wr_tog, wr_ack_tog;
      wire [15:0] wr_frames;
-@@ -73,7 +80,7 @@ module tcon_spi_top (
+@@ -73,7 +86,7 @@ module tcon_spi_top (
          .wr_frame (wr_frame), .wr_tog (wr_tog), .wr_ack_tog (wr_ack_tog),
          .rd_addr_hold (rd_addr_hold), .rd_req (rd_req),
          .rd_snapshot (rd_snapshot),
@@ -206,7 +212,7 @@ index f517947..9af1009 100644
          .col_index_in (col_index_in),
          .en (en), .blank_r (blank_r), .hw_blank (hw_blank),
          .test_mode (test_mode),
-@@ -82,7 +89,8 @@ module tcon_spi_top (
+@@ -82,7 +95,8 @@ module tcon_spi_top (
          .irq (irq), .err_reg (err_reg),
          .wr_cap_cnt (wr_cap_cnt_o), .wr_cap_o (wr_cap_o),
          .wr_ok_o (wr_ok_o), .wr_rej_cnt (wr_rej_cnt_o),
@@ -218,7 +224,7 @@ index f517947..9af1009 100644
      assign bitcnt_o      = bitcnt;
 diff --git a/coursework/microled_sim/tb/run_tcon_t6a_l1.sh b/coursework/microled_sim/tb/run_tcon_t6a_l1.sh
 new file mode 100644
-index 0000000..483ecfa
+index 0000000..7766df6
 --- /dev/null
 +++ b/coursework/microled_sim/tb/run_tcon_t6a_l1.sh
 @@ -0,0 +1,80 @@
@@ -235,7 +241,7 @@ index 0000000..483ecfa
 +
 +WALL_LIMIT_S="${WALL_LIMIT_S:-900}"
 +
-+FLOOR="77"   # 57 (rev2, unchanged) + 20 (Phase S E01..E20)
++FLOOR="85"   # 57 (rev2) + 20 (Phase S E01..E20) + 8 (P0-F E21..E22c)
 +SRC_TB="$SRC/tb/tcon_t6a_l1_tb.sv.txt"
 +TOTAL=$(grep -c 'chk("' "$SRC_TB")
 +if [ "$TOTAL" -lt "$FLOOR" ]; then
@@ -304,10 +310,10 @@ index 0000000..483ecfa
 +exit "$RC"
 diff --git a/coursework/microled_sim/tb/tcon_t6a_l1_tb.sv.txt b/coursework/microled_sim/tb/tcon_t6a_l1_tb.sv.txt
 new file mode 100644
-index 0000000..51ab858
+index 0000000..b6e77c2
 --- /dev/null
 +++ b/coursework/microled_sim/tb/tcon_t6a_l1_tb.sv.txt
-@@ -0,0 +1,632 @@
+@@ -0,0 +1,685 @@
 +`timescale 1ns / 1ps
 +// TCON T6-A **L1** testbench — the rev2 SPI/register suite (57 assertions,
 +// unchanged) PLUS the L1 safety phase E01..E20 (P0-D same-edge clear).
@@ -889,12 +895,16 @@ index 0000000..51ab858
 +        repeat (3) @(posedge clk);
 +        chk("E15_partial_mask_keeps_bit7", (fault_status[7] === 1'b1));
 +
-+        // (7) a still-asserted source cannot be cleared
-+        hw_fault = 11'h080;
++        // (7) a still-asserted source cannot be cleared.
++        // P0-F: the ONLY path into COMM_TO is the shared pin, so the live
++        // source here is fault_n low - NOT hw_fault[7], which the top now
++        // masks off (C2 enforcement).
++        fault_n = 1'b0;
++        repeat (3) @(posedge clk);
 +        wr(15'h0C, 32'h0000_0080);
 +        repeat (3) @(posedge clk);
 +        chk("E16_live_source_cannot_be_cleared", (fault_status[7] === 1'b1));
-+        hw_fault = 11'd0;
++        fault_n = 1'b1;
 +        repeat (2) @(posedge clk);
 +        wr(15'h0C, 32'h0000_0080);
 +        repeat (3) @(posedge clk);
@@ -915,6 +925,55 @@ index 0000000..51ab858
 +        clk_en = 1'b1;
 +        #50;
 +        chk("E20_capture_survived_the_dead_clock", (hw_fault_caught_o === 1'b1));
++
++        // (10) P0-F / C3: the reviewer's deterministic vector. A recovered
++        // cause (bit0: UVLO level asserted then withdrawn) is cleared by its
++        // own mask bit while ANOTHER source (bit2: OT) is still LIVE - the
++        // cleared bit must not resurrect, the live bit must not clear.
++        hw_fault[0] = 1'b1;
++        repeat (3) @(posedge clk);
++        hw_fault[0] = 1'b0;
++        repeat (3) @(posedge clk);
++        chk("E21_pre_uvlo_latched",
++            (fault_status[0] === 1'b1) && (hw_fault_caught_o === 1'b1));
++        hw_fault[2] = 1'b1;                    // OT goes LIVE and stays
++        repeat (3) @(posedge clk);
++        wr(15'h0C, 32'h0000_0001);             // W1C covers ONLY bit0
++        #1;
++        chk("E21_multi_source_partial_clear",
++            (fault_status[0] === 1'b0) && (fault_status[2] === 1'b1) &&
++            (hw_fault_caught_o === 1'b1) && (hw_blank === 1'b1));
++        repeat (30) @(posedge clk);
++        chk("E21b_cleared_cause_does_not_resurrect",
++            (fault_status[0] === 1'b0) && (fault_status[2] === 1'b1));
++        wr(15'h0C, 32'h0000_0004);             // W1C bit2 while it is LIVE
++        repeat (3) @(posedge clk);
++        chk("E21c_live_bit2_cannot_clear", (fault_status[2] === 1'b1));
++        hw_fault[2] = 1'b0;
++        repeat (3) @(posedge clk);
++        wr(15'h0C, 32'h0000_0004);
++        repeat (3) @(posedge clk);
++        chk("E21d_all_clear_after_release",
++            (fault_status === 11'd0) && (hw_fault_caught_o === 1'b0));
++
++        // (11) P0-F / C2: COMM_TO is EXCLUSIVE to the shared pin. Driving
++        // the hw_fault[7] bus bit with fault_n high must do nothing; pulling
++        // the pin must capture immediately.
++        hw_fault[7] = 1'b1;
++        repeat (4) @(posedge clk);
++        chk("E22_bus_bit7_cannot_set_comm_to",
++            (fault_status[7] === 1'b0) && (hw_fault_caught_o === 1'b0));
++        hw_fault[7] = 1'b0;
++        fault_n = 1'b0;
++        repeat (2) @(posedge clk);
++        chk("E22b_pin_pull_still_captures",
++            (fault_status[7] === 1'b1) && (hw_blank === 1'b1));
++        fault_n = 1'b1;
++        repeat (2) @(posedge clk);
++        wr(15'h0C, 32'h0000_0080);
++        repeat (3) @(posedge clk);
++        chk("E22c_pin_cause_clears_by_its_own_mask",
++            (fault_status[7] === 1'b0) && (hw_fault_caught_o === 1'b0));
 +
 +        $display("T6A_L1_SAFETY split_edges=%0d resurrections=%0d permit_samples=%0d",
 +                 split_cnt, resurrect_cnt, perm_samples);
