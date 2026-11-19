@@ -1,0 +1,10 @@
+step,hw_fault,fs_old,caught_old,armed_old,fs_new,caught_new,armed_new,hw_blank,check,expected,clause
+E18 pulse + read,000,080,080,0,080,080,0,1,E18_read_cannot_clear,bit7=1,C2/C3
+E19/E20 dead clock hold,000,080,080,0,080,080,0,1,E19/E20,capture holds,C5
+E20a W1C 0x080 cleanup,000,000,000,0,000,000,0,1,E20a_phase_s_cleanup_without_rearm,"status=0, caught=0, armed=0, dark",C3/C4
+E21d all clear after release,000,000,000,0,000,000,0,1,E21d_all_clear_after_release,"status==0, capture==0",C3/C4
+E22c pin cause cleared,000,000,000,0,000,000,0,1,E22c,bit7=0,C3
+E18 pulse + read,000,080,080,0,080,080,0,1,E18_read_cannot_clear,bit7=1,C2/C3
+E19/E20 dead clock hold,000,080,080,0,080,080,0,1,E19/E20,capture holds,C5
+E21d all clear after release,000,080,080,0,080,080,0,1,E21d_all_clear_after_release,"status==0, capture==0",C3/C4
+E22c pin cause cleared,000,000,000,0,000,000,0,1,E22c,bit7=0,C3

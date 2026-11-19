@@ -610,6 +610,18 @@ module tcon_t6a_l1_tb;
         #50;
         chk("E20_capture_survived_the_dead_clock", (hw_fault_caught_o === 1'b1));
 
+        // (9b) P0-F2: E18's COMM_TO history is STILL latched here - and per
+        // the frozen per-bit W1C contract nothing in E21/E22 may clear it
+        // implicitly. Close the Phase S boundary with ONE legal host W1C and
+        // PROVE the cleanup: status and capture zero, no re-arm happened,
+        // the panel is still dark. E21/E22 then start from a no-history
+        // state (reviewer: L1_TB_PHASE_CONTINUITY = FAIL_STATIC).
+        wr(15'h0C, 32'h0000_0080);
+        repeat (3) @(posedge clk);
+        chk("E20a_phase_s_cleanup_without_rearm",
+            (fault_status === 11'd0) && (hw_fault_caught_o === 1'b0) &&
+            (disp_armed_o === 1'b0) && (hw_blank === 1'b1));
+
         // (10) P0-F / C3: the reviewer's deterministic vector. A recovered
         // cause (bit0: UVLO level asserted then withdrawn) is cleared by its
         // own mask bit while ANOTHER source (bit2: OT) is still LIVE - the
