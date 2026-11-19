@@ -126,4 +126,8 @@ hw_blank       = blank_r | !en | any_hw_fault | hw_fault_caught | !disp_armed | 
 | `t6a/ASYNC_FAULT_TIMELINE.csv` | 64 行逐 ns 时间线，含 fsm_only / async_set 两列 |
 | `t6a/SUGGESTED_PATCH.diff.txt` | 候选补丁（`tcon_spi_regs` + `tcon_spi_top`），只在独立分支试应用 |
 
-**RTL 未改**：`course/…` 分支上四个已验收源文件 SHA 与 RUN02 清单逐字节一致。
+**RTL 未改**：`course/…` 分支上四个已验收源文件**内容**与 RUN02 运行时一致。
+行尾要单独说明：仓库 `.gitattributes` 是 `* text=auto eol=lf`，新 checkout 得到 LF；
+RUN02 清单里 `tcon_spi_regs` 是 CRLF 形式（`bdde768a…`，12196 B），
+LF 形式为 `05aaabbe…`（11937 B）。规范化后完全相同，
+对照见 `tools/t6a_sha_normalised.py`（输出 `ACCEPTED_SOURCE_CONTENT_UNCHANGED=YES`）。

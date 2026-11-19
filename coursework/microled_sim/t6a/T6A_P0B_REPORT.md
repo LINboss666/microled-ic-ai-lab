@@ -130,7 +130,7 @@ NC-4→E05、NC-5→E06。
 | 规模 | `tcon_spi_regs` +49/−3 行；`tcon_spi_top` +5/−2 行 |
 | 应用 | 只在**独立分支** `t6a-p0-candidate-20261119` 试应用 |
 | 编译 | `vlog` **0 errors / 0 warnings** |
-| `course/…` 分支 | RTL **未改**，四个源文件 SHA 与 RUN02 清单一致 |
+| `course/…` 分支 | RTL **未改**，四个源文件**内容**与 RUN02 运行时一致。`tcon_spi_regs` 在清单里是 CRLF（`bdde768a…`），新 checkout 因 `eol=lf` 为 LF（`05aaabbe…`），规范化后相同 |
 
 ---
 
