@@ -69,11 +69,11 @@ NC-D/E 属于 L1 执行日的动态检查。
 
 ---
 
-## P0-F 追加（2026-11-19）
+## P0-F2 追加（2026-11-19）
 
-- **E16**：活源改由 `fault_n=0` 驱动（C2 引脚唯一来源；名称保留）。
-- **E21/E21b/E21c/E21d**：复审的确定性多源矢量——bit0 已恢复、bit2 活，W1C 0x001
-  同拍清 bit0（30 沿不复活）、bit2 不可清、释放后全清。
-- **E22/E22b/E22c**：总线 bit7 在 fault_n=1 时不能置 COMM_TO；拉低引脚立即捕获；
-  引脚原因由自己的掩码位清除。
-- 断言总数 85 = 57 + 20 + 8；负控 NC-1..NC-6（模型）+ 5 个结构负控（静态门）。
+- **E20a_phase_s_cleanup_without_rearm**：E20 之后、E21 之前，一次**真实 SPI
+  W1C**（FAULT=0x080）关闭 Phase S 边界；断言同时检查 status==0、捕获==0、
+  **disp_armed==0**（清理不得顺手再使能）、**hw_blank==1**（仍熄屏）。
+- 断言总数 86 = 57 + 20 + 8 + 1；负控 NC-PHASE（删清理 → E21d=0x080/E22 FAIL）、
+  NC-REARM、NC-SOURCE；连续重放 `tools/t6a_p0f2_continuity.py`
+  （单实例 E18→E22，逐拍表 `E18_E22_CONTINUITY.csv`）。

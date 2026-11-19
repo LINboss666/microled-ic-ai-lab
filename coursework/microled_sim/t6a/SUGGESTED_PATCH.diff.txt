@@ -224,7 +224,7 @@ index f517947..b023a33 100644
      assign bitcnt_o      = bitcnt;
 diff --git a/coursework/microled_sim/tb/run_tcon_t6a_l1.sh b/coursework/microled_sim/tb/run_tcon_t6a_l1.sh
 new file mode 100644
-index 0000000..7766df6
+index 0000000..a474226
 --- /dev/null
 +++ b/coursework/microled_sim/tb/run_tcon_t6a_l1.sh
 @@ -0,0 +1,80 @@
@@ -241,7 +241,7 @@ index 0000000..7766df6
 +
 +WALL_LIMIT_S="${WALL_LIMIT_S:-900}"
 +
-+FLOOR="85"   # 57 (rev2) + 20 (Phase S E01..E20) + 8 (P0-F E21..E22c)
++FLOOR="86"   # 57 (rev2) + 20 (Phase S) + 8 (P0-F) + 1 (P0-F2 E20a)
 +SRC_TB="$SRC/tb/tcon_t6a_l1_tb.sv.txt"
 +TOTAL=$(grep -c 'chk("' "$SRC_TB")
 +if [ "$TOTAL" -lt "$FLOOR" ]; then
@@ -310,10 +310,10 @@ index 0000000..7766df6
 +exit "$RC"
 diff --git a/coursework/microled_sim/tb/tcon_t6a_l1_tb.sv.txt b/coursework/microled_sim/tb/tcon_t6a_l1_tb.sv.txt
 new file mode 100644
-index 0000000..b6e77c2
+index 0000000..333017f
 --- /dev/null
 +++ b/coursework/microled_sim/tb/tcon_t6a_l1_tb.sv.txt
-@@ -0,0 +1,685 @@
+@@ -0,0 +1,697 @@
 +`timescale 1ns / 1ps
 +// TCON T6-A **L1** testbench — the rev2 SPI/register suite (57 assertions,
 +// unchanged) PLUS the L1 safety phase E01..E20 (P0-D same-edge clear).
@@ -925,6 +925,18 @@ index 0000000..b6e77c2
 +        clk_en = 1'b1;
 +        #50;
 +        chk("E20_capture_survived_the_dead_clock", (hw_fault_caught_o === 1'b1));
++
++        // (9b) P0-F2: E18's COMM_TO history is STILL latched here - and per
++        // the frozen per-bit W1C contract nothing in E21/E22 may clear it
++        // implicitly. Close the Phase S boundary with ONE legal host W1C and
++        // PROVE the cleanup: status and capture zero, no re-arm happened,
++        // the panel is still dark. E21/E22 then start from a no-history
++        // state (reviewer: L1_TB_PHASE_CONTINUITY = FAIL_STATIC).
++        wr(15'h0C, 32'h0000_0080);
++        repeat (3) @(posedge clk);
++        chk("E20a_phase_s_cleanup_without_rearm",
++            (fault_status === 11'd0) && (hw_fault_caught_o === 1'b0) &&
++            (disp_armed_o === 1'b0) && (hw_blank === 1'b1));
 +
 +        // (10) P0-F / C3: the reviewer's deterministic vector. A recovered
 +        // cause (bit0: UVLO level asserted then withdrawn) is cleared by its
