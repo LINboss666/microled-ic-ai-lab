@@ -1,164 +1,67 @@
-# CE 反例测试计划（CE_TEST_PLAN）— rev3
+# T6-A L1 安全验证计划（rev4，2026-11-19，P0-D）
 
-日期：2026-11-19　状态：**计划，未执行**。T6-A 原预算 2/2 已用尽；本轮 0 次 vsim。
-L1 需要**新阶段定向预算 1 次**（独立审批），L2 另开环境。
+> 分层裁定沿用 P0-B 复审：**L1 = SPI 单元安全**（只判寄存器/许可/锁存，
+> 不许说"灯亮不亮"）；**L2 = 五芯片系统安全**（看真实 `ch_en`，另立预算）。
+> 本文件是 L1 的执行计划——**已准备、未执行**（P0-D 为零仿真轮）。
 
----
+## 1. 载体
 
-## 0. 分层不变（L1 / L2），但 L1 的边界要重新说清
-
-| 层 | 被测 | 能判 | **不能判** |
-|---|---|---|---|
-| L1 | 候选 `tcon_spi_top`（含新增 `fault_n` 端口） | `hw_blank`、`disp_armed`、`hw_fault_caught`、`FAULT_STATUS`/`INT_STATUS` 读回 | 引脚 BLANK、Data/Scan 真实导通、预充 |
-| L2 | TCON+2Data+2Scan（带 SPI） | 真实 `ch_en`/PAM、重新预充、恢复显示 | — |
-
-rev2 的一条错误要在本轮明确：**L1 不能声称"灯亮了/没亮"**，只能说"许可为 1/0"。
-所以下面每条用例都写明"非空洞"用的是哪一类样本。
-
----
-
-## 1. 共同前提
-
-core 100 MHz；SCLK 10/4 MHz；core 相位 0/2.5/5/7.5 ns；CS 高 ≥ 100 ns；
-四态精确比较；每个 core 沿采一次；`MIN_ASSERTS` 等于实际条数。
-
----
-
-## 2. L1 用例
-
-### E01–E16（rev2 保留）
-
-显示许可先到 0 → 故障出现 → 源撤去 → W1C → 再使能；含 2/4/8 ns 短脉冲、
-临界沿、复位、读/坏帧/int_en 不得绕过。判据与 rev2 相同，不再重复。
-
-### E17 短脉冲必须"读得到"（rev3 新增，P0）
-
-| 步 | 动作 |
+| 物料 | 状态 |
 |---|---|
-| 1 | 合法使能，`hw_blank=0`（记 `permit_low_samples`） |
-| 2 | `fault_n` 拉低 **4 ns**，确保**没有任何 core 沿落在脉宽内**（transcript 打印两侧沿时间戳） |
-| 3 | 脉冲结束，等 ≥ 3 个 core 沿 |
-| 4 | 读 `0x0C`、`0x10` |
+| `tb/tcon_t6a_l1_tb.sv.txt` | **已写、已编译（vlog 0/0）、未执行**；57 条 rev2 断言原样保留 + Phase S E01..E20 |
+| `tb/run_tcon_t6a_l1.sh` | 已写、bash -n 通过；`FLOOR=77`，vsim 命令就位 |
+| DUT 端口 | `.fault_n(fault_n)` **显式连接**（缺省会浮 Z，被 `fault_n?0:0x080` 读成故障）；`.disp_armed_o/.hw_fault_caught_o` 同接 |
+| 时钟 | `clk_en` 门控（仅 Phase S 用，用于死时钟用例） |
 
-判据：
-- `fault_status[7]===1`（COMM_TO），读回 `0x0C` 的 bit7 为 1；
-- `int_status[7]===1`，读回 `0x10` 的 bit7 为 1；
-- `hw_blank===1`、`disp_armed===0` 全程；
-- `fault_vis_o[7]===1`（观测口与寄存器一致）。
+## 2. Phase S 场景设计（对应 `tcon_t6a_l1_tb` E01–E20）
 
-非空洞：第 1 步必须有 `hw_blank===0` 的采样（否则"一直黑"也能过）。
+每个故障脉冲 4 ns 宽、起点在 core 上升沿后 3 ns —— **起点与终点都落在两个
+时钟沿之间**，`pulse_edges` 计数器证明 `E02_pulse_really_escaped_the_clock`。
 
-### E18 W1C=0 不得清除（rev3 新增，P0）
-
-| 步 | 动作 |
+| 断言 | 验证内容 |
 |---|---|
-| 1 | 同 E17 步骤 1–3（捕获位=1、状态 bit7=1） |
-| 2 | 写 `FAULT_STATUS = 0x0000_0000`（合法 48 沿写帧） |
-| 3 | 等 ≥ 3 沿，再读 |
+| E01 | 脉冲前面板处于点亮态（armed=1, hw_blank=0）——防止"一直黑也能 PASS" |
+| E02 | 脉冲内 core 沿数 = 0（逃逸条件为真，非空洞） |
+| E03–E06 | 捕获置位；`FAULT_STATUS[7]`/`INT_STATUS[7]` 可读；面板熄灭 |
+| E07 | 源撤去后 3 个沿无自动恢复 |
+| E08 | **一次**合法 W1C 后 status[7] 与 caught 同沿归零 |
+| E09/E10 | `split_cnt=0`（不存在"状态清了、捕获还在"的沿——rev3 缺陷的签名）；`resurrect_cnt=0`（bit7 不复活） |
+| E11 | 未再使能前保持熄灭 |
+| E12/E13 | 显式 CTRL 再使能被接受，连续 3 个非零许可采样 |
+| E14/E15 | W1C=0x000 不清；0x001 部分掩码保留 bit7 |
+| E16/E17 | 活故障清不掉；源撤后可清 |
+| E18 | 读事务不清除 |
+| E19/E20 | 核心时钟停死：保持熄灭、捕获不丢、时钟恢复后仍在 |
 
-判据：`hw_fault_caught===1`、`fault_status[7]===1`、`hw_blank===1` —— **三项都不许变**。
-负控：删掉 `w1c_f[7]` 条件 → 本用例必须 FAIL（且是 `caught`/状态真实变化，不是"黑屏"）。
+两个持续监视器（非单点检查）：
+- `split_cnt`：逐沿查 `status[7]==0 && caught==1` —— rev3 RTL 恰好产生 1 次；
+- `resurrect_cnt`：逐沿查 `status[7]` 0→1（窗口内无脉冲）。
 
-### E19 部分掩码不得清掉别的原因（rev3 新增）
+## 3. 负控（D.4：四类，全部绑定具体断言）
 
-| 步 | 动作 |
-|---|---|
-| 1 | 制造两个原因：`hw_fault[0]`（UVLO）持续 ≥ 3 沿 → 撤去；再 4 ns 脉冲（→bit7） |
-| 2 | 写 `FAULT_STATUS = 0x001` |
-| 3 | 读回 |
-
-判据：bit0 清 0，**bit7 仍为 1**，`hw_fault_caught===1`，`hw_blank===1`。
-负控：把 `clr_fault` 条件从 `w1c_f[7]` 改回 `n_fault==0` → 本用例 FAIL。
-
-### E20 清除与新脉冲同沿（rev3 新增）
-
-| 步 | 动作 |
-|---|---|
-| 1 | 捕获位=1、状态 bit7=1 |
-| 2 | 在**同一个 core 沿**：写 `FAULT_STATUS=0x080`，同时 `fault_n` 再拉低 4 ns（跨该沿） |
-| 3 | 等 ≥ 3 沿 |
-
-判据：`hw_fault_caught===1`（set 优先）、`fault_status[7]===1`、`hw_blank===1`。
-TB 必须在 transcript 打印该沿时间戳与脉冲起止，证明"同沿"。
-
-### E21 真实 `FAULT_n` 极性（rev3 新增）
-
-候选 `tcon_spi_top` 新增了 `fault_n` 端口，因此 L1 **可以**驱动真实引脚：
-
-| 步 | 动作 |
-|---|---|
-| 1 | 保持 `hw_fault=0`，只用 `fault_n=0` 拉低 4 ns |
-| 2 | 检查捕获与读回 |
-
-判据：`hw_fault_caught===1`、`fault_status[7]===1`。
-（若 L1 平台最终没有 `fault_n` 端口，则本条降级为"L2 才能验证"，**不得**声称已验证。）
-
-### E22 停钟保持（rev3 新增）
-
-| 步 | 动作 |
-|---|---|
-| 1 | 合法使能，`hw_blank=0` |
-| 2 | 停止 core 时钟（不再有 `posedge clk`） |
-| 3 | `fault_n` 拉低 10 ns 再释放，**整段没有任何 core 沿** |
-| 4 | 恢复时钟，等 3 沿 |
-
-判据：第 3 步全程 `hw_blank===1`（组合项 + 异步锁存），`disp_armed` 保持 0；
-第 4 步后仍为 1（clear 从未发生）。
-
----
-
-## 3. 恢复实验（防止"永远黑屏也 PASS"）
-
-| 步 | 动作 | 判据 |
+| 负控 | 做法 | 必然失败的断言 |
 |---|---|---|
-| R1 | 清掉所有原因（掩码覆盖全部在置位） | `hw_fault_caught===0`、`disp_armed===0`、`hw_blank===1` |
-| R2 | 一次显式 `CTRL=0x1`，`SAFE/READY` 有效 | `disp_armed===1`、`hw_blank===0`（记 `permit_low_samples>0`） |
-| R3 | 读回 `CTRL` | 等于 `0x0000_0001`（真写进去了，不是读失败得 0） |
+| NC-A | 还原寄存器 `clr_fault`（rev3 写法） | E08/E09/E10 |
+| NC-B | 去掉 caught→bit7 映射 | E04/E05 |
+| NC-C | clr 不看 W1C 掩码 | E14/E15 |
+| NC-D | 捕获改回 `posedge clk` 采样 | E02/E03 |
+| NC-E | L1 TB 拔掉 `.fault_n` 连接 | 编译过但 E03 读 Z——静态门先抓 |
 
-**没有 R2 的 `hw_blank=0`，E01–E22 的"黑屏"判据全部不可采信。**
+其中 NC-A..C 由 `tools/t6a_p0_rearm_check.py`（D0–D5 系列）与
+`tools/t6a_p0d_precheck.py`（对篡改副本的结构判据）**在本轮已经真实执行并 FAIL**；
+NC-D/E 属于 L1 执行日的动态检查。
 
----
+## 4. 执行顺序（L1 预算获批后，一次 vsim 内完成）
 
-## 4. 断言总表（L1，预计 24–28 条）
+1. `reset` → 57 条 rev2 回归原样跑（名称/阈值不动，`MIN_ASSERTS≥77`）；
+2. Phase S E01–E20；
+3. 两个监视器计数写入 transcript（`T6A_L1_SAFETY split_edges=... resurrections=... permit_samples=...`）；
+4. T6 五条件 + runner 退出码照常。
 
-| 名称 | 判据 | 对应缺口 |
-|---|---|---|
-| E01/E02 | 许可先 0 后故障后保持 1 | 基础 |
-| E03/E04/E05 | 2/4/8 ns × 四相位都捕获；脉冲内无 core 沿 | P0-B |
-| E06/E07/E08/E09 | W1C-only 仍黑、故障中 unblank 被拒、临界沿被拒 | 再使能 |
-| E10/E11 | 再使能后 `armed` 0→1、读回确认 | 恢复 |
-| E12/E13/E14 | int_en=0 / 读 / 坏帧不得绕过 | 旁路 |
-| E15/E16 | 复位清许可、捕获粘滞 | 复位 |
-| **E17** | **短脉冲后 `FAULT_STATUS[7]`/`INT_STATUS[7]`=1** | **可读性** |
-| **E18** | **W1C=0 后 `caught`/bit7 不变** | **清除协议** |
-| **E19** | **部分掩码只清被覆盖位** | **清除协议** |
-| **E20** | **同沿新脉冲胜过清除** | **优先级** |
-| **E21** | **`fault_n` 端口可达同一捕获路径** | **引脚** |
-| **E22** | **停钟保持** | **死时钟** |
+**停止条件**：任何一条 FAIL → 保留证据、不追加第二次。
 
----
+## 5. 明确不属于 L1 的事项
 
-## 5. 负控（每条必须绑定到真的会失败的断言）
-
-| 编号 | 注入 | 必须失败 | 失败现象 |
-|---|---|---|---|
-| NC-1 | 删 `disp_armed` 项 | E06 | W1C 后 `hw_blank` 1→0 |
-| NC-2 | `caught` 不并入 `n_fault` | **E17** | 读回 bit7=0 |
-| NC-3 | `clr_fault` 去掉 `w1c_f[7]` | **E18、E19** | `caught` 被写 0 清掉 |
-| NC-4 | `clr_fault` 去掉 `!any_hw_fault` | E07/E20 | 活故障中被清 |
-| NC-5 | 异步置位改回 `posedge clk` | E03/E05/E22 | 2/4 ns 丢失、停钟不保持 |
-| NC-6 | `hw_fault_i` 漏掉 `fault_n` 取反 | E21 | 引脚拉低无效 |
-
-rev2 把 NC 绑在"清完之后必须黑屏"（E06）上是错的：那条在"一直黑"时也成立。
-rev3 全部改绑到**状态位本身**（bit7 / `caught`）。
-
----
-
-## 6. 准入与预算
-
-- 准入前：`vlog` 0/0 + 三个模型（`t6a_p0_async_fault.py`、`t6a_p0_rearm_check.py`、
-  `t6a_p0_edge_matrix.py`）全过且负控有效；
-- TB 必须先补 `.fault_n` 端口（RUN02 的 TB 没有这个脚，直接跑会 elaborate 失败）；
-- 预算：**新申请 L1 定向 1 次**，失败即停，不占 T6-A 的 2/2；
-- 若 `cs_n` 与 core 同沿（E08）在数字域给不出确定结论，停在
-  `WAITING_FOR_P0B_REVISED_ZERO_SIM_ARCH_REVIEW`，不许试跑。
+- L2（五芯片、真实 `ch_en`、预充恢复）另立预算与环境；
+- `hw_blank → blank` 引脚连线、`tcon_top` `ST_FAULT` 退出条件改造（规格更严）；
+- CDC/STA/PVT 签核；`cs_n` 功能时钟约束。
